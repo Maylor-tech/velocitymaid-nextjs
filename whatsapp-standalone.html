@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Widget - Standalone</title>
+    <style>
+        /* WhatsApp Floating Button Styles */
+        .whatsapp-float {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            bottom: 30px;
+            right: 30px;
+            background-color: #25d366;
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .whatsapp-float:hover {
+            background-color: #128C7E;
+            transform: scale(1.1);
+        }
+
+        /* Pulse Animation */
+        .whatsapp-float::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: #25d366;
+            opacity: 0.6;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Online Badge */
+        .whatsapp-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 18px;
+            height: 18px;
+            background-color: #34b7f1;
+            border: 3px solid white;
+            border-radius: 50%;
+        }
+
+        /* WhatsApp Icon (SVG) */
+        .whatsapp-icon {
+            width: 35px;
+            height: 35px;
+            fill: white;
+            z-index: 1;
+        }
+
+        /* Popup Tooltip */
+        .whatsapp-popup {
+            position: fixed;
+            bottom: 110px;
+            right: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            z-index: 999;
+            max-width: 280px;
+            animation: slideUp 0.5s ease;
+            display: none;
+        }
+
+        .whatsapp-popup.show {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .whatsapp-popup-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            color: #666;
+        }
+
+        .whatsapp-popup-close:hover {
+            background: #ddd;
+        }
+
+        .whatsapp-popup-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .whatsapp-popup-icon {
+            width: 40px;
+            height: 40px;
+            background: #e8f5e9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .whatsapp-popup-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: #25d366;
+        }
+
+        .whatsapp-popup-title {
+            font-weight: bold;
+            margin: 0;
+            color: #333;
+        }
+
+        .whatsapp-popup-text {
+            margin: 10px 0 0 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .whatsapp-float {
+                width: 55px;
+                height: 55px;
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .whatsapp-icon {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .whatsapp-popup {
+                right: 20px;
+                bottom: 90px;
+                max-width: calc(100vw - 40px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- WhatsApp Floating Button -->
+<a href="https://wa.me/19732809190?text=Hi!%20I'd%20like%20to%20book%20a%20cleaning%20service." 
+   class="whatsapp-float" 
+   target="_blank" 
+   rel="noopener noreferrer"
+   id="whatsappButton"
+   aria-label="Chat on WhatsApp">
+    <svg class="whatsapp-icon" viewBox="0 0 24 24">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+    </svg>
+    <span class="whatsapp-badge"></span>
+</a>
+
+<!-- Optional Popup Tooltip -->
+<div class="whatsapp-popup" id="whatsappPopup">
+    <button class="whatsapp-popup-close" onclick="closePopup()">×</button>
+    <div class="whatsapp-popup-header">
+        <div class="whatsapp-popup-icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+        </div>
+        <div>
+            <p class="whatsapp-popup-title">Need help?</p>
+        </div>
+    </div>
+    <p class="whatsapp-popup-text">Chat with us on WhatsApp!</p>
+</div>
+
+<script>
+    // Configuration
+    const config = {
+        phoneNumber: '19732809190',  // Your WhatsApp number (country code + number)
+        message: "Hi! I'd like to book a cleaning service.",  // Pre-filled message
+        showPopupDelay: 3000,  // Show popup after 3 seconds
+        autoHidePopupDelay: 8000,  // Auto-hide popup after 8 seconds
+        showPopup: true  // Set to false to disable popup
+    };
+
+    // Update WhatsApp link with config
+    const whatsappButton = document.getElementById('whatsappButton');
+    const encodedMessage = encodeURIComponent(config.message);
+    whatsappButton.href = `https://wa.me/${config.phoneNumber}?text=${encodedMessage}`;
+
+    // Popup functionality
+    const popup = document.getElementById('whatsappPopup');
+    let popupShown = false;
+
+    function showPopup() {
+        if (config.showPopup && !popupShown) {
+            popup.classList.add('show');
+            popupShown = true;
+            
+            // Auto-hide popup
+            setTimeout(() => {
+                hidePopup();
+            }, config.autoHidePopupDelay);
+        }
+    }
+
+    function hidePopup() {
+        popup.classList.remove('show');
+    }
+
+    function closePopup() {
+        hidePopup();
+    }
+
+    // Show popup after delay
+    setTimeout(showPopup, config.showPopupDelay);
+
+    // Track WhatsApp clicks (Google Analytics)
+    whatsappButton.addEventListener('click', function() {
+        // Google Analytics tracking
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'whatsapp_click', {
+                'event_category': 'engagement',
+                'event_label': 'WhatsApp Chat Started'
+            });
+        }
+        
+        // Facebook Pixel tracking
+        if (typeof fbq !== 'undefined') {
+            fbq('track', 'Contact', {
+                content_name: 'WhatsApp Chat'
+            });
+        }
+        
+        console.log('WhatsApp button clicked');
+    });
+
+    // Close popup when clicking WhatsApp button
+    whatsappButton.addEventListener('click', function() {
+        hidePopup();
+    });
+</script>
+
+<!-- 
+INSTALLATION INSTRUCTIONS:
+==========================
+
+FOR NEXT.JS SITE:
+-----------------
+This file is a standalone example. Use the React components instead:
+- WhatsAppButton.tsx (simple)
+- WhatsAppWidget.tsx (advanced)
+
+FOR HTML SITE (Your current live site):
+---------------------------------------
+1. Copy everything between <a href...> and </a> (the WhatsApp button)
+2. Copy everything between <div class="whatsapp-popup"> and </div> (the popup)
+3. Copy the <style> section to your CSS file
+4. Copy the <script> section to your JavaScript file
+5. Update the config.phoneNumber to your number
+6. Add to your index.html before </body> tag
+
+CUSTOMIZATION:
+--------------
+1. Change phoneNumber in config
+2. Change message in config
+3. Change colors in CSS (search for #25d366)
+4. Change position (right/left, top/bottom)
+5. Disable popup: showPopup: false
+6. Change delays in config
+
+TESTING:
+--------
+1. Open your site
+2. Look for green floating button (bottom-right)
+3. Wait 3 seconds for popup
+4. Click button - should open WhatsApp
+5. Check pre-filled message appears
+
+-->
+
+</body>
+</html>

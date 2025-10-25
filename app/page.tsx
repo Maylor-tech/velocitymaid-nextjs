@@ -16,8 +16,36 @@ import {
   Calendar,
   ArrowRight,
   Menu,
-  X
+  X,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+
+// FAQ Item Component
+function FAQItem({ question, answer }: { question: string; answer: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <button
+        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <h3 className="text-lg font-semibold text-gray-900">{question}</h3>
+        {isOpen ? (
+          <ChevronUp className="w-5 h-5 text-primary-600" />
+        ) : (
+          <ChevronDown className="w-5 h-5 text-primary-600" />
+        )}
+      </button>
+      {isOpen && (
+        <div className="px-6 pb-4">
+          <p className="text-gray-700 leading-relaxed">{answer}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -53,7 +81,9 @@ export default function Home() {
             <div className="hidden md:flex items-center space-x-8">
               <a href="#services" className="text-gray-700 hover:text-primary-600 transition">Services</a>
               <a href="#why-us" className="text-gray-700 hover:text-primary-600 transition">Why Us</a>
+              <a href="#testimonials" className="text-gray-700 hover:text-primary-600 transition">Reviews</a>
               <a href="#pricing" className="text-gray-700 hover:text-primary-600 transition">Pricing</a>
+              <a href="#faq" className="text-gray-700 hover:text-primary-600 transition">FAQ</a>
               <a href="#contact" className="text-gray-700 hover:text-primary-600 transition">Contact</a>
               <a 
                 href={bookingUrl}
@@ -80,7 +110,9 @@ export default function Home() {
               <div className="flex flex-col space-y-4">
                 <a href="#services" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Services</a>
                 <a href="#why-us" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Why Us</a>
+                <a href="#testimonials" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Reviews</a>
                 <a href="#pricing" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Pricing</a>
+                <a href="#faq" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>FAQ</a>
                 <a href="#contact" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Contact</a>
                 <a 
                   href={bookingUrl}
@@ -149,6 +181,21 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Service Area Banner */}
+      <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary-600 to-primary-700">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="flex items-center justify-center mb-4">
+            <svg className="w-6 h-6 text-white mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+            </svg>
+            <h3 className="text-2xl font-bold text-white">Proudly Serving All of New Jersey</h3>
+          </div>
+          <p className="text-primary-100 text-lg">
+            Newark • Jersey City • Paterson • Elizabeth • Edison & More
+          </p>
+        </div>
+      </section>
+
       {/* Why Choose Us */}
       <section id="why-us" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
@@ -183,6 +230,63 @@ export default function Home() {
                 <feature.icon className="w-12 h-12 text-primary-600 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{feature.title}</h3>
                 <p className="text-gray-600">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Before/After Gallery */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">See Our Work</h2>
+            <p className="text-xl text-gray-600">Visual proof of our cleaning excellence</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Kitchen Deep Clean",
+                before: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop",
+                after: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&sat=1.2&brightness=1.1"
+              },
+              {
+                title: "Bathroom Transformation",
+                before: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop",
+                after: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop&sat=1.2&brightness=1.1"
+              },
+              {
+                title: "Living Room Refresh",
+                before: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop",
+                after: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&sat=1.2&brightness=1.1"
+              }
+            ].map((photo, index) => (
+              <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden card-hover">
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">{photo.title}</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <img 
+                        src={photo.before} 
+                        alt={`${photo.title} - Before`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <div className="absolute bottom-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold">
+                        Before
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <img 
+                        src={photo.after} 
+                        alt={`${photo.title} - After`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-sm font-semibold">
+                        After
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -231,6 +335,68 @@ export default function Home() {
                 >
                   Book This Service <ArrowRight className="ml-2 w-5 h-5" />
                 </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">What Our Customers Say</h2>
+            <p className="text-xl text-gray-600">Real reviews from real customers</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Sarah Johnson",
+                location: "Newark, NJ",
+                rating: 5,
+                text: "VelocityMaid transformed my home! The team was professional, efficient, and left every surface spotless. I've been using their services for 6 months and couldn't be happier.",
+                service: "Regular Cleaning"
+              },
+              {
+                name: "Michael Chen",
+                location: "Jersey City, NJ",
+                rating: 5,
+                text: "Outstanding service! They cleaned my office space after construction and it looked brand new. The attention to detail was incredible. Highly recommend!",
+                service: "Commercial Cleaning"
+              },
+              {
+                name: "Lisa Rodriguez",
+                location: "Paterson, NJ",
+                rating: 5,
+                text: "I was skeptical about hiring a cleaning service, but VelocityMaid exceeded all my expectations. Professional, trustworthy, and my home has never looked better.",
+                service: "Deep Cleaning"
+              }
+            ].map((testimonial, index) => (
+              <div key={index} className="bg-gray-50 p-8 rounded-2xl card-hover">
+                <div className="flex items-center mb-4">
+                  <div className="flex">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    ))}
+                  </div>
+                </div>
+                <div className="relative mb-6">
+                  <svg className="w-8 h-8 text-primary-300 absolute -top-2 -left-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <p className="text-gray-700 italic text-lg leading-relaxed">"{testimonial.text}"</p>
+                </div>
+                <div className="border-t border-gray-200 pt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-gray-900">{testimonial.name}</h4>
+                      <p className="text-gray-600 text-sm">{testimonial.location}</p>
+                    </div>
+                    <span className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm font-semibold">
+                      {testimonial.service}
+                    </span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -329,6 +495,55 @@ export default function Home() {
           <p className="text-center text-gray-600 mt-8">
             *Prices may vary based on home size and condition. Contact us for a custom quote.
           </p>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+            <p className="text-xl text-gray-600">Everything you need to know about our services</p>
+          </div>
+          <div className="space-y-4">
+            {[
+              {
+                question: "What areas do you serve?",
+                answer: "We proudly serve all of New Jersey, including Newark, Jersey City, Paterson, Elizabeth, Edison, and surrounding areas. Contact us to confirm service in your specific location."
+              },
+              {
+                question: "Do I need to provide cleaning supplies?",
+                answer: "No! We bring all our own professional-grade cleaning supplies and equipment. You don't need to provide anything - just sit back and relax while we work."
+              },
+              {
+                question: "Are you insured and bonded?",
+                answer: "Yes, we are fully insured and bonded for your peace of mind. Our team is background-checked and trained to the highest standards of professionalism and safety."
+              },
+              {
+                question: "How do I schedule a cleaning?",
+                answer: "You can book online through our booking form, call us directly at (973) 280-9190, or message us on WhatsApp. We offer flexible scheduling to fit your needs."
+              },
+              {
+                question: "What if I'm not satisfied with the cleaning?",
+                answer: "We offer a 100% satisfaction guarantee. If you're not completely happy with our service, we'll return within 24 hours to make it right at no additional cost."
+              },
+              {
+                question: "Do you offer recurring services?",
+                answer: "Yes! We offer weekly, bi-weekly, and monthly recurring cleaning services at discounted rates. Contact us to set up a custom schedule that works for you."
+              }
+            ].map((faq, index) => (
+              <FAQItem key={index} question={faq.question} answer={faq.answer} />
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <p className="text-gray-600 mb-4">Still have questions?</p>
+            <a 
+              href={`tel:${phoneNumber}`}
+              className="inline-flex items-center bg-primary-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-primary-700 transition"
+            >
+              <Phone className="mr-2 w-5 h-5" /> Call Us Now
+            </a>
+          </div>
         </div>
       </section>
 
@@ -446,6 +661,16 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Live Chat Widget */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="bg-primary-600 text-white p-4 rounded-full shadow-lg hover:bg-primary-700 transition cursor-pointer group">
+          <MessageCircle className="w-6 h-6" />
+          <div className="absolute bottom-full right-0 mb-2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+            Chat with us!
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

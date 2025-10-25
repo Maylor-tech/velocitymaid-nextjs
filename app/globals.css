@@ -69,3 +69,98 @@ html {
 .card-hover {
   @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-2;
 }
+
+/* Enhanced animations for new sections */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-slideInUp {
+  animation: slideInUp 0.8s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.6s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Testimonial card enhancements */
+.testimonial-card {
+  @apply transition-all duration-500 hover:shadow-2xl hover:-translate-y-3 hover:scale-105;
+}
+
+/* FAQ accordion animations */
+.faq-item {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.faq-content {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Before/After gallery effects */
+.before-after-card {
+  @apply transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:scale-105;
+}
+
+/* Service area banner animation */
+.service-banner {
+  @apply transition-all duration-500 hover:shadow-lg;
+}
+
+/* Live chat widget animations */
+.chat-widget {
+  @apply transition-all duration-300 hover:scale-110 hover:shadow-2xl;
+}
+
+/* Star rating animation */
+.star-rating {
+  @apply transition-all duration-200 hover:scale-110;
+}
+
+/* Enhanced button effects */
+.btn-enhanced {
+  @apply transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95;
+}
+
+/* Scroll animations */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease-out;
+}
+
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
