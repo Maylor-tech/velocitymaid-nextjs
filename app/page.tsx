@@ -18,7 +18,8 @@ import {
   Menu,
   X,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  CreditCard  // ← ADDED FOR PAYMENT SECTION
 } from 'lucide-react';
 
 // FAQ Item Component
@@ -83,6 +84,7 @@ export default function Home() {
               <a href="#why-us" className="text-gray-700 hover:text-primary-600 transition">Why Us</a>
               <a href="#testimonials" className="text-gray-700 hover:text-primary-600 transition">Reviews</a>
               <a href="#pricing" className="text-gray-700 hover:text-primary-600 transition">Pricing</a>
+              <a href="#pay-now" className="text-gray-700 hover:text-primary-600 transition">Pay Now</a>
               <a href="#faq" className="text-gray-700 hover:text-primary-600 transition">FAQ</a>
               <a href="#contact" className="text-gray-700 hover:text-primary-600 transition">Contact</a>
               <a 
@@ -112,6 +114,7 @@ export default function Home() {
                 <a href="#why-us" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Why Us</a>
                 <a href="#testimonials" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Reviews</a>
                 <a href="#pricing" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Pricing</a>
+                <a href="#pay-now" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Pay Now</a>
                 <a href="#faq" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>FAQ</a>
                 <a href="#contact" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Contact</a>
                 <a 
@@ -181,21 +184,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Service Area Banner */}
-      <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary-600 to-primary-700">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center mb-4">
-            <svg className="w-6 h-6 text-white mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-            </svg>
-            <h3 className="text-2xl font-bold text-white">Proudly Serving All of New Jersey</h3>
-          </div>
-          <p className="text-primary-100 text-lg">
-            Newark • Jersey City • Paterson • Elizabeth • Edison & More
-          </p>
-        </div>
-      </section>
-
       {/* Why Choose Us */}
       <section id="why-us" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
@@ -230,63 +218,6 @@ export default function Home() {
                 <feature.icon className="w-12 h-12 text-primary-600 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{feature.title}</h3>
                 <p className="text-gray-600">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Before/After Gallery */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">See Our Work</h2>
-            <p className="text-xl text-gray-600">Visual proof of our cleaning excellence</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                title: "Kitchen Deep Clean",
-                before: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop",
-                after: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&sat=1.2&brightness=1.1"
-              },
-              {
-                title: "Bathroom Transformation",
-                before: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop",
-                after: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop&sat=1.2&brightness=1.1"
-              },
-              {
-                title: "Living Room Refresh",
-                before: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop",
-                after: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&sat=1.2&brightness=1.1"
-              }
-            ].map((photo, index) => (
-              <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden card-hover">
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">{photo.title}</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="relative">
-                      <img 
-                        src={photo.before} 
-                        alt={`${photo.title} - Before`}
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <div className="absolute bottom-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold">
-                        Before
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <img 
-                        src={photo.after} 
-                        alt={`${photo.title} - After`}
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-sm font-semibold">
-                        After
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             ))}
           </div>
@@ -345,57 +276,40 @@ export default function Home() {
       <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">What Our Customers Say</h2>
-            <p className="text-xl text-gray-600">Real reviews from real customers</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">What Our Clients Say</h2>
+            <p className="text-xl text-gray-600">Real experiences from real customers</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 name: "Sarah Johnson",
                 location: "Newark, NJ",
-                rating: 5,
-                text: "VelocityMaid transformed my home! The team was professional, efficient, and left every surface spotless. I've been using their services for 6 months and couldn't be happier.",
-                service: "Regular Cleaning"
+                text: "VelocityMaid transformed my home! Their attention to detail is incredible. I've been using their service for 6 months and couldn't be happier.",
+                rating: 5
               },
               {
                 name: "Michael Chen",
                 location: "Jersey City, NJ",
-                rating: 5,
-                text: "Outstanding service! They cleaned my office space after construction and it looked brand new. The attention to detail was incredible. Highly recommend!",
-                service: "Commercial Cleaning"
+                text: "As a busy professional, I don't have time for deep cleaning. VelocityMaid has been a lifesaver. They're reliable, thorough, and professional.",
+                rating: 5
               },
               {
                 name: "Lisa Rodriguez",
                 location: "Paterson, NJ",
-                rating: 5,
-                text: "I was skeptical about hiring a cleaning service, but VelocityMaid exceeded all my expectations. Professional, trustworthy, and my home has never looked better.",
-                service: "Deep Cleaning"
+                text: "I used VelocityMaid for my move-out cleaning. The landlord said it was the cleanest they'd ever seen the apartment. Got my full deposit back!",
+                rating: 5
               }
             ].map((testimonial, index) => (
               <div key={index} className="bg-gray-50 p-8 rounded-2xl card-hover">
                 <div className="flex items-center mb-4">
-                  <div className="flex">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                    ))}
-                  </div>
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                  ))}
                 </div>
-                <div className="relative mb-6">
-                  <svg className="w-8 h-8 text-primary-300 absolute -top-2 -left-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <p className="text-gray-700 italic text-lg leading-relaxed">"{testimonial.text}"</p>
-                </div>
-                <div className="border-t border-gray-200 pt-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-gray-900">{testimonial.name}</h4>
-                      <p className="text-gray-600 text-sm">{testimonial.location}</p>
-                    </div>
-                    <span className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm font-semibold">
-                      {testimonial.service}
-                    </span>
-                  </div>
+                <p className="text-gray-700 mb-6 italic">"{testimonial.text}"</p>
+                <div>
+                  <p className="font-bold text-gray-900">{testimonial.name}</p>
+                  <p className="text-sm text-gray-600">{testimonial.location}</p>
                 </div>
               </div>
             ))}
@@ -404,7 +318,7 @@ export default function Home() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Transparent Pricing</h2>
@@ -498,12 +412,158 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Payment Section - NEW! */}
+      <section id="pay-now" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary-50 to-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <CreditCard className="w-16 h-16 text-primary-600 mx-auto mb-4" />
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Pay Your Invoice</h2>
+            <p className="text-xl text-gray-600">Service complete? Pay securely online in seconds</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {/* Basic Clean Payment */}
+            <a
+              href="https://buy.stripe.com/6oU7sNeGc5P7g47"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-600 transform hover:-translate-y-1"
+            >
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Basic Clean</h3>
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-primary-600">$120</span>
+                </div>
+                <p className="text-gray-600 mb-6 text-sm">1-2 bedroom standard cleaning</p>
+                <div className="bg-primary-600 group-hover:bg-primary-700 text-white py-3 px-6 rounded-full font-semibold transition flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Pay Now
+                </div>
+              </div>
+            </a>
+
+            {/* Deep Clean Payment */}
+            <a
+              href="https://buy.stripe.com/00w28t8Gc5P7g47"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-primary-600 transform hover:-translate-y-1 relative"
+            >
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-primary-600 text-white text-xs font-bold px-4 py-1 rounded-full">
+                  MOST POPULAR
+                </span>
+              </div>
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Deep Clean</h3>
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-primary-600">$220</span>
+                </div>
+                <p className="text-gray-600 mb-6 text-sm">1-2 bedroom deep cleaning</p>
+                <div className="bg-primary-600 group-hover:bg-primary-700 text-white py-3 px-6 rounded-full font-semibold transition flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Pay Now
+                </div>
+              </div>
+            </a>
+
+            {/* Move-Out Payment */}
+            <a
+              href="https://buy.stripe.com/cNi3cx8Gc5P7g47"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-600 transform hover:-translate-y-1"
+            >
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Move-Out</h3>
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-primary-600">$320</span>
+                </div>
+                <p className="text-gray-600 mb-6 text-sm">Complete property cleaning</p>
+                <div className="bg-primary-600 group-hover:bg-primary-700 text-white py-3 px-6 rounded-full font-semibold transition flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Pay Now
+                </div>
+              </div>
+            </a>
+
+            {/* Custom Amount Payment */}
+            <a
+              href="https://buy.stripe.com/14AcN7eGc9K52CcMcU27AI04"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-600 transform hover:-translate-y-1"
+            >
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Custom Quote</h3>
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-primary-600">Varies</span>
+                </div>
+                <p className="text-gray-600 mb-6 text-sm">Enter your quoted amount</p>
+                <div className="bg-gray-700 group-hover:bg-gray-800 text-white py-3 px-6 rounded-full font-semibold transition flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Pay Custom
+                </div>
+              </div>
+            </a>
+          </div>
+
+          {/* Security Badges */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl mx-auto">
+            <div className="flex flex-wrap items-center justify-center gap-8 text-gray-600">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <span className="font-semibold">256-bit Encryption</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="w-6 h-6 text-green-500" />
+                <span className="font-semibold">PCI Compliant</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <span className="font-semibold">All Major Cards</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <span className="font-semibold">Instant Receipt</span>
+              </div>
+            </div>
+            <p className="text-center text-gray-500 text-sm mt-6">
+              Powered by Stripe - Trusted by millions worldwide
+            </p>
+          </div>
+
+          {/* Help Text */}
+          <div className="text-center mt-12">
+            <p className="text-gray-700 mb-4">
+              <strong>Need help?</strong> Contact us and we'll assist you with payment.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a 
+                href={`tel:${phoneNumber}`}
+                className="inline-flex items-center bg-white text-primary-600 border-2 border-primary-600 px-6 py-3 rounded-full font-semibold hover:bg-primary-50 transition"
+              >
+                <Phone className="mr-2 w-5 h-5" /> {phoneNumber}
+              </a>
+              <a 
+                href={`https://wa.me/${whatsappNumber}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center bg-green-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-green-600 transition"
+              >
+                <MessageCircle className="mr-2 w-5 h-5" /> WhatsApp Support
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ Section */}
-      <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-            <p className="text-xl text-gray-600">Everything you need to know about our services</p>
+            <p className="text-xl text-gray-600">Got questions? We've got answers</p>
           </div>
           <div className="space-y-4">
             {[
@@ -634,6 +694,7 @@ export default function Home() {
               <ul className="space-y-2">
                 <li><a href="#services" className="text-gray-400 hover:text-white transition">Services</a></li>
                 <li><a href="#pricing" className="text-gray-400 hover:text-white transition">Pricing</a></li>
+                <li><a href="#pay-now" className="text-gray-400 hover:text-white transition">Pay Now</a></li>
                 <li><a href="#why-us" className="text-gray-400 hover:text-white transition">Why Us</a></li>
                 <li><a href="#contact" className="text-gray-400 hover:text-white transition">Contact</a></li>
               </ul>
@@ -664,12 +725,17 @@ export default function Home() {
 
       {/* Live Chat Widget */}
       <div className="fixed bottom-6 right-6 z-50">
-        <div className="bg-primary-600 text-white p-4 rounded-full shadow-lg hover:bg-primary-700 transition cursor-pointer group">
+        <a
+          href={`https://wa.me/${whatsappNumber}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition cursor-pointer group"
+        >
           <MessageCircle className="w-6 h-6" />
           <div className="absolute bottom-full right-0 mb-2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
-            Chat with us!
+            Chat on WhatsApp!
           </div>
-        </div>
+        </a>
       </div>
     </div>
   );
