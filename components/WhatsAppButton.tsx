@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MessageCircle, X } from 'lucide-react';
+import { sendGAEvent } from '@next/third-parties/google';
 
 interface WhatsAppButtonProps {
   phoneNumber: string;
@@ -28,6 +29,11 @@ export default function WhatsAppButton({
   }, []);
 
   const handleClick = () => {
+    // Track WhatsApp click event
+    sendGAEvent('event', 'whatsapp_clicked', {
+      location: 'whatsapp_button_component'
+    });
+    
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
@@ -61,3 +67,6 @@ export default function WhatsAppButton({
     </div>
   );
 }
+
+
+
