@@ -15,7 +15,9 @@ function getStripe() {
   if (!secretKey.startsWith('sk_')) {
     throw new Error('Invalid Stripe secret key format. Secret keys should start with sk_test_ (for testing) or sk_live_ (for production).');
   }
-  return new Stripe(secretKey);
+  return new Stripe(secretKey, {
+    apiVersion: '2022-11-15',
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -41,6 +43,36 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    // Send booking details to Zapier webhook (non-blocking)
+    if (process.env.ZAPIER_WEBHOOK_URL) {
+      try {
+        await fetch(process.env.ZAPIER_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: `${firstName} ${lastInitial}`,
+            email,
+            phone,
+            service: serviceType,
+            date: preferredDate,
+            time: preferredTime,
+            address,
+            message: specialInstructions || '',
+            totalPrice,
+            addOns: Object.entries(addOns)
+              .filter(([_, value]) => value)
+              .map(([key]) => key),
+          }),
+        }).catch((error) => {
+          // Log error but don't block Stripe flow
+          console.error('Zapier webhook error (non-blocking):', error);
+        });
+      } catch (error) {
+        // Log error but don't block Stripe flow
+        console.error('Zapier webhook error (non-blocking):', error);
+      }
     }
 
     // Build line items for Stripe
