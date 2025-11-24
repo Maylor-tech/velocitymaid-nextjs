@@ -16,7 +16,7 @@ function getStripe() {
     throw new Error('Invalid Stripe secret key format. Secret keys should start with sk_test_ (for testing) or sk_live_ (for production).');
   }
   return new Stripe(secretKey, {
-    apiVersion: Stripe.LatestApiVersion,
+    apiVersion: '2022-11-15',
   });
 }
 
