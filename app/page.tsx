@@ -92,6 +92,7 @@ export default function Home() {
     };
   }, [selectedImage]);
 
+  // Booking URL - always use local route (not Google Forms)
   const bookingUrl = "/booking";
   const phoneNumber = "(973) 280-9190";
   const phoneNumberTel = "+19732809190"; // For tel: links
