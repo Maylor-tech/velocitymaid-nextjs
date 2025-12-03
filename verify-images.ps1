@@ -36,3 +36,4 @@ if ($allFound) {
     Write-Host (Resolve-Path $galleryPath).Path -ForegroundColor White
 }
 
+

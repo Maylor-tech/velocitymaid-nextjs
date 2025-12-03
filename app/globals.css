@@ -65,6 +65,21 @@ html {
   @apply bg-white text-primary-600 px-8 py-4 rounded-full font-semibold text-lg border-2 border-primary-600 transition-all duration-300 hover:bg-primary-50 hover:shadow-xl hover:scale-105;
 }
 
+/* Jamaica Brand Button */
+.btn-jamaica {
+  @apply bg-[#F8C548] text-[#0A3D2F] px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-[#F5B835] hover:shadow-lg hover:scale-105;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Jamaica Brand Colors */
+:root {
+  --jamaica-primary: #0A3D2F;
+  --jamaica-accent: #F8C548;
+  --jamaica-accent2: #2B70C9;
+  --jamaica-neutral: #F3F1EB;
+  --jamaica-white: #FFFFFF;
+}
+
 /* Card effects */
 .card-hover {
   @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-2;

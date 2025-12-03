@@ -1,241 +1,172 @@
-# 💬 WhatsApp Integration Setup Guide
+# WhatsApp Automation Setup Guide
 
-## 🎯 **CHOOSE YOUR OPTION**
+This guide explains how to set up WhatsApp automation for VelocityMaid using Meta WhatsApp Cloud API.
 
-### **Option 1: Simple Floating Button** ⭐ RECOMMENDED
-**Best for:** Clean, professional look
-**Setup time:** 5 minutes
-**File:** `components/WhatsAppButton.tsx`
+## Environment Variables
 
-### **Option 2: Advanced Widget** 🎨 FULL FEATURED
-**Best for:** Professional chat interface
-**Setup time:** 10 minutes
-**File:** `components/WhatsAppWidget.tsx`
+Add the following variables to your `.env.local` file:
 
-### **Option 3: Direct Links Only** 🔗 ALREADY DONE
-**Best for:** Minimalists
-**Setup time:** 0 minutes (already in your site!)
-
----
-
-## ⚡ **QUICK START (Option 1 - RECOMMENDED)**
-
-### **Step 1: Add to Layout**
-Open `app/layout.tsx`, add import:
-```typescript
-import WhatsAppButton from '@/components/WhatsAppButton';
+```env
+# WhatsApp Cloud API Configuration
+WHATSAPP_TOKEN=your_whatsapp_access_token_here
+WHATSAPP_PHONE_ID=your_whatsapp_phone_number_id_here
+WHATSAPP_VERIFY_TOKEN=velocitymaid-webhook
+WHATSAPP_API_VERSION=v19.0
 ```
 
-Add component before closing `</body>`:
-```typescript
-<WhatsAppButton phoneNumber="19732809190" />
+### Getting Your Credentials
+
+1. **WHATSAPP_TOKEN**: 
+   - Go to [Meta for Developers](https://developers.facebook.com/)
+   - Create or select your WhatsApp Business App
+   - Navigate to WhatsApp > API Setup
+   - Copy the "Temporary access token" or generate a permanent token
+
+2. **WHATSAPP_PHONE_ID**:
+   - In the same API Setup page
+   - Find "Phone number ID" (starts with a number)
+   - Copy this value
+
+3. **WHATSAPP_VERIFY_TOKEN**:
+   - This is a custom token you create for webhook verification
+   - Default: `velocitymaid-webhook`
+   - Must match what you enter in Meta's webhook configuration
+
+## Webhook Setup
+
+### 1. Configure Webhook URL in Meta
+
+1. Go to your WhatsApp Business App in Meta for Developers
+2. Navigate to WhatsApp > Configuration
+3. Under "Webhook", click "Edit"
+4. Enter your webhook URL: `https://yourdomain.com/api/webhooks/whatsapp`
+5. Enter Verify Token: `velocitymaid-webhook` (or your custom token)
+6. Subscribe to `messages` event
+7. Click "Verify and Save"
+
+### 2. Test Webhook
+
+The webhook endpoint supports:
+- **GET**: Webhook verification (Meta will call this during setup)
+- **POST**: Inbound message handling
+
+## Features
+
+### Auto-Replies
+
+The system automatically responds to inbound messages:
+
+- **"book" or "clean"** → Sends booking link
+- **"apply" or "job"** → Sends cleaner application link
+- **"help" or "hi"** → Sends general help message
+- **Default** → Sends general help message
+
+### Outbound Messages
+
+#### Jamaica Booking Confirmation
+
+Automatically sent when a Jamaica (Port Antonio) booking is created:
+
+```
+Your booking is confirmed! 🎉
+
+Branch: Port Antonio
+Service: {service}
+Date: {date}
+Total: JMD ${price}
+
+We'll reach out shortly to finalize details.
 ```
 
-### **Step 2: Test**
-```bash
-npm run dev
+#### Cleaner Onboarding
+
+Automatically sent when a cleaner applies to Port Antonio:
+
 ```
-Look for green button (bottom-right)
+Thanks for applying to VelocityMaid Port Antonio! 👷
 
-### **Step 3: Deploy**
-```bash
-git add .
-git commit -m "Added WhatsApp button"
-git push
-```
-Auto-deploys to Vercel!
+Our team will review your information and contact you shortly.
 
----
+In the meantime, please prepare:
+• Government ID
+• 2 references
 
-## 📱 **PHONE NUMBER FORMAT**
-
-✅ **CORRECT:**
-```typescript
-phoneNumber="19732809190"
-// 1 = Country code (US)
-// 973 = Area code
-// 2809190 = Number
+We look forward to working with you!
 ```
 
-❌ **WRONG:**
-```typescript
-phoneNumber="(973) 280-9190"  // No formatting!
-phoneNumber="+1 973 280 9190" // No spaces!
-```
+## Testing
 
----
+### Admin Test Page
 
-## 🎨 **CUSTOMIZATION OPTIONS**
+Visit `/admin/tools/whatsapp-test` to test:
 
-### **Simple Button (Option 1):**
-```typescript
-<WhatsAppButton
-  phoneNumber="19732809190"
-  message="Hi VelocityMaid! I'd like to book a cleaning service."
-  position="right"
-  showPopup={true}
-/>
-```
+1. **Send Test Message**: Basic WhatsApp message test
+2. **Send Jamaica Confirmation**: Test booking confirmation format
+3. **Send Cleaner Onboarding**: Test onboarding message format
 
-### **Advanced Widget (Option 2):**
-```typescript
-<WhatsAppWidget
-  phoneNumber="19732809190"
-  businessName="VelocityMaid"
-  greeting="Hi there! 👋\nHow can we help?"
-  showBusinessHours={true}
-  position="right"
-/>
-```
+### Manual Testing
 
----
+You can also test by sending WhatsApp messages to your business number:
 
-## 🔧 **TROUBLESHOOTING**
+- Send "book" → Should receive booking link
+- Send "apply" → Should receive application link
+- Send "help" → Should receive help message
 
-**Button not showing?**
-- Wait 2-3 seconds (animation delay)
-- Check console (F12) for errors
-- Verify import statement
+## Phone Number Format
 
-**Link not working?**
-- Check phone number format (no spaces/dashes)
-- Test URL: https://wa.me/19732809190
-- User needs WhatsApp installed
+Phone numbers should be formatted with country code:
+- US: `+18765551985` or `18765551985`
+- Jamaica: `+18765551985` or `18765551985`
 
-**Message not pre-filled?**
-- Check URL encoding
-- Try simpler message first
-- Test in incognito mode
+The system automatically formats numbers if country code is missing.
 
----
+## Troubleshooting
 
-## 📚 **FULL IMPLEMENTATION**
+### Messages Not Sending
 
-### **Option 1: Simple Button**
-```typescript
-// In app/layout.tsx
-import WhatsAppButton from '@/components/WhatsAppButton';
+1. Check environment variables are set correctly
+2. Verify WhatsApp token is valid and not expired
+3. Check phone number format includes country code
+4. Review server logs for error messages
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>
-        {children}
-        <WhatsAppButton
-          phoneNumber="19732809190"
-          message="Hi VelocityMaid! I'd like to book a cleaning service."
-          position="right"
-          showPopup={true}
-        />
-      </body>
-    </html>
-  );
-}
-```
+### Webhook Not Receiving Messages
 
-### **Option 2: Advanced Widget**
-```typescript
-// In app/layout.tsx
-import WhatsAppWidget from '@/components/WhatsAppWidget';
+1. Verify webhook URL is accessible (not localhost)
+2. Check verify token matches in Meta configuration
+3. Ensure webhook is subscribed to `messages` event
+4. Check server logs for webhook errors
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>
-        {children}
-        <WhatsAppWidget
-          phoneNumber="19732809190"
-          businessName="VelocityMaid"
-          greeting="Hi there! 👋\nHow can we help?"
-          showBusinessHours={true}
-          position="right"
-        />
-      </body>
-    </html>
-  );
-}
-```
+### Common Errors
 
----
+- **"WhatsApp credentials not configured"**: Missing `WHATSAPP_TOKEN` or `WHATSAPP_PHONE_ID`
+- **"Invalid phone number format"**: Phone number missing or incorrectly formatted
+- **"Failed to send WhatsApp message"**: Check token validity and API permissions
 
-## 🎯 **WHAT IT DOES**
+## Integration Points
 
-When users click:
-1. Opens WhatsApp (app or web)
-2. Shows your number
-3. Pre-fills your message
-4. User just hits send!
+### Booking Flow (`/app/api/checkout/route.ts`)
 
-**Result:** More inquiries, more bookings! 📈
+Jamaica bookings automatically trigger WhatsApp confirmation:
+- Only for `currency === 'JMD'` and `branchSlug === 'port-antonio'`
+- U.S. bookings remain unchanged (Stripe handled separately)
 
----
+### Cleaner Application (`/app/api/cleaners/apply/route.ts`)
 
-## 🚀 **RECOMMENDED SETUP FOR VELOCITYMAID**
+Port Antonio cleaner applications automatically trigger onboarding message:
+- Only for `branchSlug === 'port-antonio'`
+- Other branches unchanged
 
-```typescript
-// In app/layout.tsx
-import WhatsAppButton from '@/components/WhatsAppButton';
+## Security Notes
 
-<WhatsAppButton
-  phoneNumber="19732809190"
-  message="Hi VelocityMaid! I'd like to book a cleaning service."
-  position="right"
-  showPopup={true}
-/>
-```
+- Never commit `.env.local` to version control
+- Rotate WhatsApp tokens regularly
+- Use permanent tokens in production (not temporary)
+- Monitor webhook logs for suspicious activity
 
-**Why?**
-- Clean and professional
-- Non-intrusive
-- Proven to increase inquiries by 15%
-- Easy to maintain
+## Support
 
----
-
-## 💡 **PRO TIP**
-
-Test the WhatsApp link first:
-```
-https://wa.me/19732809190?text=Hi!
-```
-
-Paste in browser. If it works → integration will work!
-
----
-
-## ✅ **FILES INCLUDED**
-
-- `components/WhatsAppButton.tsx` - Simple button
-- `components/WhatsAppWidget.tsx` - Advanced widget
-- `WHATSAPP_SETUP.md` - This guide
-
----
-
-## 🎊 **EXPECTED RESULTS**
-
-With WhatsApp integration, you should see:
-- **15% increase in inquiries**
-- **Faster response times**
-- **Better customer experience**
-- **More bookings**
-
----
-
-**Questions?** Check the troubleshooting section above.
-
-**Ready?** Add the code and deploy! 🚀
-
----
-
-**Last Updated:** October 25, 2025
-
-
-
+For issues or questions:
+1. Check server logs for detailed error messages
+2. Review Meta WhatsApp Cloud API documentation
+3. Test using admin test page first
+4. Verify webhook configuration in Meta dashboard

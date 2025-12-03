@@ -1,0 +1,232 @@
+{
+  "whatsapp_payloads": {
+    "cleaner_assignment": {
+      "description": "WhatsApp payload for cleaner assignment message",
+      "endpoint": "POST https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages",
+      "headers": {
+        "Authorization": "Bearer {YOUR_ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+      },
+      "payload": {
+        "messaging_product": "whatsapp",
+        "to": "{CLEANER_PHONE_NUMBER}",
+        "type": "template",
+        "template": {
+          "name": "cleaner_assignment",
+          "language": {
+            "code": "en"
+          },
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                {
+                  "type": "text",
+                  "text": "{{1}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{2}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{3}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{4}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{5}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{6}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{7}}"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "parameter_mapping": {
+        "{{1}}": "Client Name (e.g., 'John D')",
+        "{{2}}": "Service Type (e.g., 'Basic Clean')",
+        "{{3}}": "Service Date (e.g., 'Monday, December 25, 2024')",
+        "{{4}}": "Service Time (e.g., '10:00 AM')",
+        "{{5}}": "Address (e.g., '123 Main Street, Newark, NJ 07102')",
+        "{{6}}": "Service Location (e.g., 'New Jersey' or 'Vermont')",
+        "{{7}}": "Special Instructions (e.g., 'Please use eco-friendly products' or 'None')"
+      },
+      "zapier_mapping": {
+        "{{1}}": "{{name}}",
+        "{{2}}": "{{service}} (formatted)",
+        "{{3}}": "{{date}} (formatted)",
+        "{{4}}": "{{time}}",
+        "{{5}}": "{{address}}",
+        "{{6}}": "{{serviceLocation}} (formatted to 'New Jersey' or 'Vermont')",
+        "{{7}}": "{{message}} (or 'None' if empty)"
+      }
+    },
+    "customer_confirmation": {
+      "description": "WhatsApp payload for customer confirmation message",
+      "endpoint": "POST https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages",
+      "headers": {
+        "Authorization": "Bearer {YOUR_ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+      },
+      "payload": {
+        "messaging_product": "whatsapp",
+        "to": "{{phone}}",
+        "type": "template",
+        "template": {
+          "name": "customer_confirmation",
+          "language": {
+            "code": "en"
+          },
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                {
+                  "type": "text",
+                  "text": "{{1}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{2}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{3}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{4}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{5}}"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "parameter_mapping": {
+        "{{1}}": "Customer First Name (e.g., 'John')",
+        "{{2}}": "Service Type (e.g., 'Basic Clean')",
+        "{{3}}": "Service Date (e.g., 'Monday, December 25, 2024')",
+        "{{4}}": "Service Time (e.g., '10:00 AM')",
+        "{{5}}": "Service Location (e.g., 'New Jersey' or 'Vermont')"
+      },
+      "zapier_mapping": {
+        "{{1}}": "{{firstName}} (or extract from {{name}})",
+        "{{2}}": "{{service}} (formatted)",
+        "{{3}}": "{{date}} (formatted)",
+        "{{4}}": "{{time}}",
+        "{{5}}": "{{serviceLocation}} (formatted to 'New Jersey' or 'Vermont')"
+      }
+    },
+    "admin_alert": {
+      "description": "WhatsApp payload for admin/owner alert message",
+      "endpoint": "POST https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages",
+      "headers": {
+        "Authorization": "Bearer {YOUR_ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+      },
+      "payload": {
+        "messaging_product": "whatsapp",
+        "to": "{OWNER_ADMIN_PHONE_NUMBER}",
+        "type": "template",
+        "template": {
+          "name": "admin_alert",
+          "language": {
+            "code": "en"
+          },
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                {
+                  "type": "text",
+                  "text": "{{1}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{2}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{3}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{4}}"
+                },
+                {
+                  "type": "text",
+                  "text": "{{5}}"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "parameter_mapping": {
+        "{{1}}": "Client Name (e.g., 'John D')",
+        "{{2}}": "Service Type (e.g., 'Basic Clean')",
+        "{{3}}": "Total Price (e.g., '$120.00')",
+        "{{4}}": "Service Location (e.g., 'New Jersey' or 'Vermont')",
+        "{{5}}": "Address (e.g., '123 Main Street, Newark, NJ 07102')"
+      },
+      "zapier_mapping": {
+        "{{1}}": "{{name}}",
+        "{{2}}": "{{service}} (formatted)",
+        "{{3}}": "{{totalPrice}} (formatted as '$XXX.XX')",
+        "{{4}}": "{{serviceLocation}} (formatted to 'New Jersey' or 'Vermont')",
+        "{{5}}": "{{address}}"
+      }
+    }
+  },
+  "location_formatting": {
+    "conversion_rules": {
+      "new_jersey": "New Jersey",
+      "New Jersey": "New Jersey",
+      "vermont": "Vermont",
+      "Vermont": "Vermont",
+      "null_or_undefined": "New Jersey (default)"
+    },
+    "note": "VelocityMaid API sends formatted values ('New Jersey' or 'Vermont'), so conversion is typically not needed. If raw values are received, use Zapier Formatter to convert."
+  },
+  "whatsapp_templates": {
+    "cleaner_assignment": {
+      "name": "cleaner_assignment",
+      "category": "UTILITY",
+      "language": "en",
+      "body": "New cleaning assignment received! \n\nClient: {{1}} \n\nService: {{2}} \n\nDate: {{3}} \n\nTime: {{4}} \n\nAddress: {{5}} \n\nLocation: {{6}} \n\nNotes: {{7}}",
+      "parameters": 7
+    },
+    "customer_confirmation": {
+      "name": "customer_confirmation",
+      "category": "UTILITY",
+      "language": "en",
+      "body": "Hi {{1}}, your VelocityMaid booking is confirmed! 🎉 \n\nService: {{2}} \n\nDate: {{3}} \n\nTime: {{4}} \n\nLocation: {{5}}",
+      "parameters": 5
+    },
+    "admin_alert": {
+      "name": "admin_alert",
+      "category": "UTILITY",
+      "language": "en",
+      "body": "New booking alert! \n\nClient: {{1}} \n\nService: {{2}} \n\nTotal: ${{3}} \n\nLocation: {{4}} \n\nAddress: {{5}}",
+      "parameters": 5
+    }
+  }
+}
+
+
+

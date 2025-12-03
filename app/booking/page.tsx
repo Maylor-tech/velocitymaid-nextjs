@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Calendar, Clock, Home, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { Calendar, Clock, Home, Sparkles, ArrowRight, Loader2, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { sendGAEvent } from '@next/third-parties/google';
+import { getBranchPricingForBooking } from '@/utils/branchPricing';
 
 interface FormData {
   firstName: string;
@@ -21,22 +23,25 @@ interface FormData {
     refrigerator: boolean;
   };
   specialInstructions: string;
+  serviceLocation: 'new_jersey' | 'vermont';
 }
 
-const SERVICE_PRICES: Record<string, number> = {
+// Default prices (fallback)
+const DEFAULT_SERVICE_PRICES: Record<string, number> = {
   basic: 120,
   deep: 220,
   moveInOut: 320,
 };
 
-const ADDON_PRICES = {
+const DEFAULT_ADDON_PRICES = {
   laundry: 15,
   windows: 20,
   oven: 30,
   refrigerator: 25,
 };
 
-export default function BookingPage() {
+function BookingPageContent() {
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastInitial: '',
@@ -46,6 +51,7 @@ export default function BookingPage() {
     serviceType: '',
     preferredDate: '',
     preferredTime: '',
+    serviceLocation: 'new_jersey', // Default to New Jersey
     addOns: {
       laundry: false,
       windows: false,
@@ -59,30 +65,276 @@ export default function BookingPage() {
   const [touched, setTouched] = useState<Partial<Record<keyof FormData, boolean>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [branchPricing, setBranchPricing] = useState<{
+    branchId: string | null;
+    branchSlug: string | null;
+    prices: {
+      basic: number;
+      deep: number;
+      moveInOut: number;
+      addOns: {
+        laundry: number;
+        windows: number;
+        oven: number;
+        refrigerator: number;
+      };
+    };
+  } | null>(null);
+  const [extractedZipCode, setExtractedZipCode] = useState<string | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [portAntonioServiceAreas, setPortAntonioServiceAreas] = useState<Array<{ code: string; name: string }>>([]);
+  const [selectedRoutingCode, setSelectedRoutingCode] = useState<string>('');
+  const [selectedCurrency, setSelectedCurrency] = useState<'JMD' | 'USD'>('JMD'); // Default to JMD for Port Antonio
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralDiscount, setReferralDiscount] = useState<number>(0);
+  const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [promoDiscount, setPromoDiscount] = useState<number>(0);
+  const [promoData, setPromoData] = useState<{ title: string; discountType: string; discountValue: number } | null>(null);
+  const [multiCurrencyPricing, setMultiCurrencyPricing] = useState<{
+    supportsMultiCurrency: boolean;
+    packages: Array<{
+      code: string;
+      name: string;
+      jmdPrice?: number;
+      usdPrice?: number;
+      basePrice: number;
+      hours: number;
+    }>;
+    addons: {
+      laundry: number;
+      fridge: number;
+      oven: number;
+      windows_per_room: number;
+    };
+  } | null>(null);
+
+  // Read branch and zip from query params
+  useEffect(() => {
+    const branchParam = searchParams.get('branch');
+    const zipParam = searchParams.get('zip');
+    const refParam = searchParams.get('ref');
+    
+    if (branchParam) {
+      setSelectedBranch(branchParam);
+      
+      // If Port Antonio, fetch service areas and pricing
+      if (branchParam === 'port-antonio') {
+        fetchPortAntonioServiceAreas();
+        fetchPortAntonioPricing();
+      }
+    }
+    
+    if (zipParam) {
+      setExtractedZipCode(zipParam);
+      if (branchParam === 'port-antonio') {
+        setSelectedRoutingCode(zipParam.toUpperCase());
+      }
+    }
+    
+    // Handle promo code
+    const promoParam = searchParams.get('promo');
+    if (promoParam) {
+      setPromoCode(promoParam);
+      // Fetch promo data
+      fetch(`/api/promo/validate?branch=${branchParam || 'new-jersey'}&promo=${promoParam}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.promo) {
+            setPromoData(data.promo);
+          }
+        })
+        .catch(err => console.error('Failed to fetch promo:', err));
+    }
+    
+    // Handle referral code
+    if (refParam) {
+      setReferralCode(refParam);
+      setReferralDiscount(20); // $20 discount
+      // Store in sessionStorage for later use
+      sessionStorage.setItem('referralCode', refParam);
+    }
+    
+    // Legacy location param support
+    const locationParam = searchParams.get('location');
+    if (locationParam === 'vermont') {
+      setFormData(prev => ({
+        ...prev,
+        serviceLocation: 'vermont',
+      }));
+    }
+    if (locationParam === 'new_jersey') {
+      setFormData(prev => ({
+        ...prev,
+        serviceLocation: 'new_jersey',
+      }));
+    }
+  }, [searchParams]);
+
+  // Fetch Port Antonio service areas
+  const fetchPortAntonioServiceAreas = async () => {
+    try {
+      const response = await fetch('/api/admin/branches/port-antonio');
+      const data = await response.json();
+      if (data.success && data.branch?.serviceAreas) {
+        const areas = data.branch.serviceAreas
+          .filter((area: any) => area.zipCode.startsWith('PA-'))
+          .map((area: any) => ({
+            code: area.zipCode,
+            name: area.city || area.zipCode.replace('PA-', ''),
+          }));
+        setPortAntonioServiceAreas(areas);
+      }
+    } catch (err) {
+      console.error('Error fetching Port Antonio service areas:', err);
+      // Fallback to default routing codes
+      setPortAntonioServiceAreas([
+        { code: 'PA-100', name: 'Port Antonio' },
+        { code: 'PA-101', name: 'Boundbrook' },
+        { code: 'PA-102', name: 'Bryan\'s Bay' },
+        { code: 'PA-103', name: 'Drapers' },
+        { code: 'PA-104', name: 'Fairy Hill' },
+        { code: 'PA-105', name: 'San San' },
+        { code: 'PA-106', name: 'Anchovy' },
+        { code: 'PA-107', name: 'Norwich' },
+        { code: 'PA-108', name: 'Boston' },
+        { code: 'PA-109', name: 'Long Bay' },
+      ]);
+    }
+  };
+
+  // Fetch Port Antonio multi-currency pricing
+  const fetchPortAntonioPricing = async () => {
+    try {
+      const response = await fetch('/api/branches/port-antonio/pricing');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.pricing) {
+          setMultiCurrencyPricing(data.pricing);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching Port Antonio pricing:', error);
+    }
+  };
 
   // Track booking_started event when page loads
   useEffect(() => {
+    const locationDisplayName = formData.serviceLocation === 'vermont' ? 'Vermont' : 'New Jersey';
     sendGAEvent('event', 'booking_started', {
       page_path: '/booking',
-      page_title: 'Booking Page'
+      page_title: 'Booking Page',
+      location: locationDisplayName
     });
-  }, []);
+  }, [formData.serviceLocation]);
 
-  // Calculate total price
+  // Extract ZIP code from address (only for non-Port Antonio branches)
+  useEffect(() => {
+    if (selectedBranch === 'port-antonio') {
+      // For Port Antonio, use selected routing code
+      setExtractedZipCode(selectedRoutingCode || null);
+      return;
+    }
+    
+    if (formData.address) {
+      // Try to extract ZIP code from address (US format: 5 digits)
+      const zipMatch = formData.address.match(/\b\d{5}\b/);
+      if (zipMatch) {
+        setExtractedZipCode(zipMatch[0]);
+      } else {
+        setExtractedZipCode(null);
+      }
+    } else {
+      setExtractedZipCode(null);
+    }
+  }, [formData.address, selectedBranch, selectedRoutingCode]);
+
+  // Load branch pricing when ZIP or location changes
+  useEffect(() => {
+    const pricing = getBranchPricingForBooking(extractedZipCode || undefined, formData.serviceLocation);
+    setBranchPricing(pricing);
+  }, [extractedZipCode, formData.serviceLocation]);
+
+  // Calculate total price using branch pricing or multi-currency pricing
   useEffect(() => {
     let total = 0;
     
-    if (formData.serviceType) {
-      total += SERVICE_PRICES[formData.serviceType] || 0;
+    // Port Antonio with multi-currency pricing
+    if (selectedBranch === 'port-antonio' && multiCurrencyPricing && formData.serviceType) {
+      const serviceCodeMap: Record<string, string> = {
+        basic: 'STANDARD_CLEAN',
+        deep: 'DEEP_CLEAN',
+        moveInOut: 'MOVE_IN_OUT',
+      };
+      const packageCode = serviceCodeMap[formData.serviceType];
+      if (packageCode) {
+        const pkg = multiCurrencyPricing.packages.find(p => p.code === packageCode);
+        if (pkg) {
+          total += selectedCurrency === 'JMD' ? (pkg.jmdPrice || pkg.basePrice) : (pkg.usdPrice || pkg.basePrice);
+        }
+      }
+      
+      // Add-ons
+      if (formData.addOns.laundry) {
+        total += selectedCurrency === 'JMD' 
+          ? multiCurrencyPricing.addons.laundry 
+          : Math.round(multiCurrencyPricing.addons.laundry / 150); // Approximate USD conversion
+      }
+      if (formData.addOns.windows) {
+        total += selectedCurrency === 'JMD'
+          ? multiCurrencyPricing.addons.windows_per_room
+          : Math.round(multiCurrencyPricing.addons.windows_per_room / 150);
+      }
+      if (formData.addOns.oven) {
+        total += selectedCurrency === 'JMD'
+          ? multiCurrencyPricing.addons.oven
+          : Math.round(multiCurrencyPricing.addons.oven / 150);
+      }
+      if (formData.addOns.refrigerator) {
+        total += selectedCurrency === 'JMD'
+          ? multiCurrencyPricing.addons.fridge
+          : Math.round(multiCurrencyPricing.addons.fridge / 150);
+      }
+    } else if (formData.serviceType && branchPricing) {
+      // Standard U.S. branch pricing
+      const servicePrice = branchPricing.prices[formData.serviceType as keyof typeof branchPricing.prices];
+      if (typeof servicePrice === 'number') {
+        total += servicePrice;
+      }
+    } else if (formData.serviceType) {
+      // Fallback to default pricing
+      total += DEFAULT_SERVICE_PRICES[formData.serviceType] || 0;
     }
     
-    if (formData.addOns.laundry) total += ADDON_PRICES.laundry;
-    if (formData.addOns.windows) total += ADDON_PRICES.windows;
-    if (formData.addOns.oven) total += ADDON_PRICES.oven;
-    if (formData.addOns.refrigerator) total += ADDON_PRICES.refrigerator;
+    // Apply promo discount
+    if (promoData && total > 0) {
+      if (promoData.discountType === 'percent') {
+        const discount = (total * promoData.discountValue) / 100;
+        setPromoDiscount(discount);
+        total -= discount;
+      } else if (promoData.discountType === 'fixed') {
+        const discount = Math.min(promoData.discountValue, total);
+        setPromoDiscount(discount);
+        total -= discount;
+      }
+    } else {
+      setPromoDiscount(0);
+    }
+    
+    if (selectedBranch !== 'port-antonio' && branchPricing) {
+      if (formData.addOns.laundry) total += branchPricing.prices.addOns.laundry;
+      if (formData.addOns.windows) total += branchPricing.prices.addOns.windows;
+      if (formData.addOns.oven) total += branchPricing.prices.addOns.oven;
+      if (formData.addOns.refrigerator) total += branchPricing.prices.addOns.refrigerator;
+    } else if (selectedBranch !== 'port-antonio') {
+      // Fallback to default pricing
+      if (formData.addOns.laundry) total += DEFAULT_ADDON_PRICES.laundry;
+      if (formData.addOns.windows) total += DEFAULT_ADDON_PRICES.windows;
+      if (formData.addOns.oven) total += DEFAULT_ADDON_PRICES.oven;
+      if (formData.addOns.refrigerator) total += DEFAULT_ADDON_PRICES.refrigerator;
+    }
     
     setTotalPrice(total);
-  }, [formData.serviceType, formData.addOns]);
+  }, [formData.serviceType, formData.addOns, branchPricing, selectedBranch, multiCurrencyPricing, selectedCurrency, promoData]);
 
   // Get minimum date (today)
   const getMinDate = () => {
@@ -196,6 +448,13 @@ export default function BookingPage() {
       }
     });
 
+    // Validate routing code for Port Antonio
+    if (selectedBranch === 'port-antonio' && !selectedRoutingCode) {
+      // Add a custom error for routing code
+      alert('Please select an Area Code for your location in Port Antonio.');
+      return false;
+    }
+
     setErrors(newErrors);
     setTouched({
       firstName: true,
@@ -220,27 +479,49 @@ export default function BookingPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/checkout', {
+      // Convert serviceLocation value to display name for API
+      const locationDisplayName = formData.serviceLocation === 'vermont' ? 'Vermont' : 'New Jersey';
+      
+          const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           ...formData,
+          serviceLocation: locationDisplayName, // Send display name to API
           totalPrice,
+          zipCode: selectedBranch === 'port-antonio' ? selectedRoutingCode : extractedZipCode, // Send ZIP code or routing code for branch routing
+          branchId: branchPricing?.branchId || (selectedBranch === 'port-antonio' ? branchPricing?.branchId : null), // Send branch ID if resolved
+          currency: selectedBranch === 'port-antonio' ? selectedCurrency : 'USD', // Send currency for Port Antonio
+          referralCode: referralCode || null, // Send referral code if present
+          referralDiscount: referralDiscount || 0, // Send discount amount
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.url) {
+      if (response.ok) {
         // Track booking_submitted event
+        const locationDisplayName = formData.serviceLocation === 'vermont' ? 'Vermont' : 'New Jersey';
         sendGAEvent('event', 'booking_submitted', {
           service_type: formData.serviceType,
           total_price: totalPrice,
-          has_addons: Object.values(formData.addOns).some(v => v)
+          has_addons: Object.values(formData.addOns).some(v => v),
+          location: locationDisplayName
         });
-        window.location.href = data.url;
+        
+        // Handle JMD (local payment) vs USD (Stripe) redirects
+        if (data.redirectUrl) {
+          // JMD booking - redirect to success page
+          window.location.href = data.redirectUrl;
+        } else if (data.url) {
+          // USD booking - redirect to Stripe checkout
+          window.location.href = data.url;
+        } else {
+          alert(data.message || 'Booking confirmed!');
+          setIsSubmitting(false);
+        }
       } else {
         alert(data.error || 'Something went wrong. Please try again.');
         setIsSubmitting(false);
@@ -269,13 +550,76 @@ export default function BookingPage() {
         <div className="text-center mb-8">
           <Calendar className="w-16 h-16 text-primary-600 mx-auto mb-4" />
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Book Your Cleaning Service</h1>
-          <p className="text-xl text-gray-600">Quick & easy booking in 60 seconds</p>
+          <p className="text-xl text-gray-600 mb-4">Quick & easy booking in 60 seconds</p>
+          <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 max-w-2xl mx-auto">
+            <p className="text-sm text-gray-700">
+              <strong>Service Area:</strong> {selectedBranch === 'port-antonio'
+                ? 'We serve Port Antonio and surrounding Portland Parish areas. Select your area code below.'
+                : formData.serviceLocation === 'vermont' 
+                ? 'We serve Ludlow, Okemo Valley, and surrounding Vermont areas. Please ensure your address is within our service area.'
+                : 'We proudly serve all of New Jersey. Please ensure your address is within our service area.'}
+              <br />
+              {selectedBranch === 'port-antonio' && (
+                <>
+                  <strong>Payment:</strong> All Jamaica bookings are paid in JMD. Payment options: cash, bank transfer, or approved digital wallet.
+                  <br />
+                </>
+              )}
+              <strong>Policy:</strong> By booking, you agree to our <a href="/terms" className="text-primary-600 hover:underline">Terms of Service</a> and <a href="/refunds" className="text-primary-600 hover:underline">Refund Policy</a>.
+            </p>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Form */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 space-y-6">
+              {/* Service Location Section */}
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-3 flex items-center">
+                  <MapPin className="w-6 h-6 mr-2 text-primary-600" />
+                  Service Location
+                </h2>
+                <p className="text-sm text-gray-600 mb-3">
+                  Choose where this cleaning will take place.
+                </p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <label className="flex items-center space-x-3 cursor-pointer p-4 rounded-lg border border-gray-200 hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="serviceLocation"
+                      value="new_jersey"
+                      checked={formData.serviceLocation === 'new_jersey'}
+                      onChange={() => handleFieldChange('serviceLocation', 'new_jersey')}
+                      className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-900">New Jersey</p>
+                      <p className="text-xs text-gray-600">
+                        Newark, East Orange, Irvington, Bloomfield, Jersey City, Elizabeth, Union, Montclair and nearby areas.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center space-x-3 cursor-pointer p-4 rounded-lg border border-gray-200 hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="serviceLocation"
+                      value="vermont"
+                      checked={formData.serviceLocation === 'vermont'}
+                      onChange={() => handleFieldChange('serviceLocation', 'vermont')}
+                      className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-900">Vermont</p>
+                      <p className="text-xs text-gray-600">
+                        Ludlow, Okemo Valley, Proctorsville, Cavendish and nearby ski communities.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
               {/* Contact Info Section */}
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
@@ -341,7 +685,7 @@ export default function BookingPage() {
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
                         errors.phone ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="(973) 555-1234"
+                      placeholder="(802) 555-1234"
                       aria-invalid={errors.phone ? 'true' : 'false'}
                       aria-describedby={errors.phone ? 'phone-error' : undefined}
                     />
@@ -379,12 +723,93 @@ export default function BookingPage() {
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
                         errors.address ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="123 Main St, Newark, NJ 07102"
+                      placeholder={
+                        selectedBranch === 'port-antonio'
+                          ? 'Street address, Port Antonio, Jamaica'
+                          : '123 Main St, Newark, NJ 07102 (New Jersey addresses only)'
+                      }
                       aria-invalid={errors.address ? 'true' : 'false'}
                       aria-describedby={errors.address ? 'address-error' : undefined}
                     />
                     {errors.address && <p id="address-error" className="text-red-500 text-sm mt-1" role="alert">{errors.address}</p>}
                   </div>
+                  
+                  {/* Routing Code Selector for Port Antonio */}
+                  {selectedBranch === 'port-antonio' && (
+                    <>
+                      <div>
+                        <label htmlFor="routingCode" className="block text-sm font-medium text-gray-700 mb-1">
+                          Area Code *
+                        </label>
+                        <select
+                          id="routingCode"
+                          value={selectedRoutingCode}
+                          onChange={(e) => {
+                            setSelectedRoutingCode(e.target.value);
+                            setExtractedZipCode(e.target.value);
+                          }}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          required
+                        >
+                          <option value="">Select your area</option>
+                          {portAntonioServiceAreas.map((area) => (
+                            <option key={area.code} value={area.code}>
+                              {area.code} - {area.name}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Select the area code for your location in Portland, Jamaica
+                        </p>
+                      </div>
+                      {/* Currency Toggle for Port Antonio */}
+                      {multiCurrencyPricing?.supportsMultiCurrency && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Pricing Currency *
+                          </label>
+                          <div className="grid sm:grid-cols-2 gap-3">
+                            <label className={`flex items-center space-x-3 cursor-pointer p-4 rounded-lg border-2 transition-colors ${
+                              selectedCurrency === 'JMD' 
+                                ? 'border-blue-500 bg-blue-50' 
+                                : 'border-gray-200 hover:bg-gray-50'
+                            }`}>
+                              <input
+                                type="radio"
+                                name="currency"
+                                value="JMD"
+                                checked={selectedCurrency === 'JMD'}
+                                onChange={() => setSelectedCurrency('JMD')}
+                                className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                              />
+                              <div>
+                                <p className="font-semibold text-gray-900">Local Customer (JMD)</p>
+                                <p className="text-xs text-gray-600">Pay in Jamaican Dollars</p>
+                              </div>
+                            </label>
+                            <label className={`flex items-center space-x-3 cursor-pointer p-4 rounded-lg border-2 transition-colors ${
+                              selectedCurrency === 'USD' 
+                                ? 'border-blue-500 bg-blue-50' 
+                                : 'border-gray-200 hover:bg-gray-50'
+                            }`}>
+                              <input
+                                type="radio"
+                                name="currency"
+                                value="USD"
+                                checked={selectedCurrency === 'USD'}
+                                onChange={() => setSelectedCurrency('USD')}
+                                className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                              />
+                              <div>
+                                <p className="font-semibold text-gray-900">Visitor / USD Pricing</p>
+                                <p className="text-xs text-gray-600">Pay online with card</p>
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -413,7 +838,15 @@ export default function BookingPage() {
                         />
                         <div className="flex-1">
                           <span className="font-semibold text-gray-900">Basic Clean</span>
-                          <span className="text-primary-600 font-bold ml-2">$120</span>
+                          <span className="text-primary-600 font-bold ml-2">
+                            {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
+                              selectedCurrency === 'JMD' 
+                                ? `J$${(multiCurrencyPricing.packages.find(p => p.code === 'STANDARD_CLEAN')?.jmdPrice || 0).toLocaleString()}`
+                                : `$${multiCurrencyPricing.packages.find(p => p.code === 'STANDARD_CLEAN')?.usdPrice || 0}`
+                            ) : (
+                              `$${branchPricing?.prices.basic || DEFAULT_SERVICE_PRICES.basic}`
+                            )}
+                          </span>
                         </div>
                       </label>
                       <label className="flex items-center space-x-3 cursor-pointer p-4 rounded-lg hover:bg-gray-50 border border-gray-200">
@@ -429,7 +862,15 @@ export default function BookingPage() {
                         />
                         <div className="flex-1">
                           <span className="font-semibold text-gray-900">Deep Clean</span>
-                          <span className="text-primary-600 font-bold ml-2">$220</span>
+                          <span className="text-primary-600 font-bold ml-2">
+                            {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
+                              selectedCurrency === 'JMD' 
+                                ? `J$${(multiCurrencyPricing.packages.find(p => p.code === 'DEEP_CLEAN')?.jmdPrice || 0).toLocaleString()}`
+                                : `$${multiCurrencyPricing.packages.find(p => p.code === 'DEEP_CLEAN')?.usdPrice || 0}`
+                            ) : (
+                              `$${branchPricing?.prices.deep || DEFAULT_SERVICE_PRICES.deep}`
+                            )}
+                          </span>
                         </div>
                       </label>
                       <label className="flex items-center space-x-3 cursor-pointer p-4 rounded-lg hover:bg-gray-50 border border-gray-200">
@@ -445,7 +886,15 @@ export default function BookingPage() {
                         />
                         <div className="flex-1">
                           <span className="font-semibold text-gray-900">Move In/Out</span>
-                          <span className="text-primary-600 font-bold ml-2">$320</span>
+                          <span className="text-primary-600 font-bold ml-2">
+                            {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
+                              selectedCurrency === 'JMD' 
+                                ? `J$${(multiCurrencyPricing.packages.find(p => p.code === 'MOVE_IN_OUT')?.jmdPrice || 0).toLocaleString()}`
+                                : `$${multiCurrencyPricing.packages.find(p => p.code === 'MOVE_IN_OUT')?.usdPrice || 0}`
+                            ) : (
+                              `$${branchPricing?.prices.moveInOut || DEFAULT_SERVICE_PRICES.moveInOut}`
+                            )}
+                          </span>
                         </div>
                       </label>
                     </div>
@@ -512,7 +961,15 @@ export default function BookingPage() {
                       })}
                       className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <span className="flex-1 text-gray-700">Laundry ($15/load)</span>
+                    <span className="flex-1 text-gray-700">
+                      Laundry {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
+                        selectedCurrency === 'JMD' 
+                          ? `(J$${multiCurrencyPricing.addons.laundry.toLocaleString()}/load)`
+                          : `($${Math.round(multiCurrencyPricing.addons.laundry / 150)}/load)`
+                      ) : (
+                        '($15/load)'
+                      )}
+                    </span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-gray-50 border border-gray-200">
                     <input
@@ -524,7 +981,15 @@ export default function BookingPage() {
                       })}
                       className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <span className="flex-1 text-gray-700">Interior Windows ($20/room)</span>
+                    <span className="flex-1 text-gray-700">
+                      Interior Windows {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
+                        selectedCurrency === 'JMD' 
+                          ? `(J$${multiCurrencyPricing.addons.windows_per_room.toLocaleString()}/room)`
+                          : `($${Math.round(multiCurrencyPricing.addons.windows_per_room / 150)}/room)`
+                      ) : (
+                        '($20/room)'
+                      )}
+                    </span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-gray-50 border border-gray-200">
                     <input
@@ -536,7 +1001,15 @@ export default function BookingPage() {
                       })}
                       className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <span className="flex-1 text-gray-700">Inside Oven ($30)</span>
+                    <span className="flex-1 text-gray-700">
+                      Inside Oven {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
+                        selectedCurrency === 'JMD' 
+                          ? `(J$${multiCurrencyPricing.addons.oven.toLocaleString()})`
+                          : `($${Math.round(multiCurrencyPricing.addons.oven / 150)})`
+                      ) : (
+                        '($30)'
+                      )}
+                    </span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-gray-50 border border-gray-200">
                     <input
@@ -548,7 +1021,15 @@ export default function BookingPage() {
                       })}
                       className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <span className="flex-1 text-gray-700">Inside Refrigerator ($25)</span>
+                    <span className="flex-1 text-gray-700">
+                      Inside Refrigerator {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
+                        selectedCurrency === 'JMD' 
+                          ? `(J$${multiCurrencyPricing.addons.fridge.toLocaleString()})`
+                          : `($${Math.round(multiCurrencyPricing.addons.fridge / 150)})`
+                      ) : (
+                        '($25)'
+                      )}
+                    </span>
                   </label>
                 </div>
               </div>
@@ -595,6 +1076,14 @@ export default function BookingPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h3>
+              {formData.serviceLocation && (
+                <div className="flex justify-between items-center mb-3 text-sm">
+                  <span className="text-gray-600">Service Location</span>
+                  <span className="font-semibold text-gray-900">
+                    {formData.serviceLocation === 'new_jersey' ? 'New Jersey' : 'Vermont'}
+                  </span>
+                </div>
+              )}
               <div className="space-y-3 mb-4">
                 {formData.serviceType && (
                   <div className="flex justify-between text-gray-700">
@@ -603,41 +1092,73 @@ export default function BookingPage() {
                       {formData.serviceType === 'deep' && 'Deep Clean'}
                       {formData.serviceType === 'moveInOut' && 'Move In/Out'}
                     </span>
-                    <span className="font-semibold">${SERVICE_PRICES[formData.serviceType]}</span>
+                    <span className="font-semibold">${
+                      (() => {
+                        if (!branchPricing || !formData.serviceType) return DEFAULT_SERVICE_PRICES[formData.serviceType] || 0;
+                        const price = branchPricing.prices[formData.serviceType as keyof typeof branchPricing.prices];
+                        return typeof price === 'number' ? price : (DEFAULT_SERVICE_PRICES[formData.serviceType] || 0);
+                      })()
+                    }</span>
                   </div>
                 )}
                 {formData.addOns.laundry && (
                   <div className="flex justify-between text-gray-700 text-sm">
                     <span>Laundry</span>
-                    <span>${ADDON_PRICES.laundry}</span>
+                    <span>${branchPricing ? (typeof branchPricing.prices.addOns === 'object' && branchPricing.prices.addOns?.laundry ? branchPricing.prices.addOns.laundry : DEFAULT_ADDON_PRICES.laundry) : DEFAULT_ADDON_PRICES.laundry}</span>
                   </div>
                 )}
                 {formData.addOns.windows && (
                   <div className="flex justify-between text-gray-700 text-sm">
                     <span>Interior Windows</span>
-                    <span>${ADDON_PRICES.windows}</span>
+                    <span>${branchPricing ? (typeof branchPricing.prices.addOns === 'object' && branchPricing.prices.addOns?.windows ? branchPricing.prices.addOns.windows : DEFAULT_ADDON_PRICES.windows) : DEFAULT_ADDON_PRICES.windows}</span>
                   </div>
                 )}
                 {formData.addOns.oven && (
                   <div className="flex justify-between text-gray-700 text-sm">
                     <span>Inside Oven</span>
-                    <span>${ADDON_PRICES.oven}</span>
+                    <span>${branchPricing ? (typeof branchPricing.prices.addOns === 'object' && branchPricing.prices.addOns?.oven ? branchPricing.prices.addOns.oven : DEFAULT_ADDON_PRICES.oven) : DEFAULT_ADDON_PRICES.oven}</span>
                   </div>
                 )}
                 {formData.addOns.refrigerator && (
                   <div className="flex justify-between text-gray-700 text-sm">
                     <span>Inside Refrigerator</span>
-                    <span>${ADDON_PRICES.refrigerator}</span>
+                    <span>${branchPricing ? (typeof branchPricing.prices.addOns === 'object' && branchPricing.prices.addOns?.refrigerator ? branchPricing.prices.addOns.refrigerator : DEFAULT_ADDON_PRICES.refrigerator) : DEFAULT_ADDON_PRICES.refrigerator}</span>
                   </div>
                 )}
               </div>
+              {promoDiscount > 0 && promoData && (
+                <div className="border-t border-gray-200 pt-4">
+                  <div className="flex justify-between items-center text-yellow-600 mb-2">
+                    <span className="text-sm font-semibold">{promoData.title}</span>
+                    <span className="text-lg font-bold">-${promoDiscount.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-gray-500">Promo: {promoCode}</p>
+                </div>
+              )}
+              {referralDiscount > 0 && referralCode && (
+                <div className="border-t border-gray-200 pt-4">
+                  <div className="flex justify-between items-center text-green-600 mb-2">
+                    <span className="text-sm font-semibold">Referral Discount</span>
+                    <span className="text-lg font-bold">-${referralDiscount}</span>
+                  </div>
+                  <p className="text-xs text-gray-500">Applied from referral code: {referralCode}</p>
+                </div>
+              )}
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-bold text-gray-900">Total</span>
                   <span className="text-2xl font-bold text-primary-600">
-                    ${totalPrice || 0}
+                    {selectedBranch === 'port-antonio' && selectedCurrency === 'JMD' 
+                      ? `J$${(totalPrice || 0).toLocaleString()}`
+                      : `$${totalPrice || 0}`
+                    }
                   </span>
                 </div>
+                {selectedBranch === 'port-antonio' && selectedCurrency === 'JMD' && (
+                  <p className="text-sm text-gray-500 mt-2 text-center">
+                    All Jamaica bookings are paid in JMD. Payment options: cash, bank transfer, or approved digital wallet.
+                  </p>
+                )}
               </div>
               {totalPrice === 0 && (
                 <p className="text-sm text-gray-500 mt-2 text-center">Select a service to see total</p>
@@ -647,6 +1168,21 @@ export default function BookingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BookingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading booking form...</p>
+        </div>
+      </div>
+    }>
+      <BookingPageContent />
+    </Suspense>
   );
 }
 

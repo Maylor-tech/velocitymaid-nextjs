@@ -20,6 +20,7 @@ import {
   X,
   ChevronDown,
   ChevronUp,
+  MapPin,
 } from 'lucide-react';
 import { sendGAEvent } from '@next/third-parties/google';
 
@@ -43,6 +44,120 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
       {isOpen && (
         <div className="px-6 pb-4">
           <p className="text-gray-700 leading-relaxed">{answer}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ZIP Code Finder Component
+function ZipCodeFinder() {
+  const [zipCode, setZipCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showWaitlist, setShowWaitlist] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+
+  const handleFindCleaners = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setShowWaitlist(false);
+
+    try {
+      const response = await fetch(`/api/resolve-zip?zip=${encodeURIComponent(zipCode)}`);
+      const data = await response.json();
+
+      if (data.success && data.branchSlug) {
+        // Redirect to branch landing page with ZIP
+        window.location.href = `/locations/${data.branchSlug}/book?zip=${encodeURIComponent(zipCode)}`;
+      } else {
+        // Not in service area - show waitlist
+        setShowWaitlist(true);
+      }
+    } catch (err: any) {
+      console.error('Error resolving ZIP:', err);
+      setError('Failed to check service area. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Submit to waitlist API
+    setWaitlistSubmitted(true);
+  };
+
+  return (
+    <div className="max-w-md mx-auto">
+      <form onSubmit={handleFindCleaners} className="mb-4">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={zipCode}
+            onChange={(e) => setZipCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
+            placeholder="Enter ZIP code"
+            required
+            maxLength={5}
+            className="flex-1 px-6 py-4 rounded-full text-lg font-semibold text-gray-900 focus:ring-4 focus:ring-white/50 focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={loading || zipCode.length !== 5}
+            className="bg-white text-primary-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600"></div>
+                Finding...
+              </>
+            ) : (
+              <>
+                Find Cleaners <ArrowRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+      )}
+
+      {showWaitlist && (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            Not in your area yet
+          </h3>
+          <p className="text-gray-600 mb-4">
+            We're expanding! Join our waitlist to be notified when VelocityMaid launches in your area.
+          </p>
+          {waitlistSubmitted ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-green-600 font-medium">Thanks! We'll notify you when we launch in your area.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleWaitlistSubmit}>
+              <input
+                type="email"
+                value={waitlistEmail}
+                onChange={(e) => setWaitlistEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+              />
+              <button
+                type="submit"
+                className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+              >
+                Join Waitlist
+              </button>
+            </form>
+          )}
         </div>
       )}
     </div>
@@ -94,9 +209,9 @@ export default function Home() {
 
   // Booking URL - always use local route (not Google Forms)
   const bookingUrl = "/booking";
-  const phoneNumber = "(973) 280-9190";
-  const phoneNumberTel = "+19732809190"; // For tel: links
-  const whatsappNumber = "19732809190";
+  const phoneNumber = "(802) 733-5348";
+  const phoneNumberTel = "+18027335348"; // For tel: links
+  const whatsappNumber = "18027335348";
   const email = "hello@velocitymaid.com";
 
   return (
@@ -120,6 +235,8 @@ export default function Home() {
               <a href="#pricing" className="text-gray-700 hover:text-primary-600 transition">Pricing</a>
               <a href="#faq" className="text-gray-700 hover:text-primary-600 transition">FAQ</a>
               <a href="#contact" className="text-gray-700 hover:text-primary-600 transition">Contact</a>
+              <a href="/new-jersey" className="text-gray-700 hover:text-primary-600 transition">New Jersey</a>
+              <a href="/vermont" className="text-gray-700 hover:text-primary-600 transition">Vermont</a>
               <a 
                 href={bookingUrl}
                 className="bg-primary-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-primary-700 transition"
@@ -147,6 +264,8 @@ export default function Home() {
                 <a href="#pricing" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Pricing</a>
                 <a href="#faq" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>FAQ</a>
                 <a href="#contact" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Contact</a>
+                <a href="/new-jersey" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>New Jersey</a>
+                <a href="/vermont" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Vermont</a>
                 <a 
                   href={bookingUrl}
                   className="bg-primary-600 text-white px-6 py-2 rounded-full font-semibold text-center hover:bg-primary-700 transition"
@@ -169,7 +288,7 @@ export default function Home() {
                 <span className="text-primary-600"> Lightning Fast</span>
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                Professional cleaning services that fit your schedule. Experience the VelocityMaid difference today.
+                VelocityMaid provides reliable home and apartment cleaning services across New Jersey, specializing in move-in/out cleaning, deep cleaning, and maintenance cleaning.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <a 
@@ -201,7 +320,7 @@ export default function Home() {
                   <span className="ml-2 text-gray-600">Rated 5 stars by local customers</span>
                 </div>
                 <div className="text-gray-600">
-                  Trusted by Newark families since 2024
+                  Serving New Jersey • Trusted & Reliable
                 </div>
               </div>
             </div>
@@ -289,7 +408,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose VelocityMaid?</h2>
-            <p className="text-xl text-gray-600">Professional cleaning for busy Newark families</p>
+            <p className="text-xl text-gray-600">Professional cleaning services throughout New Jersey</p>
           </div>
           <div className="grid md:grid-cols-4 gap-8">
             {[
@@ -324,26 +443,56 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Service Area Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-primary-600 text-white">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-4xl font-bold mb-4">Serving New Jersey</h2>
+          <p className="text-xl text-primary-100 mb-8">
+            VelocityMaid offers professional home and apartment cleaning services throughout New Jersey, supported by a remote operations base in Ludlow, Vermont. We focus on quality, trust, and reliable communication through automated scheduling, reminders, and professional service standards.
+          </p>
+          <div className="grid md:grid-cols-3 gap-6 mt-12">
+            <div className="bg-white bg-opacity-10 rounded-2xl p-6">
+              <h3 className="text-xl font-bold mb-2">Trust</h3>
+              <p className="text-primary-100">Fully insured and bonded professionals you can trust in your home</p>
+            </div>
+            <div className="bg-white bg-opacity-10 rounded-2xl p-6">
+              <h3 className="text-xl font-bold mb-2">Reliability</h3>
+              <p className="text-primary-100">Consistent, dependable service that respects your schedule</p>
+            </div>
+            <div className="bg-white bg-opacity-10 rounded-2xl p-6">
+              <h3 className="text-xl font-bold mb-2">Attention to Detail</h3>
+              <p className="text-primary-100">We treat your home with the same care we'd give our own</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Services */}
       <section id="services" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Services</h2>
-            <p className="text-xl text-gray-600">Comprehensive cleaning solutions for every need</p>
+            <p className="text-xl text-gray-600">Professional cleaning solutions for every need</p>
           </div>
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 icon: HomeIcon,
-                title: "Residential Cleaning",
-                description: "Regular cleaning, deep cleaning, move-in/out cleaning",
-                features: ["Kitchen & Bathrooms", "Floors & Carpets", "Dusting & Vacuuming", "Custom Services"]
+                title: "Basic Cleaning",
+                description: "Perfect for regular maintenance cleaning",
+                features: ["Kitchen & Bathrooms", "Dusting & Vacuuming", "Floor Mopping", "Trash Removal"]
+              },
+              {
+                icon: Sparkles,
+                title: "Deep Cleaning",
+                description: "Thorough top-to-bottom cleaning service",
+                features: ["Everything in Basic", "Inside Appliances", "Baseboards & Windows", "Detailed Scrub"]
               },
               {
                 icon: Building2,
-                title: "Commercial Cleaning",
-                description: "Office spaces, retail stores, and commercial properties",
-                features: ["Office Cleaning", "Retail Spaces", "Post-Construction", "Flexible Scheduling"]
+                title: "Move In/Out Cleaning",
+                description: "Complete property cleaning for transitions",
+                features: ["Everything in Deep Clean", "Inside Cabinets", "Inside Closets", "Full Sanitization"]
               }
             ].map((service, index) => (
               <div key={index} className="bg-white p-8 rounded-2xl shadow-lg card-hover">
@@ -366,6 +515,31 @@ export default function Home() {
                 </a>
               </div>
             ))}
+          </div>
+          <div className="mt-12 bg-white p-8 rounded-2xl shadow-lg">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">Add-On Services</h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="text-center">
+                <CheckCircle className="w-8 h-8 text-primary-600 mx-auto mb-2" />
+                <p className="font-semibold text-gray-900">Laundry</p>
+                <p className="text-sm text-gray-600">$15/load</p>
+              </div>
+              <div className="text-center">
+                <CheckCircle className="w-8 h-8 text-primary-600 mx-auto mb-2" />
+                <p className="font-semibold text-gray-900">Windows</p>
+                <p className="text-sm text-gray-600">$20/room</p>
+              </div>
+              <div className="text-center">
+                <CheckCircle className="w-8 h-8 text-primary-600 mx-auto mb-2" />
+                <p className="font-semibold text-gray-900">Oven</p>
+                <p className="text-sm text-gray-600">$30</p>
+              </div>
+              <div className="text-center">
+                <CheckCircle className="w-8 h-8 text-primary-600 mx-auto mb-2" />
+                <p className="font-semibold text-gray-900">Refrigerator</p>
+                <p className="text-sm text-gray-600">$25</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -519,7 +693,7 @@ export default function Home() {
             {[
               {
                 question: "What areas do you serve?",
-                answer: "We proudly serve all of New Jersey, including Newark, Jersey City, Paterson, Elizabeth, Edison, and surrounding areas. Contact us to confirm service in your specific location."
+                answer: "We proudly serve all of New Jersey, including Newark, Jersey City, Paterson, Elizabeth, Edison, and surrounding areas. Our operations are supported from Ludlow, Vermont, ensuring reliable service coordination across the state. Contact us to confirm service in your specific location."
               },
               {
                 question: "Do I need to provide cleaning supplies?",
@@ -531,7 +705,7 @@ export default function Home() {
               },
               {
                 question: "How do I schedule a cleaning?",
-                answer: "You can book online through our booking form, call us directly at (973) 280-9190, or message us on WhatsApp. We offer flexible scheduling to fit your needs."
+                answer: "You can book online through our booking form, call us directly at (802) 733-5348, or message us on WhatsApp. We offer flexible scheduling to fit your needs."
               },
               {
                 question: "What if I'm not satisfied with the cleaning?",
@@ -563,14 +737,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* ZIP Code Finder Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary-600 to-primary-700">
         <div className="max-w-4xl mx-auto text-center">
-          <Calendar className="w-16 h-16 text-white mx-auto mb-6" />
+          <MapPin className="w-16 h-16 text-white mx-auto mb-6" />
           <h2 className="text-4xl font-bold text-white mb-4">
-            Ready for a Spotless Home?
+            Find Cleaners Near You
           </h2>
           <p className="text-xl text-primary-100 mb-8">
+            Enter your ZIP code to find VelocityMaid services in your area
+          </p>
+          
+          <ZipCodeFinder />
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <Calendar className="w-16 h-16 text-primary-600 mx-auto mb-6" />
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            Ready for a Spotless Home?
+          </h2>
+          <p className="text-xl text-gray-600 mb-8">
             Book your cleaning service today and experience the VelocityMaid difference
           </p>
           
@@ -585,7 +774,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 
               href="/booking"
-              className="bg-white text-primary-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition inline-flex items-center justify-center"
+              className="bg-primary-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-primary-700 transition inline-flex items-center justify-center"
             >
               Book Online Now <ArrowRight className="ml-2 w-5 h-5" />
             </a>
@@ -658,7 +847,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-5 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Sparkles className="w-8 h-8 text-primary-400" />
@@ -673,18 +862,26 @@ export default function Home() {
               <ul className="space-y-2">
                 <li><a href="#services" className="text-gray-400 hover:text-white transition">Services</a></li>
                 <li><a href="#pricing" className="text-gray-400 hover:text-white transition">Pricing</a></li>
-                <li><a href="#pay-now" className="text-gray-400 hover:text-white transition">Pay Now</a></li>
+                <li><a href={bookingUrl} className="text-gray-400 hover:text-white transition">Book Now</a></li>
                 <li><a href="#why-us" className="text-gray-400 hover:text-white transition">Why Us</a></li>
                 <li><a href="#contact" className="text-gray-400 hover:text-white transition">Contact</a></li>
               </ul>
             </div>
             <div>
+              <h4 className="text-lg font-bold mb-4">Legal</h4>
+              <ul className="space-y-2">
+                <li><a href="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</a></li>
+                <li><a href="/terms" className="text-gray-400 hover:text-white transition">Terms of Service</a></li>
+                <li><a href="/refunds" className="text-gray-400 hover:text-white transition">Refund Policy</a></li>
+              </ul>
+            </div>
+            <div>
               <h4 className="text-lg font-bold mb-4">Services</h4>
               <ul className="space-y-2">
-                <li className="text-gray-400">Residential Cleaning</li>
-                <li className="text-gray-400">Commercial Cleaning</li>
+                <li className="text-gray-400">Basic Cleaning</li>
                 <li className="text-gray-400">Deep Cleaning</li>
                 <li className="text-gray-400">Move In/Out</li>
+                <li className="text-gray-400">Add-On Services</li>
               </ul>
             </div>
             <div>
@@ -692,7 +889,9 @@ export default function Home() {
               <ul className="space-y-2">
                 <li><a href={`tel:${phoneNumberTel}`} className="text-gray-400 hover:text-white transition">{phoneNumber}</a></li>
                 <li><a href={`mailto:${email}`} className="text-gray-400 hover:text-white transition">{email}</a></li>
-                <li className="text-gray-400">New Jersey</li>
+                <li className="text-gray-400">Serving New Jersey</li>
+                <li className="text-gray-400">79 Main Street, Apt 7</li>
+                <li className="text-gray-400">Ludlow, VT 05149</li>
               </ul>
             </div>
           </div>

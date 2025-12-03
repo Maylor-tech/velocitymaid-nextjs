@@ -69,3 +69,4 @@ http://localhost:3000
 
 **That's it! The issue is just the directory.** 🚀
 
+

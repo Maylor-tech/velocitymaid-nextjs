@@ -66,7 +66,7 @@ export default function BookingFailedPage() {
           <div className="mt-8 pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-600 mb-2">Need help?</p>
             <p className="text-sm text-gray-700">
-              Call us at <a href="tel:9732809190" className="text-primary-600 hover:text-primary-700 font-semibold">(973) 280-9190</a> or{' '}
+              Call us at <a href="tel:+18027335348" className="text-primary-600 hover:text-primary-700 font-semibold">(802) 733-5348</a> or{' '}
               <a href="mailto:hello@velocitymaid.com" className="text-primary-600 hover:text-primary-700 font-semibold">email us</a>
             </p>
           </div>

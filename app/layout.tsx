@@ -8,14 +8,14 @@ const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: "VelocityMaid | Professional Cleaning Services in New Jersey",
-  description: "Experience professional cleaning services with VelocityMaid. We provide residential and commercial cleaning solutions across New Jersey. Book your service today!",
+  description: "VelocityMaid provides reliable home and apartment cleaning services across New Jersey, specializing in move-in/out cleaning, deep cleaning, and maintenance cleaning.",
   keywords: "cleaning services, maid service, house cleaning, commercial cleaning, New Jersey, professional cleaners, Newark cleaning, Jersey City cleaning",
   authors: [{ name: "VelocityMaid" }],
   creator: "VelocityMaid",
   publisher: "VelocityMaid",
   openGraph: {
     title: "VelocityMaid | Professional Cleaning Services in New Jersey",
-    description: "Professional cleaning services for busy New Jersey families. Residential and commercial cleaning in Newark, Jersey City, and surrounding areas.",
+    description: "VelocityMaid provides reliable home and apartment cleaning services across New Jersey, specializing in move-in/out cleaning, deep cleaning, and maintenance cleaning.",
     type: "website",
     locale: "en_US",
     siteName: "VelocityMaid",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "VelocityMaid | Professional Cleaning Services",
-    description: "Professional cleaning services for busy New Jersey families.",
+    description: "VelocityMaid provides reliable home and apartment cleaning services across New Jersey.",
     // Add when you create og-image.jpg:
     // images: ['/og-image.jpg'],
   },
@@ -57,23 +57,30 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": "VelocityMaid",
+    "alternateName": "VelocityMaid Cleaning Services",
     "image": "https://velocitymaid.com/images/gallery/velocitymaid-cozy-bedroom-cleaning-nj.jpg",
-    "description": "Professional cleaning services for busy New Jersey families. Residential and commercial cleaning in Newark, Jersey City, and surrounding areas.",
+    "description": "VelocityMaid provides reliable home and apartment cleaning services across New Jersey, specializing in move-in/out cleaning, deep cleaning, and maintenance cleaning.",
     "address": {
       "@type": "PostalAddress",
-      "addressLocality": "Newark",
-      "addressRegion": "NJ",
+      "streetAddress": "79 Main Street, Apt 7",
+      "addressLocality": "Ludlow",
+      "addressRegion": "VT",
+      "postalCode": "05149",
       "addressCountry": "US"
     },
     "geo": {
       "@type": "GeoCoordinates",
-      "latitude": "40.7357",
-      "longitude": "-74.1724"
+      "latitude": "43.3956",
+      "longitude": "-72.7023"
     },
     "url": "https://velocitymaid.com",
-    "telephone": "+19732809190",
+    "telephone": "+18027335348",
     "email": "hello@velocitymaid.com",
     "priceRange": "$$",
+    "founder": {
+      "@type": "Person",
+      "name": "Brian Maylor"
+    },
     "openingHoursSpecification": [
       {
         "@type": "OpeningHoursSpecification",
@@ -82,21 +89,38 @@ export default function RootLayout({
         "closes": "18:00"
       }
     ],
-    "areaServed": [
-      {
-        "@type": "City",
-        "name": "Newark"
-      },
-      {
-        "@type": "City",
-        "name": "Jersey City"
-      },
-      {
-        "@type": "City",
-        "name": "Paterson"
-      }
-    ],
+    "areaServed": {
+      "@type": "State",
+      "name": "New Jersey"
+    },
     "serviceType": "Cleaning Service",
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Cleaning Services",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Basic Cleaning"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Deep Cleaning"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Move In/Out Cleaning"
+          }
+        }
+      ]
+    },
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "5",
@@ -113,7 +137,7 @@ export default function RootLayout({
         />
         {children}
         <WhatsAppButton 
-          phoneNumber="19732809190"
+          phoneNumber="18027335348"
           message="Hi VelocityMaid! I'd like to book a cleaning service."
           position="right"
           showPopup={true}

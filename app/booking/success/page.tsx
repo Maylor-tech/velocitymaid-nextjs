@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { CheckCircle, Home, Sparkles } from 'lucide-react';
+import { CheckCircle, Home, Sparkles, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -69,10 +69,33 @@ function SuccessContent() {
               </li>
               <li className="flex items-start">
                 <span className="text-primary-600 mr-2">✓</span>
-                <span>If you have any questions, call us at (973) 280-9190</span>
+                <span>If you have any questions, call us at (802) 733-5348</span>
               </li>
             </ul>
           </div>
+
+          {/* Review Card */}
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-6 mb-8">
+            <div className="flex items-center justify-center mb-4">
+              <Star className="w-12 h-12 text-yellow-500" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">
+              Love Your Cleaning?
+            </h3>
+            <p className="text-gray-700 mb-4 text-center">
+              After your service, we'd love to hear about your experience!
+            </p>
+            <div className="text-center">
+              <Link
+                href="/review-us/new-jersey"
+                className="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-3 rounded-lg transition"
+              >
+                <Star className="w-5 h-5" />
+                Leave a Review
+              </Link>
+            </div>
+          </div>
+
           <Link
             href="/"
             className="inline-flex items-center justify-center bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-8 rounded-lg transition"
