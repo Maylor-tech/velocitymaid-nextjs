@@ -1,11 +1,5 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/reminder-24h",
-      "schedule": "0 0 * * *"
-    }
-  ]
+  "buildCommand": "npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
+  "framework": "nextjs"
 }
-
-
-
