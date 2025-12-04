@@ -1,7 +1,4 @@
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { Home, User, MessageCircle, Bed, Bath, Calendar, Package, FileText, Eye, CheckCircle, XCircle, Clock, Star } from 'lucide-react';

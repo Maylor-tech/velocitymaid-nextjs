@@ -1,7 +1,4 @@
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-
-'use client';
+"use client";
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -168,13 +165,12 @@ export default function CleanerApplyPage() {
           <p className="text-lg text-gray-600 mt-2">Join the VelocityMaid team and help us bring clean homes to your community.</p>
         </div>
 
-        {showToast && (
-          <Toast
-            message={success ? 'Application submitted successfully!' : (error || 'Failed to submit application')}
-            type={success ? 'success' : 'error'}
-            onClose={() => setShowToast(false)}
-          />
-        )}
+        <Toast
+          message={success ? 'Application submitted successfully!' : (error || 'Failed to submit application')}
+          type={success ? 'success' : 'error'}
+          visible={showToast}
+          onClose={() => setShowToast(false)}
+        />
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

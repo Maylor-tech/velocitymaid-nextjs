@@ -1,7 +1,4 @@
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-
-'use client';
+"use client";
 
 import { useState, useEffect, Suspense } from 'react';
 import { Calendar, Clock, Home, Sparkles, ArrowRight, Loader2, MapPin } from 'lucide-react';

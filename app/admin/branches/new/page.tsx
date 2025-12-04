@@ -1,9 +1,4 @@
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-
-'use client';
-
-// TODO: Protect this route with admin authentication
+"use client";
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -229,13 +224,12 @@ export default function NewBranchPage() {
           <p className="text-gray-600">Set up a new VelocityMaid location with service areas, pricing, and automations</p>
         </div>
 
-        {showToast && (
-          <Toast
-            message={success ? 'Branch created successfully! Redirecting...' : (error || 'Failed to create branch')}
-            type={success ? 'success' : 'error'}
-            onClose={() => setShowToast(false)}
-          />
-        )}
+        <Toast
+          message={success ? 'Branch created successfully! Redirecting...' : (error || 'Failed to create branch')}
+          type={success ? 'success' : 'error'}
+          visible={showToast}
+          onClose={() => setShowToast(false)}
+        />
 
         {success && !showToast && (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -178,13 +178,12 @@ export default function AutomationPage() {
           </p>
         </div>
 
-        {showToast && (
-          <Toast
-            message={success ? 'Automation settings saved successfully!' : (error || 'Failed to save settings.')}
-            type={success ? 'success' : 'error'}
-            onClose={() => setShowToast(false)}
-          />
-        )}
+        <Toast
+          message={success ? 'Automation settings saved successfully!' : (error || 'Failed to save settings.')}
+          type={success ? 'success' : 'error'}
+          visible={showToast}
+          onClose={() => setShowToast(false)}
+        />
 
         <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-xl shadow-sm border border-gray-200 p-8">
           <div className="space-y-4">

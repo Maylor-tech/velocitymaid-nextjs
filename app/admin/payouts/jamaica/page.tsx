@@ -1,7 +1,4 @@
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -359,17 +356,16 @@ export default function JamaicaPayoutsPage() {
         )}
       </div>
 
-      {showToast && (
-        <Toast
-          message={toastMessage || error || ''}
-          type={error ? 'error' : 'success'}
-          onClose={() => {
-            setShowToast(false);
-            setError(null);
-            setToastMessage('');
-          }}
-        />
-      )}
+      <Toast
+        message={toastMessage || error || ''}
+        type={error ? 'error' : 'success'}
+        visible={showToast}
+        onClose={() => {
+          setShowToast(false);
+          setError(null);
+          setToastMessage('');
+        }}
+      />
     </AdminLayout>
   );
 }

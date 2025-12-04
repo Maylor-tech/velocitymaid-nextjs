@@ -1,7 +1,4 @@
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
@@ -172,13 +169,12 @@ export default function CleanerApplicationsPage() {
           <p className="text-gray-600">Review and manage cleaner applications</p>
         </div>
 
-        {showToast && (
-          <Toast
-            message={toastMessage}
-            type={toastType}
-            onClose={() => setShowToast(false)}
-          />
-        )}
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          visible={showToast}
+          onClose={() => setShowToast(false)}
+        />
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex gap-4">

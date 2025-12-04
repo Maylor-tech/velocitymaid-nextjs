@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -191,13 +191,12 @@ export default function EditBranchPage() {
           </div>
         </div>
 
-        {showToast && (
-          <Toast
-            message={success ? 'Branch updated successfully!' : (error || 'Failed to update branch')}
-            type={success ? 'success' : 'error'}
-            onClose={() => setShowToast(false)}
-          />
-        )}
+        <Toast
+          message={success ? 'Branch updated successfully!' : (error || 'Failed to update branch')}
+          type={success ? 'success' : 'error'}
+          visible={showToast}
+          onClose={() => setShowToast(false)}
+        />
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
