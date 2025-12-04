@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "npm install --legacy-peer-deps"
+  },
+  "overrides": {
+    "eslint": "9.0.0",
+    "eslint-config-next": "latest"
   },
   "dependencies": {
     "@next/third-parties": "^16.0.3",
