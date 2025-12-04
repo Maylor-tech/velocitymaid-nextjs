@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 'use client';
 
 // TODO: Protect this route with admin authentication

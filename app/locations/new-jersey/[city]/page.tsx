@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';

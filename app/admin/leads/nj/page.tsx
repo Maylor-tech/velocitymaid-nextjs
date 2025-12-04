@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import LeadManagementClient from './components/LeadManagementClient';
