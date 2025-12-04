@@ -8,6 +8,8 @@
  * - Rating <= 3 → create complaint record + trigger WhatsApp apology workflow
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createReview } from '@/utils/reviewData';

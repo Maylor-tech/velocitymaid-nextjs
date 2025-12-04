@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * Reassign Cleaner to Job API
  * POST /api/admin/schedule/reassign

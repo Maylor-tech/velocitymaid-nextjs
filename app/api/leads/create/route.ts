@@ -5,6 +5,8 @@
  * Creates a new lead, scores it, and triggers automation
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateLeadScore } from '@/lib/leadScoring';

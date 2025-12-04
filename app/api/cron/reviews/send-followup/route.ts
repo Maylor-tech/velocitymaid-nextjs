@@ -5,6 +5,8 @@
  * Sends follow-up review request 24 hours after job completion
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

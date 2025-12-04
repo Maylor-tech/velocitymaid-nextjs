@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * Jamaica P&L Dashboard API
  * GET /api/admin/finance/jamaica/pnl

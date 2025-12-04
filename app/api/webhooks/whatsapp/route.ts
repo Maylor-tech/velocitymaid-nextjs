@@ -4,6 +4,8 @@
  * Handles webhook verification and inbound messages from Meta WhatsApp Cloud API
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { replyWithBookingLink, replyWithCleanerApply, replyWithGeneralHelp, parseJobReply } from '@/app/services/whatsappService';
 import { prisma } from '@/lib/prisma';

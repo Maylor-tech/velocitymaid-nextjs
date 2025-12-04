@@ -6,6 +6,8 @@
  * Processes leads waiting for morning follow-up
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';

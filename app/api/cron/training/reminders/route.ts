@@ -8,6 +8,8 @@
  * Should be called daily via cron job
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkAndSendTrainingReminder } from '@/app/services/trainingNotifications';

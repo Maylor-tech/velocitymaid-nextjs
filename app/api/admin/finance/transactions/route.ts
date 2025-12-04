@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Transaction Ledger API
  * GET /api/admin/finance/transactions

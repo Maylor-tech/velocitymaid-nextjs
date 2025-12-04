@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * Get Jobs for Scheduling API
  * GET /api/admin/schedule/jobs

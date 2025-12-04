@@ -5,6 +5,8 @@
  * Sends Day 0 welcome message immediately when lead is created
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';

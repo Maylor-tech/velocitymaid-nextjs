@@ -5,6 +5,8 @@
  * Sends monthly promo SMS to leads who never booked
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

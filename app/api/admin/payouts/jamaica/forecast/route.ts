@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * Payout Forecast Engine API
  * GET /api/admin/payouts/jamaica/forecast

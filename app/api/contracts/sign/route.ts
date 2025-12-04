@@ -5,6 +5,8 @@
  * Marks contract as signed and saves signature
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

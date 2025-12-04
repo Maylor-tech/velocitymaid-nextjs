@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * Get All Cleaners Training Status API
  * GET /api/admin/cleaners/training

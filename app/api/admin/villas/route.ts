@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * Admin Villa CRM API
  * GET /api/admin/villas

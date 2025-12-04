@@ -5,6 +5,8 @@
  * Sends automated after-hours response based on lead tier and context
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';

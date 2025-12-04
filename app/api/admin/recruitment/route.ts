@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Admin Recruitment Dashboard API
  * GET /api/admin/recruitment

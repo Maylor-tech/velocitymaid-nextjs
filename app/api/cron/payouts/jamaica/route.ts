@@ -9,6 +9,8 @@
  * Security: Should be protected with a secret token in production
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createPayout } from '@/app/services/payouts/jamaicaPayoutService';

@@ -5,6 +5,8 @@
  * Automatically posts promo to Google Business Profile
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
