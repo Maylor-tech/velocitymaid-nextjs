@@ -6,6 +6,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 interface QuizQuestion {
   question: string;
@@ -20,7 +21,7 @@ interface QuizData {
 /**
  * Generate quiz data for a lesson
  */
-function createQuiz(questions: Omit<QuizQuestion, 'correctAnswer'> & { correctAnswer: number }): QuizData {
+function createQuiz(questions: Array<Omit<QuizQuestion, 'correctAnswer'> & { correctAnswer: number }>): QuizData {
   return {
     questions: questions.map(q => ({
       question: q.question,
@@ -55,7 +56,7 @@ async function upsertLesson(
       data: {
         title: data.title,
         content: data.content,
-        quizJson: data.quizJson || null,
+        quizJson: data.quizJson ? (data.quizJson as unknown as Prisma.InputJsonValue) : undefined,
       },
     });
   } else {
@@ -65,7 +66,7 @@ async function upsertLesson(
         order,
         title: data.title,
         content: data.content,
-        quizJson: data.quizJson || null,
+        quizJson: data.quizJson ? (data.quizJson as unknown as Prisma.InputJsonValue) : undefined,
       },
     });
   }
@@ -113,8 +114,7 @@ At VelocityMaid, we believe in providing exceptional cleaning services while cre
 ## Your Journey Starts Here
 
 Complete all training modules to begin receiving job assignments. We're here to support you every step of the way!`,
-    quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'What is VelocityMaid\'s main mission?',
             options: [
@@ -145,8 +145,7 @@ Complete all training modules to begin receiving job assignments. We're here to 
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
+        ]),
   });
 
   // Lesson 2: How VelocityMaid Will Work With You
@@ -187,9 +186,7 @@ Understanding how we operate will help you succeed in your role.
 - **Professionalism**: Maintain high standards
 - **Communication**: Keep us informed of any issues
 - **Quality**: Deliver consistent, excellent service`,
-      order: 2,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'What is the primary communication channel for job assignments?',
             options: [
@@ -220,9 +217,7 @@ Understanding how we operate will help you succeed in your role.
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   return module;
@@ -245,18 +240,9 @@ async function seedProfessionalStandardsModule() {
   });
 
   // Lesson 1: Dress Code & Timekeeping
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 1,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Dress Code & Timekeeping',
-      content: `# Dress Code & Timekeeping
+  await upsertLesson(module.id, 1, {
+    title: 'Dress Code & Timekeeping',
+    content: `# Dress Code & Timekeeping
 
 Professional appearance and punctuality are essential to our success.
 
@@ -296,57 +282,44 @@ Professional appearance and punctuality are essential to our success.
 - Represents VelocityMaid brand positively
 - Shows respect for the job and clients
 - Creates a professional work environment`,
-      order: 1,
-      quizJson: createQuiz({
-        questions: [
-          {
-            question: 'What should you do if you\'re running late?',
-            options: [
-              'Don\'t say anything',
-              'Notify immediately via WhatsApp',
-              'Call the customer directly',
-              'Just show up when you can',
-            ],
-            correctAnswer: 1,
-          },
-          {
-            question: 'What is the recommended arrival time?',
-            options: [
-              'Exactly on time',
-              '15 minutes early if possible',
-              '30 minutes late',
-              'Whenever convenient',
-            ],
-            correctAnswer: 1,
-          },
-          {
-            question: 'What should you avoid wearing?',
-            options: [
-              'Clean, professional clothing',
-              'Revealing or inappropriate clothing',
-              'Comfortable shoes',
-              'VelocityMaid-branded items',
-            ],
-            correctAnswer: 1,
-          },
+    quizJson: createQuiz([
+      {
+        question: 'What should you do if you\'re running late?',
+        options: [
+          'Don\'t say anything',
+          'Notify immediately via WhatsApp',
+          'Call the customer directly',
+          'Just show up when you can',
         ],
-      }),
-    },
+        correctAnswer: 1,
+      },
+      {
+        question: 'What is the recommended arrival time?',
+        options: [
+          'Exactly on time',
+          '15 minutes early if possible',
+          '30 minutes late',
+          'Whenever convenient',
+        ],
+        correctAnswer: 1,
+      },
+      {
+        question: 'What should you avoid wearing?',
+        options: [
+          'Clean, professional clothing',
+          'Revealing or inappropriate clothing',
+          'Comfortable shoes',
+          'VelocityMaid-branded items',
+        ],
+        correctAnswer: 1,
+      },
+    ]),
   });
 
   // Lesson 2: Communication & Phone Etiquette
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 2,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Communication & Phone Etiquette',
-      content: `# Communication & Phone Etiquette
+  await upsertLesson(module.id, 2, {
+    title: 'Communication & Phone Etiquette',
+    content: `# Communication & Phone Etiquette
 
 Effective communication is key to success.
 
@@ -389,42 +362,38 @@ Effective communication is key to success.
 - ❌ Making assumptions
 - ❌ Sharing customer information
 - ❌ Complaining to customers`,
-      order: 2,
-      quizJson: createQuiz({
-        questions: [
-          {
-            question: 'How quickly should you respond to WhatsApp messages?',
-            options: [
-              'Within 24 hours',
-              'Within 2 hours',
-              'Within a week',
-              'Whenever you feel like it',
-            ],
-            correctAnswer: 1,
-          },
-          {
-            question: 'What should you do when assigned to a job?',
-            options: [
-              'Ignore the message',
-              'Confirm details and arrival time',
-              'Call the customer directly',
-              'Wait for a reminder',
-            ],
-            correctAnswer: 1,
-          },
-          {
-            question: 'What should you avoid in communication?',
-            options: [
-              'Being clear and concise',
-              'Using inappropriate language',
-              'Confirming details',
-              'Responding promptly',
-            ],
-            correctAnswer: 1,
-          },
+    quizJson: createQuiz([
+      {
+        question: 'How quickly should you respond to WhatsApp messages?',
+        options: [
+          'Within 24 hours',
+          'Within 2 hours',
+          'Within a week',
+          'Whenever you feel like it',
         ],
-      }),
-    },
+        correctAnswer: 1,
+      },
+      {
+        question: 'What should you do when assigned to a job?',
+        options: [
+          'Ignore the message',
+          'Confirm details and arrival time',
+          'Call the customer directly',
+          'Wait for a reminder',
+        ],
+        correctAnswer: 1,
+      },
+      {
+        question: 'What should you avoid in communication?',
+        options: [
+          'Being clear and concise',
+          'Using inappropriate language',
+          'Confirming details',
+          'Responding promptly',
+        ],
+        correctAnswer: 1,
+      },
+    ]),
   });
 
   return module;
@@ -447,18 +416,9 @@ async function seedCleaningSystemsModule() {
   });
 
   // Lesson 1: Standard Clean – Room by Room
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 1,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Standard Clean – Room by Room',
-      content: `# Standard Clean – Room by Room
+  await upsertLesson(module.id, 1, {
+    title: 'Standard Clean – Room by Room',
+    content: `# Standard Clean – Room by Room
 
 A systematic approach ensures nothing is missed.
 
@@ -500,57 +460,44 @@ A systematic approach ensures nothing is missed.
 - **Doors**: Wipe handles and frames
 - **Light switches**: Wipe clean
 - **Baseboards**: Dust or wipe`,
-      order: 1,
-      quizJson: createQuiz({
-        questions: [
-          {
-            question: 'What should you clean in the kitchen?',
-            options: [
-              'Only the sink',
-              'Countertops, sink, appliances, floors, and trash',
-              'Only the floors',
-              'Nothing specific',
-            ],
-            correctAnswer: 1,
-          },
-          {
-            question: 'What is included in bathroom cleaning?',
-            options: [
-              'Only the toilet',
-              'Toilet, shower/tub, sink, floors, and trash',
-              'Only the mirror',
-              'Only the floors',
-            ],
-            correctAnswer: 1,
-          },
-          {
-            question: 'What should you do in living areas?',
-            options: [
-              'Only vacuum',
-              'Dust, vacuum/mop, empty trash, and tidy',
-              'Only dust',
-              'Nothing',
-            ],
-            correctAnswer: 1,
-          },
+    quizJson: createQuiz([
+      {
+        question: 'What should you clean in the kitchen?',
+        options: [
+          'Only the sink',
+          'Countertops, sink, appliances, floors, and trash',
+          'Only the floors',
+          'Nothing specific',
         ],
-      }),
-    },
+        correctAnswer: 1,
+      },
+      {
+        question: 'What is included in bathroom cleaning?',
+        options: [
+          'Only the toilet',
+          'Toilet, shower/tub, sink, floors, and trash',
+          'Only the mirror',
+          'Only the floors',
+        ],
+        correctAnswer: 1,
+      },
+      {
+        question: 'What should you do in living areas?',
+        options: [
+          'Only vacuum',
+          'Dust, vacuum/mop, empty trash, and tidy',
+          'Only dust',
+          'Nothing',
+        ],
+        correctAnswer: 1,
+      },
+    ]),
   });
 
   // Lesson 2: Deep Clean – Extra Tasks
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 2,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Deep Clean – Extra Tasks',
-      content: `# Deep Clean – Extra Tasks
+  await upsertLesson(module.id, 2, {
+    title: 'Deep Clean – Extra Tasks',
+    content: `# Deep Clean – Extra Tasks
 
 Deep cleans include all standard tasks plus additional thorough cleaning.
 
@@ -592,9 +539,7 @@ Deep cleans include all standard tasks plus additional thorough cleaning.
 - **Vents**: Clean and dust
 - **Cobwebs**: Remove from corners
 - **Baseboards**: Detailed cleaning`,
-      order: 2,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'What additional tasks are included in a deep clean?',
             options: [
@@ -615,23 +560,12 @@ Deep cleans include all standard tasks plus additional thorough cleaning.
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   // Lesson 3: Move In/Out – Empty House Standards
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 3,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Move In/Out – Empty House Standards',
+  await upsertLesson(module.id, 3, {
+    title: 'Move In/Out – Empty House Standards',
       content: `# Move In/Out – Empty House Standards
 
 Move-in/out cleans require the highest level of detail.
@@ -677,9 +611,7 @@ Move-in/out cleans require the highest level of detail.
 - **Checklist review**: Ensure all tasks completed
 - **Quality check**: Verify high standards
 - **Final walkthrough**: Confirm readiness`,
-      order: 3,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'What should you do before starting a move-in/out clean?',
             options: [
@@ -700,9 +632,7 @@ Move-in/out cleans require the highest level of detail.
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   return module;
@@ -725,17 +655,8 @@ async function seedSafetyEcoModule() {
   });
 
   // Lesson 1: Safe Product Use in Jamaica
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 1,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Safe Product Use in Jamaica',
+  await upsertLesson(module.id, 1, {
+    title: 'Safe Product Use in Jamaica',
       content: `# Safe Product Use in Jamaica
 
 Understanding products and their safe use is essential.
@@ -775,9 +696,7 @@ Understanding products and their safe use is essential.
 - **Availability**: Use products available locally
 - **Climate**: Consider humidity in storage
 - **Water quality**: Adjust dilution if needed`,
-      order: 1,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'What should you do before using a cleaning product?',
             options: [
@@ -798,23 +717,12 @@ Understanding products and their safe use is essential.
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   // Lesson 2: Protecting Yourself & Clients
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 2,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Protecting Yourself & Clients',
+  await upsertLesson(module.id, 2, {
+    title: 'Protecting Yourself & Clients',
       content: `# Protecting Yourself & Clients
 
 Safety is our top priority.
@@ -857,9 +765,7 @@ Safety is our top priority.
 - **Injuries**: Seek medical attention if needed
 - **Spills**: Clean up safely
 - **Fire**: Know exit routes`,
-      order: 2,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'What protective equipment should you wear?',
             options: [
@@ -871,10 +777,10 @@ Safety is our top priority.
             correctAnswer: 1,
           },
           {
-            question: 'What should you do with client's personal items?',
+            question: 'What should you do with client\'s personal items?',
             options: [
               'Move them around',
-              'Respect privacy, don't move or inspect personal belongings',
+              'Respect privacy, don\'t move or inspect personal belongings',
               'Take photos',
               'Read documents',
             ],
@@ -890,23 +796,12 @@ Safety is our top priority.
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   // Lesson 3: Eco-Friendly Cleaning & Water Use
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 3,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Eco-Friendly Cleaning & Water Use',
+  await upsertLesson(module.id, 3, {
+    title: 'Eco-Friendly Cleaning & Water Use',
       content: `# Eco-Friendly Cleaning & Water Use
 
 Sustainable practices benefit everyone.
@@ -948,16 +843,14 @@ Sustainable practices benefit everyone.
 - **Cost**: Saves money
 - **Health**: Better for everyone
 - **Community**: Sets positive example`,
-      order: 3,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'How should you conserve water?',
             options: [
               'Let water run continuously',
               'Use buckets, rinse efficiently, and avoid running water unnecessarily',
               'Use as much water as possible',
-              'Don't worry about water use',
+              'Don\'t worry about water use',
             ],
             correctAnswer: 1,
           },
@@ -971,9 +864,7 @@ Sustainable practices benefit everyone.
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   return module;
@@ -996,17 +887,8 @@ async function seedQualityScorecardModule() {
   });
 
   // Lesson 1: Scorecard & Ratings
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 1,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Scorecard & Ratings',
+  await upsertLesson(module.id, 1, {
+    title: 'Scorecard & Ratings',
       content: `# Scorecard & Ratings
 
 Understanding how your work is evaluated helps you excel.
@@ -1053,9 +935,7 @@ Understanding how your work is evaluated helps you excel.
 - **Regular reviews**: Check your scorecard
 - **Identify areas for improvement**: Focus on weak points
 - **Celebrate success**: Recognize achievements`,
-      order: 1,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'What is included in quality metrics?',
             options: [
@@ -1076,23 +956,12 @@ Understanding how your work is evaluated helps you excel.
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   // Lesson 2: Complaints & Re-cleans
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 2,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Complaints & Re-cleans',
+  await upsertLesson(module.id, 2, {
+    title: 'Complaints & Re-cleans',
       content: `# Complaints & Re-cleans
 
 How to handle feedback and improve.
@@ -1144,9 +1013,7 @@ How to handle feedback and improve.
 - **Patterns**: Identify recurring issues
 - **Solutions**: Develop better approaches
 - **Growth**: Continuous improvement`,
-      order: 2,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'How should you respond to complaints?',
             options: [
@@ -1163,27 +1030,16 @@ How to handle feedback and improve.
               'Work as fast as possible',
               'Follow checklist, take time, double-check, and ask questions',
               'Skip some tasks',
-              'Don't communicate',
+              'Don\'t communicate',
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   // Lesson 3: Bonuses & Incentives
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 3,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Bonuses & Incentives',
+  await upsertLesson(module.id, 3, {
+    title: 'Bonuses & Incentives',
       content: `# Bonuses & Incentives
 
 Rewards for excellent performance.
@@ -1239,9 +1095,7 @@ Rewards for excellent performance.
 - **Public acknowledgment**: Recognition for achievements
 - **Career growth**: Opportunities for advancement
 - **Team building**: Part of VelocityMaid family`,
-      order: 3,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'What can earn you bonuses?',
             options: [
@@ -1262,9 +1116,7 @@ Rewards for excellent performance.
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   return module;
@@ -1287,17 +1139,8 @@ async function seedRoutesCommunicationModule() {
   });
 
   // Lesson 1: Using WhatsApp for Jobs
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 1,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Using WhatsApp for Jobs',
+  await upsertLesson(module.id, 1, {
+    title: 'Using WhatsApp for Jobs',
       content: `# Using WhatsApp for Jobs
 
 WhatsApp is your primary tool for job management.
@@ -1343,9 +1186,7 @@ You'll receive messages with:
 - **Be professional**: Use proper language
 - **Save contacts**: Add VelocityMaid number
 - **Backup plan**: Have alternative communication method`,
-      order: 1,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'What should you do when receiving a job assignment?',
             options: [
@@ -1366,23 +1207,12 @@ You'll receive messages with:
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   // Lesson 2: Time Management & Transport
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 2,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'Time Management & Transport',
+  await upsertLesson(module.id, 2, {
+    title: 'Time Management & Transport',
       content: `# Time Management & Transport
 
 Effective time management ensures success.
@@ -1436,9 +1266,7 @@ Effective time management ensures success.
 - **Work systematically**: Follow room order
 - **Minimize breaks**: Stay focused
 - **Quality first**: Don't rush`,
-      order: 2,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'What should you do before a job?',
             options: [
@@ -1459,23 +1287,12 @@ Effective time management ensures success.
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   // Lesson 3: When Something Goes Wrong
-  await prisma.trainingLesson.upsert({
-    where: {
-      moduleId_order: {
-        moduleId: module.id,
-        order: 3,
-      },
-    },
-    update: {},
-    create: {
-      moduleId: module.id,
-      title: 'When Something Goes Wrong',
+  await upsertLesson(module.id, 3, {
+    title: 'When Something Goes Wrong',
       content: `# When Something Goes Wrong
 
 Handling problems professionally is essential.
@@ -1545,32 +1362,28 @@ Handling problems professionally is essential.
 - **Property damage**: Report immediately
 - **Customer conflict**: Get support
 - **Unresolved issues**: Don't struggle alone`,
-      order: 3,
-      quizJson: createQuiz({
-        questions: [
+    quizJson: createQuiz([
           {
             question: 'What should you do if you can\'t access a property?',
             options: [
               'Leave and go home',
               'Contact immediately via WhatsApp, wait for instructions',
               'Break in',
-              'Don't say anything',
+              'Don\'t say anything',
             ],
             correctAnswer: 1,
           },
           {
             question: 'How should you communicate problems?',
             options: [
-              'Don't say anything',
+              'Don\'t say anything',
               'Notify immediately via WhatsApp, be specific, and suggest solutions',
               'Only tell the customer',
               'Wait until later',
             ],
             correctAnswer: 1,
           },
-        ],
-      }),
-    },
+        ]),
   });
 
   return module;

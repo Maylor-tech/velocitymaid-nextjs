@@ -665,7 +665,40 @@ export default async function NewJerseyLandingPage() {
               Frequently Asked Questions
             </h2>
             <Suspense fallback={<div>Loading FAQ...</div>}>
-              <FAQAccordion />
+              <FAQAccordion faqs={[
+                {
+                  question: 'How much does cleaning cost?',
+                  answer: 'Our pricing is flat-rate based on the size of your home. Studio apartments start at $120, 1-bedroom at $140, 2-bedroom at $160, and 3-bedroom at $180. Deep cleaning and move-in/out services are available at additional rates.',
+                },
+                {
+                  question: 'Do I need to be home during the cleaning?',
+                  answer: 'No, you don\'t need to be home! Many of our customers provide us with a key or access code. All our cleaners are background-checked and insured for your peace of mind.',
+                },
+                {
+                  question: 'What supplies do you use?',
+                  answer: 'We bring all our own eco-friendly cleaning supplies and equipment. You don\'t need to provide anything unless you have specific product preferences.',
+                },
+                {
+                  question: 'How do I book a cleaning?',
+                  answer: 'You can book online through our website, call us, or send us a WhatsApp message. We\'ll confirm your appointment and send you a reminder the day before.',
+                },
+                {
+                  question: 'What if I\'m not satisfied?',
+                  answer: 'We offer a 100% satisfaction guarantee. If you\'re not happy with the cleaning, let us know within 24 hours and we\'ll come back to fix it at no charge.',
+                },
+                {
+                  question: 'Do you offer recurring cleaning?',
+                  answer: 'Yes! We offer weekly, bi-weekly, and monthly cleaning schedules. Recurring customers receive priority booking and special rates.',
+                },
+                {
+                  question: 'Are your cleaners insured?',
+                  answer: 'Yes, all our cleaners are fully insured and bonded. We carry liability insurance to protect your home and belongings.',
+                },
+                {
+                  question: 'What areas do you serve?',
+                  answer: 'We currently serve Essex, Union, and Hudson Counties, including Newark, Jersey City, Elizabeth, Union, Hoboken, East Orange, Rahway, Linden, and Irvington.',
+                },
+              ]} />
             </Suspense>
           </div>
         </section>

@@ -58,7 +58,7 @@ export default async function TrainingReportsPage() {
     where: { isActive: true },
     include: {
       lessons: {
-        where: { isActive: true },
+        orderBy: { order: 'asc' },
       },
     },
     orderBy: { order: 'asc' },

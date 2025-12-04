@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, CheckCircle, AlertCircle, ArrowLeft, MessageSquare, Send } from 'lucide-react';
-import AdminLayout from '../../../components/AdminLayout';
+import AdminLayout from '@/app/admin/components/AdminLayout';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';
 import { sendWhatsAppBookingConfirmation, sendCleanerOnboardingMessage } from '@/app/services/whatsappTemplates';
 

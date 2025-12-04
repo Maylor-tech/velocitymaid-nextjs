@@ -11,18 +11,20 @@ import { sendWhatsAppMessage } from '@/app/services/whatsappService';
 import { getNurtureMessage, shouldStopSequence } from '@/utils/nurtureMessages';
 
 export async function POST(request: NextRequest) {
+  let day: number | undefined;
   try {
     const body = await request.json();
-    const { customerId, day } = body;
+    const { customerId, day: dayValue } = body;
+    day = dayValue;
 
-    if (!customerId || day === undefined) {
+    if (!customerId || dayValue === undefined) {
       return NextResponse.json(
         { success: false, error: 'Customer ID and day are required' },
         { status: 400 }
       );
     }
 
-    if (day < 0 || day > 7) {
+    if (dayValue < 0 || dayValue > 7) {
       return NextResponse.json(
         { success: false, error: 'Day must be between 0 and 7' },
         { status: 400 }
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
         data: {
           customerId,
           branchId: customer.branchId!,
-          currentDay: day,
+          currentDay: dayValue,
           referralCode: null, // Will be generated if needed
           isActive: true,
         },
@@ -90,7 +92,7 @@ export async function POST(request: NextRequest) {
     const existingHistory = await prisma.nurtureHistory.findFirst({
       where: {
         nurtureSequenceId: sequence.id,
-        day,
+        day: dayValue,
         status: 'SENT',
       },
     });
@@ -105,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     // Generate message
     const message = getNurtureMessage(
-      day,
+      dayValue,
       customer.firstName,
       referralCode || undefined,
       customer.branch?.slug || 'new-jersey'
@@ -116,7 +118,7 @@ export async function POST(request: NextRequest) {
       data: {
         customerId,
         nurtureSequenceId: sequence.id,
-        day,
+        day: dayValue,
         message,
         channel: customer.whatsappOptIn ? 'WHATSAPP' : 'SMS',
         status: 'PENDING',
@@ -154,21 +156,21 @@ export async function POST(request: NextRequest) {
     await prisma.nurtureSequence.update({
       where: { id: sequence.id },
       data: {
-        currentDay: day,
-        ...(day === 7 && { isActive: false, completedAt: new Date() }),
+        currentDay: dayValue,
+        ...(dayValue === 7 && { isActive: false, completedAt: new Date() }),
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: `Day ${day} message sent`,
+      message: `Day ${dayValue} message sent`,
       historyId: history.id,
       messageId,
     });
   } catch (error: any) {
-    console.error(`Day ${body.day} nurture error:`, error);
+    console.error(`Day ${day ?? 'unknown'} nurture error:`, error);
     return NextResponse.json(
-      { success: false, error: error.message || `Failed to send Day ${body.day} message` },
+      { success: false, error: error.message || `Failed to send Day ${day ?? 'unknown'} message` },
       { status: 500 }
     );
   }

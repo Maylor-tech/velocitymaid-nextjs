@@ -35,6 +35,7 @@ export interface CleanerJobWithTimestamps {
   completedAt?: string;
   totalPrice?: number;
   onTime?: boolean;
+  jobQualityScore?: number | null; // Job Quality Score (0-100)
 }
 
 export interface CleanerStats {
@@ -396,6 +397,14 @@ export async function getCleanerStats(cleanerId: string): Promise<CleanerStats |
     complaintCount: 0,
     complaintRate: 0,
     latestComplaintRatings: [],
+    // Job Quality Score (JQS)
+    averageJQS: (() => {
+      const jobsWithJQS = completedJobs.filter(job => job.jobQualityScore !== null && job.jobQualityScore !== undefined);
+      if (jobsWithJQS.length === 0) return 0;
+      const sum = jobsWithJQS.reduce((acc, job) => acc + (job.jobQualityScore || 0), 0);
+      return sum / jobsWithJQS.length;
+    })(),
+    totalJQSJobs: completedJobs.filter(job => job.jobQualityScore !== null && job.jobQualityScore !== undefined).length,
   };
 }
 

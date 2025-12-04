@@ -109,6 +109,24 @@ Is there anything we could improve? Reply to this message and we'll make it righ
 
     // Rating <= 3: Create complaint + trigger WhatsApp apology
     if (roundedRating <= 3) {
+      // Get job to fetch customer name
+      const job = await prisma.job.findUnique({
+        where: { id: jobId },
+        include: {
+          customer: {
+            select: {
+              firstName: true,
+              lastName: true,
+              phone: true,
+            },
+          },
+        },
+      });
+
+      const customerName = job?.customer
+        ? `${job.customer.firstName} ${job.customer.lastName}`
+        : job?.customerName || 'Customer';
+
       // Save internal review
       const review = createReview({
         jobId,
@@ -125,9 +143,14 @@ Is there anything we could improve? Reply to this message and we'll make it righ
         jobId,
         cleanerId,
         serviceLocation: 'new_jersey',
-        issueDescription: comment?.trim() || `Low rating: ${roundedRating} stars`,
-        severity: roundedRating === 1 ? 'high' : roundedRating === 2 ? 'medium' : 'low',
-        requestedResolution: requestReclean ? 'reclean' : 'refund_partial',
+        customerName,
+        customerPhone: customerPhone || job?.customer?.phone || '',
+        rating: roundedRating,
+        comment: comment?.trim() || `Low rating: ${roundedRating} stars`,
+        requestReclean: requestReclean || false,
+        status: 'pending',
+        resolutionType: null,
+        adminNotes: null,
       });
 
       // Send WhatsApp apology if phone provided

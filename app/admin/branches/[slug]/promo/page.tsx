@@ -37,11 +37,24 @@ export default async function BranchPromoPage({
   });
 
   // Get all promos for this branch
-  const allPromos = await prisma.promo.findMany({
+  const allPromosRaw = await prisma.promo.findMany({
     where: { branchId: branch.id },
     orderBy: [{ year: 'desc' }, { month: 'desc' }],
     take: 12, // Last 12 months
   });
+
+  // Convert Date objects to ISO strings for client component
+  const allPromos = allPromosRaw.map(promo => ({
+    ...promo,
+    startDate: promo.startDate.toISOString(),
+    endDate: promo.endDate.toISOString(),
+  }));
+
+  const currentPromoFormatted = currentPromo ? {
+    ...currentPromo,
+    startDate: currentPromo.startDate.toISOString(),
+    endDate: currentPromo.endDate.toISOString(),
+  } : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -58,7 +71,7 @@ export default async function BranchPromoPage({
         <PromoManagementClient
           branchId={branch.id}
           branchSlug={branch.slug}
-          currentPromo={currentPromo}
+          currentPromo={currentPromoFormatted}
           allPromos={allPromos}
           currentMonth={currentMonth}
           currentYear={currentYear}

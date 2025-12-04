@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { Star, QrCode, ExternalLink, Sparkles, Gift } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'Leave a Review - VelocityMaid New Jersey',

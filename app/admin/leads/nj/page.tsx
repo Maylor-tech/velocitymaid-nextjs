@@ -21,7 +21,7 @@ export default async function AdminLeadsNJPage() {
   }
 
   // Get leads
-  const leads = await prisma.lead.findMany({
+  const leadsRaw = await prisma.lead.findMany({
     where: { branchId: branch.id },
     orderBy: [
       { leadScore: 'desc' },
@@ -29,6 +29,25 @@ export default async function AdminLeadsNJPage() {
     ],
     take: 100,
   });
+
+  // Convert Date objects to ISO strings for client component
+  const leads = leadsRaw.map(lead => ({
+    id: lead.id,
+    name: lead.name,
+    phone: lead.phone,
+    email: lead.email,
+    zip: lead.zip,
+    bedrooms: lead.bedrooms,
+    bathrooms: lead.bathrooms,
+    urgency: lead.urgency,
+    homeType: lead.homeType,
+    leadScore: lead.leadScore,
+    leadTier: lead.leadTier,
+    riskFlags: lead.riskFlags,
+    status: lead.status,
+    depositPaid: lead.depositPaid,
+    createdAt: lead.createdAt.toISOString(),
+  }));
 
   // Get stats
   const stats = {

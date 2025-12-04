@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import TrainingModuleCard from './components/TrainingModuleCard';
+import TrainingModuleCard from '@/app/cleaners/training/components/TrainingModuleCard';
 
 interface Lesson {
   id: string;

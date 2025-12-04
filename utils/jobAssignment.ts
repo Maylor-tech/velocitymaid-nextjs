@@ -6,7 +6,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getCleanerAverageJQS } from './jobQualityScore';
-import { checkTrainingPassed } from './trainingEligibility';
+import { isCleanerTrainingEligible } from './trainingEligibility';
 import { resolveCityFromZip } from './cityRouting';
 
 interface AssignmentOptions {
@@ -179,7 +179,7 @@ export async function findBestCleanerForJob(options: AssignmentOptions): Promise
       }
     }
 
-    // Get available cleaners with JQS
+    // Get available cleaners with JQS, distance, and weekly job count
     const availableCleaners = [];
     for (const cleaner of eligibleCleaners) {
       const isAvailable = await isCleanerAvailable(
@@ -190,9 +190,28 @@ export async function findBestCleanerForJob(options: AssignmentOptions): Promise
       );
       if (isAvailable) {
         const avgJQS = await getCleanerAverageJQS(cleaner.id);
+        
+        // Calculate distance score (1 if same city, 0 otherwise)
+        const cleanerPreferredCities = cleaner.preferredCities || [];
+        const distanceScore = jobCity && cleanerPreferredCities.includes(jobCity) ? 1 : 0;
+        
+        // Calculate weekly job count
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        weekStart.setHours(0, 0, 0, 0);
+        const weeklyJobCount = await prisma.job.count({
+          where: {
+            assignedCleanerId: cleaner.id,
+            status: { in: ['assigned', 'in_progress', 'completed'] },
+            assignedAt: { gte: weekStart },
+          },
+        });
+        
         availableCleaners.push({
           cleanerId: cleaner.id,
           avgJQS,
+          distanceScore,
+          weeklyJobCount,
         });
       }
     }

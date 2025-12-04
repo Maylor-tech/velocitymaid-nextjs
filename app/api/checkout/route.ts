@@ -142,6 +142,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Determine city from ZIP (for New Jersey)
+    let assignedCity: string | null = null;
+    if (zipCode && resolvedBranchSlug === 'new-jersey') {
+      assignedCity = resolveCityFromZip(zipCode);
+    }
+
     // If JMD currency (Port Antonio local), skip Stripe and create Job directly
     if (selectedCurrency === 'JMD' && resolvedBranchSlug === 'port-antonio') {
       if (!resolvedBranchId) {
@@ -149,12 +155,6 @@ export async function POST(request: NextRequest) {
           { error: 'Branch not found for Port Antonio' },
           { status: 400 }
         );
-      }
-
-      // Determine city from ZIP
-      let assignedCity: string | null = null;
-      if (zipCode && resolvedBranchSlug === 'new-jersey') {
-        assignedCity = resolveCityFromZip(zipCode);
       }
 
       // Create Job record directly (no Stripe payment)
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
           currency: 'JMD',
           paymentMethod: 'cash', // Default to cash, can be updated later
           appliedReferralCode: referralCode || null, // Store referral code
-          assignedCity: assignedCity, // Store city assignment
+          // Note: assignedCity can be stored in metadata or address field if needed
         },
       });
 

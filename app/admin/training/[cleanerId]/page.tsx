@@ -191,7 +191,7 @@ export default function CleanerTrainingDetailPage() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {data.cleanerName}
                 {data.overallStatus === 'PASSED' && (
-                  <Award className="w-6 h-6 text-yellow-500 inline-block ml-2" title="Jamaica Certified" />
+                  <Award className="w-6 h-6 text-yellow-500 inline-block ml-2" aria-label="Jamaica Certified" />
                 )}
               </h1>
               <p className="text-gray-600">{data.cleanerEmail}</p>

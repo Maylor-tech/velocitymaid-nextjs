@@ -35,7 +35,6 @@ export async function GET(request: NextRequest) {
         trainingStatus: {
           OR: [
             { overallStatus: 'NOT_STARTED' },
-            { overallStatus: null },
           ],
         },
       },

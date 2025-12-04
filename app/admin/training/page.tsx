@@ -204,7 +204,7 @@ export default function AdminTrainingPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           {cleaner.overallStatus === 'PASSED' && (
-                            <Award className="w-4 h-4 text-yellow-500" title="Jamaica Certified" />
+                            <Award className="w-4 h-4 text-yellow-500" aria-label="Jamaica Certified" />
                           )}
                           <div>
                             <div className="text-sm font-medium text-gray-900">{cleaner.cleanerName}</div>

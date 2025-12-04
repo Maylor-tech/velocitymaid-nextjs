@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
-import LessonCard from '../components/LessonCard';
-import ProgressBar from '../components/ProgressBar';
+import LessonCard from '@/app/cleaners/training/components/LessonCard';
+import ProgressBar from '@/app/cleaners/training/components/ProgressBar';
 
 interface Lesson {
   id: string;
@@ -13,6 +13,7 @@ interface Lesson {
   order: number;
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
   score: number | null;
+  completedAt: string | null;
 }
 
 interface ModuleData {

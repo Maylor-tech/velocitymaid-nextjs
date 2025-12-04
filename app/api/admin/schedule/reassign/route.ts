@@ -73,15 +73,17 @@ export async function POST(request: NextRequest) {
             overallStatus: true,
           },
         },
-        cleanerApplication: {
-          select: {
-            phone: true,
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        },
       },
     });
+
+    // Get cleaner application separately (if exists)
+    const cleanerApplication = cleaner
+      ? await prisma.cleanerApplication.findFirst({
+          where: { email: cleaner.email },
+          orderBy: { createdAt: 'desc' },
+          select: { phone: true },
+        })
+      : null;
 
     if (!cleaner) {
       return NextResponse.json(
@@ -132,7 +134,7 @@ export async function POST(request: NextRequest) {
     // Send WhatsApp job offer for Jamaica branches
     if (isJamaicaBranch && sendWhatsApp) {
       const cleanerPhone =
-        cleaner.cleanerApplication?.[0]?.phone ||
+        cleanerApplication?.phone ||
         cleaner.email;
 
       if (cleanerPhone) {

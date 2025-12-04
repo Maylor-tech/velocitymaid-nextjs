@@ -21,7 +21,7 @@ export default async function MorningQueuePage() {
   }
 
   // Get leads waiting for morning
-  const waitingLeads = await prisma.lead.findMany({
+  const waitingLeadsRaw = await prisma.lead.findMany({
     where: {
       branchId: branch.id,
       waitForMorning: true,
@@ -32,6 +32,19 @@ export default async function MorningQueuePage() {
     ],
     take: 100,
   });
+
+  // Convert Date objects to ISO strings for client component
+  const waitingLeads = waitingLeadsRaw.map(lead => ({
+    id: lead.id,
+    name: lead.name,
+    phone: lead.phone,
+    zip: lead.zip,
+    leadTier: lead.leadTier,
+    leadScore: lead.leadScore,
+    urgency: lead.urgency,
+    afterHoursMessage: lead.afterHoursMessage,
+    createdAt: lead.createdAt.toISOString(),
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">

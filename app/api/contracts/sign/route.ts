@@ -20,6 +20,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get existing contract first
+    const existingContract = await prisma.contract.findUnique({
+      where: { id: contractId },
+    });
+
+    if (!existingContract) {
+      return NextResponse.json(
+        { success: false, error: 'Contract not found' },
+        { status: 404 }
+      );
+    }
+
     // Update contract
     const contract = await prisma.contract.update({
       where: { id: contractId },
@@ -30,7 +42,7 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         email: email || null,
         metadata: {
-          ...((contract.metadata as any) || {}),
+          ...((existingContract.metadata as any) || {}),
           signature,
         },
       },

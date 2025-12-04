@@ -11,6 +11,8 @@ export interface LeadScoringInput {
   previousService?: boolean;
   homeType?: string;
   referralSource?: string;
+  phone?: string;
+  email?: string;
 }
 
 export interface LeadScoringResult {

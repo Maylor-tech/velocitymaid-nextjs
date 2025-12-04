@@ -126,17 +126,26 @@ async function handleInboundMessage(message: any) {
  */
 async function handleJobReply(cleanerPhone: string, reply: 'YES' | 'NO', originalMessage: string) {
   try {
-    // Find cleaner by phone number
+    // Find cleaner application by phone number
+    const normalizedPhone = cleanerPhone.replace(/[^0-9]/g, '');
+    const cleanerApplication = await prisma.cleanerApplication.findFirst({
+      where: {
+        phone: {
+          contains: normalizedPhone,
+        },
+      },
+    });
+
+    if (!cleanerApplication) {
+      console.log(`Cleaner application not found for phone: ${cleanerPhone}`);
+      return;
+    }
+
+    // Find cleaner by email
     const cleaner = await prisma.user.findFirst({
       where: {
         role: 'CLEANER',
-        cleanerApplication: {
-          some: {
-            phone: {
-              contains: cleanerPhone.replace(/[^0-9]/g, ''),
-            },
-          },
-        },
+        email: cleanerApplication.email,
       },
       include: {
         primaryBranch: {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
-import QuizForm from '../../components/QuizForm';
+import QuizForm from '@/app/cleaners/training/components/QuizForm';
 
 interface LessonData {
   id: string;
