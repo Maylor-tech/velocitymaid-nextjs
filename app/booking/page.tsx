@@ -642,8 +642,8 @@ function BookingPageContent() {
                           errors.firstName ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="John"
-                        aria-invalid={errors.firstName ? 'true' : 'false'}
-                        aria-describedby={errors.firstName ? 'firstName-error' : undefined}
+                        {...(errors.firstName && { 'aria-invalid': 'true' })}
+                        {...(errors.firstName && { 'aria-describedby': 'firstName-error' })}
                       />
                       {errors.firstName && <p id="firstName-error" className="text-red-500 text-sm mt-1" role="alert">{errors.firstName}</p>}
                     </div>
@@ -665,8 +665,8 @@ function BookingPageContent() {
                           errors.lastInitial ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="M"
-                        aria-invalid={errors.lastInitial ? 'true' : 'false'}
-                        aria-describedby={errors.lastInitial ? 'lastInitial-error' : undefined}
+                        {...(errors.lastInitial && { 'aria-invalid': 'true' })}
+                        {...(errors.lastInitial && { 'aria-describedby': 'lastInitial-error' })}
                       />
                       {errors.lastInitial && <p id="lastInitial-error" className="text-red-500 text-sm mt-1" role="alert">{errors.lastInitial}</p>}
                     </div>
@@ -686,8 +686,8 @@ function BookingPageContent() {
                         errors.phone ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="(802) 555-1234"
-                      aria-invalid={errors.phone ? 'true' : 'false'}
-                      aria-describedby={errors.phone ? 'phone-error' : undefined}
+                      {...(errors.phone && { 'aria-invalid': 'true' })}
+                      {...(errors.phone && { 'aria-describedby': 'phone-error' })}
                     />
                     {errors.phone && <p id="phone-error" className="text-red-500 text-sm mt-1" role="alert">{errors.phone}</p>}
                   </div>
@@ -705,8 +705,8 @@ function BookingPageContent() {
                         errors.email ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="john@example.com"
-                      aria-invalid={errors.email ? 'true' : 'false'}
-                      aria-describedby={errors.email ? 'email-error' : undefined}
+                      {...(errors.email && { 'aria-invalid': 'true' })}
+                      {...(errors.email && { 'aria-describedby': 'email-error' })}
                     />
                     {errors.email && <p id="email-error" className="text-red-500 text-sm mt-1" role="alert">{errors.email}</p>}
                   </div>
@@ -728,8 +728,8 @@ function BookingPageContent() {
                           ? 'Street address, Port Antonio, Jamaica'
                           : '123 Main St, Newark, NJ 07102 (New Jersey addresses only)'
                       }
-                      aria-invalid={errors.address ? 'true' : 'false'}
-                      aria-describedby={errors.address ? 'address-error' : undefined}
+                      {...(errors.address && { 'aria-invalid': 'true' })}
+                      {...(errors.address && { 'aria-describedby': 'address-error' })}
                     />
                     {errors.address && <p id="address-error" className="text-red-500 text-sm mt-1" role="alert">{errors.address}</p>}
                   </div>
@@ -834,7 +834,7 @@ function BookingPageContent() {
                           onChange={(e) => handleFieldChange('serviceType', e.target.value)}
                           onBlur={() => handleBlur('serviceType')}
                           className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          aria-invalid={errors.serviceType ? 'true' : 'false'}
+                          {...(errors.serviceType && { 'aria-invalid': 'true' })}
                         />
                         <div className="flex-1">
                           <span className="font-semibold text-gray-900">Basic Clean</span>
@@ -858,7 +858,7 @@ function BookingPageContent() {
                           onChange={(e) => handleFieldChange('serviceType', e.target.value)}
                           onBlur={() => handleBlur('serviceType')}
                           className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          aria-invalid={errors.serviceType ? 'true' : 'false'}
+                          {...(errors.serviceType && { 'aria-invalid': 'true' })}
                         />
                         <div className="flex-1">
                           <span className="font-semibold text-gray-900">Deep Clean</span>
@@ -882,7 +882,7 @@ function BookingPageContent() {
                           onChange={(e) => handleFieldChange('serviceType', e.target.value)}
                           onBlur={() => handleBlur('serviceType')}
                           className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          aria-invalid={errors.serviceType ? 'true' : 'false'}
+                          {...(errors.serviceType && { 'aria-invalid': 'true' })}
                         />
                         <div className="flex-1">
                           <span className="font-semibold text-gray-900">Move In/Out</span>
@@ -916,8 +916,8 @@ function BookingPageContent() {
                         className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
                           errors.preferredDate ? 'border-red-500' : 'border-gray-300'
                         }`}
-                        aria-invalid={errors.preferredDate ? 'true' : 'false'}
-                        aria-describedby={errors.preferredDate ? 'preferredDate-error' : undefined}
+                        {...(errors.preferredDate && { 'aria-invalid': 'true' })}
+                        {...(errors.preferredDate && { 'aria-describedby': 'preferredDate-error' })}
                       />
                       {errors.preferredDate && <p id="preferredDate-error" className="text-red-500 text-sm mt-1" role="alert">{errors.preferredDate}</p>}
                     </div>
@@ -933,8 +933,8 @@ function BookingPageContent() {
                         className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
                           errors.preferredTime ? 'border-red-500' : 'border-gray-300'
                         }`}
-                        aria-invalid={errors.preferredTime ? 'true' : 'false'}
-                        aria-describedby={errors.preferredTime ? 'preferredTime-error' : undefined}
+                        {...(errors.preferredTime && { 'aria-invalid': 'true' })}
+                        {...(errors.preferredTime && { 'aria-describedby': 'preferredTime-error' })}
                       >
                         <option value="">Select a time</option>
                         <option value="morning">Morning (9 AM - 12 PM)</option>

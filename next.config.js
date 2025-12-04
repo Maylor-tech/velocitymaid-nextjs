@@ -5,9 +5,6 @@ const nextConfig = {
     // Enable image optimization for local images
     unoptimized: false,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
