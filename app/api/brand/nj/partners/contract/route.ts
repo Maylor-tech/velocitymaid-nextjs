@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid New Jersey Building Partnership Contract
  * GET /api/brand/nj/partners/contract

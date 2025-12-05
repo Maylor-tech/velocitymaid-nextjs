@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Generate Deposit URL for Tier C Leads
  * POST /api/leads/deposit/generate

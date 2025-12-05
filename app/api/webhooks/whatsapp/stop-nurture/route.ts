@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Stop Nurture Sequence on Customer Reply
  * POST /api/webhooks/whatsapp/stop-nurture

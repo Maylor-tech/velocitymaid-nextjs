@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid New Jersey Brand Style Guide Generator
  * GET /api/brand/nj/guide

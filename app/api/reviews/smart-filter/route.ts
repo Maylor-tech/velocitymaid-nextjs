@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Smart Review Filter API
  * POST /api/reviews/smart-filter

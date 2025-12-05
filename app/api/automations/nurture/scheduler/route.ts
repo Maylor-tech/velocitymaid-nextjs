@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Nurture Sequence Scheduler
  * POST /api/automations/nurture/scheduler

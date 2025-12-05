@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Get Training Progress API
  * GET /api/training/progress

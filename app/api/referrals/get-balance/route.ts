@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Get Referral Balance API
  * GET /api/referrals/get-balance?customerId={id}

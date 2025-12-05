@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Restaurant Nightly Clean Contract PDF
  * GET /api/brand/nj/corporate/restaurant-contract

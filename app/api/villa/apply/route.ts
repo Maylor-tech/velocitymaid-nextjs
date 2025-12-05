@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Villa Partnership Application API
  * POST /api/villa/apply

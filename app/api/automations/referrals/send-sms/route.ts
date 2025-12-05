@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Send Referral SMS Message API
  * POST /api/automations/referrals/send-sms

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * VelocityMaid New Jersey Instagram Caption Generator
  * GET /api/brand/nj/instagram/caption?day={dayNumber}

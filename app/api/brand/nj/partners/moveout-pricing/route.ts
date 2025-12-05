@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid New Jersey Move-Out Cleaning Pricing Sheet
  * GET /api/brand/nj/partners/moveout-pricing

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Send Referral WhatsApp Message API
  * POST /api/automations/referrals/send-whatsapp

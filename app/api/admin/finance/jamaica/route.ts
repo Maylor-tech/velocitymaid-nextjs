@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Jamaica Branch Revenue Dashboard API
  * GET /api/admin/finance/jamaica

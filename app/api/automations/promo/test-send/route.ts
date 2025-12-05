@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Test Send Promo Message
  * POST /api/automations/promo/test-send

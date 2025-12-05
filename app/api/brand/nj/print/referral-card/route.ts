@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * VelocityMaid New Jersey Referral Card Generator
  * GET /api/brand/nj/print/referral-card?side={front|back}

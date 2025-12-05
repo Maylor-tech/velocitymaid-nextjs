@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid New Jersey Move-Out Sheet Generator
  * GET /api/brand/nj/print/moveout-sheet

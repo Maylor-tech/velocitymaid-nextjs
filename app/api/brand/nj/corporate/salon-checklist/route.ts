@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Salon Cleaning Checklist PDF
  * GET /api/brand/nj/corporate/salon-checklist

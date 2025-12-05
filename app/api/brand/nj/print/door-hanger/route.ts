@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * VelocityMaid New Jersey Door Hanger Generator
  * GET /api/brand/nj/print/door-hanger?side={front|back}

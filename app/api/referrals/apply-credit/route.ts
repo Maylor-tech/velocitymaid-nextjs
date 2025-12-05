@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Apply Referral Credit API
  * POST /api/referrals/apply-credit

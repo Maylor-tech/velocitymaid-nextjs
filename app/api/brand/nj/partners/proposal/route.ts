@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid New Jersey Apartment Cleaning Partnership Proposal
  * GET /api/brand/nj/partners/proposal

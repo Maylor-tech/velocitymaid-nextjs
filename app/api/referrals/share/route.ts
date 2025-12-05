@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Share Referral Link API
  * GET /api/referrals/share?customerId={id}&method={whatsapp|sms|copy}

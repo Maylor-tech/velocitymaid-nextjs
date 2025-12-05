@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Validate Promo Code
  * GET /api/promo/validate?branch=new-jersey&promo=1-2024

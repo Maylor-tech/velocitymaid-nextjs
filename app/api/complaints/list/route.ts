@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllComplaints, calculateComplaintStats } from '@/utils/complaintData';
 import type { ComplaintStatus, ServiceRegion } from '@/utils/complaintData';

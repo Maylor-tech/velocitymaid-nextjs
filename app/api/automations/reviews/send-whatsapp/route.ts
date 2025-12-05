@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Send Review Request WhatsApp Message
  * POST /api/automations/reviews/send-whatsapp

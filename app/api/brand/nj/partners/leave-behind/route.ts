@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * VelocityMaid New Jersey Leave-Behind Card Generator
  * GET /api/brand/nj/partners/leave-behind?side={front|back}

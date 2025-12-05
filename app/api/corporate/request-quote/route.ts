@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Corporate Quote Request API
  * POST /api/corporate/request-quote

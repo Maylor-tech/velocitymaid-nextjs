@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid New Jersey Checklist Graphic (PNG)
  * GET /api/brand/nj/partners/checklist-graphic

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Day 6 Nurture Message
  * POST /api/automations/nurture/day6

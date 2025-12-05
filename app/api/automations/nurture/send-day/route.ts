@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Send Nurture Message for Specific Day
  * POST /api/automations/nurture/send-day

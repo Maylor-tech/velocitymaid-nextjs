@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Monthly Promo Scheduler (Cron Job)
  * GET /api/cron/promo/monthly-send

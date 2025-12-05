@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Send Follow-Up Review Request (Cron Job)
  * GET /api/cron/reviews/send-followup

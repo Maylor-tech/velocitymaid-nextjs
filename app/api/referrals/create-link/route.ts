@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Create Referral Link API
  * POST /api/referrals/create-link

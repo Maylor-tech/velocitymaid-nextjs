@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Track Referral Event API
  * POST /api/referrals/track-event

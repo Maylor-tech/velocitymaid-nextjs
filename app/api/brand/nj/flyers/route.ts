@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * VelocityMaid New Jersey Flyer & Door Hanger Generator
  * GET /api/brand/nj/flyers?type={flyerType}

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid Jamaica Contract Packet PDF Generator
  * GET /api/contracts/packet

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Morning Queue Processing Cron Job
  * GET /api/cron/morning-queue/process

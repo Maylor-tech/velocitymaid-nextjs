@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Jamaica Marketing Flyers PDF Generator
  * GET /api/marketing/jamaica/flyers?type=[launch|villa|hiring]

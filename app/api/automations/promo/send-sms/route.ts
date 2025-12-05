@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Send Promo SMS Message
  * POST /api/automations/promo/send-sms

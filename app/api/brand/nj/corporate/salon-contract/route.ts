@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Salon/Barbershop Cleaning Contract PDF
  * GET /api/brand/nj/corporate/salon-contract

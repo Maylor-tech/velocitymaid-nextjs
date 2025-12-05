@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Office Cleaning Checklist PDF
  * GET /api/brand/nj/corporate/office-checklist

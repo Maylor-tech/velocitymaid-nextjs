@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Send Review Request SMS Message
  * POST /api/automations/reviews/send-sms

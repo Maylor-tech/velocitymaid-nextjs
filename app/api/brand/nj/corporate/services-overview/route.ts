@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Corporate Services Overview PDF
  * GET /api/brand/nj/corporate/services-overview

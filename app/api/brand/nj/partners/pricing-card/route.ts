@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid New Jersey Pricing Card (PNG)
  * GET /api/brand/nj/partners/pricing-card

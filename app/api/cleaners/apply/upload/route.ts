@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * File Upload API for Cleaner Application
  * POST /api/cleaners/apply/upload

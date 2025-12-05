@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Generate Review QR Code
  * GET /api/reviews/qr-code?branch=new-jersey
@@ -7,6 +9,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import QRCode from 'qrcode';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

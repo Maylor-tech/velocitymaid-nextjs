@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Create Lead
  * POST /api/leads/create

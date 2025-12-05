@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Job Completion Webhook
  * POST /api/webhooks/jobs/completed

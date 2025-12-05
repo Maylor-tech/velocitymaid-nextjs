@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Generate Cleaner Handbook PDF API
  * GET /api/training/handbook/pdf

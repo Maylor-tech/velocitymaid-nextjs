@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Create Jamaica Payout API
  * POST /api/admin/payouts/jamaica/create

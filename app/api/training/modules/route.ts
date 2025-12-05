@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Get Training Modules API
  * GET /api/training/modules

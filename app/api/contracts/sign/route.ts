@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Sign Contract API
  * POST /api/contracts/sign

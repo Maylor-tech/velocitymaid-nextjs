@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Send Promo WhatsApp Message
  * POST /api/automations/promo/send-whatsapp

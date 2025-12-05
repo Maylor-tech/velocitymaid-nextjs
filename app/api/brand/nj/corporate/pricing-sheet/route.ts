@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Corporate Pricing Sheet PDF
  * GET /api/brand/nj/corporate/pricing-sheet

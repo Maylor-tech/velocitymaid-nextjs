@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Google Business Profile Promo Post (Optional)
  * POST /api/automations/gbp/promo

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid New Jersey Superintendent Referral Program
  * GET /api/brand/nj/partners/superintendent-referral

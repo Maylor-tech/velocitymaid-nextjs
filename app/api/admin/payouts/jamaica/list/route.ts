@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * List Jamaica Payouts API
  * GET /api/admin/payouts/jamaica/list?branchId=xxx&status=xxx

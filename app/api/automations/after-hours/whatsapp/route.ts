@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * After-Hours WhatsApp Auto-Response
  * POST /api/automations/after-hours/whatsapp

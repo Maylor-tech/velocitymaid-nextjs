@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Process Referral After Booking Completion
  * POST /api/webhooks/referrals/process

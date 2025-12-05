@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Get Cleaner Payment Method API
  * GET /api/cleaners/payment-method/get?cleanerId=xxx

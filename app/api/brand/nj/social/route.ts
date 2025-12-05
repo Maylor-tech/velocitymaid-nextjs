@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * VelocityMaid New Jersey Social Media Template Generator
  * GET /api/brand/nj/social?type={templateType}

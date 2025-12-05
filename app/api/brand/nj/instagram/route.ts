@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * VelocityMaid New Jersey Instagram Content Pack Generator
  * GET /api/brand/nj/instagram?graphic={number}&format={feed|story}

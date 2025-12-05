@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Training Reminders Cron Job
  * GET /api/cron/training/reminders

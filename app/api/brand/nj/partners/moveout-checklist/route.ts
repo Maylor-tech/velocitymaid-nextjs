@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid New Jersey Move-Out Cleaning Checklist
  * GET /api/brand/nj/partners/moveout-checklist

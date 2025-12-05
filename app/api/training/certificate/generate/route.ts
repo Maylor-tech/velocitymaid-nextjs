@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Generate Certificate API
  * POST /api/training/certificate/generate

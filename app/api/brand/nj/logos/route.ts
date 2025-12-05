@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * VelocityMaid New Jersey Logo Generator
  * GET /api/brand/nj/logos?type={logoType}

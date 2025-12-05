@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Update Cleaner Payment Method API
  * POST /api/cleaners/payment-method/update

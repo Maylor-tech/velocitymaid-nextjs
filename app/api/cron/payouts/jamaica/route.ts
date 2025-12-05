@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Weekly Jamaica Payouts Cron Job
  * 

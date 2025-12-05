@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Cleaner Earnings Dashboard API
  * GET /api/cleaners/earnings

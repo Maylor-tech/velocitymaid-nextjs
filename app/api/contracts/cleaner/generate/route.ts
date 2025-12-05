@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Generate Cleaner Agreement PDF
  * POST /api/contracts/cleaner/generate

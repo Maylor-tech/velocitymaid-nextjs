@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * WhatsApp Auto-Response for Leads
  * POST /api/automations/whatsapp/lead

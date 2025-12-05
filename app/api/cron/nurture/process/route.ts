@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Process Nurture Sequence Messages (Cron Job)
  * GET /api/cron/nurture/process

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid New Jersey Mailbox Flyer Generator
  * GET /api/brand/nj/print/mailbox-flyer

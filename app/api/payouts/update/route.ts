@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server';
 import { updatePayout, getPayoutById } from '@/utils/payoutData';
 import type { PayoutStatus, PaymentMethod } from '@/utils/payoutData';

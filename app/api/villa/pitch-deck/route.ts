@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * VelocityMaid Jamaica Villa Sales Pitch Deck PDF Generator
  * GET /api/villa/pitch-deck

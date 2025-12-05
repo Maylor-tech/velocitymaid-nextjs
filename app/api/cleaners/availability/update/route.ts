@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Update Cleaner Availability API
  * POST /api/cleaners/availability/update

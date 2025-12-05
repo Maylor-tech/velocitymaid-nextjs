@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Generate Villa Partnership Agreement PDF
  * POST /api/contracts/villa/generate

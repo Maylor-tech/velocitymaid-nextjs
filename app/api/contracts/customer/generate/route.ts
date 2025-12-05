@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Generate Customer Terms PDF
  * POST /api/contracts/customer/generate

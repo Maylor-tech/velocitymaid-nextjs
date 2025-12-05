@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Send Referral Reminder Messages (Cron Job)
  * GET /api/cron/referrals/send-reminders

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 /**
  * Office Cleaning Contract PDF
  * GET /api/brand/nj/corporate/office-contract
