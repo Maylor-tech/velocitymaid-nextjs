@@ -7,8 +7,6 @@ export const dynamic = 'force-dynamic';
  * Sends tiered WhatsApp response based on lead score
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';

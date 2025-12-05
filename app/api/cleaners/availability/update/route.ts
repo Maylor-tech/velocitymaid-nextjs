@@ -7,8 +7,6 @@ export const dynamic = 'force-dynamic';
  * Creates or updates cleaner availability settings
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';

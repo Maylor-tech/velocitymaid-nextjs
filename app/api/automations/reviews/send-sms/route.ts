@@ -7,8 +7,6 @@ export const dynamic = 'force-dynamic';
  * Sends SMS message requesting review after job completion
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

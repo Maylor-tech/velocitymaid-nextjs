@@ -7,8 +7,6 @@ export const dynamic = 'force-dynamic';
  * Generates a certificate when training is marked as PASSED
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';

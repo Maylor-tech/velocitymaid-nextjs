@@ -7,8 +7,6 @@ export const dynamic = 'force-dynamic';
  * Applies a referral credit to a booking
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

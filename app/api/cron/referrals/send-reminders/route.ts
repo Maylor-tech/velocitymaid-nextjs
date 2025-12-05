@@ -8,8 +8,6 @@ export const dynamic = 'force-dynamic';
  * Runs daily via cron job
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

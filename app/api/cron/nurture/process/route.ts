@@ -8,8 +8,6 @@ export const dynamic = 'force-dynamic';
  * Checks for messages that should be sent now
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';

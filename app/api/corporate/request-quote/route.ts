@@ -7,8 +7,6 @@ export const dynamic = 'force-dynamic';
  * Stores corporate quote requests and sends notifications
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

@@ -7,8 +7,6 @@ export const dynamic = 'force-dynamic';
  * Creates a deposit payment link for Tier C leads
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

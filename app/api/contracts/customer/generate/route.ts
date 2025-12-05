@@ -5,8 +5,6 @@ export const dynamic = 'force-dynamic';
  * POST /api/contracts/customer/generate
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { customerTermsTemplate } from '@/app/api/contracts/templates';

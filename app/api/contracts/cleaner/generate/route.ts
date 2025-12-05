@@ -5,8 +5,6 @@ export const dynamic = 'force-dynamic';
  * POST /api/contracts/cleaner/generate
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { cleanerAgreementTemplate } from '@/app/api/contracts/templates';

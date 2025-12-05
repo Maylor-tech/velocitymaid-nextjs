@@ -10,7 +10,7 @@ const nextConfig = {
   },
   // Prevent static generation timeout for review pages
   experimental: {
-    isrMemoryCacheSize: 0,
+    missingSuspenseWithCSRBailout: false,
   },
 }
 

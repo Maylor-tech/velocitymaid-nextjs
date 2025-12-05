@@ -5,8 +5,6 @@ export const dynamic = 'force-dynamic';
  * POST /api/contracts/villa/generate
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { villaPartnershipTemplate } from '@/app/api/contracts/templates';

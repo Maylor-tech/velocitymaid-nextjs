@@ -7,8 +7,6 @@ export const dynamic = 'force-dynamic';
  * Tracks a referral event (when someone uses a referral code)
  */
 
-export const dynamic = 'force-dynamic'
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
