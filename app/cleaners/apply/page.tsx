@@ -15,7 +15,7 @@ interface Branch {
   status: string;
 }
 
-export default function CleanerApplyPage() {
+function CleanerApplyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preSelectedBranchSlug = searchParams.get('branch');
@@ -393,6 +393,18 @@ export default function CleanerApplyPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function CleanerApplyPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+      </div>
+    }>
+      <CleanerApplyContent />
+    </Suspense>
   );
 }
 

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { Gift, Share2, Copy, MessageCircle, QrCode, DollarSign, Users, CheckCircle2 } from 'lucide-react';

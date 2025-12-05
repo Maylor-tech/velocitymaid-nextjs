@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState, Suspense } from 'react';
 import { CheckCircle, Home, Sparkles, Star } from 'lucide-react';

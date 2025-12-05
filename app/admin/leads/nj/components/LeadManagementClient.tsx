@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useMemo } from 'react';
 import { Search, Filter, CheckCircle2, XCircle, DollarSign, TrendingUp, Users } from 'lucide-react';

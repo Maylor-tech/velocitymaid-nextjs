@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { Sparkles, Award, DollarSign, Clock, Users, CheckCircle, ArrowRight, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';

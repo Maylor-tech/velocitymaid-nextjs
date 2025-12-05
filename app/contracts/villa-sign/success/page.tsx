@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle, Download, Home } from 'lucide-react';
+import { CheckCircle, Download, Home, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function VillaSignSuccessPage() {
+function VillaSignSuccessContent() {
   const searchParams = useSearchParams();
   const contractId = searchParams.get('contractId');
 
@@ -42,6 +43,18 @@ export default function VillaSignSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VillaSignSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-[#F3F1EB] to-white flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0A3D2F]" />
+      </div>
+    }>
+      <VillaSignSuccessContent />
+    </Suspense>
   );
 }
 

@@ -1,12 +1,4 @@
-/**
- * Jamaica SOP Library Page
- * 
- * /cleaners/sop
- * 
- * Displays Standard Operating Procedures for Jamaica cleaners
- */
-
-'use client';
+"use client";
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';

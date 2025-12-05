@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { Users, TrendingUp, DollarSign, CheckCircle2 } from 'lucide-react';
 

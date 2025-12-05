@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { Calendar, DollarSign, MessageSquare, Eye, Send, CheckCircle2, XCircle } from 'lucide-react';
