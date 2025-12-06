@@ -1,59 +1,31 @@
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
-import LeadManagementClient from './components/LeadManagementClient';
 import { resolveBranchSlug } from '@/utils/branchSlugResolver';
 import BranchNotFound from '../../components/BranchNotFound';
+import LeadManagementClient from '../nj/components/LeadManagementClient';
 
 export const metadata: Metadata = {
-  title: 'Lead Management - New Jersey | VelocityMaid Admin',
-  description: 'Manage and qualify leads for New Jersey branch',
+  title: 'Lead Management | VelocityMaid Admin',
+  description: 'Manage and qualify leads',
 };
 
-export default async function AdminLeadsNJPage() {
-  // Resolve branch slug
-  const resolvedSlug = resolveBranchSlug('nj');
+interface PageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export default async function AdminLeadsSlugPage({ params }: PageProps) {
+  // Resolve branch slug (nj → new-jersey-branch)
+  const resolvedSlug = resolveBranchSlug(params.slug);
 
   let branch;
   try {
-    // Try the resolved slug first
     branch = await prisma.branch.findUnique({
       where: { slug: resolvedSlug },
     });
-    
-    // If not found, try the original slug as fallback
-    if (!branch) {
-      branch = await prisma.branch.findUnique({
-        where: { slug: 'new-jersey' },
-      });
-    }
-    
-    // If still not found, try 'nj'
-    if (!branch) {
-      branch = await prisma.branch.findUnique({
-        where: { slug: 'nj' },
-      });
-    }
   } catch (error) {
     console.error('Error fetching branch:', error);
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center px-4">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Database Error</h1>
-          <p className="text-gray-600 mb-4">
-            Unable to connect to the database. Please check your connection.
-          </p>
-          <p className="text-sm text-red-600 mb-4">
-            Error: {error instanceof Error ? error.message : 'Unknown error'}
-          </p>
-          <a
-            href="/admin/leads"
-            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            Back to Leads
-          </a>
-        </div>
-      </div>
-    );
   }
 
   // If branch not found, return styled 404
@@ -61,7 +33,7 @@ export default async function AdminLeadsNJPage() {
     return <BranchNotFound slug={resolvedSlug} />;
   }
 
-  // Get leads - will return empty array if no leads exist
+  // Get leads
   let leadsRaw: Awaited<ReturnType<typeof prisma.lead.findMany>> = [];
   try {
     leadsRaw = await prisma.lead.findMany({
@@ -74,7 +46,6 @@ export default async function AdminLeadsNJPage() {
     });
   } catch (error) {
     console.error('Error fetching leads:', error);
-    // leadsRaw remains empty array - this is OK, we'll show empty state
   }
 
   // Convert Date objects to ISO strings for client component
@@ -108,20 +79,15 @@ export default async function AdminLeadsNJPage() {
     rejected: leads.filter(l => l.status === 'REJECTED').length,
   };
 
-  // Ensure we have valid data
-  if (!branch || !branch.id) {
-    return <BranchNotFound slug={resolvedSlug} />;
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Lead Management - {branch.name || 'New Jersey'}
+            Lead Management - {branch.name}
           </h1>
           <p className="text-gray-600">
-            Manage and qualify leads for the {branch.name || 'New Jersey'} branch
+            Manage and qualify leads for the {branch.name} branch
           </p>
         </div>
 
@@ -134,3 +100,4 @@ export default async function AdminLeadsNJPage() {
     </div>
   );
 }
+

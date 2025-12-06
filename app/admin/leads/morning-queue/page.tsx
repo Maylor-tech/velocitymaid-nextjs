@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import MorningQueueClient from './components/MorningQueueClient';
+import { resolveBranchSlug } from '@/utils/branchSlugResolver';
+import BranchNotFound from '../../components/BranchNotFound';
 
 export const metadata: Metadata = {
   title: 'Morning Queue - Leads | VelocityMaid Admin',
@@ -8,30 +10,41 @@ export const metadata: Metadata = {
 };
 
 export default async function MorningQueuePage() {
-  const branch = await prisma.branch.findUnique({
-    where: { slug: 'new-jersey' },
-  });
+  // Resolve branch slug
+  const resolvedSlug = resolveBranchSlug('nj');
 
-  if (!branch) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Branch not found</p>
-      </div>
-    );
+  let branch;
+  try {
+    branch = await prisma.branch.findUnique({
+      where: { slug: resolvedSlug },
+    });
+  } catch (error) {
+    console.error('Error fetching branch:', error);
   }
 
-  // Get leads waiting for morning
-  const waitingLeadsRaw = await prisma.lead.findMany({
-    where: {
-      branchId: branch.id,
-      waitForMorning: true,
-      status: { in: ['ACTIVE', 'NEW'] },
-    },
-    orderBy: [
-      { createdAt: 'asc' },
-    ],
-    take: 100,
-  });
+  // If branch not found, return styled 404
+  if (!branch) {
+    return <BranchNotFound slug={resolvedSlug} />;
+  }
+
+  // Get leads waiting for morning - will return empty array if using fallback branch
+  let waitingLeadsRaw: Awaited<ReturnType<typeof prisma.lead.findMany>> = [];
+  try {
+    waitingLeadsRaw = await prisma.lead.findMany({
+      where: {
+        branchId: branch.id,
+        waitForMorning: true,
+        status: { in: ['ACTIVE', 'NEW'] },
+      },
+      orderBy: [
+        { createdAt: 'asc' },
+      ],
+      take: 100,
+    });
+  } catch (error) {
+    console.error('Error fetching leads:', error);
+    // waitingLeadsRaw remains empty array
+  }
 
   // Convert Date objects to ISO strings for client component
   const waitingLeads = waitingLeadsRaw.map(lead => ({
