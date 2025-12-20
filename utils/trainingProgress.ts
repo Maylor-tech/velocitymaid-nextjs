@@ -78,3 +78,4 @@ export function calculateOverallProgress(modules: ModuleProgress[]): {
   };
 }
 
+

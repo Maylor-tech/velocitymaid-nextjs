@@ -157,3 +157,4 @@ Your Stripe setup looks correct! The key is properly formatted and the code will
 
 **You're ready to test!** 🚀
 
+

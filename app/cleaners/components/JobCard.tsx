@@ -125,3 +125,4 @@ export default function JobCard({ job, onStatusUpdate }: JobCardProps) {
 
 
 
+

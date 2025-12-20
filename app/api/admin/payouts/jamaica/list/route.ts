@@ -8,11 +8,13 @@ export const dynamic = 'force-dynamic'
  * Only accessible by ADMIN role
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireRole } from "@/lib/auth/requireRole";
 import { getBranchPayouts } from '@/app/services/payouts/jamaicaPayoutService';
 
 export async function GET(request: NextRequest) {
   try {
+    await requireRole(request, "ADMIN");
     // TODO: Add admin authentication check
     const searchParams = request.nextUrl.searchParams;
     const branchId = searchParams.get('branchId');
@@ -39,4 +41,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 

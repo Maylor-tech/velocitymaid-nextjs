@@ -80,3 +80,4 @@ export default function LessonCard({ lesson, moduleSlug }: LessonCardProps) {
   );
 }
 
+

@@ -8,12 +8,14 @@ export const dynamic = 'force-dynamic'
  * Only accessible by ADMIN role
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireRole } from "@/lib/auth/requireRole";
 import { createPayout } from '@/app/services/payouts/jamaicaPayoutService';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';
 
 export async function POST(request: NextRequest) {
   try {
+    await requireRole(request, "ADMIN");
     // TODO: Add admin authentication check
     // const session = await getServerSession();
     // if (!session || session.user.role !== 'ADMIN') {
@@ -78,4 +80,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 

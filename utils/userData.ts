@@ -4,7 +4,7 @@
  * TODO: Replace with database queries when connecting to real DB
  */
 
-export type UserRole = 'ADMIN' | 'MANAGER' | 'CLEANER' | 'SUPPORT';
+export type UserRole = 'ADMIN' | 'MANAGER' | 'BRANCH_OWNER' | 'CLEANER' | 'SUPPORT';
 
 export interface User {
   id: string;
@@ -111,6 +111,7 @@ export function updateUser(id: string, updates: Partial<Omit<User, 'id' | 'creat
  * 
  * See prisma/schema.prisma for full Prisma schema
  */
+
 
 
 

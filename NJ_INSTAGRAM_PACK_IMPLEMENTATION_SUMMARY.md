@@ -367,3 +367,4 @@ The content pack is ready for use! Social media managers can access all graphics
 
 All graphics are dynamically generated and ready for export! 🎯
 
+

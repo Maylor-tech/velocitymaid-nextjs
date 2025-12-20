@@ -6,6 +6,9 @@ import { sendCustomerConfirmation } from '@/lib/sendCustomerConfirmation';
 import { prisma } from '@/lib/prisma';
 import { resolveCityFromZip } from '@/utils/cityRouting';
 import { getServicePrice, getAddOnPrice } from '@/utils/branchPricing';
+import { autoAssignCleaner } from '@/lib/cleaner-assignment';
+import { JobStatus } from '@prisma/client';
+import { validateTerritory } from '@/lib/pilot/territory';
 
 // Initialize Stripe only when needed (lazy initialization)
 function getStripe() {
@@ -29,25 +32,85 @@ function getStripe() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      firstName,
-      lastInitial,
-      phone,
-      email,
-      address,
-      serviceType,
-      preferredDate,
-      preferredTime,
-      serviceLocation,
-      addOns,
-      specialInstructions,
-      totalPrice,
-      zipCode, // ZIP code for branch routing
-      branchId, // Explicit branch ID (if provided)
-      currency, // Currency: 'USD' or 'JMD' (defaults to USD)
-      referralCode, // Referral code if present
-      referralDiscount, // Discount amount (e.g., 20)
-    } = body;
+    
+    // 🚨 PAYMENT-FIRST FLOW: Accept bookingData from BookingContext
+    // If bookingData is provided, extract fields from it
+    // Otherwise, use legacy direct field format (for backward compatibility)
+    let bookingData: any = null;
+    let firstName: string;
+    let lastInitial: string;
+    let phone: string;
+    let email: string;
+    let address: string;
+    let serviceType: string;
+    let preferredDate: string;
+    let preferredTime: string;
+    let serviceLocation: string;
+    let addOns: any;
+    let specialInstructions: string;
+    let totalPrice: number;
+    let zipCode: string;
+    let branchId: string | undefined;
+    let currency: string;
+    let referralCode: string | undefined;
+    let referralDiscount: number | undefined;
+
+    if (body.bookingData) {
+      // New payment-first flow: extract from bookingData
+      bookingData = body.bookingData;
+      const contact = bookingData.contact || {};
+      const service = bookingData.service || {};
+      const when = bookingData.when || {};
+      const extras = bookingData.extras || [];
+      const estimate = bookingData.estimate || {};
+      
+      firstName = contact.firstName || '';
+      lastInitial = contact.lastName ? contact.lastName.charAt(0) : '';
+      phone = contact.phone || '';
+      email = contact.email || '';
+      address = [contact.streetAddress, contact.city, contact.state, contact.zip]
+        .filter(Boolean)
+        .join(', ');
+      serviceType = service.type || service.label || 'basic';
+      preferredDate = when.date || '';
+      preferredTime = when.time || '';
+      serviceLocation = body.branchSlug === 'miami' ? 'Miami' : 
+                       body.branchSlug === 'vermont' ? 'Vermont' : 
+                       body.branchSlug === 'port-antonio' ? 'Port Antonio' : 'New Jersey';
+      addOns = extras.reduce((acc: any, extra: any) => {
+        const key = extra.id || extra.label?.toLowerCase().replace(/\s+/g, '');
+        if (key === 'insidefridge' || key === 'inside fridge') acc.refrigerator = true;
+        if (key === 'insideoven' || key === 'inside oven') acc.oven = true;
+        if (key === 'windows') acc.windows = true;
+        if (key === 'laundry') acc.laundry = true;
+        return acc;
+      }, {});
+      specialInstructions = bookingData.extras?.notes || '';
+      totalPrice = estimate.total || 0;
+      zipCode = contact.zip || '';
+      currency = 'USD';
+    } else {
+      // Legacy format: direct fields
+      ({
+        firstName,
+        lastInitial,
+        phone,
+        email,
+        address,
+        serviceType,
+        preferredDate,
+        preferredTime,
+        serviceLocation,
+        addOns,
+        specialInstructions,
+        totalPrice,
+        zipCode,
+        branchId,
+        currency,
+        referralCode,
+        referralDiscount,
+      } = body);
+    }
 
     const selectedCurrency = currency || 'USD';
 
@@ -90,56 +153,93 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Resolve branch ID from ZIP code/routing code or use explicit branchId
+    // Resolve branch ID from serviceLocation, ZIP code/routing code, or use explicit branchId
     let resolvedBranchId: string | null = branchId || null;
     let resolvedBranchSlug: string | null = null;
     
+    // First, try to resolve by serviceLocation (Miami, New Jersey, Vermont)
+    // This is more reliable than ZIP lookup for explicit location selection
+    if (!resolvedBranchId && serviceLocation) {
+      const locationSlugMap: Record<string, string> = {
+        'Miami': 'miami',
+        'New Jersey': 'new-jersey',
+        'Vermont': 'vermont',
+      };
+      
+      const branchSlug = locationSlugMap[serviceLocation];
+      if (branchSlug) {
+        try {
+          const branch = await prisma.branch.findUnique({
+            where: { slug: branchSlug },
+            select: { id: true, slug: true, status: true },
+          });
+          
+          if (branch && branch.status === 'ACTIVE') {
+            resolvedBranchId = branch.id;
+            resolvedBranchSlug = branch.slug;
+          }
+        } catch (error) {
+          console.error(`Error looking up branch by slug ${branchSlug}:`, error);
+        }
+      }
+    }
+    
+    // If still not resolved, try ZIP code lookup (fallback)
     if (!resolvedBranchId && zipCode) {
       const normalizedZip = zipCode.trim().toUpperCase();
       
       // Check for Jamaica routing codes (PA-XXX)
       if (normalizedZip.startsWith('PA-')) {
-        const serviceArea = await prisma.branchServiceArea.findFirst({
-          where: {
-            zipCode: normalizedZip,
-            branch: {
-              slug: 'port-antonio',
+        try {
+          const serviceArea = await prisma.branchServiceArea.findFirst({
+            where: {
+              zipCode: normalizedZip,
+              Branch: {
+                slug: 'port-antonio',
+              },
             },
-          },
-          include: {
-            branch: {
-              select: { id: true, slug: true },
+            include: {
+              Branch: {
+                select: { id: true, slug: true },
+              },
             },
-          },
-        });
-        
-        if (serviceArea?.branch) {
-          resolvedBranchId = serviceArea.branch.id;
-          resolvedBranchSlug = serviceArea.branch.slug;
+          });
+          
+          if (serviceArea?.Branch) {
+            resolvedBranchId = serviceArea.Branch.id;
+            resolvedBranchSlug = serviceArea.Branch.slug;
+          }
+        } catch (error) {
+          console.error('Error looking up Port Antonio service area:', error);
         }
       } else {
         // Standard U.S. ZIP code lookup
-        const serviceArea = await prisma.branchServiceArea.findFirst({
-          where: {
-            zipCode: normalizedZip,
-            branch: {
-              status: 'ACTIVE',
+        try {
+          const serviceArea = await prisma.branchServiceArea.findFirst({
+            where: {
+              zipCode: normalizedZip,
+              Branch: {
+                status: 'ACTIVE',
+              },
             },
-          },
-          include: {
-            branch: {
-              select: { id: true, slug: true },
+            include: {
+              Branch: {
+                select: { id: true, slug: true },
+              },
             },
-          },
-          orderBy: [
-            { priority: 'asc' },
-            { createdAt: 'asc' },
-          ],
-        });
-        
-        if (serviceArea?.branch) {
-          resolvedBranchId = serviceArea.branch.id;
-          resolvedBranchSlug = serviceArea.branch.slug;
+            orderBy: [
+              { priority: 'asc' },
+              { createdAt: 'asc' },
+            ],
+          });
+          
+          if (serviceArea?.Branch) {
+            resolvedBranchId = serviceArea.Branch.id;
+            resolvedBranchSlug = serviceArea.Branch.slug;
+          }
+        } catch (error) {
+          console.error('Error looking up service area by ZIP:', error);
+          // If ZIP lookup fails, don't block the booking - we'll use serviceLocation fallback
         }
       }
     }
@@ -159,17 +259,93 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Create Job record directly (no Stripe payment)
+      // Create or find Customer record to link to Job
+      let customerId: string | null = null;
+      if (email) {
+        try {
+          let customer = await prisma.customer.findUnique({
+            where: { email },
+          });
+
+          if (!customer) {
+            // Extract ZIP from address if available for homeZipCode
+            let homeZipCode: string | null = null;
+            if (address) {
+              const zipMatch = address.match(/\b\d{5}\b/);
+              if (zipMatch) {
+                homeZipCode = zipMatch[0];
+              }
+            }
+
+            customer = await prisma.customer.create({
+              data: {
+                firstName,
+                lastName: lastInitial || '',
+                email,
+                phone: phone || null,
+                branchId: resolvedBranchId,
+                homeZipCode,
+              },
+            });
+          } else {
+            // Note: isBlocked field not in schema - removed check
+
+            // Update customer info if needed (phone, branchId)
+            if (phone && !customer.phone) {
+              await prisma.customer.update({
+                where: { id: customer.id },
+                data: { phone },
+              });
+            }
+            if (!customer.branchId) {
+              await prisma.customer.update({
+                where: { id: customer.id },
+                data: { branchId: resolvedBranchId },
+              });
+            }
+          }
+
+          customerId = customer.id;
+        } catch (customerError: any) {
+          console.error(`Error creating/finding customer for JMD booking (non-fatal):`, customerError.message);
+          // Continue without customerId - job can still be created
+        }
+      }
+
+      // Phase M: Validate territory before creating job
+      if (zipCode && resolvedBranchId) {
+        const territoryValidation = await validateTerritory(
+          resolvedBranchId,
+          zipCode,
+          preferredTime || undefined
+        );
+        
+        if (!territoryValidation.valid) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: territoryValidation.error || "Service area validation failed",
+              territoryError: true,
+              zipCode: territoryValidation.zipCode,
+              serviceHours: territoryValidation.serviceHours,
+            },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Create Job record directly (no Stripe payment) with customerId linked
       const job = await prisma.job.create({
         data: {
           branchId: resolvedBranchId,
+          customerId, // Link to customer for preferSameCleaner logic
           customerName: `${firstName} ${lastInitial}`,
           preferredDate: preferredDate ? new Date(preferredDate) : null,
           preferredTime: preferredTime || null,
           serviceType: serviceType || null,
           serviceLocation: serviceLocation || null,
           address: address || null,
-          status: 'pending',
+          status: JobStatus.RECEIVED,
           totalPrice: totalPrice,
           currency: 'JMD',
           paymentMethod: 'cash', // Default to cash, can be updated later
@@ -177,6 +353,28 @@ export async function POST(request: NextRequest) {
           // Note: assignedCity can be stored in metadata or address field if needed
         },
       });
+
+      // Phase M: Send immediate confirmation
+      try {
+        const { sendJobConfirmation } = await import("@/lib/pilot/customerExperience");
+        const confirmationResult = await sendJobConfirmation(job.id);
+        if (confirmationResult.sent) {
+          console.log(`[PHASE_M] Confirmation sent for job ${job.id}`);
+        } else {
+          console.warn(`[PHASE_M] Confirmation failed for job ${job.id}: ${confirmationResult.error}`);
+        }
+      } catch (confirmationError: any) {
+        console.error(`[PHASE_M] Error sending confirmation:`, confirmationError);
+        // Don't fail job creation if confirmation fails
+      }
+
+      // Auto-assign cleaner (non-blocking - don't fail if this fails)
+      try {
+        const assignmentResult = await autoAssignCleaner(job.id);
+        console.log('Auto-assignment result for JMD payment:', assignmentResult);
+      } catch (assignError: any) {
+        console.error('Auto-assignment error (non-fatal):', assignError.message || assignError);
+      }
 
       // Track referral event if referral code exists
       if (referralCode && resolvedBranchId) {
@@ -196,6 +394,8 @@ export async function POST(request: NextRequest) {
                 branchId: resolvedBranchId,
               },
             });
+          } else {
+            // Note: isBlocked field not in schema - removed check
           }
 
           // Track referral event
@@ -399,6 +599,55 @@ export async function POST(request: NextRequest) {
       serviceLocation: normalizedServiceLocation,
     };
 
+    // 🚨 FIX: Stripe metadata has 500-char limit, so store booking data in database
+    // Store booking data temporarily and reference it by ID in metadata
+    let bookingDataId: string | null = null;
+    if (bookingData) {
+      try {
+        // Store booking data in a temporary table (using Job with a special status or a separate table)
+        // For now, we'll store it as JSON in a temporary Job record that we'll update after payment
+        // OR: Store essential fields only in metadata and reconstruct bookingData
+        
+        // Option: Store only essential fields in metadata (minimized)
+        // Remove estimate.lineItems and other verbose fields
+        const minimizedBookingData = {
+          s: bookingData.service?.type || bookingData.service?.label || 'STANDARD', // service type
+          h: `${bookingData.home?.bedrooms || 1},${bookingData.home?.bathrooms || 1},${bookingData.home?.squareFeet || ''}`, // home: "bedrooms,bathrooms,sqft"
+          e: bookingData.extras?.map((ex: any) => ex.id || ex.label).join(',') || '', // extras: "id1,id2"
+          d: bookingData.when?.date || '', // date
+          t: bookingData.when?.time || '', // time
+          c: `${bookingData.contact?.firstName || ''}|${bookingData.contact?.lastName || ''}|${bookingData.contact?.email || ''}|${bookingData.contact?.phone || ''}|${bookingData.contact?.streetAddress || ''}|${bookingData.contact?.city || ''}|${bookingData.contact?.state || ''}|${bookingData.contact?.zip || ''}`, // contact: "fn|ln|email|phone|street|city|state|zip"
+          est: `${bookingData.estimate?.total || 0}`, // estimate total only
+          b: body.branchSlug || '', // branch slug
+        };
+        
+        const minimizedJson = JSON.stringify(minimizedBookingData);
+        if (minimizedJson.length <= 500) {
+          metadata.bookingDataMin = minimizedJson;
+          metadata.branchSlug = body.branchSlug || '';
+        } else {
+          // If still too long, store only critical fields
+          metadata.serviceType = minimizedBookingData.s;
+          metadata.branchSlug = body.branchSlug || '';
+          metadata.contactEmail = bookingData.contact?.email || '';
+          metadata.contactName = `${bookingData.contact?.firstName || ''} ${bookingData.contact?.lastName || ''}`.trim();
+          metadata.homeDetails = minimizedBookingData.h;
+          metadata.extrasList = minimizedBookingData.e;
+          metadata.preferredDate = minimizedBookingData.d;
+          metadata.preferredTime = minimizedBookingData.t;
+          metadata.totalPrice = minimizedBookingData.est;
+          metadata.contactFull = minimizedBookingData.c;
+        }
+      } catch (storageError) {
+        console.error('[CHECKOUT] Error storing booking data:', storageError);
+        // Fallback: store only essential fields
+        metadata.branchSlug = body.branchSlug || '';
+        metadata.serviceType = bookingData?.service?.type || bookingData?.service?.label || 'STANDARD';
+      }
+    } else {
+      metadata.branchSlug = body.branchSlug || '';
+    }
+
     // Add referral code to metadata if present
     if (referralCode) {
       metadata.referralCode = referralCode;
@@ -428,14 +677,35 @@ export async function POST(request: NextRequest) {
     // Add currency to metadata
     metadata.currency = selectedCurrency;
 
+    // Phase 5 Step 4: Check if customer is blocked before creating Stripe session
+    if (email) {
+      const existingCustomer = await prisma.customer.findUnique({
+        where: { email },
+      });
+
+      // Note: isBlocked field not in schema - removed check
+      if (false) { // Placeholder - add isBlocked field to schema if needed
+        return NextResponse.json(
+          {
+            error: 'This account is currently restricted. Please contact support.',
+            code: 'CUSTOMER_BLOCKED',
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Create Stripe Checkout Session
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://velocitymaid.com'}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://velocitymaid.com'}/booking/failed`,
+      // 🚨 PAYMENT-FIRST FLOW: Redirect to confirmation page (NOT API route)
+      // The confirmation page will call the API to create the job
+      // This follows Next.js best practices: pages for users, APIs for data
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://velocitymaid.com'}/book/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://velocitymaid.com'}/book`,
       customer_email: email,
       metadata,
       billing_address_collection: 'required',

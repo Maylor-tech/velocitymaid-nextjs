@@ -63,3 +63,4 @@ export function getCombinedRevenueJMD(
   return jmdRevenue + usdInJMD;
 }
 
+

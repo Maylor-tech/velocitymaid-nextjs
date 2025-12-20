@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireRole } from "@/lib/auth/requireRole";
 import { seedAllBranches } from '@/utils/seedBranches';
 
 /**
@@ -12,6 +13,7 @@ import { seedAllBranches } from '@/utils/seedBranches';
  */
 export async function POST(request: NextRequest) {
   try {
+    await requireRole(request, "ADMIN");
     // TODO: Add admin authentication check
     
     const result = seedAllBranches();
@@ -55,6 +57,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 
 
 

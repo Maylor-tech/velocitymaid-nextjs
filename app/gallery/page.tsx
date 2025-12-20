@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Sparkles, X, ArrowLeft } from 'lucide-react';
+import { Sparkles, X, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Gallery images - only using photos that actually exist
 const galleryImages = [
@@ -69,14 +69,65 @@ const galleryImages = [
     category: 'Living Room',
     location: 'Newark, NJ'
   },
+  {
+    src: '/images/gallery/bathroom-sink-02.jpg',
+    alt: 'Bathroom sink cleaning',
+    category: 'Bathroom',
+    location: 'New Jersey'
+  },
+  {
+    src: '/images/gallery/bathroom-window-01.jpg',
+    alt: 'Bathroom window cleaning',
+    category: 'Bathroom',
+    location: 'New Jersey'
+  },
+  {
+    src: '/images/gallery/bedroom-canopy-01.jpg',
+    alt: 'Bedroom canopy cleaning',
+    category: 'Bedroom',
+    location: 'New Jersey'
+  },
+  {
+    src: '/images/gallery/bedroom-gray-01.jpg',
+    alt: 'Bedroom cleaning',
+    category: 'Bedroom',
+    location: 'New Jersey'
+  },
+  {
+    src: '/images/gallery/dining-rustic-01.jpg',
+    alt: 'Dining room cleaning',
+    category: 'Living Room',
+    location: 'New Jersey'
+  },
+  {
+    src: '/images/gallery/kitchen-cabin-01.jpg',
+    alt: 'Kitchen cabin cleaning',
+    category: 'Kitchen',
+    location: 'New Jersey'
+  },
+  {
+    src: '/images/gallery/kitchen-cabin-02.jpg',
+    alt: 'Kitchen cabin cleaning',
+    category: 'Kitchen',
+    location: 'New Jersey'
+  },
+  {
+    src: '/images/gallery/loft-blue-chair-01.jpg',
+    alt: 'Loft living space cleaning',
+    category: 'Living Room',
+    location: 'New Jersey'
+  },
 ];
 
 const categories = ['All', 'Kitchen', 'Bathroom', 'Bedroom', 'Living Room', 'Closet'];
 
 export default function GalleryPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [filteredImages, setFilteredImages] = useState(galleryImages);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   useEffect(() => {
     if (selectedCategory === 'All') {
@@ -86,21 +137,80 @@ export default function GalleryPage() {
     }
   }, [selectedCategory]);
 
+  const openLightbox = (imageSrc: string) => {
+    const index = filteredImages.findIndex(img => img.src === imageSrc);
+    setSelectedImage(imageSrc);
+    setSelectedImageIndex(index);
+  };
+
+  const closeLightbox = () => {
+    setSelectedImage(null);
+    setSelectedImageIndex(null);
+  };
+
+  const navigateImage = (direction: 'prev' | 'next') => {
+    if (selectedImageIndex === null) return;
+    
+    let newIndex: number;
+    if (direction === 'prev') {
+      newIndex = selectedImageIndex > 0 ? selectedImageIndex - 1 : filteredImages.length - 1;
+    } else {
+      newIndex = selectedImageIndex < filteredImages.length - 1 ? selectedImageIndex + 1 : 0;
+    }
+    
+    setSelectedImageIndex(newIndex);
+    setSelectedImage(filteredImages[newIndex].src);
+  };
+
+  // Touch handlers for swipe
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      navigateImage('next');
+    } else if (isRightSwipe) {
+      navigateImage('prev');
+    }
+  };
+
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedImage) return;
+
       if (e.key === 'Escape') {
-        setSelectedImage(null);
+        closeLightbox();
+      } else if (e.key === 'ArrowLeft') {
+        navigateImage('prev');
+      } else if (e.key === 'ArrowRight') {
+        navigateImage('next');
       }
     };
+
     if (selectedImage) {
-      window.addEventListener('keydown', handleEscape);
+      window.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
     }
+
     return () => {
-      window.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [selectedImage]);
+  }, [selectedImage, selectedImageIndex, filteredImages]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -176,7 +286,7 @@ export default function GalleryPage() {
                 <div
                   key={index}
                   className="group bg-white rounded-2xl shadow-lg overflow-hidden card-hover cursor-pointer relative"
-                  onClick={() => setSelectedImage(image.src)}
+                  onClick={() => openLightbox(image.src)}
                 >
                   <div className="relative w-full aspect-square bg-gray-100">
                     <Image
@@ -214,31 +324,80 @@ export default function GalleryPage() {
         </div>
       </section>
 
-      {/* Image Lightbox Modal */}
-      {selectedImage && (
+      {/* Enhanced Image Lightbox Modal */}
+      {selectedImage && selectedImageIndex !== null && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-90 p-4"
-          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-95 p-4"
+          onClick={closeLightbox}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
+          {/* Close Button */}
           <button
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition z-[101] bg-black bg-opacity-50 rounded-full p-2"
-            onClick={() => setSelectedImage(null)}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition z-[101] bg-black bg-opacity-70 rounded-full p-3 hover:bg-opacity-90"
+            onClick={(e) => {
+              e.stopPropagation();
+              closeLightbox();
+            }}
             aria-label="Close image"
           >
             <X className="w-6 h-6" />
           </button>
+
+          {/* Navigation Arrows */}
+          {filteredImages.length > 1 && (
+            <>
+              <button
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition z-[101] bg-black bg-opacity-70 rounded-full p-3 hover:bg-opacity-90"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigateImage('prev');
+                }}
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </button>
+              <button
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition z-[101] bg-black bg-opacity-70 rounded-full p-3 hover:bg-opacity-90"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigateImage('next');
+                }}
+                aria-label="Next image"
+              >
+                <ChevronRight className="w-8 h-8" />
+              </button>
+            </>
+          )}
+
+          {/* Image Counter */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white bg-black bg-opacity-70 rounded-full px-4 py-2 text-sm z-[101]">
+            {selectedImageIndex + 1} / {filteredImages.length}
+          </div>
+
+          {/* Image Container */}
           <div
             className="relative max-w-7xl max-h-[90vh] w-full h-full"
             onClick={(e) => e.stopPropagation()}
           >
             <Image
               src={selectedImage}
-              alt="Full size gallery image"
+              alt={filteredImages[selectedImageIndex]?.alt || "Full size gallery image"}
               fill
               className="object-contain"
               sizes="100vw"
+              priority
             />
           </div>
+
+          {/* Image Info */}
+          {filteredImages[selectedImageIndex] && (
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 text-center text-white bg-black bg-opacity-70 rounded-lg px-6 py-3 max-w-2xl z-[101]">
+              <p className="font-semibold text-lg">{filteredImages[selectedImageIndex].category}</p>
+              <p className="text-sm text-gray-300">{filteredImages[selectedImageIndex].location}</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -252,7 +411,7 @@ export default function GalleryPage() {
             Book your cleaning service today and experience the VelocityMaid difference
           </p>
           <Link
-            href="/booking"
+            href="/book"
             className="inline-flex items-center bg-white text-primary-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition"
           >
             Book Your Cleaning Service

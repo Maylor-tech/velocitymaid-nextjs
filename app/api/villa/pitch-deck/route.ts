@@ -793,3 +793,4 @@ function generatePitchDeckHTML(): string {
   `;
 }
 
+

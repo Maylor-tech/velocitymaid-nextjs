@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import CustomerLayout from '../components/CustomerLayout';
 import BookingCard from '../components/BookingCard';
 import EmptyState from '../components/EmptyState';
 import Link from 'next/link';
@@ -74,17 +73,15 @@ export default function BookingHistoryPage() {
 
   if (loading) {
     return (
-      <CustomerLayout>
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </CustomerLayout>
+      <div className="text-center py-12">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p className="mt-4 text-gray-600">Loading...</p>
+      </div>
     );
   }
 
   return (
-    <CustomerLayout>
+    <div>
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Booking History</h1>
         <p className="text-gray-600">View your past cleanings and reviews</p>
@@ -169,7 +166,7 @@ export default function BookingHistoryPage() {
           })}
         </div>
       )}
-    </CustomerLayout>
+    </div>
   );
 }
 

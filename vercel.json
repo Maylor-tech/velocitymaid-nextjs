@@ -1,5 +1,11 @@
 {
   "buildCommand": "rm -rf .next && npm run build",
   "installCommand": "npm install --legacy-peer-deps",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/weekly-payout-summary",
+      "schedule": "0 11 * * 1"
+    }
+  ]
 }

@@ -25,3 +25,4 @@ export const jamaicaBrandClasses = {
   borderAccent2: 'border-[#2B70C9]',
 };
 
+

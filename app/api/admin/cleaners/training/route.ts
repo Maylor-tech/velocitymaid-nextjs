@@ -7,11 +7,13 @@ export const dynamic = 'force-dynamic'
  * Only accessible by ADMIN role
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
+    await requireRole(request, "ADMIN");
     // TODO: Add admin authentication check
     // For now, allow access (should be protected in production)
 
@@ -74,4 +76,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 

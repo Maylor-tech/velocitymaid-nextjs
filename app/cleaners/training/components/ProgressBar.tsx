@@ -38,3 +38,4 @@ export default function ProgressBar({ completed, total, showLabel = false, class
   );
 }
 
+

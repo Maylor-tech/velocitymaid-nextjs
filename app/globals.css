@@ -6,6 +6,28 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;
+  
+  /* shadcn/ui variables */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 3.9%;
+  --primary: 200 95% 39%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 96.1%;
+  --secondary-foreground: 0 0% 9%;
+  --muted: 0 0% 96.1%;
+  --muted-foreground: 0 0% 45.1%;
+  --accent: 0 0% 96.1%;
+  --accent-foreground: 0 0% 9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 89.8%;
+  --input: 0 0% 89.8%;
+  --ring: 0 0% 3.9%;
+  --radius: 0.5rem;
 }
 
 * {
@@ -63,21 +85,6 @@ html {
 
 .btn-secondary {
   @apply bg-white text-primary-600 px-8 py-4 rounded-full font-semibold text-lg border-2 border-primary-600 transition-all duration-300 hover:bg-primary-50 hover:shadow-xl hover:scale-105;
-}
-
-/* Jamaica Brand Button */
-.btn-jamaica {
-  @apply bg-[#F8C548] text-[#0A3D2F] px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-[#F5B835] hover:shadow-lg hover:scale-105;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-/* Jamaica Brand Colors */
-:root {
-  --jamaica-primary: #0A3D2F;
-  --jamaica-accent: #F8C548;
-  --jamaica-accent2: #2B70C9;
-  --jamaica-neutral: #F3F1EB;
-  --jamaica-white: #FFFFFF;
 }
 
 /* Card effects */

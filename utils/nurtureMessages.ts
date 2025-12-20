@@ -108,3 +108,4 @@ export function shouldStopSequence(customerReplied: boolean, leadStatus: string)
   return customerReplied || leadStatus === 'BOOKED' || leadStatus === 'CLOSED';
 }
 
+

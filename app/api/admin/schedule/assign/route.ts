@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic'
  * Assigns a cleaner to a job and sends WhatsApp notification (Jamaica only)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 import { sendJobOffer } from '@/app/services/whatsappService';
 
@@ -18,6 +19,7 @@ interface AssignRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireRole(request, "ADMIN");
     // TODO: Add admin authentication check
 
     const body: AssignRequest = await request.json();

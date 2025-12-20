@@ -1,55 +1,71 @@
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { findCustomerById } from '@/utils/customerData';
+import { verifyCustomerSessionToken, COOKIE_NAME } from '@/lib/customerSession';
+import { prisma } from '@/lib/prisma';
 
 /**
- * Get Current Customer API
- * 
  * GET /api/customer/me
  * 
- * Returns current logged-in customer info
+ * Get current authenticated customer
  */
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const customerId = cookieStore.get('customerId')?.value;
+    const token = cookieStore.get(COOKIE_NAME)?.value ?? null;
+    const session = await verifyCustomerSessionToken(token);
 
-    if (!customerId) {
+    if (!session) {
       return NextResponse.json(
-        { success: false, error: 'Not authenticated' },
-        { status: 401 }
+        { authenticated: false },
+        { status: 200 }
       );
     }
 
-    const customer = findCustomerById(customerId);
+    // Get full customer data
+    const fullCustomer = await prisma.customer.findUnique({
+      where: { id: session.customerId },
+    });
 
-    if (!customer) {
+    if (!fullCustomer) {
       return NextResponse.json(
-        { success: false, error: 'Customer not found' },
-        { status: 404 }
+        { authenticated: false, error: 'Customer not found' },
+        { status: 200 }
       );
     }
+
+    // Access fields that may not be in current Prisma types
+    // These fields exist in the schema (addressLine1, city, state, postalCode)
+    const customerData = fullCustomer as typeof fullCustomer & {
+      addressLine1?: string | null;
+      city?: string | null;
+      state?: string | null;
+      postalCode?: string | null;
+    };
 
     return NextResponse.json({
-      success: true,
+      authenticated: true,
       customer: {
-        id: customer.id,
-        firstName: customer.firstName,
-        lastName: customer.lastName,
-        email: customer.email,
-        phone: customer.phone,
-        defaultAddress: customer.defaultAddress,
-        region: customer.region,
+        id: fullCustomer.id,
+        firstName: fullCustomer.firstName ?? '',
+        lastName: fullCustomer.lastName ?? '',
+        email: fullCustomer.email,
+        phone: fullCustomer.phone ?? '',
+        streetAddress: customerData.addressLine1 ?? fullCustomer.defaultAddress ?? '',
+        city: customerData.city ?? '',
+        state: customerData.state ?? '',
+        zip: customerData.postalCode ?? '',
       },
     });
   } catch (error: any) {
     console.error('Get customer error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch customer' },
+      {
+        success: false,
+        error: error.message || 'Failed to fetch customer',
+      },
       { status: 500 }
     );
   }
 }
-

@@ -8,12 +8,21 @@ import Tabs, { TabType } from '../components/Tabs';
 import JobList from '../components/JobList';
 import type { CleanerJob } from '../components/JobCard';
 import CertificationBadge from '../training/components/CertificationBadge';
+import PaymentMethodBanner from '@/components/cleaner/PaymentMethodBanner';
 
 interface CleanerInfo {
   id: string;
   name: string;
-  phone: string;
-  region: 'new_jersey' | 'vermont';
+  email: string;
+  branchId: string | null;
+  branchName: string | null;
+  branchSlug: string | null;
+  primaryBranchId: string | null;
+  assignedBranches: Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
 }
 
 interface TrainingProgress {
@@ -37,11 +46,13 @@ export default function CleanerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [trainingProgress, setTrainingProgress] = useState<TrainingProgress | null>(null);
+  const [paymentMethodVerified, setPaymentMethodVerified] = useState<boolean | null>(null);
 
   // Fetch cleaner info
   useEffect(() => {
     fetchCleanerInfo();
     fetchTrainingProgress();
+    fetchPaymentMethodStatus();
   }, []);
 
   // Fetch jobs when tab changes
@@ -78,6 +89,19 @@ export default function CleanerDashboardPage() {
     } catch (err) {
       // Silently fail - training is optional
       console.error('Error fetching training progress:', err);
+    }
+  };
+
+  const fetchPaymentMethodStatus = async () => {
+    try {
+      const response = await fetch('/api/cleaners/payment-method/status');
+      const data = await response.json();
+      if (data.success) {
+        setPaymentMethodVerified(data.verified);
+      }
+    } catch (err) {
+      // Silently fail - payment method check is optional
+      console.error('Error fetching payment method status:', err);
     }
   };
 
@@ -211,8 +235,14 @@ export default function CleanerDashboardPage() {
       <div className="max-w-4xl mx-auto">
         <CleanerHeader
           name={cleaner.name}
-          region={cleaner.region}
+          branchName={cleaner.branchName || undefined}
+          branchSlug={cleaner.branchSlug || undefined}
           onLogout={handleLogout}
+        />
+
+        {/* Payment Method Banner (Week 2 Requirement) */}
+        <PaymentMethodBanner 
+          hasVerifiedPaymentMethod={paymentMethodVerified === true}
         />
 
         {/* Certification Badge */}
@@ -311,7 +341,7 @@ export default function CleanerDashboardPage() {
             My Incentives
           </button>
           <button
-            onClick={() => router.push('/cleaners/earnings')}
+            onClick={() => router.push('/cleaner/earnings')}
             className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-colors font-semibold shadow-md flex items-center gap-2"
           >
             <span>💵</span>

@@ -261,3 +261,4 @@ function generateSalonChecklist(): string {
   `.trim();
 }
 
+

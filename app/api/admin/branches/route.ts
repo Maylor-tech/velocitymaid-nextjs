@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -15,19 +16,31 @@ export async function GET(request: NextRequest) {
   try {
     const branches = await prisma.branch.findMany({
       include: {
-        manager: {
-          select: { id: true, name: true, email: true },
+        User_Branch_managerIdToUser: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
         },
-        pricingModel: {
-          select: { id: true, name: true },
+        PricingModel: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
-        serviceAreas: {
-          select: { zipCode: true },
+        BranchServiceArea: {
+          select: {
+            zipCode: true,
+            city: true,
+            state: true,
+          },
         },
         _count: {
           select: {
-            jobs: true,
-            userBranches: true,
+            Job: true,
+            CleanerApplication: true,
+            Customer: true,
           },
         },
       },
@@ -40,7 +53,7 @@ export async function GET(request: NextRequest) {
       count: branches.length,
     });
   } catch (error: any) {
-    console.error('List branches error:', error);
+    console.error('BRANCH_FETCH_ERROR:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch branches' },
       { status: 500 }

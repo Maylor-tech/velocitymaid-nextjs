@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Edit, Users, TrendingUp, Settings, MapPin, Phone, Mail, Calendar } from 'lucide-react';
+import { ArrowLeft, Edit, Users, TrendingUp, Settings, MapPin, Phone, Mail, Calendar, Briefcase, DollarSign, AlertCircle as AlertCircleIcon } from 'lucide-react';
 import AdminLayout from '../../components/AdminLayout';
 import { Loader2, AlertCircle } from 'lucide-react';
+import KpiCard from '@/components/admin/ui/KpiCard';
 
 export default function BranchDetailPage() {
   const params = useParams();
@@ -14,12 +15,43 @@ export default function BranchDetailPage() {
   const [branch, setBranch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [loadingMetrics, setLoadingMetrics] = useState(false);
 
   useEffect(() => {
     if (slug) {
       fetchBranch();
     }
   }, [slug]);
+
+  useEffect(() => {
+    if (branch?.id) {
+      fetchMetricsForBranch(branch.id);
+    }
+  }, [branch?.id]);
+
+  const fetchMetricsForBranch = async (branchId: string) => {
+    try {
+      setLoadingMetrics(true);
+      const response = await fetch(`/api/admin/branches/${branchId}/metrics`);
+      const data = await response.json();
+
+      if (data.success) {
+        setMetrics(data.metrics);
+      }
+    } catch (err: any) {
+      console.error('Error fetching branch metrics:', err);
+    } finally {
+      setLoadingMetrics(false);
+    }
+  };
+
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
+    if (currency === 'JMD') {
+      return `J$${amount.toFixed(2)}`;
+    }
+    return `$${amount.toFixed(2)}`;
+  };
 
   const fetchBranch = async () => {
     try {
@@ -221,7 +253,53 @@ export default function BranchDetailPage() {
           </div>
         )}
 
-        {/* Statistics */}
+        {/* Branch KPIs */}
+        {loadingMetrics ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-6">
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+            </div>
+          </div>
+        ) : metrics ? (
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Branch KPIs</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <KpiCard
+                label="Jobs Today"
+                value={metrics.jobsToday || 0}
+                icon={<Briefcase className="w-5 h-5" />}
+              />
+              <KpiCard
+                label="Jobs This Week"
+                value={metrics.jobsWeek || 0}
+                icon={<Calendar className="w-5 h-5" />}
+              />
+              <KpiCard
+                label="Unassigned Jobs"
+                value={metrics.unassignedJobs || 0}
+                highlight
+                icon={<AlertCircleIcon className="w-5 h-5" />}
+              />
+              <KpiCard
+                label="Active Cleaners"
+                value={metrics.cleaners || 0}
+                icon={<Users className="w-5 h-5" />}
+              />
+              <KpiCard
+                label="Customers"
+                value={metrics.customers || 0}
+                icon={<Users className="w-5 h-5" />}
+              />
+              <KpiCard
+                label="Revenue This Week"
+                value={formatCurrency(metrics.revenueWeek || 0, branch.currency || 'USD')}
+                icon={<DollarSign className="w-5 h-5" />}
+              />
+            </div>
+          </div>
+        ) : null}
+
+        {/* Statistics (Legacy) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Jobs</h3>

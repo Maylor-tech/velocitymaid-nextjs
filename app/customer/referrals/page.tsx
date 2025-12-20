@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Gift, Share2, Copy, MessageCircle, QrCode, DollarSign, Users, CheckCircle2 } from 'lucide-react';
-import CustomerLayout from '../components/CustomerLayout';
 
 interface ReferralData {
   balance: {
@@ -99,29 +98,24 @@ export default function ReferralsPage() {
 
   if (loading) {
     return (
-      <CustomerLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0A3D2F] mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading referral information...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0A3D2F] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading referral information...</p>
         </div>
-      </CustomerLayout>
+      </div>
     );
   }
 
   if (!referralData) {
     return (
-      <CustomerLayout>
-        <div className="text-center py-12">
-          <p className="text-gray-600">Unable to load referral information.</p>
-        </div>
-      </CustomerLayout>
+      <div className="text-center py-12">
+        <p className="text-gray-600">Unable to load referral information.</p>
+      </div>
     );
   }
 
   return (
-    <CustomerLayout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -317,7 +311,6 @@ export default function ReferralsPage() {
           </div>
         </div>
       </div>
-    </CustomerLayout>
   );
 }
 

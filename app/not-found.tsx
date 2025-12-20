@@ -37,7 +37,7 @@ export default function NotFound() {
           <Link href="/" className="text-gray-600 hover:text-primary-600 transition">
             Home
           </Link>
-          <Link href="/booking" className="text-gray-600 hover:text-primary-600 transition">
+          <Link href="/book" className="text-gray-600 hover:text-primary-600 transition">
             Book Now
           </Link>
           <Link href="/gallery" className="text-gray-600 hover:text-primary-600 transition">

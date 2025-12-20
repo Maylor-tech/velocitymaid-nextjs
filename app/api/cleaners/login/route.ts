@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { findCleanerByIdentifier } from '@/utils/cleanerData';
 import { cookies } from 'next/headers';
+import { prisma } from '@/lib/prisma';
+import { UserRole } from '@prisma/client';
 
 /**
  * Cleaner Login API
@@ -26,20 +28,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find cleaner by phone or email
-    const cleaner = findCleanerByIdentifier(identifier);
+    // Try database first (for seeded cleaners)
+    const normalizedIdentifier = identifier.toLowerCase().trim();
+    let cleaner = await prisma.user.findFirst({
+      where: {
+        role: UserRole.CLEANER,
+        isActive: true,
+        email: normalizedIdentifier, // Only check email for now
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    // If not found in database, try mock data (for backward compatibility)
+    if (!cleaner) {
+      const mockCleaner = findCleanerByIdentifier(identifier);
+      if (mockCleaner && mockCleaner.active) {
+        // Set HTTP-only cookie with cleaner ID
+        const cookieStore = await cookies();
+        cookieStore.set('cleanerId', mockCleaner.id, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+          path: '/',
+        });
+
+        return NextResponse.json({
+          success: true,
+          cleaner: {
+            id: mockCleaner.id,
+            name: mockCleaner.name,
+            phone: mockCleaner.phone,
+            region: mockCleaner.region,
+          },
+        });
+      }
+    }
 
     if (!cleaner) {
       return NextResponse.json(
         { success: false, error: 'Cleaner not found' },
         { status: 401 }
-      );
-    }
-
-    if (!cleaner.active) {
-      return NextResponse.json(
-        { success: false, error: 'Cleaner account is inactive' },
-        { status: 403 }
       );
     }
 
@@ -58,9 +91,8 @@ export async function POST(request: NextRequest) {
       success: true,
       cleaner: {
         id: cleaner.id,
-        name: cleaner.name,
-        phone: cleaner.phone,
-        region: cleaner.region,
+        name: cleaner.name || 'Cleaner',
+        email: cleaner.email,
       },
     });
   } catch (error: any) {
@@ -88,6 +120,7 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
+
 
 
 

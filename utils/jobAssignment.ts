@@ -1,5 +1,14 @@
 /**
- * Job Assignment Logic
+ * @deprecated LEGACY - This file is deprecated and should not be used for new code.
+ * 
+ * The cleaner assignment logic has been unified and moved to:
+ * - lib/cleaner-assignment.ts -> selectBestCleanerForJob() (internal)
+ * - lib/cleaner-assignment.ts -> autoAssignCleaner() (public API)
+ * 
+ * This file is kept for reference only. All new assignment logic should use
+ * autoAssignCleaner(jobId) from lib/cleaner-assignment.ts.
+ * 
+ * Job Assignment Logic (LEGACY)
  * 
  * Handles job assignment with recurring customer preferences and JQS-based selection
  */

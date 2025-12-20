@@ -26,8 +26,8 @@ export default function CleanerLoginPage() {
       const data = await response.json();
 
       if (data.success) {
-        // Redirect to dashboard
-        router.push('/cleaners/dashboard');
+        // Redirect to jobs page (new cleaner portal)
+        router.push('/cleaner/jobs');
       } else {
         setError(data.error || 'Login failed');
       }

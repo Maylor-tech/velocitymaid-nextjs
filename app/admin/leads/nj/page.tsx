@@ -1,136 +1,152 @@
-import { Metadata } from 'next';
-import { prisma } from '@/lib/prisma';
+"use client";
+
+import { useState, useEffect } from 'react';
+import AdminLayout from '../../components/AdminLayout';
 import LeadManagementClient from './components/LeadManagementClient';
-import { resolveBranchSlug } from '@/utils/branchSlugResolver';
-import BranchNotFound from '../../components/BranchNotFound';
 
-export const metadata: Metadata = {
-  title: 'Lead Management - New Jersey | VelocityMaid Admin',
-  description: 'Manage and qualify leads for New Jersey branch',
-};
+interface Lead {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  zip: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  urgency: string | null;
+  homeType: string | null;
+  leadScore: number;
+  leadTier: string;
+  riskFlags: string[];
+  status: string;
+  depositPaid: boolean;
+  createdAt: string;
+}
 
-export default async function AdminLeadsNJPage() {
-  // Resolve branch slug
-  const resolvedSlug = resolveBranchSlug('nj');
+interface Stats {
+  total: number;
+  tierA: number;
+  tierB: number;
+  tierC: number;
+  new: number;
+  active: number;
+  qualified: number;
+  rejected: number;
+}
 
-  let branch;
-  try {
-    // Try the resolved slug first
-    branch = await prisma.branch.findUnique({
-      where: { slug: resolvedSlug },
-    });
-    
-    // If not found, try the original slug as fallback
-    if (!branch) {
-      branch = await prisma.branch.findUnique({
-        where: { slug: 'new-jersey' },
+export default function NJLeadsPage() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [stats, setStats] = useState<Stats>({
+    total: 0,
+    tierA: 0,
+    tierB: 0,
+    tierC: 0,
+    new: 0,
+    active: 0,
+    qualified: 0,
+    rejected: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [branchId, setBranchId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch New Jersey branch ID
+    fetch('/api/admin/branches')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          const njBranch = data.branches.find(
+            (b: any) => b.slug === 'new-jersey' || b.slug === 'newark'
+          );
+          if (njBranch) {
+            setBranchId(njBranch.id);
+            loadLeads(njBranch.id);
+          } else {
+            setError('New Jersey branch not found');
+            setLoading(false);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching branches:', err);
+        setError('Failed to load branch information');
+        setLoading(false);
       });
+  }, []);
+
+  const loadLeads = async (branchId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`/api/admin/leads?branchId=${branchId}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setLeads(data.leads || []);
+        setStats(data.stats || stats);
+      } else {
+        throw new Error(data.error || 'Failed to fetch leads');
+      }
+    } catch (err: any) {
+      console.error('Error fetching leads:', err);
+      setError(err.message || 'Failed to load leads');
+    } finally {
+      setLoading(false);
     }
-    
-    // If still not found, try 'nj'
-    if (!branch) {
-      branch = await prisma.branch.findUnique({
-        where: { slug: 'nj' },
-      });
-    }
-  } catch (error) {
-    console.error('Error fetching branch:', error);
+  };
+
+  if (loading && !branchId) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center px-4">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Database Error</h1>
-          <p className="text-gray-600 mb-4">
-            Unable to connect to the database. Please check your connection.
-          </p>
-          <p className="text-sm text-red-600 mb-4">
-            Error: {error instanceof Error ? error.message : 'Unknown error'}
-          </p>
-          <a
-            href="/admin/leads"
-            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            Back to Leads
-          </a>
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-gray-500">Loading...</p>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
-  // If branch not found, return styled 404
-  if (!branch) {
-    return <BranchNotFound slug={resolvedSlug} />;
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={() => branchId && loadLeads(branchId)}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
   }
 
-  // Get leads - will return empty array if no leads exist
-  let leadsRaw: Awaited<ReturnType<typeof prisma.lead.findMany>> = [];
-  try {
-    leadsRaw = await prisma.lead.findMany({
-      where: { branchId: branch.id },
-      orderBy: [
-        { leadScore: 'desc' },
-        { createdAt: 'desc' },
-      ],
-      take: 100,
-    });
-  } catch (error) {
-    console.error('Error fetching leads:', error);
-    // leadsRaw remains empty array - this is OK, we'll show empty state
-  }
-
-  // Convert Date objects to ISO strings for client component
-  const leads = leadsRaw.map(lead => ({
-    id: lead.id,
-    name: lead.name,
-    phone: lead.phone,
-    email: lead.email,
-    zip: lead.zip,
-    bedrooms: lead.bedrooms,
-    bathrooms: lead.bathrooms,
-    urgency: lead.urgency,
-    homeType: lead.homeType,
-    leadScore: lead.leadScore,
-    leadTier: lead.leadTier,
-    riskFlags: lead.riskFlags,
-    status: lead.status,
-    depositPaid: lead.depositPaid,
-    createdAt: lead.createdAt.toISOString(),
-  }));
-
-  // Get stats
-  const stats = {
-    total: leads.length,
-    tierA: leads.filter(l => l.leadTier === 'A').length,
-    tierB: leads.filter(l => l.leadTier === 'B').length,
-    tierC: leads.filter(l => l.leadTier === 'C').length,
-    new: leads.filter(l => l.status === 'NEW').length,
-    active: leads.filter(l => l.status === 'ACTIVE').length,
-    qualified: leads.filter(l => l.status === 'QUALIFIED').length,
-    rejected: leads.filter(l => l.status === 'REJECTED').length,
-  };
-
-  // Ensure we have valid data
-  if (!branch || !branch.id) {
-    return <BranchNotFound slug={resolvedSlug} />;
+  if (!branchId) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-gray-500">Branch not found</p>
+        </div>
+      </AdminLayout>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Lead Management - {branch.name || 'New Jersey'}
-          </h1>
-          <p className="text-gray-600">
-            Manage and qualify leads for the {branch.name || 'New Jersey'} branch
-          </p>
+    <AdminLayout>
+      <div className="p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">New Jersey Leads</h1>
+          <p className="text-gray-600 mt-1">Manage and track leads for New Jersey branch</p>
         </div>
-
         <LeadManagementClient
-          branchId={branch.id}
+          branchId={branchId}
           initialLeads={leads}
           initialStats={stats}
         />
       </div>
-    </div>
+    </AdminLayout>
   );
 }

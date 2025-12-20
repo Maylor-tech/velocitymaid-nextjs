@@ -4,13 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  LayoutDashboard, 
   Calendar, 
-  History, 
   Settings, 
-  CreditCard,
   LogOut,
-  Heart
+  Phone,
+  MessageSquare
 } from 'lucide-react';
 
 interface CustomerLayoutProps {
@@ -39,15 +37,19 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
       const response = await fetch('/api/customer/me');
       const data = await response.json();
 
-      if (data.success) {
+      // API returns { authenticated: true, customer: {...} } on success
+      // or { authenticated: false } when not logged in
+      if (data.authenticated && data.customer) {
         setCustomer(data.customer);
       } else {
-        if (response.status === 401) {
-          router.push('/customer/login');
-        }
+        console.error('Failed to fetch customer:', data.error || 'Not authenticated');
+        // Redirect to login if not authenticated
+        router.push('/customer/login');
+        return;
       }
     } catch (error) {
       console.error('Error fetching customer info:', error);
+      // On network errors, redirect to login
       router.push('/customer/login');
     } finally {
       setLoading(false);
@@ -74,18 +76,27 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
     );
   }
 
-  if (!customer) {
-    return null;
+  if (!customer && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Unable to load customer information.</p>
+          <button
+            onClick={() => {
+              window.location.href = '/customer/login';
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const navItems = [
-    { href: '/customer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/customer/upcoming', label: 'Upcoming', icon: Calendar },
-    { href: '/customer/history', label: 'History', icon: History },
-    { href: '/customer/subscriptions', label: 'Subscriptions', icon: Calendar },
-    { href: '/customer/billing', label: 'Billing', icon: CreditCard },
-    { href: '/customer/tips', label: 'Tips', icon: Heart },
-    { href: '/customer/preferences', label: 'Preferences', icon: Settings },
+    { href: '/customer/jobs', label: 'My Jobs', icon: Calendar },
+    { href: '/customer/profile', label: 'Profile', icon: Settings },
   ];
 
   return (
@@ -95,7 +106,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
-              <Link href="/customer/dashboard" className="text-xl font-bold text-blue-600">
+              <Link href="/customer/jobs" className="text-xl font-bold text-blue-600">
                 VelocityMaid
               </Link>
               <div className="hidden md:flex gap-1">
@@ -120,8 +131,26 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                {customer.firstName} {customer.lastName}
+              <a
+                href="tel:9732809190"
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Call Support"
+              >
+                <Phone className="w-4 h-4" />
+                <span className="text-sm">(973) 280-9190</span>
+              </a>
+              <a
+                href="https://wa.me/19732809190"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                title="WhatsApp Support"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span className="text-sm">Support</span>
+              </a>
+              <span className="text-sm text-gray-600 hidden sm:inline">
+                {customer?.firstName} {customer?.lastName}
               </span>
               <button
                 onClick={handleLogout}
@@ -156,6 +185,33 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
               </Link>
             );
           })}
+        </div>
+      </div>
+
+      {/* Support Banner */}
+      <div className="bg-blue-50 border-b border-blue-200 px-4 sm:px-6 lg:px-8 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <p className="text-sm text-blue-800">
+            <strong>Need help?</strong> For urgent same-day changes, please call us directly.
+          </p>
+          <div className="flex items-center gap-3">
+            <a
+              href="tel:9732809190"
+              className="flex items-center gap-2 text-sm text-blue-700 hover:text-blue-900 font-medium"
+            >
+              <Phone className="w-4 h-4" />
+              (973) 280-9190
+            </a>
+            <a
+              href="https://wa.me/19732809190"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-green-700 hover:text-green-900 font-medium"
+            >
+              <MessageSquare className="w-4 h-4" />
+              WhatsApp
+            </a>
+          </div>
         </div>
       </div>
 

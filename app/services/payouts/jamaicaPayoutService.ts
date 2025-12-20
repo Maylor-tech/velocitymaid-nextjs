@@ -133,6 +133,19 @@ export async function createPayout(
     throw new Error(eligibility.reason || 'Training not completed. Please complete all training modules to receive payouts.');
   }
 
+  // Check payment method verification
+  const paymentMethod = await prisma.cleanerPaymentMethod.findFirst({
+    where: {
+      cleanerId,
+      isActive: true,
+      verifiedAt: { not: null },
+    },
+  });
+
+  if (!paymentMethod) {
+    throw new Error('Cleaner payment method not verified. Please add and verify a payment method to receive payouts.');
+  }
+
   // Calculate earnings
   const earnings = await calculateCleanerEarnings(cleanerId, branchId, periodStart, periodEnd);
 

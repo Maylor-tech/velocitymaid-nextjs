@@ -4,11 +4,13 @@ export const dynamic = 'force-dynamic'
  * GET /api/admin/villas
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
+    await requireRole(request, "ADMIN");
     // TODO: Add admin authentication check
 
     const searchParams = request.nextUrl.searchParams;
@@ -48,4 +50,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 

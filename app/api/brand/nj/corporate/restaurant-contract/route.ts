@@ -242,3 +242,4 @@ function generateRestaurantContract(): string {
   `.trim();
 }
 
+

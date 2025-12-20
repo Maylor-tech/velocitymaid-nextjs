@@ -7,195 +7,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id                   String                @id @default(uuid())
-  email                String                @unique
-  name                 String?
-  role                 UserRole              @default(CLEANER)
-  primaryBranchId      String?
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  isActive             Boolean               @default(false)
-  homeZip              String?
-  preferredCities      String[]              @default([])
-  managedBranches      Branch[]              @relation("BranchManager")
-  availability         CleanerAvailability?
-  jamaicaPaymentMethod JamaicaPaymentMethod?
-  jamaicaPayouts       JamaicaPayout[]       @relation("CleanerPayouts")
-  assignedJobs         Job[]                 @relation("AssignedJobs")
-  lessonProgresses     LessonProgress[]
-  certificate          TrainingCertificate?  @relation("CleanerCertificate")
-  quizAttempts         TrainingQuizAttempt[]
-  trainingStatus       TrainingStatus?
-  transactions         TransactionLedger[]
-  primaryBranch        Branch?               @relation("UserPrimaryBranch", fields: [primaryBranchId], references: [id])
-  userBranches         UserBranch[]
-
-  @@index([primaryBranchId])
-  @@index([role])
-  @@index([isActive])
-  @@index([preferredCities])
-}
-
-model UserBranch {
-  id        String   @id @default(uuid())
-  userId    String
-  branchId  String
-  createdAt DateTime @default(now())
-  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, branchId])
-  @@index([userId])
-  @@index([branchId])
-}
-
-model Customer {
-  id                String           @id @default(uuid())
-  firstName         String
-  lastName          String
-  email             String           @unique
-  phone             String?
-  defaultAddress    String?
-  homeZipCode       String?
-  branchId          String?
-  stripeCustomerId  String?          @unique
-  loyaltyPoints     Int              @default(0)
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  preferSameCleaner Boolean          @default(false)
-  leadStatus        LeadStatus       @default(NEW)
-  whatsappOptIn     Boolean          @default(false)
-  branch            Branch?          @relation(fields: [branchId], references: [id])
-  jobs              Job[]
-  nurtureHistory    NurtureHistory[]
-  nurtureSequence   NurtureSequence?
-  referralCredits   ReferralCredit[] @relation("CustomerReferralCredits")
-  referredEvents    ReferralEvent[]  @relation("ReferredCustomerEvents")
-  referrerEvents    ReferralEvent[]  @relation("ReferrerEvents")
-  referralLinks     ReferralLink[]   @relation("CustomerReferralLinks")
-
-  @@index([email])
-  @@index([branchId])
-  @@index([homeZipCode])
-  @@index([leadStatus])
-}
-
 model Branch {
-  id                  String                      @id @default(uuid())
-  name                String
-  slug                String                      @unique
-  country             String                      @default("US")
-  state               String
-  city                String
-  regionLabel         String?
-  timezone            String
-  primaryPhone        String
-  whatsappNumber      String
-  managerId           String?
-  pricingModelId      String?
-  status              BranchStatus                @default(COMING_SOON)
-  createdAt           DateTime                    @default(now())
-  updatedAt           DateTime                    @updatedAt
-  currency            String                      @default("USD")
-  manager             User?                       @relation("BranchManager", fields: [managerId], references: [id])
-  pricingModel        PricingModel?               @relation(fields: [pricingModelId], references: [id])
-  automationConfig    BranchAutomationConfig?
-  config              BranchConfig?
-  landingContent      BranchLandingContent?
-  onboardingResources BranchOnboardingResources[]
-  payoutRules         BranchPayoutRules?
-  serviceAreas        BranchServiceArea[]
-  servicePackages     BranchServicePackage[]
-  sops                BranchSops[]
-  cleanerApplications CleanerApplication[]
-  customers           Customer[]
-  jamaicaPayouts      JamaicaPayout[]
-  jobs                Job[]
-  leads               Lead[]
-  nurtureSequences    NurtureSequence[]
-  promos              Promo[]
-  referralEvents      ReferralEvent[]             @relation("BranchReferralEvents")
-  referralLinks       ReferralLink[]              @relation("BranchReferralLinks")
-  transactions        TransactionLedger[]
-  primaryUsers        User[]                      @relation("UserPrimaryBranch")
-  userBranches        UserBranch[]
+  id                                String                      @id
+  name                              String
+  slug                              String                      @unique
+  country                           String                      @default("US")
+  state                             String
+  city                              String
+  regionLabel                       String?
+  timezone                          String
+  primaryPhone                      String
+  whatsappNumber                    String
+  managerId                         String?
+  pricingModelId                    String?
+  status                            BranchStatus                @default(COMING_SOON)
+  createdAt                         DateTime                    @default(now())
+  updatedAt                         DateTime
+  currency                          String                      @default("USD")
+  User_Branch_managerIdToUser       User?                       @relation("Branch_managerIdToUser", fields: [managerId], references: [id])
+  PricingModel                      PricingModel?               @relation(fields: [pricingModelId], references: [id])
+  BranchAutomationConfig            BranchAutomationConfig?
+  BranchConfig                      BranchConfig?
+  BranchLandingContent              BranchLandingContent?
+  BranchOnboardingResources         BranchOnboardingResources[]
+  BranchPayoutRules                 BranchPayoutRules?
+  BranchServiceArea                 BranchServiceArea[]
+  BranchServicePackage              BranchServicePackage[]
+  BranchSops                        BranchSops[]
+  CleanerApplication                CleanerApplication[]
+  Customer                          Customer[]
+  JamaicaPayout                     JamaicaPayout[]
+  Job                               Job[]
+  Lead                              Lead[]
+  NurtureSequence                   NurtureSequence[]
+  Promo                             Promo[]
+  ReferralEvent                     ReferralEvent[]
+  ReferralLink                      ReferralLink[]
+  TransactionLedger                 TransactionLedger[]
+  User_User_primaryBranchIdToBranch User[]                      @relation("User_primaryBranchIdToBranch")
+  UserBranch                        UserBranch[]
+  AssignmentLog                    AssignmentLog[]
+  ServicePricing                    ServicePricing[]
+  RegionPricingModifier             RegionPricingModifier[]
 
-  @@index([slug])
-  @@index([status])
   @@index([managerId])
   @@index([pricingModelId])
-}
-
-model BranchServiceArea {
-  id        String   @id @default(uuid())
-  branchId  String
-  zipCode   String
-  priority  Int      @default(1)
-  city      String?
-  state     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
-  @@unique([branchId, zipCode])
-  @@index([branchId])
-  @@index([zipCode])
-  @@index([zipCode, priority])
-}
-
-model PricingModel {
-  id            String      @id @default(uuid())
-  name          String
-  billingType   BillingType
-  currency      String      @default("USD")
-  baseRate      Decimal     @db.Decimal(10, 2)
-  extraHourRate Decimal?    @db.Decimal(10, 2)
-  minHours      Int?
-  internalNotes String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  branches      Branch[]
-
-  @@index([name])
-}
-
-model BranchServicePackage {
-  id                   String   @id @default(uuid())
-  branchId             String
-  code                 String
-  name                 String
-  description          String?
-  defaultDurationHours Int
-  basePrice            Decimal  @db.Decimal(10, 2)
-  isActive             Boolean  @default(true)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  currency             String?  @default("USD")
-  pricingData          Json?
-  branch               Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
-  @@unique([branchId, code])
-  @@index([branchId])
-  @@index([branchId, isActive])
-}
-
-model BranchConfig {
-  id                     String   @id @default(uuid())
-  branchId               String   @unique
-  bookingEmail           String?
-  supportEmail           String?
-  maxDailyJobs           Int?
-  whatsappTemplateConfig Json?
-  zapierHooks            Json?
-  operationsFlags        Json?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  branch                 Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  @@index([slug])
+  @@index([status])
 }
 
 model BranchAutomationConfig {
-  id                       String   @id @default(uuid())
+  id                       String   @id
   branchId                 String   @unique
   bookingWebhookUrl        String?
   reminderWebhookUrl       String?
@@ -204,12 +66,26 @@ model BranchAutomationConfig {
   whatsappTemplateReminder String?
   whatsappTemplateReview   String?
   createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
-  branch                   Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  updatedAt                DateTime
+  Branch                   Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+}
+
+model BranchConfig {
+  id                     String   @id
+  branchId               String   @unique
+  bookingEmail           String?
+  supportEmail           String?
+  maxDailyJobs           Int?
+  whatsappTemplateConfig Json?
+  zapierHooks            Json?
+  operationsFlags        Json?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime
+  Branch                 Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
 }
 
 model BranchLandingContent {
-  id             String   @id @default(uuid())
+  id             String   @id
   branchId       String   @unique
   headline       String?
   subheadline    String?
@@ -220,13 +96,26 @@ model BranchLandingContent {
   testimonials   Json?
   faqEntries     Json?
   createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  updatedAt      DateTime
   cityContent    Json?
-  branch         Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  Branch         Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+}
+
+model BranchOnboardingResources {
+  id          String   @id
+  branchId    String
+  name        String
+  description String?
+  resourceUrl String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  Branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
 }
 
 model BranchPayoutRules {
-  id                     String       @id @default(uuid())
+  id                     String       @id
   branchId               String       @unique
   baseRateType           BaseRateType
   baseRateValue          Decimal      @db.Decimal(10, 2)
@@ -234,35 +123,231 @@ model BranchPayoutRules {
   tipHandling            TipHandling
   franchiseFeePercentage Decimal?     @db.Decimal(5, 2)
   createdAt              DateTime     @default(now())
-  updatedAt              DateTime     @updatedAt
-  branch                 Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  updatedAt              DateTime
+  Branch                 Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+}
+
+model BranchServiceArea {
+  id        String   @id
+  branchId  String
+  zipCode   String
+  priority  Int      @default(1)
+  city      String?
+  state     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([branchId, zipCode])
+  @@index([branchId])
+  @@index([zipCode])
+  @@index([zipCode, priority])
+}
+
+model BranchServicePackage {
+  id                   String   @id
+  branchId             String
+  code                 String
+  name                 String
+  description          String?
+  defaultDurationHours Int
+  basePrice            Decimal  @db.Decimal(10, 2)
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime
+  currency             String?  @default("USD")
+  pricingData          Json?
+  Branch               Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([branchId, code])
+  @@index([branchId])
+  @@index([branchId, isActive])
 }
 
 model BranchSops {
-  id        String      @id @default(uuid())
+  id        String      @id
   branchId  String
   category  SopCategory
   title     String
   docUrl    String?
   createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  branch    Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  updatedAt DateTime
+  Branch    Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
-  @@index([branchId])
   @@index([branchId, category])
+  @@index([branchId])
 }
 
-model BranchOnboardingResources {
-  id          String   @id @default(uuid())
-  branchId    String
-  name        String
-  description String?
-  resourceUrl String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+model CleanerApplication {
+  id                  String                   @id
+  name                String
+  email               String
+  phone               String
+  branchId            String
+  experienceLevel     String?
+  daysAvailable       Json?
+  notes               String?
+  status              CleanerApplicationStatus @default(PENDING)
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime
+  applicantFitScore   Int?
+  areaOfResidence     String?
+  canTravelToVillas   Boolean                  @default(false)
+  idUploadUrl         String?
+  referencesUploadUrl String?
+  weekendAbility      Boolean                  @default(false)
+  whatsappNumber      String?
+  Branch              Branch                   @relation(fields: [branchId], references: [id])
+
+  @@index([applicantFitScore])
+  @@index([branchId])
+  @@index([email])
+  @@index([status])
+}
+
+model CleanerAvailability {
+  id            String   @id
+  cleanerId     String   @unique
+  workingDays   Json
+  timeRanges    Json
+  maxDailyJobs  Int      @default(3)
+  blackoutDates Json?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+  User          User     @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@index([cleanerId])
+  @@index([isActive])
+}
+
+model CleanerPaymentMethod {
+  id               String    @id @default(uuid())
+  cleanerId        String
+  methodType       String
+  label            String?
+  details          Json
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  verifiedAt       DateTime?
+  verifiedBy       String?
+  verificationNote String?
+  User             User      @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@index([cleanerId, isActive])
+  @@index([cleanerId])
+}
+
+model Contract {
+  id        String    @id
+  name      String
+  type      String
+  branch    String    @default("port-antonio")
+  url       String
+  status    String    @default("PENDING")
+  signedAt  DateTime?
+  signedBy  String?
+  phone     String?
+  email     String?
+  metadata  Json?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+
+  @@index([branch])
+  @@index([createdAt])
+  @@index([status])
+  @@index([type])
+}
+
+model Customer {
+  id                                                       String           @id @default(uuid())
+  firstName                                                String
+  lastName                                                 String
+  email                                                    String           @unique
+  phone                                                    String?
+  defaultAddress                                           String?
+  homeZipCode                                              String?
+  branchId                                                 String?
+  stripeCustomerId                                         String?          @unique
+  loyaltyPoints                                            Int              @default(0)
+  createdAt                                                DateTime         @default(now())
+  updatedAt                                                DateTime
+  preferSameCleaner                                        Boolean          @default(false)
+  leadStatus                                               LeadStatus       @default(NEW)
+  whatsappOptIn                                            Boolean          @default(false)
+  Branch                                                   Branch?          @relation(fields: [branchId], references: [id])
+  Job                                                      Job[]
+  NurtureHistory                                           NurtureHistory[]
+  NurtureSequence                                          NurtureSequence?
+  ReferralCredit                                           ReferralCredit[]
+  ReferralEvent_ReferralEvent_referredCustomerIdToCustomer ReferralEvent[]  @relation("ReferralEvent_referredCustomerIdToCustomer")
+  ReferralEvent_ReferralEvent_referrerIdToCustomer         ReferralEvent[]  @relation("ReferralEvent_referrerIdToCustomer")
+  ReferralLink                                             ReferralLink[]
+  CleanerRating                                            CleanerRating[]
 
   @@index([branchId])
+  @@index([email])
+  @@index([homeZipCode])
+  @@index([leadStatus])
+}
+
+model FranchiseApplication {
+  id                      String                     @id
+  name                    String
+  email                   String
+  phone                   String
+  city                    String
+  state                   String
+  country                 String
+  desiredBranchSlug       String?
+  background              String?
+  investmentCapacityRange String?
+  notes                   String?
+  status                  FranchiseApplicationStatus @default(PENDING)
+  internalNotes           String?
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime
+
+  @@index([city, state])
+  @@index([email])
+  @@index([status])
+}
+
+model JamaicaPaymentMethod {
+  id             String   @id
+  cleanerId      String   @unique
+  bankName       String?
+  accountNumber  String?
+  accountType    String?
+  whatsappNumber String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  User           User     @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@index([cleanerId])
+}
+
+model JamaicaPayout {
+  id            String   @id
+  cleanerId     String
+  branchId      String
+  periodStart   DateTime
+  periodEnd     DateTime
+  totalAmount   Float
+  currency      String   @default("JMD")
+  status        String   @default("PENDING")
+  paymentMethod String   @default("BANK_TRANSFER")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+  Branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  User          User     @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([cleanerId])
+  @@index([periodStart, periodEnd])
+  @@index([status])
 }
 
 model Job {
@@ -277,7 +362,7 @@ model Job {
   serviceType         String?
   serviceLocation     String?
   address             String?
-  status              String    @default("pending")
+  status              JobStatus @default(RECEIVED)
   totalPrice          Decimal?  @db.Decimal(10, 2)
   createdAt           DateTime  @default(now())
   assignedAt          DateTime?
@@ -289,435 +374,72 @@ model Job {
   appliedReferralCode String?
   promoApplied        String?
   promoDiscount       Decimal?  @db.Decimal(10, 2)
-  assignedCleaner     User?     @relation("AssignedJobs", fields: [assignedCleanerId], references: [id])
-  branch              Branch    @relation(fields: [branchId], references: [id])
-  customer            Customer? @relation(fields: [customerId], references: [id])
+  // Phase L: Pricing Lock & Snapshot
+  // NOTE: Pricing fields removed - database schema is source of truth
+  // These fields do not exist in database and should not be referenced
+  // priceLockedAt       DateTime?
+  // pricingSnapshot     Json?
+  // pricingReferenceId String?
+  // basePrice           Decimal?
+  // modifiers           Decimal?
+  // fees                Decimal?
+  // tax                 Decimal?
+  // discountAmount      Decimal?
+  // discountReason      String?
+  // discountApprovedBy  String?
+  User                User?     @relation(fields: [assignedCleanerId], references: [id])
+  Branch              Branch    @relation(fields: [branchId], references: [id])
+  Customer            Customer? @relation(fields: [customerId], references: [id])
+  AssignmentLog       AssignmentLog[]
+  CleanerRating       CleanerRating?
 
-  @@index([branchId])
-  @@index([assignedCleanerId])
-  @@index([customerId])
-  @@index([status])
-  @@index([preferredDate])
-  @@index([jobQualityScore])
   @@index([appliedReferralCode])
-}
-
-model CleanerApplication {
-  id                  String                   @id @default(uuid())
-  name                String
-  email               String
-  phone               String
-  branchId            String
-  experienceLevel     String?
-  daysAvailable       Json?
-  notes               String?
-  status              CleanerApplicationStatus @default(PENDING)
-  createdAt           DateTime                 @default(now())
-  updatedAt           DateTime                 @updatedAt
-  applicantFitScore   Int?
-  areaOfResidence     String?
-  canTravelToVillas   Boolean                  @default(false)
-  idUploadUrl         String?
-  referencesUploadUrl String?
-  weekendAbility      Boolean                  @default(false)
-  whatsappNumber      String?
-  branch              Branch                   @relation(fields: [branchId], references: [id])
-
+  // @@index([priceLockedAt])  // Commented out until column exists in database
+  @@index([assignedCleanerId])
   @@index([branchId])
-  @@index([status])
-  @@index([email])
-  @@index([applicantFitScore])
-}
-
-model FranchiseApplication {
-  id                      String                     @id @default(uuid())
-  name                    String
-  email                   String
-  phone                   String
-  city                    String
-  state                   String
-  country                 String
-  desiredBranchSlug       String?
-  background              String?
-  investmentCapacityRange String?
-  notes                   String?
-  status                  FranchiseApplicationStatus @default(PENDING)
-  internalNotes           String?
-  createdAt               DateTime                   @default(now())
-  updatedAt               DateTime                   @updatedAt
-
-  @@index([status])
-  @@index([email])
-  @@index([city, state])
-}
-
-model VillaPartnerApplication {
-  id                String   @id @default(cuid())
-  propertyName      String
-  managerName       String
-  whatsapp          String
-  bedrooms          Int
-  bathrooms         Int
-  turnoverFrequency String
-  needsInventory    Boolean  @default(false)
-  needsLinenService Boolean  @default(false)
-  notes             String?
-  status            String   @default("NEW")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  @@index([status])
-  @@index([createdAt])
-}
-
-model Contract {
-  id        String    @id @default(cuid())
-  name      String
-  type      String
-  branch    String    @default("port-antonio")
-  url       String
-  status    String    @default("PENDING")
-  signedAt  DateTime?
-  signedBy  String?
-  phone     String?
-  email     String?
-  metadata  Json?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@index([type])
-  @@index([status])
-  @@index([branch])
-  @@index([createdAt])
-}
-
-model JamaicaPayout {
-  id            String   @id @default(cuid())
-  cleanerId     String
-  branchId      String
-  periodStart   DateTime
-  periodEnd     DateTime
-  totalAmount   Float
-  currency      String   @default("JMD")
-  status        String   @default("PENDING")
-  paymentMethod String   @default("BANK_TRANSFER")
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  cleaner       User     @relation("CleanerPayouts", fields: [cleanerId], references: [id], onDelete: Cascade)
-
-  @@index([cleanerId])
-  @@index([branchId])
-  @@index([status])
-  @@index([periodStart, periodEnd])
-}
-
-model TransactionLedger {
-  id              String   @id @default(cuid())
-  branchId        String?
-  transactionType String
-  amount          Float
-  currency        String   @default("JMD")
-  description     String?
-  referenceId     String?
-  referenceType   String?
-  cleanerId       String?
-  customerId      String?
-  metadata        Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  branch          Branch?  @relation(fields: [branchId], references: [id])
-  cleaner         User?    @relation(fields: [cleanerId], references: [id])
-
-  @@index([branchId])
-  @@index([cleanerId])
   @@index([customerId])
-  @@index([transactionType])
+  @@index([jobQualityScore])
+  @@index([preferredDate])
+  @@index([status])
+}
+
+model AssignmentLog {
+  id          String   @id @default(cuid())
+  jobId       String
+  cleanerId   String?
+  branchId    String
+  outcome     String   // "ASSIGNED" | "NO_CLEANER" | "SKIPPED"
+  reason      String?
+  details     Json?
+  createdAt   DateTime @default(now())
+  Job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([branchId])
   @@index([createdAt])
-  @@index([referenceId, referenceType])
 }
 
-model JamaicaPaymentMethod {
-  id             String   @id @default(cuid())
-  cleanerId      String   @unique
-  bankName       String?
-  accountNumber  String?
-  accountType    String?
-  whatsappNumber String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  cleaner        User     @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
-
-  @@index([cleanerId])
-}
-
-model TrainingModule {
-  id          String           @id @default(cuid())
-  slug        String           @unique
-  title       String
-  description String
-  order       Int
-  isActive    Boolean          @default(true)
-  lessons     TrainingLesson[]
-
-  @@index([slug])
-  @@index([order])
-  @@index([isActive])
-}
-
-model TrainingLesson {
-  id         String           @id @default(cuid())
-  moduleId   String
-  title      String
-  content    String
-  order      Int
-  quizJson   Json?
-  progresses LessonProgress[]
-  module     TrainingModule   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  quiz       TrainingQuiz?
-
-  @@index([moduleId])
-  @@index([moduleId, order])
-}
-
-model LessonProgress {
-  id          String         @id @default(cuid())
+model CleanerRating {
+  id          String   @id @default(cuid())
+  jobId       String   @unique
   cleanerId   String
-  lessonId    String
-  status      String         @default("NOT_STARTED")
-  score       Int?
-  completedAt DateTime?
-  cleaner     User           @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
-  lesson      TrainingLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-
-  @@unique([cleanerId, lessonId])
-  @@index([cleanerId])
-  @@index([lessonId])
-  @@index([status])
-}
-
-model TrainingStatus {
-  id             String               @id @default(cuid())
-  cleanerId      String               @unique
-  overallStatus  String               @default("NOT_STARTED")
-  lastModuleSlug String?
-  updatedAt      DateTime             @updatedAt
-  certificate    TrainingCertificate? @relation("TrainingStatusCertificate")
-  cleaner        User                 @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  customerId  String?
+  rating      Int
+  comment     String?
+  createdAt   DateTime @default(now())
+  Job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Cleaner     User     @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  Customer    Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([cleanerId])
-  @@index([overallStatus])
-}
-
-model TrainingCertificate {
-  id            String          @id @default(cuid())
-  certificateId String          @unique
-  cleanerId     String          @unique
-  status        String          @default("ACTIVE")
-  issuedAt      DateTime        @default(now())
-  revokedAt     DateTime?
-  cleaner       User            @relation("CleanerCertificate", fields: [cleanerId], references: [id], onDelete: Cascade, map: "TrainingCertificate_cleanerId_User_fkey")
-  trainingStatus TrainingStatus? @relation("TrainingStatusCertificate", fields: [cleanerId], references: [cleanerId], onDelete: Cascade, map: "TrainingCertificate_cleanerId_TrainingStatus_fkey")
-
-  @@index([certificateId])
-  @@index([cleanerId])
-  @@index([status])
-}
-
-model TrainingQuiz {
-  id           String                @id @default(cuid())
-  lessonId     String                @unique
-  title        String
-  passingScore Int                   @default(70)
-  timeLimit    Int?
-  isActive     Boolean               @default(true)
-  questions    TrainingQuestion[]
-  lesson       TrainingLesson        @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  attempts     TrainingQuizAttempt[]
-
-  @@index([lessonId])
-  @@index([isActive])
-}
-
-model TrainingQuestion {
-  id            String       @id @default(cuid())
-  quizId        String
-  question      String
-  order         Int
-  questionType  String       @default("MULTIPLE_CHOICE")
-  options       Json
-  correctAnswer Int
-  explanation   String?
-  quiz          TrainingQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
-
-  @@index([quizId])
-  @@index([quizId, order])
-}
-
-model TrainingQuizAttempt {
-  id          String       @id @default(cuid())
-  cleanerId   String
-  quizId      String
-  lessonId    String
-  score       Int
-  passed      Boolean
-  answers     Json
-  startedAt   DateTime     @default(now())
-  completedAt DateTime?
-  cleaner     User         @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
-  quiz        TrainingQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
-
-  @@index([cleanerId])
-  @@index([quizId])
-  @@index([lessonId])
-  @@index([passed])
-  @@index([startedAt])
-}
-
-model CleanerAvailability {
-  id            String   @id @default(uuid())
-  cleanerId     String   @unique
-  workingDays   Json
-  timeRanges    Json
-  maxDailyJobs  Int      @default(3)
-  blackoutDates Json?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  cleaner       User     @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
-
-  @@index([cleanerId])
-  @@index([isActive])
-}
-
-model ReferralLink {
-  id              String           @id @default(uuid())
-  customerId      String
-  branchId        String
-  code            String           @unique
-  isActive        Boolean          @default(true)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  referralCredits ReferralCredit[]
-  referralEvents  ReferralEvent[]
-  branch          Branch           @relation("BranchReferralLinks", fields: [branchId], references: [id], onDelete: Cascade)
-  customer        Customer         @relation("CustomerReferralLinks", fields: [customerId], references: [id], onDelete: Cascade)
-
   @@index([customerId])
-  @@index([branchId])
-  @@index([code])
-}
-
-model ReferralCredit {
-  id             String               @id @default(uuid())
-  customerId     String
-  referralLinkId String?
-  amount         Decimal              @db.Decimal(10, 2)
-  status         ReferralCreditStatus @default(PENDING)
-  appliedToJobId String?
-  expiresAt      DateTime?
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
-  customer       Customer             @relation("CustomerReferralCredits", fields: [customerId], references: [id], onDelete: Cascade)
-  referralLink   ReferralLink?        @relation(fields: [referralLinkId], references: [id])
-
-  @@index([customerId])
-  @@index([status])
-  @@index([referralLinkId])
-}
-
-model ReferralEvent {
-  id                      String              @id @default(uuid())
-  referrerId              String
-  referredCustomerId      String
-  branchId                String
-  referralLinkId          String?
-  jobId                   String?
-  status                  ReferralEventStatus @default(PENDING)
-  referrerCreditId        String?
-  referredDiscountApplied Boolean             @default(false)
-  createdAt               DateTime            @default(now())
-  updatedAt               DateTime            @updatedAt
-  branch                  Branch              @relation("BranchReferralEvents", fields: [branchId], references: [id], onDelete: Cascade)
-  referralLink            ReferralLink?       @relation(fields: [referralLinkId], references: [id])
-  referredCustomer        Customer            @relation("ReferredCustomerEvents", fields: [referredCustomerId], references: [id], onDelete: Cascade)
-  referrer                Customer            @relation("ReferrerEvents", fields: [referrerId], references: [id], onDelete: Cascade)
-
-  @@index([referrerId])
-  @@index([referredCustomerId])
-  @@index([branchId])
-  @@index([status])
-  @@index([referralLinkId])
-}
-
-model NurtureSequence {
-  id           String           @id @default(uuid())
-  customerId   String           @unique
-  branchId     String
-  isActive     Boolean          @default(true)
-  currentDay   Int              @default(0)
-  startedAt    DateTime         @default(now())
-  pausedAt     DateTime?
-  completedAt  DateTime?
-  referralCode String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  history      NurtureHistory[]
-  branch       Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  customer     Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@index([customerId])
-  @@index([branchId])
-  @@index([isActive])
-}
-
-model NurtureHistory {
-  id                String               @id @default(uuid())
-  customerId        String
-  nurtureSequenceId String?
-  day               Int
-  message           String
-  channel           NurtureChannel
-  status            NurtureMessageStatus @default(PENDING)
-  messageId         String?
-  sentAt            DateTime?
-  errorMessage      String?
-  createdAt         DateTime             @default(now())
-  customer          Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  nurtureSequence   NurtureSequence?     @relation(fields: [nurtureSequenceId], references: [id], onDelete: Cascade)
-
-  @@index([customerId])
-  @@index([nurtureSequenceId])
-  @@index([day])
-  @@index([status])
-}
-
-model Promo {
-  id            String   @id @default(cuid())
-  branchId      String
-  month         Int
-  year          Int
-  title         String
-  description   String
-  discountType  String
-  discountValue Int
-  active        Boolean  @default(true)
-  startDate     DateTime
-  endDate       DateTime
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
-  @@unique([branchId, month, year])
-  @@index([branchId])
-  @@index([active])
-  @@index([startDate, endDate])
-  @@index([month, year])
+  @@index([rating])
+  @@index([createdAt])
 }
 
 model Lead {
-  id                String     @id @default(cuid())
+  id                String     @id
   branchId          String
   name              String
   phone             String
@@ -738,38 +460,372 @@ model Lead {
   depositUrl        String?
   customerId        String?
   createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  updatedAt         DateTime
   afterHoursMessage String?
   waitForMorning    Boolean    @default(false)
-  branch            Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  Branch            Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   @@index([branchId])
-  @@index([status])
-  @@index([leadTier])
-  @@index([leadScore])
-  @@index([phone])
   @@index([email])
-  @@index([zip])
+  @@index([leadScore])
+  @@index([leadTier])
+  @@index([phone])
+  @@index([status])
   @@index([waitForMorning])
+  @@index([zip])
 }
 
-enum UserRole {
-  ADMIN
-  MANAGER
-  CLEANER
-  SUPPORT
+model LessonProgress {
+  id             String         @id
+  cleanerId      String
+  lessonId       String
+  status         String         @default("NOT_STARTED")
+  score          Int?
+  completedAt    DateTime?
+  User           User           @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  TrainingLesson TrainingLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([cleanerId, lessonId])
+  @@index([cleanerId])
+  @@index([lessonId])
+  @@index([status])
 }
 
-enum BranchStatus {
-  ACTIVE
-  COMING_SOON
-  PAUSED
+model NurtureHistory {
+  id                String               @id
+  customerId        String
+  nurtureSequenceId String?
+  day               Int
+  message           String
+  channel           NurtureChannel
+  status            NurtureMessageStatus @default(PENDING)
+  messageId         String?
+  sentAt            DateTime?
+  errorMessage      String?
+  createdAt         DateTime             @default(now())
+  Customer          Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  NurtureSequence   NurtureSequence?     @relation(fields: [nurtureSequenceId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([day])
+  @@index([nurtureSequenceId])
+  @@index([status])
 }
 
-enum BillingType {
-  HOURLY
-  FLAT
-  TIERED
+model NurtureSequence {
+  id             String           @id
+  customerId     String           @unique
+  branchId       String
+  isActive       Boolean          @default(true)
+  currentDay     Int              @default(0)
+  startedAt      DateTime         @default(now())
+  pausedAt       DateTime?
+  completedAt    DateTime?
+  referralCode   String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  NurtureHistory NurtureHistory[]
+  Branch         Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  Customer       Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([customerId])
+  @@index([isActive])
+}
+
+model PricingModel {
+  id            String      @id
+  name          String
+  billingType   BillingType
+  currency      String      @default("USD")
+  baseRate      Decimal     @db.Decimal(10, 2)
+  extraHourRate Decimal?    @db.Decimal(10, 2)
+  minHours      Int?
+  internalNotes String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime
+  Branch        Branch[]
+
+  @@index([name])
+}
+
+model Promo {
+  id            String   @id
+  branchId      String
+  month         Int
+  year          Int
+  title         String
+  description   String
+  discountType  String
+  discountValue Int
+  active        Boolean  @default(true)
+  startDate     DateTime
+  endDate       DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+  Branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([branchId, month, year])
+  @@index([active])
+  @@index([branchId])
+  @@index([month, year])
+  @@index([startDate, endDate])
+}
+
+model ReferralCredit {
+  id             String               @id
+  customerId     String
+  referralLinkId String?
+  amount         Decimal              @db.Decimal(10, 2)
+  status         ReferralCreditStatus @default(PENDING)
+  appliedToJobId String?
+  expiresAt      DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime
+  Customer       Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  ReferralLink   ReferralLink?        @relation(fields: [referralLinkId], references: [id])
+
+  @@index([customerId])
+  @@index([referralLinkId])
+  @@index([status])
+}
+
+model ReferralEvent {
+  id                                                  String              @id
+  referrerId                                          String
+  referredCustomerId                                  String
+  branchId                                            String
+  referralLinkId                                      String?
+  jobId                                               String?
+  status                                              ReferralEventStatus @default(PENDING)
+  referrerCreditId                                    String?
+  referredDiscountApplied                             Boolean             @default(false)
+  createdAt                                           DateTime            @default(now())
+  updatedAt                                           DateTime
+  Branch                                              Branch              @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  ReferralLink                                        ReferralLink?       @relation(fields: [referralLinkId], references: [id])
+  Customer_ReferralEvent_referredCustomerIdToCustomer Customer            @relation("ReferralEvent_referredCustomerIdToCustomer", fields: [referredCustomerId], references: [id], onDelete: Cascade)
+  Customer_ReferralEvent_referrerIdToCustomer         Customer            @relation("ReferralEvent_referrerIdToCustomer", fields: [referrerId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([referralLinkId])
+  @@index([referredCustomerId])
+  @@index([referrerId])
+  @@index([status])
+}
+
+model ReferralLink {
+  id             String           @id
+  customerId     String
+  branchId       String
+  code           String           @unique
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  ReferralCredit ReferralCredit[]
+  ReferralEvent  ReferralEvent[]
+  Branch         Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  Customer       Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([code])
+  @@index([customerId])
+}
+
+model TrainingCertificate {
+  id                     String         @id
+  certificateId          String         @unique
+  cleanerId              String         @unique
+  status                 String         @default("ACTIVE")
+  issuedAt               DateTime       @default(now())
+  revokedAt              DateTime?
+  statusRelation         TrainingStatus @relation(fields: [cleanerId], references: [cleanerId], onDelete: Cascade, map: "TrainingCertificate_cleanerId_TrainingStatus_fkey")
+  userRelation           User           @relation(fields: [cleanerId], references: [id], onDelete: Cascade, map: "TrainingCertificate_cleanerId_User_fkey")
+
+  @@index([certificateId])
+  @@index([cleanerId])
+  @@index([status])
+}
+
+model TrainingLesson {
+  id             String           @id
+  moduleId       String
+  title          String
+  content        String
+  order          Int
+  quizJson       Json?
+  LessonProgress LessonProgress[]
+  TrainingModule TrainingModule   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  TrainingQuiz   TrainingQuiz?
+
+  @@index([moduleId])
+  @@index([moduleId, order])
+}
+
+model TrainingModule {
+  id             String           @id
+  slug           String           @unique
+  title          String
+  description    String
+  order          Int
+  isActive       Boolean          @default(true)
+  TrainingLesson TrainingLesson[]
+
+  @@index([isActive])
+  @@index([order])
+  @@index([slug])
+}
+
+model TrainingQuestion {
+  id            String       @id
+  quizId        String
+  question      String
+  order         Int
+  questionType  String       @default("MULTIPLE_CHOICE")
+  options       Json
+  correctAnswer Int
+  explanation   String?
+  TrainingQuiz  TrainingQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@index([quizId, order])
+}
+
+model TrainingQuiz {
+  id                  String                @id
+  lessonId            String                @unique
+  title               String
+  passingScore        Int                   @default(70)
+  timeLimit           Int?
+  isActive            Boolean               @default(true)
+  TrainingQuestion    TrainingQuestion[]
+  TrainingLesson      TrainingLesson        @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  TrainingQuizAttempt TrainingQuizAttempt[]
+
+  @@index([isActive])
+  @@index([lessonId])
+}
+
+model TrainingQuizAttempt {
+  id           String       @id
+  cleanerId    String
+  quizId       String
+  lessonId     String
+  score        Int
+  passed       Boolean
+  answers      Json
+  startedAt    DateTime     @default(now())
+  completedAt  DateTime?
+  User         User         @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  TrainingQuiz TrainingQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([cleanerId])
+  @@index([lessonId])
+  @@index([passed])
+  @@index([quizId])
+  @@index([startedAt])
+}
+
+model TrainingStatus {
+  id                  String               @id
+  cleanerId           String               @unique
+  overallStatus       String               @default("NOT_STARTED")
+  lastModuleSlug      String?
+  updatedAt           DateTime
+  TrainingCertificate TrainingCertificate?
+  User                User                 @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@index([cleanerId])
+  @@index([overallStatus])
+}
+
+model TransactionLedger {
+  id              String   @id
+  branchId        String?
+  transactionType String
+  amount          Float
+  currency        String   @default("JMD")
+  description     String?
+  referenceId     String?
+  referenceType   String?
+  cleanerId       String?
+  customerId      String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  Branch          Branch?  @relation(fields: [branchId], references: [id])
+  User            User?    @relation(fields: [cleanerId], references: [id])
+
+  @@index([branchId])
+  @@index([cleanerId])
+  @@index([createdAt])
+  @@index([customerId])
+  @@index([referenceId, referenceType])
+  @@index([transactionType])
+}
+
+model User {
+  id                                  String                @id
+  email                               String                @unique
+  name                                String?
+  role                                UserRole              @default(CLEANER)
+  primaryBranchId                     String?
+  createdAt                           DateTime              @default(now())
+  updatedAt                           DateTime
+  isActive                            Boolean               @default(false)
+  homeZip                             String?
+  preferredCities                     String[]              @default([])
+  Branch_Branch_managerIdToUser       Branch[]              @relation("Branch_managerIdToUser")
+  CleanerAvailability                 CleanerAvailability?
+  CleanerPaymentMethod                CleanerPaymentMethod[]
+  JamaicaPaymentMethod                JamaicaPaymentMethod?
+  JamaicaPayout                       JamaicaPayout[]
+  Job                                 Job[]
+  LessonProgress                      LessonProgress[]
+  TrainingCertificate                 TrainingCertificate?
+  TrainingQuizAttempt                 TrainingQuizAttempt[]
+  TrainingStatus                      TrainingStatus?
+  TransactionLedger                   TransactionLedger[]
+  Branch_User_primaryBranchIdToBranch Branch?               @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
+  UserBranch                          UserBranch[]
+  CleanerRating                       CleanerRating[]
+
+  @@index([isActive])
+  @@index([preferredCities])
+  @@index([primaryBranchId])
+  @@index([role])
+}
+
+model UserBranch {
+  id        String   @id
+  userId    String
+  branchId  String
+  createdAt DateTime @default(now())
+  Branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, branchId])
+  @@index([branchId])
+  @@index([userId])
+}
+
+model VillaPartnerApplication {
+  id                String   @id
+  propertyName      String
+  managerName       String
+  whatsapp          String
+  bedrooms          Int
+  bathrooms         Int
+  turnoverFrequency String
+  needsInventory    Boolean  @default(false)
+  needsLinenService Boolean  @default(false)
+  notes             String?
+  status            String   @default("NEW")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime
+
+  @@index([createdAt])
+  @@index([status])
 }
 
 enum BaseRateType {
@@ -778,17 +834,16 @@ enum BaseRateType {
   PERCENTAGE
 }
 
-enum TipHandling {
-  PASS_THROUGH
-  SPLIT
-  POOL
+enum BillingType {
+  HOURLY
+  FLAT
+  TIERED
 }
 
-enum SopCategory {
-  OPS
-  SALES
-  QC
-  COMPLIANCE
+enum BranchStatus {
+  ACTIVE
+  COMING_SOON
+  PAUSED
 }
 
 enum CleanerApplicationStatus {
@@ -802,19 +857,6 @@ enum FranchiseApplicationStatus {
   REVIEWED
   APPROVED
   REJECTED
-}
-
-enum ReferralCreditStatus {
-  PENDING
-  APPLIED
-  EXPIRED
-  CANCELLED
-}
-
-enum ReferralEventStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
 }
 
 enum LeadStatus {
@@ -836,4 +878,104 @@ enum NurtureMessageStatus {
   SENT
   FAILED
   STOPPED
+}
+
+enum ReferralCreditStatus {
+  PENDING
+  APPLIED
+  EXPIRED
+  CANCELLED
+}
+
+enum ReferralEventStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum SopCategory {
+  OPS
+  SALES
+  QC
+  COMPLIANCE
+}
+
+enum TipHandling {
+  PASS_THROUGH
+  SPLIT
+  POOL
+}
+
+enum JobStatus {
+  RECEIVED
+  CONFIRMED
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  BRANCH_OWNER
+  CLEANER
+  SUPPORT
+}
+
+// Phase L: Pricing Tables
+model ServiceType {
+  id          String   @id @default(cuid())
+  code        String   @unique  // "STANDARD", "DEEP", "MOVE_OUT", "RECURRING"
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  
+  ServicePricing ServicePricing[]
+  
+  @@index([code])
+  @@index([isActive])
+}
+
+model ServicePricing {
+  id              String      @id @default(cuid())
+  serviceTypeId   String
+  branchId        String?
+  basePrice       Decimal     @db.Decimal(10, 2)
+  hourlyRate      Decimal?    @db.Decimal(10, 2)
+  currency        String      @default("USD")
+  effectiveFrom   DateTime    @default(now())
+  effectiveTo     DateTime?
+  isActive        Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime
+  
+  ServiceType     ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
+  Branch          Branch?     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  // Job             Job[]  // Removed - pricingReferenceId not in database
+  
+  @@index([serviceTypeId])
+  @@index([branchId])
+  @@index([isActive])
+  @@index([effectiveFrom, effectiveTo])
+}
+
+model RegionPricingModifier {
+  id              String   @id @default(cuid())
+  branchId        String
+  regionType      String   // "CITY", "ZIP", "STATE"
+  regionValue     String   // City name, ZIP code, or state code
+  modifierPercent Decimal  @db.Decimal(5, 2)  // e.g., 10.00 = +10%, -5.00 = -5%
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  
+  Branch          Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  
+  @@unique([branchId, regionType, regionValue])
+  @@index([branchId])
+  @@index([isActive])
+  @@index([regionType, regionValue])
 }

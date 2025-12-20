@@ -1,30 +1,47 @@
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { COOKIE_NAME } from '@/lib/customerSession';
 
 /**
- * Customer Logout API
- * 
  * POST /api/customer/logout
  * 
- * Clears customerId cookie and redirects to login
+ * Logout customer and clear session
  */
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    cookieStore.delete('customerId');
-
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       message: 'Logged out successfully',
     });
+
+    // Clear cookie with both paths to handle old and new cookies
+    res.cookies.delete(COOKIE_NAME);
+    res.cookies.set(COOKIE_NAME, '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0, // Expire immediately
+    });
+    // Also clear the old path cookie
+    res.cookies.set(COOKIE_NAME, '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/customer',
+      maxAge: 0, // Expire immediately
+    });
+
+    return res;
   } catch (error: any) {
-    console.error('Customer logout error:', error);
+    console.error('Logout error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to logout' },
+      {
+        success: false,
+        error: error.message || 'Failed to logout',
+      },
       { status: 500 }
     );
   }
 }
-

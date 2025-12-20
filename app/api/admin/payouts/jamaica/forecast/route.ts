@@ -6,13 +6,15 @@ export const dynamic = 'force-dynamic'
  * Forecasts expected payouts for all active cleaners
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 import { calculateCleanerEarnings } from '@/app/services/payouts/jamaicaPayoutService';
 import { calculateTotalJamaicaBonuses } from '@/utils/jamaicaIncentives';
 
 export async function GET(request: NextRequest) {
   try {
+    await requireRole(request, "ADMIN");
     // TODO: Add admin authentication check
 
     const searchParams = request.nextUrl.searchParams;
@@ -192,4 +194,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 

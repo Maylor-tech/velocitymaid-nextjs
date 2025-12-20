@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic'
  * Returns revenue metrics for Port Antonio branch
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireRole } from "@/lib/auth/requireRole";
 import {
   getJamaicaRevenue,
   getAverageTicketSize,
@@ -19,6 +20,7 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
+    await requireRole(request, "ADMIN");
     // TODO: Add admin authentication check
 
     const searchParams = request.nextUrl.searchParams;
@@ -73,4 +75,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 

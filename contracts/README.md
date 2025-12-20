@@ -45,3 +45,4 @@ Signed contracts are stored in the database and can be viewed via:
 
 Actual PDF files and DOCX templates need to be created by legal/design team. The system currently generates HTML that can be printed to PDF.
 
+

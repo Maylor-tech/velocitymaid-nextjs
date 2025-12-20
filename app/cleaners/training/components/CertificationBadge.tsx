@@ -35,3 +35,4 @@ export default function CertificationBadge({ className = '', size = 'md' }: Cert
   );
 }
 
+

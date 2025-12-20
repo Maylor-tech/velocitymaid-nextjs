@@ -10,8 +10,10 @@ import {
   DollarSign,
   AlertCircle,
   Settings,
-  Search
+  Search,
+  Briefcase
 } from 'lucide-react';
+import { DemoModeBanner } from '@/components/DemoModeBanner';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -22,6 +24,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const navItems = [
     { href: '/dashboard', label: 'Operations', icon: LayoutDashboard },
+    { href: '/admin/jobs', label: 'Jobs Board', icon: Briefcase },
     { href: '/admin/branches', label: 'Branches', icon: Building2 },
     { href: '/dashboard/profit', label: 'Profitability', icon: TrendingUp },
     { href: '/dashboard/payouts', label: 'Payouts', icon: DollarSign },
@@ -34,6 +37,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Demo Mode Banner */}
+      <DemoModeBanner />
+      
       {/* Sidebar */}
       <aside className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 shadow-sm z-40">
         <div className="p-6">

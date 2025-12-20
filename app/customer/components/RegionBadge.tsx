@@ -30,3 +30,4 @@ export default function RegionBadge({ location, size = 'md' }: RegionBadgeProps)
 
 
 
+

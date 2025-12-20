@@ -242,3 +242,4 @@ function generateSalonContract(): string {
   `.trim();
 }
 
+

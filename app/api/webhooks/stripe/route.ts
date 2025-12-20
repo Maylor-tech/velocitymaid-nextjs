@@ -4,6 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { sendCustomerConfirmation } from '@/lib/sendCustomerConfirmation';
 import { sendAdminNotification } from '@/lib/sendAdminNotification';
+import { prisma } from '@/lib/prisma';
+import { autoAssignCleaner } from '@/lib/cleaner-assignment';
+import { JobStatus } from '@prisma/client';
+import { validateTerritory } from '@/lib/pilot/territory';
 
 /**
  * Stripe Webhook Handler
@@ -137,6 +141,168 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       console.error(`Error updating Stripe metadata for session ${session.id}:`, error.message);
       // Don't fail the webhook if metadata update fails
     }
+  }
+
+  // Create or find Job record in database
+  let jobId: string | null = null;
+  try {
+    const branchId = metadata.branchId || null;
+    if (!branchId) {
+      console.warn(`No branchId in metadata for session ${session.id} - skipping job creation`);
+    } else {
+      const firstName = metadata.firstName || '';
+      const lastInitial = metadata.lastInitial || '';
+      const customerName = `${firstName}${lastInitial ? ` ${lastInitial}` : ''}`.trim();
+      const email = metadata.email || '';
+      const totalPrice = session.amount_total ? session.amount_total / 100 : 0;
+      const preferredDate = metadata.preferredDate ? new Date(metadata.preferredDate) : null;
+
+      // Create or find Customer record to link to Job
+      let customerId: string | null = null;
+      if (email) {
+        try {
+          let customer = await prisma.customer.findUnique({
+            where: { email },
+          });
+
+          if (!customer) {
+            // Extract ZIP from address if available for homeZipCode
+            let homeZipCode: string | null = null;
+            if (metadata.address) {
+              const zipMatch = metadata.address.match(/\b\d{5}\b/);
+              if (zipMatch) {
+                homeZipCode = zipMatch[0];
+              }
+            }
+
+            customer = await prisma.customer.create({
+              data: {
+                firstName,
+                lastName: lastInitial || '',
+                email,
+                phone: phone || null,
+                branchId,
+                homeZipCode,
+              },
+            });
+          } else {
+            // Update customer info if needed (phone, branchId)
+            if (phone && !customer.phone) {
+              await prisma.customer.update({
+                where: { id: customer.id },
+                data: { phone },
+              });
+            }
+            if (!customer.branchId) {
+              await prisma.customer.update({
+                where: { id: customer.id },
+                data: { branchId },
+              });
+            }
+          }
+
+          customerId = customer.id;
+        } catch (customerError: any) {
+          console.error(`Error creating/finding customer for session ${session.id} (non-fatal):`, customerError.message);
+          // Continue without customerId - job can still be created
+        }
+      }
+
+      // Check if job already exists for this session
+      const existingJob = await prisma.job.findUnique({
+        where: { sessionId: session.id },
+      });
+
+      if (existingJob) {
+        jobId = existingJob.id;
+        console.log(`Job already exists for session ${session.id}: ${jobId}`);
+        
+        // Update customerId if it wasn't set before
+        if (customerId && !existingJob.customerId) {
+          await prisma.job.update({
+            where: { id: existingJob.id },
+            data: { customerId },
+          });
+        }
+      } else {
+        // Phase 5 Step 4: Check if customer is blocked
+        if (customerId) {
+          const customer = await prisma.customer.findUnique({
+            where: { id: customerId },
+            select: { isBlocked: true },
+          });
+
+          if (customer?.isBlocked) {
+            console.warn(`Blocked customer ${customerId} attempted to create job via Stripe webhook`);
+            // TODO: Create ComplianceIssue for blocked customer attempt
+            // Don't create the job - return error
+            return {
+              success: false,
+              error: 'This account is currently restricted. Please contact support.',
+            };
+          }
+        }
+
+        // Phase M: Validate territory before creating job
+        // Extract ZIP from address if available
+        let zipCode: string | null = null;
+        if (metadata.address) {
+          const zipMatch = metadata.address.match(/\b\d{5}\b/);
+          if (zipMatch) {
+            zipCode = zipMatch[0];
+          }
+        }
+
+        if (zipCode && branchId) {
+          const territoryValidation = await validateTerritory(
+            branchId,
+            zipCode,
+            metadata.preferredTime || undefined
+          );
+          
+          if (!territoryValidation.valid) {
+            console.warn(`[STRIPE_WEBHOOK] Territory validation failed: ${territoryValidation.error}`);
+            // Don't block job creation in webhook, but log the issue
+            // Admin can review and handle manually
+          }
+        }
+
+        // Create new job with customerId linked
+        const newJob = await prisma.job.create({
+          data: {
+            sessionId: session.id,
+            branchId,
+            customerId, // Link to customer for preferSameCleaner logic
+            customerName,
+            preferredDate,
+            preferredTime: metadata.preferredTime || null,
+            serviceType: metadata.serviceType || null,
+            serviceLocation: metadata.serviceLocation || null,
+            address: metadata.address || null,
+            status: JobStatus.RECEIVED,
+            totalPrice: totalPrice,
+            currency: metadata.currency || 'USD',
+            paymentMethod: 'card',
+            appliedReferralCode: metadata.referralCode || null,
+            promoApplied: metadata.promoCode || null,
+            promoDiscount: metadata.referralDiscount ? parseFloat(metadata.referralDiscount) : null,
+          },
+        });
+        jobId = newJob.id;
+        console.log(`Job created for session ${session.id}: ${jobId}${customerId ? ` (linked to customer ${customerId})` : ''}`);
+
+        // Auto-assign cleaner (non-blocking - don't fail if this fails)
+        try {
+          const assignmentResult = await autoAssignCleaner(newJob.id);
+          console.log('Auto-assignment result:', assignmentResult);
+        } catch (assignError: any) {
+          console.error('Auto-assignment error (non-fatal):', assignError.message || assignError);
+        }
+      }
+    }
+  } catch (jobError: any) {
+    console.error(`Error creating/finding job for session ${session.id} (non-fatal):`, jobError.message || jobError);
+    // Don't fail the webhook if job creation fails
   }
 
   // Send admin notification (non-blocking - don't fail if this fails)
