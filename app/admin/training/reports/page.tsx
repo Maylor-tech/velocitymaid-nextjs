@@ -9,6 +9,9 @@
 import { prisma } from '@/lib/prisma';
 import { BarChart3, Users, Award, Clock, TrendingUp, XCircle } from 'lucide-react';
 
+// Force dynamic rendering - this page requires database access
+export const dynamic = 'force-dynamic';
+
 export default async function TrainingReportsPage() {
   // Get all Jamaica branches
   const jamaicaBranches = await prisma.branch.findMany({
