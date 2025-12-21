@@ -238,27 +238,14 @@ export function BookingProvider({ children, initialBranchSlug }: { children: Rea
         return;
       }
 
-      // Validate URL before redirecting
-      if (!checkoutResult.url || typeof checkoutResult.url !== 'string') {
-        console.error("[BOOKING] Invalid checkout URL:", checkoutResult);
-        setError("Invalid checkout URL received. Please check your configuration and try again.");
-        setLoading(false);
-        return;
-      }
-
-      // Validate URL format
-      try {
-        new URL(checkoutResult.url);
-      } catch (urlError) {
-        console.error("[BOOKING] Invalid URL format:", checkoutResult.url, urlError);
-        setError("Invalid checkout URL format. Please contact support.");
-        setLoading(false);
-        return;
+      // Validate checkout URL
+      if (!checkoutResult?.url) {
+        throw new Error("Checkout URL missing");
       }
 
       console.log("[BOOKING] ✅ Redirecting to Stripe checkout...");
       
-      // Redirect to Stripe checkout
+      // Redirect to Stripe checkout (must use window.location.href, NOT router.push)
       window.location.href = checkoutResult.url;
     } catch (err: any) {
       console.error("Booking submission error:", err);

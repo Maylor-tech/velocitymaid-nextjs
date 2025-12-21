@@ -10,6 +10,12 @@ import { autoAssignCleaner } from '@/lib/cleaner-assignment';
 import { JobStatus } from '@prisma/client';
 import { validateTerritory } from '@/lib/pilot/territory';
 
+// Determine BASE URL with fallback chain
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  (process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`) ||
+  "http://localhost:3000";
+
 // Initialize Stripe only when needed (lazy initialization)
 function getStripe() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -25,7 +31,7 @@ function getStripe() {
     throw new Error('Invalid Stripe secret key format. Secret keys should start with sk_test_ (for testing) or sk_live_ (for production).');
   }
   return new Stripe(secretKey, {
-    apiVersion: '2025-10-29.clover',
+    apiVersion: "2024-06-20",
   });
 }
 
@@ -399,7 +405,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Track referral event
-          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/referrals/track-event`, {
+          await fetch(`${BASE_URL}/api/referrals/track-event`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -458,7 +464,7 @@ export async function POST(request: NextRequest) {
         success: true,
         jobId: job.id,
         message: 'Booking confirmed! Payment will be collected locally (cash or bank transfer).',
-        redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://velocitymaid.com'}/booking/success?job_id=${job.id}&currency=JMD`,
+        redirectUrl: `${BASE_URL}/booking/success?job_id=${job.id}&currency=JMD`,
       });
     }
 
@@ -704,8 +710,8 @@ export async function POST(request: NextRequest) {
       // 🚨 PAYMENT-FIRST FLOW: Redirect to confirmation page (NOT API route)
       // The confirmation page will call the API to create the job
       // This follows Next.js best practices: pages for users, APIs for data
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://velocitymaid.com'}/book/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://velocitymaid.com'}/book`,
+      success_url: `${BASE_URL}/book/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${BASE_URL}/book`,
       customer_email: email,
       metadata,
       billing_address_collection: 'required',
@@ -737,33 +743,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate session URL before returning
+    // Validate Stripe session URL before returning
     if (!session.url) {
-      console.error('[CHECKOUT] Stripe session created but URL is missing:', {
-        sessionId: session.id,
-        sessionUrl: session.url,
-      });
+      console.error("Stripe session created without URL", session);
       return NextResponse.json(
-        { error: 'Stripe checkout session created but URL is missing. Please check your Stripe configuration.' },
+        { error: "Stripe failed to generate checkout URL" },
         { status: 500 }
       );
     }
-
-    // Validate URL format
-    try {
-      new URL(session.url);
-    } catch (urlError) {
-      console.error('[CHECKOUT] Invalid Stripe session URL format:', session.url, urlError);
-      return NextResponse.json(
-        { error: 'Invalid checkout URL format. Please contact support.' },
-        { status: 500 }
-      );
-    }
-
-    console.log('[CHECKOUT] ✅ Checkout session created successfully:', {
-      sessionId: session.id,
-      urlLength: session.url.length,
-    });
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
