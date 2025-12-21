@@ -5,7 +5,9 @@ import { logAuditEntry } from "@/lib/audit";
 import { autoAssignCleaner } from "@/lib/dispatch/autoAssignCleaner";
 import { JobStatus } from "@prisma/client";
 
+// Force dynamic rendering - this route requires database access and should never be statically generated
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 /**
  * POST /api/admin/dispatcher/run
