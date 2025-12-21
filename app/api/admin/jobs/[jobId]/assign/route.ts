@@ -6,6 +6,7 @@ import { Resend } from "resend";
 import { requireRole } from "@/lib/auth/requireRole";
 import { shouldLockPricing, lockJobPricing, createPricingSnapshot, isPriceLocked } from "@/lib/pricing/lock";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const resend = new Resend(process.env.RESEND_API_KEY);

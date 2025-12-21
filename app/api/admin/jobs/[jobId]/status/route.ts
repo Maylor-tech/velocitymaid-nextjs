@@ -8,6 +8,7 @@ import { shouldLockPricing, lockJobPricing, createPricingSnapshot, isPriceLocked
 // TODO: Implement createPayoutIfEligible function
 // import { createPayoutIfEligible } from "@/src/server/payout/createPayoutIfEligible";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
