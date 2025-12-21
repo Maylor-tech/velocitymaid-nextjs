@@ -36,8 +36,29 @@ function getStripe() {
 }
 
 export async function POST(request: NextRequest) {
+  console.log("[CHECKOUT] Route called");
+  
   try {
+    // Check Stripe key exists before processing
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error("[CHECKOUT] STRIPE_SECRET_KEY is missing!");
+      return NextResponse.json(
+        { error: "Stripe not configured" },
+        { status: 500 }
+      );
+    }
+    
+    // Check BASE_URL is configured
+    if (!BASE_URL || BASE_URL === "http://localhost:3000") {
+      console.warn("[CHECKOUT] BASE_URL not configured, using fallback:", BASE_URL);
+    }
+    
     const body = await request.json();
+    console.log("[CHECKOUT] Request body received:", {
+      hasBookingData: !!body.bookingData,
+      branchSlug: body.branchSlug,
+      bookingDataKeys: body.bookingData ? Object.keys(body.bookingData) : [],
+    });
     
     // 🚨 PAYMENT-FIRST FLOW: Accept bookingData from BookingContext
     // If bookingData is provided, extract fields from it
@@ -121,9 +142,32 @@ export async function POST(request: NextRequest) {
     const selectedCurrency = currency || 'USD';
 
     // Validate required fields
+    console.log("[CHECKOUT] Validating required fields:", {
+      hasFirstName: !!firstName,
+      hasEmail: !!email,
+      hasServiceType: !!serviceType,
+      hasTotalPrice: !!totalPrice,
+      totalPrice,
+    });
+    
     if (!firstName || !email || !serviceType || !totalPrice) {
+      console.error("[CHECKOUT] Missing required fields:", {
+        firstName: !!firstName,
+        email: !!email,
+        serviceType: !!serviceType,
+        totalPrice: !!totalPrice,
+      });
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate booking data
+    if (!bookingData?.serviceType && !serviceType) {
+      console.error("[CHECKOUT] Invalid booking data - serviceType missing");
+      return NextResponse.json(
+        { error: "Invalid booking data" },
         { status: 400 }
       );
     }
@@ -702,20 +746,80 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Stripe Checkout Session
-    const stripe = getStripe();
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: lineItems,
-      mode: 'payment',
-      // 🚨 PAYMENT-FIRST FLOW: Redirect to confirmation page (NOT API route)
-      // The confirmation page will call the API to create the job
-      // This follows Next.js best practices: pages for users, APIs for data
-      success_url: `${BASE_URL}/book/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${BASE_URL}/book`,
-      customer_email: email,
-      metadata,
-      billing_address_collection: 'required',
+    console.log("[CHECKOUT] Creating Stripe session...", {
+      lineItemsCount: lineItems.length,
+      baseUrl: BASE_URL,
+      customerEmail: email,
+      metadataKeys: Object.keys(metadata),
     });
+    
+    // Validate line items before creating session
+    if (lineItems.length === 0) {
+      console.error("[CHECKOUT] No line items to charge");
+      return NextResponse.json(
+        { error: "No items to charge" },
+        { status: 400 }
+      );
+    }
+    
+    // Validate line item amounts
+    for (const item of lineItems) {
+      if (item.price_data && typeof item.price_data.unit_amount === 'number') {
+        if (item.price_data.unit_amount <= 0 || isNaN(item.price_data.unit_amount)) {
+          console.error("[CHECKOUT] Invalid line item amount:", item);
+          return NextResponse.json(
+            { error: "Invalid pricing data" },
+            { status: 400 }
+          );
+        }
+      }
+    }
+    
+    const stripe = getStripe();
+    
+    const successUrl = `${BASE_URL}/book/confirmation?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${BASE_URL}/book`;
+    
+    console.log("[CHECKOUT] Stripe session config:", {
+      successUrl,
+      cancelUrl,
+      customerEmail: email,
+      lineItemsCount: lineItems.length,
+    });
+    
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: lineItems,
+        mode: 'payment',
+        // 🚨 PAYMENT-FIRST FLOW: Redirect to confirmation page (NOT API route)
+        // The confirmation page will call the API to create the job
+        // This follows Next.js best practices: pages for users, APIs for data
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        customer_email: email,
+        metadata,
+        billing_address_collection: 'required',
+      });
+      
+      console.log("[CHECKOUT] Session created:", {
+        sessionId: session.id,
+        hasUrl: !!session.url,
+        urlLength: session.url?.length || 0,
+      });
+    } catch (stripeError: any) {
+      console.error("[CHECKOUT] Stripe error:", {
+        message: stripeError.message,
+        type: stripeError.type,
+        code: stripeError.code,
+        stack: stripeError.stack,
+      });
+      return NextResponse.json(
+        { error: stripeError.message || "Stripe checkout failed" },
+        { status: 500 }
+      );
+    }
 
     // Send WhatsApp confirmation (non-blocking - don't fail if this fails)
     // Note: This sends when checkout session is created, not when payment completes.
@@ -745,16 +849,29 @@ export async function POST(request: NextRequest) {
 
     // Validate Stripe session URL before returning
     if (!session.url) {
-      console.error("Stripe session created without URL", session);
+      console.error("[CHECKOUT] Stripe session created without URL", {
+        sessionId: session.id,
+        sessionStatus: session.status,
+        sessionObject: JSON.stringify(session, null, 2),
+      });
       return NextResponse.json(
         { error: "Stripe failed to generate checkout URL" },
         { status: 500 }
       );
     }
 
+    console.log("[CHECKOUT] ✅ Success - returning checkout URL");
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
-    console.error('Stripe checkout error:', error);
+    console.error("[CHECKOUT] Error:", {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      type: typeof error,
+    });
+    console.error("[CHECKOUT] Error stack:", error.stack);
+    console.error("[CHECKOUT] Error message:", error.message);
+    
     return NextResponse.json(
       { error: error.message || 'Failed to create checkout session' },
       { status: 500 }
