@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import PromoManagementClient from './components/PromoManagementClient';
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: 'Monthly Promo Management | VelocityMaid Admin',
   description: 'Manage monthly promotional campaigns for branches',

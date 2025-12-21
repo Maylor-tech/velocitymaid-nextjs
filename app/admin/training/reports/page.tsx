@@ -10,6 +10,7 @@ import { prisma } from '@/lib/prisma';
 import { BarChart3, Users, Award, Clock, TrendingUp, XCircle } from 'lucide-react';
 
 // Force dynamic rendering - this page requires database access
+export const runtime = "nodejs";
 export const dynamic = 'force-dynamic';
 
 export default async function TrainingReportsPage() {
