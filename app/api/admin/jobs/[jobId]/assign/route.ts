@@ -9,8 +9,6 @@ import { shouldLockPricing, lockJobPricing, createPricingSnapshot, isPriceLocked
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 /**
  * PATCH /api/admin/jobs/[jobId]/assign
  * 
@@ -222,6 +220,7 @@ export async function PATCH(
           })
         : "TBD";
 
+      const resend = new Resend(process.env.RESEND_API_KEY);
       resend.emails
         .send({
           from: "VelocityMaid <onboarding@resend.dev>", // Using verified domain
