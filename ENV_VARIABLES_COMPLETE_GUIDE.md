@@ -131,7 +131,7 @@ Create this file in your project root (`velocitymaid-nextjs/.env.local`):
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT].supabase.co:5432/postgres?sslmode=require
 
 # Stripe (Test Mode)
-STRIPE_SECRET_KEY=sk_test_51SaL7RBKwFR9ueazeJ69Drt2l9wNzd418xmoIXsMG3kSQk50EfMYLPGqy03oBoNoEibt1jZdWDweUfqmFkK0TMu4005wNrmnhl
+STRIPE_SECRET_KEY=sk_test_[YOUR-STRIPE-SECRET-KEY-HERE]
 
 # Base URL (Local Development)
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
