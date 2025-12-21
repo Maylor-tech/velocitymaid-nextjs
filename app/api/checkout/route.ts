@@ -737,6 +737,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Validate session URL before returning
+    if (!session.url) {
+      console.error('[CHECKOUT] Stripe session created but URL is missing:', {
+        sessionId: session.id,
+        sessionUrl: session.url,
+      });
+      return NextResponse.json(
+        { error: 'Stripe checkout session created but URL is missing. Please check your Stripe configuration.' },
+        { status: 500 }
+      );
+    }
+
+    // Validate URL format
+    try {
+      new URL(session.url);
+    } catch (urlError) {
+      console.error('[CHECKOUT] Invalid Stripe session URL format:', session.url, urlError);
+      return NextResponse.json(
+        { error: 'Invalid checkout URL format. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
+    console.log('[CHECKOUT] ✅ Checkout session created successfully:', {
+      sessionId: session.id,
+      urlLength: session.url.length,
+    });
+
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
     console.error('Stripe checkout error:', error);

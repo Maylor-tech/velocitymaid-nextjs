@@ -228,11 +228,30 @@ export function BookingProvider({ children, initialBranchSlug }: { children: Rea
         ok: checkoutRes.ok,
         status: checkoutRes.status,
         hasUrl: !!checkoutResult.url,
+        url: checkoutResult.url ? checkoutResult.url.substring(0, 50) + '...' : 'null/undefined',
       });
 
-      if (!checkoutRes.ok || !checkoutResult.url) {
-        console.error("[BOOKING] Checkout failed:", checkoutResult.error);
+      if (!checkoutRes.ok) {
+        console.error("[BOOKING] Checkout API error:", checkoutResult);
         setError(checkoutResult.error || "Failed to start checkout. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Validate URL before redirecting
+      if (!checkoutResult.url || typeof checkoutResult.url !== 'string') {
+        console.error("[BOOKING] Invalid checkout URL:", checkoutResult);
+        setError("Invalid checkout URL received. Please check your configuration and try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Validate URL format
+      try {
+        new URL(checkoutResult.url);
+      } catch (urlError) {
+        console.error("[BOOKING] Invalid URL format:", checkoutResult.url, urlError);
+        setError("Invalid checkout URL format. Please contact support.");
         setLoading(false);
         return;
       }
