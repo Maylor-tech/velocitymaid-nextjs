@@ -24,39 +24,186 @@ function BookingConfirmationContent() {
     if (sessionId === 'test123' || sessionId.startsWith('test')) {
       setStatus('success');
       setJobId('test-job-id');
+      // Auto-redirect for test sessions too
+      setTimeout(() => {
+        router.replace('/customer/jobs?status=received');
+      }, 2000);
       return;
     }
+    
+    // 🚨 SAFETY FIX: Maximum timeout - if processing takes too long, redirect anyway
+    let maxTimeout: NodeJS.Timeout | null = null;
 
     // Create the job by calling the API
     const createJob = async () => {
       try {
-        const response = await fetch(`/api/booking/create?session_id=${sessionId}`, {
-          method: 'POST',
-        });
+        // Set max timeout at start of processing
+        maxTimeout = setTimeout(() => {
+          console.warn('[CONFIRMATION] Processing timeout - redirecting to jobs page');
+          router.replace('/customer/jobs?status=received');
+        }, 10000); // 10 seconds max
 
+        // 🚨 STEP 1: Log before API call
+        console.log('[CONFIRMATION] ====== STARTING BOOKING CREATION ======');
+        console.log('[CONFIRMATION] Calling API with session_id:', sessionId?.substring(0, 20) + '...');
+        console.log('[CONFIRMATION] API endpoint: /api/booking/create');
+        console.log('[CONFIRMATION] Request body:', JSON.stringify({ session_id: sessionId }, null, 2));
+
+        // 🚨 ROOT CAUSE FIX: Add error handling for fetch itself
+        let response: Response;
+        try {
+          response = await fetch('/api/booking/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              session_id: sessionId,
+            }),
+          });
+          
+          // 🚨 STEP 2: Log response details BEFORE parsing
+          console.log('[CONFIRMATION] ====== RESPONSE RECEIVED ======');
+          console.log('[CONFIRMATION] Response status:', response.status);
+          console.log('[CONFIRMATION] Response statusText:', response.statusText);
+          console.log('[CONFIRMATION] Response ok:', response.ok);
+          console.log('[CONFIRMATION] Response headers:', Object.fromEntries(response.headers.entries()));
+          
+        } catch (fetchError: any) {
+          console.error('[CONFIRMATION] ❌ Fetch error:', fetchError);
+          console.error('[CONFIRMATION] Fetch error name:', fetchError?.name);
+          console.error('[CONFIRMATION] Fetch error message:', fetchError?.message);
+          console.error('[CONFIRMATION] Fetch error stack:', fetchError?.stack);
+          throw new Error(`Network error: ${fetchError.message}. Please check your connection and try again.`);
+        }
+
+        // 🚨 STEP 3: Check response status
         if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to create booking');
+          console.error('[CONFIRMATION] ❌ Response not OK:', response.status, response.statusText);
+          
+          // Try to parse error response
+          let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+          try {
+            const contentType = response.headers.get('content-type');
+            console.log('[CONFIRMATION] Error response content-type:', contentType);
+            
+            if (contentType && contentType.includes('application/json')) {
+              const data = await response.json();
+              console.log('[CONFIRMATION] Error response data:', data);
+              errorMessage = data.error || errorMessage;
+            } else {
+              // Response is not JSON, read as text
+              const text = await response.text();
+              console.log('[CONFIRMATION] Error response text:', text);
+              errorMessage = text || errorMessage;
+            }
+          } catch (parseError) {
+            console.error('[CONFIRMATION] Failed to parse error response:', parseError);
+          }
+          throw new Error(errorMessage);
+        }
+
+        // 🚨 STEP 4: Check content type
+        const contentType = response.headers.get('content-type');
+        console.log('[CONFIRMATION] Response content-type:', contentType);
+        
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('[CONFIRMATION] ❌ Non-JSON response. Content-type:', contentType);
+          throw new Error('Server returned non-JSON response. Please try again.');
+        }
+
+        // 🚨 STEP 5: Get raw response text FIRST (critical for debugging)
+        console.log('[CONFIRMATION] Reading response text...');
+        let responseText: string;
+        try {
+          responseText = await response.text();
+        } catch (textError: any) {
+          console.error('[CONFIRMATION] ❌ Failed to read response text:', textError);
+          throw new Error('Failed to read server response. Please try again.');
+        }
+        
+        console.log('[CONFIRMATION] ====== RAW RESPONSE TEXT ======');
+        console.log('[CONFIRMATION] Response text length:', responseText?.length || 0);
+        console.log('[CONFIRMATION] Response text (first 500 chars):', responseText?.substring(0, 500) || '(empty)');
+        console.log('[CONFIRMATION] Response text (full):', responseText || '(empty)');
+        
+        if (!responseText || responseText.trim() === '') {
+          console.error('[CONFIRMATION] ❌ EMPTY RESPONSE TEXT');
+          console.error('[CONFIRMATION] Response status:', response.status);
+          console.error('[CONFIRMATION] Response headers:', Object.fromEntries(response.headers.entries()));
+          throw new Error('Server returned empty response. This usually means the API crashed. Please contact support.');
+        }
+
+        // 🚨 STEP 6: Parse JSON
+        console.log('[CONFIRMATION] Attempting to parse JSON...');
+        let data: any;
+        try {
+          // Try to parse as JSON
+          data = JSON.parse(responseText);
+          console.log('[CONFIRMATION] ✅ JSON parsed successfully');
+          console.log('[CONFIRMATION] Parsed data:', JSON.stringify(data, null, 2));
+        } catch (parseError: any) {
+          console.error('[CONFIRMATION] ❌ JSON PARSE ERROR');
+          console.error('[CONFIRMATION] Parse error:', parseError);
+          console.error('[CONFIRMATION] Parse error message:', parseError?.message);
+          console.error('[CONFIRMATION] Response text that failed to parse:', responseText);
+          
+          // 🚨 SMART FIX: If response looks like HTML (error page), extract useful info
+          if (responseText.includes('<!DOCTYPE') || responseText.includes('<html')) {
+            throw new Error('Server returned HTML instead of JSON. This usually means the API route crashed. Please contact support.');
+          }
+          
+          // If response is very short, show it
+          if (responseText.length < 200) {
+            throw new Error(`Invalid JSON response: ${parseError.message}. Server said: "${responseText}"`);
+          }
+          
+          throw new Error(`Invalid JSON response: ${parseError.message}. Response preview: ${responseText.substring(0, 200)}...`);
         }
 
         // Job created successfully
-        // The API redirects, but we handle it client-side for better UX
-        const data = await response.json();
-        setJobId(data.jobId || null);
-        setStatus('success');
-        
-        // Auto-redirect to customer jobs after 2 seconds
-        setTimeout(() => {
-          router.push('/customer/jobs?status=received');
-        }, 2000);
+        if (data.success && data.jobId) {
+          // Clear max timeout since we succeeded
+          if (maxTimeout) {
+            clearTimeout(maxTimeout);
+            maxTimeout = null;
+          }
+          
+          setJobId(data.jobId);
+          setStatus('success');
+          
+          // Auto-redirect to customer jobs after 2 seconds (use replace to avoid back button issues)
+          setTimeout(() => {
+            router.replace('/customer/jobs?status=received');
+          }, 2000);
+        } else {
+          throw new Error(data.error || 'Booking creation failed');
+        }
       } catch (err: any) {
         console.error('Booking creation error:', err);
-        setError(err.message || 'Failed to create booking');
+        // Clear max timeout on error
+        if (maxTimeout) {
+          clearTimeout(maxTimeout);
+          maxTimeout = null;
+        }
+        // Handle specific error types
+        if (err.message?.includes('JSON')) {
+          setError('Server communication error. Please contact support if this persists.');
+        } else {
+          setError(err.message || 'Failed to create booking. Please try again.');
+        }
         setStatus('error');
       }
     };
 
     createJob();
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (maxTimeout) {
+        clearTimeout(maxTimeout);
+      }
+    };
   }, [sessionId, router]);
 
   if (status === 'loading') {

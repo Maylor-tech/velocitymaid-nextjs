@@ -30,27 +30,72 @@ function getStripe() {
   });
 }
 
+// 🚨 CRITICAL: Wrap entire handler to catch ANY error
 export async function POST(req: NextRequest) {
+  // 🚨 SAFETY: Set up unhandled rejection handler for this request
+  const requestId = Math.random().toString(36).substring(7);
+  console.log("=".repeat(60));
+  console.log(`[BOOKING API] ====== ROUTE CALLED [${requestId}] ======`);
+  console.log("[BOOKING API] Timestamp:", new Date().toISOString());
+  console.log("[BOOKING API] Method:", req.method);
+  console.log("[BOOKING API] URL:", req.url);
+  
+  // 🚨 CRITICAL: Always return a response, even if everything fails
   try {
-    // 🚨 STEP 1: Extract session_id from query parameters
-    const { searchParams } = new URL(req.url);
-    const sessionId = searchParams.get('session_id');
+    // 🚨 STEP 1: Extract session_id from request body (with fallback to query params for compatibility)
+    console.log("[BOOKING API] Step 1: Reading request body...");
+    let sessionId: string | null = null;
+    
+    try {
+      // Try to read from body first (new format)
+      const body = await req.json();
+      console.log("[BOOKING API] ✅ Body received:", JSON.stringify(body, null, 2));
+      sessionId = body.session_id || null;
+      console.log("[BOOKING API] Session ID from body:", sessionId ? sessionId.substring(0, 20) + "..." : "null");
+    } catch (bodyError: any) {
+      // If body parsing fails, try query params (backward compatibility)
+      console.warn("[BOOKING API] ⚠️ Failed to parse body, trying query params");
+      console.warn("[BOOKING API] Body error:", bodyError.message);
+      const { searchParams } = new URL(req.url);
+      sessionId = searchParams.get('session_id');
+      console.log("[BOOKING API] Session ID from query params:", sessionId ? sessionId.substring(0, 20) + "..." : "null");
+    }
+
+    // If still no session_id, check query params as final fallback
+    if (!sessionId) {
+      console.log("[BOOKING API] No session_id in body, checking query params...");
+      const { searchParams } = new URL(req.url);
+      sessionId = searchParams.get('session_id');
+      console.log("[BOOKING API] Final session_id check:", sessionId ? sessionId.substring(0, 20) + "..." : "null");
+    }
 
     if (!sessionId) {
+      console.error("[BOOKING API] ❌ No session_id found in body or query params");
       return NextResponse.json(
         { error: "Payment session ID required. Job creation requires confirmed payment." },
         { status: 400 }
       );
     }
+    
+    console.log("[BOOKING API] ✅ Session ID extracted:", sessionId.substring(0, 20) + "...");
 
     // 🚨 STEP 2: Retrieve and verify Stripe session
+    console.log("[BOOKING API] Step 2: Fetching Stripe session...");
     const stripe = getStripe();
     let session: Stripe.Checkout.Session;
     
     try {
+      console.log("[BOOKING API] Calling stripe.checkout.sessions.retrieve...");
       session = await stripe.checkout.sessions.retrieve(sessionId);
+      console.log("[BOOKING API] ✅ Stripe session retrieved");
+      console.log("[BOOKING API] Session ID:", session.id);
+      console.log("[BOOKING API] Payment status:", session.payment_status);
+      console.log("[BOOKING API] Customer email:", session.customer_email);
     } catch (stripeError: any) {
-      console.error("[BOOKING CREATE] Stripe session retrieval failed:", stripeError);
+      console.error("[BOOKING API] ❌ Stripe session retrieval failed");
+      console.error("[BOOKING API] Stripe error:", stripeError);
+      console.error("[BOOKING API] Stripe error message:", stripeError?.message);
+      console.error("[BOOKING API] Stripe error stack:", stripeError?.stack);
       return NextResponse.json(
         { error: "Invalid payment session. Please complete checkout again." },
         { status: 400 }
@@ -70,10 +115,15 @@ export async function POST(req: NextRequest) {
     const metadata = session.metadata || {};
     let bookingData: any = null;
     
+    console.log("[BOOKING CREATE] Stripe metadata keys:", Object.keys(metadata));
+    console.log("[BOOKING CREATE] Has bookingDataMin:", !!metadata.bookingDataMin);
+    console.log("[BOOKING CREATE] Has contactFull:", !!metadata.contactFull);
+    
     // Try to reconstruct booking data from minimized metadata
     if (metadata.bookingDataMin) {
       try {
         const minimized = JSON.parse(metadata.bookingDataMin);
+        console.log("[BOOKING CREATE] Parsed minimized data successfully");
         // Reconstruct full booking data structure
         bookingData = {
           service: {
@@ -122,12 +172,14 @@ export async function POST(req: NextRequest) {
         };
       } catch (parseError) {
         console.error("[BOOKING CREATE] Failed to parse minimized booking data:", parseError);
+        console.error("[BOOKING CREATE] Raw bookingDataMin:", metadata.bookingDataMin);
         // Fall through to legacy format
       }
     }
     
     // Fallback: reconstruct from individual metadata fields
     if (!bookingData) {
+      console.log("[BOOKING CREATE] Using fallback metadata reconstruction");
       const contactParts = metadata.contactFull ? metadata.contactFull.split('|') : [];
       bookingData = {
         service: {
@@ -191,7 +243,13 @@ export async function POST(req: NextRequest) {
     const estimate = bookingData.estimate;
     const branchSlug = bookingData.branchSlug;
 
-    console.log("[BOOKING CREATE] Received request:", { branchSlug, hasEmail: !!contact?.email });
+    console.log("[BOOKING CREATE] Extracted booking data:", { 
+      branchSlug, 
+      hasEmail: !!contact?.email,
+      hasService: !!service,
+      hasContact: !!contact,
+      hasEstimate: !!estimate
+    });
 
     if (!contact?.email) {
       return NextResponse.json(
@@ -222,7 +280,7 @@ export async function POST(req: NextRequest) {
 
     // Fallback: if no branch found or no slug provided, use first ACTIVE branch
     if (!branch) {
-      console.log("[BOOKING CREATE] Branch not found by slug, trying fallback to ACTIVE branch...");
+      console.log("[BOOKING API] Branch not found by slug, trying fallback to ACTIVE branch...");
       try {
         branch = await prisma.branch.findFirst({
           where: { status: 'ACTIVE' },
@@ -230,15 +288,17 @@ export async function POST(req: NextRequest) {
         });
 
         if (!branch) {
+          console.error("[BOOKING API] ❌ No active branch found");
           return NextResponse.json(
             { error: 'No active branch found. Please contact support.' },
             { status: 400 }
           );
         }
 
-        console.log("[BOOKING CREATE] Using fallback ACTIVE branch:", branch);
+        console.log("[BOOKING API] ✅ Using fallback ACTIVE branch:", branch.name);
       } catch (dbError: any) {
-        console.error("[BOOKING CREATE] Database error while fetching ACTIVE branch:", dbError);
+        console.error("[BOOKING API] ❌ Database error while fetching ACTIVE branch");
+        console.error("[BOOKING API] DB error:", dbError);
         return NextResponse.json(
           { error: "Database connection error. Please try again later." },
           { status: 500 }
@@ -246,7 +306,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log("[BOOKING CREATE] Using branch:", branch);
+    console.log("[BOOKING API] ✅ Using branch:", branch.name, `(${branch.slug})`);
 
     const normalizedEmail = contact.email.toLowerCase().trim();
 
@@ -278,11 +338,29 @@ export async function POST(req: NextRequest) {
     if (fullAddressString) customerCreateData.defaultAddress = fullAddressString;
     if (contact.zip) customerCreateData.homeZipCode = contact.zip;
 
-    const customer = await prisma.customer.upsert({
-      where: { email: normalizedEmail },
-      update: customerUpdateData,
-      create: customerCreateData,
-    });
+    console.log("[BOOKING API] Step 5: Upserting customer in database...");
+    console.log("[BOOKING API] Customer email:", normalizedEmail);
+    console.log("[BOOKING API] Customer data:", JSON.stringify(customerCreateData, null, 2));
+    
+    let customer;
+    try {
+      customer = await prisma.customer.upsert({
+        where: { email: normalizedEmail },
+        update: customerUpdateData,
+        create: customerCreateData,
+      });
+      console.log("[BOOKING API] ✅ Customer upserted successfully");
+      console.log("[BOOKING API] Customer ID:", customer.id);
+    } catch (dbError: any) {
+      console.error("[BOOKING API] ❌ Database error while upserting customer");
+      console.error("[BOOKING API] DB error:", dbError);
+      console.error("[BOOKING API] DB error message:", dbError?.message);
+      console.error("[BOOKING API] DB error code:", dbError?.code);
+      return NextResponse.json(
+        { error: "Database error while creating customer. Please try again later." },
+        { status: 500 }
+      );
+    }
 
     // Full address already built above for customer upsert
     const fullAddress = fullAddressString;
@@ -353,16 +431,42 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    const job = await prisma.job.create({
-      data: jobData,
+    console.log("[BOOKING API] Step 6: Creating job in database...");
+    console.log("[BOOKING API] Job data keys:", Object.keys(jobData));
+    console.log("[BOOKING API] Job data (sanitized):", {
+      customerId: jobData.customerId,
+      branchId: jobData.branchId,
+      serviceType: jobData.serviceType,
+      totalPrice: jobData.totalPrice,
+      status: jobData.status,
+      preferredDate: jobData.preferredDate,
     });
-
-    console.log("[BOOKING CREATE] ✅ Job created successfully:", {
-      jobId: job.id,
-      customerId: customer.id,
-      branchId: branch.id,
-      status: job.status,
-    });
+    
+    let job;
+    try {
+      job = await prisma.job.create({
+        data: jobData,
+      });
+      console.log("[BOOKING API] ✅ Job created successfully");
+      console.log("[BOOKING API] Job ID:", job.id);
+      console.log("[BOOKING API] Job details:", {
+        jobId: job.id,
+        customerId: customer.id,
+        branchId: branch.id,
+        status: job.status,
+        totalPrice: job.totalPrice,
+      });
+    } catch (dbError: any) {
+      console.error("[BOOKING API] ❌ Database error while creating job");
+      console.error("[BOOKING API] DB error:", dbError);
+      console.error("[BOOKING API] DB error message:", dbError?.message);
+      console.error("[BOOKING API] DB error code:", dbError?.code);
+      console.error("[BOOKING API] DB error meta:", dbError?.meta);
+      return NextResponse.json(
+        { error: "Database error while creating job. Please try again later." },
+        { status: 500 }
+      );
+    }
 
     // Phase M: Send immediate confirmation
     try {
@@ -429,25 +533,31 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log("[BOOKING CREATE] ✅ Booking completed successfully. Creating session...");
+    console.log("[BOOKING API] ✅ Booking completed successfully. Creating session...");
     
     // 🔐 Auto-login customer after booking
+    console.log("[BOOKING API] Step 7: Creating customer session token...");
     const sessionToken = await createCustomerSessionToken({
       customerId: customer.id,
       email: customer.email,
       issuedAt: Math.floor(Date.now() / 1000),
     });
+    console.log("[BOOKING API] ✅ Session token created");
 
-    // 🚨 STEP 7: Return JSON response (not redirect)
-    // The confirmation page handles the redirect to customer dashboard
-    // This allows the confirmation page to show success UI before redirecting
-    const res = NextResponse.json({
+    // 🚨 STEP 8: Prepare response
+    console.log("[BOOKING API] Step 8: Preparing response...");
+    const responseData = {
       success: true,
       jobId: job.id,
       customerId: customer.id,
       message: "Booking created successfully",
-    });
+    };
+    console.log("[BOOKING API] Response data:", JSON.stringify(responseData, null, 2));
+    
+    const res = NextResponse.json(responseData);
+    console.log("[BOOKING API] ✅ Response object created");
 
+    console.log("[BOOKING API] Step 9: Setting session cookie...");
     res.cookies.set(COOKIE_NAME, sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -456,15 +566,54 @@ export async function POST(req: NextRequest) {
       maxAge: COOKIE_MAX_AGE_SECONDS,
     });
 
-    console.log("[BOOKING CREATE] ✅ Session cookie set. Customer auto-logged in. Job ID:", job.id);
+    console.log("[BOOKING API] ✅ Session cookie set. Customer auto-logged in. Job ID:", job.id);
+    console.log("[BOOKING API] ====== SENDING RESPONSE ======");
+    console.log("[BOOKING API] Response status:", res.status);
+    console.log("[BOOKING API] Response headers:", Object.fromEntries(res.headers.entries()));
+    console.log("=".repeat(60));
     return res;
   } catch (err: any) {
-    console.error("BOOKING ERROR:", err);
-    console.error("Error stack:", err?.stack);
-    return NextResponse.json(
-      { error: err?.message || "Failed to create booking." },
-      { status: 500 }
-    );
+    console.error(`[BOOKING API] ❌ ERROR [${requestId}]:`, err);
+    console.error("[BOOKING API] Error name:", err?.name);
+    console.error("[BOOKING API] Error message:", err?.message);
+    console.error("[BOOKING API] Error stack:", err?.stack);
+    console.error("[BOOKING API] Error type:", typeof err);
+    console.error("[BOOKING API] Error constructor:", err?.constructor?.name);
+    
+    // 🚨 CRITICAL: Always return valid JSON, even if error handling fails
+    try {
+      const errorMessage = err?.message || "Failed to create booking.";
+      const errorStatus = err?.status || 500;
+      
+      const errorResponse = NextResponse.json(
+        { 
+          success: false,
+          error: errorMessage,
+          requestId: requestId,
+          timestamp: new Date().toISOString(),
+          details: process.env.NODE_ENV === 'development' ? err?.stack : undefined
+        },
+        { status: errorStatus }
+      );
+      
+      console.log(`[BOOKING API] ✅ Error response created [${requestId}]`);
+      return errorResponse;
+    } catch (responseError: any) {
+      // 🚨 LAST RESORT: If even error response creation fails, return minimal JSON
+      console.error("[BOOKING API] ❌❌ CRITICAL: Failed to create error response:", responseError);
+      return new NextResponse(
+        JSON.stringify({ 
+          success: false, 
+          error: "Internal server error",
+          requestId: requestId,
+          timestamp: new Date().toISOString()
+        }),
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
   }
 }
 

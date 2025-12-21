@@ -30,7 +30,19 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
 
   useEffect(() => {
     fetchCustomerInfo();
-  }, []);
+    
+    // 🚨 SAFETY FIX: Maximum loading timeout - if auth check takes too long, redirect to login
+    const maxLoadingTimeout = setTimeout(() => {
+      if (loading && !customer) {
+        console.warn('[CUSTOMER LAYOUT] Auth check timeout - redirecting to login');
+        router.push('/customer/login');
+      }
+    }, 10000); // 10 seconds max
+    
+    return () => {
+      clearTimeout(maxLoadingTimeout);
+    };
+  }, [loading, customer, router]);
 
   const fetchCustomerInfo = async () => {
     try {
@@ -71,11 +83,13 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-2 text-xs text-gray-400">If this takes too long, you'll be redirected to login</p>
         </div>
       </div>
     );
   }
 
+  // 🚨 SAFETY FIX: If not authenticated and not loading, redirect to login
   if (!customer && !loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

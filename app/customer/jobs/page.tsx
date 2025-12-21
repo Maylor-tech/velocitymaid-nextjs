@@ -44,10 +44,38 @@ export default function CustomerJobsPage() {
   const [pastJobs, setPastJobs] = useState<CustomerJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // 🚨 SAFETY FIX: Verify authentication before loading jobs
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/customer/me');
+        const data = await response.json();
+        
+        if (!data.authenticated) {
+          // Not authenticated - redirect to login
+          router.replace('/customer/login?redirect=/customer/jobs');
+          return;
+        }
+        
+        setAuthChecked(true);
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        // On error, redirect to login
+        router.replace('/customer/login?redirect=/customer/jobs');
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
 
   useEffect(() => {
-    fetchJobs();
-  }, [activeTab]);
+    // Only fetch jobs if auth is verified
+    if (authChecked) {
+      fetchJobs();
+    }
+  }, [activeTab, authChecked]);
 
   const fetchJobs = async () => {
     try {
@@ -180,10 +208,12 @@ export default function CustomerJobsPage() {
         </div>
 
         {/* Loading State */}
-        {loading && (
+        {(!authChecked || loading) && (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <span className="ml-3 text-gray-600">Loading jobs...</span>
+            <span className="ml-3 text-gray-600">
+              {!authChecked ? 'Verifying access...' : 'Loading jobs...'}
+            </span>
           </div>
         )}
 

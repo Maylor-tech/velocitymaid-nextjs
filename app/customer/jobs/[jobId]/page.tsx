@@ -126,12 +126,10 @@ export default function JobDetailsPage() {
 
   if (loading) {
     return (
-      <CustomerLayout>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <span className="ml-3 text-gray-600">Loading job details...</span>
-        </div>
-      </CustomerLayout>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="ml-3 text-gray-600">Loading job details...</span>
+      </div>
     );
   }
 
