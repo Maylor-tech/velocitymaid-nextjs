@@ -17,7 +17,13 @@ import { validateTerritory } from "@/lib/pilot/territory";
 
 export const dynamic = "force-dynamic";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend (lazy initialization to prevent build-time errors)
+function getResend() {
+  if (!process.env.RESEND_API_KEY) {
+    return null;
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 // Initialize Stripe
 function getStripe() {
@@ -483,7 +489,8 @@ export async function POST(req: NextRequest) {
     }
 
     // SEND CUSTOMER EMAIL
-    if (process.env.RESEND_API_KEY) {
+    const resend = getResend();
+    if (resend) {
       try {
         await resend.emails.send({
           from: "VelocityMaid <onboarding@resend.dev>",
@@ -507,7 +514,7 @@ export async function POST(req: NextRequest) {
     }
 
     // SEND ADMIN NOTIFICATION
-    if (process.env.RESEND_API_KEY) {
+    if (resend) {
       try {
         await resend.emails.send({
           from: "VelocityMaid <onboarding@resend.dev>",

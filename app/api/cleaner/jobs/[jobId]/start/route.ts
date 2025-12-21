@@ -8,7 +8,13 @@ import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
 
 export const dynamic = "force-dynamic";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend (lazy initialization to prevent build-time errors)
+function getResend() {
+  if (!process.env.RESEND_API_KEY) {
+    return null;
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 /**
  * PATCH /api/cleaner/jobs/[jobId]/start
@@ -126,7 +132,8 @@ export async function PATCH(
     });
 
     // 7. Send customer notification email (non-blocking)
-    if (job.Customer?.email && process.env.RESEND_API_KEY) {
+    const resend = getResend();
+    if (job.Customer?.email && resend) {
       const formattedDate = job.preferredDate
         ? new Date(job.preferredDate).toLocaleDateString("en-US", {
             weekday: "long",

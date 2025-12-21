@@ -8,7 +8,13 @@ export const dynamic = "force-dynamic";
 
 console.log(">>> SEND ESTIMATE ROUTE LOADED");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend (lazy initialization to prevent build-time errors)
+function getResend() {
+  if (!process.env.RESEND_API_KEY) {
+    return null;
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 export async function POST(req: NextRequest) {
 
@@ -83,7 +89,8 @@ export async function POST(req: NextRequest) {
 
     console.log("[ESTIMATE] Sending email via Resend…");
 
-    if (!process.env.RESEND_API_KEY) {
+    const resend = getResend();
+    if (!resend) {
       console.error("[ESTIMATE] RESEND_API_KEY is not configured");
       return NextResponse.json(
         { error: "Email service is not configured. Please contact support." },
