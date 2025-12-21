@@ -13,8 +13,6 @@ import { logAuditEntry } from "@/lib/audit";
 import { JobStatus, UserRole } from "@prisma/client";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export interface AutoAssignResult {
   success: boolean;
   cleanerId?: string;
@@ -231,6 +229,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AutoAssignResult
 
     // 8. Send notification email to cleaner (non-blocking)
     if (selectedCleaner.email && process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
       const formattedDate = job.preferredDate
         ? new Date(job.preferredDate).toLocaleDateString("en-US", {
             weekday: "long",
