@@ -10,11 +10,21 @@ import { autoAssignCleaner } from '@/lib/cleaner-assignment';
 import { JobStatus } from '@prisma/client';
 import { validateTerritory } from '@/lib/pilot/territory';
 
-// Determine BASE URL with fallback chain
-const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL ||
-  (process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`) ||
-  "http://localhost:3000";
+// Get base URL with fallback
+function getBaseUrl() {
+  // Production
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+  
+  // Vercel auto-detected URL
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Local development
+  return 'http://localhost:3000';
+}
 
 // Initialize Stripe only when needed (lazy initialization)
 function getStripe() {
@@ -49,8 +59,9 @@ export async function POST(request: NextRequest) {
     }
     
     // Check BASE_URL is configured
-    if (!BASE_URL || BASE_URL === "http://localhost:3000") {
-      console.warn("[CHECKOUT] BASE_URL not configured, using fallback:", BASE_URL);
+    const baseUrlCheck = getBaseUrl();
+    if (!baseUrlCheck || baseUrlCheck === "http://localhost:3000") {
+      console.warn("[CHECKOUT] BASE_URL not configured, using fallback:", baseUrlCheck);
     }
     
     const body = await request.json();
@@ -449,7 +460,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Track referral event
-          await fetch(`${BASE_URL}/api/referrals/track-event`, {
+          await fetch(`${getBaseUrl()}/api/referrals/track-event`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -508,7 +519,7 @@ export async function POST(request: NextRequest) {
         success: true,
         jobId: job.id,
         message: 'Booking confirmed! Payment will be collected locally (cash or bank transfer).',
-        redirectUrl: `${BASE_URL}/booking/success?job_id=${job.id}&currency=JMD`,
+        redirectUrl: `${getBaseUrl()}/booking/success?job_id=${job.id}&currency=JMD`,
       });
     }
 
@@ -748,7 +759,6 @@ export async function POST(request: NextRequest) {
     // Create Stripe Checkout Session
     console.log("[CHECKOUT] Creating Stripe session...", {
       lineItemsCount: lineItems.length,
-      baseUrl: BASE_URL,
       customerEmail: email,
       metadataKeys: Object.keys(metadata),
     });
@@ -776,9 +786,21 @@ export async function POST(request: NextRequest) {
     }
     
     const stripe = getStripe();
+    const baseUrl = getBaseUrl();
     
-    const successUrl = `${BASE_URL}/book/confirmation?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${BASE_URL}/book`;
+    // Validate URLs before sending to Stripe
+    if (!baseUrl || baseUrl === 'undefined') {
+      console.error('[CHECKOUT] BASE_URL not configured properly');
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
+    
+    console.log('[CHECKOUT] Using base URL:', baseUrl);
+    
+    const successUrl = `${baseUrl}/book/confirmation?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${baseUrl}/book`;
     
     console.log("[CHECKOUT] Stripe session config:", {
       successUrl,
@@ -789,6 +811,9 @@ export async function POST(request: NextRequest) {
     
     let session;
     try {
+      console.log('[CHECKOUT] Creating Stripe session...');
+      console.log('[CHECKOUT] Success URL:', successUrl);
+      
       session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: lineItems,
@@ -803,20 +828,14 @@ export async function POST(request: NextRequest) {
         billing_address_collection: 'required',
       });
       
-      console.log("[CHECKOUT] Session created:", {
-        sessionId: session.id,
-        hasUrl: !!session.url,
-        urlLength: session.url?.length || 0,
-      });
+      console.log('[CHECKOUT] Session created successfully:', session.id);
+      console.log('[CHECKOUT] Redirect URL:', session.url);
     } catch (stripeError: any) {
-      console.error("[CHECKOUT] Stripe error:", {
-        message: stripeError.message,
-        type: stripeError.type,
-        code: stripeError.code,
-        stack: stripeError.stack,
-      });
+      console.error('[CHECKOUT] Stripe error:', stripeError.message);
+      console.error('[CHECKOUT] Stripe error type:', stripeError.type);
+      
       return NextResponse.json(
-        { error: stripeError.message || "Stripe checkout failed" },
+        { error: `Stripe error: ${stripeError.message}` },
         { status: 500 }
       );
     }
