@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createCustomerSessionToken, COOKIE_NAME, COOKIE_MAX_AGE_SECONDS } from '../../../../lib/customerSession';

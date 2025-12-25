@@ -1,18 +1,36 @@
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'; // Required for file system operations (if using alternative storage)
 
 /**
  * File Upload API for Cleaner Application
  * POST /api/cleaners/apply/upload
  * 
- * Handles ID and references file uploads
+ * ⚠️ NOTE: This route currently returns an error because Vercel serverless functions
+ * cannot write to the filesystem. To enable file uploads, you need to:
+ * 
+ * Option 1: Use Vercel Blob Storage
+ * Option 2: Use AWS S3 or similar cloud storage
+ * Option 3: Use a different hosting solution that supports file writes
+ * 
+ * For now, this route is disabled to prevent build failures.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
 
 export async function POST(request: NextRequest) {
+  // Return error - file uploads not supported on Vercel serverless
+  return NextResponse.json(
+    { 
+      success: false, 
+      error: 'File uploads are currently disabled. Please contact support for alternative upload methods.' 
+    },
+    { status: 503 }
+  );
+
+  /* 
+  // DISABLED: File system operations don't work on Vercel serverless
+  // To re-enable, implement cloud storage (Vercel Blob, S3, etc.)
+  
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -43,31 +61,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'applications');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const randomStr = Math.random().toString(36).substring(2, 15);
-    const fileExtension = file.name.split('.').pop();
-    const filename = `${type}-${timestamp}-${randomStr}.${fileExtension}`;
-    const filepath = join(uploadsDir, filename);
-
-    // Save file
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filepath, buffer);
-
-    // Return public URL
-    const publicUrl = `/uploads/applications/${filename}`;
-
+    // TODO: Implement cloud storage upload here
+    // Example: Upload to Vercel Blob Storage or S3
+    
     return NextResponse.json({
-      success: true,
-      url: publicUrl,
-      filename,
+      success: false,
+      error: 'File uploads not yet implemented with cloud storage',
     });
   } catch (error: any) {
     console.error('File upload error:', error);
@@ -76,6 +75,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  */
 }
 
 

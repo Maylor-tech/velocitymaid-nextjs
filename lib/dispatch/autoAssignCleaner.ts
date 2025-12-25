@@ -11,7 +11,6 @@
 import { prisma } from "../prisma";
 import { logAuditEntry } from "../audit";
 import { JobStatus, UserRole } from "@prisma/client";
-import { Resend } from "resend";
 
 export interface AutoAssignResult {
   success: boolean;
@@ -229,35 +228,41 @@ export async function autoAssignCleaner(jobId: string): Promise<AutoAssignResult
 
     // 8. Send notification email to cleaner (non-blocking)
     if (selectedCleaner.email && process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      const formattedDate = job.preferredDate
-        ? new Date(job.preferredDate).toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
-        : "TBD";
+      // Lazy import to prevent build-time errors if Resend is not configured
+      try {
+        const { Resend } = await import('resend');
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const formattedDate = job.preferredDate
+          ? new Date(job.preferredDate).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "TBD";
 
-      resend.emails
-        .send({
-          from: "VelocityMaid <onboarding@resend.dev>",
-          to: selectedCleaner.email,
-          subject: "🧹 New Job Assigned (Auto)",
-          html: `
-            <h2>You've been auto-assigned a new job</h2>
-            <p><strong>Customer:</strong> ${job.customerName || "N/A"}</p>
-            <p><strong>Date:</strong> ${formattedDate}</p>
-            <p><strong>Time:</strong> ${job.preferredTime || "TBD"}</p>
-            <p><strong>Address:</strong> ${job.address || "Address TBD"}</p>
-            <p><strong>Service:</strong> ${job.serviceType || "Standard Cleaning"}</p>
-            <p>Please accept or decline in your dashboard.</p>
-            <p>Thank you,<br>VelocityMaid Operations</p>
-          `,
-        })
-        .catch((err) => {
-          console.error("[AUTO_ASSIGN] Failed to send cleaner email:", err);
-        });
+        resend.emails
+          .send({
+            from: "VelocityMaid <onboarding@resend.dev>",
+            to: selectedCleaner.email,
+            subject: "🧹 New Job Assigned (Auto)",
+            html: `
+              <h2>You've been auto-assigned a new job</h2>
+              <p><strong>Customer:</strong> ${job.customerName || "N/A"}</p>
+              <p><strong>Date:</strong> ${formattedDate}</p>
+              <p><strong>Time:</strong> ${job.preferredTime || "TBD"}</p>
+              <p><strong>Address:</strong> ${job.address || "Address TBD"}</p>
+              <p><strong>Service:</strong> ${job.serviceType || "Standard Cleaning"}</p>
+              <p>Please accept or decline in your dashboard.</p>
+              <p>Thank you,<br>VelocityMaid Operations</p>
+            `,
+          })
+          .catch((err) => {
+            console.error("[AUTO_ASSIGN] Failed to send cleaner email:", err);
+          });
+      } catch (err) {
+        console.error("[AUTO_ASSIGN] Failed to initialize Resend:", err);
+      }
     }
 
     // 9. Log audit entry
