@@ -18,6 +18,7 @@ interface BookingContextType {
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
 const initialData: BookingDraft = {
+  country: null, // Country must be selected first
   serviceType: null,
   branchSlug: null,
   contact: {
@@ -74,7 +75,11 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
   const nextStep = useCallback(() => {
     // Validate before moving to next step
     if (step === 0) {
-      // Step 0: Service & Location - require branchSlug and serviceType
+      // Step 0: Context Selection - require country, branchSlug, and serviceType
+      if (!data.country) {
+        setError('Please select a country to continue.');
+        return;
+      }
       if (!data.branchSlug) {
         setError('Please select a location to continue.');
         return;
@@ -88,7 +93,7 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
     // Clear any previous errors
     setError(null);
     setStep((prev) => Math.min(prev + 1, 5) as BookingStep);
-  }, [step, data.branchSlug, data.serviceType]);
+  }, [step, data.country, data.branchSlug, data.serviceType]);
 
   const prevStep = useCallback(() => {
     setStep((prev) => Math.max(prev - 1, 0) as BookingStep);
@@ -123,12 +128,16 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
       // Check for missing required fields
       const missingFields: string[] = [];
       
-      // Service validation
-      if (!data.serviceType) {
-        missingFields.push('Service Type');
+      // Context validation (country and branch required)
+      if (!data.country) {
+        missingFields.push('Country');
       }
       if (!data.branchSlug) {
         missingFields.push('Location/Branch');
+      }
+      // Service validation
+      if (!data.serviceType) {
+        missingFields.push('Service Type');
       }
       
       // Home validation
@@ -167,7 +176,7 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
       }
       
       // Additional check for critical required fields (backup validation)
-      if (!data.contact.firstName || !data.contact.email || !data.serviceType || !data.branchSlug) {
+      if (!data.country || !data.contact.firstName || !data.contact.email || !data.serviceType || !data.branchSlug) {
         throw new Error('Missing required fields. Please complete all steps.');
       }
 

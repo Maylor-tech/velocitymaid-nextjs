@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
       email,
       phone,
       whatsappNumber,
+      country,
       branchId,
       experienceLevel,
       areaOfResidence,
@@ -24,10 +25,18 @@ export async function POST(request: NextRequest) {
       notes,
     } = body;
 
-    // Basic validation - branchId is REQUIRED (non-negotiable per system rules)
+    // Basic validation - name, email, phone are REQUIRED
     if (!name || !email || !phone) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields: name, email, and phone are required' },
+        { status: 400 }
+      );
+    }
+
+    // CRITICAL: country is REQUIRED - Phase 0 architecture requires country selection first
+    if (!country || typeof country !== 'string' || country.trim() === '') {
+      return NextResponse.json(
+        { success: false, error: 'Country selection is required. Please select a country.' },
         { status: 400 }
       );
     }
@@ -49,6 +58,19 @@ export async function POST(request: NextRequest) {
     if (!branch) {
       return NextResponse.json(
         { success: false, error: 'Invalid branch selected. Please select a valid branch.' },
+        { status: 400 }
+      );
+    }
+
+    // Verify branch country matches selected country (Phase 0 architecture requirement)
+    const branchCountry = branch.country || '';
+    const countryMatch = 
+      (country === 'Jamaica' && (branchCountry === 'Jamaica' || branchCountry === 'JM')) ||
+      (country === 'USA' && (branchCountry === 'USA' || branchCountry === 'US' || branchCountry === 'United States'));
+    
+    if (!countryMatch) {
+      return NextResponse.json(
+        { success: false, error: 'Selected branch does not match selected country. Please verify your selections.' },
         { status: 400 }
       );
     }

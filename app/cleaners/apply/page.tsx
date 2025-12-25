@@ -32,6 +32,7 @@ function CleanerApplyContent() {
     email: '',
     phone: '',
     whatsappNumber: '',
+    country: '', // Country selection (required before branch)
     branchId: '',
     experienceLevel: '',
     areaOfResidence: '',
@@ -52,10 +53,44 @@ function CleanerApplyContent() {
     if (preSelectedBranchSlug && branches.length > 0) {
       const branch = branches.find(b => b.slug === preSelectedBranchSlug);
       if (branch) {
-        setFormData(prev => ({ ...prev, branchId: branch.id }));
+        setFormData(prev => ({ 
+          ...prev, 
+          country: branch.country || '',
+          branchId: branch.id 
+        }));
       }
     }
   }, [preSelectedBranchSlug, branches]);
+
+  // Filter branches by selected country
+  const availableBranches = formData.country
+    ? branches.filter(b => {
+        const branchCountry = b.country || '';
+        if (formData.country === 'Jamaica') {
+          return branchCountry === 'Jamaica' || branchCountry === 'JM';
+        }
+        if (formData.country === 'USA') {
+          return branchCountry === 'USA' || branchCountry === 'US' || branchCountry === 'United States';
+        }
+        return false;
+      })
+    : branches;
+
+  // Reset branch when country changes
+  useEffect(() => {
+    if (formData.country && formData.branchId) {
+      const selectedBranch = branches.find(b => b.id === formData.branchId);
+      if (selectedBranch) {
+        const branchCountry = selectedBranch.country || '';
+        const countryMatch = 
+          (formData.country === 'Jamaica' && (branchCountry === 'Jamaica' || branchCountry === 'JM')) ||
+          (formData.country === 'USA' && (branchCountry === 'USA' || branchCountry === 'US' || branchCountry === 'United States'));
+        if (!countryMatch) {
+          setFormData(prev => ({ ...prev, branchId: '' }));
+        }
+      }
+    }
+  }, [formData.country, branches, formData.branchId]);
 
   const fetchBranches = async () => {
     try {
@@ -86,6 +121,11 @@ function CleanerApplyContent() {
     }
     if (!formData.phone) {
       setError('Please enter your phone number');
+      setShowToast(true);
+      return;
+    }
+    if (!formData.country) {
+      setError('Please select a country');
       setShowToast(true);
       return;
     }
@@ -247,6 +287,29 @@ function CleanerApplyContent() {
             <p className="text-xs text-gray-500 mt-1">Include country code (876) for Jamaica</p>
           </div>
 
+          {/* Country Selection - FIRST STEP (CRITICAL) */}
+          <div>
+            <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+              Country *
+            </label>
+            <select
+              id="country"
+              value={formData.country}
+              onChange={(e) => setFormData({ ...formData, country: e.target.value, branchId: '' })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+              required
+              aria-required="true"
+            >
+              <option value="">Select a country</option>
+              <option value="Jamaica">Jamaica</option>
+              <option value="USA">United States</option>
+            </select>
+            {!formData.country && (
+              <p className="text-xs text-gray-500 mt-1">You must select a country to apply</p>
+            )}
+          </div>
+
+          {/* Branch Selection - SECOND STEP (after country) */}
           <div>
             <label htmlFor="branchId" className="block text-sm font-medium text-gray-700 mb-1">
               Preferred Branch *
@@ -255,20 +318,30 @@ function CleanerApplyContent() {
               id="branchId"
               value={formData.branchId}
               onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
+              disabled={!formData.country}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none ${
-                !formData.branchId ? 'border-gray-300' : 'border-gray-300'
+                !formData.country
+                  ? 'opacity-50 cursor-not-allowed border-gray-200 bg-gray-50'
+                  : !formData.branchId
+                  ? 'border-gray-300'
+                  : 'border-gray-300'
               }`}
               required
               aria-required="true"
             >
-              <option value="">Select a branch</option>
-              {branches.map(branch => (
+              <option value="">
+                {!formData.country ? 'Select a country first' : 'Select a branch'}
+              </option>
+              {availableBranches.map(branch => (
                 <option key={branch.id} value={branch.id}>
                   {branch.name} ({branch.city}, {branch.state})
                 </option>
               ))}
             </select>
-            {!formData.branchId && (
+            {!formData.country && (
+              <p className="text-xs text-gray-500 mt-1">Select a country first to see available branches</p>
+            )}
+            {formData.country && !formData.branchId && (
               <p className="text-xs text-gray-500 mt-1">You must select a branch to apply</p>
             )}
           </div>
