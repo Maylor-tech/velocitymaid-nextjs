@@ -76,3 +76,4 @@ export default function StatusBarChart({ data }: StatusBarChartProps) {
 
 
 
+

@@ -308,3 +308,4 @@ npm run build && echo "✅ Build successful" || echo "❌ Build failed"
 **Next Review:** After first production booking
 
 
+

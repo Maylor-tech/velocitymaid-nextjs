@@ -13,8 +13,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "../../../../lib/auth/requireRole";
 import { prisma } from '../../../../lib/prisma';
 import { getCleanerAverageJQS } from '../../../../utils/jobQualityScore';
-import { computeAssignmentScore, CleanerForScoring } from '@/lib/assignment-scoring';
-import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level';
+import { computeAssignmentScore, CleanerForScoring } from '../../../../lib/assignment-scoring';
+import { calculateCleanerLevel, CleanerLevelMetrics } from '../../../../lib/cleaner-level';
 
 // Helper to get start of week (Sunday)
 function startOfWeek(date: Date): Date {

@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getCustomerSession } from '@/lib/customerSession';
-import { prisma } from '@/lib/prisma';
+import { getCustomerSession } from '../../../../lib/customerSession';
+import { prisma } from '../../../../lib/prisma';
 
 /**
  * Get Current Customer API

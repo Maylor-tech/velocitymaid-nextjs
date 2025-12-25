@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { validateTerritory } from "@/lib/pilot/territory";
+import { validateTerritory } from "../../../../lib/pilot/territory";
 
 export const dynamic = "force-dynamic";
 

@@ -38,10 +38,20 @@ function getStripe() {
 }
 
 export async function POST(req: NextRequest) {
+  const runId = `run_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:40',message:'Booking create POST entry',data:{runId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'G'})}).catch(()=>{});
+  // #endregion
   try {
     // 🚨 STEP 1: Extract session_id from request body
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:44',message:'Parsing request body',data:{runId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H'})}).catch(()=>{});
+    // #endregion
     const body = await req.json();
     const sessionId = body.session_id;
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:47',message:'Session ID extracted',data:{runId,hasSessionId:!!sessionId,sessionIdPrefix:sessionId?.substring(0,10)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H'})}).catch(()=>{});
+    // #endregion
 
     if (!sessionId) {
       return NextResponse.json(
@@ -52,10 +62,19 @@ export async function POST(req: NextRequest) {
 
     // 🚨 STEP 2: Verify Stripe session exists
     let session: Stripe.Checkout.Session;
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:55',message:'Retrieving Stripe session',data:{runId,sessionId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'I'})}).catch(()=>{});
+    // #endregion
     try {
       const stripe = getStripe();
       session = await stripe.checkout.sessions.retrieve(sessionId);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:59',message:'Stripe session retrieved',data:{runId,paymentStatus:session.payment_status,hasMetadata:!!session.metadata},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'I'})}).catch(()=>{});
+      // #endregion
     } catch (stripeError: any) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:62',message:'Stripe session retrieval failed',data:{runId,error:stripeError?.message,errorType:stripeError?.type},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'I'})}).catch(()=>{});
+      // #endregion
       console.error('[BOOKING CREATE] Invalid Stripe session:', stripeError.message);
       return NextResponse.json(
         { success: false, error: 'Invalid payment session. Please complete checkout again.' },
@@ -111,11 +130,20 @@ export async function POST(req: NextRequest) {
 
     // 🚨 STEP 6: Create or find customer
     let customerId: string | null = null;
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:114',message:'Starting customer lookup/create',data:{runId,hasEmail:!!email,email},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'J'})}).catch(()=>{});
+    // #endregion
     if (email) {
       try {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:117',message:'Querying customer by email',data:{runId,email},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'J'})}).catch(()=>{});
+        // #endregion
         let customer = await prisma.customer.findUnique({
           where: { email },
         });
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:120',message:'Customer query result',data:{runId,customerFound:!!customer,customerId:customer?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'J'})}).catch(()=>{});
+        // #endregion
 
         if (!customer) {
           // Extract ZIP from address if available
@@ -163,7 +191,13 @@ export async function POST(req: NextRequest) {
         }
 
         customerId = customer.id;
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:165',message:'Customer ID set',data:{runId,customerId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'J'})}).catch(()=>{});
+        // #endregion
       } catch (customerError: any) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:168',message:'Customer creation/lookup error',data:{runId,error:customerError?.message,errorCode:customerError?.code},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'J'})}).catch(()=>{});
+        // #endregion
         console.error('[BOOKING CREATE] Error creating/finding customer:', customerError.message);
         // Continue without customerId - job can still be created
       }
@@ -174,6 +208,9 @@ export async function POST(req: NextRequest) {
 
     // 🚨 STEP 8: Create job with payment confirmation (IDEMPOTENT)
     // Using upsert ensures safe retries - if job already exists, no duplicate is created
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:177',message:'Creating job via upsert',data:{runId,sessionId,branchId,customerId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'K'})}).catch(()=>{});
+    // #endregion
     const job = await prisma.job.upsert({
       where: { sessionId: session.id },
       update: {
@@ -219,6 +256,9 @@ export async function POST(req: NextRequest) {
     });
 
     console.log(`[BOOKING CREATE] Job created: ${job.id} for session ${sessionId}${customerId ? ` (customer ${customerId})` : ''}`);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:221',message:'Job created successfully',data:{runId,jobId:job.id,sessionId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'K'})}).catch(()=>{});
+    // #endregion
 
     // Auto-assign cleaner (non-blocking)
     try {
@@ -256,6 +296,9 @@ export async function POST(req: NextRequest) {
       message: 'Booking created successfully',
     });
   } catch (error: any) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:258',message:'Booking create error caught',data:{runId,errorType:error?.constructor?.name,errorMessage:error?.message,errorCode:error?.code},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'L'})}).catch(()=>{});
+    // #endregion
     console.error('[BOOKING CREATE] Error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create booking' },

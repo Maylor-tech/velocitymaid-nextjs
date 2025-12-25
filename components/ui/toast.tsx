@@ -30,3 +30,4 @@ export default function Toast({ message, type = 'info', visible, onClose }: Toas
   );
 }
 
+
