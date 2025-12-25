@@ -246,7 +246,7 @@ export async function getCancellationWindow(jobId: string): Promise<{
     };
   }
 
-  const { calculateCancellationFee } = await import("@/lib/pricing/refund");
+  const { calculateCancellationFee } = await import("../pricing/refund");
   const feeCalc = calculateCancellationFee(job.preferredDate);
 
   const basePrice = Number(job.basePrice || job.totalPrice || 0);
