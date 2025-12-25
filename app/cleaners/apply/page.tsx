@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { User, CheckCircle, Loader2, ArrowRight } from 'lucide-react';
-import Toast from '@/app/admin/components/Toast';
+import Toast from '../../../components/ui/toast';
 
 interface Branch {
   id: string;

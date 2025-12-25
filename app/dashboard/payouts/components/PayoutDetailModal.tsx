@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { CleanerPayout, PayoutStatus, PaymentMethod } from '../../../../utils/payoutData';
-import LocationBadge from '../../../../cleaners/components/LocationBadge';
+import LocationBadge from '../../../cleaners/components/LocationBadge';
 import { getAllCleaners } from '../../../../utils/cleanerData';
 
 interface PayoutDetailModalProps {

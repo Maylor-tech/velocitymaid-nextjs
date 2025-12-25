@@ -1,7 +1,7 @@
 'use client';
 
 import type { Complaint } from '../../../../utils/complaintData';
-import LocationBadge from '../../../../cleaners/components/LocationBadge';
+import LocationBadge from '../../../cleaners/components/LocationBadge';
 
 interface ComplaintsTableProps {
   complaints: Complaint[];

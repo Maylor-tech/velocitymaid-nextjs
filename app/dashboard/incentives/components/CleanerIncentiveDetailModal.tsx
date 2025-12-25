@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { CleanerIncentive } from '../../../../utils/incentiveData';
 import TierBadge from './TierBadge';
-import LocationBadge from '../../../../cleaners/components/LocationBadge';
+import LocationBadge from '../../../cleaners/components/LocationBadge';
 
 interface CleanerIncentiveDetailModalProps {
   cleanerId: string | null;
