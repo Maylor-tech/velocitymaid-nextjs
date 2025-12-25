@@ -1,9 +1,9 @@
 'use client';
 
-import type { Review } from '@/utils/reviewData';
+import type { Review } from '../../../../utils/reviewData';
 import RatingDisplay from './RatingDisplay';
 import LocationBadge from '../../components/LocationBadge';
-import { getComplaintByReviewId } from '@/utils/complaintData';
+import { getComplaintByReviewId } from '../../../../utils/complaintData';
 
 interface ReviewListProps {
   reviews: Review[];

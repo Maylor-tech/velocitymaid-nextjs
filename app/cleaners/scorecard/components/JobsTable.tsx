@@ -2,7 +2,7 @@
 
 import LocationBadge from '../../components/LocationBadge';
 import StatusBadge from '../../components/StatusBadge';
-import type { CleanerJobWithTimestamps } from '@/utils/cleanerScorecardQueries';
+import type { CleanerJobWithTimestamps } from '../../../../utils/cleanerScorecardQueries';
 
 interface JobsTableProps {
   jobs: CleanerJobWithTimestamps[];
