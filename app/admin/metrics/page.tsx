@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '../components/AdminLayout';
-import KpiCard from '@/components/admin/metrics/KpiCard';
-import StatusBarChart from '@/components/admin/metrics/StatusBarChart';
-import JobsTrendChart from '@/components/admin/metrics/JobsTrendChart';
-import TopCleanersTable from '@/components/admin/metrics/TopCleanersTable';
+import KpiCard from '../../../components/admin/metrics/KpiCard';
+import StatusBarChart from '../../../components/admin/metrics/StatusBarChart';
+import JobsTrendChart from '../../../components/admin/metrics/JobsTrendChart';
+import TopCleanersTable from '../../../components/admin/metrics/TopCleanersTable';
 import {
   Briefcase,
   Calendar,
