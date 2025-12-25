@@ -59,10 +59,11 @@ function CleanerApplyContent() {
 
   const fetchBranches = async () => {
     try {
-      const response = await fetch('/api/admin/branches');
+      // Phase 0: Use public branches API, not admin API
+      const response = await fetch('/api/branches');
       const data = await response.json();
       if (data.success) {
-        setBranches(data.branches.filter((b: Branch) => b.status === 'ACTIVE' || b.status === 'COMING_SOON'));
+        setBranches(data.branches);
       }
     } catch (err) {
       console.error('Error fetching branches:', err);
