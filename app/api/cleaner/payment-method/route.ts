@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole } from "@/lib/auth/requireRole";
-import { prisma } from "@/lib/prisma";
-import { encryptPaymentData } from "@/lib/paymentEncryption";
-import { logPaymentMethodAction } from "@/lib/payoutDecryption";
+import { requireRole } from "../../../../lib/auth/requireRole";
+import { prisma } from "../../../../lib/prisma";
+import { encryptPaymentData } from "../../../../lib/paymentEncryption";
+import { logPaymentMethodAction } from "../../../../lib/payoutDecryption";
 
 export const dynamic = "force-dynamic";
 

@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedCleaner } from '@/lib/cleanerAuth';
-import { prisma } from '@/lib/prisma';
-import type { CleanerJob } from '@/app/cleaners/components/JobCard';
+import { getAuthenticatedCleaner } from '../../../../lib/cleanerAuth';
+import { prisma } from '../../../../lib/prisma';
+import type { CleanerJob } from '../../../cleaners/components/JobCard';
 
 /**
  * Get Cleaner's Jobs API

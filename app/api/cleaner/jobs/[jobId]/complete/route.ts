@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { logAuditEntry } from "@/lib/audit";
-import { getAuthenticatedCleaner } from "@/lib/cleanerAuth";
+import { prisma } from "../../../../../../lib/prisma";
+import { logAuditEntry } from "../../../../../../lib/audit";
+import { getAuthenticatedCleaner } from "../../../../../../lib/cleanerAuth";
 import { JobStatus } from "@prisma/client";
 import { createPayoutIfEligible } from "../../../../../src/server/payout/createPayoutIfEligible";
-import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
+import { requireCleanerJobAssignment } from "../../../../../../lib/auth/requireRole";
 
 export const dynamic = "force-dynamic";
 

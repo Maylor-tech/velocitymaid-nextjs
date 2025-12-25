@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getCustomerSession } from '@/lib/customerSession';
-import { prisma } from '@/lib/prisma';
+import { getCustomerSession } from '../../../../lib/customerSession';
+import { prisma } from '../../../../lib/prisma';
 import { PaymentStatus } from '@prisma/client';
-import { requireRole } from '@/lib/auth/requireRole';
+import { requireRole } from '../../../../lib/auth/requireRole';
 
 /**
  * GET /api/customer/jobs
