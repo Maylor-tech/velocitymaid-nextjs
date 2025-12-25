@@ -1,7 +1,7 @@
 "use client";
 
 // 🚫 PRODUCTION: This route is disabled for launch
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

@@ -6,7 +6,7 @@ import { AlertCircle, Users, Calendar, AlertTriangle, MessageSquare } from "luci
 import Link from "next/link";
 
 // 🚫 PRODUCTION: This route is disabled for launch
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 interface DashboardMetrics {
   jobsToday: number;
