@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { AlertCircle, Users, Calendar, AlertTriangle, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
