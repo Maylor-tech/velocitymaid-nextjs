@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
-import { storeMagicToken, countActiveTokensForCustomer } from '../../../../lib/magicTokenStore';
+import { storeMagicToken, countActiveTokensForCustomer } from '@/lib/magicTokenStore';
 
 // Rate limiting constants
 const MAX_TOKENS_PER_CUSTOMER = 5; // Max 5 active tokens per customer

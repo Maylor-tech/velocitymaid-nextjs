@@ -15,7 +15,8 @@ const nextConfig = {
     missingSuspenseWithCSRBailout: false,
   },
   // Explicitly configure webpack to resolve @/ path alias
-  webpack: (config) => {
+  // This ensures Vercel's build system understands the alias
+  webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname),

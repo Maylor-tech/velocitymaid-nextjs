@@ -8,9 +8,9 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../../../lib/prisma';
-import { calculateCleanerLevel, CleanerLevelMetrics } from '../../../../../lib/cleaner-level';
-import { getCleanerAverageJQS } from '../../../../../utils/jobQualityScore';
+import { prisma } from '@/lib/prisma';
+import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level';
+import { getCleanerAverageJQS } from '@/utils/jobQualityScore';
 
 // Helper to get start of week (Sunday)
 function startOfWeek(date: Date): Date {

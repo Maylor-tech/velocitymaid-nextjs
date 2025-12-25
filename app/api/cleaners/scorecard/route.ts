@@ -2,11 +2,11 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getCleanerStats, getJobsByDay, getCleanerJobs } from '../../../../utils/cleanerScorecardQueries';
-import { getReviewsByCleanerId, calculateReviewStats } from '../../../../utils/reviewData';
-import { getComplaintsByCleanerId } from '../../../../utils/complaintData';
-import { getLatestIncentive } from '../../../../utils/incentiveData';
-import { getCleanerAverageJQS } from '../../../../utils/jobQualityScore';
+import { getCleanerStats, getJobsByDay, getCleanerJobs } from '@/utils/cleanerScorecardQueries';
+import { getReviewsByCleanerId, calculateReviewStats } from '@/utils/reviewData';
+import { getComplaintsByCleanerId } from '@/utils/complaintData';
+import { getLatestIncentive } from '@/utils/incentiveData';
+import { getCleanerAverageJQS } from '@/utils/jobQualityScore';
 
 /**
  * Get Cleaner Scorecard Data

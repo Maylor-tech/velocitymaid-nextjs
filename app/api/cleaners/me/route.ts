@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedCleaner } from '../../../../lib/cleanerAuth';
-import { prisma } from '../../../../lib/prisma';
+import { getAuthenticatedCleaner } from '@/lib/cleanerAuth';
+import { prisma } from '@/lib/prisma';
 
 /**
  * Get Current Cleaner Info

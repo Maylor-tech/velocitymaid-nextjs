@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { validateTerritory } from "../../../../lib/pilot/territory";
+import { validateTerritory } from "@/lib/pilot/territory";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { getAllowedZipCodes, getServiceHours } = await import("../../../../lib/pilot/territory");
+    const { getAllowedZipCodes, getServiceHours } = await import("@/lib/pilot/territory");
     
     const [zipCodes, serviceHours] = await Promise.all([
       getAllowedZipCodes(branchId),

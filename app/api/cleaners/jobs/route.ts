@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedCleaner } from '../../../../lib/cleanerAuth';
-import { prisma } from '../../../../lib/prisma';
-import type { CleanerJob } from '../../../cleaners/components/JobCard';
+import { getAuthenticatedCleaner } from '@/lib/cleanerAuth';
+import { prisma } from '@/lib/prisma';
+import type { CleanerJob } from '@/app/cleaners/components/JobCard';
 
 /**
  * Get Cleaner's Jobs API
@@ -288,7 +288,7 @@ export async function PATCH(request: NextRequest) {
     // Send review request if job is completed
     if (status === 'completed' && updatedJob.Customer?.phone) {
       try {
-        const { sendReviewRequest } = await import('../../../../lib/sendReviewRequest');
+        const { sendReviewRequest } = await import('@/lib/sendReviewRequest');
         const whatsappToken = process.env.WHATSAPP_TOKEN;
         const whatsappPhoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
