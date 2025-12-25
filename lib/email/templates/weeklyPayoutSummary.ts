@@ -4,7 +4,7 @@
  * Generates HTML and text versions of weekly payout summary emails
  */
 
-import { CleanerPayoutSummary } from "@/lib/payoutSummary";
+import { CleanerPayoutSummary } from "../../payoutSummary";
 
 export function getWeeklyPayoutSummarySubject(dateFrom: Date, dateTo: Date): string {
   const fromStr = dateFrom.toLocaleDateString("en-US", { month: "short", day: "numeric" });

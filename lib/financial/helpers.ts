@@ -4,17 +4,17 @@
  * Reusable helpers for calculating financial metrics from jobs
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../prisma';
 import { JobStatus } from '@prisma/client';
 import {
   calculateJobCosts,
   type JobFinancialInput,
-} from '@/lib/financial/model';
+} from './model';
 import {
   aggregateBranchFinancials,
   aggregateCleanerEarnings,
-} from '@/lib/financial/aggregation';
-import { calculateCleanerLevel, type CleanerLevelMetrics } from '@/lib/cleaner-level';
+} from './aggregation';
+import { calculateCleanerLevel, type CleanerLevelMetrics } from '../cleaner-level';
 
 /**
  * Helper to get cleaner level for a cleaner

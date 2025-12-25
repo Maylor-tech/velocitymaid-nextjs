@@ -4,7 +4,7 @@
  * Logs admin actions and system changes for compliance tracking
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from './prisma';
 
 export interface AuditLogParams {
   actorId?: string | null;

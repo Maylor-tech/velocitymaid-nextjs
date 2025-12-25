@@ -5,9 +5,9 @@
  * "Clear cancellation window (locked rules)"
  */
 
-import { prisma } from "@/lib/prisma";
-import { sendCustomerConfirmation } from "@/lib/sendCustomerConfirmation";
-import { send24HourReminder } from "@/lib/whatsapp";
+import { prisma } from "../prisma";
+import { sendCustomerConfirmation } from "../sendCustomerConfirmation";
+import { send24HourReminder } from "../whatsapp";
 
 export interface ConfirmationStatus {
   sent: boolean;

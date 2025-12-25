@@ -5,7 +5,7 @@
  */
 
 import { getAdminNumber } from './whatsappRouter';
-import type { Complaint } from '@/utils/complaintData';
+import type { Complaint } from '../utils/complaintData';
 
 interface ComplaintAlertResult {
   success: boolean;

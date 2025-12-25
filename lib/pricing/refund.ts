@@ -5,7 +5,7 @@
  * No ad-hoc refunds. Ever.
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../prisma";
 import { getPricingSnapshot } from "./lock";
 
 export interface RefundCalculation {

@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../prisma';
 
 /**
  * Calculate cleaner share for a job

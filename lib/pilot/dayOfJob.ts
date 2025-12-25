@@ -8,7 +8,7 @@
  * - Issue escalation
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../prisma";
 import { JobStatus } from "@prisma/client";
 
 export interface JobCompletionCheck {

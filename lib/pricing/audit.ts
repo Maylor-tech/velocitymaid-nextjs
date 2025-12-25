@@ -4,7 +4,7 @@
  * Tracks pricing changes and detects anomalies.
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../prisma";
 
 export interface PriceChangeEvent {
   jobId: string;

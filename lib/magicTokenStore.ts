@@ -5,7 +5,7 @@
  * Provides durability, replay protection, and auditability.
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from './prisma';
 
 export interface MagicTokenData {
   customerId: string;

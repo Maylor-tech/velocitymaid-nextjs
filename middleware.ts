@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   COOKIE_NAME,
   verifyCustomerSessionToken,
-} from '@/lib/customerSession';
+} from './lib/customerSession';
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

@@ -5,7 +5,7 @@
  * Once locked, pricing cannot be changed without void + rebook.
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../prisma";
 import { Job, JobStatus } from "@prisma/client";
 
 export interface PricingSnapshot {

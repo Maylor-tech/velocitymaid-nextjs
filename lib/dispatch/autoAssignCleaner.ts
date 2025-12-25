@@ -8,8 +8,8 @@
  * - Sends notification email
  */
 
-import { prisma } from "@/lib/prisma";
-import { logAuditEntry } from "@/lib/audit";
+import { prisma } from "../prisma";
+import { logAuditEntry } from "../audit";
 import { JobStatus, UserRole } from "@prisma/client";
 import { Resend } from "resend";
 

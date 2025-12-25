@@ -4,12 +4,12 @@
  * Background workers for recalculating metrics, cleaner levels, and data integrity checks
  */
 
-import { prisma } from '@/lib/prisma';
-import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level';
+import { prisma } from '../prisma';
+import { calculateCleanerLevel, CleanerLevelMetrics } from '../cleaner-level';
 import {
   calculateFinancialBreakdownsForJobs,
-} from '@/lib/financial/helpers';
-import { aggregateBranchFinancials } from '@/lib/financial/aggregation';
+} from '../financial/helpers';
+import { aggregateBranchFinancials } from '../financial/aggregation';
 
 /**
  * Helper functions for date operations

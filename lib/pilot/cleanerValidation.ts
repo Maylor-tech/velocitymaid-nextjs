@@ -5,8 +5,8 @@
  * Non-negotiable: No payment method → no assignments.
  */
 
-import { prisma } from "@/lib/prisma";
-import { hasVerifiedPaymentMethod } from "@/lib/paymentMethods";
+import { prisma } from "../prisma";
+import { hasVerifiedPaymentMethod } from "../paymentMethods";
 
 export interface CleanerAssignmentEligibility {
   eligible: boolean;

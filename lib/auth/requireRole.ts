@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCustomerSession } from "@/lib/customerSession";
-import { getAuthenticatedCleaner } from "@/lib/cleanerAuth";
-import { prisma } from "@/lib/prisma";
+import { getCustomerSession } from "../customerSession";
+import { getAuthenticatedCleaner } from "../cleanerAuth";
+import { prisma } from "../prisma";
 import { UserRole } from "@prisma/client";
 import { cookies } from "next/headers";
 

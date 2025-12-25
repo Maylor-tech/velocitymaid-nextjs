@@ -6,7 +6,7 @@
 
 import { sendWhatsAppTemplate } from './whatsapp';
 import { getAdminNumber } from './whatsappRouter';
-import type { Review } from '@/utils/reviewData';
+import type { Review } from '../utils/reviewData';
 
 interface LowRatingAlertResult {
   success: boolean;

@@ -5,7 +5,7 @@
  * Groups payouts by cleaner and computes totals
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "./prisma";
 
 export interface PayoutSummaryRow {
   payoutId: string;

@@ -6,10 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, AuthContext } from "@/lib/auth/requireRole";
-import { assertPricingPermission } from "@/lib/permissions/pricing";
-import { prisma } from "@/lib/prisma";
-import { assertPriceUnlocked } from "@/lib/pricing/lock";
+import { requireRole, AuthContext } from "../auth/requireRole";
+import { assertPricingPermission } from "../permissions/pricing";
+import { prisma } from "../prisma";
+import { assertPriceUnlocked } from "../pricing/lock";
 import { UserRole } from "@prisma/client";
 
 /**

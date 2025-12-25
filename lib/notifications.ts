@@ -5,7 +5,7 @@
  * Used for payout receipts and other important events
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "./prisma";
 
 export type NotificationType =
   | "PAYOUT_SENT"

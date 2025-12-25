@@ -2,7 +2,7 @@
  * Payment Method Validation & Constants
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "./prisma";
 
 export const PAYMENT_METHODS = ["BANK", "ZELLE", "VENMO", "CASH", "CASH_APP", "PAYPAL"] as const;
 

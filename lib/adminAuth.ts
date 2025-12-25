@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth/requireRole";
+import { requireRole } from "./auth/requireRole";
 import { NextRequest } from "next/server";
 
 /**

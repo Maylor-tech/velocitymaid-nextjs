@@ -1,8 +1,8 @@
-import { prisma } from '@/lib/prisma';
-import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
-import { getCleanerAverageJQS } from '@/utils/jobQualityScore';
-import { isCleanerTrainingEligible } from '@/utils/trainingEligibility';
-import { resolveCityFromZip } from '@/utils/cityRouting';
+import { prisma } from './prisma';
+import { sendCleanerAssignment } from './sendCleanerAssignment';
+import { getCleanerAverageJQS } from '../utils/jobQualityScore';
+import { isCleanerTrainingEligible } from '../utils/trainingEligibility';
+import { resolveCityFromZip } from '../utils/cityRouting';
 
 export interface AssignmentResult {
   success: boolean;

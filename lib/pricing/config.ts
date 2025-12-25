@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma';
-import type { ServiceType } from '@/components/booking/types';
+import { prisma } from '../prisma';
+import type { ServiceType } from '../../components/booking/types';
 
 export interface BranchServicePricingConfig {
   baseRate: number;          // base price for a standard 1br/1ba job

@@ -4,7 +4,7 @@
  * Enforces admin-only discounts with caps and reason codes.
  */
 
-import { assertPricingPermission } from "@/lib/permissions/pricing";
+import { assertPricingPermission } from "../permissions/pricing";
 import { UserRole } from "@prisma/client";
 
 export interface DiscountRequest {

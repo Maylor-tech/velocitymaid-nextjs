@@ -5,7 +5,7 @@
  */
 
 import { cookies } from "next/headers";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "./prisma";
 import { UserRole } from "@prisma/client";
 
 export interface CleanerAuthResult {

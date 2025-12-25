@@ -1,4 +1,4 @@
-import type { ServiceType } from '@/components/booking/types';
+import type { ServiceType } from '../../components/booking/types';
 
 export interface BookingQuoteInput {
   serviceType: ServiceType | null;

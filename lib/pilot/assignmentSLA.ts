@@ -5,7 +5,7 @@
  * "Assign within 60 minutes during business hours"
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../prisma";
 import { getServiceHours } from "./territory";
 
 export interface AssignmentSLAStatus {

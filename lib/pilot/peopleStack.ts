@@ -5,7 +5,7 @@
  * No new roles during pilot. No "friends & favors".
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../prisma";
 import { UserRole } from "@prisma/client";
 
 export interface PeopleStackStatus {
