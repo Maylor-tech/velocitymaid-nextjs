@@ -6,7 +6,7 @@
  */
 
 import { AlertCircle } from "lucide-react";
-import { PayoutSkipReason, SkippedJobDebug } from "@/lib/payoutDebug";
+import { PayoutSkipReason, SkippedJobDebug } from "../../lib/payoutDebug";
 
 interface PayoutDebugPanelProps {
   debug: SkippedJobDebug[];

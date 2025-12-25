@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import WhatsAppButton from "@/components/WhatsAppButton";
+import WhatsAppButton from "../components/WhatsAppButton";
 import { GoogleAnalytics } from '@next/third-parties/google';
-import { DemoModeBanner } from "@/components/DemoModeBanner";
+import { DemoModeBanner } from "../components/DemoModeBanner";
 
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
 

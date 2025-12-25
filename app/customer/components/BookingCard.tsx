@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Calendar, MapPin, Clock, DollarSign } from 'lucide-react';
-import type { CustomerBooking } from '@/utils/customerBookings';
+import type { CustomerBooking } from '../../../../utils/customerBookings';
 import RegionBadge from './RegionBadge';
 import BookingStatusBadge from './BookingStatusBadge';
 

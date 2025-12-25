@@ -1,8 +1,8 @@
 'use client';
 
-import type { CleanerPayout } from '@/utils/payoutData';
-import LocationBadge from '@/app/cleaners/components/LocationBadge';
-import { getAllCleaners } from '@/utils/cleanerData';
+import type { CleanerPayout } from '../../../../utils/payoutData';
+import LocationBadge from '../../../../cleaners/components/LocationBadge';
+import { getAllCleaners } from '../../../../utils/cleanerData';
 
 interface PayoutsTableProps {
   payouts: CleanerPayout[];

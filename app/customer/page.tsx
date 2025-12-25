@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { verifyCustomerSessionToken, COOKIE_NAME } from '@/lib/customerSession';
-import { prisma } from '@/lib/prisma';
+import { verifyCustomerSessionToken, COOKIE_NAME } from '../../lib/customerSession';
+import { prisma } from '../../lib/prisma';
 
 /**
  * Customer Portal Home

@@ -6,7 +6,7 @@ import CustomerLayout from '../components/CustomerLayout';
 import BookingCard from '../components/BookingCard';
 import EmptyState from '../components/EmptyState';
 import { AlertCircle } from 'lucide-react';
-import type { CustomerBooking } from '@/utils/customerBookings';
+import type { CustomerBooking } from '../../../utils/customerBookings';
 
 export default function UpcomingBookingsPage() {
   const router = useRouter();

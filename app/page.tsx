@@ -23,8 +23,8 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { sendGAEvent } from '@next/third-parties/google';
-import BeforeAfterSlider from '@/components/BeforeAfterSlider';
-import TestimonialsSection from '@/components/TestimonialsSection';
+import BeforeAfterSlider from '../components/BeforeAfterSlider';
+import TestimonialsSection from '../components/TestimonialsSection';
 
 // FAQ Item Component
 function FAQItem({ question, answer }: { question: string; answer: string }) {

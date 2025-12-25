@@ -1,6 +1,6 @@
 'use client';
 
-import type { ComplaintStatus } from '@/utils/complaintData';
+import type { ComplaintStatus } from '../../../../utils/complaintData';
 
 type ServiceRegion = 'new_jersey' | 'vermont' | null;
 

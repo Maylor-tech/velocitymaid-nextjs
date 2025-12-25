@@ -25,7 +25,7 @@ import {
 import { Cleaner, CleanerProfileDetails } from './types';
 import AvailabilityEditorModal from './AvailabilityEditorModal';
 import AddIncentiveModal from './AddIncentiveModal';
-import { getLevelBadgeColor } from '@/lib/cleaner-level';
+import { getLevelBadgeColor } from '../../../lib/cleaner-level';
 
 interface CleanerProfileDrawerProps {
   isOpen: boolean;

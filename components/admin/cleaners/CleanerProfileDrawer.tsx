@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Drawer from '@/components/admin/ui/Drawer';
+import Drawer from '../ui/Drawer';
 import { Loader2, CheckCircle, XCircle, Calendar, TrendingUp, Award, MapPin, Star, DollarSign, Shield, AlertTriangle } from 'lucide-react';
 
 interface CleanerProfileDrawerProps {

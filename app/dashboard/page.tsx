@@ -12,8 +12,8 @@ import BookingFeed from './components/BookingFeed';
 import ReviewsTable from './components/ReviewsTable';
 import LeadStats from './components/LeadStats';
 import { Job } from './components/JobCard';
-import { RevenueData, CleanerSchedule, KPIStats } from '@/utils/dashboardQueries';
-import type { Review } from '@/utils/reviewData';
+import { RevenueData, CleanerSchedule, KPIStats } from '../../utils/dashboardQueries';
+import type { Review } from '../../utils/reviewData';
 
 type ServiceRegion = 'new_jersey' | 'vermont' | null;
 

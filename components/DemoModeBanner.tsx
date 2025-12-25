@@ -7,7 +7,7 @@
 
 "use client";
 
-import { DEMO_MODE } from "@/lib/demoMode";
+import { DEMO_MODE } from "../lib/demoMode";
 
 export function DemoModeBanner() {
   if (!DEMO_MODE) return null;

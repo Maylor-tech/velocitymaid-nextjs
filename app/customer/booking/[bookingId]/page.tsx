@@ -7,9 +7,9 @@ import RegionBadge from '../../components/RegionBadge';
 import BookingStatusBadge from '../../components/BookingStatusBadge';
 import Link from 'next/link';
 import { Calendar, Clock, MapPin, DollarSign, User, MessageSquare, Star, X } from 'lucide-react';
-import type { CustomerBooking } from '@/utils/customerBookings';
-import { getReviewsByJobId, type Review } from '@/utils/reviewData';
-import { getComplaintByReviewId } from '@/utils/complaintData';
+import type { CustomerBooking } from '../../../../utils/customerBookings';
+import { getReviewsByJobId, type Review } from '../../../../utils/reviewData';
+import { getComplaintByReviewId } from '../../../../utils/complaintData';
 // Note: Review checking will be done via API in production
 
 export default function BookingDetailsPage() {

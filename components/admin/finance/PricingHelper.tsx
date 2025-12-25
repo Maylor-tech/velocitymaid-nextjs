@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Calculator, X } from 'lucide-react';
-import { calculateJobPrice, getRecommendedBaseRate, type JobPricingInput } from '@/lib/finance/pricing';
+import { calculateJobPrice, getRecommendedBaseRate, type JobPricingInput } from '../../lib/finance/pricing';
 
 interface PricingHelperProps {
   serviceType?: string | null;

@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
 import CustomerLayout from './components/CustomerLayout';
 import DatabaseErrorPage from './components/DatabaseErrorPage';
-import { verifyCustomerSessionToken, COOKIE_NAME } from '@/lib/customerSession';
-import { prisma } from '@/lib/prisma';
+import { verifyCustomerSessionToken, COOKIE_NAME } from '../../lib/customerSession';
+import { prisma } from '../../lib/prisma';
 
 /**
  * Customer Portal Layout

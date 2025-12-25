@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import Drawer from '@/components/admin/ui/Drawer';
+import Drawer from '../ui/Drawer';
 import JobInfoRow from './JobInfoRow';
 import AssignCleanerModal from './AssignCleanerModal';
-import CleanerProfileDrawer from '@/components/admin/cleaners/CleanerProfileDrawer';
+import CleanerProfileDrawer from '../cleaners/CleanerProfileDrawer';
 import { Loader2, RefreshCw, UserCheck, XCircle, UserPlus } from 'lucide-react';
 
 interface JobDetailDrawerProps {

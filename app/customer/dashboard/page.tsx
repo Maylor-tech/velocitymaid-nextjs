@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
-import { verifyCustomerSessionToken, COOKIE_NAME } from '@/lib/customerSession';
-import { prisma } from '@/lib/prisma';
+import { verifyCustomerSessionToken, COOKIE_NAME } from '../../../lib/customerSession';
+import { prisma } from '../../../lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
