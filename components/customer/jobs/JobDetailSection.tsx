@@ -31,3 +31,4 @@ export default function JobDetailSection({ icon, label, value }: JobDetailSectio
 
 
 
+

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { TrendingUp, DollarSign, Users, Calendar } from 'lucide-react';
-import { formatCurrency } from '@/utils/currencyConverter';
+import { formatCurrency } from '../../../../../utils/currencyConverter';
 
 interface Forecast {
   cleanerId: string;

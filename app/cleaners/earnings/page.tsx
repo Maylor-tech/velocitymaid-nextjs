@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DollarSign, Calendar, TrendingUp, Clock, Award, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { formatCurrency } from '@/utils/currencyConverter';
+import { formatCurrency } from '../../../utils/currencyConverter';
 
 interface WeeklyEarning {
   weekStart: Date;
