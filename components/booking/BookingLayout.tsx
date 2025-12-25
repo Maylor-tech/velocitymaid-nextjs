@@ -8,100 +8,97 @@ interface BookingLayoutProps {
   children: React.ReactNode;
 }
 
-const stepLabels = ['Service', 'Home Details', 'Date & Time', 'Extras', 'Contact', 'Confirmation'];
-
 export default function BookingLayout({ children }: BookingLayoutProps) {
-  const { step, next, prev, canGoNext } = useBooking();
+  const { step, nextStep, prevStep, error } = useBooking();
+
+  const steps = [
+    'Service',
+    'Home Details',
+    'Date & Time',
+    'Extras',
+    'Contact Info',
+    'Confirm',
+  ];
+
+  const canGoNext = step < 5;
+  const canGoPrev = step > 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-sky-50 py-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Book Your Cleaning</h1>
-          <p className="text-gray-600">Complete the form below to schedule your service</p>
-        </div>
-
-        {/* Stepper */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-center justify-between">
-            {stepLabels.map((label, index) => {
-              const isActive = index === step;
-              const isCompleted = index < step;
-              const stepNum = index + 1;
-
-              return (
-                <React.Fragment key={index}>
-                  <div className="flex flex-col items-center flex-1">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-colors ${
-                        isActive
-                          ? 'bg-blue-600 text-white'
-                          : isCompleted
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-200 text-gray-600'
-                      }`}
-                    >
-                      {isCompleted ? '✓' : stepNum}
-                    </div>
-                    <span
-                      className={`mt-2 text-xs font-medium ${
-                        isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
-                      }`}
-                    >
-                      {label}
-                    </span>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-3xl mx-auto px-4">
+        {/* Progress Indicator */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            {steps.map((label, index) => (
+              <div key={index} className="flex items-center flex-1">
+                <div className="flex flex-col items-center flex-1">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                      index <= step
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-600'
+                    }`}
+                  >
+                    {index + 1}
                   </div>
-                  {index < stepLabels.length - 1 && (
-                    <div
-                      className={`flex-1 h-0.5 mx-2 ${
-                        isCompleted ? 'bg-green-500' : 'bg-gray-200'
-                      }`}
-                    />
-                  )}
-                </React.Fragment>
-              );
-            })}
+                  <span
+                    className={`text-xs mt-2 text-center ${
+                      index <= step ? 'text-blue-600 font-medium' : 'text-gray-500'
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </div>
+                {index < steps.length - 1 && (
+                  <div
+                    className={`h-1 flex-1 mx-2 ${
+                      index < step ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
+                  />
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8 mb-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 mb-6">
           {children}
         </div>
 
-        {/* Footer Navigation */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={prev}
-              disabled={step === 0}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ${
-                step === 0
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              <ChevronLeft className="w-5 h-5" />
-              Back
-            </button>
-
-            <button
-              onClick={next}
-              disabled={!canGoNext}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
-                canGoNext
-                  ? 'bg-blue-600 hover:bg-blue-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              {step === 5 ? 'Confirm & Continue' : 'Next'}
-              {step < 5 && <ChevronRight className="w-5 h-5" />}
-            </button>
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-sm text-red-800">{error}</p>
           </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between">
+          <button
+            onClick={prevStep}
+            disabled={!canGoPrev}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${
+              canGoPrev
+                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            <ChevronLeft className="w-5 h-5" />
+            Previous
+          </button>
+
+          {canGoNext && (
+            <button
+              onClick={nextStep}
+              className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            >
+              Next
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 }
-

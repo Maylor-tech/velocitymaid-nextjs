@@ -299,6 +299,29 @@ export default function ReviewStep() {
         )}
       </div>
 
+      {/* What Happens Next */}
+      <div className="mt-6 border-2 border-blue-100 bg-blue-50 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">What happens next</h3>
+        <ul className="space-y-2 text-sm text-gray-700">
+          <li className="flex items-start gap-2">
+            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <span>You'll complete secure payment</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <span>We'll confirm your booking</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <span>A vetted cleaner will be assigned</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <span>You'll receive updates by email or SMS</span>
+          </li>
+        </ul>
+      </div>
+
       {/* Pricing Section */}
       <div className="mt-6">
         {!quote && (

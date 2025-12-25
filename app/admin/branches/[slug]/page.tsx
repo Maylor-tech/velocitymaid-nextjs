@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Edit, Users, TrendingUp, Settings, MapPin, Phone, Mail, Calendar, Briefcase, DollarSign, AlertCircle as AlertCircleIcon } from 'lucide-react';
 import AdminLayout from '../../components/AdminLayout';
 import { Loader2, AlertCircle } from 'lucide-react';
-import KpiCard from '@/components/admin/ui/KpiCard';
+import KpiCard from '../../../../components/admin/ui/KpiCard';
 
 export default function BranchDetailPage() {
   const params = useParams();

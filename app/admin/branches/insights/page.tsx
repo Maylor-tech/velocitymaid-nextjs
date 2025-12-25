@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '../../components/AdminLayout';
-import KpiCard from '@/components/admin/ui/KpiCard';
+import KpiCard from '../../../../components/admin/ui/KpiCard';
 import {
   Building2,
   Briefcase,

@@ -27,3 +27,10 @@ WHERE table_name = 'CleanerPaymentMethod'
 ORDER BY ordinal_position;
 
 
+
+
+
+
+
+
+

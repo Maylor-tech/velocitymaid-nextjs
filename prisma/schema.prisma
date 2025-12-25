@@ -24,6 +24,7 @@ model Branch {
   createdAt                         DateTime                    @default(now())
   updatedAt                         DateTime
   currency                          String                      @default("USD")
+  AssignmentLog                     AssignmentLog[]
   User_Branch_managerIdToUser       User?                       @relation("Branch_managerIdToUser", fields: [managerId], references: [id])
   PricingModel                      PricingModel?               @relation(fields: [pricingModelId], references: [id])
   BranchAutomationConfig            BranchAutomationConfig?
@@ -46,9 +47,6 @@ model Branch {
   TransactionLedger                 TransactionLedger[]
   User_User_primaryBranchIdToBranch User[]                      @relation("User_primaryBranchIdToBranch")
   UserBranch                        UserBranch[]
-  AssignmentLog                    AssignmentLog[]
-  ServicePricing                    ServicePricing[]
-  RegionPricingModifier             RegionPricingModifier[]
 
   @@index([managerId])
   @@index([pricingModelId])
@@ -221,24 +219,6 @@ model CleanerAvailability {
   @@index([isActive])
 }
 
-model CleanerPaymentMethod {
-  id               String    @id @default(uuid())
-  cleanerId        String
-  methodType       String
-  label            String?
-  details          Json
-  isActive         Boolean   @default(true)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  verifiedAt       DateTime?
-  verifiedBy       String?
-  verificationNote String?
-  User             User      @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
-
-  @@index([cleanerId, isActive])
-  @@index([cleanerId])
-}
-
 model Contract {
   id        String    @id
   name      String
@@ -261,35 +241,52 @@ model Contract {
 }
 
 model Customer {
-  id                                                       String           @id @default(uuid())
+  id                                                       String            @id
   firstName                                                String
   lastName                                                 String
-  email                                                    String           @unique
+                                                   String            @unique
   phone                                                    String?
   defaultAddress                                           String?
   homeZipCode                                              String?
   branchId                                                 String?
-  stripeCustomerId                                         String?          @unique
-  loyaltyPoints                                            Int              @default(0)
-  createdAt                                                DateTime         @default(now())
+  stripeCustomerId                                         String?           @unique
+  loyaltyPoints                                            Int               @default(0)
+  createdAt                                                DateTime          @default(now())
   updatedAt                                                DateTime
-  preferSameCleaner                                        Boolean          @default(false)
-  leadStatus                                               LeadStatus       @default(NEW)
-  whatsappOptIn                                            Boolean          @default(false)
-  Branch                                                   Branch?          @relation(fields: [branchId], references: [id])
+  preferSameCleaner                                        Boolean           @default(false)
+  leadStatus                                               LeadStatus        @default(NEW)
+  whatsappOptIn                                            Boolean           @default(false)
+  CleanerRating                                            CleanerRating[]
+  Branch                                                   Branch?           @relation(fields: [branchId], references: [id])
   Job                                                      Job[]
   NurtureHistory                                           NurtureHistory[]
   NurtureSequence                                          NurtureSequence?
   ReferralCredit                                           ReferralCredit[]
-  ReferralEvent_ReferralEvent_referredCustomerIdToCustomer ReferralEvent[]  @relation("ReferralEvent_referredCustomerIdToCustomer")
-  ReferralEvent_ReferralEvent_referrerIdToCustomer         ReferralEvent[]  @relation("ReferralEvent_referrerIdToCustomer")
+  ReferralEvent_ReferralEvent_referredCustomerIdToCustomer ReferralEvent[]   @relation("ReferralEvent_referredCustomerIdToCustomer")
+  ReferralEvent_ReferralEvent_referrerIdToCustomer         ReferralEvent[]   @relation("ReferralEvent_referrerIdToCustomer")
   ReferralLink                                             ReferralLink[]
-  CleanerRating                                            CleanerRating[]
+  MagicLoginToken                                          MagicLoginToken[]
 
   @@index([branchId])
   @@index([email])
   @@index([homeZipCode])
   @@index([leadStatus])
+}
+
+model MagicLoginToken {
+  id         String    @id @default(cuid())
+  token      String    @unique
+  customerId String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([customerId])
+  @@index([expiresAt])
+  @@index([usedAt])
 }
 
 model FranchiseApplication {
@@ -351,8 +348,8 @@ model JamaicaPayout {
 }
 
 model Job {
-  id                  String    @id @default(uuid())
-  sessionId           String?   @unique
+  id                  String          @id
+  sessionId           String?         @unique
   branchId            String
   customerId          String?
   assignedCleanerId   String?
@@ -362,58 +359,49 @@ model Job {
   serviceType         String?
   serviceLocation     String?
   address             String?
-  status              JobStatus @default(RECEIVED)
-  totalPrice          Decimal?  @db.Decimal(10, 2)
-  createdAt           DateTime  @default(now())
+  totalPrice          Decimal?        @db.Decimal(10, 2)
+  createdAt           DateTime        @default(now())
   assignedAt          DateTime?
   onTheWayAt          DateTime?
   completedAt         DateTime?
-  currency            String?   @default("USD")
+  currency            String?         @default("USD")
   paymentMethod       String?
   jobQualityScore     Int?
   appliedReferralCode String?
   promoApplied        String?
-  promoDiscount       Decimal?  @db.Decimal(10, 2)
-  // Phase L: Pricing Lock & Snapshot
-  // NOTE: Pricing fields removed - database schema is source of truth
-  // These fields do not exist in database and should not be referenced
-  // priceLockedAt       DateTime?
-  // pricingSnapshot     Json?
-  // pricingReferenceId String?
-  // basePrice           Decimal?
-  // modifiers           Decimal?
-  // fees                Decimal?
-  // tax                 Decimal?
-  // discountAmount      Decimal?
-  // discountReason      String?
-  // discountApprovedBy  String?
-  User                User?     @relation(fields: [assignedCleanerId], references: [id])
-  Branch              Branch    @relation(fields: [branchId], references: [id])
-  Customer            Customer? @relation(fields: [customerId], references: [id])
+  promoDiscount       Decimal?        @db.Decimal(10, 2)
+  checkoutSessionId   String?
+  paidAt              DateTime?
+  paymentIntentId     String?
+  paymentStatus       PaymentStatus   @default(PENDING)
+  status              String          @default("pending")
   AssignmentLog       AssignmentLog[]
   CleanerRating       CleanerRating?
+  User                User?           @relation(fields: [assignedCleanerId], references: [id])
+  Branch              Branch          @relation(fields: [branchId], references: [id])
+  Customer            Customer?       @relation(fields: [customerId], references: [id])
 
   @@index([appliedReferralCode])
-  // @@index([priceLockedAt])  // Commented out until column exists in database
   @@index([assignedCleanerId])
   @@index([branchId])
   @@index([customerId])
   @@index([jobQualityScore])
   @@index([preferredDate])
   @@index([status])
+  @@index([paymentStatus])
 }
 
 model AssignmentLog {
-  id          String   @id @default(cuid())
-  jobId       String
-  cleanerId   String?
-  branchId    String
-  outcome     String   // "ASSIGNED" | "NO_CLEANER" | "SKIPPED"
-  reason      String?
-  details     Json?
-  createdAt   DateTime @default(now())
-  Job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  Branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  jobId     String
+  cleanerId String?
+  branchId  String
+  outcome   String
+  reason    String?
+  details   Json?
+  createdAt DateTime @default(now())
+  Branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  Job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([jobId])
   @@index([branchId])
@@ -421,16 +409,16 @@ model AssignmentLog {
 }
 
 model CleanerRating {
-  id          String   @id @default(cuid())
-  jobId       String   @unique
-  cleanerId   String
-  customerId  String?
-  rating      Int
-  comment     String?
-  createdAt   DateTime @default(now())
-  Job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  Cleaner     User     @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
-  Customer    Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  jobId      String    @unique
+  cleanerId  String
+  customerId String?
+  rating     Int
+  comment    String?
+  createdAt  DateTime  @default(now())
+  Cleaner    User      @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  Customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  Job        Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([cleanerId])
   @@index([customerId])
@@ -633,14 +621,14 @@ model ReferralLink {
 }
 
 model TrainingCertificate {
-  id                     String         @id
-  certificateId          String         @unique
-  cleanerId              String         @unique
-  status                 String         @default("ACTIVE")
-  issuedAt               DateTime       @default(now())
-  revokedAt              DateTime?
-  statusRelation         TrainingStatus @relation(fields: [cleanerId], references: [cleanerId], onDelete: Cascade, map: "TrainingCertificate_cleanerId_TrainingStatus_fkey")
-  userRelation           User           @relation(fields: [cleanerId], references: [id], onDelete: Cascade, map: "TrainingCertificate_cleanerId_User_fkey")
+  id             String         @id
+  certificateId  String         @unique
+  cleanerId      String         @unique
+  status         String         @default("ACTIVE")
+  issuedAt       DateTime       @default(now())
+  revokedAt      DateTime?
+  trainingStatus TrainingStatus @relation(fields: [cleanerId], references: [cleanerId], onDelete: Cascade, map: "TrainingCertificate_cleanerId_TrainingStatus_fkey")
+  cleaner        User           @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
 
   @@index([certificateId])
   @@index([cleanerId])
@@ -777,7 +765,7 @@ model User {
   preferredCities                     String[]              @default([])
   Branch_Branch_managerIdToUser       Branch[]              @relation("Branch_managerIdToUser")
   CleanerAvailability                 CleanerAvailability?
-  CleanerPaymentMethod                CleanerPaymentMethod[]
+  CleanerRating                       CleanerRating[]
   JamaicaPaymentMethod                JamaicaPaymentMethod?
   JamaicaPayout                       JamaicaPayout[]
   Job                                 Job[]
@@ -788,7 +776,6 @@ model User {
   TransactionLedger                   TransactionLedger[]
   Branch_User_primaryBranchIdToBranch Branch?               @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
   UserBranch                          UserBranch[]
-  CleanerRating                       CleanerRating[]
 
   @@index([isActive])
   @@index([preferredCities])
@@ -906,76 +893,17 @@ enum TipHandling {
   POOL
 }
 
-enum JobStatus {
-  RECEIVED
-  CONFIRMED
-  ASSIGNED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
-
 enum UserRole {
   ADMIN
   MANAGER
-  BRANCH_OWNER
   CLEANER
   SUPPORT
+  BRANCH_OWNER
 }
 
-// Phase L: Pricing Tables
-model ServiceType {
-  id          String   @id @default(cuid())
-  code        String   @unique  // "STANDARD", "DEEP", "MOVE_OUT", "RECURRING"
-  name        String
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime
-  
-  ServicePricing ServicePricing[]
-  
-  @@index([code])
-  @@index([isActive])
-}
-
-model ServicePricing {
-  id              String      @id @default(cuid())
-  serviceTypeId   String
-  branchId        String?
-  basePrice       Decimal     @db.Decimal(10, 2)
-  hourlyRate      Decimal?    @db.Decimal(10, 2)
-  currency        String      @default("USD")
-  effectiveFrom   DateTime    @default(now())
-  effectiveTo     DateTime?
-  isActive        Boolean     @default(true)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime
-  
-  ServiceType     ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
-  Branch          Branch?     @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  // Job             Job[]  // Removed - pricingReferenceId not in database
-  
-  @@index([serviceTypeId])
-  @@index([branchId])
-  @@index([isActive])
-  @@index([effectiveFrom, effectiveTo])
-}
-
-model RegionPricingModifier {
-  id              String   @id @default(cuid())
-  branchId        String
-  regionType      String   // "CITY", "ZIP", "STATE"
-  regionValue     String   // City name, ZIP code, or state code
-  modifierPercent Decimal  @db.Decimal(5, 2)  // e.g., 10.00 = +10%, -5.00 = -5%
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime
-  
-  Branch          Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  
-  @@unique([branchId, regionType, regionValue])
-  @@index([branchId])
-  @@index([isActive])
-  @@index([regionType, regionValue])
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }

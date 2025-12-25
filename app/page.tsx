@@ -156,65 +156,92 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className={`fixed w-full z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white shadow-lg py-4' : 'bg-transparent py-6'
+        isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-md py-3' : 'bg-white/80 backdrop-blur-sm py-5'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <Sparkles className="w-8 h-8 text-primary-600" />
-              <span className="text-2xl font-bold text-gray-900">VelocityMaid</span>
-            </div>
+            <a href="/" className="flex items-center space-x-2 group">
+              <Sparkles className="w-7 h-7 text-primary-600 group-hover:text-primary-700 transition-colors" />
+              <span className="text-xl font-bold text-gray-900 group-hover:text-primary-600 transition-colors">VelocityMaid</span>
+            </a>
 
             {/* Desktop Menu */}
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="#services" className="text-gray-700 hover:text-primary-600 transition" aria-label="View our services">Services</a>
-              <a href="#why-us" className="text-gray-700 hover:text-primary-600 transition" aria-label="Learn why choose us">Why Us</a>
-              <a href="#testimonials" className="text-gray-700 hover:text-primary-600 transition" aria-label="Read customer reviews">Reviews</a>
-              <a href="#pricing" className="text-gray-700 hover:text-primary-600 transition" aria-label="View pricing">Pricing</a>
-              <a href="#faq" className="text-gray-700 hover:text-primary-600 transition" aria-label="Frequently asked questions">FAQ</a>
-              <a href="#contact" className="text-gray-700 hover:text-primary-600 transition" aria-label="Contact us">Contact</a>
-              <a href="/customer" className="text-gray-700 hover:text-primary-600 transition" aria-label="Customer Portal">Customer Portal</a>
-              <a href="/cleaners/apply" className="text-gray-700 hover:text-primary-600 transition" aria-label="Careers - Apply to become a cleaner">Careers</a>
-              <a href="/new-jersey" className="text-gray-700 hover:text-primary-600 transition" aria-label="New Jersey cleaning services">New Jersey</a>
-              <a href="/vermont" className="text-gray-700 hover:text-primary-600 transition" aria-label="Vermont cleaning services">Vermont</a>
+            <div className="hidden lg:flex items-center space-x-6">
+              <a href="#services" className="text-gray-700 hover:text-primary-600 transition-colors font-medium text-sm" aria-label="View our services">Services</a>
+              <a href="#why-us" className="text-gray-700 hover:text-primary-600 transition-colors font-medium text-sm" aria-label="Learn why choose us">Why Us</a>
+              <a href="#testimonials" className="text-gray-700 hover:text-primary-600 transition-colors font-medium text-sm" aria-label="Read customer reviews">Reviews</a>
+              <a href="#pricing" className="text-gray-700 hover:text-primary-600 transition-colors font-medium text-sm" aria-label="View pricing">Pricing</a>
+              <a href="#faq" className="text-gray-700 hover:text-primary-600 transition-colors font-medium text-sm" aria-label="Frequently asked questions">FAQ</a>
+              <div className="relative group">
+                <button className="text-gray-700 hover:text-primary-600 transition-colors font-medium text-sm flex items-center gap-1">
+                  Locations
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="py-2">
+                    <a href="/new-jersey" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">New Jersey</a>
+                    <a href="/vermont" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">Vermont</a>
+                    <a href="/miami" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">Miami</a>
+                    <a href="/jamaica" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">Jamaica</a>
+                  </div>
+                </div>
+              </div>
               <a 
                 href={bookingUrl}
-                className="bg-primary-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-primary-700 transition"
+                className="bg-primary-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-primary-700 transition-colors text-sm shadow-sm"
                 aria-label="Book a cleaning service"
               >
-                Book Now
+                Book a Service
               </a>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button 
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-              {...(isMenuOpen && { 'aria-expanded': true })}
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            {/* Mobile Menu Button & CTA */}
+            <div className="flex items-center gap-3 lg:hidden">
+              <a 
+                href={bookingUrl}
+                className="bg-primary-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors text-sm"
+                aria-label="Book a cleaning service"
+              >
+                Book
+              </a>
+              <button 
+                className="p-2"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+                {...(isMenuOpen && { 'aria-expanded': true })}
+              >
+                {isMenuOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
+              </button>
+            </div>
           </div>
 
           {/* Mobile Menu */}
           {isMenuOpen && (
-            <div className="md:hidden mt-4 pb-4">
-              <div className="flex flex-col space-y-4">
-                <a href="#services" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Services</a>
-                <a href="#why-us" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Why Us</a>
-                <a href="#testimonials" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Reviews</a>
-                <a href="#pricing" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Pricing</a>
-                <a href="#faq" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>FAQ</a>
-                <a href="#contact" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Contact</a>
-                <a href="/cleaners/apply" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Careers</a>
-                <a href="/new-jersey" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>New Jersey</a>
-                <a href="/vermont" className="text-gray-700 hover:text-primary-600 transition" onClick={() => setIsMenuOpen(false)}>Vermont</a>
+            <div className="md:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
+              <div className="flex flex-col space-y-3">
+                <a href="#services" className="text-gray-700 hover:text-primary-600 transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>Services</a>
+                <a href="#why-us" className="text-gray-700 hover:text-primary-600 transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>Why Us</a>
+                <a href="#testimonials" className="text-gray-700 hover:text-primary-600 transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>Reviews</a>
+                <a href="#pricing" className="text-gray-700 hover:text-primary-600 transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>Pricing</a>
+                <a href="#faq" className="text-gray-700 hover:text-primary-600 transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>FAQ</a>
+                <a href="#contact" className="text-gray-700 hover:text-primary-600 transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>Contact</a>
+                <div className="pt-2 border-t border-gray-200">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Locations</p>
+                  <a href="/new-jersey" className="block text-gray-700 hover:text-primary-600 transition-colors py-1.5" onClick={() => setIsMenuOpen(false)}>New Jersey</a>
+                  <a href="/vermont" className="block text-gray-700 hover:text-primary-600 transition-colors py-1.5" onClick={() => setIsMenuOpen(false)}>Vermont</a>
+                  <a href="/miami" className="block text-gray-700 hover:text-primary-600 transition-colors py-1.5" onClick={() => setIsMenuOpen(false)}>Miami</a>
+                  <a href="/jamaica" className="block text-gray-700 hover:text-primary-600 transition-colors py-1.5" onClick={() => setIsMenuOpen(false)}>Jamaica</a>
+                </div>
+                <div className="pt-2 border-t border-gray-200">
+                  <a href="/customer" className="block text-gray-700 hover:text-primary-600 transition-colors py-1.5 text-sm" onClick={() => setIsMenuOpen(false)}>Customer Portal</a>
+                  <a href="/cleaners/apply" className="block text-gray-700 hover:text-primary-600 transition-colors py-1.5 text-sm" onClick={() => setIsMenuOpen(false)}>Careers</a>
+                </div>
                 <a 
                   href={bookingUrl}
-                  className="bg-primary-600 text-white px-6 py-2 rounded-full font-semibold text-center hover:bg-primary-700 transition"
+                  className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold text-center hover:bg-primary-700 transition-colors mt-4"
+                  onClick={() => setIsMenuOpen(false)}
                 >
-                  Book Now
+                  Book a Service
                 </a>
               </div>
             </div>
@@ -223,30 +250,38 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary-50 to-white">
+      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary-50 via-white to-primary-50">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
               <motion.h1 
-                className="text-5xl md:text-6xl font-bold text-gray-900 mb-6"
+                className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                Sparkling Clean Homes,
-                <span className="text-primary-600"> Lightning Fast</span>
+                Reliable home cleaning,
+                <span className="text-primary-600"> without the stress.</span>
               </motion.h1>
               <motion.p 
-                className="text-xl text-gray-600 mb-8"
+                className="text-lg sm:text-xl text-gray-600 mb-4 leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
               >
-                Professional cleaning services that fit your schedule. Experience the VelocityMaid difference today.
+                Book in minutes. We'll handle the rest.
+              </motion.p>
+              <motion.p 
+                className="text-sm text-gray-500 mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.15 }}
+              >
+                Takes about 2 minutes to book
               </motion.p>
               <motion.div 
                 className="flex flex-col sm:flex-row gap-4"
@@ -256,14 +291,14 @@ export default function Home() {
               >
                 <a 
                   href={bookingUrl}
-                  className="btn-primary inline-flex items-center justify-center"
+                  className="bg-primary-600 text-white inline-flex items-center justify-center rounded-lg px-8 py-3.5 font-semibold hover:bg-primary-700 transition-colors shadow-md hover:shadow-lg"
                   aria-label="Book your cleaning service"
                 >
-                  Book Your Cleaning <ArrowRight className="ml-2 w-5 h-5" aria-hidden="true" />
+                  Book a Service <ArrowRight className="ml-2 w-5 h-5" aria-hidden="true" />
                 </a>
                 <a 
                   href={`tel:${phoneNumberTel}`}
-                  className="btn-secondary inline-flex items-center justify-center"
+                  className="border-2 border-gray-300 text-gray-700 inline-flex items-center justify-center rounded-lg px-6 py-3.5 font-medium hover:border-primary-600 hover:text-primary-600 transition-colors"
                   aria-label={`Call VelocityMaid at ${phoneNumber}`}
                   onClick={() => {
                     sendGAEvent('event', 'phone_clicked', {
@@ -276,7 +311,7 @@ export default function Home() {
                 </a>
               </motion.div>
               <motion.div 
-                className="mt-8 flex items-center gap-8"
+                className="mt-10 flex flex-wrap items-center gap-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.3 }}
@@ -287,20 +322,22 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.4 }}
                 >
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  <span className="ml-2 text-gray-600">Rated 5 stars by local customers</span>
+                  <div className="flex">
+                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                  </div>
+                  <span className="ml-2 text-sm text-gray-600 font-medium">Rated 5 stars by local customers</span>
                 </motion.div>
                 <motion.div 
-                  className="text-gray-600"
+                  className="text-sm text-gray-500"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.5 }}
                 >
-                  Trusted by Newark families since 2024
+                  Trusted since 2024
                 </motion.div>
               </motion.div>
             </motion.div>
@@ -308,6 +345,47 @@ export default function Home() {
               <HeroImage />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Trust Bullets */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="flex flex-col items-center text-center p-6 rounded-xl hover:bg-gray-50 transition-colors">
+              <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center mb-4">
+                <Shield className="w-7 h-7 text-primary-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-lg">Insured & background-checked cleaners</h3>
+              <p className="text-sm text-gray-600">All our cleaners are thoroughly vetted and fully insured</p>
+            </div>
+            <div className="flex flex-col items-center text-center p-6 rounded-xl hover:bg-gray-50 transition-colors">
+              <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center mb-4">
+                <Calendar className="w-7 h-7 text-primary-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-lg">Easy online booking & rescheduling</h3>
+              <p className="text-sm text-gray-600">Book in minutes and manage your appointments anytime</p>
+            </div>
+            <div className="flex flex-col items-center text-center p-6 rounded-xl hover:bg-gray-50 transition-colors">
+              <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center mb-4">
+                <Phone className="w-7 h-7 text-primary-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-lg">Local support when you need it</h3>
+              <p className="text-sm text-gray-600">Real people ready to help, not automated responses</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Reassurance Strip */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-gray-50 to-primary-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-xl text-gray-800 mb-3 font-semibold">
+            Your home is in good hands.
+          </p>
+          <p className="text-gray-600 text-lg">
+            We carefully vet our cleaners and stand behind every service.
+          </p>
         </div>
       </section>
 

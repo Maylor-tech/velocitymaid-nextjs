@@ -47,21 +47,27 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
   const fetchCustomerInfo = async () => {
     try {
       const response = await fetch('/api/customer/me');
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Not authenticated - redirect to login
+          router.push('/customer/login');
+          return;
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
       const data = await response.json();
 
-      // API returns { authenticated: true, customer: {...} } on success
-      // or { authenticated: false } when not logged in
-      if (data.authenticated && data.customer) {
+      if (data.success && data.authenticated && data.customer) {
         setCustomer(data.customer);
       } else {
         console.error('Failed to fetch customer:', data.error || 'Not authenticated');
-        // Redirect to login if not authenticated
         router.push('/customer/login');
         return;
       }
     } catch (error) {
       console.error('Error fetching customer info:', error);
-      // On network errors, redirect to login
       router.push('/customer/login');
     } finally {
       setLoading(false);
@@ -134,7 +140,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                         isActive
                           ? 'bg-blue-100 text-blue-700'
-                          : 'text-gray-700 hover:bg-gray-100'
+                          : 'text-gray-600 hover:bg-gray-100'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -144,31 +150,29 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
                 })}
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <a
-                href="tel:9732809190"
-                className="hidden sm:flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Call Support"
-              >
-                <Phone className="w-4 h-4" />
-                <span className="text-sm">(973) 280-9190</span>
-              </a>
+            <div className="flex items-center gap-3">
               <a
                 href="https://wa.me/19732809190"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-2 px-3 py-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium"
                 title="WhatsApp Support"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span className="text-sm">Support</span>
+                <span>Support</span>
               </a>
-              <span className="text-sm text-gray-600 hidden sm:inline">
+              <Link
+                href="/book"
+                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
+              >
+                Book a Service
+              </Link>
+              <span className="text-sm text-gray-600 hidden lg:inline">
                 {customer?.firstName} {customer?.lastName}
               </span>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Logout</span>
@@ -191,7 +195,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-colors ${
                   isActive
                     ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -199,6 +203,12 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
               </Link>
             );
           })}
+          <Link
+            href="/book"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm whitespace-nowrap hover:bg-blue-700 transition-colors ml-auto"
+          >
+            Book a Service
+          </Link>
         </div>
       </div>
 
@@ -206,7 +216,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
       <div className="bg-blue-50 border-b border-blue-200 px-4 sm:px-6 lg:px-8 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <p className="text-sm text-blue-800">
-            <strong>Need help?</strong> For urgent same-day changes, please call us directly.
+            <strong>Need help?</strong> For same-day changes, call or WhatsApp us.
           </p>
           <div className="flex items-center gap-3">
             <a

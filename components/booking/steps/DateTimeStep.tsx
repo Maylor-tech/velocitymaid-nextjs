@@ -48,7 +48,7 @@ export default function DateTimeStep() {
 
       <div>
         <label htmlFor="timeSlot" className="block text-sm font-medium text-gray-700 mb-2">
-          Time Slot *
+          Time Slot {data.schedule.flexibility === 'EXACT_TIME' ? '*' : '(Optional)'}
         </label>
         <select
           id="timeSlot"
@@ -60,13 +60,24 @@ export default function DateTimeStep() {
           }
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
         >
-          <option value="">Select a time slot...</option>
+          <option value="">
+            {data.schedule.flexibility === 'EXACT_TIME' 
+              ? 'Select a time slot...' 
+              : 'Optional - Select if you have a preference'}
+          </option>
           {timeSlots.map((slot) => (
             <option key={slot.value} value={slot.value}>
               {slot.label}
             </option>
           ))}
         </select>
+        {data.schedule.flexibility !== 'EXACT_TIME' && (
+          <p className="mt-1 text-xs text-gray-500">
+            {data.schedule.flexibility === 'FLEXIBLE' 
+              ? 'Time slot is optional when flexibility is set to "Flexible"'
+              : 'You can select a time slot or leave it for us to schedule'}
+          </p>
+        )}
       </div>
 
       <div>
@@ -99,6 +110,12 @@ export default function DateTimeStep() {
     </div>
   );
 }
+
+
+
+
+
+
 
 
 

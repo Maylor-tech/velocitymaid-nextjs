@@ -45,6 +45,7 @@ export default function CustomerJobsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [customerName, setCustomerName] = useState<string | null>(null);
 
   // 🚨 SAFETY FIX: Verify authentication before loading jobs
   useEffect(() => {
@@ -57,6 +58,11 @@ export default function CustomerJobsPage() {
           // Not authenticated - redirect to login
           router.replace('/customer/login?redirect=/customer/jobs');
           return;
+        }
+        
+        // Store customer name for welcome message
+        if (data.customer?.firstName) {
+          setCustomerName(data.customer.firstName);
         }
         
         setAuthChecked(true);
@@ -128,7 +134,7 @@ export default function CustomerJobsPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending' },
+      pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending confirmation' },
       assigned: { color: 'bg-blue-100 text-blue-800', icon: User, label: 'Assigned' },
       in_progress: { color: 'bg-purple-100 text-purple-800', icon: Clock, label: 'In Progress' },
       completed: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Completed' },
@@ -176,9 +182,25 @@ export default function CustomerJobsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Jobs</h1>
-        <p className="text-gray-600">View and manage your cleaning appointments</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+            {customerName ? `Welcome back, ${customerName}` : 'My Jobs'}
+          </h1>
+          <p className="text-gray-600">
+            {activeTab === 'upcoming' 
+              ? "Here's a quick view of your upcoming cleanings."
+              : "View your past cleaning appointments."}
+          </p>
+        </div>
+        {activeTab === 'upcoming' && (
+          <Link
+            href="/book"
+            className="hidden md:flex items-center gap-2 px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-sm"
+          >
+            Book a new cleaning
+          </Link>
+        )}
       </div>
 
         {/* Tabs */}
@@ -227,22 +249,42 @@ export default function CustomerJobsPage() {
           </div>
         )}
 
+        {/* What's happening now? Helper */}
+        {!loading && !error && activeTab === 'upcoming' && upcomingJobs.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              <strong>What's happening now?</strong> We're confirming details and assigning a vetted cleaner. You'll get updates by email or SMS.
+            </p>
+          </div>
+        )}
+
         {/* Jobs List */}
         {!loading && !error && (
           <>
             {jobs.length === 0 ? (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                 <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">
-                  {activeTab === 'upcoming' ? 'No upcoming jobs' : 'No past jobs'}
-                </p>
-                {activeTab === 'upcoming' && (
-                  <Link
-                    href="/"
-                    className="inline-flex items-center gap-2 px-4 py-2 mt-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Book a Service
-                  </Link>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  {activeTab === 'upcoming' 
+                    ? "No upcoming cleanings yet" 
+                    : "No past cleanings yet"}
+                </h2>
+                {activeTab === 'upcoming' ? (
+                  <>
+                    <p className="text-gray-600 mb-6">
+                      Book in minutes and we'll take care of the rest.
+                    </p>
+                    <Link
+                      href="/book"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                    >
+                      Book a Service
+                    </Link>
+                  </>
+                ) : (
+                  <p className="text-gray-600">
+                    Your completed cleanings will appear here.
+                  </p>
                 )}
               </div>
             ) : (
@@ -255,15 +297,20 @@ export default function CustomerJobsPage() {
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-start gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
                             {job.serviceType || 'Cleaning Service'}
                           </h3>
-                          {getStatusBadge(job.status)}
-                          {getPaymentStatusBadge(job.paymentStatus)}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {getStatusBadge(job.status)}
+                            {getPaymentStatusBadge(job.paymentStatus)}
+                          </div>
                         </div>
+                        {job.status.toLowerCase() === 'pending' && (
+                          <p className="text-xs text-gray-500 mt-1 ml-0">We're assigning your cleaner.</p>
+                        )}
                         {job.number && (
-                          <p className="text-sm text-gray-500">Job #{job.number}</p>
+                          <p className="text-sm text-gray-500 mt-1">Job #{job.number}</p>
                         )}
                       </div>
                       {job.price !== null && (

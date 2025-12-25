@@ -17,7 +17,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import AdminLayout from '../../components/AdminLayout';
-import KpiCard from '@/components/admin/ui/KpiCard';
+import KpiCard from '../../../../components/admin/ui/KpiCard';
 import { useCleanerScorecard } from '../hooks/useCleanerScorecard';
 
 export default function CleanerScorecardPage() {

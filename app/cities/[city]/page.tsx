@@ -1,9 +1,8 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getBranchBySlug, getAllBranches, getBranchLandingContent } from '@/utils/branchData';
+import { getBranchBySlug, getAllBranches, getBranchLandingContent, type Branch } from '../../../utils/branchData';
 import { Phone, MessageCircle, MapPin, CheckCircle, Star, Sparkles, ArrowRight } from 'lucide-react';
-import type { Branch } from '@/utils/branchData';
 
 interface PageProps {
   params: {

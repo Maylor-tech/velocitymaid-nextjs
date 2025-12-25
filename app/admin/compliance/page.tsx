@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '../components/AdminLayout';
-import KpiCard from '@/components/admin/ui/KpiCard';
+import KpiCard from '../../../components/admin/ui/KpiCard';
 import {
   Shield,
   AlertTriangle,

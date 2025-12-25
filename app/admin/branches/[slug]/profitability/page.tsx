@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { DollarSign, TrendingUp, Users, Calendar } from 'lucide-react';
-import { getBranchBySlug } from '@/utils/branchData';
-import type { Branch } from '@/utils/branchData';
+import { getBranchBySlug, type Branch } from '../../../../../utils/branchData';
 import AdminLayout from '../../../components/AdminLayout';
 
 export default function BranchProfitabilityPage() {

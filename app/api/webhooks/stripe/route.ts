@@ -6,8 +6,6 @@ import { sendCustomerConfirmation } from '@/lib/sendCustomerConfirmation';
 import { sendAdminNotification } from '@/lib/sendAdminNotification';
 import { prisma } from '@/lib/prisma';
 import { autoAssignCleaner } from '@/lib/cleaner-assignment';
-import { JobStatus } from '@prisma/client';
-import { validateTerritory } from '@/lib/pilot/territory';
 
 /**
  * Stripe Webhook Handler
@@ -225,48 +223,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           });
         }
       } else {
-        // Phase 5 Step 4: Check if customer is blocked
-        if (customerId) {
-          const customer = await prisma.customer.findUnique({
-            where: { id: customerId },
-            select: { isBlocked: true },
-          });
-
-          if (customer?.isBlocked) {
-            console.warn(`Blocked customer ${customerId} attempted to create job via Stripe webhook`);
-            // TODO: Create ComplianceIssue for blocked customer attempt
-            // Don't create the job - return error
-            return {
-              success: false,
-              error: 'This account is currently restricted. Please contact support.',
-            };
-          }
-        }
-
-        // Phase M: Validate territory before creating job
-        // Extract ZIP from address if available
-        let zipCode: string | null = null;
-        if (metadata.address) {
-          const zipMatch = metadata.address.match(/\b\d{5}\b/);
-          if (zipMatch) {
-            zipCode = zipMatch[0];
-          }
-        }
-
-        if (zipCode && branchId) {
-          const territoryValidation = await validateTerritory(
-            branchId,
-            zipCode,
-            metadata.preferredTime || undefined
-          );
-          
-          if (!territoryValidation.valid) {
-            console.warn(`[STRIPE_WEBHOOK] Territory validation failed: ${territoryValidation.error}`);
-            // Don't block job creation in webhook, but log the issue
-            // Admin can review and handle manually
-          }
-        }
-
         // Create new job with customerId linked
         const newJob = await prisma.job.create({
           data: {
@@ -279,7 +235,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             serviceType: metadata.serviceType || null,
             serviceLocation: metadata.serviceLocation || null,
             address: metadata.address || null,
-            status: JobStatus.RECEIVED,
+            status: 'pending',
             totalPrice: totalPrice,
             currency: metadata.currency || 'USD',
             paymentMethod: 'card',

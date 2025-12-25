@@ -10,6 +10,10 @@ function BookingConfirmationContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [showMagicLink, setShowMagicLink] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState('');
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
 
   const sessionId = searchParams.get("session_id");
 
@@ -206,6 +210,36 @@ function BookingConfirmationContent() {
     };
   }, [sessionId, router]);
 
+  // Function to send magic link
+  const sendMagicLink = async () => {
+    if (!magicLinkEmail) return;
+    
+    setMagicLinkLoading(true);
+    try {
+      const response = await fetch('/api/auth/customer-magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: magicLinkEmail }),
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setMagicLinkSent(true);
+        // In development, show the link in console
+        if (data.magicLink) {
+          console.log('[DEV] Magic link:', data.magicLink);
+        }
+      } else {
+        setError(data.error || 'Failed to send magic link');
+      }
+    } catch (error) {
+      console.error('Magic link error:', error);
+      setError('Failed to send magic link. Please try again.');
+    } finally {
+      setMagicLinkLoading(false);
+    }
+  };
+
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -248,37 +282,82 @@ function BookingConfirmationContent() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 text-center">
         <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          🎉 Booking Confirmed
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          You're all set 🎉
         </h1>
         <p className="text-lg text-gray-600 mb-6">
           Your payment was successful and your cleaning has been booked.
         </p>
-        {jobId && (
-          <p className="text-sm text-gray-500 mb-4">
-            Job ID: <span className="font-mono">{jobId}</span>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
+          <p className="text-sm text-blue-800">
+            <strong>What's next:</strong> We're preparing your service now. You can track updates anytime from your dashboard.
           </p>
+        </div>
+
+        {/* Magic Link Section */}
+        {!magicLinkSent ? (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 mb-3">
+              <strong>Access your dashboard:</strong> Get a secure login link sent to your email.
+            </p>
+            {!showMagicLink ? (
+              <button
+                onClick={() => setShowMagicLink(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                Send me a login link
+              </button>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="email"
+                  value={magicLinkEmail}
+                  onChange={(e) => setMagicLinkEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      sendMagicLink();
+                    }
+                  }}
+                />
+                <button
+                  onClick={sendMagicLink}
+                  disabled={magicLinkLoading || !magicLinkEmail}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {magicLinkLoading ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-800">
+              ✅ Login link sent! Check your email and click the link to access your dashboard.
+            </p>
+            {process.env.NODE_ENV === 'development' && (
+              <p className="text-xs text-green-600 mt-2">
+                (Check console for development link)
+              </p>
+            )}
+          </div>
         )}
-        <p className="text-sm text-gray-500 mb-8">
-          Confirmation ID: <span className="font-mono">{sessionId}</span>
-        </p>
-        <div className="flex gap-4 justify-center">
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={() => router.push("/customer/jobs?status=received")}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
           >
             View My Jobs
           </button>
-          <button
-            onClick={() => router.push("/book")}
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+          <a
+            href="tel:9732809190"
+            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium text-center"
           >
-            Book Another
-          </button>
+            Contact Support
+          </a>
         </div>
-        <p className="text-xs text-gray-400 mt-6">
-          Redirecting to your jobs in 2 seconds...
-        </p>
       </div>
     </div>
   );

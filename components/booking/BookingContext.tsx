@@ -1,139 +1,182 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import {
-  BookingDraft,
-  BookingStep,
-  BookingContactInfo,
-  BookingAddress,
-  BookingHomeDetails,
-  BookingSchedule,
-  BookingExtras,
-} from './types';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import type { BookingDraft, BookingStep } from './types';
 
-interface BookingContextValue {
-  step: BookingStep;
-  setStep: (step: BookingStep) => void;
+interface BookingContextType {
   data: BookingDraft;
-  update: (partial: Partial<BookingDraft>) => void;
-  next: () => void;
-  prev: () => void;
-  canGoNext: boolean;
+  step: BookingStep;
+  update: (updates: Partial<BookingDraft>) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  setStep: (step: BookingStep) => void;
   submitBooking: () => Promise<void>;
   loading: boolean;
-  error: string;
+  error: string | null;
 }
 
-const BookingContext = createContext<BookingContextValue | undefined>(undefined);
+const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
-const defaultContact: BookingContactInfo = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  streetAddress: '',
-  city: '',
-  state: '',
-  zip: '',
-};
-
-const defaultAddress: BookingAddress = {
-  street: '',
-  city: '',
-  state: '',
-  zip: '',
-  apartment: '',
-  entryNotes: '',
-};
-
-const defaultHome: BookingHomeDetails = {
-  bedrooms: 1,
-  bathrooms: 1,
-  sqft: null,
-  pets: false,
-};
-
-const defaultSchedule: BookingSchedule = {
-  date: null,
-  timeSlot: null,
-  flexibility: 'FLEXIBLE',
-};
-
-const defaultExtras: BookingExtras = {
-  insideFridge: false,
-  insideOven: false,
-  insideCabinets: false,
-  windows: false,
-  laundry: false,
-  notes: '',
-};
-
-const defaultData: BookingDraft = {
+const initialData: BookingDraft = {
   serviceType: null,
   branchSlug: null,
-  contact: defaultContact,
-  address: defaultAddress,
-  home: defaultHome,
-  schedule: defaultSchedule,
-  extras: defaultExtras,
+  contact: {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+  },
+  address: {
+    street: '',
+    city: '',
+    state: '',
+    zip: '',
+  },
+  home: {
+    bedrooms: 1,
+    bathrooms: 1,
+    sqft: null,
+    pets: false,
+  },
+  schedule: {
+    date: null,
+    timeSlot: null,
+    flexibility: 'FLEXIBLE',
+  },
+  extras: {
+    insideFridge: false,
+    insideOven: false,
+    insideCabinets: false,
+    windows: false,
+    laundry: false,
+    notes: '',
+  },
 };
 
-export function BookingProvider({ children, initialBranchSlug }: { children: ReactNode; initialBranchSlug?: string | null }) {
-  const [step, setStep] = useState<BookingStep>(0);
+interface BookingProviderProps {
+  children: React.ReactNode;
+  initialBranchSlug?: string | null;
+}
+
+export function BookingProvider({ children, initialBranchSlug }: BookingProviderProps) {
   const [data, setData] = useState<BookingDraft>({
-    ...defaultData,
+    ...initialData,
     branchSlug: initialBranchSlug || null,
   });
+  const [step, setStep] = useState<BookingStep>(0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const update = useCallback((partial: Partial<BookingDraft>) => {
-    setData((prev) => ({ ...prev, ...partial }));
+  const update = useCallback((updates: Partial<BookingDraft>) => {
+    setData((prev) => ({ ...prev, ...updates }));
   }, []);
 
-  const canGoNext = useCallback((): boolean => {
-    switch (step) {
-      case 0:
-        return !!(data.serviceType && data.branchSlug);
-      case 1:
-        return data.home.bedrooms > 0 && data.home.bathrooms > 0;
-      case 2:
-        return !!(data.schedule.date && data.schedule.timeSlot);
-      case 3:
-        return true; // Extras step has no hard requirements
-      case 4:
-        // Contact step: require firstName and valid email
-        const emailValid = /\S+@\S+\.\S+/.test(data.contact.email.trim());
-        const firstNameOk = data.contact.firstName.trim().length > 0;
-        return emailValid && firstNameOk;
-      case 5:
-        return true; // Review step is always valid
-      default:
-        return false;
+  const nextStep = useCallback(() => {
+    // Validate before moving to next step
+    if (step === 0) {
+      // Step 0: Service & Location - require branchSlug and serviceType
+      if (!data.branchSlug) {
+        setError('Please select a location to continue.');
+        return;
+      }
+      if (!data.serviceType) {
+        setError('Please select a service type to continue.');
+        return;
+      }
     }
-  }, [step, data]);
+    
+    // Clear any previous errors
+    setError(null);
+    setStep((prev) => Math.min(prev + 1, 5) as BookingStep);
+  }, [step, data.branchSlug, data.serviceType]);
 
-  const next = useCallback(() => {
-    if (canGoNext() && step < 5) {
-      setStep((s) => (s + 1) as BookingStep);
-    }
-  }, [step, canGoNext]);
-
-  const prev = useCallback(() => {
-    if (step > 0) {
-      setStep((s) => (s - 1) as BookingStep);
-    }
-  }, [step]);
+  const prevStep = useCallback(() => {
+    setStep((prev) => Math.max(prev - 1, 0) as BookingStep);
+  }, []);
 
   const submitBooking = useCallback(async () => {
     setLoading(true);
-    setError("");
+    setError(null);
 
     try {
-      // First, get the quote/estimate
-      const quoteResponse = await fetch("/api/booking/quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      // Form validation check with detailed logging
+      console.log("Form validation check:");
+      
+      // Map data structure to user-friendly names
+      const bookingData = {
+        service: {
+          serviceType: data.serviceType,
+          branchSlug: data.branchSlug,
+        },
+        home: data.home,
+        extras: data.extras,
+        when: data.schedule,
+        contact: data.contact,
+      };
+      
+      console.log("Service:", bookingData.service);
+      console.log("Home:", bookingData.home);
+      console.log("Extras:", bookingData.extras);
+      console.log("When:", bookingData.when);
+      console.log("Contact:", bookingData.contact);
+      
+      // Check for missing required fields
+      const missingFields: string[] = [];
+      
+      // Service validation
+      if (!data.serviceType) {
+        missingFields.push('Service Type');
+      }
+      if (!data.branchSlug) {
+        missingFields.push('Location/Branch');
+      }
+      
+      // Home validation
+      if (!data.home.bedrooms || data.home.bedrooms < 1) {
+        missingFields.push('Bedrooms');
+      }
+      if (!data.home.bathrooms || data.home.bathrooms < 1) {
+        missingFields.push('Bathrooms');
+      }
+      
+      // Schedule validation
+      if (!data.schedule.date) {
+        missingFields.push('Date');
+      }
+      // TimeSlot is only required if flexibility is EXACT_TIME (not FLEXIBLE, MORNING, or AFTERNOON)
+      if (data.schedule.flexibility === 'EXACT_TIME' && !data.schedule.timeSlot) {
+        missingFields.push('Time Slot');
+      }
+      
+      // Contact validation
+      if (!data.contact.firstName || data.contact.firstName.trim() === '') {
+        missingFields.push('First Name');
+      }
+      if (!data.contact.email || data.contact.email.trim() === '') {
+        missingFields.push('Email');
+      }
+      if (!data.contact.phone || data.contact.phone.trim() === '') {
+        missingFields.push('Phone');
+      }
+      
+      console.log("Missing fields:", missingFields.length > 0 ? missingFields : 'None');
+      
+      // Throw error if critical fields are missing
+      if (missingFields.length > 0) {
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}. Please complete all steps.`);
+      }
+      
+      // Additional check for critical required fields (backup validation)
+      if (!data.contact.firstName || !data.contact.email || !data.serviceType || !data.branchSlug) {
+        throw new Error('Missing required fields. Please complete all steps.');
+      }
+
+      // First, get a quote to calculate the total price
+      const quoteResponse = await fetch('/api/booking/quote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           serviceType: data.serviceType,
           branchSlug: data.branchSlug,
@@ -143,125 +186,102 @@ export function BookingProvider({ children, initialBranchSlug }: { children: Rea
         }),
       });
 
-      const quoteResult = await quoteResponse.json();
-      
-      if (!quoteResponse.ok || !quoteResult.success || !quoteResult.quote) {
-        setError(quoteResult.errors?.[0]?.message || "Failed to calculate estimate. Please try again.");
-        setLoading(false);
-        return;
+      if (!quoteResponse.ok) {
+        const errorData = await quoteResponse.json().catch(() => ({ errors: [] }));
+        const errorMessage = errorData.errors?.[0]?.message || 'Failed to calculate price';
+        throw new Error(errorMessage);
       }
 
-      const quote = quoteResult.quote;
-      const estimate = {
-        subtotal: quote.subtotal,
-        tax: quote.tax,
-        total: quote.total,
-        lineItems: quote.lineItems.map((item: any) => ({
-          label: item.label,
-          amount: item.amount,
-        })),
-        estimatedHours: quote.estimatedHours,
-        recommendedCleaners: quote.recommendedCleaners,
+      const { quote } = await quoteResponse.json();
+      if (!quote || !quote.total) {
+        throw new Error('Failed to calculate price');
+      }
+
+      // Map service type to checkout API format
+      const serviceTypeMap: Record<string, string> = {
+        'STANDARD': 'basic',
+        'DEEP_CLEAN': 'deep',
+        'MOVE_IN_OUT': 'moveInOut',
+      };
+      const mappedServiceType = serviceTypeMap[data.serviceType] || data.serviceType.toLowerCase();
+
+      // Build address string
+      const addressParts = [
+        data.contact.streetAddress || data.address.street,
+        data.contact.city || data.address.city,
+        data.contact.state || data.address.state,
+        data.contact.zip || data.address.zip,
+      ].filter(Boolean);
+      const addressString = addressParts.join(', ');
+
+      // Map branch slug to service location
+      const branchLocationMap: Record<string, string> = {
+        'new-jersey': 'new_jersey',
+        'vermont': 'vermont',
+        'miami': 'miami',
+        'port-antonio': 'port_antonio',
+      };
+      const serviceLocation = branchLocationMap[data.branchSlug] || data.branchSlug;
+
+      // Prepare checkout payload in the format the API expects
+      const checkoutPayload = {
+        firstName: data.contact.firstName,
+        lastInitial: data.contact.lastName?.[0] || '',
+        phone: data.contact.phone || '',
+        email: data.contact.email,
+        address: addressString,
+        serviceType: mappedServiceType,
+        preferredDate: data.schedule.date,
+        preferredTime: data.schedule.timeSlot,
+        serviceLocation,
+        addOns: {
+          laundry: data.extras.laundry || false,
+          windows: data.extras.windows || false,
+          oven: data.extras.insideOven || false,
+          refrigerator: data.extras.insideFridge || false,
+        },
+        specialInstructions: data.extras.notes || '',
+        totalPrice: quote.total,
+        zipCode: data.contact.zip || data.address.zip || null,
+        branchSlug: data.branchSlug,
+        currency: quote.currency || 'USD',
       };
 
-      // 🚨 PAYMENT-FIRST FLOW: Start Stripe checkout instead of creating job directly
-      const serviceLabel = data.serviceType ? (data.serviceType === 'STANDARD' ? 'Standard Cleaning' : data.serviceType === 'DEEP_CLEAN' ? 'Deep Clean' : 'Move In / Out') : 'Standard Cleaning';
-      
-      console.log("[BOOKING] Starting Stripe checkout with booking data:", {
-        branchSlug: data.branchSlug,
-        service: serviceLabel,
-        estimateTotal: estimate.total,
+      // Call checkout API to create Stripe session
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(checkoutPayload),
       });
 
-      // Prepare booking data to pass through Stripe metadata
-      const bookingData = {
-        service: {
-          label: serviceLabel,
-          type: data.serviceType,
-        },
-        home: {
-          bedrooms: data.home.bedrooms,
-          bathrooms: data.home.bathrooms,
-          squareFeet: data.home.sqft,
-        },
-        extras: Object.entries(data.extras)
-          .filter(([key, value]) => key !== 'notes' && value === true)
-          .map(([key]) => ({
-            id: key,
-            label: key === 'insideFridge' ? 'Inside Fridge' : 
-                   key === 'insideOven' ? 'Inside Oven' :
-                   key === 'insideCabinets' ? 'Inside Cabinets' :
-                   key === 'windows' ? 'Windows' :
-                   key === 'laundry' ? 'Laundry' : key,
-          })),
-        when: {
-          date: data.schedule.date,
-          time: data.schedule.timeSlot,
-        },
-        contact: {
-          firstName: data.contact.firstName,
-          lastName: data.contact.lastName,
-          email: data.contact.email,
-          phone: data.contact.phone,
-          streetAddress: data.contact.streetAddress || data.address.street,
-          city: data.contact.city || data.address.city,
-          state: data.contact.state || data.address.state,
-          zip: data.contact.zip || data.address.zip,
-        },
-        estimate,
-        branchSlug: data.branchSlug,
-      };
-
-      // Start Stripe checkout - job will be created AFTER payment succeeds
-      const checkoutRes = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          branchSlug: data.branchSlug,
-          bookingData,
-        }),
-      });
-
-      const checkoutResult = await checkoutRes.json();
-      
-      console.log("[BOOKING] Checkout API Response:", {
-        ok: checkoutRes.ok,
-        status: checkoutRes.status,
-        hasUrl: !!checkoutResult.url,
-        url: checkoutResult.url ? checkoutResult.url.substring(0, 50) + '...' : 'null/undefined',
-      });
-
-      if (!checkoutRes.ok) {
-        console.error("[BOOKING] Checkout API error:", checkoutResult);
-        setError(checkoutResult.error || "Failed to start checkout. Please try again.");
-        setLoading(false);
-        return;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to create checkout session' }));
+        throw new Error(errorData.error || 'Failed to create checkout session');
       }
 
-      // Validate checkout URL
-      if (!checkoutResult?.url) {
-        throw new Error("Checkout URL missing");
+      const { url } = await response.json();
+
+      if (!url) {
+        throw new Error('No checkout URL returned');
       }
 
-      console.log("[BOOKING] ✅ Redirecting to Stripe checkout...");
-      
-      // Redirect to Stripe checkout (must use window.location.href, NOT router.push)
-      window.location.href = checkoutResult.url;
+      // Redirect to Stripe checkout
+      window.location.href = url;
     } catch (err: any) {
-      console.error("Booking submission error:", err);
-      setError(err.message || "Unexpected server error.");
+      setError(err.message || 'Failed to submit booking. Please try again.');
       setLoading(false);
     }
   }, [data]);
 
-  const value: BookingContextValue = {
-    step,
-    setStep,
+  const value: BookingContextType = {
     data,
+    step,
     update,
-    next,
-    prev,
-    canGoNext: canGoNext(),
+    nextStep,
+    prevStep,
+    setStep,
     submitBooking,
     loading,
     error,
@@ -270,11 +290,10 @@ export function BookingProvider({ children, initialBranchSlug }: { children: Rea
   return <BookingContext.Provider value={value}>{children}</BookingContext.Provider>;
 }
 
-export function useBooking(): BookingContextValue {
+export function useBooking(): BookingContextType {
   const context = useContext(BookingContext);
-  if (!context) {
-    throw new Error('useBooking must be used within BookingProvider');
+  if (context === undefined) {
+    throw new Error('useBooking must be used within a BookingProvider');
   }
   return context;
 }
-
