@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
-  "buildCommand": "rm -rf .next && npx prisma generate && npm run build",
+  "buildCommand": "rm -rf .next && npm run build",
   "installCommand": "npm install --legacy-peer-deps"
 }
