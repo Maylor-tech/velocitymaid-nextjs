@@ -1,6 +1,6 @@
 'use client';
 
-import type { CleanerIncentive } from '../../../../utils/incentiveData';
+import type { CleanerIncentive } from '@/utils/incentiveData';
 import TierBadge from './TierBadge';
 import LocationBadge from '../../../cleaners/components/LocationBadge';
 

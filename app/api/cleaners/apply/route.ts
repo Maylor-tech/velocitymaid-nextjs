@@ -24,23 +24,31 @@ export async function POST(request: NextRequest) {
       notes,
     } = body;
 
-    // Basic validation
-    if (!name || !email || !phone || !branchId) {
+    // Basic validation - branchId is REQUIRED (non-negotiable per system rules)
+    if (!name || !email || !phone) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
+        { success: false, error: 'Missing required fields: name, email, and phone are required' },
         { status: 400 }
       );
     }
 
-    // Verify branch exists
+    // CRITICAL: branchId is REQUIRED - every cleaner application MUST belong to a branch
+    if (!branchId || typeof branchId !== 'string' || branchId.trim() === '') {
+      return NextResponse.json(
+        { success: false, error: 'Branch selection is required. Please select a branch.' },
+        { status: 400 }
+      );
+    }
+
+    // Verify branch exists and is valid
     const branch = await prisma.branch.findUnique({
-      where: { id: branchId },
+      where: { id: branchId.trim() },
       select: { id: true, status: true, slug: true, country: true },
     });
 
     if (!branch) {
       return NextResponse.json(
-        { success: false, error: 'Invalid branch' },
+        { success: false, error: 'Invalid branch selected. Please select a valid branch.' },
         { status: 400 }
       );
     }
@@ -67,18 +75,18 @@ export async function POST(request: NextRequest) {
         areaOfResidence: areaOfResidence || null,
         experienceLevel: experienceLevel || null,
         phone: whatsappNumber || phone,
-        branchId,
+        branchId: branchId.trim(),
       });
     }
 
-    // Create application
+    // Create application - branchId is REQUIRED and validated above
     const application = await prisma.cleanerApplication.create({
       data: {
         name,
         email,
         phone,
         whatsappNumber: whatsappNumber || null,
-        branchId,
+        branchId: branchId.trim(), // REQUIRED - validated and verified above
         experienceLevel: experienceLevel || null,
         areaOfResidence: areaOfResidence || null,
         daysAvailable: daysAvailable ? JSON.parse(JSON.stringify(daysAvailable)) : null,

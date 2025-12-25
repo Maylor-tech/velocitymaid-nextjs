@@ -8,7 +8,7 @@ import Tabs, { TabType } from '../components/Tabs';
 import JobList from '../components/JobList';
 import type { CleanerJob } from '../components/JobCard';
 import CertificationBadge from '../training/components/CertificationBadge';
-import PaymentMethodBanner from '../../../components/cleaner/PaymentMethodBanner';
+import PaymentMethodBanner from '@/components/cleaner/PaymentMethodBanner';
 
 interface CleanerInfo {
   id: string;

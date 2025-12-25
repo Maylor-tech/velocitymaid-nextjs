@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getBranchBySlug } from '../../../../../../utils/branchData';
-import { findUserById, createUserBranch, getUserBranches, updateUser } from '../../../../../../utils/userData';
-import { isCleanerTrainingEligible } from '../../../../../../utils/trainingEligibility';
-import { prisma } from '../../../../../../lib/prisma';
+import { getBranchBySlug } from '@/utils/branchData';
+import { findUserById, createUserBranch, getUserBranches, updateUser } from '@/utils/userData';
+import { isCleanerTrainingEligible } from '@/utils/trainingEligibility';
+import { prisma } from '@/lib/prisma';
 
 /**
  * Assign Cleaner to Branch API

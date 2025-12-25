@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, Users, Calendar, BarChart3 } from 'lucide-react';
-import { formatCurrency } from '../../../../utils/currencyConverter';
+import { formatCurrency } from '@/utils/currencyConverter';
 
 interface RevenueData {
   totalRevenueJMD: number;

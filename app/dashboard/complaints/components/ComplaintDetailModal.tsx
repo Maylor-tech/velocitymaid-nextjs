@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Complaint, ComplaintStatus, ResolutionType } from '../../../../utils/complaintData';
+import type { Complaint, ComplaintStatus, ResolutionType } from '@/utils/complaintData';
 import LocationBadge from '../../../cleaners/components/LocationBadge';
 
 interface ComplaintDetailModalProps {

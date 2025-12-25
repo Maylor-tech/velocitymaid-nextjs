@@ -10,10 +10,10 @@ import MetricBadge from './components/MetricBadge';
 import RatingDisplay from './components/RatingDisplay';
 import RatingTrendChart from './components/RatingTrendChart';
 import ReviewList from './components/ReviewList';
-import type { CleanerStats, CleanerJobWithTimestamps } from '../../../utils/cleanerScorecardQueries';
-import type { Review, ReviewStats } from '../../../utils/reviewData';
-import type { CleanerIncentive } from '../../../utils/incentiveData';
-import { calculateNextTierRequirements } from '../../../utils/incentiveEngine';
+import type { CleanerStats, CleanerJobWithTimestamps } from '@/utils/cleanerScorecardQueries';
+import type { Review, ReviewStats } from '@/utils/reviewData';
+import type { CleanerIncentive } from '@/utils/incentiveData';
+import { calculateNextTierRequirements } from '@/utils/incentiveEngine';
 
 interface ScorecardData {
   stats: CleanerStats;

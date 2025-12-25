@@ -2,9 +2,9 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createCustomerSessionToken, COOKIE_NAME, COOKIE_MAX_AGE_SECONDS } from '../../../../lib/customerSession';
-import { prisma } from '../../../../lib/prisma';
-import { consumeMagicToken } from '../../../../lib/magicTokenStore';
+import { createCustomerSessionToken, COOKIE_NAME, COOKIE_MAX_AGE_SECONDS } from '@/lib/customerSession';
+import { prisma } from '@/lib/prisma';
+import { consumeMagicToken } from '@/lib/magicTokenStore';
 
 export async function GET(req: NextRequest) {
   try {

@@ -1,6 +1,6 @@
 'use client';
 
-import { CleanerSchedule } from '../../../utils/dashboardQueries';
+import { CleanerSchedule } from '@/utils/dashboardQueries';
 import LocationBadge from './LocationBadge';
 
 interface CleanerScheduleCardProps {

@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import TierBadge from '../../dashboard/incentives/components/TierBadge';
-import type { CleanerIncentive } from '../../../utils/incentiveData';
-import { calculateNextTierRequirements, getTierInfo } from '../../../utils/incentiveEngine';
-import type { PerformanceMetrics } from '../../../utils/incentiveEngine';
+import type { CleanerIncentive } from '@/utils/incentiveData';
+import { calculateNextTierRequirements, getTierInfo } from '@/utils/incentiveEngine';
+import type { PerformanceMetrics } from '@/utils/incentiveEngine';
 
 export default function CleanerIncentivesPage() {
   const router = useRouter();

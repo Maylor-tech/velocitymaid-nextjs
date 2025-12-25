@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { DollarSign, TrendingDown, TrendingUp, Plus, Edit } from 'lucide-react';
-import { formatCurrency } from '../../../../../utils/currencyConverter';
+import { formatCurrency } from '@/utils/currencyConverter';
 
 interface PnLData {
   revenue: {

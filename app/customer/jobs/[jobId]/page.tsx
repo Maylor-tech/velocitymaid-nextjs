@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import JobStatusBadge from '../../../../components/customer/jobs/JobStatusBadge';
-import JobDetailSection from '../../../../components/customer/jobs/JobDetailSection';
-import CleanerCard from '../../../../components/customer/jobs/CleanerCard';
-import PriceBreakdown from '../../../../components/customer/jobs/PriceBreakdown';
-import ActionButtons from '../../../../components/customer/jobs/ActionButtons';
-import RequestChangeModal from '../../../../components/customer/actions/RequestChangeModal';
-import CancelJobModal from '../../../../components/customer/actions/CancelJobModal';
+import JobStatusBadge from '@/components/customer/jobs/JobStatusBadge';
+import JobDetailSection from '@/components/customer/jobs/JobDetailSection';
+import CleanerCard from '@/components/customer/jobs/CleanerCard';
+import PriceBreakdown from '@/components/customer/jobs/PriceBreakdown';
+import ActionButtons from '@/components/customer/jobs/ActionButtons';
+import RequestChangeModal from '@/components/customer/actions/RequestChangeModal';
+import CancelJobModal from '@/components/customer/actions/CancelJobModal';
 import {
   Calendar,
   Clock,

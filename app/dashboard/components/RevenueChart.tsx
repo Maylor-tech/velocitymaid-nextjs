@@ -1,6 +1,6 @@
 'use client';
 
-import { RevenueData } from '../../../utils/dashboardQueries';
+import { RevenueData } from '@/utils/dashboardQueries';
 
 interface RevenueChartProps {
   data: RevenueData[];

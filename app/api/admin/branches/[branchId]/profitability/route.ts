@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBranchBySlug, getAllBranches } from '../../../../../../utils/branchData';
+import { getBranchBySlug, getAllBranches } from '@/utils/branchData';
 
 /**
  * Branch Profitability API

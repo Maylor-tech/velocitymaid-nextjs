@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../../../../lib/prisma";
-import { logAuditEntry } from "../../../../../../lib/audit";
-import { getAuthenticatedCleaner } from "../../../../../../lib/cleanerAuth";
+import { prisma } from "@/lib/prisma";
+import { logAuditEntry } from "@/lib/audit";
+import { getAuthenticatedCleaner } from "@/lib/cleanerAuth";
 import { JobStatus } from "@prisma/client";
-import { createPayoutIfEligible } from "../../../../../src/server/payout/createPayoutIfEligible";
-import { requireCleanerJobAssignment } from "../../../../../../lib/auth/requireRole";
+import { createPayoutIfEligible } from "@/src/server/payout/createPayoutIfEligible";
+import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
 
 export const dynamic = "force-dynamic";
 
@@ -194,7 +194,7 @@ export async function PATCH(
 
     // Phase M: System checks after completion
     try {
-      const { verifyJobCompletion, checkJobCompletionIssues } = await import("../../../../../../lib/pilot/dayOfJob");
+      const { verifyJobCompletion, checkJobCompletionIssues } = await import("@/lib/pilot/dayOfJob");
       const completionCheck = await verifyJobCompletion(jobId);
       
       if (!completionCheck.passed) {

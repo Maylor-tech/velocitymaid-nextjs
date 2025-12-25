@@ -1,6 +1,6 @@
 'use client';
 
-import type { ComplaintStats as ComplaintStatsType } from '../../../../utils/complaintData';
+import type { ComplaintStats as ComplaintStatsType } from '@/utils/complaintData';
 
 interface ComplaintStatsProps {
   stats: ComplaintStatsType;

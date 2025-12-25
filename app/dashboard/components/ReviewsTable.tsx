@@ -1,6 +1,6 @@
 'use client';
 
-import type { Review } from '../../../utils/reviewData';
+import type { Review } from '@/utils/reviewData';
 import LocationBadge from '../../cleaners/components/LocationBadge';
 
 interface ReviewsTableProps {

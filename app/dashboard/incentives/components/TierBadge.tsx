@@ -1,6 +1,6 @@
 'use client';
 
-import type { IncentiveTier } from '../../../../utils/incentiveData';
+import type { IncentiveTier } from '@/utils/incentiveData';
 
 interface TierBadgeProps {
   tier: IncentiveTier;

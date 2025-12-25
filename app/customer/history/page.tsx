@@ -6,9 +6,9 @@ import BookingCard from '../components/BookingCard';
 import EmptyState from '../components/EmptyState';
 import Link from 'next/link';
 import { Star, CheckCircle } from 'lucide-react';
-import type { CustomerBooking } from '../../../utils/customerBookings';
-import { getReviewsByJobId, type Review } from '../../../utils/reviewData';
-import { getComplaintByReviewId } from '../../../utils/complaintData';
+import type { CustomerBooking } from '@/utils/customerBookings';
+import { getReviewsByJobId, type Review } from '@/utils/reviewData';
+import { getComplaintByReviewId } from '@/utils/complaintData';
 // Note: Review and complaint checking will be done via API in production
 
 export default function BookingHistoryPage() {

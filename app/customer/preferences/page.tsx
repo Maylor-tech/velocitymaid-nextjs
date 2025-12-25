@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CustomerLayout from '../components/CustomerLayout';
-import { getCustomerPreferences } from '../../../utils/customerData';
-import type { CustomerPreferences } from '../../../utils/customerData';
+import { getCustomerPreferences } from '@/utils/customerData';
+import type { CustomerPreferences } from '@/utils/customerData';
 
 export default function CustomerPreferencesPage() {
   const router = useRouter();

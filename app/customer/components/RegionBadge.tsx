@@ -1,6 +1,6 @@
 'use client';
 
-import type { ServiceRegion } from '../../../../utils/reviewData';
+import type { ServiceRegion } from '@/utils/reviewData';
 
 interface RegionBadgeProps {
   location: ServiceRegion;

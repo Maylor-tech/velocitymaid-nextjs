@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useBooking } from '../BookingContext';
 import { Check, Loader2, AlertCircle, Calculator, Mail, CheckCircle } from 'lucide-react';
-import type { BookingQuoteResult } from '../../../lib/pricing/types';
+import type { BookingQuoteResult } from '@/lib/pricing/types';
 
 const serviceTypeLabels: Record<string, string> = {
   STANDARD: 'Standard Cleaning',

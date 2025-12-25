@@ -11,7 +11,7 @@ import ComplaintFilters from './components/ComplaintFilters';
 import ComplaintStats from './components/ComplaintStats';
 import ComplaintsTable from './components/ComplaintsTable';
 import ComplaintDetailModal from './components/ComplaintDetailModal';
-import type { Complaint, ComplaintStatus, ResolutionType, ComplaintStats as ComplaintStatsType } from '../../../utils/complaintData';
+import type { Complaint, ComplaintStatus, ResolutionType, ComplaintStats as ComplaintStatsType } from '@/utils/complaintData';
 
 type ServiceRegion = 'new_jersey' | 'vermont' | null;
 

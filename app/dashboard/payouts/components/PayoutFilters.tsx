@@ -1,6 +1,6 @@
 'use client';
 
-import type { PayoutStatus } from '../../../../utils/payoutData';
+import type { PayoutStatus } from '@/utils/payoutData';
 
 type ServiceRegion = 'new_jersey' | 'vermont' | null;
 

@@ -7,8 +7,8 @@ import PayoutFilters from './components/PayoutFilters';
 import PayoutKpis from './components/PayoutKpis';
 import PayoutsTable from './components/PayoutsTable';
 import PayoutDetailModal from './components/PayoutDetailModal';
-import type { CleanerPayout, PayoutStatus, PaymentMethod } from '../../../utils/payoutData';
-import type { ServiceRegion } from '../../../utils/reviewData';
+import type { CleanerPayout, PayoutStatus, PaymentMethod } from '@/utils/payoutData';
+import type { ServiceRegion } from '@/utils/reviewData';
 
 export default function PayoutsDashboardPage() {
   const [payouts, setPayouts] = useState<CleanerPayout[]>([]);

@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { User, CheckCircle, Loader2, ArrowRight } from 'lucide-react';
-import Toast from '../../../components/ui/toast';
+import Toast from '@/components/ui/toast';
 
 interface Branch {
   id: string;
@@ -72,8 +72,24 @@ function CleanerApplyContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.email || !formData.phone || !formData.branchId) {
-      setError('Please fill in all required fields');
+    // Validate required fields with specific error messages
+    if (!formData.name) {
+      setError('Please enter your full name');
+      setShowToast(true);
+      return;
+    }
+    if (!formData.email) {
+      setError('Please enter your email address');
+      setShowToast(true);
+      return;
+    }
+    if (!formData.phone) {
+      setError('Please enter your phone number');
+      setShowToast(true);
+      return;
+    }
+    if (!formData.branchId) {
+      setError('Please select a branch');
       setShowToast(true);
       return;
     }
@@ -238,8 +254,11 @@ function CleanerApplyContent() {
               id="branchId"
               value={formData.branchId}
               onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none ${
+                !formData.branchId ? 'border-gray-300' : 'border-gray-300'
+              }`}
               required
+              aria-required="true"
             >
               <option value="">Select a branch</option>
               {branches.map(branch => (
@@ -248,6 +267,9 @@ function CleanerApplyContent() {
                 </option>
               ))}
             </select>
+            {!formData.branchId && (
+              <p className="text-xs text-gray-500 mt-1">You must select a branch to apply</p>
+            )}
           </div>
 
           <div>

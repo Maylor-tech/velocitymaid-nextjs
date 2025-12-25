@@ -6,10 +6,10 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRole } from "../../../../../../lib/auth/requireRole";
-import { prisma } from '../../../../../../lib/prisma';
-import { getJamaicaRevenue } from '../../../../../../utils/jamaicaFinanceQueries';
-import { convertUSDToJMD } from '../../../../../../utils/currencyConverter';
+import { requireRole } from "@/lib/auth/requireRole";
+import { prisma } from '@/lib/prisma';
+import { getJamaicaRevenue } from '@/utils/jamaicaFinanceQueries';
+import { convertUSDToJMD } from '@/utils/currencyConverter';
 
 export async function GET(request: NextRequest) {
   try {

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import type { CleanerPayout, PayoutStatus, PaymentMethod } from '../../../../utils/payoutData';
+import type { CleanerPayout, PayoutStatus, PaymentMethod } from '@/utils/payoutData';
 import LocationBadge from '../../../cleaners/components/LocationBadge';
-import { getAllCleaners } from '../../../../utils/cleanerData';
+import { getAllCleaners } from '@/utils/cleanerData';
 
 interface PayoutDetailModalProps {
   payout: CleanerPayout | null;

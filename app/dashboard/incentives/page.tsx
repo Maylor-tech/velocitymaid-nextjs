@@ -7,7 +7,7 @@ import IncentiveKpis from './components/IncentiveKpis';
 import IncentiveLeaderboard from './components/IncentiveLeaderboard';
 import TierTrendChart from './components/TierTrendChart';
 import CleanerIncentiveDetailModal from './components/CleanerIncentiveDetailModal';
-import type { CleanerIncentive } from '../../../utils/incentiveData';
+import type { CleanerIncentive } from '@/utils/incentiveData';
 
 export default function IncentivesDashboardPage() {
   const [incentives, setIncentives] = useState<CleanerIncentive[]>([]);
