@@ -5,7 +5,7 @@
  * This should be run after the database migration.
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../lib/prisma';
 import { Prisma } from '@prisma/client';
 
 interface QuizQuestion {

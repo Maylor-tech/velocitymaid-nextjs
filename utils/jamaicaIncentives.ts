@@ -4,7 +4,7 @@
  * Extends incentive logic for Jamaica with JQS bonuses, 5-star reviews, and attendance
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../lib/prisma';
 import { getCleanerAverageJQS } from './jobQualityScore';
 
 /**

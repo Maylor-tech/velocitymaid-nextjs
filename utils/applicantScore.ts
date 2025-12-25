@@ -12,7 +12,7 @@
  * Score range: 0-100
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../lib/prisma';
 
 interface ApplicantData {
   daysAvailable: string[] | null;

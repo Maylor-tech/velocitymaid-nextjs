@@ -4,7 +4,7 @@
  * Seeds the database with realistic demo data for development and testing
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../lib/prisma';
 import {
   randomDateWithin,
   pick,

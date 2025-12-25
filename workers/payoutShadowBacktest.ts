@@ -7,10 +7,10 @@
  * NO money movement. NO ledger writes. Pure comparison.
  */
 
-import { prisma } from "@/lib/prisma";
-import { getActivePolicyVersionIdForBranch } from "@/services/payout/getActivePolicyVersion";
-import { evaluatePayout } from "@/services/payout/evaluatePayout";
-import { validateRules } from "@/services/payout/ruleSchema";
+import { prisma } from "../lib/prisma";
+import { getActivePolicyVersionIdForBranch } from "../services/payout/getActivePolicyVersion";
+import { evaluatePayout } from "../services/payout/evaluatePayout";
+import { validateRules } from "../services/payout/ruleSchema";
 import { JobStatus } from "@prisma/client";
 
 // ============================================================================

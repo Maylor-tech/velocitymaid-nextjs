@@ -7,8 +7,8 @@
  * Uses existing 24h reminder infrastructure but enhanced for Phase M.
  */
 
-import { prisma } from "@/lib/prisma";
-import { send24HourReminder } from "@/lib/whatsapp";
+import { prisma } from "../lib/prisma";
+import { send24HourReminder } from "../lib/whatsapp";
 
 export interface ReminderJob {
   jobId: string;

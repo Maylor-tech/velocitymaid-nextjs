@@ -13,7 +13,7 @@
  * Handles job assignment with recurring customer preferences and JQS-based selection
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../lib/prisma';
 import { getCleanerAverageJQS } from './jobQualityScore';
 import { isCleanerTrainingEligible } from './trainingEligibility';
 import { resolveCityFromZip } from './cityRouting';

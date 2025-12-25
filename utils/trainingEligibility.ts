@@ -4,7 +4,7 @@
  * Checks if a cleaner is eligible for job assignments based on training status
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../lib/prisma';
 
 /**
  * Check if cleaner has passed training (for Jamaica branch)

@@ -4,7 +4,7 @@
  * Generates certificate IDs and handles certificate creation
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../lib/prisma';
 import { randomBytes } from 'crypto';
 
 /**

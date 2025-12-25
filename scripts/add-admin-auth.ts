@@ -58,16 +58,22 @@ function addAuthGuard(filePath: string): boolean {
     return false;
   }
 
-  const hasImport = content.includes('from "@/lib/auth/requireRole"') || content.includes("from '@/lib/auth/requireRole'");
+  const hasImport = content.includes('from "@/lib/auth/requireRole"') || content.includes("from '@/lib/auth/requireRole'") || content.includes('from "../lib/auth/requireRole"') || content.includes("from '../lib/auth/requireRole'");
 
   if (!hasImport) {
     const importMatch = content.match(/^import.*from.*["']next\/server["'];?/m);
     if (importMatch) {
       const importLine = importMatch[0];
-      const newImport = importLine.replace(/;?\s*$/, "") + '\nimport { requireRole } from "@/lib/auth/requireRole";';
+      // Calculate relative path based on file depth
+      const depth = filePath.split('/').length - 3; // app/api/admin/... = 3 levels
+      const relativePath = '../'.repeat(depth) + 'lib/auth/requireRole';
+      const newImport = importLine.replace(/;?\s*$/, "") + `\nimport { requireRole } from "${relativePath}";`;
       content = content.replace(importLine, newImport);
     } else {
-      content = 'import { requireRole } from "@/lib/auth/requireRole";\n' + content;
+      // Calculate relative path based on file depth
+      const depth = filePath.split('/').length - 3;
+      const relativePath = '../'.repeat(depth) + 'lib/auth/requireRole';
+      content = `import { requireRole } from "${relativePath}";\n` + content;
     }
   }
 

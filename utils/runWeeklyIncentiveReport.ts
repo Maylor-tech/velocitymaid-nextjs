@@ -9,7 +9,7 @@ import { getCleanerStats } from './cleanerScorecardQueries';
 import { getAllCleaners } from './cleanerData';
 import { calculateTier, calculateBonus } from './incentiveEngine';
 import { createIncentive, getIncentivesByPeriod } from './incentiveData';
-import { sendWeeklyIncentiveSummary } from '@/lib/sendWeeklyIncentiveSummary';
+import { sendWeeklyIncentiveSummary } from '../lib/sendWeeklyIncentiveSummary';
 import type { ServiceRegion } from './reviewData';
 
 export interface WeeklyIncentiveResult {

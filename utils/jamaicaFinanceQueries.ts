@@ -4,7 +4,7 @@
  * Prisma queries for Jamaica branch financial data
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../lib/prisma';
 import { convertUSDToJMD, getCombinedRevenueJMD } from './currencyConverter';
 
 const PORT_ANTONIO_SLUG = 'port-antonio';

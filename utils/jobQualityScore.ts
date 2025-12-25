@@ -11,7 +11,7 @@
  * Total: 0-100 points
  */
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../lib/prisma';
 
 interface JQSCalculationInput {
   jobId: string;

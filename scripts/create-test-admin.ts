@@ -2,7 +2,7 @@
  * Create a test admin user for development/testing
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../lib/prisma";
 import { UserRole } from "@prisma/client";
 
 async function createTestAdmin() {

@@ -20,7 +20,7 @@ import {
   getMiamiBranchId, 
   processWeeklyPayouts,
   type WeeklyPayoutResult 
-} from "@/lib/pilot/payoutCycle";
+} from "../lib/pilot/payoutCycle";
 
 export interface WeeklyPayoutWorkerResult {
   success: boolean;

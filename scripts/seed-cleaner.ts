@@ -5,7 +5,7 @@
  * Run with: npx tsx scripts/seed-cleaner.ts
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../lib/prisma";
 import { UserRole } from "@prisma/client";
 
 async function seedCleaner() {
