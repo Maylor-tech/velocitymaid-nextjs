@@ -15,16 +15,15 @@
 
 import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { BookingProvider } from '@/components/booking/BookingContext';
-import BookingLayout from '@/components/booking/BookingLayout';
-import ServiceStep from '@/components/booking/steps/ServiceStep';
-import HomeDetailsStep from '@/components/booking/steps/HomeDetailsStep';
-import DateTimeStep from '@/components/booking/steps/DateTimeStep';
-import ExtrasStep from '@/components/booking/steps/ExtrasStep';
-import ContactInfoStep from '@/components/booking/steps/ContactInfoStep';
-import ReviewStep from '@/components/booking/steps/ReviewStep';
-import ConfirmationStep from '@/components/booking/steps/ConfirmationStep';
-import { useBooking } from '@/components/booking/BookingContext';
+import { BookingProvider, useBooking } from '../../components/booking/BookingContext';
+import BookingLayout from '../../components/booking/BookingLayout';
+import ServiceStep from '../../components/booking/steps/ServiceStep';
+import HomeDetailsStep from '../../components/booking/steps/HomeDetailsStep';
+import DateTimeStep from '../../components/booking/steps/DateTimeStep';
+import ExtrasStep from '../../components/booking/steps/ExtrasStep';
+import ContactInfoStep from '../../components/booking/steps/ContactInfoStep';
+import ReviewStep from '../../components/booking/steps/ReviewStep';
+import ConfirmationStep from '../../components/booking/steps/ConfirmationStep';
 import { Loader2 } from 'lucide-react';
 
 function BookingWizard() {
