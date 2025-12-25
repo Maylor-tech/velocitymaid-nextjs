@@ -1,6 +1,51 @@
 {
+  "root": true,
   "extends": [
     "next/core-web-vitals",
     "next/typescript"
+  ],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": [
+              "@/app/admin/*",
+              "@/app/branch-owner/*",
+              "@/app/pilot/*",
+              "@/app/finance/*",
+              "@/app/metrics/*",
+              "@/api/admin/*",
+              "@/api/branch-owner/*",
+              "@/api/pilot/*",
+              "@/api/finance/*",
+              "@/api/metrics/*"
+            ],
+            "message": "❌ Forbidden in Phase 0. This module is disabled. See RULES.md."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "app/admin/**/*",
+        "app/branch-owner/**/*",
+        "app/pilot/**/*",
+        "app/finance/**/*",
+        "app/metrics/**/*",
+        "api/admin/**/*",
+        "api/branch-owner/**/*",
+        "api/pilot/**/*",
+        "api/finance/**/*",
+        "api/metrics/**/*"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
   ]
 }
+
