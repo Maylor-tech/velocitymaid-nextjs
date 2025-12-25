@@ -58,7 +58,7 @@ export async function getAuthenticatedCleaner(
 
       // Fallback to mock data (for backward compatibility during migration)
       try {
-        const { findCleanerById } = await import("@/utils/cleanerData");
+        const { findCleanerById } = await import("../utils/cleanerData");
         const mockCleaner = findCleanerById(cleanerIdFromCookie);
         if (mockCleaner && mockCleaner.active) {
           return {

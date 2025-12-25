@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     const averageJQS = await getCleanerAverageJQS(cleanerId);
     
     // Count jobs with JQS
-    const { prisma } = await import('@/lib/prisma');
+    const { prisma } = await import('../../../../lib/prisma');
     const totalJQSJobs = await prisma.job.count({
       where: {
         assignedCleanerId: cleanerId,

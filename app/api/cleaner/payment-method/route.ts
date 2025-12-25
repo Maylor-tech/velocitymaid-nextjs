@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     // Return masked data only - never expose full encrypted values
     if (method) {
-      const { maskPaymentDetails } = await import("@/lib/paymentMasking");
+      const { maskPaymentDetails } = await import("../../../../lib/paymentMasking");
       return NextResponse.json({
         success: true,
         method: {
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     // Import validation helper
     const { isValidPaymentMethod, validatePaymentMethodData } = await import(
-      "@/lib/paymentMethods"
+      "../../../../lib/paymentMethods"
     );
 
     // Validate required fields
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     // Validate payment method type
     if (!isValidPaymentMethod(methodType)) {
-      const { PAYMENT_METHODS } = await import("@/lib/paymentMethods");
+      const { PAYMENT_METHODS } = await import("../../../../lib/paymentMethods");
       return NextResponse.json(
         {
           success: false,

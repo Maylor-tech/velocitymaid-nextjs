@@ -15,7 +15,20 @@ const nextConfig = {
   // Explicitly configure webpack to resolve @/ path alias
   // This ensures Vercel's build system understands the alias
   webpack: (config, { isServer }) => {
-    config.resolve.alias['@'] = path.resolve(__dirname);
+    // Ensure @/ resolves to project root for both server and client
+    const rootPath = path.resolve(__dirname);
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': rootPath,
+    };
+    
+    // Also set up fallbacks for better resolution
+    config.resolve.modules = [
+      ...(config.resolve.modules || []),
+      rootPath,
+      'node_modules',
+    ];
+    
     return config;
   },
 }

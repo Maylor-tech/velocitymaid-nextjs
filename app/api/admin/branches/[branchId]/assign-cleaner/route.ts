@@ -181,7 +181,7 @@ export async function GET(
     }
 
     // Get all users assigned to this branch
-    const { getUserBranches, findUserById, getUsersByRole } = await import('@/utils/userData');
+    const { getUserBranches, findUserById, getUsersByRole } = await import('../../../../../../utils/userData');
     const allCleaners = getUsersByRole('CLEANER');
     
     const branchCleaners = allCleaners
