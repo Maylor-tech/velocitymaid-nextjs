@@ -11,7 +11,13 @@ import {
   CheckCircle,
   X
 } from 'lucide-react';
-import { jamaicaMarketingContent } from '@/app/marketing/jamaica/content';
+// Marketing content import removed - file doesn't exist
+// TODO: Re-add marketing content after launch
+const jamaicaMarketingContent = {
+  social: {},
+  whatsapp: {},
+  villa: {},
+};
 
 const marketingAssets = [
   { name: 'Launching', filename: 'launching.png', category: 'launch' },

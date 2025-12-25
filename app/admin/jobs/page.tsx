@@ -2,7 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, X } from "lucide-react";
-import { getNextStatuses, isTerminalStatus } from "@/lib/jobStatus";
+
+// Inline job status helpers (replacing @/lib/jobStatus import)
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  RECEIVED: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["ASSIGNED", "CANCELLED"],
+  ASSIGNED: ["ON_THE_WAY", "REASSIGN_PENDING", "CANCELLED"],
+  ON_THE_WAY: ["IN_PROGRESS", "CANCELLED"],
+  IN_PROGRESS: ["COMPLETED", "CANCELLED"],
+  REASSIGN_PENDING: ["ASSIGNED", "CANCELLED"],
+  COMPLETED: [],
+  CANCELLED: [],
+};
+
+function getNextStatuses(current: string): string[] {
+  return VALID_TRANSITIONS[current] || [];
+}
+
+function isTerminalStatus(status: string): boolean {
+  return status === "COMPLETED" || status === "CANCELLED";
+}
 
 interface Job {
   id: string;

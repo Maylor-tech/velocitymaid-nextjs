@@ -3,7 +3,22 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
-import { getNextStatuses } from "@/lib/jobStatus";
+
+// Inline job status helpers (replacing @/lib/jobStatus import)
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  RECEIVED: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["ASSIGNED", "CANCELLED"],
+  ASSIGNED: ["ON_THE_WAY", "REASSIGN_PENDING", "CANCELLED"],
+  ON_THE_WAY: ["IN_PROGRESS", "CANCELLED"],
+  IN_PROGRESS: ["COMPLETED", "CANCELLED"],
+  REASSIGN_PENDING: ["ASSIGNED", "CANCELLED"],
+  COMPLETED: [],
+  CANCELLED: [],
+};
+
+function getNextStatuses(current: string): string[] {
+  return VALID_TRANSITIONS[current] || [];
+}
 
 interface Job {
   id: string;
