@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCustomerSession } from "../customerSession";
 import { getAuthenticatedCleaner } from "../cleanerAuth";
+import { getAuthenticatedBranchOwner } from "./branchOwnerAuth";
 import { prisma } from "../prisma";
 import { UserRole } from "@prisma/client";
 import { cookies } from "next/headers";
@@ -105,7 +106,6 @@ export async function requireRole(
   }
 
   if (requiredRole === "BRANCH_OWNER") {
-    const { getAuthenticatedBranchOwner } = await import("@/lib/auth/branchOwnerAuth");
     const authResult = await getAuthenticatedBranchOwner(request);
     
     if (!authResult.success || !authResult.branchOwnerId) {
