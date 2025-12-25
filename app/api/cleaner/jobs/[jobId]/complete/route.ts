@@ -194,7 +194,7 @@ export async function PATCH(
 
     // Phase M: System checks after completion
     try {
-      const { verifyJobCompletion, checkJobCompletionIssues } = await import("../../../../../lib/pilot/dayOfJob");
+      const { verifyJobCompletion, checkJobCompletionIssues } = await import("../../../../../../lib/pilot/dayOfJob");
       const completionCheck = await verifyJobCompletion(jobId);
       
       if (!completionCheck.passed) {

@@ -1,3 +1,5 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -11,6 +13,14 @@ const nextConfig = {
   // Prevent static generation timeout for review pages
   experimental: {
     missingSuspenseWithCSRBailout: false,
+  },
+  // Explicitly configure webpack to resolve @/ path alias
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname),
+    };
+    return config;
   },
 }
 
