@@ -244,7 +244,7 @@ model Customer {
   id                                                       String            @id
   firstName                                                String
   lastName                                                 String
-                                                   String            @unique
+  email                                                    String            @unique
   phone                                                    String?
   defaultAddress                                           String?
   homeZipCode                                              String?
