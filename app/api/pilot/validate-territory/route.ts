@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { getAllowedZipCodes, getServiceHours } = await import("@/lib/pilot/territory");
+    const { getAllowedZipCodes, getServiceHours } = await import("../../../../lib/pilot/territory");
     
     const [zipCodes, serviceHours] = await Promise.all([
       getAllowedZipCodes(branchId),
@@ -101,6 +101,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 
 
 

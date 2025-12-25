@@ -288,7 +288,7 @@ export async function PATCH(request: NextRequest) {
     // Send review request if job is completed
     if (status === 'completed' && updatedJob.Customer?.phone) {
       try {
-        const { sendReviewRequest } = await import('@/lib/sendReviewRequest');
+        const { sendReviewRequest } = await import('../../../../lib/sendReviewRequest');
         const whatsappToken = process.env.WHATSAPP_TOKEN;
         const whatsappPhoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
