@@ -56,3 +56,4 @@ files.forEach(file => {
 console.log(`\nTotal replacements: ${totalReplacements}`);
 console.log('Done! Review changes with: git diff');
 
+

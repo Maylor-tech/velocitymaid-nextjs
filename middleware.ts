@@ -7,6 +7,19 @@ import {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // 🚫 PRODUCTION: Block admin, branch-owner, and pilot routes
+  // These routes are disabled for launch - only booking + cleaner application
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction) {
+    if (
+      pathname.startsWith('/admin') ||
+      pathname.startsWith('/branch-owner') ||
+      pathname.startsWith('/pilot')
+    ) {
+      return new NextResponse(null, { status: 404 });
+    }
+  }
+
   // 🚨 CANONICAL BOOKING FLOW: Redirect /booking → /book
   if (pathname.startsWith('/booking')) {
     const redirectUrl = req.nextUrl.clone();
@@ -54,7 +67,10 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/booking/:path*',  // Redirect legacy booking routes
-    '/customer/:path*', // Customer portal auth
+    '/admin/:path*',      // Block admin routes in production
+    '/branch-owner/:path*', // Block branch-owner routes in production
+    '/pilot/:path*',      // Block pilot routes in production
+    '/booking/:path*',    // Redirect legacy booking routes
+    '/customer/:path*',   // Customer portal auth
   ],
 };

@@ -7,6 +7,9 @@
  * Helps Branch Owner prioritize assignments.
  */
 
+// 🚫 PRODUCTION: This route is disabled for launch
+export const dynamic = "force-static";
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card';
 import { Badge } from 'components/ui/badge';
@@ -27,6 +30,17 @@ interface AssignmentQueueItem {
 }
 
 export default function AssignmentQueuePage() {
+  // Block in production
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
+          <p className="text-gray-600">Page not found</p>
+        </div>
+      </div>
+    );
+  }
   const [queue, setQueue] = useState<AssignmentQueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

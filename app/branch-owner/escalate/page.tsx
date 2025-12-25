@@ -1,5 +1,8 @@
 "use client";
 
+// 🚫 PRODUCTION: This route is disabled for launch
+export const dynamic = "force-static";
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +10,18 @@ import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function BranchOwnerEscalatePage() {
+  // Block in production
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
+          <p className="text-gray-600">Page not found</p>
+        </div>
+      </div>
+    );
+  }
+  
   const router = useRouter();
   const [issueType, setIssueType] = useState<string>("");
   const [reason, setReason] = useState<string>("");

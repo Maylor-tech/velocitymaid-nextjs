@@ -33,3 +33,4 @@ CREATE INDEX IF NOT EXISTS "WeeklyEmailLog_createdAt_idx" ON "WeeklyEmailLog"("c
 
 
 
+

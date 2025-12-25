@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Users, Calendar, AlertTriangle, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
+// 🚫 PRODUCTION: This route is disabled for launch
+export const dynamic = "force-static";
+
 interface DashboardMetrics {
   jobsToday: number;
   jobsThisWeek: number;
@@ -15,6 +18,17 @@ interface DashboardMetrics {
 }
 
 export default function BranchOwnerDashboardPage() {
+  // Block in production
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
+          <p className="text-gray-600">Page not found</p>
+        </div>
+      </div>
+    );
+  }
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

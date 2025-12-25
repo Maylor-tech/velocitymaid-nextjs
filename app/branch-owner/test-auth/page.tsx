@@ -1,5 +1,8 @@
 "use client";
 
+// 🚫 PRODUCTION: This route is disabled for launch
+export const dynamic = "force-static";
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +15,18 @@ import { Button } from '@/components/ui/button';
  */
 
 export default function TestAuthPage() {
+  // Block in production
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
+          <p className="text-gray-600">Page not found</p>
+        </div>
+      </div>
+    );
+  }
+  
   const [userId, setUserId] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

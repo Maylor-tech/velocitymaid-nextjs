@@ -40,3 +40,4 @@ export default function KpiCard({ label, value, icon, subtitle }: KpiCardProps) 
 
 
 
+
