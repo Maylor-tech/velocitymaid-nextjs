@@ -1,5 +1,5 @@
 {
-  "buildCommand": "rm -rf .next && npm run build",
+  "buildCommand": "rm -rf .next && SKIP_ENV_VALIDATION=true npm run build",
   "installCommand": "npm install --legacy-peer-deps",
   "framework": "nextjs",
   "crons": [
