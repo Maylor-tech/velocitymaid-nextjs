@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
+import { PaymentStatus } from '@prisma/client';
 import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
 import { logAuditEntry } from '@/lib/audit';
 
@@ -64,14 +65,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get cleaner
+    // Phase 1: Only PAID jobs can be assigned
+    if (job.paymentStatus !== PaymentStatus.PAID) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Only PAID jobs can be assigned to cleaners',
+          code: 'PAYMENT_REQUIRED',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Phase 1: Only CONFIRMED jobs can be assigned (or jobs without assignment)
+    if (job.status !== 'CONFIRMED' && job.status !== 'RECEIVED' && job.assignedCleanerId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Job status ${job.status} does not allow assignment`,
+          code: 'INVALID_STATUS',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Get cleaner with branch information
     const cleaner = await prisma.user.findUnique({
       where: { id: cleanerId, role: 'CLEANER' },
       include: {
-        primaryBranch: {
+        Branch_User_primaryBranchIdToBranch: {
           select: {
+            id: true,
             country: true,
             slug: true,
+          },
+        },
+        UserBranch: {
+          include: {
+            Branch: {
+              select: {
+                id: true,
+              },
+            },
           },
         },
         trainingStatus: {
@@ -92,7 +127,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Jamaica branch - verify training
+    // Phase 1: Check cleaner has APPROVED application
+    const approvedApplication = await prisma.cleanerApplication.findFirst({
+      where: {
+        email: cleaner.email,
+        status: 'APPROVED',
+      },
+    });
+
+    if (!approvedApplication) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Cleaner does not have an approved application',
+          code: 'NOT_APPROVED',
+        },
+        { status: 403 }
+      );
+    }
+
+    // Phase 1: Enforce branch consistency - cleaner must be in same branch as job
+    const cleanerBranchIds = [
+      cleaner.primaryBranchId,
+      ...cleaner.UserBranch.map(ub => ub.Branch.id),
+    ].filter(Boolean) as string[];
+
+    if (!cleanerBranchIds.includes(job.branchId)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Cleaner must be in the same branch as the job',
+          code: 'BRANCH_MISMATCH',
+          jobBranchId: job.branchId,
+          cleanerBranchIds,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if Jamaica branch - verify training (existing logic preserved)
     const isJamaicaBranch =
       job.Branch.country === 'Jamaica' ||
       job.Branch.country === 'JM' ||
@@ -111,12 +184,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update job assignment
+    // Update job assignment - Phase 1: Set status to ASSIGNED
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
       data: {
         assignedCleanerId: cleanerId,
-        status: job.status === 'pending' ? 'assigned' : job.status,
+        status: job.status === 'RECEIVED' || job.status === 'CONFIRMED' ? 'ASSIGNED' : job.status,
         assignedAt: new Date(),
       },
       include: {

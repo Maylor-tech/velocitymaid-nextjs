@@ -138,6 +138,7 @@ export async function GET(request: NextRequest) {
       totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
       currency: job.currency,
       paymentMethod: job.paymentMethod,
+      paymentStatus: job.paymentStatus, // Phase 1: Include payment status
       createdAt: job.createdAt.toISOString(),
       assignedAt: job.assignedAt?.toISOString() || null,
       onTheWayAt: job.onTheWayAt?.toISOString() || null,

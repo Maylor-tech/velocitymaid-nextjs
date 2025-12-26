@@ -49,6 +49,7 @@ export async function GET(
         totalPrice: true,
         currency: true,
         paymentMethod: true,
+        paymentStatus: true, // Phase 1: Include payment status
         createdAt: true,
         assignedAt: true,
         onTheWayAt: true,
