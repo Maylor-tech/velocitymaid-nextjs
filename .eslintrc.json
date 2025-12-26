@@ -1,51 +1,82 @@
 {
-  "root": true,
-  "extends": [
-    "next/core-web-vitals",
-    "next/typescript"
-  ],
-  "rules": {
-    "no-restricted-imports": [
-      "error",
+    "root": true,
+    "extends": [
+      "next/core-web-vitals",
+      "next/typescript"
+    ],
+    "rules": {
+      "no-restricted-imports": [
+        "error",
+        {
+          "patterns": [
+            {
+              "group": [
+                "@/app/admin/**",
+                "@/app/branch-owner/**",
+                "@/app/pilot/**",
+                "@/app/cleaner/**",
+                "@/app/finance/**",
+                "@/app/metrics/**",
+                "@/app/api/admin/**",
+                "@/app/api/branch-owner/**",
+                "@/app/api/pilot/**",
+                "@/app/api/finance/**",
+                "@/app/api/metrics/**"
+              ],
+              "message": "❌ Forbidden import. Phase 0 code must NOT depend on Phase 1 modules. See RULES.md and RULES_PHASE_1.md."
+            }
+          ]
+        }
+      ]
+    },
+    "overrides": [
       {
-        "patterns": [
-          {
-            "group": [
-              "@/app/admin/*",
-              "@/app/branch-owner/*",
-              "@/app/pilot/*",
-              "@/app/finance/*",
-              "@/app/metrics/*",
-              "@/api/admin/*",
-              "@/api/branch-owner/*",
-              "@/api/pilot/*",
-              "@/api/finance/*",
-              "@/api/metrics/*"
-            ],
-            "message": "❌ Forbidden in Phase 0. This module is disabled. See RULES.md."
-          }
-        ]
+        "files": [
+          "app/admin/**/*",
+          "app/branch-owner/**/*",
+          "app/pilot/**/*",
+          "app/cleaner/**/*",
+          "app/finance/**/*",
+          "app/metrics/**/*",
+          "app/api/admin/**/*",
+          "app/api/branch-owner/**/*",
+          "app/api/pilot/**/*",
+          "app/api/finance/**/*",
+          "app/api/metrics/**/*"
+        ],
+        "rules": {
+          "no-restricted-imports": "off"
+        }
+      },
+      {
+        "files": [
+          "lib/**/*",
+          "components/**/*"
+        ],
+        "rules": {
+          "no-restricted-imports": [
+            "error",
+            {
+              "patterns": [
+                {
+                  "group": [
+                    "@/app/admin/**",
+                    "@/app/branch-owner/**",
+                    "@/app/pilot/**",
+                    "@/app/cleaner/**",
+                    "@/app/finance/**",
+                    "@/app/api/admin/**",
+                    "@/app/api/branch-owner/**",
+                    "@/app/api/pilot/**",
+                    "@/app/api/finance/**"
+                  ],
+                  "message": "❌ Shared code must remain Phase-agnostic. Do not import Phase 1 modules here."
+                }
+              ]
+            }
+          ]
+        }
       }
     ]
-  },
-  "overrides": [
-    {
-      "files": [
-        "app/admin/**/*",
-        "app/branch-owner/**/*",
-        "app/pilot/**/*",
-        "app/finance/**/*",
-        "app/metrics/**/*",
-        "api/admin/**/*",
-        "api/branch-owner/**/*",
-        "api/pilot/**/*",
-        "api/finance/**/*",
-        "api/metrics/**/*"
-      ],
-      "rules": {
-        "no-restricted-imports": "off"
-      }
-    }
-  ]
-}
-
+  }
+  

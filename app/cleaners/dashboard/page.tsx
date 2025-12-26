@@ -70,6 +70,13 @@ export default function CleanerDashboardPage() {
       if (data.success) {
         setCleaner(data.cleaner);
       } else {
+        // Check if it's an approval status error
+        if (response.status === 403 && data.applicationStatus) {
+          // Application is pending or rejected
+          setError(data.error || 'Your application is pending approval');
+          setLoading(false);
+          return;
+        }
         // Not authenticated, redirect to login
         router.push('/cleaners/login');
       }
@@ -206,12 +213,31 @@ export default function CleanerDashboardPage() {
     }
   };
 
-  if (!cleaner) {
+  if (!cleaner && !error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error message if application is pending/rejected
+  if (error && !cleaner) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+          <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Pending</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={handleLogout}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Back to Login
+          </button>
         </div>
       </div>
     );

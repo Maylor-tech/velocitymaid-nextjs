@@ -1,14 +1,15 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  // TODO: Add admin authentication check
   try {
+    await requireRole(request, "ADMIN");
     const { id } = params;
 
     const application = await prisma.cleanerApplication.findUnique({

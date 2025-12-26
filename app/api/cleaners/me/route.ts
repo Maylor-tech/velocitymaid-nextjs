@@ -56,6 +56,42 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Phase 1: Gate cleaner dashboard by approval status
+    // If cleaner is a User with role CLEANER, they were created from an approved application
+    // But we should verify they have an approved application
+    const approvedApplication = await prisma.cleanerApplication.findFirst({
+      where: {
+        email: cleaner.email,
+        status: 'APPROVED',
+      },
+    });
+
+    // If no approved application found, check status of any application
+    if (!approvedApplication) {
+      const anyApplication = await prisma.cleanerApplication.findFirst({
+        where: {
+          email: cleaner.email,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (anyApplication && anyApplication.status !== 'APPROVED') {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: anyApplication.status === 'PENDING' 
+              ? 'Your application is pending approval. You will be notified once it is reviewed.'
+              : 'Your application was not approved. Please contact support if you believe this is an error.',
+            applicationStatus: anyApplication.status,
+          },
+          { status: 403 }
+        );
+      }
+      
+      // If cleaner is a User but no application found, allow access (edge case - User created manually)
+      // This maintains backward compatibility
+    }
+
     // Determine primary branch (first from primaryBranchId, then from UserBranch)
     const primaryBranch = cleaner.Branch_User_primaryBranchIdToBranch || 
                           cleaner.UserBranch[0]?.Branch || 

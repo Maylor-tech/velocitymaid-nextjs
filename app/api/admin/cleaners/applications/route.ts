@@ -5,8 +5,8 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
-  // TODO: Add admin authentication check
   try {
+    await requireRole(request, "ADMIN");
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
     const branchId = searchParams.get('branchId');
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const applications = await prisma.cleanerApplication.findMany({
       where,
       include: {
-        branch: {
+        Branch: {
           select: { id: true, name: true, slug: true, city: true, state: true },
         },
       },
