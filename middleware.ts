@@ -7,19 +7,19 @@ import {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // 🔐 ADMIN AUTH: Protect /admin routes (except /admin/login)
+  // 🔐 ADMIN ROUTE PROTECTION
   if (pathname.startsWith('/admin')) {
     const isLoginRoute = pathname === '/admin/login';
     const adminSession = req.cookies.get('admin_session')?.value;
 
-    // If not logged in and not on login page, redirect to login
+    // Not logged in → redirect to login
     if (!adminSession && !isLoginRoute) {
       const loginUrl = req.nextUrl.clone();
       loginUrl.pathname = '/admin/login';
       return NextResponse.redirect(loginUrl);
     }
 
-    // If logged in and on login page, redirect to jobs
+    // Logged in → block login page
     if (adminSession === 'true' && isLoginRoute) {
       const jobsUrl = req.nextUrl.clone();
       jobsUrl.pathname = '/admin/jobs';
@@ -27,12 +27,10 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // 🚫 PRODUCTION: Block admin, branch-owner, and pilot routes
-  // These routes are disabled for launch - only booking + cleaner application
+  // 🚫 OPTIONAL: block other private sections in production
   const isProduction = process.env.NODE_ENV === 'production';
   if (isProduction) {
     if (
-      pathname.startsWith('/admin') ||
       pathname.startsWith('/branch-owner') ||
       pathname.startsWith('/pilot')
     ) {
@@ -87,7 +85,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/admin/:path*',      // Block admin routes in production
+    '/admin/:path*',      // Admin route protection
     '/branch-owner/:path*', // Block branch-owner routes in production
     '/pilot/:path*',      // Block pilot routes in production
     '/booking/:path*',    // Redirect legacy booking routes
