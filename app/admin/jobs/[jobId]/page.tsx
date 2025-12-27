@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Loader2, User, Calendar, MapPin, DollarSign, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, User, Calendar, MapPin, DollarSign, CheckCircle, XCircle, AlertCircle, Clock, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 interface Job {
@@ -43,6 +43,17 @@ interface Cleaner {
   email: string;
 }
 
+interface AuditLog {
+  id: string;
+  timestamp: string;
+  eventType: string;
+  adminEmail: string;
+  cleanerId: string | null;
+  cleanerName: string | null;
+  branchId: string | null;
+  notes: string | null;
+}
+
 export default function AdminJobDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -50,6 +61,7 @@ export default function AdminJobDetailPage() {
   
   const [job, setJob] = useState<Job | null>(null);
   const [cleaners, setCleaners] = useState<Cleaner[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [assigning, setAssigning] = useState(false);
@@ -69,6 +81,36 @@ export default function AdminJobDetailPage() {
       fetchCleaners();
     }
   }, [job?.branch?.id]);
+
+  useEffect(() => {
+    if (jobId) {
+      fetchAuditLogs();
+    }
+  }, [jobId]);
+
+  // Phase 2B: Refresh audit logs when cleaners are loaded to enrich cleaner names
+  useEffect(() => {
+    if (cleaners.length > 0 && auditLogs.length > 0) {
+      const enrichedLogs = auditLogs.map(log => {
+        if (log.cleanerId && !log.cleanerName) {
+          const cleaner = cleaners.find(c => c.id === log.cleanerId);
+          if (cleaner) {
+            return { ...log, cleanerName: cleaner.name };
+          }
+        }
+        return log;
+      });
+      // Only update if there are changes (check if any cleaner names were added)
+      const hasChanges = enrichedLogs.some((log, i) => {
+        const original = auditLogs[i];
+        return log.cleanerName && !original?.cleanerName;
+      });
+      if (hasChanges) {
+        setAuditLogs(enrichedLogs);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cleaners]);
 
   const fetchJob = async () => {
     try {
@@ -105,6 +147,36 @@ export default function AdminJobDetailPage() {
       }
     } catch (err) {
       console.error('Error fetching cleaners:', err);
+    }
+  };
+
+  // Phase 2B: Fetch audit logs for this job
+  // Why audit logs exist: Track admin actions for compliance and debugging
+  // Scope: Read-only - we only fetch, never modify or delete
+  // Why audit failures don't block ops: Audit logs are for observability, not critical path
+  const fetchAuditLogs = async () => {
+    if (!jobId) return;
+    
+    try {
+      const response = await fetch(`/api/admin/jobs/${jobId}/audit`);
+      const data = await response.json();
+      
+      if (data.success) {
+        // Phase 2B: Enrich cleaner names if cleanerId is present and cleaners are loaded
+        const enrichedLogs = data.logs.map((log: AuditLog) => {
+          if (log.cleanerId && cleaners.length > 0) {
+            const cleaner = cleaners.find(c => c.id === log.cleanerId);
+            if (cleaner) {
+              return { ...log, cleanerName: cleaner.name };
+            }
+          }
+          return log;
+        });
+        setAuditLogs(enrichedLogs);
+      }
+    } catch (err) {
+      console.error('Error fetching audit logs:', err);
+      // Phase 2B: Fail silently - audit log fetch failure shouldn't block UI
     }
   };
 
@@ -151,6 +223,7 @@ export default function AdminJobDetailPage() {
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
         fetchJob(); // Refresh job data - UI updates immediately
+        fetchAuditLogs(); // Phase 2B: Refresh audit logs to show new assignment entry
       } else {
         // Phase 1: Handle reassignment confirmation error
         if (data.code === 'REASSIGNMENT_REQUIRED') {
@@ -219,6 +292,17 @@ export default function AdminJobDetailPage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   // Phase 2A: Payment Gating - Only allow assignment if payment is PAID
@@ -445,6 +529,58 @@ export default function AdminJobDetailPage() {
             </p>
           </div>
         )}
+
+        {/* Phase 2B: Admin Audit Log Timeline */}
+        {/* Why audit logs exist: Track admin actions for compliance and debugging */}
+        {/* Scope: Phase 2B is read-only - no editing or deletion */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <FileText className="w-5 h-5 text-gray-600" />
+            <h2 className="text-xl font-semibold text-gray-900">Audit Log</h2>
+          </div>
+          
+          {auditLogs.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>No audit log entries found for this job</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Phase 2B: Display audit logs in chronological order (most recent first) */}
+              {auditLogs.map((log, index) => (
+                <div
+                  key={log.id}
+                  className="flex gap-4 pb-4 border-b border-gray-100 last:border-0"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4 mb-1">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{log.eventType}</p>
+                        <p className="text-sm text-gray-500">
+                          Admin: {log.adminEmail}
+                        </p>
+                        {log.cleanerId && (
+                          <p className="text-sm text-gray-500">
+                            Cleaner: {log.cleanerName || log.cleanerId}
+                          </p>
+                        )}
+                        {log.notes && (
+                          <p className="text-sm text-gray-600 mt-1 italic">{log.notes}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-gray-400 flex-shrink-0">
+                        <Clock className="w-3 h-3" />
+                        {formatTimestamp(log.timestamp)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

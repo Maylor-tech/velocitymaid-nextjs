@@ -14,14 +14,16 @@ import { prisma } from '@/lib/prisma';
 import { PaymentStatus } from '@prisma/client';
 import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
 import { logAuditEntry } from '@/lib/audit';
+import { logAdminEvent } from '@/lib/auditLog';
 
 export async function POST(request: NextRequest) {
   try {
-    await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
+    // Phase 2B: Get admin context to capture admin email for audit log
+    const adminAuth = await requireRole(request, "ADMIN");
+    const adminEmail = adminAuth.email || 'unknown@admin.com';
 
     const body = await request.json();
-    const { jobId, cleanerId, sendWhatsApp = true } = body;
+    const { jobId, cleanerId, sendWhatsApp = true, confirmReassign } = body;
 
     if (!jobId || !cleanerId) {
       return NextResponse.json(
@@ -125,7 +127,7 @@ export async function POST(request: NextRequest) {
         },
         UserBranch: {
           include: {
-            branch: {
+            Branch: {
               select: {
                 id: true,
               },
@@ -248,9 +250,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Phase 5 Step 5: Log audit entry
+    // Phase 5 Step 5: Log audit entry (existing system)
     await logAuditEntry({
-      actorId: null, // TODO: Get from session
+      actorId: adminAuth.userId,
       actorRole: 'ADMIN',
       action: 'MANUAL_JOB_ASSIGNMENT',
       entityType: 'Job',
@@ -266,6 +268,20 @@ export async function POST(request: NextRequest) {
           to: updatedJob.status,
         },
       },
+    });
+
+    // Phase 2B: Admin Audit Log - Log assignment event for observability
+    // Why audit logs exist: Track admin actions for compliance and debugging
+    // Why audit failures don't block ops: Audit is non-critical observability layer
+    // Scope: Phase 2B is append-only - we only add entries, never modify behavior
+    const isReassignment = job.assignedCleanerId && job.assignedCleanerId !== cleanerId;
+    await logAdminEvent({
+      eventType: 'JOB_ASSIGNED',
+      adminEmail: adminEmail,
+      jobId: jobId,
+      cleanerId: cleanerId,
+      branchId: job.branchId,
+      notes: isReassignment ? `Reassigned from cleaner ${job.assignedCleanerId} to ${cleanerId}` : undefined,
     });
 
     // Send WhatsApp notification if requested
