@@ -28,11 +28,21 @@ export async function requireRole(
   if (requiredRole === "ADMIN") {
     // Check for admin user via session/cookie or header (for testing)
     const cookieStore = await cookies();
+    const adminSession = cookieStore.get("admin_session")?.value;
     const adminId = 
       cookieStore.get("adminId")?.value || 
       cookieStore.get("adminSession")?.value ||
       request.headers.get("x-admin-id") || // Allow header-based auth for testing
       request.headers.get("authorization")?.replace("Bearer ", ""); // Also check Bearer token
+    
+    // Simple local-only auth: if admin_session cookie is "true", allow access
+    if (adminSession === "true") {
+      return {
+        userId: "local-admin",
+        role: "ADMIN",
+        email: "maylortech007@gmail.com",
+      };
+    }
     
     if (!adminId) {
       const response = NextResponse.json(

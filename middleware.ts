@@ -7,6 +7,26 @@ import {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // 🔐 ADMIN AUTH: Protect /admin routes (except /admin/login)
+  if (pathname.startsWith('/admin')) {
+    const isLoginRoute = pathname === '/admin/login';
+    const adminSession = req.cookies.get('admin_session')?.value;
+
+    // If not logged in and not on login page, redirect to login
+    if (!adminSession && !isLoginRoute) {
+      const loginUrl = req.nextUrl.clone();
+      loginUrl.pathname = '/admin/login';
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // If logged in and on login page, redirect to jobs
+    if (adminSession === 'true' && isLoginRoute) {
+      const jobsUrl = req.nextUrl.clone();
+      jobsUrl.pathname = '/admin/jobs';
+      return NextResponse.redirect(jobsUrl);
+    }
+  }
+
   // 🚫 PRODUCTION: Block admin, branch-owner, and pilot routes
   // These routes are disabled for launch - only booking + cleaner application
   const isProduction = process.env.NODE_ENV === 'production';
