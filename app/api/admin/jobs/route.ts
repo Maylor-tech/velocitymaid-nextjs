@@ -44,10 +44,10 @@ export async function GET(req: NextRequest) {
           assignedCleanerId: true,
           payoutStatus: true,
           ratingStatus: true,
-          Branch: {
+          branch: {
             select: { name: true, id: true },
           },
-          User: {
+          assignedCleaner: {
             select: { id: true, name: true, email: true },
           },
           JobPayout: {
@@ -84,10 +84,10 @@ export async function GET(req: NextRequest) {
           createdAt: true,
           branchId: true,
           assignedCleanerId: true,
-          Branch: {
+          branch: {
             select: { name: true, id: true },
           },
-          User: {
+          assignedCleaner: {
             select: { id: true, name: true, email: true },
           },
         },
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
       totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
       preferredDate: job.preferredDate?.toISOString() || null,
       createdAt: job.createdAt.toISOString(),
-      assignedCleanerName: job.User?.name || null,
+      assignedCleanerName: job.assignedCleaner?.name || null,
       JobPayout: job.JobPayout || [],
     }));
 

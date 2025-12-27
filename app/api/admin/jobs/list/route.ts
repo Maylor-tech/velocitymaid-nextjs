@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     const jobs = await prisma.job.findMany({
       where,
       include: {
-        Branch: {
+        branch: {
           select: {
             id: true,
             name: true,
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
             state: true,
           },
         },
-        Customer: {
+        customer: {
           select: {
             id: true,
             firstName: true,
@@ -100,8 +100,7 @@ export async function GET(request: NextRequest) {
             preferSameCleaner: true,
           },
         },
-        User: {
-          // assigned cleaner
+        assignedCleaner: {
           select: {
             id: true,
             name: true,
@@ -123,12 +122,12 @@ export async function GET(request: NextRequest) {
       id: job.id,
       sessionId: job.sessionId,
       branchId: job.branchId,
-      branch: job.Branch,
+      branch: job.branch,
       customerId: job.customerId,
-      customer: job.Customer,
+      customer: job.customer,
       customerName: job.customerName,
       assignedCleanerId: job.assignedCleanerId,
-      assignedCleaner: job.User,
+      assignedCleaner: job.assignedCleaner,
       preferredDate: job.preferredDate?.toISOString() || null,
       preferredTime: job.preferredTime,
       serviceType: job.serviceType,
