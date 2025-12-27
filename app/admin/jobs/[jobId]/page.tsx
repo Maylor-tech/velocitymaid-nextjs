@@ -221,7 +221,10 @@ export default function AdminJobDetailPage() {
     }).format(amount);
   };
 
+  // Phase 2A: Payment Gating - Only allow assignment if payment is PAID
+  // Phase 1: Also check job status allows assignment
   const canAssign = job && job.paymentStatus === 'PAID' && (job.status === 'CONFIRMED' || job.status === 'RECEIVED' || !job.assignedCleanerId);
+  const isPaymentBlocked = job && job.paymentStatus !== 'PAID';
 
   if (loading) {
     return (
@@ -342,23 +345,52 @@ export default function AdminJobDetailPage() {
         </div>
 
         {/* Assignment Section */}
-        {canAssign ? (
+        {/* Phase 2A: Payment Gating - Show assignment UI only if payment is PAID */}
+        {isPaymentBlocked ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Assign Cleaner</h2>
             
-            {job.paymentStatus !== 'PAID' && (
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-yellow-900">Payment Required</p>
-                    <p className="text-sm text-yellow-800 mt-1">
-                      Only PAID jobs can be assigned to cleaners. Current payment status: {job.paymentStatus}
-                    </p>
-                  </div>
+            {/* Phase 2A: Payment Gating - Warning message for unpaid jobs */}
+            {/* Why unpaid jobs are blocked: Ensures cleaners are only assigned to jobs with guaranteed payment */}
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-900">Payment required before assignment</p>
+                  <p className="text-sm text-yellow-800 mt-1">
+                    This job must be PAID before a cleaner can be assigned. Current payment status: {job.paymentStatus}
+                  </p>
                 </div>
               </div>
-            )}
+            </div>
+
+            {/* Phase 2A: Disable assignment controls for unpaid jobs */}
+            <div className="space-y-4 opacity-50 pointer-events-none">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Cleaner
+                </label>
+                <select
+                  value={selectedCleanerId}
+                  onChange={(e) => setSelectedCleanerId(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-gray-100"
+                  disabled={true}
+                >
+                  <option value="">-- Payment required --</option>
+                </select>
+              </div>
+              <button
+                disabled={true}
+                className="w-full px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <XCircle className="w-4 h-4" />
+                Assignment Disabled
+              </button>
+            </div>
+          </div>
+        ) : canAssign ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Assign Cleaner</h2>
 
             {cleaners.length === 0 ? (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
@@ -409,8 +441,6 @@ export default function AdminJobDetailPage() {
             <p className="text-gray-600">
               {job.assignedCleaner 
                 ? 'This job is already assigned to a cleaner'
-                : job.paymentStatus !== 'PAID'
-                ? 'This job must be PAID before it can be assigned'
                 : 'This job cannot be assigned in its current status'}
             </p>
           </div>

@@ -65,13 +65,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Phase 1: Only PAID jobs can be assigned
-    // Assumption: Payment must be completed before assignment to ensure cleaner gets paid
+    // Phase 2A: Payment Gating - Check payment status BEFORE any other validation
+    // This prevents wasted API calls and ensures payment is verified first
+    // Why unpaid jobs are blocked: Cleaners should only be assigned to jobs that are guaranteed to pay
+    // This protects cleaner time and ensures payment integrity before assignment
     if (job.paymentStatus !== PaymentStatus.PAID) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Only PAID jobs can be assigned to cleaners',
+          error: 'Job must be PAID before assignment',
           code: 'PAYMENT_REQUIRED',
         },
         { status: 400 }
@@ -110,6 +112,7 @@ export async function POST(request: NextRequest) {
 
     // Phase 1: Get cleaner with branch information
     // Must verify: role === "CLEANER" and isActive === true
+    // Note: Payment check (Phase 2A) already passed above, so we can proceed with cleaner validation
     const cleaner = await prisma.user.findUnique({
       where: { id: cleanerId, role: 'CLEANER' },
       include: {

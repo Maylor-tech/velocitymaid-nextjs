@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, Loader2, Filter, Calendar, MapPin, DollarSign, User } from 'lucide-react';
+import { Eye, Loader2, Filter, Calendar, MapPin, DollarSign, User, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
 interface Job {
@@ -298,9 +298,19 @@ export default function AdminJobsPage() {
                       {formatCurrency(job.totalPrice, job.currency)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(job.paymentStatus)}`}>
-                        {job.paymentStatus}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(job.paymentStatus)}`}>
+                          {job.paymentStatus}
+                        </span>
+                        {/* Phase 2A: Payment Gating - Visual indicator for unpaid jobs */}
+                        {/* Why unpaid jobs are blocked: Prevents assignment before payment is confirmed */}
+                        {job.paymentStatus !== 'PAID' && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" title="Payment required before assignment">
+                            <AlertTriangle className="w-3 h-3" />
+                            Unpaid
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
@@ -321,11 +331,13 @@ export default function AdminJobsPage() {
                       <Link
                         href={`/admin/jobs/${job.id}`}
                         className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors inline-flex items-center gap-1"
-                        title="View Details"
+                        title={job.paymentStatus !== 'PAID' ? 'View Details (Payment required before assignment)' : 'View Details'}
                       >
                         <Eye className="w-4 h-4" />
                         View
                       </Link>
+                      {/* Phase 2A: Payment Gating - Assignment is disabled for unpaid jobs in detail view */}
+                      {/* The detail page will show a warning and disable assignment controls */}
                     </td>
                   </tr>
                 ))}
