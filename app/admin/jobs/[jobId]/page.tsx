@@ -108,13 +108,24 @@ export default function AdminJobDetailPage() {
     }
   };
 
-  const handleAssign = async () => {
+  const handleAssign = async (confirmReassign: boolean = false) => {
     if (!selectedCleanerId) {
       setToastMessage('Please select a cleaner');
       setToastType('error');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       return;
+    }
+
+    // Phase 1: Safety check - require confirmation for reassignment
+    if (!confirmReassign && job?.assignedCleanerId && job.assignedCleanerId !== selectedCleanerId) {
+      const confirmed = window.confirm(
+        `This job is already assigned to ${job.assignedCleaner?.name || 'another cleaner'}. ` +
+        `Do you want to reassign it to the selected cleaner?`
+      );
+      if (!confirmed) {
+        return;
+      }
     }
 
     try {
@@ -128,6 +139,7 @@ export default function AdminJobDetailPage() {
           jobId,
           cleanerId: selectedCleanerId,
           sendWhatsApp: true,
+          confirmReassign: confirmReassign || (job?.assignedCleanerId && job.assignedCleanerId !== selectedCleanerId),
         }),
       });
 
@@ -138,9 +150,21 @@ export default function AdminJobDetailPage() {
         setToastType('success');
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
-        fetchJob(); // Refresh job data
+        fetchJob(); // Refresh job data - UI updates immediately
       } else {
-        throw new Error(data.error || 'Failed to assign cleaner');
+        // Phase 1: Handle reassignment confirmation error
+        if (data.code === 'REASSIGNMENT_REQUIRED') {
+          const confirmed = window.confirm(
+            `${data.error}\n\nDo you want to proceed with reassignment?`
+          );
+          if (confirmed) {
+            // Retry with confirmation
+            await handleAssign(true);
+            return;
+          }
+        } else {
+          throw new Error(data.error || 'Failed to assign cleaner');
+        }
       }
     } catch (err: any) {
       setToastMessage(err.message || 'Failed to assign cleaner');

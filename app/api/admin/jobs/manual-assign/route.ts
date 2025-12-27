@@ -33,11 +33,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get job with relations
+    // Phase 1: Get job with relations (using lowercase relation field names)
     const job = await prisma.job.findUnique({
       where: { id: jobId },
       include: {
-        Branch: {
+        branch: {
           select: {
             id: true,
             name: true,
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
             country: true,
           },
         },
-        Customer: {
+        customer: {
           select: {
             firstName: true,
             lastName: true,
@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Phase 1: Only PAID jobs can be assigned
+    // Assumption: Payment must be completed before assignment to ensure cleaner gets paid
     if (job.paymentStatus !== PaymentStatus.PAID) {
       return NextResponse.json(
         {
@@ -77,7 +78,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Phase 1: Only CONFIRMED jobs can be assigned (or jobs without assignment)
+    // Phase 1: Safety check - prevent silent reassignment
+    // If job already has an assigned cleaner, require explicit confirmation
+    if (job.assignedCleanerId && job.assignedCleanerId !== cleanerId) {
+      const { confirmReassign } = body;
+      if (!confirmReassign) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Job is already assigned to another cleaner. Set confirmReassign=true to override.',
+            code: 'REASSIGNMENT_REQUIRED',
+            currentCleanerId: job.assignedCleanerId,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Phase 1: Only CONFIRMED or RECEIVED jobs can be assigned (or jobs without assignment)
+    // Assumption: Jobs in other statuses (e.g., IN_PROGRESS, COMPLETED) should not be reassigned
     if (job.status !== 'CONFIRMED' && job.status !== 'RECEIVED' && job.assignedCleanerId) {
       return NextResponse.json(
         {
@@ -89,11 +108,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get cleaner with branch information
+    // Phase 1: Get cleaner with branch information
+    // Must verify: role === "CLEANER" and isActive === true
     const cleaner = await prisma.user.findUnique({
       where: { id: cleanerId, role: 'CLEANER' },
       include: {
-        Branch_User_primaryBranchIdToBranch: {
+        primaryBranch: {
           select: {
             id: true,
             country: true,
@@ -102,7 +122,7 @@ export async function POST(request: NextRequest) {
         },
         UserBranch: {
           include: {
-            Branch: {
+            branch: {
               select: {
                 id: true,
               },
@@ -121,9 +141,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Cleaner not found',
+          error: 'Cleaner not found or is not a CLEANER',
+          code: 'CLEANER_NOT_FOUND',
         },
         { status: 404 }
+      );
+    }
+
+    // Phase 1: Block assignment if cleaner is not active
+    // Assumption: Only active cleaners can be assigned to jobs
+    if (!cleaner.isActive) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Cleaner is not active and cannot be assigned to jobs',
+          code: 'CLEANER_INACTIVE',
+        },
+        { status: 403 }
       );
     }
 
@@ -147,6 +181,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Phase 1: Enforce branch consistency - cleaner must be in same branch as job
+    // Assumption: Cleaners can only be assigned to jobs in their assigned branch(es)
+    // Note: UserBranch uses capitalized 'Branch' relation field name (join table model)
     const cleanerBranchIds = [
       cleaner.primaryBranchId,
       ...cleaner.UserBranch.map(ub => ub.Branch.id),
@@ -165,11 +201,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Jamaica branch - verify training (existing logic preserved)
+    // Phase 1: Check if Jamaica branch - verify training (existing logic preserved)
+    // Assumption: Jamaica branch requires additional training certification
     const isJamaicaBranch =
-      job.Branch.country === 'Jamaica' ||
-      job.Branch.country === 'JM' ||
-      job.Branch.slug === 'port-antonio';
+      job.branch.country === 'Jamaica' ||
+      job.branch.country === 'JM' ||
+      job.branch.slug === 'port-antonio';
 
     if (isJamaicaBranch) {
       if (cleaner.trainingStatus?.overallStatus !== 'PASSED') {
@@ -184,7 +221,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update job assignment - Phase 1: Set status to ASSIGNED
+    // Phase 1: Update job assignment
+    // Requirements:
+    // 1. Set job.assignedCleanerId to cleanerId
+    // 2. Set job.status to "ASSIGNED" (if job was RECEIVED or CONFIRMED)
+    // 3. Set job.assignedAt to current timestamp
+    // Assumption: Status transitions are manual in Phase 1 (no automation)
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
       data: {
@@ -193,7 +235,7 @@ export async function POST(request: NextRequest) {
         assignedAt: new Date(),
       },
       include: {
-        User: {
+        assignedCleaner: {
           select: {
             id: true,
             name: true,
@@ -269,11 +311,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Phase 1: Return updated job with cleaner information
+    // The UI will refresh to show the assigned cleaner's name and email
     return NextResponse.json({
       success: true,
       job: {
         ...updatedJob,
-        assignedCleaner: updatedJob.User,
+        assignedCleaner: updatedJob.assignedCleaner,
       },
       message: 'Cleaner assigned successfully',
     });
