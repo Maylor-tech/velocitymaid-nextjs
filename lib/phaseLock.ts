@@ -9,6 +9,9 @@ export const PHASE_LOCK = {
   PHASE_2A_PAYMENT_GATE: true,
   PHASE_2B_AUDIT_LOG: true,
   PHASE_2C_CLEANER_EARNINGS: true,
+
+  // 🔓 Phase 3 unlocked
+  PHASE_3_PAYOUT_ENGINE: false,
 } as const;
 
 /**
