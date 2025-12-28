@@ -1,66 +1,123 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card';
-import { Button } from 'components/ui/button';
-import { Badge } from 'components/ui/badge';
-import { CheckCircle2, XCircle, AlertCircle, Info, ArrowRight } from "lucide-react";
-import Link from "next/link";
+/**
+ * Phase 2C: Cleaner Earnings View
+ * 
+ * 🔒 Phase 2C locked — UI is display-only
+ * 
+ * Displays completed jobs and earnings totals for authenticated cleaner
+ * 
+ * Rules:
+ * - Read-only: No editing or assignment logic
+ * - Shows jobs with status === "COMPLETED"
+ * - Shows paymentStatus for each job
+ * - Calculates lifetime, month, and week totals
+ */
 
-interface ReadinessStatus {
-  eligible: boolean;
-  blockers: Array<{
-    reason: string;
-    action: string;
-    link?: string;
-    severity: "error" | "warning" | "info";
-  }>;
-  paymentMethod: {
-    exists: boolean;
-    verified: boolean;
-    status: string;
+import { useEffect, useState } from 'react';
+import { Loader2, DollarSign, Calendar, CheckCircle, Clock } from 'lucide-react';
+
+interface Job {
+  id: string;
+  createdAt: string;
+  serviceType: string | null;
+  totalPrice: number;
+  paymentStatus: string;
+  currency: string;
+}
+
+interface EarningsData {
+  jobs: Job[];
+  totals: {
+    lifetimeTotal: number;
+    monthTotal: number;
+    weekTotal: number;
   };
-  completedJobs: number;
-  jobsReadyForPayout: number;
-  pendingPayouts: number;
-  cleanerActive: boolean;
 }
 
 export default function CleanerEarningsPage() {
-  const [readiness, setReadiness] = useState<ReadinessStatus | null>(null);
+  const [data, setData] = useState<EarningsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchReadiness();
+    fetchEarnings();
   }, []);
 
-  const fetchReadiness = async () => {
+  const fetchEarnings = async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch("/api/cleaner/payout-readiness");
-      const data = await res.json();
-      
-      if (data.success) {
-        setReadiness(data.readiness);
+      const response = await fetch('/api/cleaner/earnings');
+      const result = await response.json();
+
+      if (result.success) {
+        setData(result);
       } else {
-        throw new Error(data.error || "Failed to load payout readiness");
+        throw new Error(result.error || 'Failed to load earnings');
       }
     } catch (err: any) {
-      console.error("Error fetching payout readiness:", err);
-      setError(err.message || "Failed to load payout readiness");
+      console.error('Error fetching earnings:', err);
+      setError(err.message || 'Failed to load earnings');
     } finally {
       setLoading(false);
     }
   };
 
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const getPaymentStatusBadge = (status: string) => {
+    switch (status) {
+      case 'PAID':
+        return (
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            Paid
+          </span>
+        );
+      case 'PENDING':
+        return (
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+            Pending
+          </span>
+        );
+      case 'FAILED':
+        return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          Failed
+        </span>
+      );
+      default:
+        return (
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            {status}
+          </span>
+        );
+    }
+  };
+
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading payout status...</p>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center py-12">
+            <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
+            <p className="mt-4 text-gray-600">Loading earnings...</p>
+          </div>
         </div>
       </div>
     );
@@ -68,268 +125,134 @@ export default function CleanerEarningsPage() {
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-6">
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <p className="text-red-600">{error}</p>
-            <Button onClick={fetchReadiness} variant="outline" className="mt-4">
+            <button
+              onClick={fetchEarnings}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
               Try Again
-            </Button>
-          </CardContent>
-        </Card>
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (!readiness) {
+  if (!data) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-gray-600">Unable to load payout status.</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+            <p className="text-gray-600">No earnings data available.</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Earnings & Payouts</h1>
-        <p className="text-gray-600 mt-2">
-          Track your earnings and see when you'll receive payouts
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Earnings</h1>
+          <p className="text-gray-600">View your completed jobs and earnings</p>
+        </div>
 
-      {/* Payout Readiness Status Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Payout Readiness</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Status Badge */}
-          <div className="flex items-center gap-3">
-            {readiness.eligible ? (
-              <>
-                <CheckCircle2 className="w-8 h-8 text-green-600" />
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-green-600">
-                    Ready to Receive Payouts
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    You have {readiness.jobsReadyForPayout} completed job(s) ready for payout.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <AlertCircle className="w-8 h-8 text-yellow-600" />
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-yellow-600">
-                    Not Ready Yet
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Complete the requirements below to receive payouts.
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Blockers List */}
-          {readiness.blockers.length > 0 && (
-            <div className="border rounded-lg p-4 bg-yellow-50 space-y-3">
-              <h4 className="font-medium text-yellow-800 flex items-center gap-2">
-                <AlertCircle className="w-5 h-5" />
-                What's Blocking Payouts:
-              </h4>
-              <ul className="space-y-3">
-                {readiness.blockers.map((blocker, idx) => (
-                  <li key={idx} className="flex items-start gap-3">
-                    {blocker.severity === "error" ? (
-                      <XCircle className="w-5 h-5 mt-0.5 text-red-600 flex-shrink-0" />
-                    ) : blocker.severity === "warning" ? (
-                      <AlertCircle className="w-5 h-5 mt-0.5 text-yellow-600 flex-shrink-0" />
-                    ) : (
-                      <Info className="w-5 h-5 mt-0.5 text-blue-600 flex-shrink-0" />
-                    )}
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        {blocker.reason}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-0.5">
-                        {blocker.action}
-                      </p>
-                      {blocker.link && (
-                        <Link href={blocker.link}>
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="p-0 h-auto mt-1 text-blue-600"
-                          >
-                            Fix this <ArrowRight className="w-3 h-3 ml-1" />
-                          </Button>
-                        </Link>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+        {/* Totals */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <DollarSign className="w-6 h-6 text-blue-600" />
+              <h3 className="text-sm font-medium text-gray-500">Lifetime Total</h3>
             </div>
-          )}
-
-          {/* Eligibility Checklist */}
-          <div className="border rounded-lg p-4 space-y-3">
-            <h4 className="font-medium mb-2">Requirements Checklist:</h4>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                {readiness.cleanerActive ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-red-600" />
-                )}
-                <span className="text-sm">Account is active</span>
-                {!readiness.cleanerActive && (
-                  <span className="text-xs text-gray-500 ml-2">
-                    (Contact support)
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                {readiness.paymentMethod.exists ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-red-600" />
-                )}
-                <span className="text-sm">Payment method added</span>
-                {!readiness.paymentMethod.exists && (
-                  <Link href="/cleaner/payments">
-                    <Button variant="link" size="sm" className="p-0 h-auto ml-2">
-                      Add →
-                    </Button>
-                  </Link>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                {readiness.paymentMethod.verified ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-red-600" />
-                )}
-                <span className="text-sm">Payment method verified</span>
-                {!readiness.paymentMethod.verified && readiness.paymentMethod.exists && (
-                  <span className="text-xs text-gray-500 ml-2">
-                    (Pending admin verification)
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                {readiness.completedJobs > 0 ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-yellow-600" />
-                )}
-                <span className="text-sm">
-                  Completed jobs ({readiness.completedJobs})
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {readiness.jobsReadyForPayout > 0 ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-yellow-600" />
-                )}
-                <span className="text-sm">
-                  Jobs ready for payout ({readiness.jobsReadyForPayout})
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Pending Payouts */}
-          {readiness.pendingPayouts > 0 && (
-            <div className="border rounded-lg p-4 bg-blue-50">
-              <div className="flex items-center gap-2 mb-2">
-                <Info className="w-5 h-5 text-blue-600" />
-                <h4 className="font-medium text-blue-900">
-                  Pending Payouts: {readiness.pendingPayouts}
-                </h4>
-              </div>
-              <p className="text-sm text-blue-700 mb-2">
-                You have {readiness.pendingPayouts} payout(s) waiting for approval.
-                You'll receive payment once they're approved and processed.
-              </p>
-              <p className="text-xs text-blue-600 italic">
-                Pending payouts are processed once payment verification and payout schedule are complete.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Payment Method Card (if not verified) */}
-      {!readiness.paymentMethod.verified && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Payment Method</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
-              {readiness.paymentMethod.exists
-                ? "Your payment method is pending verification. An administrator will review it within 24 hours."
-                : "Add a payment method to receive payouts. You can use bank transfer, Zelle, Venmo, Cash App, or PayPal."}
+            <p className="text-2xl font-bold text-gray-900">
+              {formatCurrency(data.totals.lifetimeTotal)}
             </p>
-            <Link href="/cleaner/payments">
-              <Button>
-                {readiness.paymentMethod.exists
-                  ? "Update Payment Method"
-                  : "Add Payment Method"}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      )}
+          </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">
-                {readiness.completedJobs}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Completed Jobs</p>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Calendar className="w-6 h-6 text-green-600" />
+              <h3 className="text-sm font-medium text-gray-500">This Month</h3>
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-2xl font-bold text-gray-900">
+              {formatCurrency(data.totals.monthTotal)}
+            </p>
+          </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">
-                {readiness.jobsReadyForPayout}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Ready for Payout</p>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Clock className="w-6 h-6 text-purple-600" />
+              <h3 className="text-sm font-medium text-gray-500">Last 7 Days</h3>
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-2xl font-bold text-gray-900">
+              {formatCurrency(data.totals.weekTotal)}
+            </p>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">
-                {readiness.pendingPayouts}
+        {/* Jobs Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Completed Jobs</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {data.jobs.length} {data.jobs.length === 1 ? 'job' : 'jobs'} completed
+            </p>
+          </div>
+
+          {data.jobs.length === 0 ? (
+            <div className="p-12 text-center">
+              <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No completed jobs yet</p>
+              <p className="text-sm text-gray-400 mt-2">
+                Completed jobs will appear here once you finish assignments
               </p>
-              <p className="text-sm text-gray-600 mt-1">Pending Payouts</p>
             </div>
-          </CardContent>
-        </Card>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Service Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Payment Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {data.jobs.map((job) => (
+                    <tr key={job.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(job.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {job.serviceType || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {formatCurrency(job.totalPrice, job.currency)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getPaymentStatusBadge(job.paymentStatus)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
