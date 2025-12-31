@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Branch {
@@ -36,11 +37,13 @@ model Branch {
   BranchServicePackage              BranchServicePackage[]
   BranchSops                        BranchSops[]
   CleanerApplication                CleanerApplication[]
+  CleanerBalanceLedger              CleanerBalanceLedger[]
   Customer                          Customer[]
   JamaicaPayout                     JamaicaPayout[]
   Job                               Job[]
   Lead                              Lead[]
   NurtureSequence                   NurtureSequence[]
+  PayoutTransfer                    PayoutTransfer[]
   Promo                             Promo[]
   ReferralEvent                     ReferralEvent[]
   ReferralLink                      ReferralLink[]
@@ -259,13 +262,13 @@ model Customer {
   CleanerRating                                            CleanerRating[]
   Branch                                                   Branch?           @relation(fields: [branchId], references: [id])
   Job                                                      Job[]
+  MagicLoginToken                                          MagicLoginToken[]
   NurtureHistory                                           NurtureHistory[]
   NurtureSequence                                          NurtureSequence?
   ReferralCredit                                           ReferralCredit[]
   ReferralEvent_ReferralEvent_referredCustomerIdToCustomer ReferralEvent[]   @relation("ReferralEvent_referredCustomerIdToCustomer")
   ReferralEvent_ReferralEvent_referrerIdToCustomer         ReferralEvent[]   @relation("ReferralEvent_referrerIdToCustomer")
   ReferralLink                                             ReferralLink[]
-  MagicLoginToken                                          MagicLoginToken[]
 
   @@index([branchId])
   @@index([email])
@@ -280,8 +283,7 @@ model MagicLoginToken {
   expiresAt  DateTime
   usedAt     DateTime?
   createdAt  DateTime  @default(now())
-
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([customerId])
@@ -348,38 +350,40 @@ model JamaicaPayout {
 }
 
 model Job {
-  id                  String          @id
-  sessionId           String?         @unique
-  branchId            String
-  customerId          String?
-  assignedCleanerId   String?
-  customerName        String?
-  preferredDate       DateTime?
-  preferredTime       String?
-  serviceType         String?
-  serviceLocation     String?
-  address             String?
-  totalPrice          Decimal?        @db.Decimal(10, 2)
-  createdAt           DateTime        @default(now())
-  assignedAt          DateTime?
-  onTheWayAt          DateTime?
-  completedAt         DateTime?
-  currency            String?         @default("USD")
-  paymentMethod       String?
-  jobQualityScore     Int?
-  appliedReferralCode String?
-  promoApplied        String?
-  promoDiscount       Decimal?        @db.Decimal(10, 2)
-  checkoutSessionId   String?
-  paidAt              DateTime?
-  paymentIntentId     String?
-  paymentStatus       PaymentStatus   @default(PENDING)
-  status              String          @default("pending")
-  AssignmentLog       AssignmentLog[]
-  CleanerRating       CleanerRating?
-  User                User?           @relation(fields: [assignedCleanerId], references: [id])
-  Branch              Branch          @relation(fields: [branchId], references: [id])
-  Customer            Customer?       @relation(fields: [customerId], references: [id])
+  id                   String                 @id
+  sessionId            String?                @unique
+  branchId             String
+  customerId           String?
+  assignedCleanerId    String?
+  customerName         String?
+  preferredDate        DateTime?
+  preferredTime        String?
+  serviceType          String?
+  serviceLocation      String?
+  address              String?
+  totalPrice           Decimal?               @db.Decimal(10, 2)
+  createdAt            DateTime               @default(now())
+  assignedAt           DateTime?
+  onTheWayAt           DateTime?
+  completedAt          DateTime?
+  currency             String?                @default("USD")
+  paymentMethod        String?
+  jobQualityScore      Int?
+  appliedReferralCode  String?
+  promoApplied         String?
+  promoDiscount        Decimal?               @db.Decimal(10, 2)
+  checkoutSessionId    String?
+  paidAt               DateTime?
+  paymentIntentId      String?
+  paymentStatus        PaymentStatus          @default(PENDING)
+  status               String                 @default("pending")
+  AssignmentLog        AssignmentLog[]
+  CleanerBalanceLedger CleanerBalanceLedger[]
+  CleanerRating        CleanerRating?
+  ComplianceIssue      ComplianceIssue[]
+  User                 User?                  @relation(fields: [assignedCleanerId], references: [id])
+  Branch               Branch                 @relation(fields: [branchId], references: [id])
+  Customer             Customer?              @relation(fields: [customerId], references: [id])
 
   @@index([appliedReferralCode])
   @@index([assignedCleanerId])
@@ -627,8 +631,8 @@ model TrainingCertificate {
   status         String         @default("ACTIVE")
   issuedAt       DateTime       @default(now())
   revokedAt      DateTime?
-  trainingStatus TrainingStatus @relation(fields: [cleanerId], references: [cleanerId], onDelete: Cascade, map: "TrainingCertificate_cleanerId_TrainingStatus_fkey")
-  cleaner        User           @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  cleaner        User           @relation("TrainingCertificate_cleaner", fields: [cleanerId], references: [id], onDelete: Cascade, map: "TrainingCertificate_cleanerId_User_fkey")
+  trainingStatus TrainingStatus? @relation("TrainingCertificate_trainingStatus", fields: [cleanerId], references: [cleanerId], map: "TrainingCertificate_cleanerId_TrainingStatus_fkey")
 
   @@index([certificateId])
   @@index([cleanerId])
@@ -720,8 +724,8 @@ model TrainingStatus {
   overallStatus       String               @default("NOT_STARTED")
   lastModuleSlug      String?
   updatedAt           DateTime
-  TrainingCertificate TrainingCertificate?
-  User                User                 @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  TrainingCertificate TrainingCertificate? @relation("TrainingCertificate_trainingStatus")
+  User                User                 @relation("TrainingStatus_cleaner", fields: [cleanerId], references: [id], onDelete: Cascade, map: "TrainingStatus_cleanerId_User_fkey")
 
   @@index([cleanerId])
   @@index([overallStatus])
@@ -753,34 +757,47 @@ model TransactionLedger {
 }
 
 model User {
-  id                                  String                @id
-  email                               String                @unique
+  id                                  String                 @id
+  email                               String                 @unique
   name                                String?
-  role                                UserRole              @default(CLEANER)
+  role                                UserRole               @default(CLEANER)
   primaryBranchId                     String?
-  createdAt                           DateTime              @default(now())
+  createdAt                           DateTime               @default(now())
   updatedAt                           DateTime
-  isActive                            Boolean               @default(false)
+  isActive                            Boolean                @default(false)
   homeZip                             String?
-  preferredCities                     String[]              @default([])
-  Branch_Branch_managerIdToUser       Branch[]              @relation("Branch_managerIdToUser")
+  preferredCities                     String[]               @default([])
+  isSuspended                         Boolean                @default(false)
+  warningCount                        Int                    @default(0)
+  stripeAccountId                     String?
+  stripeChargesEnabled                Boolean                @default(false)
+  stripePayoutsEnabled                Boolean                @default(false)
+  stripeOnboardingStatus              String?
+  stripeRequirementsDueCount          Int                    @default(0)
+  stripeLastAccountUpdateAt           DateTime?
+  Branch_Branch_managerIdToUser       Branch[]               @relation("Branch_managerIdToUser")
   CleanerAvailability                 CleanerAvailability?
+  CleanerBalanceLedger                CleanerBalanceLedger[]
   CleanerRating                       CleanerRating[]
+  ComplianceIssue                     ComplianceIssue[]
   JamaicaPaymentMethod                JamaicaPaymentMethod?
   JamaicaPayout                       JamaicaPayout[]
   Job                                 Job[]
   LessonProgress                      LessonProgress[]
-  TrainingCertificate                 TrainingCertificate?
+  PayoutTransfer                      PayoutTransfer[]
+  TrainingCertificate                 TrainingCertificate? @relation("TrainingCertificate_cleaner")
   TrainingQuizAttempt                 TrainingQuizAttempt[]
-  TrainingStatus                      TrainingStatus?
+  TrainingStatus                      TrainingStatus? @relation("TrainingStatus_cleaner")
   TransactionLedger                   TransactionLedger[]
-  Branch_User_primaryBranchIdToBranch Branch?               @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
+  Branch_User_primaryBranchIdToBranch Branch?                @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
   UserBranch                          UserBranch[]
 
   @@index([isActive])
   @@index([preferredCities])
   @@index([primaryBranchId])
   @@index([role])
+  @@index([isSuspended])
+  @@index([warningCount])
 }
 
 model UserBranch {
@@ -813,6 +830,90 @@ model VillaPartnerApplication {
 
   @@index([createdAt])
   @@index([status])
+}
+
+model CleanerBalanceLedger {
+  id               String            @id @default(cuid())
+  cleanerId        String
+  branchId         String?
+  jobId            String?
+  payoutTransferId String?
+  type             LedgerEntryType
+  status           LedgerEntryStatus @default(POSTED)
+  amountCents      Int
+  currency         String            @default("USD")
+  description      String?
+  createdAt        DateTime          @default(now())
+  branch           Branch?           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  cleaner          User              @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  job              Job?              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  payoutTransfer   PayoutTransfer?   @relation(fields: [payoutTransferId], references: [id])
+
+  @@unique([jobId, type], map: "unique_credit_per_job")
+  @@index([cleanerId, createdAt])
+}
+
+model PayoutBatch {
+  id               String            @id @default(cuid())
+  periodStart      DateTime
+  periodEnd        DateTime
+  status           PayoutBatchStatus @default(DRAFT)
+  createdByAdminId String?
+  createdAt        DateTime          @default(now())
+  totalAmountCents Int?
+  transfers        PayoutTransfer[]
+
+  @@index([periodStart, periodEnd])
+}
+
+model PayoutTransfer {
+  id             String                 @id @default(cuid())
+  batchId        String
+  cleanerId      String
+  branchId       String?
+  amountCents    Int
+  currency       String                 @default("USD")
+  stripePayoutId String?
+  status         PayoutTransferStatus   @default(PENDING)
+  failureReason  String?
+  createdAt      DateTime               @default(now())
+  ledgerEntries  CleanerBalanceLedger[]
+  batch          PayoutBatch            @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  branch         Branch?                @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  cleaner        User                   @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@index([cleanerId, status])
+}
+
+model TaxYearArchive {
+  year           Int      @id
+  archivedAt     DateTime @default(now())
+  archivedBy     String?
+  readinessScore Float
+  status         String
+  summaryJson    Json
+
+  @@index([year])
+}
+
+model ComplianceIssue {
+  id           String                @id @default(cuid())
+  cleanerId    String
+  createdAt    DateTime              @default(now())
+  resolvedAt   DateTime?
+  createdById  String?
+  jobId        String?
+  notes        String?
+  reason       String
+  resolvedById String?
+  type         ComplianceIssueType
+  severity     ComplianceSeverity
+  status       ComplianceIssueStatus
+  cleaner      User                  @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  job          Job?                  @relation(fields: [jobId], references: [id])
+
+  @@index([cleanerId, status])
+  @@index([jobId])
 }
 
 enum BaseRateType {
@@ -907,3 +1008,117 @@ enum PaymentStatus {
   FAILED
   REFUNDED
 }
+
+enum LedgerEntryType {
+  CREDIT
+  DEBIT
+}
+
+enum LedgerEntryStatus {
+  PENDING
+  POSTED
+  REVERSED
+}
+
+enum PayoutBatchStatus {
+  DRAFT
+  APPROVED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum PayoutTransferStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+enum ComplianceIssueType {
+  CUSTOMER_COMPLAINT
+  NO_SHOW
+  PROPERTY_DAMAGE
+  FRAUD_SUSPECTED
+  PAYMENT_DISPUTE
+  POLICY_VIOLATION
+  OTHER
+}
+
+enum ComplianceIssueStatus {
+  OPEN
+  RESOLVED
+  ESCALATED
+}
+
+enum ComplianceSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum InvestorAccessStatus {
+  PENDING
+  APPROVED
+}
+
+enum ContactMessageStatus {
+  NEW
+  REVIEWED
+  REPLIED
+}
+
+model InvestorAccessRequest {
+  id           String                @id @default(cuid())
+  name         String
+  email        String
+  organization String?
+  interest     String?
+  status       InvestorAccessStatus  @default(PENDING)
+  approvedAt   DateTime?
+  approvedBy   String?
+  createdAt    DateTime              @default(now())
+}
+
+model ContactMessage {
+  id           String                @id @default(cuid())
+  role         String
+  name         String
+  email        String
+  organization String?
+  message      String?
+  status       ContactMessageStatus @default(NEW)
+  createdAt    DateTime              @default(now())
+
+  replies      ContactReply[]
+  internalNotes ContactInternalNote[]
+}
+
+model ContactReply {
+  id               String   @id @default(cuid())
+  contactMessageId String
+  body             String
+  repliedByAdminId String
+  createdAt        DateTime @default(now())
+
+  contactMessage ContactMessage @relation(fields: [contactMessageId], references: [id], onDelete: Cascade)
+}
+
+model ContactReplyTemplate {
+  id        String   @id @default(cuid())
+  title     String
+  role      String   // Investor | Partner / Operator | Advisor | Other | All
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model ContactInternalNote {
+  id               String   @id @default(cuid())
+  contactMessageId String
+  body             String
+  createdAt        DateTime @default(now())
+
+  contactMessage ContactMessage @relation(fields: [contactMessageId], references: [id], onDelete: Cascade)
+}
+

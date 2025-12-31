@@ -35,10 +35,10 @@ export async function GET(request: NextRequest) {
         assignedCleanerId: cleanerId,
         status: 'COMPLETED',
       },
-      select: {
-        id: true,
+          select: {
+            id: true,
         createdAt: true,
-        serviceType: true,
+            serviceType: true,
         totalPrice: true,
         paymentStatus: true,
         currency: true,

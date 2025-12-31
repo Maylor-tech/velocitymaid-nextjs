@@ -1,11 +1,20 @@
 {
-  "buildCommand": "rm -rf .next && SKIP_ENV_VALIDATION=true npm run build",
-  "installCommand": "npm install --legacy-peer-deps --include=dev",
-  "framework": "nextjs",
   "crons": [
     {
-      "path": "/api/cron/weekly-payout-summary",
-      "schedule": "0 11 * * 1"
+      "path": "/api/cron/process-payouts",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/w9-reminders",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/weekly-1099-readiness",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/archive-tax-year",
+      "schedule": "5 0 * * *"
     }
   ]
 }

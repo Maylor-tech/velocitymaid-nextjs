@@ -6,6 +6,7 @@ import { sendCustomerConfirmation } from '@/lib/sendCustomerConfirmation';
 import { sendAdminNotification } from '@/lib/sendAdminNotification';
 import { prisma } from '@/lib/prisma';
 import { autoAssignCleaner } from '@/lib/cleaner-assignment';
+import { getStripeAccountStatus } from '@/lib/stripe/connect';
 
 /**
  * Stripe Webhook Handler
@@ -318,6 +319,67 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 /**
+ * Handle account.updated event (Stripe Connect)
+ * Syncs payout readiness fields from Stripe
+ */
+async function handleAccountUpdated(account: Stripe.Account) {
+  try {
+    // Find cleaner by stripeAccountId
+    const cleaner = await prisma.user.findFirst({
+      where: {
+        stripeAccountId: account.id,
+        role: 'CLEANER',
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!cleaner) {
+      console.log(`No cleaner found for Stripe account ${account.id}`);
+      return {
+        success: false,
+        error: 'Cleaner not found',
+      };
+    }
+
+    // Get account status
+    const status = await getStripeAccountStatus(account.id);
+
+    // Update cleaner payout readiness fields
+    await prisma.user.update({
+      where: { id: cleaner.id },
+      data: {
+        stripeChargesEnabled: status.chargesEnabled,
+        stripePayoutsEnabled: status.payoutsEnabled,
+        stripeOnboardingStatus: status.onboardingStatus,
+        stripeRequirementsDueCount: status.requirementsDueCount,
+        stripeLastAccountUpdateAt: new Date(),
+      },
+    });
+
+    console.log(`Updated Stripe status for cleaner ${cleaner.id}:`, {
+      chargesEnabled: status.chargesEnabled,
+      payoutsEnabled: status.payoutsEnabled,
+      onboardingStatus: status.onboardingStatus,
+      requirementsDueCount: status.requirementsDueCount,
+    });
+
+    return {
+      success: true,
+      cleanerId: cleaner.id,
+      status,
+    };
+  } catch (error: any) {
+    console.error('[ACCOUNT_UPDATED] Error:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to update account status',
+    };
+  }
+}
+
+/**
  * Main webhook handler
  */
 export async function POST(request: NextRequest) {
@@ -384,6 +446,33 @@ export async function POST(request: NextRequest) {
           log,
         });
       }
+    }
+
+    // Handle account.updated event (Stripe Connect)
+    if (event.type === 'account.updated') {
+      const account = event.data.object as Stripe.Account;
+      
+      log.push(`Processing account update: ${account.id}`);
+
+      const result = await handleAccountUpdated(account);
+      
+      if (result.success) {
+        log.push(`SUCCESS: Updated cleaner payout status for ${result.cleanerId}`);
+      } else {
+        log.push(`FAILED: ${result.error || 'Unknown error'}`);
+      }
+
+      const duration = Date.now() - startTime;
+      log.push(`Processing completed in ${duration}ms`);
+
+      return NextResponse.json({
+        received: true,
+        eventType: event.type,
+        success: result.success,
+        cleanerId: result.cleanerId,
+        log,
+        duration: `${duration}ms`,
+      });
     }
 
     // Handle other event types (acknowledge but don't process)

@@ -16,6 +16,7 @@
 
 import { useEffect, useState } from 'react';
 import { Loader2, DollarSign, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { PayoutStatusCard } from '@/components/cleaner/PayoutStatusCard';
 
 interface Job {
   id: string;
@@ -160,6 +161,11 @@ export default function CleanerEarningsPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Earnings</h1>
           <p className="text-gray-600">View your completed jobs and earnings</p>
+        </div>
+
+        {/* Payout Status Card */}
+        <div className="mb-6">
+          <PayoutStatusCard />
         </div>
 
         {/* Totals */}
