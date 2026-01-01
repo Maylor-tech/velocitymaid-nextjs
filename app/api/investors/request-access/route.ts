@@ -7,6 +7,7 @@
  * Public endpoint (no auth required for submission)
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

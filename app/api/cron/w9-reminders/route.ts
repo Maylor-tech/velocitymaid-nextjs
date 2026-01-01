@@ -17,6 +17,7 @@
  * Schedule: Configured in vercel.json (weekly)
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

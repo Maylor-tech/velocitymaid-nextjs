@@ -5,6 +5,7 @@
  * Resets all training progress for a cleaner
  */
 
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

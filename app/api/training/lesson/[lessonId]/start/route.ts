@@ -5,6 +5,7 @@
  * Marks a lesson as IN_PROGRESS for the current cleaner
  */
 
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';

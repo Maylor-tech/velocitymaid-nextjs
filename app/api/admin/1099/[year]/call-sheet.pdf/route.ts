@@ -9,6 +9,7 @@
  * Admin-only, no caching (fresh every day)
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

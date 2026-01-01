@@ -5,6 +5,7 @@
  * Returns lesson details with content and quiz data
  */
 
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';

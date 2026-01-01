@@ -5,6 +5,7 @@
  * Manually triggers morning follow-up for a lead
  */
 
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';

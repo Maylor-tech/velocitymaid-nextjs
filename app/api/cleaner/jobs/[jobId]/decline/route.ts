@@ -6,6 +6,7 @@ import { JobStatus } from "@prisma/client";
 import { autoAssignCleaner } from "@/lib/dispatch/autoAssignCleaner";
 import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**

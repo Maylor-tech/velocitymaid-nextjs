@@ -14,6 +14,7 @@ import { lockJobPricing, createPricingSnapshot, isPriceLocked, shouldLockPricing
 import { prisma } from "@/lib/prisma";
 import { JobStatus } from "@prisma/client";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(

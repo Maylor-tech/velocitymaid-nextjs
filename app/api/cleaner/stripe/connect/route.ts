@@ -6,6 +6,7 @@
  * Creates Stripe Connect Express account if missing, then creates Account Link for onboarding
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

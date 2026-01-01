@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEntry } from "@/lib/audit";
 import { notifyPayoutFailed } from "@/lib/notifications";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(

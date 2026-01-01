@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 import { Resend } from "resend";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 console.log(">>> SEND ESTIMATE ROUTE LOADED");

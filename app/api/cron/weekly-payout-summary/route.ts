@@ -21,6 +21,7 @@ import { resend } from "@/lib/email/resendClient";
 import { prisma } from "@/lib/prisma";
 import { randomUUID } from "crypto";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**

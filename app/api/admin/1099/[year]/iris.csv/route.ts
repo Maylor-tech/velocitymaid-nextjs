@@ -10,6 +10,7 @@
  * Currently only exports if tax profile is VERIFIED (has encrypted TIN)
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

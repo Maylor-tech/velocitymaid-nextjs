@@ -5,6 +5,7 @@
  * Validates, encrypts TIN, sets status to SUBMITTED, creates audit log
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

@@ -12,6 +12,7 @@
  * Schedule: Configured in vercel.json (default: every 10 minutes)
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

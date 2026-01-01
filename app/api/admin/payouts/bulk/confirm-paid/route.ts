@@ -21,6 +21,7 @@ import { notifyPayoutPaid } from "@/lib/notifications";
 import { randomUUID } from "crypto";
 import { DEMO_MODE } from "@/lib/demoMode";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {

@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEntry } from "@/lib/audit";
 import { randomUUID } from "crypto";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(

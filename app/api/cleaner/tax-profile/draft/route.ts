@@ -5,6 +5,7 @@
  * Saves draft tax profile (does not encrypt TIN yet, does not submit)
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

@@ -7,6 +7,7 @@
  * and sends email notifications routed by role.
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

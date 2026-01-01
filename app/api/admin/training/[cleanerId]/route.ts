@@ -5,6 +5,7 @@
  * Returns detailed training progress for a specific cleaner
  */
 
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

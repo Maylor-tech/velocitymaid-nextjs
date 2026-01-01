@@ -6,6 +6,7 @@
  * Lists transfers for a batch with paging and optional status filter
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

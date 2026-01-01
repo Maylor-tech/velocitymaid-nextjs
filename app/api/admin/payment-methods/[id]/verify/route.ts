@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { logPaymentMethodAction } from "@/lib/payoutDecryption";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**

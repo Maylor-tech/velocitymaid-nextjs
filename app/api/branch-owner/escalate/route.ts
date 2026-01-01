@@ -10,6 +10,7 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { getAuthenticatedBranchOwner } from "@/lib/auth/branchOwnerAuth";
 import { prisma } from "@/lib/prisma";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {

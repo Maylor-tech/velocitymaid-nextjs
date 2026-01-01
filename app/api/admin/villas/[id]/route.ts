@@ -3,6 +3,7 @@
  * GET /api/admin/villas/[id]
  */
 
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

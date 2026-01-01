@@ -8,6 +8,7 @@
  * Admin-only, protected by requireRole("ADMIN")
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

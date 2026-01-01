@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthenticatedCleaner } from "@/lib/cleanerAuth";
 import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**

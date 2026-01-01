@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**

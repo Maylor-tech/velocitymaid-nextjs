@@ -6,6 +6,7 @@
  * Never exposes full TIN
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

@@ -22,6 +22,7 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import { generateCsv, formatCsvDate, formatCsvDateTime, formatCsvCurrency } from "@/lib/csv";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {

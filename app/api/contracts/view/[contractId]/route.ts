@@ -3,6 +3,7 @@
  * GET /api/contracts/view/[contractId]
  */
 
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { cleanerAgreementTemplate, villaPartnershipTemplate, customerTermsTemplate } from '@/app/api/contracts/templates';

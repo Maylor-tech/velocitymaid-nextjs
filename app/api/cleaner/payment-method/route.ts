@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { encryptPaymentData } from "@/lib/paymentEncryption";
 import { logPaymentMethodAction } from "@/lib/payoutDecryption";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**

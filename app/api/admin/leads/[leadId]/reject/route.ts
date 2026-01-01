@@ -3,6 +3,7 @@
  * POST /api/admin/leads/[leadId]/reject
  */
 
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

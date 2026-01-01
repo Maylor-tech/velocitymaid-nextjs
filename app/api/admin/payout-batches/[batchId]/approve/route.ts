@@ -6,6 +6,7 @@
  * Transitions DRAFT → APPROVED (no Stripe calls)
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";

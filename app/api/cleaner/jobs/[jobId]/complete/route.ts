@@ -6,6 +6,7 @@ import { JobStatus } from "@prisma/client";
 import { createPayoutIfEligible } from "@/src/server/payout/createPayoutIfEligible";
 import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**

@@ -5,6 +5,7 @@
  * Admin override to mark training as PASSED
  */
 
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendTrainingPassedNotification } from '@/app/services/trainingNotifications';
