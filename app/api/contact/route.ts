@@ -141,11 +141,26 @@ ${message || "—"}
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("[CONTACT] Contact API error:", err);
+    console.error("[CONTACT] Error details:", {
+      message: err.message,
+      name: err.name,
+      code: err.code,
+    });
+
+    // More specific error messages for common issues
+    let errorMessage = "Unable to submit message at this time";
+    if (err.message?.includes("P1001") || err.message?.includes("Can't reach database")) {
+      errorMessage = "Database connection error. Please try again in a moment.";
+    } else if (err.message?.includes("Unique constraint")) {
+      errorMessage = "This message may have already been submitted.";
+    } else if (err.message?.includes("Prisma") || err.code?.startsWith("P")) {
+      errorMessage = "Database error. Please try again.";
+    }
 
     return NextResponse.json(
       {
         success: false,
-        error: "Unable to submit message at this time",
+        error: errorMessage,
         details:
           process.env.NODE_ENV === "development" ? err.stack : undefined,
       },
