@@ -48,12 +48,17 @@ export default function AdminInboxPage() {
   const [activeTab, setActiveTab] = useState<"NEW" | "REVIEWED" | "REPLIED" | "ARCHIVED" | "ALL">("ALL");
 
   useEffect(() => {
-    // Check for status query param from dashboard
-    const params = new URLSearchParams(window.location.search);
-    const statusParam = params.get("status");
-    if (statusParam && ["NEW", "REVIEWED", "REPLIED", "ARCHIVED"].includes(statusParam)) {
-      setActiveTab(statusParam as typeof activeTab);
+    // Check for status query param from dashboard on initial load
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const statusParam = params.get("status");
+      if (statusParam && ["NEW", "REVIEWED", "REPLIED", "ARCHIVED"].includes(statusParam)) {
+        setActiveTab(statusParam as typeof activeTab);
+      }
     }
+  }, []);
+
+  useEffect(() => {
     fetchMessages();
   }, [activeTab]);
 
