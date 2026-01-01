@@ -32,10 +32,10 @@ export async function POST(
     const admin = await requireRole(request, "ADMIN");
 
     const body = await request.json();
-    const { message } = body;
+    const { body: replyBody, sendEmail = true } = body;
 
     // Validate reply message
-    if (!message || typeof message !== "string" || message.trim().length === 0) {
+    if (!replyBody || typeof replyBody !== "string" || replyBody.trim().length === 0) {
       return NextResponse.json(
         { success: false, error: "Reply message required" },
         { status: 400 }
@@ -54,82 +54,64 @@ export async function POST(
       );
     }
 
-    // 1️⃣ Send reply email
-    const resend = getResend();
-    if (!resend) {
-      return NextResponse.json(
-        { success: false, error: "Email service not configured" },
-        { status: 500 }
-      );
-    }
-
-    try {
-      await resend.emails.send({
-        from: "VelocityMaid <no-reply@velocitymaid.com>",
-        to: [contact.email],
-        subject: "Re: Your message to VelocityMaid",
-        html: `
-          <p>Hello ${contact.name},</p>
-
-          <p>${message.replace(/\n/g, "<br/>")}</p>
-
-          <p>
-            Regards,<br/>
-            VelocityMaid
-          </p>
-
-          <hr/>
-          <p style="font-size:12px;color:#666;">
-            Infrastructure for trust at scale.
-          </p>
-        `,
-        text: `
-Hello ${contact.name},
-
-${message}
-
-Regards,
-VelocityMaid
-
----
-Infrastructure for trust at scale.
-        `.trim(),
-      });
-
-      console.log(
-        `[CONTACT_REPLY] Reply sent to ${contact.email} for message ${params.id}`
-      );
-    } catch (emailError: any) {
-      console.error("[CONTACT_REPLY] Failed to send reply email:", emailError);
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Failed to send reply email",
-          details:
-            process.env.NODE_ENV === "development"
-              ? emailError.message
-              : undefined,
-        },
-        { status: 500 }
-      );
-    }
-
-    // 2️⃣ Save reply to database
-    await prisma.contactReply.create({
+    // 1️⃣ Save reply to database FIRST (atomic, defensible)
+    const reply = await prisma.contactReply.create({
       data: {
         contactMessageId: contact.id,
-        body: message.trim(),
+        body: replyBody.trim(),
         repliedByAdminId: admin.userId,
+        sentViaEmail: sendEmail,
       },
     });
 
-    // 3️⃣ Update status to REPLIED
-    await prisma.contactMessage.update({
-      where: { id: params.id },
-      data: {
-        status: "REPLIED",
-      },
-    });
+    // 2️⃣ Send email if requested (non-blocking)
+    let emailSent = false;
+    if (sendEmail) {
+      const resend = getResend();
+      if (resend) {
+        try {
+          await resend.emails.send({
+            from: "VelocityMaid <no-reply@velocitymaid.com>",
+            to: [contact.email],
+            subject: "VelocityMaid — Follow-up",
+            html: `
+              <p>Hi ${contact.name},</p>
+              <p>Thanks for reaching out to VelocityMaid.</p>
+              <p>${replyBody.replace(/\n/g, "<br/>")}</p>
+              <p>Best regards,<br/>VelocityMaid Team</p>
+            `,
+            text: `
+Hi ${contact.name},
+
+Thanks for reaching out to VelocityMaid.
+
+${replyBody}
+
+Best regards,
+VelocityMaid Team
+            `.trim(),
+          });
+
+          emailSent = true;
+          console.log(
+            `[CONTACT_REPLY] Reply sent to ${contact.email} for message ${params.id}`
+          );
+        } catch (emailError: any) {
+          console.error("[CONTACT_REPLY] Failed to send reply email:", emailError);
+          // Don't fail - reply is already saved
+        }
+      }
+    }
+
+    // 3️⃣ Update status to REPLIED (only if email was sent successfully)
+    if (emailSent || !sendEmail) {
+      await prisma.contactMessage.update({
+        where: { id: params.id },
+        data: {
+          status: "REPLIED",
+        },
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

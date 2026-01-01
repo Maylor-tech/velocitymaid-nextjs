@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 
-export async function POST(
+export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -26,7 +26,7 @@ export async function POST(
     const { status } = body;
 
     // Validate status
-    if (!["NEW", "REVIEWED", "REPLIED"].includes(status)) {
+    if (!["NEW", "REVIEWED", "REPLIED", "ARCHIVED"].includes(status)) {
       return NextResponse.json(
         { success: false, error: "Invalid status" },
         { status: 400 }

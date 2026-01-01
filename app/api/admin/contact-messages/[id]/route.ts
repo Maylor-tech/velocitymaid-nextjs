@@ -1,9 +1,9 @@
 /**
- * Admin Contact Messages API
+ * Admin Contact Message Detail API
  * 
- * GET /api/admin/contact-messages
+ * GET /api/admin/contact-messages/[id]
  * 
- * Returns all contact messages
+ * Returns a single contact message with full thread
  * Admin-only, protected by requireRole("ADMIN")
  */
 
@@ -14,29 +14,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     // Require admin authentication
     await requireRole(request, "ADMIN");
 
-    // Parse query parameters for filtering
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status");
-    const role = searchParams.get("role");
-
-    // Build where clause
-    const where: any = {};
-    if (status && ["NEW", "REVIEWED", "REPLIED", "ARCHIVED"].includes(status)) {
-      where.status = status;
-    }
-    if (role) {
-      where.role = role;
-    }
-
-    // Fetch messages with optional filters, ordered by most recent first
-    const messages = await prisma.contactMessage.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
+    // Fetch message with full thread
+    const message = await prisma.contactMessage.findUnique({
+      where: { id: params.id },
       include: {
         replies: {
           orderBy: { createdAt: "asc" },
@@ -47,12 +35,19 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    if (!message) {
+      return NextResponse.json(
+        { success: false, error: "Message not found" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
-      messages,
+      message,
     });
   } catch (error: any) {
-    console.error("[ADMIN_CONTACT_MESSAGES] Error:", error);
+    console.error("[ADMIN_CONTACT_MESSAGE_DETAIL] Error:", error);
 
     if (error instanceof Response) {
       return error;
@@ -61,7 +56,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Failed to fetch contact messages",
+        error: error?.message || "Failed to fetch message",
         details:
           process.env.NODE_ENV === "development" ? error.stack : undefined,
       },
@@ -69,5 +64,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 

@@ -1067,6 +1067,7 @@ enum ContactMessageStatus {
   NEW
   REVIEWED
   REPLIED
+  ARCHIVED
 }
 
 model InvestorAccessRequest {
@@ -1090,6 +1091,7 @@ model ContactMessage {
   message      String?
   status       ContactMessageStatus @default(NEW)
   createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
 
   replies      ContactReply[]
   internalNotes ContactInternalNote[]
@@ -1099,7 +1101,8 @@ model ContactReply {
   id               String   @id @default(cuid())
   contactMessageId String
   body             String
-  repliedByAdminId String
+  repliedByAdminId String?
+  sentViaEmail     Boolean  @default(true)
   createdAt        DateTime @default(now())
 
   contactMessage ContactMessage @relation(fields: [contactMessageId], references: [id], onDelete: Cascade)
