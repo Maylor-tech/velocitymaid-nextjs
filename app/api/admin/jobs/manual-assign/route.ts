@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
             country: true,
           },
         },
-        customer: {
+        Customer: {
           select: {
             firstName: true,
             lastName: true,

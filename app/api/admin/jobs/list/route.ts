@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
             state: true,
           },
         },
-        customer: {
+        Customer: {
           select: {
             id: true,
             firstName: true,
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
             preferSameCleaner: true,
           },
         },
-        assignedCleaner: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       customer: job.customer,
       customerName: job.customerName,
       assignedCleanerId: job.assignedCleanerId,
-      assignedCleaner: job.assignedCleaner,
+      assignedCleaner: job.User,
       preferredDate: job.preferredDate?.toISOString() || null,
       preferredTime: job.preferredTime,
       serviceType: job.serviceType,
