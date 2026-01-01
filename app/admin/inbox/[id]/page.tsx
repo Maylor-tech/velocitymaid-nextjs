@@ -96,7 +96,7 @@ export default function AdminInboxDetailPage() {
       }
 
       fetchMessage(); // Refresh to show updated status
-      // Trigger dashboard refresh (could use a custom event or router refresh)
+      // Trigger dashboard refresh
       window.dispatchEvent(new CustomEvent("messageStatusUpdated"));
     } catch (err: any) {
       console.error("Failed to mark as read:", err);

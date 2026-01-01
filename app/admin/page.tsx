@@ -97,16 +97,25 @@ export default function AdminCommandCenter() {
     };
   }, []);
 
+  // Refresh metrics when returning from inbox (router refresh)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchMetrics();
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, []);
+
   const fetchMetrics = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch messages
-      const messagesRes = await fetch("/api/admin/contact-messages", {
+      // Fetch authoritative metrics from dedicated endpoint
+      const metricsRes = await fetch("/api/admin/dashboard/metrics", {
         cache: "no-store",
       });
-      const messagesData = await messagesRes.json();
+      const metricsData = await metricsRes.json();
 
       // Fetch investor requests
       const investorRes = await fetch("/api/admin/investors/requests", {
@@ -114,17 +123,20 @@ export default function AdminCommandCenter() {
       });
       const investorData = await investorRes.json();
 
-      if (messagesData.success && investorData.success) {
-        const messages = messagesData.messages || [];
+      if (metricsData.success && investorData.success) {
+        const messageMetrics = metricsData.metrics || {};
         const investorRequests = investorData.requests || [];
 
         setMetrics({
           messages: {
-            NEW: messages.filter((m: any) => m.status === "NEW").length,
-            REVIEWED: messages.filter((m: any) => m.status === "REVIEWED").length,
-            REPLIED: messages.filter((m: any) => m.status === "REPLIED").length,
-            ARCHIVED: messages.filter((m: any) => m.status === "ARCHIVED").length,
-            total: messages.length,
+            NEW: messageMetrics.NEW || 0,
+            REVIEWED: messageMetrics.REVIEWED || 0,
+            REPLIED: messageMetrics.REPLIED || 0,
+            ARCHIVED: messageMetrics.ARCHIVED || 0,
+            total: (messageMetrics.NEW || 0) + 
+                   (messageMetrics.REVIEWED || 0) + 
+                   (messageMetrics.REPLIED || 0) + 
+                   (messageMetrics.ARCHIVED || 0),
           },
           investorRequests: {
             PENDING: investorRequests.filter((r: any) => r.status === "PENDING").length,
@@ -196,7 +208,7 @@ export default function AdminCommandCenter() {
             status="Requires attention"
             href="/admin/inbox?status=NEW"
             icon={Mail}
-            color="bg-blue-600"
+            color="bg-amber-600"
           />
           <MetricCard
             title="Reviewed"
@@ -204,7 +216,7 @@ export default function AdminCommandCenter() {
             status="In progress"
             href="/admin/inbox?status=REVIEWED"
             icon={Clock}
-            color="bg-yellow-600"
+            color="bg-gray-600"
           />
           <MetricCard
             title="Replied"
@@ -220,7 +232,7 @@ export default function AdminCommandCenter() {
             status="Completed"
             href="/admin/inbox?status=ARCHIVED"
             icon={Archive}
-            color="bg-gray-600"
+            color="bg-gray-400"
           />
         </div>
 
