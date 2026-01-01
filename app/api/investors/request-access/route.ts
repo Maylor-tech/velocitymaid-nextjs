@@ -21,7 +21,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, email, organization, interest } = body;
+    let { name, email, organization, interest } = body;
+
+    // Normalize email (lowercase, trim) to prevent duplicates
+    email = email?.toLowerCase().trim();
 
     // Validate required fields
     if (!name || !email) {
@@ -34,13 +37,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Idempotency protection: check for existing request
+    const existing = await prisma.investorAccessRequest.findFirst({
+      where: { email },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (existing) {
+      // Return success without creating duplicate
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Access request already submitted",
+          id: existing.id,
+        },
+        { status: 200 }
+      );
+    }
+
     // Save request to database
     const accessRequest = await prisma.investorAccessRequest.create({
       data: {
-        name,
+        name: name.trim(),
         email,
-        organization: organization || null,
-        interest: interest || null,
+        organization: organization?.trim() || null,
+        interest: interest?.trim() || null,
       },
     });
 
@@ -56,12 +77,12 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error("[INVESTOR_ACCESS_REQUEST] Error:", error);
+    console.error("[INVESTOR_ACCESS_REQUEST] Investor access request error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Failed to submit access request",
+        error: "Unable to submit access request at this time",
         details:
           process.env.NODE_ENV === "development" ? error.stack : undefined,
       },

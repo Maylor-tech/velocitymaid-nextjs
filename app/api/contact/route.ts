@@ -30,7 +30,10 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { role, name, email, organization, message } = body;
+    let { role, name, email, organization, message } = body;
+
+    // Normalize email (lowercase, trim) to prevent duplicates
+    email = email?.toLowerCase().trim();
 
     // Validate required fields
     if (!role || !name || !email) {
@@ -40,14 +43,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Role allow-listing to prevent garbage data from bots
+    const allowedRoles = ['Partner / Operator', 'Investor', 'Advisor', 'Other'];
+    if (!allowedRoles.includes(role)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid role" },
+        { status: 400 }
+      );
+    }
+
     // 1️⃣ Persist to database
     await prisma.contactMessage.create({
       data: {
         role,
-        name,
+        name: name.trim(),
         email,
-        organization: organization || null,
-        message: message || null,
+        organization: organization?.trim() || null,
+        message: message?.trim() || null,
       },
     });
 
@@ -128,12 +140,12 @@ ${message || "—"}
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error("[CONTACT] Error:", err);
+    console.error("[CONTACT] Contact API error:", err);
 
     return NextResponse.json(
       {
         success: false,
-        error: err?.message || "Failed to process contact message",
+        error: "Unable to submit message at this time",
         details:
           process.env.NODE_ENV === "development" ? err.stack : undefined,
       },

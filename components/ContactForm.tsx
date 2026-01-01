@@ -5,14 +5,27 @@ import { useState } from "react";
 export default function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     const formData = new FormData(e.currentTarget);
+    
+    // Map form values to API expected values
+    const roleMap: Record<string, string> = {
+      'partner': 'Partner / Operator',
+      'investor': 'Investor',
+      'advisor': 'Advisor',
+      'other': 'Other',
+    };
+    
+    const role = roleMap[formData.get("role") as string] || formData.get("role") as string;
+    
     const payload = {
-      role: formData.get("role") as string,
+      role,
       name: formData.get("name") as string,
       email: formData.get("email") as string,
       organization: formData.get("organization") as string,
@@ -37,7 +50,7 @@ export default function ContactForm() {
       window.dispatchEvent(new CustomEvent("contactFormSubmitted"));
     } catch (error: any) {
       console.error("Failed to submit contact form:", error);
-      alert(error.message || "Failed to submit message. Please try again.");
+      setError(error.message || "Failed to submit message. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -52,6 +65,18 @@ export default function ContactForm() {
       onSubmit={handleSubmit}
       className="mt-8 max-w-xl space-y-4"
     >
+      {error && (
+        <div className="rounded-md bg-red-50 border border-red-200 p-4">
+          <p className="text-sm text-red-800">{error}</p>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           I'm reaching out as a
