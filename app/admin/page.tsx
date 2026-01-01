@@ -180,7 +180,7 @@ export default function AdminCommandCenter() {
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-gray-900">Command Center</h1>
         <p className="mt-2 text-sm text-gray-600">
-          Every inbound communication is tracked from first contact to resolution, with timestamps, responses, and status changes logged automatically.
+          The admin dashboard shows real-time operational readiness — how many communications require attention, how many are in progress, and how many are resolved.
         </p>
       </div>
 
