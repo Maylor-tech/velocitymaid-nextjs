@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     const resend = getResend();
     if (resend) {
       const to =
-        role === "investor"
+        role === "Investor"
           ? process.env.INVESTOR_NOTIFICATIONS_EMAIL ||
             process.env.CONTACT_NOTIFICATIONS_EMAIL
           : process.env.CONTACT_NOTIFICATIONS_EMAIL;
