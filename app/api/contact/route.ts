@@ -24,6 +24,11 @@ function getResend() {
 
 export async function POST(req: NextRequest) {
   try {
+    // Defensive guard: ensure Prisma is initialized
+    if (!prisma) {
+      throw new Error('Prisma client not initialized');
+    }
+
     const body = await req.json();
     const { role, name, email, organization, message } = body;
 

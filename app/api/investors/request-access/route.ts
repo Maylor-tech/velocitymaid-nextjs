@@ -15,6 +15,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
+    // Defensive guard: ensure Prisma is initialized
+    if (!prisma) {
+      throw new Error('Prisma client not initialized');
+    }
+
     const body = await request.json();
     const { name, email, organization, interest } = body;
 
