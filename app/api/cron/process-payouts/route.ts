@@ -21,6 +21,15 @@ import { PayoutBatchStatus, PayoutTransferStatus } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   try {
+    // Payouts are optional/staged - can be disabled via env var
+    if (process.env.ENABLE_PAYOUTS !== "true") {
+      return NextResponse.json({
+        ok: true,
+        message: "Payouts disabled (staged feature)",
+        processedBatches: 0,
+      });
+    }
+
     // Security: Verify cron secret
     const secret = req.headers.get("x-cron-secret");
     const cronSecret = process.env.CRON_SECRET;
