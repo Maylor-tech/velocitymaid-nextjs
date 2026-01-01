@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { type CustomerProfile } from '@/lib/types/customerProfile';
 import { getCustomerSession } from '@/lib/customerSession';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**

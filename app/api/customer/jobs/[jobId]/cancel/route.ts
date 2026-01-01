@@ -5,6 +5,7 @@ import { notifyAdmin } from '@/lib/notifyAdmin';
 import { JobStatus } from '@prisma/client';
 import { requireCustomerJobOwnership } from '@/lib/auth/requireRole';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**

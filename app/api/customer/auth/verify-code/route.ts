@@ -6,6 +6,7 @@ import {
   createCustomerSessionToken,
 } from '@/lib/customerSession';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {

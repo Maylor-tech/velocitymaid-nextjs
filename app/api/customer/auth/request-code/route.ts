@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { nanoid } from 'nanoid';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function generate6DigitCode(): string {

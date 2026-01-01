@@ -1,7 +1,9 @@
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { prisma } from '@/lib/prisma';
 import { getCleanerStats, getJobsByDay, getCleanerJobs } from '@/utils/cleanerScorecardQueries';
 import { getReviewsByCleanerId, calculateReviewStats } from '@/utils/reviewData';
 import { getComplaintsByCleanerId } from '@/utils/complaintData';
@@ -70,7 +72,6 @@ export async function GET(request: NextRequest) {
     const averageJQS = await getCleanerAverageJQS(cleanerId);
     
     // Count jobs with JQS
-    const { prisma } = await import('../../../../lib/prisma');
     const totalJQSJobs = await prisma.job.count({
       where: {
         assignedCleanerId: cleanerId,

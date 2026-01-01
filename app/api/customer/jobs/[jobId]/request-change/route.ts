@@ -3,6 +3,7 @@ import { readCustomerSession } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
 import { notifyAdmin } from '@/lib/notifyAdmin';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
