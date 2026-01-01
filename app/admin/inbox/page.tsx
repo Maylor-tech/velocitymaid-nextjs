@@ -11,6 +11,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Loader2, Mail, Building2, Users, Briefcase } from "lucide-react";
 
 interface ContactMessage {
@@ -47,6 +48,12 @@ export default function AdminInboxPage() {
   const [activeTab, setActiveTab] = useState<"NEW" | "REVIEWED" | "REPLIED" | "ARCHIVED" | "ALL">("ALL");
 
   useEffect(() => {
+    // Check for status query param from dashboard
+    const params = new URLSearchParams(window.location.search);
+    const statusParam = params.get("status");
+    if (statusParam && ["NEW", "REVIEWED", "REPLIED", "ARCHIVED"].includes(statusParam)) {
+      setActiveTab(statusParam as typeof activeTab);
+    }
     fetchMessages();
   }, [activeTab]);
 

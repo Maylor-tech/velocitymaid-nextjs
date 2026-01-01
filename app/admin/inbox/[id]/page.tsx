@@ -11,6 +11,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 import { Loader2, ArrowLeft, Mail, Send, CheckCircle2, Archive } from "lucide-react";
 
 interface ContactReply {
@@ -159,13 +160,13 @@ export default function AdminInboxDetailPage() {
     <div className="mx-auto max-w-4xl px-6 py-12">
       {/* Header */}
       <div className="mb-8">
-        <button
-          onClick={() => router.push("/admin/inbox")}
+        <Link
+          href="/admin/inbox"
           className="flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to inbox
-        </button>
+        </Link>
         <h1 className="text-2xl font-semibold text-gray-900">Message Thread</h1>
       </div>
 
