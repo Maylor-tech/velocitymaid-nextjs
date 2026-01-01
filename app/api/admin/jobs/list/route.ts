@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       branchId: job.branchId,
       branch: job.Branch,
       customerId: job.customerId,
-      customer: job.customer,
+      customer: job.Customer,
       customerName: job.customerName,
       assignedCleanerId: job.assignedCleanerId,
       assignedCleaner: job.User,

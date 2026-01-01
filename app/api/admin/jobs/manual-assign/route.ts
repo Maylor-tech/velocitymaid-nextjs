@@ -337,7 +337,11 @@ export async function POST(request: NextRequest) {
       success: true,
       job: {
         ...updatedJob,
-        assignedCleaner: updatedJob.assignedCleaner,
+        assignedCleaner: updatedJob.User ? {
+          id: updatedJob.User.id,
+          name: updatedJob.User.name,
+          email: updatedJob.User.email,
+        } : null,
       },
       message: 'Cleaner assigned successfully',
     });
