@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 export const dynamic = 'force-dynamic';
 
 /**
@@ -35,11 +36,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Phase 1: Get job with relations (using lowercase relation field names)
+    // Phase 1: Get job with relations (using capitalized relation field name)
     const job = await prisma.job.findUnique({
       where: { id: jobId },
       include: {
-        branch: {
+        Branch: {
           select: {
             id: true,
             name: true,
@@ -209,9 +210,9 @@ export async function POST(request: NextRequest) {
     // Phase 1: Check if Jamaica branch - verify training (existing logic preserved)
     // Assumption: Jamaica branch requires additional training certification
     const isJamaicaBranch =
-      job.branch.country === 'Jamaica' ||
-      job.branch.country === 'JM' ||
-      job.branch.slug === 'port-antonio';
+      job.Branch.country === 'Jamaica' ||
+      job.Branch.country === 'JM' ||
+      job.Branch.slug === 'port-antonio';
 
     if (isJamaicaBranch) {
       if (cleaner.trainingStatus?.overallStatus !== 'PASSED') {

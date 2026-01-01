@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 export const dynamic = 'force-dynamic';
 
 /**
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
     const jobs = await prisma.job.findMany({
       where,
       include: {
-        branch: {
+        Branch: {
           select: {
             id: true,
             name: true,
@@ -122,7 +123,7 @@ export async function GET(request: NextRequest) {
       id: job.id,
       sessionId: job.sessionId,
       branchId: job.branchId,
-      branch: job.branch,
+      branch: job.Branch,
       customerId: job.customerId,
       customer: job.customer,
       customerName: job.customerName,
