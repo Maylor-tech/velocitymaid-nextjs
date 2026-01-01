@@ -11,6 +11,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Loader2, Mail, Building2, Users, Briefcase } from "lucide-react";
 

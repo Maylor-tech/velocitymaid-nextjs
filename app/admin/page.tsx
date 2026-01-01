@@ -79,6 +79,7 @@ function MetricCard({
 
 export default function AdminCommandCenter() {
   const router = useRouter();
+  const pathname = usePathname();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,14 +98,12 @@ export default function AdminCommandCenter() {
     };
   }, []);
 
-  // Refresh metrics when returning from inbox (router refresh)
+  // Refresh metrics when returning to dashboard (pathname change)
   useEffect(() => {
-    const handleFocus = () => {
+    if (pathname === "/admin") {
       fetchMetrics();
-    };
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, []);
+    }
+  }, [pathname]);
 
   const fetchMetrics = async () => {
     try {
