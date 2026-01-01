@@ -12,7 +12,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, ArrowLeft, Mail, Send, CheckCircle2, Archive } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, Send, CheckCircle2, Archive, Eye, MessageSquare } from "lucide-react";
 
 interface ContactReply {
   id: string;
@@ -44,8 +44,11 @@ export default function AdminInboxDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [replySubject, setReplySubject] = useState("");
+  const [showReplyComposer, setShowReplyComposer] = useState(false);
   const [sendingReply, setSendingReply] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
   useEffect(() => {
     fetchMessage();
@@ -78,6 +81,31 @@ export default function AdminInboxDetailPage() {
     }
   };
 
+  const markAsRead = async () => {
+    setUpdatingStatus(true);
+    try {
+      const res = await fetch(`/api/admin/contact-messages/${messageId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "REVIEWED" }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to mark as read");
+      }
+
+      fetchMessage(); // Refresh to show updated status
+      // Trigger dashboard refresh (could use a custom event or router refresh)
+      window.dispatchEvent(new CustomEvent("messageStatusUpdated"));
+    } catch (err: any) {
+      console.error("Failed to mark as read:", err);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   const sendReply = async () => {
     if (!replyText.trim()) return;
 
@@ -88,6 +116,7 @@ export default function AdminInboxDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           body: replyText.trim(),
+          subject: replySubject.trim() || undefined,
           sendEmail: true,
         }),
       });
@@ -97,8 +126,16 @@ export default function AdminInboxDetailPage() {
         throw new Error(errorData.error || "Failed to send reply");
       }
 
+      // Success - show toast (simple alert for now)
+      alert("Reply sent");
+      
       setReplyText("");
+      setReplySubject("");
+      setShowReplyComposer(false);
       fetchMessage(); // Refresh to show new reply
+      
+      // Trigger dashboard refresh
+      window.dispatchEvent(new CustomEvent("messageStatusUpdated"));
     } catch (err: any) {
       console.error("Failed to send reply:", err);
       alert(`Error: ${err.message}`);
@@ -107,28 +144,55 @@ export default function AdminInboxDetailPage() {
     }
   };
 
-  const updateStatus = async (status: string) => {
+  const archiveMessage = async () => {
     setUpdatingStatus(true);
     try {
       const res = await fetch(`/api/admin/contact-messages/${messageId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status: "ARCHIVED" }),
       });
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to update status");
+        throw new Error(errorData.error || "Failed to archive message");
       }
 
+      setShowArchiveConfirm(false);
       fetchMessage(); // Refresh to show updated status
+      
+      // Trigger dashboard refresh
+      window.dispatchEvent(new CustomEvent("messageStatusUpdated"));
+      
+      // Optionally redirect back to inbox
+      setTimeout(() => {
+        router.push("/admin/inbox");
+      }, 1000);
     } catch (err: any) {
-      console.error("Failed to update status:", err);
+      console.error("Failed to archive:", err);
       alert(`Error: ${err.message}`);
     } finally {
       setUpdatingStatus(false);
     }
   };
+
+  function statusColor(status: string) {
+    if (status === "NEW") return "bg-blue-100 text-blue-800";
+    if (status === "REVIEWED") return "bg-yellow-100 text-yellow-800";
+    if (status === "REPLIED") return "bg-green-100 text-green-800";
+    if (status === "ARCHIVED") return "bg-gray-100 text-gray-800";
+    return "bg-gray-100 text-gray-800";
+  }
+
+  function statusLabel(status: string) {
+    const labels: Record<string, string> = {
+      NEW: "Unopened",
+      REVIEWED: "Read, no reply yet",
+      REPLIED: "Responded",
+      ARCHIVED: "Closed / stored",
+    };
+    return labels[status] || status;
+  }
 
   if (loading) {
     return (
@@ -167,8 +231,79 @@ export default function AdminInboxDetailPage() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to inbox
         </Link>
-        <h1 className="text-2xl font-semibold text-gray-900">Message Thread</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-gray-900">Message Thread</h1>
+          
+          {/* Status Badge - Always Visible */}
+          <span
+            className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusColor(
+              message.status
+            )}`}
+          >
+            {message.status} — {statusLabel(message.status)}
+          </span>
+        </div>
       </div>
+
+      {/* Action Buttons - Top Right */}
+      {message.status !== "ARCHIVED" && (
+        <div className="flex items-center justify-end space-x-3 mb-6">
+          {message.status === "NEW" && (
+            <button
+              onClick={markAsRead}
+              disabled={updatingStatus}
+              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Mark as Read
+            </button>
+          )}
+          <button
+            onClick={() => setShowReplyComposer(!showReplyComposer)}
+            disabled={updatingStatus || sendingReply}
+            className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Reply
+          </button>
+          <button
+            onClick={() => setShowArchiveConfirm(true)}
+            disabled={updatingStatus || sendingReply}
+            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Archive className="w-4 h-4 mr-2" />
+            Archive
+          </button>
+        </div>
+      )}
+
+      {/* Archive Confirmation Modal */}
+      {showArchiveConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Archive this conversation?</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              This will mark the conversation as archived. It will be removed from the main inbox but remain accessible via filter/search. The conversation history will never be deleted.
+            </p>
+            <div className="flex items-center justify-end space-x-3">
+              <button
+                onClick={() => setShowArchiveConfirm(false)}
+                disabled={updatingStatus}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={archiveMessage}
+                disabled={updatingStatus}
+                className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50"
+              >
+                Archive
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Original Message */}
       <div className="bg-white border border-gray-200 rounded-md p-6 mb-6">
@@ -236,63 +371,61 @@ export default function AdminInboxDetailPage() {
         </div>
       )}
 
-      {/* Reply Box */}
-      {message.status !== "ARCHIVED" && (
+      {/* Inline Reply Composer */}
+      {showReplyComposer && message.status !== "ARCHIVED" && (
         <div className="bg-white border border-gray-200 rounded-md p-6 mb-6">
-          <h3 className="text-sm font-medium text-gray-900 mb-4">Reply Box</h3>
-          <textarea
-            rows={6}
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            placeholder="Write your reply…"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 mb-4"
-            disabled={sendingReply}
-          />
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={sendReply}
-              disabled={sendingReply || !replyText.trim()}
-              className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Send className="w-4 h-4 mr-2" />
-              {sendingReply ? "Sending…" : "Send Email"}
-            </button>
-            <label className="flex items-center text-sm text-gray-600">
+          <h3 className="text-sm font-medium text-gray-900 mb-4">Reply</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Subject
+              </label>
               <input
-                type="checkbox"
-                defaultChecked
-                className="mr-2"
+                type="text"
+                value={replySubject}
+                onChange={(e) => setReplySubject(e.target.value)}
+                placeholder="Re: Your message to VelocityMaid"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
                 disabled={sendingReply}
               />
-              Send via email
-            </label>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Message
+              </label>
+              <textarea
+                rows={6}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder="Write your reply…"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                disabled={sendingReply}
+              />
+            </div>
+            <div className="flex items-center justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowReplyComposer(false);
+                  setReplyText("");
+                  setReplySubject("");
+                }}
+                disabled={sendingReply}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sendReply}
+                disabled={sendingReply || !replyText.trim()}
+                className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                {sendingReply ? "Sending…" : "Send"}
+              </button>
+            </div>
           </div>
         </div>
       )}
-
-      {/* Actions */}
-      <div className="flex items-center space-x-3">
-        {message.status === "NEW" && (
-          <button
-            onClick={() => updateStatus("REVIEWED")}
-            disabled={updatingStatus}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-          >
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            Mark Reviewed
-          </button>
-        )}
-        {message.status !== "ARCHIVED" && (
-          <button
-            onClick={() => updateStatus("ARCHIVED")}
-            disabled={updatingStatus}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-          >
-            <Archive className="w-4 h-4 mr-2" />
-            Archive
-          </button>
-        )}
-      </div>
     </div>
   );
 }

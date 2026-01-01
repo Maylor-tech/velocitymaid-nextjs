@@ -32,7 +32,7 @@ export async function POST(
     const admin = await requireRole(request, "ADMIN");
 
     const body = await request.json();
-    const { body: replyBody, sendEmail = true } = body;
+    const { body: replyBody, subject, sendEmail = true } = body;
 
     // Validate reply message
     if (!replyBody || typeof replyBody !== "string" || replyBody.trim().length === 0) {
@@ -73,7 +73,7 @@ export async function POST(
           await resend.emails.send({
             from: "VelocityMaid <no-reply@velocitymaid.com>",
             to: [contact.email],
-            subject: "VelocityMaid — Follow-up",
+            subject: subject?.trim() || "VelocityMaid — Follow-up",
             html: `
               <p>Hi ${contact.name},</p>
               <p>Thanks for reaching out to VelocityMaid.</p>
@@ -109,6 +109,7 @@ VelocityMaid Team
         where: { id: params.id },
         data: {
           status: "REPLIED",
+          repliedAt: new Date(),
         },
       });
     }

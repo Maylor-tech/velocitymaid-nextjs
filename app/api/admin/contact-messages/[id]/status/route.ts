@@ -33,10 +33,20 @@ export async function PATCH(
       );
     }
 
-    // Update message status
+    // Update message status with appropriate timestamps
+    const updateData: any = { status };
+    
+    if (status === "REVIEWED") {
+      updateData.reviewedAt = new Date();
+    } else if (status === "REPLIED") {
+      updateData.repliedAt = new Date();
+    } else if (status === "ARCHIVED") {
+      updateData.archivedAt = new Date();
+    }
+
     await prisma.contactMessage.update({
       where: { id: params.id },
-      data: { status },
+      data: updateData,
     });
 
     return NextResponse.json({ success: true });

@@ -1092,6 +1092,9 @@ model ContactMessage {
   status       ContactMessageStatus @default(NEW)
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
+  reviewedAt   DateTime?
+  repliedAt   DateTime?
+  archivedAt   DateTime?
 
   replies      ContactReply[]
   internalNotes ContactInternalNote[]

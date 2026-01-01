@@ -85,6 +85,16 @@ export default function AdminCommandCenter() {
 
   useEffect(() => {
     fetchMetrics();
+    
+    // Listen for status updates from inbox
+    const handleStatusUpdate = () => {
+      fetchMetrics();
+    };
+    window.addEventListener("messageStatusUpdated", handleStatusUpdate);
+    
+    return () => {
+      window.removeEventListener("messageStatusUpdated", handleStatusUpdate);
+    };
   }, []);
 
   const fetchMetrics = async () => {
