@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
         assignedAt: new Date(),
       },
       include: {
-        assignedCleaner: {
+        User: {
           select: {
             id: true,
             name: true,
