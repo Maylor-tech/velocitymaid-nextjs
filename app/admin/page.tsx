@@ -113,6 +113,7 @@ export default function AdminCommandCenter() {
       // Fetch authoritative metrics from dedicated endpoint
       const metricsRes = await fetch("/api/admin/dashboard/metrics", {
         cache: "no-store",
+        credentials: "include",
       });
       const metricsData = await metricsRes.json();
 

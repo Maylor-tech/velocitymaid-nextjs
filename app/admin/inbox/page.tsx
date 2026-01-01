@@ -72,6 +72,7 @@ export default function AdminInboxPage() {
       const statusParam = activeTab !== "ALL" ? `?status=${activeTab}` : "";
       const res = await fetch(`/api/admin/contact-messages${statusParam}`, {
         cache: "no-store",
+        credentials: "include",
       });
 
       if (!res.ok) {
