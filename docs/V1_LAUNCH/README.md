@@ -23,6 +23,10 @@
    One-page "What VelocityMaid Is / Is Not" explainer  
    Executive-friendly positioning
 
+5. **[PRODUCTION_DEPLOYMENT_CHECKLIST.md](./PRODUCTION_DEPLOYMENT_CHECKLIST.md)**  
+   Final production deployment & launch checklist  
+   For founder/lead engineer execution
+
 ---
 
 ## Quick Start
@@ -38,6 +42,9 @@
 
 **For Positioning Questions:**
 → Reference [POSITIONING.md](./POSITIONING.md)
+
+**For Production Deployment:**
+→ Use [PRODUCTION_DEPLOYMENT_CHECKLIST.md](./PRODUCTION_DEPLOYMENT_CHECKLIST.md)
 
 ---
 
