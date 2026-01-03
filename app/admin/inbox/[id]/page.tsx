@@ -59,8 +59,9 @@ export default function AdminInboxDetailPage() {
       setLoading(true);
       setError(null);
 
-      const res = await fetch(`/api/admin/contact-messages/${messageId}`, {
+      const res = await fetch(`/api/admin/messages/${messageId}`, {
         cache: "no-store",
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -84,10 +85,10 @@ export default function AdminInboxDetailPage() {
   const markAsRead = async () => {
     setUpdatingStatus(true);
     try {
-      const res = await fetch(`/api/admin/contact-messages/${messageId}/status`, {
-        method: "PATCH",
+      const res = await fetch(`/api/admin/messages/${messageId}/review`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "REVIEWED" }),
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -95,7 +96,13 @@ export default function AdminInboxDetailPage() {
         throw new Error(errorData.error || "Failed to mark as read");
       }
 
-      fetchMessage(); // Refresh to show updated status
+      const data = await res.json();
+      if (data.success && data.message) {
+        setMessage(data.message); // Update message state
+      } else {
+        fetchMessage(); // Fallback: refresh to show updated status
+      }
+      
       // Trigger dashboard refresh
       window.dispatchEvent(new CustomEvent("messageStatusUpdated"));
     } catch (err: any) {
@@ -111,9 +118,10 @@ export default function AdminInboxDetailPage() {
 
     setSendingReply(true);
     try {
-      const res = await fetch(`/api/admin/contact-messages/${messageId}/reply`, {
+      const res = await fetch(`/api/admin/messages/${messageId}/reply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           body: replyText.trim(),
           subject: replySubject.trim() || undefined,
@@ -147,10 +155,10 @@ export default function AdminInboxDetailPage() {
   const archiveMessage = async () => {
     setUpdatingStatus(true);
     try {
-      const res = await fetch(`/api/admin/contact-messages/${messageId}/status`, {
-        method: "PATCH",
+      const res = await fetch(`/api/admin/messages/${messageId}/archive`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "ARCHIVED" }),
+        credentials: "include",
       });
 
       if (!res.ok) {

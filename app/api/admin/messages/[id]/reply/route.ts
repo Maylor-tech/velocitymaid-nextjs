@@ -1,0 +1,161 @@
+/**
+ * Admin Message Reply API
+ * 
+ * POST /api/admin/messages/[id]/reply
+ * 
+ * Matches V1 spec requirement
+ * Delegates to contact-messages reply implementation
+ */
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/auth/requireRole";
+import { prisma } from "@/lib/prisma";
+import { Resend } from "resend";
+import { ContactMessageStatus } from "@prisma/client";
+
+function getResend() {
+  if (!process.env.RESEND_API_KEY) {
+    return null;
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Require admin authentication
+    const admin = await requireRole(request, "ADMIN");
+
+    const body = await request.json();
+    const { body: replyBody, subject, sendEmail = true } = body;
+
+    // Validate reply message
+    if (!replyBody || typeof replyBody !== "string" || replyBody.trim().length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Reply message required" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch contact message
+    const contact = await prisma.contactMessage.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!contact) {
+      return NextResponse.json(
+        { success: false, error: "Contact message not found" },
+        { status: 404 }
+      );
+    }
+
+    // 1️⃣ Save reply to database FIRST (atomic, defensible)
+    const reply = await prisma.contactReply.create({
+      data: {
+        contactMessageId: contact.id,
+        body: replyBody.trim(),
+        repliedByAdminId: admin.userId,
+        sentViaEmail: sendEmail,
+      },
+    });
+
+    // 2️⃣ Send email if requested (non-blocking)
+    let emailSent = false;
+    if (sendEmail) {
+      const resend = getResend();
+      if (resend) {
+        try {
+          await resend.emails.send({
+            from: "VelocityMaid <no-reply@velocitymaid.com>",
+            to: [contact.email],
+            subject: subject?.trim() || "VelocityMaid — Follow-up",
+            html: `
+              <p>Hi ${contact.name},</p>
+              <p>Thanks for reaching out to VelocityMaid.</p>
+              <p>${replyBody.replace(/\n/g, "<br/>")}</p>
+              <p>Best regards,<br/>VelocityMaid Team</p>
+            `,
+            text: `
+Hi ${contact.name},
+
+Thanks for reaching out to VelocityMaid.
+
+${replyBody}
+
+Best regards,
+VelocityMaid Team
+            `.trim(),
+          });
+          emailSent = true;
+          console.log(`[CONTACT_REPLY] Reply sent to ${contact.email} for message ${params.id}`);
+        } catch (emailError: any) {
+          console.error("[CONTACT_REPLY] Failed to send reply email:", emailError);
+          // Don't fail the request if email fails - message is already saved
+        }
+      }
+    }
+
+    // 3️⃣ Update status based on email send result
+    // Spec: If email succeeds → REPLIED, if email fails → keep reply saved, status remains REVIEWED
+    if (emailSent) {
+      // Email sent successfully → mark as REPLIED
+      await prisma.contactMessage.update({
+        where: { id: contact.id },
+        data: {
+          status: ContactMessageStatus.REPLIED,
+          repliedAt: new Date(),
+        },
+      });
+    }
+    // If email failed or sendEmail=false, reply is saved but status remains unchanged (REVIEWED or current status)
+
+    // Fetch updated message with full thread
+    const updatedMessage = await prisma.contactMessage.findUnique({
+      where: { id: params.id },
+      include: {
+        replies: {
+          orderBy: { createdAt: "asc" },
+        },
+        internalNotes: {
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: updatedMessage,
+      reply,
+    });
+  } catch (error: any) {
+    console.error("[ADMIN_MESSAGE_REPLY] Error:", error);
+
+    if (error instanceof Response) {
+      return error;
+    }
+
+    // Handle not found
+    if (error?.code === "P2025") {
+      return NextResponse.json(
+        { success: false, error: "Message not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error?.message || "Failed to send reply",
+        details:
+          process.env.NODE_ENV === "development" ? error.stack : undefined,
+      },
+      { status: 500 }
+    );
+  }
+}
+
