@@ -119,8 +119,26 @@ export async function POST(req: NextRequest) {
       console.log(`[${requestId}] Tenant created: ${tenant.id}`);
     } catch (tenantError: any) {
       console.error(`[${requestId}] Tenant creation error:`, tenantError);
+      console.error(`[${requestId}] Tenant error details:`, {
+        code: tenantError.code,
+        meta: tenantError.meta,
+        message: tenantError.message,
+      });
+      
+      // Provide more specific error message
+      let errorMessage = 'Failed to create tenant';
+      if (tenantError.code === 'P2002') {
+        errorMessage = 'A tenant with this name already exists. Please try a different company name.';
+      } else if (tenantError.message) {
+        errorMessage = `Failed to create tenant: ${tenantError.message}`;
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to create tenant', requestId },
+        { 
+          error: errorMessage, 
+          requestId,
+          details: process.env.NODE_ENV === 'development' ? tenantError.message : undefined,
+        },
         { status: 500 }
       );
     }
