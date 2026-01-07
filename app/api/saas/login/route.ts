@@ -77,10 +77,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Set session cookie with user ID
+    // Create JWT token
+    const { createToken } = await import('@/lib/auth/jwt');
+    let token: string;
+    try {
+      token = await createToken({
+        userId: user.id,
+        email: user.email,
+        tenantId: user.tenantId!,
+        role: user.role,
+      });
+    } catch (tokenError: any) {
+      console.error(`[${requestId}] Token creation error:`, tokenError);
+      return NextResponse.json(
+        { success: false, error: 'Failed to create session', requestId },
+        { status: 500 }
+      );
+    }
+
+    // Set JWT token in HttpOnly cookie
     try {
       const cookieStore = await cookies();
-      cookieStore.set('saas_user_id', user.id, {
+      cookieStore.set('saas_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

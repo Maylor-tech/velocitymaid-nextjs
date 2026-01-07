@@ -239,16 +239,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Set session cookie
+    // Create JWT token
+    const { createToken } = await import('@/lib/auth/jwt');
+    let token: string;
+    try {
+      token = await createToken({
+        userId: user.id,
+        email: user.email,
+        tenantId: user.tenantId!,
+        role: user.role,
+      });
+    } catch (tokenError: any) {
+      console.error(`[${requestId}] Token creation error:`, tokenError);
+      // Don't fail registration if token creation fails, but log it
+    }
+
+    // Set JWT token in HttpOnly cookie
     try {
       const cookieStore = await cookies();
-      cookieStore.set('saas_user_id', user.id, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
+      if (token) {
+        cookieStore.set('saas_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        });
+      }
     } catch (cookieError: any) {
       console.error(`[${requestId}] Cookie setting error:`, cookieError);
       // Don't fail registration if cookie fails, but log it

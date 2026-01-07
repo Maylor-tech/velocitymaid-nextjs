@@ -46,6 +46,29 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl, 301);
   }
 
+  // 🔐 SaaS ROUTE PROTECTION
+  if (pathname.startsWith('/saas')) {
+    const isAuthRoute = pathname === '/saas/login' || pathname === '/saas/signup' || pathname === '/saas/signup/success';
+    const saasToken = req.cookies.get('saas_token')?.value;
+    const saasUserId = req.cookies.get('saas_user_id')?.value; // Legacy support
+
+    // Not logged in, trying to access protected SaaS routes → redirect to login
+    if (!saasToken && !saasUserId && !isAuthRoute) {
+      const loginUrl = req.nextUrl.clone();
+      loginUrl.pathname = '/saas/login';
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Logged in, trying to access login/signup → redirect to dashboard
+    if ((saasToken || saasUserId) && isAuthRoute) {
+      const dashUrl = req.nextUrl.clone();
+      dashUrl.pathname = '/saas/dashboard';
+      dashUrl.searchParams.delete('redirect');
+      return NextResponse.redirect(dashUrl);
+    }
+  }
+
   // Only handle customer portal paths here.
   // (Admin/auth logic can be added separately or above with early returns.)
   const isCustomerRoute = pathname.startsWith('/customer');
@@ -90,5 +113,6 @@ export const config = {
     '/pilot/:path*',      // Block pilot routes in production
     '/booking/:path*',    // Redirect legacy booking routes
     '/customer/:path*',   // Customer portal auth
+    '/saas/:path*',       // SaaS portal auth
   ],
 };

@@ -8,24 +8,16 @@ import { sendAdminNotification } from '@/lib/sendAdminNotification';
 import { prisma } from '@/lib/prisma';
 import { autoAssignCleaner } from '@/lib/cleaner-assignment';
 import { getStripeAccountStatus } from '@/lib/stripe/connect';
+import { getStripe } from '@/lib/stripe';
 
 /**
  * Stripe Webhook Handler
  * 
- * Handles Stripe webhook events, specifically checkout.session.completed
- * to send WhatsApp confirmation messages after successful payment.
+ * Handles Stripe webhook events:
+ * - checkout.session.completed (customer bookings and SaaS subscriptions)
+ * - invoice.payment_succeeded (subscription renewals)
+ * - account.updated (Stripe Connect)
  */
-
-// Initialize Stripe
-function getStripe(): Stripe {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
-  if (!secretKey) {
-    throw new Error('STRIPE_SECRET_KEY is not set');
-  }
-  return new Stripe(secretKey, {
-    apiVersion: '2025-10-29.clover',
-  });
-}
 
 /**
  * Verify Stripe webhook signature
@@ -416,7 +408,53 @@ export async function POST(request: NextRequest) {
       
       log.push(`Processing checkout session: ${session.id}`);
       log.push(`Payment status: ${session.payment_status}`);
+      log.push(`Mode: ${session.mode}`);
 
+      // Check if this is a subscription checkout (SaaS billing)
+      if (session.mode === 'subscription' && session.subscription) {
+        log.push(`Processing subscription checkout for tenant: ${session.metadata?.tenantId}`);
+        
+        try {
+          const subscription = await stripe.subscriptions.retrieve(
+            session.subscription as string
+          );
+
+          const tenantId = session.metadata?.tenantId;
+          if (!tenantId) {
+            log.push(`WARNING: No tenantId in session metadata`);
+          } else {
+            // Update subscription record
+            await prisma.subscription.update({
+              where: {
+                stripeCustomerId: subscription.customer as string,
+              },
+              data: {
+                stripeSubscriptionId: subscription.id,
+                stripePriceId: subscription.items.data[0]?.price.id || null,
+                stripeCurrentPeriodEnd: new Date(
+                  subscription.current_period_end * 1000
+                ),
+              },
+            });
+
+            log.push(`SUCCESS: Subscription updated for tenant ${tenantId}`);
+          }
+        } catch (error: any) {
+          log.push(`ERROR: Failed to update subscription: ${error.message}`);
+          console.error('Subscription update error:', error);
+        }
+
+        const duration = Date.now() - startTime;
+        return NextResponse.json({
+          received: true,
+          eventType: event.type,
+          success: true,
+          log,
+          duration: `${duration}ms`,
+        });
+      }
+
+      // Otherwise, handle as customer booking checkout
       // Only process if payment is successful
       if (session.payment_status === 'paid') {
         const result = await handleCheckoutCompleted(session);
@@ -447,6 +485,49 @@ export async function POST(request: NextRequest) {
           log,
         });
       }
+    }
+
+    // Handle invoice.payment_succeeded event (subscription renewals)
+    if (event.type === 'invoice.payment_succeeded') {
+      const invoice = event.data.object as Stripe.Invoice;
+      
+      log.push(`Processing invoice payment: ${invoice.id}`);
+      log.push(`Subscription: ${invoice.subscription}`);
+
+      if (invoice.subscription) {
+        try {
+          const subscription = await stripe.subscriptions.retrieve(
+            invoice.subscription as string
+          );
+
+          // Update subscription record
+          await prisma.subscription.update({
+            where: {
+              stripeSubscriptionId: subscription.id,
+            },
+            data: {
+              stripePriceId: subscription.items.data[0]?.price.id || null,
+              stripeCurrentPeriodEnd: new Date(
+                subscription.current_period_end * 1000
+              ),
+            },
+          });
+
+          log.push(`SUCCESS: Subscription updated for ${subscription.id}`);
+        } catch (error: any) {
+          log.push(`ERROR: Failed to update subscription: ${error.message}`);
+          console.error('Subscription update error:', error);
+        }
+      }
+
+      const duration = Date.now() - startTime;
+      return NextResponse.json({
+        received: true,
+        eventType: event.type,
+        success: true,
+        log,
+        duration: `${duration}ms`,
+      });
     }
 
     // Handle account.updated event (Stripe Connect)

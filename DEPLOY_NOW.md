@@ -1,129 +1,109 @@
-# 🚀 DEPLOY NOW - Step by Step
+# 🚀 Deploy to Vercel - Quick Guide
 
-## ✅ What's Ready
-- ✅ Booking form (1 page, fast)
-- ✅ Stripe integration
-- ✅ Form validation
-- ✅ Success/failed pages
-- ✅ Build passes
-- ✅ Code is ready
+## Pre-Deployment Checklist
 
-## 🔴 What You Need to Do (5 Steps)
+Before deploying, make sure:
 
-### STEP 1: Get Stripe Test Key (2 min)
+1. **Environment Variables are Set in Vercel**
+   - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+   - Add all required variables (see below)
 
-1. Open: https://dashboard.stripe.com/test/apikeys
-2. Click "Reveal test key" next to "Secret key"
-3. Copy the key (starts with `sk_test_...`)
-4. Keep it open - you'll paste it next
+2. **Database is Ready**
+   - Production database URL is set
+   - Migrations can be run
 
----
+3. **Stripe is Configured** (if using billing)
+   - Live mode API keys
+   - Webhook endpoint configured
 
-### STEP 2: Create .env.local File (1 min)
+## Required Environment Variables
 
-**In your project folder** (`velocitymaid-nextjs`), create a new file:
+Add these in Vercel Dashboard:
 
-**File name:** `.env.local` (exactly this name, including the dot)
-
-**File contents:**
-```env
-STRIPE_SECRET_KEY=sk_test_paste_your_key_here
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```bash
+DATABASE_URL=your_production_database_url
+DIRECT_URL=your_direct_database_url
+STRIPE_SECRET_KEY=sk_live_... (or sk_test_... for testing)
+STRIPE_WEBHOOK_SECRET=whsec_...
+NEXTAUTH_URL=https://yourdomain.com
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
 ```
 
-**Replace** `sk_test_paste_your_key_here` with the key you copied in Step 1.
-
-**Save the file.**
-
----
-
-### STEP 3: Test Locally (2 min)
-
-Run this command:
+Optional (for billing):
 ```bash
-npm run dev
+NEXT_PUBLIC_STRIPE_PRICE_STARTER=price_...
+NEXT_PUBLIC_STRIPE_PRICE_PRO=price_...
+NEXT_PUBLIC_STRIPE_PRICE_BUSINESS=price_...
 ```
 
-Then:
-1. Open: http://localhost:3000/booking
-2. Fill out the form
-3. Click "Continue to Payment"
-4. Use test card: `4242 4242 4242 4242` (any future date, any CVC)
+## Deployment Options
 
-**If it works → Continue to Step 4**
-**If it doesn't → Check your Stripe key is correct**
-
----
-
-### STEP 4: Commit & Push (1 min)
-
-Run these commands:
+### Option 1: Deploy via Vercel CLI (Recommended)
 ```bash
+# Install Vercel CLI if not installed
+npm i -g vercel
+
+# Login to Vercel
+vercel login
+
+# Deploy to production
+vercel --prod
+```
+
+### Option 2: Deploy via Git Push
+```bash
+# Commit your changes
 git add .
-git commit -m "Launch: Custom booking form with Stripe integration"
-git push
+git commit -m "feat: add SaaS multi-tenancy and billing system"
+
+# Push to main branch (Vercel auto-deploys)
+git push origin main
 ```
 
----
+### Option 3: Deploy via Vercel Dashboard
+1. Go to https://vercel.com
+2. Select your project
+3. Click "Deploy" → "Deploy Latest"
 
-### STEP 5: Add Keys to Vercel (2 min)
+## Post-Deployment
 
-1. **Go to:** https://vercel.com/dashboard
-2. **Click your project** (velocitymaid-nextjs)
-3. **Go to:** Settings → Environment Variables
-4. **Add these:**
+1. **Run Database Migrations**
+   ```bash
+   npx prisma migrate deploy
+   ```
 
-   **Variable 1:**
-   - Name: `STRIPE_SECRET_KEY`
-   - Value: `sk_test_your_key_here` (same key from Step 1)
-   - Environments: ✅ Production ✅ Preview ✅ Development
+2. **Verify Deployment**
+   - Visit: `https://yourdomain.com/api/health`
+   - Should return 200 OK
 
-   **Variable 2:**
-   - Name: `NEXT_PUBLIC_BASE_URL`
-   - Value: `https://your-project.vercel.app` (or your custom domain)
-   - Environments: ✅ Production ✅ Preview ✅ Development
+3. **Test User Flows**
+   - Visit: `https://yourdomain.com/saas`
+   - Test signup
+   - Test login
+   - Test dashboard
 
-5. **Click "Save"**
-6. **Go to Deployments tab**
-7. **Click "..." on latest deployment → "Redeploy"**
+4. **Configure Stripe Webhook**
+   - Go to Stripe Dashboard → Webhooks
+   - Add endpoint: `https://yourdomain.com/api/webhooks/stripe`
+   - Enable events: `checkout.session.completed`, `invoice.payment_succeeded`
 
----
+## Troubleshooting
 
-## ✅ You're Live!
+### Build Fails
+- Check environment variables are set
+- Verify `DATABASE_URL` is correct
+- Check build logs in Vercel dashboard
 
-Visit your site and test the booking form!
+### Database Connection Errors
+- Verify `DATABASE_URL` and `DIRECT_URL` are set
+- Check database allows connections from Vercel IPs
+- Run migrations: `npx prisma migrate deploy`
 
----
-
-## 🔄 For Production (When Ready)
-
-When you're ready to accept real payments:
-
-1. **Get LIVE Stripe key:**
-   - Go to: https://dashboard.stripe.com
-   - Toggle to **LIVE MODE** (top right)
-   - Go to: Developers → API Keys
-   - Copy **Secret key** (starts with `sk_live_...`)
-
-2. **Update Vercel:**
-   - Go to Environment Variables
-   - Update `STRIPE_SECRET_KEY` with your LIVE key
-   - Update `NEXT_PUBLIC_BASE_URL` with your production domain
-   - Redeploy
-
-3. **Update Zapier:**
-   - Change trigger from "Google Forms" to "Stripe Payment Success"
-   - Test the automation
+### Stripe Errors
+- Verify using correct key (live vs test)
+- Check webhook secret matches
+- Verify webhook endpoint is accessible
 
 ---
 
-## 🆘 Need Help?
-
-- **Stripe setup:** See `STRIPE_SETUP_GUIDE.md`
-- **Full checklist:** See `PRE_LAUNCH_CHECKLIST.md`
-- **Quick reference:** See `QUICK_DEPLOY.md`
-
----
-
-**Ready? Start with Step 1!** 🚀
-
+**Ready to deploy!** 🚀

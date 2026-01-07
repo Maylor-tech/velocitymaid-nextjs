@@ -11,7 +11,9 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   try {
     const cookieStore = await cookies();
+    // Delete both old and new cookie names for compatibility
     cookieStore.delete('saas_user_id');
+    cookieStore.delete('saas_token');
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

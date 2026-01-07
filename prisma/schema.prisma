@@ -8,6 +8,37 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Multi-tenancy models for SaaS billing
+model Tenant {
+  id            String    @id @default(cuid())
+  name          String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  users         User[]
+  messages      ContactMessage[]
+  subscription  Subscription?
+
+  @@index([name])
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  tenantId             String    @unique
+  stripeCustomerId     String    @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
+  stripeCurrentPeriodEnd DateTime?
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+}
+
 model Branch {
   id                                String                      @id
   name                              String
@@ -762,6 +793,7 @@ model User {
   name                                String?
   role                                UserRole               @default(CLEANER)
   primaryBranchId                     String?
+  tenantId                            String?
   createdAt                           DateTime               @default(now())
   updatedAt                           DateTime
   isActive                            Boolean                @default(false)
@@ -791,6 +823,7 @@ model User {
   TransactionLedger                   TransactionLedger[]
   Branch_User_primaryBranchIdToBranch Branch?                @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
   UserBranch                          UserBranch[]
+  Tenant                              Tenant?                @relation(fields: [tenantId], references: [id])
 
   @@index([isActive])
   @@index([preferredCities])
@@ -798,6 +831,7 @@ model User {
   @@index([role])
   @@index([isSuspended])
   @@index([warningCount])
+  @@index([tenantId])
 }
 
 model UserBranch {
@@ -1090,6 +1124,7 @@ model ContactMessage {
   organization String?
   message      String?
   status       ContactMessageStatus @default(NEW)
+  tenantId     String?
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
   reviewedAt   DateTime?
@@ -1098,6 +1133,9 @@ model ContactMessage {
 
   replies      ContactReply[]
   internalNotes ContactInternalNote[]
+  Tenant       Tenant?               @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
 }
 
 model ContactReply {

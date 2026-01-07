@@ -51,7 +51,44 @@ export async function requireAuth(request?: NextRequest): Promise<AuthContext> {
     };
   }
   
-  // Check for SaaS user session
+  // Check for SaaS JWT token (new method)
+  const saasToken = cookieStore.get("saas_token")?.value;
+  if (saasToken) {
+    try {
+      const { verifyToken } = await import('@/lib/auth/jwt');
+      const payload = await verifyToken(saasToken);
+      
+      if (payload && payload.tenantId) {
+        // Verify user still exists and is active
+        const user = await prisma.user.findUnique({
+          where: {
+            id: payload.userId,
+            isActive: true,
+          },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            tenantId: true,
+          },
+        });
+
+        if (user && user.tenantId === payload.tenantId) {
+          return {
+            userId: user.id,
+            email: user.email,
+            tenantId: user.tenantId,
+            role: user.role,
+          };
+        }
+      }
+    } catch (jwtError) {
+      // JWT verification failed, fall through to legacy check
+      console.warn('JWT verification failed, trying legacy auth');
+    }
+  }
+
+  // Legacy: Check for SaaS user session (backward compatibility)
   if (saasUserId) {
     const user = await prisma.user.findUnique({
       where: {

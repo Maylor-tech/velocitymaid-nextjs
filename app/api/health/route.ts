@@ -1,62 +1,68 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { validateSaaSEnv } from '@/lib/env/validate';
+import { prisma } from '@/lib/prisma';
+import { getStripe } from '@/lib/stripe';
+
+export const runtime = 'nodejs';
+
 /**
- * Health Check API
+ * Health check endpoint for production monitoring
  * 
  * GET /api/health
- * 
- * Confirms:
- * - Database reachable
- * - Prisma initialized
- * - Env vars present
- * 
- * Public endpoint for monitoring
  */
+export async function GET(req: NextRequest) {
+  const checks: Record<string, { status: 'ok' | 'error'; message?: string }> = {};
+  let overallStatus = 'ok';
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-
-export async function GET() {
+  // Check environment variables
   try {
-    // Check Prisma initialization
-    if (!prisma) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "Prisma client not initialized",
-        },
-        { status: 503 }
-      );
+    const envCheck = validateSaaSEnv();
+    if (!envCheck.valid) {
+      checks.env = {
+        status: 'error',
+        message: `Missing: ${envCheck.missing.join(', ')}`,
+      };
+      overallStatus = 'error';
+    } else if (envCheck.warnings.length > 0) {
+      checks.env = {
+        status: 'ok',
+        message: `Warnings: ${envCheck.warnings.join(', ')}`,
+      };
+    } else {
+      checks.env = { status: 'ok' };
     }
-
-    // Check database connectivity
-    await prisma.$queryRaw`SELECT 1`;
-
-    // Check critical environment variables
-    const envVars = {
-      DATABASE_URL: !!process.env.DATABASE_URL,
-      RESEND_API_KEY: !!process.env.RESEND_API_KEY,
-    };
-
-    return NextResponse.json({
-      status: "healthy",
-      timestamp: new Date().toISOString(),
-      database: "connected",
-      prisma: "initialized",
-      environment: envVars,
-    });
   } catch (error: any) {
-    console.error("[HEALTH] Health check error:", error);
-
-    return NextResponse.json(
-      {
-        status: "unhealthy",
-        timestamp: new Date().toISOString(),
-        error: process.env.NODE_ENV === "development" ? error.message : "Service unavailable",
-      },
-      { status: 503 }
-    );
+    checks.env = { status: 'error', message: error.message };
+    overallStatus = 'error';
   }
-}
 
+  // Check database connection
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    checks.database = { status: 'ok' };
+  } catch (error: any) {
+    checks.database = { status: 'error', message: error.message };
+    overallStatus = 'error';
+  }
+
+  // Check Stripe connection
+  try {
+    const stripe = getStripe();
+    await stripe.customers.list({ limit: 1 });
+    checks.stripe = { status: 'ok' };
+  } catch (error: any) {
+    checks.stripe = { status: 'error', message: error.message };
+    // Don't fail overall if Stripe fails (might be test mode)
+  }
+
+  const statusCode = overallStatus === 'ok' ? 200 : 503;
+
+  return NextResponse.json(
+    {
+      status: overallStatus,
+      timestamp: new Date().toISOString(),
+      checks,
+    },
+    { status: statusCode }
+  );
+}
