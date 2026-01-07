@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getStripe, isStripeConfigured } from '@/lib/stripe';
 import { randomUUID } from 'crypto';
 import { validateEmail, validateName, validatePhone } from '@/lib/validation/saas';
+import { hashPassword, validatePassword } from '@/lib/auth/password';
 
 export const runtime = 'nodejs';
 
@@ -22,12 +23,21 @@ export const runtime = 'nodejs';
  */
 export async function POST(req: NextRequest) {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  console.log('\n[REGISTER] Received new registration request.');
+  console.log(`[REGISTER] Request ID: ${requestId}`);
   
   try {
     // Parse and validate request body
     let body;
     try {
       body = await req.json();
+      console.log('[REGISTER] Request body parsed:', { 
+        name: body.name, 
+        email: body.email, 
+        companyName: body.companyName,
+        hasPassword: !!body.password,
+        hasPhone: !!body.phone,
+      });
     } catch (parseError) {
       console.error(`[${requestId}] JSON parse error:`, parseError);
       return NextResponse.json(
@@ -36,12 +46,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, companyName, phone } = body;
+    const { name, email, companyName, phone, password } = body;
 
     // Validate required fields
-    if (!name || !email || !companyName) {
+    if (!name || !email || !companyName || !password) {
       return NextResponse.json(
-        { error: 'Name, email, and company name are required', requestId },
+        { error: 'Name, email, company name, and password are required', requestId },
+        { status: 400 }
+      );
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return NextResponse.json(
+        { error: passwordValidation.error, requestId },
         { status: 400 }
       );
     }
@@ -85,13 +104,20 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    console.log(`[REGISTER] Normalized email: ${normalizedEmail}`);
 
     // Check if user already exists (do this BEFORE creating any resources)
+    console.log(`[REGISTER] Checking for existing user with email: ${normalizedEmail}`);
     let existingUser;
     try {
       existingUser = await prisma.user.findUnique({
         where: { email: normalizedEmail },
       });
+      if (existingUser) {
+        console.error('[REGISTER] Error: User already exists.', { userId: existingUser.id, email: existingUser.email });
+      } else {
+        console.log('[REGISTER] No existing user found. Proceeding with registration.');
+      }
     } catch (dbError: any) {
       console.error(`[${requestId}] Database error checking existing user:`, dbError);
       return NextResponse.json(
@@ -108,7 +134,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Hash password
+    console.log('[REGISTER] Hashing password...');
+    let hashedPassword: string;
+    try {
+      hashedPassword = await hashPassword(password);
+      console.log('[REGISTER] Password hashed successfully.');
+    } catch (hashError: any) {
+      console.error(`[${requestId}] Password hashing error:`, hashError);
+      return NextResponse.json(
+        { error: 'Failed to process password', requestId },
+        { status: 500 }
+      );
+    }
+
     // Create tenant
+    console.log('[REGISTER] Starting database transaction to create tenant and user...');
     let tenant;
     try {
       tenant = await prisma.tenant.create({
@@ -116,7 +157,7 @@ export async function POST(req: NextRequest) {
           name: companyName.trim(),
         },
       });
-      console.log(`[${requestId}] Tenant created: ${tenant.id}`);
+      console.log(`[REGISTER] Tenant created: ${tenant.id} (${tenant.name})`);
     } catch (tenantError: any) {
       console.error(`[${requestId}] Tenant creation error:`, tenantError);
       console.error(`[${requestId}] Tenant error details:`, {
@@ -144,6 +185,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create Stripe customer for the tenant (optional - allow registration without Stripe)
+    console.log('[REGISTER] Creating Stripe customer...');
     let stripeCustomerId: string | null = null;
     if (isStripeConfigured()) {
       try {
@@ -156,7 +198,7 @@ export async function POST(req: NextRequest) {
           },
         });
         stripeCustomerId = stripeCustomer.id;
-        console.log(`[${requestId}] Stripe customer created: ${stripeCustomer.id}`);
+        console.log(`[REGISTER] Stripe customer created: ${stripeCustomer.id}`);
       } catch (stripeError: any) {
         console.warn(`[${requestId}] Stripe customer creation failed (continuing without Stripe):`, stripeError.message);
         // Continue registration without Stripe - can be set up later
@@ -198,6 +240,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create user (admin for the tenant)
+    console.log('[REGISTER] Creating user account...');
     let user;
     try {
       const userId = randomUUID();
@@ -206,19 +249,30 @@ export async function POST(req: NextRequest) {
           id: userId,
           email: normalizedEmail,
           name: name.trim(),
+          password: hashedPassword,
           role: 'ADMIN',
           tenantId: tenant.id,
           isActive: true,
           updatedAt: new Date(),
         },
       });
-      console.log(`[${requestId}] User created: ${user.id}`);
+      console.log(`[REGISTER] User created successfully:`, {
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        tenantId: user.tenantId,
+        role: user.role,
+        hasPassword: !!user.password,
+      });
+      console.log('[REGISTER] Database transaction successful. Tenant and user created.');
     } catch (userError: any) {
+      console.error('\n[REGISTER] FATAL ERROR: User creation failed');
       console.error(`[${requestId}] User creation error:`, userError);
       console.error(`[${requestId}] Error details:`, {
         code: userError.code,
         meta: userError.meta,
         message: userError.message,
+        stack: userError.stack,
       });
       // Clean up resources if user creation fails
       await prisma.subscription.delete({ where: { id: subscription.id } }).catch(() => {});
@@ -241,7 +295,7 @@ export async function POST(req: NextRequest) {
 
     // Create JWT token
     const { createToken } = await import('@/lib/auth/jwt');
-    let token: string;
+    let token: string | undefined;
     try {
       token = await createToken({
         userId: user.id,
@@ -251,13 +305,18 @@ export async function POST(req: NextRequest) {
       });
     } catch (tokenError: any) {
       console.error(`[${requestId}] Token creation error:`, tokenError);
+      console.error(`[${requestId}] Token error details:`, {
+        message: tokenError.message,
+        stack: tokenError.stack,
+      });
       // Don't fail registration if token creation fails, but log it
+      // User will need to login manually
     }
 
     // Set JWT token in HttpOnly cookie
-    try {
-      const cookieStore = await cookies();
-      if (token) {
+    if (token) {
+      try {
+        const cookieStore = await cookies();
         cookieStore.set('saas_token', token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
@@ -265,10 +324,12 @@ export async function POST(req: NextRequest) {
           path: '/',
           maxAge: 60 * 60 * 24 * 7, // 7 days
         });
+      } catch (cookieError: any) {
+        console.error(`[${requestId}] Cookie setting error:`, cookieError);
+        // Don't fail registration if cookie fails, but log it
       }
-    } catch (cookieError: any) {
-      console.error(`[${requestId}] Cookie setting error:`, cookieError);
-      // Don't fail registration if cookie fails, but log it
+    } else {
+      console.warn(`[${requestId}] No token created, user will need to login manually`);
     }
 
     console.log(`[${requestId}] Registration successful for: ${normalizedEmail}`);
@@ -292,9 +353,14 @@ export async function POST(req: NextRequest) {
       requestId,
     });
   } catch (error: any) {
+    console.error('\n[REGISTER] FATAL ERROR: Unexpected error in registration');
     console.error(`[${requestId}] Unexpected registration error:`, error);
+    console.error(`[${requestId}] Error details:`, {
+      message: error.message,
+      stack: error.stack,
+    });
     return NextResponse.json(
-      { error: 'An unexpected error occurred. Please try again.', requestId },
+      { error: 'An unexpected error occurred. Please try again.', requestId, details: process.env.NODE_ENV === 'development' ? error.message : undefined },
       { status: 500 }
     );
   }

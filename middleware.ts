@@ -51,17 +51,52 @@ export async function middleware(req: NextRequest) {
     const isAuthRoute = pathname === '/saas/login' || pathname === '/saas/signup' || pathname === '/saas/signup/success';
     const saasToken = req.cookies.get('saas_token')?.value;
     const saasUserId = req.cookies.get('saas_user_id')?.value; // Legacy support
+    
+    console.log(`\n[MIDDLEWARE] Path: ${pathname}, Token found: ${!!saasToken}, Legacy user ID: ${!!saasUserId}, Is auth route: ${isAuthRoute}`);
 
     // Not logged in, trying to access protected SaaS routes → redirect to login
     if (!saasToken && !saasUserId && !isAuthRoute) {
+      console.log('[MIDDLEWARE] No token, redirecting to login.');
       const loginUrl = req.nextUrl.clone();
       loginUrl.pathname = '/saas/login';
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
 
+    // If token exists, verify it
+    if (saasToken && !isAuthRoute) {
+      try {
+        const { verifyToken } = await import('@/lib/auth/jwt');
+        const payload = await verifyToken(saasToken);
+        if (payload) {
+          console.log('[MIDDLEWARE] JWT verification successful. Payload:', {
+            userId: payload.userId,
+            email: payload.email,
+            tenantId: payload.tenantId,
+            role: payload.role,
+          });
+        } else {
+          console.error('[MIDDLEWARE] JWT verification failed. Token invalid or expired.');
+          // Clear invalid token and redirect
+          const loginUrl = req.nextUrl.clone();
+          loginUrl.pathname = '/saas/login';
+          const response = NextResponse.redirect(loginUrl);
+          response.cookies.delete('saas_token');
+          return response;
+        }
+      } catch (error) {
+        console.error('[MIDDLEWARE] JWT verification error. Redirecting to login.', error);
+        const loginUrl = req.nextUrl.clone();
+        loginUrl.pathname = '/saas/login';
+        const response = NextResponse.redirect(loginUrl);
+        response.cookies.delete('saas_token');
+        return response;
+      }
+    }
+
     // Logged in, trying to access login/signup → redirect to dashboard
     if ((saasToken || saasUserId) && isAuthRoute) {
+      console.log('[MIDDLEWARE] User already logged in, redirecting to dashboard.');
       const dashUrl = req.nextUrl.clone();
       dashUrl.pathname = '/saas/dashboard';
       dashUrl.searchParams.delete('redirect');

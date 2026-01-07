@@ -791,6 +791,7 @@ model User {
   id                                  String                 @id
   email                               String                 @unique
   name                                String?
+  password                            String?                // Hashed password for SaaS users
   role                                UserRole               @default(CLEANER)
   primaryBranchId                     String?
   tenantId                            String?

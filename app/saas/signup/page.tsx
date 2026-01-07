@@ -15,6 +15,8 @@ export default function SignUpPage() {
     email: '',
     companyName: '',
     phone: '',
+    password: '',
+    confirmPassword: '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,6 +26,20 @@ export default function SignUpPage() {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate password strength
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      setIsSubmitting(false);
+      return;
+    }
     
     try {
       const response = await fetch('/api/saas/register', {
@@ -31,7 +47,13 @@ export default function SignUpPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          companyName: formData.companyName,
+          phone: formData.phone,
+          password: formData.password,
+        }),
       });
 
       const data = await response.json();
@@ -144,6 +166,40 @@ export default function SignUpPage() {
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                 placeholder="(555) 123-4567"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                required
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                placeholder="At least 8 characters"
+                minLength={8}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Must be at least 8 characters with letters and numbers
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                required
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                placeholder="Re-enter your password"
               />
             </div>
 

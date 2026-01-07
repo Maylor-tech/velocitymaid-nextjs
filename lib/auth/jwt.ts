@@ -18,7 +18,12 @@ interface JWTPayload {
 function getJWTSecret(): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error('JWT_SECRET environment variable is not set');
+    // In development, use a default secret (not for production!)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️  JWT_SECRET not set, using default development secret. Set JWT_SECRET in production!');
+      return 'dev-secret-key-change-in-production-' + Date.now();
+    }
+    throw new Error('JWT_SECRET environment variable is not set. Please set it in your environment variables.');
   }
   return secret;
 }
