@@ -13,8 +13,17 @@ import { seedAllBranchesDb } from '@/utils/seedBranchesDb';
  */
 export async function POST(request: NextRequest) {
   try {
-    await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
+    // Allow seeding with a secret key from environment variable (for one-time setup)
+    const secretKey = request.headers.get('x-seed-secret');
+    const expectedSecret = process.env.BRANCH_SEED_SECRET;
+    
+    if (expectedSecret && secretKey === expectedSecret) {
+      // Bypass auth if secret key matches
+      console.log('Branch seeding authorized via secret key');
+    } else {
+      // Otherwise require admin authentication
+      await requireRole(request, "ADMIN");
+    }
     
     const result = await seedAllBranchesDb();
     
