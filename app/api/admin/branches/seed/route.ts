@@ -2,21 +2,21 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
-import { seedAllBranches } from '@/utils/seedBranches';
+import { seedAllBranchesDb } from '@/utils/seedBranchesDb';
 
 /**
  * Seed Branches API
  * 
  * POST /api/admin/branches/seed
  * 
- * Seeds all VelocityMaid branches with complete configuration
+ * Seeds all VelocityMaid branches with complete configuration into the database
  */
 export async function POST(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
     // TODO: Add admin authentication check
     
-    const result = seedAllBranches();
+    const result = await seedAllBranchesDb();
     
     return NextResponse.json({
       success: true,
@@ -26,26 +26,22 @@ export async function POST(request: NextRequest) {
           id: result.newJersey.id,
           slug: result.newJersey.slug,
           name: result.newJersey.name,
+          country: result.newJersey.country,
+          status: result.newJersey.status,
         },
         vermont: {
           id: result.vermont.id,
           slug: result.vermont.slug,
           name: result.vermont.name,
-        },
-        boston: {
-          id: result.boston.id,
-          slug: result.boston.slug,
-          name: result.boston.name,
-        },
-        newYorkCity: {
-          id: result.newYorkCity.id,
-          slug: result.newYorkCity.slug,
-          name: result.newYorkCity.name,
+          country: result.vermont.country,
+          status: result.vermont.status,
         },
         portAntonio: {
           id: result.portAntonio.id,
           slug: result.portAntonio.slug,
           name: result.portAntonio.name,
+          country: result.portAntonio.country,
+          status: result.portAntonio.status,
         },
       },
     });
