@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
+import { sendIssueFollowUpIfNeeded } from '@/lib/notifications/issueFollowUpWhatsApp';
 
 // GET /api/admin/cleaners/[cleanerId]/compliance
 export async function GET(
@@ -82,8 +83,8 @@ export async function GET(
         type: issue.type,
         severity: issue.severity,
         status: issue.status,
-        summary: issue.summary,
-        details: issue.details,
+        summary: issue.reason,
+        details: issue.notes,
         createdAt: issue.createdAt.toISOString(),
         resolvedAt: issue.resolvedAt?.toISOString() || null,
       })),
@@ -178,10 +179,11 @@ export async function PATCH(
       const issue = await prisma.complianceIssue.create({
         data: {
           cleanerId,
+          jobId: addIssue.jobId ?? null,
           type: addIssue.type,
-          severity: addIssue.severity || 3,
-          summary: addIssue.summary,
-          details: addIssue.details || null,
+          severity: (addIssue.severity ?? 3) as import('@prisma/client').ComplianceSeverity,
+          reason: addIssue.summary ?? addIssue.reason ?? 'Compliance issue',
+          notes: addIssue.details ?? addIssue.notes ?? null,
           status: 'OPEN',
         },
       });
@@ -195,6 +197,8 @@ export async function PATCH(
         description: `Compliance issue created for cleaner: ${addIssue.summary}`,
         changes: { issue },
       });
+
+      sendIssueFollowUpIfNeeded(issue.id).catch(() => {});
     }
 
     // Resolve compliance issue
@@ -213,7 +217,7 @@ export async function PATCH(
         action: 'COMPLIANCE_ISSUE_RESOLVED',
         entityType: 'ComplianceIssue',
         entityId: resolveIssueId,
-        description: `Compliance issue resolved: ${issue.summary}`,
+        description: `Compliance issue resolved: ${issue.reason}`,
         changes: { status: 'RESOLVED' },
       });
     }

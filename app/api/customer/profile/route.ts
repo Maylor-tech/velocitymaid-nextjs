@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { type CustomerProfile } from '@/lib/types/customerProfile';
 import { getCustomerSession } from '@/lib/customerSession';
+import { sendAccountUpdateNotice } from '@/lib/notifications/accountUpdateNotice';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -106,10 +107,58 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    const current = await prisma.customer.findUnique({
+      where: { id: session.customerId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        addressLine1: true,
+        addressLine2: true,
+        city: true,
+        state: true,
+        postalCode: true,
+        notifyEmail: true,
+        notifySMS: true,
+      },
+    });
+    if (!current) {
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+    }
+
+    const materialUpdates: Record<string, any> = {};
+    for (const [key, value] of Object.entries(updates)) {
+      const cur = (current as Record<string, any>)[key];
+      const a = cur == null ? null : (typeof cur === 'boolean' ? cur : String(cur).trim());
+      const b = value == null ? null : (typeof value === 'boolean' ? value : String(value).trim());
+      if (a !== b) materialUpdates[key] = updates[key];
+    }
+    if (Object.keys(materialUpdates).length === 0) {
+      const profile: CustomerProfile = {
+        id: current.id,
+        email: current.email,
+        firstName: current.firstName,
+        lastName: current.lastName,
+        phone: current.phone,
+        addressLine1: current.addressLine1,
+        addressLine2: current.addressLine2,
+        city: current.city,
+        state: current.state,
+        postalCode: current.postalCode,
+        notifyEmail: current.notifyEmail ?? true,
+        notifySMS: current.notifySMS ?? false,
+      };
+      return NextResponse.json({ profile });
+    }
+
     const updated = await prisma.customer.update({
       where: { id: session.customerId },
-      data: updates,
+      data: materialUpdates,
     });
+
+    sendAccountUpdateNotice(session.customerId).catch(() => {});
 
     const profile: CustomerProfile = {
       id: updated.id,

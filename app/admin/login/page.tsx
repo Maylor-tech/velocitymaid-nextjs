@@ -29,14 +29,27 @@ export default function AdminLoginPage() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Invalid email address');
+        if (res.status === 403) {
+          setError('You don\'t have admin access yet.');
+        } else if (res.status === 401) {
+          setError('Email not found.');
+        } else {
+          console.error('Admin login error:', data.error ?? res.status);
+          setError(null);
+        }
+        return;
       }
 
-      // Redirect to admin jobs page
       router.push('/admin/jobs');
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Login failed. Please try again.');
+      if (err?.status === 403) {
+        setError('You don\'t have admin access yet.');
+      } else if (err?.status === 404) {
+        setError('Email not found.');
+      } else {
+        console.error('Admin login issue:', err);
+        setError(null);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -47,7 +60,8 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">VelocityMaid</h1>
-          <p className="text-sm text-gray-500">Admin Portal</p>
+          <p className="text-sm font-medium text-gray-700 mb-1">Welcome back 👋</p>
+          <p className="text-sm text-gray-500">Enter your email to access the admin portal.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

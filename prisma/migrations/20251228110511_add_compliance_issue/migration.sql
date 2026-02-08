@@ -1,14 +1,24 @@
--- CreateEnum
-CREATE TYPE "ComplianceIssueType" AS ENUM ('CUSTOMER_COMPLAINT', 'NO_SHOW', 'PROPERTY_DAMAGE', 'FRAUD_SUSPECTED', 'PAYMENT_DISPUTE', 'POLICY_VIOLATION', 'OTHER');
+-- CreateEnum (idempotent: skip if already exists)
+DO $$ BEGIN
+  CREATE TYPE "ComplianceIssueType" AS ENUM ('CUSTOMER_COMPLAINT', 'NO_SHOW', 'PROPERTY_DAMAGE', 'FRAUD_SUSPECTED', 'PAYMENT_DISPUTE', 'POLICY_VIOLATION', 'OTHER');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "ComplianceIssueStatus" AS ENUM ('OPEN', 'RESOLVED', 'ESCALATED');
+DO $$ BEGIN
+  CREATE TYPE "ComplianceIssueStatus" AS ENUM ('OPEN', 'RESOLVED', 'ESCALATED');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "ComplianceSeverity" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
+DO $$ BEGIN
+  CREATE TYPE "ComplianceSeverity" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
--- CreateTable
-CREATE TABLE "ComplianceIssue" (
+-- CreateTable (idempotent: skip if already exists from 20250101000000_add_compliance_issue)
+CREATE TABLE IF NOT EXISTS "ComplianceIssue" (
     "id" TEXT NOT NULL,
     "cleanerId" TEXT NOT NULL,
     "jobId" TEXT,
@@ -25,15 +35,19 @@ CREATE TABLE "ComplianceIssue" (
     CONSTRAINT "ComplianceIssue_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE INDEX "ComplianceIssue_cleanerId_status_idx" ON "ComplianceIssue"("cleanerId", "status");
+-- CreateIndex (idempotent)
+CREATE INDEX IF NOT EXISTS "ComplianceIssue_cleanerId_status_idx" ON "ComplianceIssue"("cleanerId", "status");
+CREATE INDEX IF NOT EXISTS "ComplianceIssue_jobId_idx" ON "ComplianceIssue"("jobId");
 
--- CreateIndex
-CREATE INDEX "ComplianceIssue_jobId_idx" ON "ComplianceIssue"("jobId");
-
--- AddForeignKey
-ALTER TABLE "ComplianceIssue" ADD CONSTRAINT "ComplianceIssue_cleanerId_fkey" FOREIGN KEY ("cleanerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ComplianceIssue" ADD CONSTRAINT "ComplianceIssue_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- AddForeignKey (idempotent: skip if constraint already exists)
+DO $$ BEGIN
+  ALTER TABLE "ComplianceIssue" ADD CONSTRAINT "ComplianceIssue_cleanerId_fkey" FOREIGN KEY ("cleanerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "ComplianceIssue" ADD CONSTRAINT "ComplianceIssue_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 

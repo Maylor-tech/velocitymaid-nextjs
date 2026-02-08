@@ -191,7 +191,7 @@ export async function processRefund(
 export function isNoShow(job: { status: string; completedAt: Date | null }): boolean {
   // No-show logic: job was scheduled but never completed
   // This would be tracked separately, but for now we check status
-  return job.status === "CANCELLED" && !job.completedAt;
+  return (job.status === "CANCELLED" || job.status === "CANCELLED_EMERGENCY") && !job.completedAt;
 }
 
 /**

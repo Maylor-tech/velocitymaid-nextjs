@@ -7,10 +7,11 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(request, "ADMIN");
+    const auth = await requireRole(request, "ADMIN");
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
-    const branchId = searchParams.get('branchId');
+    const branchIdParam = searchParams.get('branchId');
+    const branchId = auth.branchId ?? branchIdParam;
 
     const where: any = {};
     if (status) {

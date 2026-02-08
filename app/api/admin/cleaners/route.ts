@@ -16,6 +16,35 @@ import { getCleanerAverageJQS } from '@/utils/jobQualityScore';
 import { computeAssignmentScore, CleanerForScoring } from '@/lib/assignment-scoring';
 import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level';
 
+function startOfToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function parseStartTime(date: Date, time?: string | null): Date {
+  if (!time) return date;
+  const match = String(time).match(/(\d+):?(\d+)?\s*(AM|PM)?/i);
+  if (!match) return date;
+
+  let hour = Number(match[1]);
+  const minutes = Number(match[2] || 0);
+  const meridian = match[3]?.toUpperCase();
+
+  if (meridian === 'PM' && hour < 12) hour += 12;
+  if (meridian === 'AM' && hour === 12) hour = 0;
+
+  const d = new Date(date);
+  d.setHours(hour, minutes, 0, 0);
+  return d;
+}
+
+const JOB_DURATION_MS = 3 * 60 * 60 * 1000;
+
+function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
+  return aStart.getTime() < bEnd.getTime() && bStart.getTime() < aEnd.getTime();
+}
+
 // Helper to get start of week (Sunday)
 function startOfWeek(date: Date): Date {
   const d = new Date(date);
@@ -36,12 +65,12 @@ function endOfWeek(date: Date): Date {
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
+    const auth = await requireRole(request, "ADMIN");
 
     const { searchParams } = new URL(request.url);
-    const branchId = searchParams.get('branchId');
+    const branchIdParam = searchParams.get('branchId');
     const jobId = searchParams.get('jobId');
+    const branchId = auth.branchId ?? branchIdParam;
 
     if (!branchId) {
       return NextResponse.json({
@@ -93,6 +122,58 @@ export async function GET(request: NextRequest) {
       });
 
       if (!user) continue;
+
+      // Today / job day: assigned jobs and time-overlap (🟢 Available / 🟡 Busy / 🔴 Conflict)
+      const todayStart = startOfToday();
+      const todayEnd = new Date(todayStart);
+      todayEnd.setDate(todayEnd.getDate() + 1);
+
+      let todayAvailability: 'AVAILABLE' | 'BUSY' | 'CONFLICT' = 'AVAILABLE';
+
+      if (jobDate && jobTime) {
+        // Job we're assigning to: check overlap on that day
+        const jobStart = parseStartTime(new Date(jobDate), jobTime);
+        const jobEnd = new Date(jobStart.getTime() + JOB_DURATION_MS);
+        const jobDayStart = new Date(jobDate);
+        jobDayStart.setHours(0, 0, 0, 0);
+        const jobDayEnd = new Date(jobDayStart);
+        jobDayEnd.setDate(jobDayEnd.getDate() + 1);
+
+        const assignedOnJobDay = await prisma.job.findMany({
+          where: {
+            assignedCleanerId: user.id,
+            status: 'ASSIGNED',
+            preferredDate: {
+              gte: jobDayStart,
+              lt: jobDayEnd,
+            },
+          },
+          select: { preferredDate: true, preferredTime: true },
+        });
+
+        let hasOverlap = false;
+        for (const j of assignedOnJobDay) {
+          const start = parseStartTime(j.preferredDate ? new Date(j.preferredDate) : jobDayStart, j.preferredTime);
+          const end = new Date(start.getTime() + JOB_DURATION_MS);
+          if (overlaps(jobStart, jobEnd, start, end)) {
+            hasOverlap = true;
+            break;
+          }
+        }
+        todayAvailability = hasOverlap ? 'CONFLICT' : assignedOnJobDay.length > 0 ? 'BUSY' : 'AVAILABLE';
+      } else {
+        const assignedTodayCount = await prisma.job.count({
+          where: {
+            assignedCleanerId: user.id,
+            status: 'ASSIGNED',
+            preferredDate: {
+              gte: todayStart,
+              lt: todayEnd,
+            },
+          },
+        });
+        todayAvailability = assignedTodayCount > 0 ? 'BUSY' : 'AVAILABLE';
+      }
 
       // Weekly job count
       const weekStart = startOfWeek(new Date());
@@ -377,6 +458,7 @@ export async function GET(request: NextRequest) {
         isActive: user.isActive,
         availability,
         reason,
+        todayAvailability,
         dailyJobs,
         weeklyJobs,
         preferredCityMatch: preferredCityMatch || false,

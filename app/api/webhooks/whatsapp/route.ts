@@ -97,6 +97,10 @@ async function handleInboundMessage(message: any) {
       return;
     }
 
+    // Post-clean feedback reply (1–5 or note)
+    const feedbackHandled = await tryHandleFeedbackReply(from, text.trim());
+    if (feedbackHandled) return;
+
     // Route message based on content
     if (normalizedText === 'book' || normalizedText.includes('clean') || normalizedText.includes('booking') || normalizedText.includes('schedule')) {
       // User wants to book a cleaning
@@ -122,6 +126,91 @@ async function handleInboundMessage(message: any) {
     console.error('Error handling inbound message:', error);
     // Don't throw - we don't want to break the webhook
   }
+}
+
+/**
+ * Try to handle post-clean feedback reply (1–5 or note). Returns true if handled.
+ */
+async function tryHandleFeedbackReply(from: string, text: string): Promise<boolean> {
+  if (!text) return false;
+  const normalizedFrom = from.replace(/\D/g, '');
+  const normalizedFrom10 = normalizedFrom.length >= 10 ? normalizedFrom.slice(-10) : normalizedFrom;
+
+  const feedbackSentJobIds = await prisma.auditLog.findMany({
+    where: {
+      action: 'POST_CLEAN_FEEDBACK_REQUESTED',
+      entityType: 'Job',
+    },
+    select: { entityId: true },
+    orderBy: { createdAt: 'desc' },
+  });
+  const jobIds = [...new Set(feedbackSentJobIds.map((a) => a.entityId))].slice(0, 100);
+
+  if (jobIds.length === 0) return false;
+
+  const jobsWithCustomer = await prisma.job.findMany({
+    where: {
+      id: { in: jobIds },
+      status: 'COMPLETED',
+      assignedCleanerId: { not: null },
+      Customer: { phone: { not: null } },
+    },
+    select: {
+      id: true,
+      assignedCleanerId: true,
+      customerId: true,
+      Customer: { select: { phone: true } },
+    },
+    orderBy: { completedAt: 'desc' },
+  });
+
+  const job = jobsWithCustomer.find((j) => {
+    const p = (j.Customer?.phone ?? '').replace(/\D/g, '');
+    const p10 = p.length >= 10 ? p.slice(-10) : p;
+    return p10 === normalizedFrom10 || p === normalizedFrom;
+  });
+  if (!job?.assignedCleanerId) return false;
+
+  let rating: number | null = null;
+  const digitMatch = text.match(/\b([1-5])\b/);
+  if (digitMatch) {
+    rating = parseInt(digitMatch[1], 10);
+  } else if (/^[1-5]$/.test(text.replace(/\s/g, ''))) {
+    rating = parseInt(text.replace(/\s/g, ''), 10);
+  }
+  const comment = text.length > 2 ? text.slice(0, 500) : null;
+  if (rating === null && !comment) return false;
+
+  await prisma.cleanerRating.create({
+    data: {
+      jobId: job.id,
+      cleanerId: job.assignedCleanerId,
+      customerId: job.customerId ?? null,
+      rating: rating ?? 3,
+      comment: comment ?? null,
+    },
+  });
+
+  if (rating !== null) {
+    await prisma.job
+      .update({
+        where: { id: job.id },
+        data: { jobQualityScore: rating * 20 },
+      })
+      .catch(() => {});
+  }
+
+  await sendWhatsAppMessage(
+    from,
+    'Thanks for your feedback! We’re glad we could help. — VelocityMaid'
+  ).catch(() => {});
+
+  if (rating === 5) {
+    const { sendCleanerAppreciationIfEligible } = await import('@/lib/notifications/cleanerAppreciation');
+    sendCleanerAppreciationIfEligible(job.assignedCleanerId).catch(() => {});
+  }
+
+  return true;
 }
 
 /**

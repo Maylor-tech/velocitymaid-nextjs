@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, Loader2, Filter, Calendar, MapPin, DollarSign, User, AlertTriangle } from 'lucide-react';
+import { Eye, MapPin, AlertTriangle, X } from 'lucide-react';
 import Link from 'next/link';
+import EmptyState from '@/components/ui/EmptyState';
+import QuickAssignCleaner from '@/components/admin/jobs/QuickAssignCleaner';
+
+const WELCOME_BANNER_KEY = 'admin_welcome_dismissed';
 
 interface Job {
   id: string;
@@ -27,18 +31,86 @@ interface Job {
     name: string;
     slug: string;
   };
+  scheduleConfirmed?: boolean;
 }
 
 export default function AdminJobsPage() {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [branchFilter, setBranchFilter] = useState<string>('all');
   const [branches, setBranches] = useState<Array<{ id: string; name: string }>>([]);
   const [unassignedOnly, setUnassignedOnly] = useState(false);
+  const [adminMe, setAdminMe] = useState<{ name?: string; branchName?: string; isBranchScoped?: boolean } | null>(null);
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
+  const [counters, setCounters] = useState<{
+    today: number;
+    upcoming: number;
+    attention: number;
+  } | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [cleaners, setCleaners] = useState<Array<{ id: string; name: string | null; email?: string | null }>>([]);
+  const [confirmingJobId, setConfirmingJobId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/admin/me')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setAdminMe({
+            name: data.name,
+            branchName: data.branchName,
+            isBranchScoped: data.isBranchScoped,
+          });
+          try {
+            if (typeof window !== 'undefined' && localStorage.getItem(WELCOME_BANNER_KEY) === '1') {
+              setWelcomeDismissed(true);
+            }
+          } catch {}
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/admin/jobs/counters')
+      .then((res) => (res.ok ? res.json() : null))
+      .then(setCounters)
+      .catch(() => setCounters(null));
+  }, []);
+
+  const fetchCleaners = async () => {
+    try {
+      const res = await fetch('/api/admin/cleaners');
+      const data = await res.json();
+      setCleaners(data.cleaners || []);
+    } catch (e) {
+      console.error('Failed to load cleaners', e);
+      setCleaners([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchCleaners();
+  }, []);
+
+  useEffect(() => {
+    if (!jobs || jobs.length === 0) return;
+    const hasAssignedJob = jobs.some((job) => job.status === 'ASSIGNED');
+    let alreadyCelebrated = false;
+    try {
+      alreadyCelebrated = typeof window !== 'undefined' && !!localStorage.getItem('vm_first_job_assigned');
+    } catch {}
+    if (hasAssignedJob && !alreadyCelebrated) {
+      setShowCelebration(true);
+      try {
+        localStorage.setItem('vm_first_job_assigned', 'true');
+      } catch {}
+    }
+  }, [jobs]);
 
   useEffect(() => {
     fetchBranches();
@@ -57,44 +129,49 @@ export default function AdminJobsPage() {
     }
   };
 
-  const fetchJobs = async () => {
+  const dismissWelcome = () => {
+    setWelcomeDismissed(true);
     try {
-      setLoading(true);
-      setError(null);
+      localStorage.setItem(WELCOME_BANNER_KEY, '1');
+    } catch {}
+  };
+
+  const fetchJobs = async () => {
+    setLoading(true);
+    setLoadFailed(false);
+    try {
       const params = new URLSearchParams();
-      
-      if (statusFilter !== 'all') {
-        params.append('status', statusFilter);
-      }
-      if (branchFilter !== 'all') {
-        params.append('branchId', branchFilter);
-      }
-      if (unassignedOnly) {
-        params.append('unassignedOnly', 'true');
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (branchFilter !== 'all') params.append('branchId', branchFilter);
+      if (unassignedOnly) params.append('unassignedOnly', 'true');
+
+      const res = await fetch(`/api/admin/jobs/list?${params.toString()}`);
+      const data = await res.json();
+
+      if (!data.success) {
+        console.error('Jobs API warning:', data);
+        setJobs([]);
+        setLoadFailed(true);
+        return;
       }
 
-      const response = await fetch(`/api/admin/jobs/list?${params.toString()}`);
-      const data = await response.json();
-
-      if (data.success) {
-        let filteredJobs = data.jobs;
-
-        // Filter by payment status on client side (since API might not support it)
-        if (paymentFilter !== 'all') {
-          filteredJobs = filteredJobs.filter((job: Job) => job.paymentStatus === paymentFilter);
-        }
-
-        setJobs(filteredJobs);
-      } else {
-        throw new Error(data.error || 'Failed to fetch jobs');
+      let list = data.jobs ?? [];
+      if (paymentFilter !== 'all') {
+        list = list.filter((job: Job) => job.paymentStatus === paymentFilter);
       }
-    } catch (err: any) {
-      console.error('Error fetching jobs:', err);
-      setError(err.message || 'Failed to load jobs');
+      setJobs(list);
+    } catch (err) {
+      console.error('Jobs fetch failed:', err);
+      setLoadFailed(true);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
   };
+
+  const hasJobs = jobs.length > 0;
+  const hasAssignedJobs = jobs.some((job) => job.status === 'ASSIGNED');
+  const showFirstJobChecklist = hasJobs && !hasAssignedJobs;
 
   const getStatusColor = (status: string) => {
     const statusLower = status.toLowerCase();
@@ -141,12 +218,54 @@ export default function AdminJobsPage() {
     }).format(amount);
   };
 
-  if (loading && jobs.length === 0) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
-        <div className="text-center py-12">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading jobs...</p>
+        <p className="p-6 text-sm text-gray-500">Loading jobs…</p>
+      </div>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Jobs</h1>
+            <p className="text-gray-600">Manage and assign jobs to cleaners</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-md">
+            <EmptyState
+              title="No jobs yet"
+              subtitle="New bookings will appear here automatically."
+              actionLabel="Refresh"
+              onAction={fetchJobs}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (jobs.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
+            <h3 className="text-sm font-semibold text-blue-900">
+              Welcome, {adminMe?.name ?? 'there'} 👋
+            </h3>
+            <p className="mt-1 text-sm text-blue-800">
+              You&apos;re managing the {adminMe?.branchName ?? 'your'} branch. As bookings come in, you&apos;ll be able
+              to assign cleaners and manage schedules from this page.
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-md">
+            <EmptyState
+              title="No jobs yet"
+              subtitle="New bookings will appear here automatically."
+            />
+          </div>
         </div>
       </div>
     );
@@ -155,10 +274,43 @@ export default function AdminJobsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {showCelebration && (
+          <div className="mb-6 rounded-xl border border-yellow-200 bg-yellow-50 p-5">
+            <h2 className="mb-1 text-lg font-semibold text-yellow-900">
+              🎉 First job assigned!
+            </h2>
+            <p className="text-sm text-yellow-800">
+              You&apos;re officially up and running. Great work getting things moving.
+            </p>
+          </div>
+        )}
+
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Jobs</h1>
           <p className="text-gray-600">Manage and assign jobs to cleaners</p>
         </div>
+
+        {/* First-login welcome banner (dismissible) */}
+        {adminMe?.branchName && !welcomeDismissed && (
+          <div className="mb-6 bg-sky-50 border border-sky-200 rounded-xl p-4 flex items-start justify-between gap-4">
+            <div>
+              <p className="font-medium text-gray-900">
+                Welcome {adminMe.name ? `${adminMe.name} 👋` : '👋'}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                You&apos;re managing the {adminMe.branchName} branch. Let&apos;s get your first cleaner assigned.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={dismissWelcome}
+              className="shrink-0 p-1 text-gray-400 hover:text-gray-600 rounded"
+              aria-label="Dismiss"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -225,19 +377,51 @@ export default function AdminJobsPage() {
           </div>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-600">{error}</p>
+        {showFirstJobChecklist && (
+          <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-5">
+            <h2 className="mb-2 text-lg font-semibold text-green-900">
+              👋 Let&apos;s get your first job moving
+            </h2>
+            <p className="mb-4 text-sm text-green-800">
+              You&apos;re almost there. Just follow these quick steps:
+            </p>
+            <ol className="space-y-2 text-sm text-green-900">
+              <li className="flex items-start gap-2">
+                <span className="font-bold">1.</span>
+                Review incoming jobs and customer notes
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-bold">2.</span>
+                Assign a verified cleaner to the job
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-bold">3.</span>
+                Confirm date, time, and location look right
+              </li>
+            </ol>
+            <p className="mt-4 text-xs text-green-700">
+              This checklist will disappear automatically once a job is assigned.
+            </p>
           </div>
         )}
 
-        {/* Jobs Table */}
-        {jobs.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-md p-12 text-center">
-            <p className="text-gray-500">No jobs found</p>
+        {counters && (
+          <div className="mb-4 flex flex-wrap gap-3">
+            <span className="rounded-full bg-gray-100 px-4 py-1 text-sm text-gray-800">
+              Today · <strong>{counters.today}</strong>
+            </span>
+            <span className="rounded-full bg-blue-100 px-4 py-1 text-sm text-blue-800">
+              Upcoming · <strong>{counters.upcoming}</strong>
+            </span>
+            {counters.attention > 0 && (
+              <span className="rounded-full bg-red-100 px-4 py-1 text-sm text-red-800">
+                Needs Attention · <strong>{counters.attention}</strong>
+              </span>
+            )}
           </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        )}
+
+        <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -328,23 +512,52 @@ export default function AdminJobsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <Link
-                        href={`/admin/jobs/${job.id}`}
-                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors inline-flex items-center gap-1"
-                        title={job.paymentStatus !== 'PAID' ? 'View Details (Payment required before assignment)' : 'View Details'}
-                      >
-                        <Eye className="w-4 h-4" />
-                        View
-                      </Link>
-                      {/* Phase 2A: Payment Gating - Assignment is disabled for unpaid jobs in detail view */}
-                      {/* The detail page will show a warning and disable assignment controls */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {job.status === 'CONFIRMED' && !job.assignedCleanerId && job.paymentStatus === 'PAID' ? (
+                          <QuickAssignCleaner
+                            jobId={job.id}
+                            cleaners={cleaners}
+                            onAssigned={fetchJobs}
+                          />
+                        ) : job.assignedCleaner ? (
+                          <span className="text-xs text-gray-700">Assigned: {job.assignedCleaner.name || job.assignedCleaner.email || '—'}</span>
+                        ) : null}
+                        {job.status === 'ASSIGNED' && !job.scheduleConfirmed && (
+                          <button
+                            type="button"
+                            disabled={confirmingJobId === job.id}
+                            onClick={async () => {
+                              setConfirmingJobId(job.id);
+                              try {
+                                await fetch(`/api/admin/jobs/${job.id}/confirm-schedule`, { method: 'POST' });
+                                fetchJobs();
+                              } finally {
+                                setConfirmingJobId(null);
+                              }
+                            }}
+                            className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-60"
+                          >
+                            {confirmingJobId === job.id ? 'Confirming…' : 'Confirm Schedule'}
+                          </button>
+                        )}
+                        {job.scheduleConfirmed && (
+                          <span className="text-xs text-green-700">✔ Confirmed</span>
+                        )}
+                        <Link
+                          href={`/admin/jobs/${job.id}`}
+                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors inline-flex items-center gap-1"
+                          title={job.paymentStatus !== 'PAID' ? 'View Details (Payment required before assignment)' : 'View Details'}
+                        >
+                          <Eye className="w-4 h-4" />
+                          View
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
       </div>
     </div>
   );

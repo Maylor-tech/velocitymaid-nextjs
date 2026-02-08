@@ -19,7 +19,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
-import { PaymentStatus } from '@prisma/client';
 import { autoAssignCleaner } from '@/lib/cleaner-assignment';
 
 function getStripe() {
@@ -214,20 +213,12 @@ export async function POST(req: NextRequest) {
     // #endregion
     const job = await prisma.job.upsert({
       where: { sessionId: session.id },
-      update: {
-        // Job already exists - update payment status if needed
-        paymentStatus: PaymentStatus.PAID,
-        paidAt: new Date(),
-      },
+      update: {},
       create: {
         id: randomUUID(),
 
         // 🔐 Stripe binding (critical for audit trail)
         sessionId: session.id,
-        checkoutSessionId: session.id,
-        paymentIntentId: paymentIntentId,
-        paymentStatus: PaymentStatus.PAID,
-        paidAt: new Date(),
 
         // 🏢 Business context
         branchId,
@@ -246,8 +237,8 @@ export async function POST(req: NextRequest) {
         currency,
 
         // ⚙️ State
-        status: 'pending',
-        paymentMethod: 'stripe',
+        status: 'RECEIVED',
+        paymentMethod: 'card',
 
         // 🎁 Promotions
         appliedReferralCode: referralCode,

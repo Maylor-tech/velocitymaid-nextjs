@@ -1,0 +1,23 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.9.2
+2 info using node@v23.6.1
+3 silly config load:file:C:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:C:\dev\velocitymaid-nextjs\.npmrc
+5 silly config load:file:C:\Users\18023\.npmrc
+6 silly config load:file:C:\Users\18023\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm exec tsx scripts/updateAdminEmail.ts
+8 verbose argv "exec" "--" "tsx" "scripts/updateAdminEmail.ts"
+9 verbose logfile logs-max:10 dir:C:\dev\velocitymaid-nextjs\%AppData%\npm-cache\_logs\2026-02-01T05_24_08_883Z-
+10 verbose logfile C:\dev\velocitymaid-nextjs\%AppData%\npm-cache\_logs\2026-02-01T05_24_08_883Z-debug-0.log
+11 silly logfile start cleaning logs, removing 1 files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly logfile done cleaning log files
+14 http fetch GET 200 https://registry.npmjs.org/tsx 17ms (cache stale)
+15 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+16 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+17 verbose cwd C:\dev\velocitymaid-nextjs
+18 verbose os Windows_NT 10.0.26200
+19 verbose node v23.6.1
+20 verbose npm  v10.9.2
+21 verbose exit 0
+22 info ok

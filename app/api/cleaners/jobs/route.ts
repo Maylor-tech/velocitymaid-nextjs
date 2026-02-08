@@ -4,6 +4,9 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedCleaner } from '@/lib/cleanerAuth';
 import { prisma } from '@/lib/prisma';
+import { sendArrivalNotificationIfNeeded } from '@/lib/notifications/arrivalWhatsApp';
+import { grantLoyaltyCreditIfEligible } from '@/lib/notifications/loyaltyCredit';
+import { sendSubscriptionUpsellIfEligible } from '@/lib/notifications/subscriptionUpsell';
 import type { CleanerJob } from '@/app/cleaners/components/JobCard';
 
 /**
@@ -288,6 +291,16 @@ export async function PATCH(request: NextRequest) {
         },
       },
     });
+
+    // "We've arrived" WhatsApp when cleaner checks in (on_the_way) — once per job
+    if (status === 'on_the_way') {
+      sendArrivalNotificationIfNeeded(updatedJob.id).catch(() => {});
+    }
+
+    if (status === 'completed') {
+      grantLoyaltyCreditIfEligible(updatedJob.id).catch(() => {});
+      sendSubscriptionUpsellIfEligible(updatedJob.id).catch(() => {});
+    }
 
     // Send review request if job is completed
     if (status === 'completed' && updatedJob.Customer?.phone) {

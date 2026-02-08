@@ -12,6 +12,7 @@ export const JOB_STATUSES = [
   "IN_PROGRESS",
   "COMPLETED",
   "CANCELLED",
+  "CANCELLED_EMERGENCY",
   "REASSIGN_PENDING",
 ] as const;
 
@@ -30,6 +31,7 @@ const VALID_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
   REASSIGN_PENDING: ["ASSIGNED", "CANCELLED"],
   COMPLETED: [], // Terminal state
   CANCELLED: [], // Terminal state
+  CANCELLED_EMERGENCY: [], // Terminal state
 };
 
 /**
@@ -82,6 +84,6 @@ export function assertTransition(from: string, to: string): void {
  * Check if a status is terminal (no further transitions allowed)
  */
 export function isTerminalStatus(status: string): boolean {
-  return status === "COMPLETED" || status === "CANCELLED";
+  return status === "COMPLETED" || status === "CANCELLED" || status === "CANCELLED_EMERGENCY";
 }
 

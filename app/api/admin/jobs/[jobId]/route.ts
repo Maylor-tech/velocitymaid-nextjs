@@ -17,7 +17,7 @@ export async function GET(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(request, "ADMIN");
+    const auth = await requireRole(request, "ADMIN");
 
     const { jobId } = params;
 
@@ -120,6 +120,13 @@ export async function GET(
           success: false,
           error: 'Job not found',
         },
+        { status: 404 }
+      );
+    }
+
+    if (auth.branchId && job.branchId !== auth.branchId) {
+      return NextResponse.json(
+        { success: false, error: 'Job not found' },
         { status: 404 }
       );
     }

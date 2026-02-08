@@ -2,16 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCustomerSession } from "../customerSession";
 import { getAuthenticatedCleaner } from "../cleanerAuth";
 import { getAuthenticatedBranchOwner } from "./branchOwnerAuth";
+import { getAuthenticatedBranchOperator } from "./branchOperatorAuth";
 import { prisma } from "../prisma";
 import { UserRole } from "@prisma/client";
 import { cookies } from "next/headers";
 
-export type RequiredRole = "ADMIN" | "CUSTOMER" | "CLEANER" | "BRANCH_OWNER";
+export type RequiredRole = "ADMIN" | "CUSTOMER" | "CLEANER" | "BRANCH_OWNER" | "BRANCH_OPERATOR";
 
 export interface AuthContext {
   userId: string;
   role: RequiredRole;
   email?: string;
+  /** Set for ADMIN when session is branch-scoped (from UserBranch) */
+  branchId?: string;
+  /** Branch display name when branch-scoped */
+  branchName?: string;
 }
 
 /**
@@ -26,24 +31,59 @@ export async function requireRole(
   requiredRole: RequiredRole
 ): Promise<AuthContext> {
   if (requiredRole === "ADMIN") {
-    // Check for admin user via session/cookie or header (for testing)
     const cookieStore = await cookies();
-    const adminSession = cookieStore.get("admin_session")?.value;
-    const adminId = 
-      cookieStore.get("adminId")?.value || 
+    const adminSessionRaw = cookieStore.get("admin_session")?.value;
+    const adminId =
+      cookieStore.get("adminId")?.value ||
       cookieStore.get("adminSession")?.value ||
-      request.headers.get("x-admin-id") || // Allow header-based auth for testing
-      request.headers.get("authorization")?.replace("Bearer ", ""); // Also check Bearer token
-    
-    // Simple local-only auth: if admin_session cookie is "true", allow access
-    if (adminSession === "true") {
-      return {
-        userId: "local-admin",
-        role: "ADMIN",
-        email: "maylortech007@gmail.com",
-      };
+      request.headers.get("x-admin-id") ||
+      request.headers.get("authorization")?.replace("Bearer ", "");
+
+    // Branch-scoped session: { userId, role, branchId } from admin-login
+    if (adminSessionRaw) {
+      try {
+        const session = JSON.parse(adminSessionRaw) as { userId?: string; role?: string; branchId?: string };
+        if (session?.userId) {
+          const admin = await prisma.user.findUnique({
+            where: { id: session.userId, role: UserRole.ADMIN },
+            select: { id: true, email: true },
+          });
+          if (admin) {
+            const branches = await prisma.userBranch.findMany({
+              where: { userId: admin.id },
+              include: { branch: true },
+            });
+            if (branches.length === 0) {
+              return {
+                userId: admin.id,
+                role: "ADMIN",
+                email: admin.email,
+                branchId: session.branchId,
+              };
+            }
+            const activeBranch = branches[0];
+            return {
+              userId: admin.id,
+              role: "ADMIN",
+              email: admin.email,
+              branchId: activeBranch.branchId,
+              branchName: activeBranch.branch.name,
+            };
+          }
+        }
+      } catch {
+        // not JSON, fall through
+      }
+      // Legacy: cookie was "true" (no branch scope)
+      if (adminSessionRaw === "true") {
+        return {
+          userId: "local-admin",
+          role: "ADMIN",
+          email: "maylortech007@gmail.com",
+        };
+      }
     }
-    
+
     if (!adminId) {
       const response = NextResponse.json(
         { success: false, error: "Unauthorized: Admin authentication required" },
@@ -72,10 +112,20 @@ export async function requireRole(
       throw response;
     }
 
+    const branches = await prisma.userBranch.findMany({
+      where: { userId: admin.id },
+      include: { branch: true },
+    });
+    if (branches.length === 0) {
+      return { userId: admin.id, role: "ADMIN", email: admin.email };
+    }
+    const activeBranch = branches[0];
     return {
       userId: admin.id,
       role: "ADMIN",
       email: admin.email,
+      branchId: activeBranch.branchId,
+      branchName: activeBranch.branch.name,
     };
   }
 
@@ -133,11 +183,65 @@ export async function requireRole(
     };
   }
 
+  if (requiredRole === "BRANCH_OPERATOR") {
+    const authResult = await getAuthenticatedBranchOperator(request);
+
+    if (!authResult.success || !authResult.operatorId) {
+      const response = NextResponse.json(
+        { success: false, error: "Unauthorized: Branch operator authentication required" },
+        { status: 401 }
+      );
+      throw response;
+    }
+
+    return {
+      userId: authResult.operatorId,
+      role: "BRANCH_OPERATOR",
+      email: authResult.operator?.email,
+    };
+  }
+
   const response = NextResponse.json(
     { success: false, error: "Invalid role requirement" },
     { status: 500 }
   );
   throw response;
+}
+
+/**
+ * Get admin auth from cookies only (for server components e.g. admin layout).
+ * Returns null if no session or invalid; does not throw.
+ */
+export async function getAdminAuthFromCookies(): Promise<AuthContext | null> {
+  const cookieStore = await cookies();
+  const adminSessionRaw = cookieStore.get("admin_session")?.value;
+  if (!adminSessionRaw || adminSessionRaw === "true") return null;
+  try {
+    const session = JSON.parse(adminSessionRaw) as { userId?: string; branchId?: string };
+    if (!session?.userId) return null;
+    const admin = await prisma.user.findUnique({
+      where: { id: session.userId, role: UserRole.ADMIN },
+      select: { id: true, email: true },
+    });
+    if (!admin) return null;
+    const branches = await prisma.userBranch.findMany({
+      where: { userId: admin.id },
+      include: { branch: true },
+    });
+    if (branches.length === 0) {
+      return { userId: admin.id, role: "ADMIN", email: admin.email, branchId: session.branchId };
+    }
+    const activeBranch = branches[0];
+    return {
+      userId: admin.id,
+      role: "ADMIN",
+      email: admin.email,
+      branchId: activeBranch.branchId,
+      branchName: activeBranch.branch.name,
+    };
+  } catch {
+    return null;
+  }
 }
 
 /**

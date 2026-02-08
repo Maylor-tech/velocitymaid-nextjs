@@ -13,9 +13,13 @@ import { prisma } from '@/lib/prisma';
  * Returns all branches
  */
 export async function GET(request: NextRequest) {
-  // TODO: Add admin authentication check
   try {
+    const auth = await requireRole(request, "ADMIN");
+
+    const whereBranchIds = auth.branchId ? { id: auth.branchId } : undefined;
+
     const branches = await prisma.branch.findMany({
+      where: whereBranchIds,
       include: {
         User_Branch_managerIdToUser: {
           select: {

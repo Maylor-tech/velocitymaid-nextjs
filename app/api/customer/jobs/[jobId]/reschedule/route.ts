@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCustomerSession } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
+import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
 import { JobStatus } from '@prisma/client';
 import { requireCustomerJobOwnership } from '@/lib/auth/requireRole';
 
@@ -34,9 +35,10 @@ export async function POST(
       );
     }
 
-    // Get job
+    // Get job with customer phone for WhatsApp
     const job = await prisma.job.findUnique({
       where: { id: params.jobId },
+      include: { Customer: { select: { phone: true } } },
     });
 
     if (!job) {
@@ -55,25 +57,47 @@ export async function POST(
     }
 
     // Check if job can be rescheduled
-    if (job.status === JobStatus.COMPLETED || job.status === JobStatus.CANCELLED) {
+    if (job.status === JobStatus.COMPLETED || job.status === JobStatus.CANCELLED || job.status === JobStatus.CANCELLED_EMERGENCY) {
       return NextResponse.json(
         { success: false, error: 'Cannot reschedule a completed or cancelled job' },
         { status: 400 }
       );
     }
 
-    // Update job with reschedule request
-    // We'll store the requested date/time and set a status flag
     const requestedDate = new Date(newDate);
+    const newPreferredTime = timeWindow ?? job.preferredTime ?? '';
+
+    const dateChanged =
+      (job.preferredDate?.getTime() ?? 0) !== requestedDate.getTime();
+    const timeChanged = (job.preferredTime ?? '') !== newPreferredTime;
+    const shouldNotify = dateChanged || timeChanged;
 
     await prisma.job.update({
       where: { id: params.jobId },
       data: {
         preferredDate: requestedDate,
-        preferredTime: timeWindow || job.preferredTime,
-        status: JobStatus.CONFIRMED, // Keep as CONFIRMED, reschedule handled via date change
+        preferredTime: newPreferredTime || null,
+        status: JobStatus.CONFIRMED,
       },
     });
+
+    if (shouldNotify && job.Customer?.phone) {
+      const message = `
+🔄 Schedule Update from VelocityMaid
+
+Your cleaning has been rescheduled:
+
+🗓 New Date: ${requestedDate.toDateString()}
+⏰ New Time: ${newPreferredTime || 'As scheduled'}
+
+If you have questions, just reply here.
+— VelocityMaid
+`.trim();
+      sendWhatsAppMessage({
+        to: job.Customer.phone,
+        message,
+      }).catch(() => {});
+    }
 
     // Log audit entry
     await logAuditEntry({
@@ -87,7 +111,7 @@ export async function POST(
         oldDate: job.preferredDate?.toISOString(),
         newDate: requestedDate.toISOString(),
         oldTime: job.preferredTime,
-        newTime: timeWindow || job.preferredTime,
+        newTime: newPreferredTime || null,
       },
     });
 

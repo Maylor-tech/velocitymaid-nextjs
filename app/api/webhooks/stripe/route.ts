@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { sendCustomerConfirmation } from '@/lib/sendCustomerConfirmation';
 import { sendAdminNotification } from '@/lib/sendAdminNotification';
+import { sendInvoiceReceiptForPayment } from '@/lib/notifications/invoiceReceipt';
+import { sendRefundConfirmation } from '@/lib/notifications/refundConfirmation';
 import { prisma } from '@/lib/prisma';
 import { autoAssignCleaner } from '@/lib/cleaner-assignment';
 import { getStripeAccountStatus } from '@/lib/stripe/connect';
@@ -16,6 +18,7 @@ import { getStripe } from '@/lib/stripe';
  * Handles Stripe webhook events:
  * - checkout.session.completed (customer bookings and SaaS subscriptions)
  * - invoice.payment_succeeded (subscription renewals)
+ * - refund.created / charge.refunded (refund confirmation WhatsApp)
  * - account.updated (Stripe Connect)
  */
 
@@ -308,6 +311,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.error(`Error in admin notification process for session ${session.id}:`, error.message);
   }
 
+  // Send invoice receipt once per payment (audit guard prevents duplicates)
+  try {
+    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'https://velocitymaid.com').replace(/\/$/, '');
+    const amount = session.amount_total != null ? session.amount_total / 100 : 0;
+    const invoiceNumber = session.id.startsWith('cs_') ? `VM-${session.id.slice(-8).toUpperCase()}` : session.id;
+    const sent = await sendInvoiceReceiptForPayment({
+      paymentId: session.id,
+      invoiceNumber,
+      amount,
+      date: new Date(),
+      receiptLink: `${baseUrl}/customer/jobs`,
+      customerPhone: metadata.phone || null,
+    });
+    if (sent) console.log(`Invoice receipt sent for session ${session.id}`);
+  } catch (err: any) {
+    console.error(`Error sending invoice receipt for session ${session.id}:`, err?.message);
+  }
+
   return result;
 }
 
@@ -518,6 +539,144 @@ export async function POST(request: NextRequest) {
           log.push(`ERROR: Failed to update subscription: ${error.message}`);
           console.error('Subscription update error:', error);
         }
+      }
+
+      // Send invoice receipt once per payment (audit guard prevents duplicates)
+      try {
+        const customerEmail = invoice.customer_email ?? null;
+        let customerPhone: string | null = null;
+        if (customerEmail) {
+          const customer = await prisma.customer.findUnique({
+            where: { email: customerEmail },
+            select: { phone: true },
+          });
+          customerPhone = customer?.phone ?? null;
+        }
+        const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'https://velocitymaid.com').replace(/\/$/, '');
+        const receiptLink = invoice.hosted_invoice_url || invoice.invoice_pdf || `${baseUrl}/customer/billing`;
+        const sent = await sendInvoiceReceiptForPayment({
+          paymentId: invoice.id,
+          invoiceNumber: invoice.number || invoice.id,
+          amount: (invoice.amount_paid ?? 0) / 100,
+          date: new Date((invoice.created ?? 0) * 1000),
+          receiptLink,
+          customerPhone,
+        });
+        if (sent) log.push('SUCCESS: Invoice receipt WhatsApp sent');
+      } catch (receiptErr: any) {
+        log.push(`Invoice receipt skip/error: ${receiptErr?.message || receiptErr}`);
+      }
+
+      const duration = Date.now() - startTime;
+      return NextResponse.json({
+        received: true,
+        eventType: event.type,
+        success: true,
+        log,
+        duration: `${duration}ms`,
+      });
+    }
+
+    // Handle refund.created — send refund confirmation once per refund (preferred: full refund payload)
+    if (event.type === 'refund.created') {
+      const refund = event.data.object as Stripe.Refund;
+      if (refund.status !== 'succeeded') {
+        const duration = Date.now() - startTime;
+        return NextResponse.json({ received: true, eventType: event.type, log, duration: `${duration}ms` });
+      }
+      log.push(`Processing refund: ${refund.id}`);
+
+      try {
+        const stripe = getStripe();
+        const chargeId = typeof refund.charge === 'string' ? refund.charge : refund.charge?.id;
+        let stripeCustomerId: string | null = null;
+        let email: string | null = null;
+        if (chargeId) {
+          const charge = await stripe.charges.retrieve(chargeId);
+          stripeCustomerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id ?? null;
+          email = charge.receipt_email ?? charge.billing_details?.email ?? null;
+        }
+        let customerPhone: string | null = null;
+        if (stripeCustomerId) {
+          const c = await prisma.customer.findFirst({
+            where: { stripeCustomerId },
+            select: { phone: true },
+          });
+          customerPhone = c?.phone ?? null;
+        }
+        if (!customerPhone && email) {
+          const c = await prisma.customer.findUnique({
+            where: { email },
+            select: { phone: true },
+          });
+          customerPhone = c?.phone ?? null;
+        }
+        const amount = (refund.amount ?? 0) / 100;
+        const sent = await sendRefundConfirmation({
+          refundId: refund.id,
+          amount,
+          customerPhone,
+        });
+        if (sent) log.push('SUCCESS: Refund confirmation WhatsApp sent');
+        else log.push('SKIP: Refund notice not sent (no phone or already sent)');
+      } catch (refundErr: any) {
+        log.push(`Refund confirmation error: ${refundErr?.message || refundErr}`);
+      }
+
+      const duration = Date.now() - startTime;
+      return NextResponse.json({
+        received: true,
+        eventType: event.type,
+        success: true,
+        log,
+        duration: `${duration}ms`,
+      });
+    }
+
+    // Handle charge.refunded — send refund confirmation (fallback when refund.created not configured)
+    if (event.type === 'charge.refunded') {
+      const charge = event.data.object as Stripe.Charge;
+      log.push(`Processing refund for charge: ${charge.id}`);
+
+      try {
+        const stripe = getStripe();
+        let refunds = charge.refunds?.data ?? [];
+        if (refunds.length === 0) {
+          const list = await stripe.refunds.list({ charge: charge.id, limit: 10 });
+          refunds = list.data ?? [];
+        }
+        const lastRefund = refunds.length > 0 ? refunds[refunds.length - 1] : null;
+        if (!lastRefund) {
+          log.push('SKIP: No refund details on charge');
+        } else {
+          const stripeCustomerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id ?? null;
+          const email = charge.receipt_email ?? charge.billing_details?.email ?? null;
+          let customerPhone: string | null = null;
+          if (stripeCustomerId) {
+            const c = await prisma.customer.findFirst({
+              where: { stripeCustomerId },
+              select: { phone: true },
+            });
+            customerPhone = c?.phone ?? null;
+          }
+          if (!customerPhone && email) {
+            const c = await prisma.customer.findUnique({
+              where: { email },
+              select: { phone: true },
+            });
+            customerPhone = c?.phone ?? null;
+          }
+          const amount = (lastRefund.amount ?? 0) / 100;
+          const sent = await sendRefundConfirmation({
+            refundId: lastRefund.id,
+            amount,
+            customerPhone,
+          });
+          if (sent) log.push('SUCCESS: Refund confirmation WhatsApp sent');
+          else log.push('SKIP: Refund notice not sent (no phone or already sent)');
+        }
+      } catch (refundErr: any) {
+        log.push(`Refund confirmation error: ${refundErr?.message || refundErr}`);
       }
 
       const duration = Date.now() - startTime;

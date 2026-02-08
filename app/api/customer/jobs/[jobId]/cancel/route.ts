@@ -66,7 +66,7 @@ export async function POST(
     }
 
     // Check if job is already cancelled or completed
-    if (job.status === JobStatus.COMPLETED || job.status === JobStatus.CANCELLED) {
+    if (job.status === JobStatus.COMPLETED || job.status === JobStatus.CANCELLED || job.status === JobStatus.CANCELLED_EMERGENCY) {
       return NextResponse.json(
         { success: false, error: 'Cannot cancel a completed or already cancelled job' },
         { status: 400 }

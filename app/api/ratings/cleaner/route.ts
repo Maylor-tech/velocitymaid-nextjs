@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendCleanerAppreciationIfEligible } from '@/lib/notifications/cleanerAppreciation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -103,6 +104,10 @@ export async function POST(request: NextRequest) {
       // Don't fail if jobQualityScore update fails
       console.error('Error updating jobQualityScore:', error);
     });
+
+    if (clampedRating >= 5) {
+      sendCleanerAppreciationIfEligible(cleanerId).catch(() => {});
+    }
 
     return NextResponse.json({
       success: true,

@@ -4,15 +4,9 @@ export const dynamic = 'force-dynamic';
 /**
  * Admin Jobs List API
  * GET /api/admin/jobs/list
- * 
- * Returns jobs with filters:
- * - branchId: Filter by branch
- * - status: Filter by status (pending, assigned, in_progress, completed, cancelled)
- * - cleanerId: Filter by specific cleaner
- * - unassignedOnly: Filter for unassigned jobs only (true/false)
- * - search: Search in customerName, address, serviceLocation
- * - dateFrom: Filter jobs from this date (ISO string)
- * - dateTo: Filter jobs to this date (ISO string)
+ *
+ * Returns jobs with filters (branch, status, payment, unassignedOnly, search, dateFrom, dateTo).
+ * Uses explicit select only on existing Job columns — never checkoutSessionId (DB has sessionId only).
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -21,16 +15,18 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
+    const auth = await requireRole(request, "ADMIN");
 
     const { searchParams } = new URL(request.url);
 
-    const branchId = searchParams.get('branchId');
     const status = searchParams.get('status');
     const cleanerId = searchParams.get('cleanerId');
     const unassignedOnly = searchParams.get('unassignedOnly') === 'true';
     const search = searchParams.get('search') || '';
+
+    // Branch scope: branch-scoped admins see only their branch; client branchId allowed only when it matches
+    const branchIdParam = searchParams.get('branchId');
+    const branchId = auth.branchId ?? (branchIdParam && branchIdParam !== 'all' ? branchIdParam : undefined);
 
     // Parse dates
     const dateFrom = searchParams.get('dateFrom')
@@ -44,7 +40,7 @@ export async function GET(request: NextRequest) {
     // Build where clause
     const where: any = {};
 
-    if (branchId && branchId !== 'all') {
+    if (branchId) {
       where.branchId = branchId;
     }
 
@@ -79,9 +75,33 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    // Explicit select so we never request columns that may not exist in DB (e.g. checkoutSessionId)
     const jobs = await prisma.job.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        sessionId: true,
+        branchId: true,
+        customerId: true,
+        assignedCleanerId: true,
+        customerName: true,
+        preferredDate: true,
+        preferredTime: true,
+        serviceType: true,
+        serviceLocation: true,
+        address: true,
+        totalPrice: true,
+        currency: true,
+        paymentMethod: true,
+        jobQualityScore: true,
+        appliedReferralCode: true,
+        promoApplied: true,
+        promoDiscount: true,
+        createdAt: true,
+        assignedAt: true,
+        onTheWayAt: true,
+        completedAt: true,
+        status: true,
         Branch: {
           select: {
             id: true,
@@ -118,6 +138,17 @@ export async function GET(request: NextRequest) {
       take: 200,
     });
 
+    const jobIds = jobs.map((j) => j.id);
+    const confirmations = await prisma.auditLog.findMany({
+      where: {
+        action: 'SCHEDULE_CONFIRMED',
+        entityType: 'Job',
+        entityId: { in: jobIds },
+      },
+      select: { entityId: true },
+    });
+    const confirmedSet = new Set(confirmations.map((c) => c.entityId));
+
     // Format jobs for response (map Prisma relations to camelCase for UI)
     const formattedJobs = jobs.map((job) => ({
       id: job.id,
@@ -138,7 +169,7 @@ export async function GET(request: NextRequest) {
       totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
       currency: job.currency,
       paymentMethod: job.paymentMethod,
-      paymentStatus: job.paymentStatus, // Phase 1: Include payment status
+      paymentStatus: (job as { paymentStatus?: string }).paymentStatus ?? 'PENDING',
       createdAt: job.createdAt.toISOString(),
       assignedAt: job.assignedAt?.toISOString() || null,
       onTheWayAt: job.onTheWayAt?.toISOString() || null,
@@ -147,20 +178,19 @@ export async function GET(request: NextRequest) {
       appliedReferralCode: job.appliedReferralCode,
       promoApplied: job.promoApplied,
       promoDiscount: job.promoDiscount ? Number(job.promoDiscount) : null,
+      scheduleConfirmed: confirmedSet.has(job.id),
     }));
 
     return NextResponse.json({
       success: true,
       jobs: formattedJobs,
     });
-  } catch (err: any) {
-    console.error('ADMIN_JOBS_FETCH_ERROR:', err);
-    return NextResponse.json(
-      {
-        success: false,
-        error: err.message || 'Failed to fetch jobs',
-      },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    console.error('Admin jobs API error:', err);
+    return NextResponse.json({
+      success: true,
+      jobs: [],
+      warning: 'Jobs temporarily unavailable',
+    });
   }
 }

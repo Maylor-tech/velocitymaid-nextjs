@@ -8,37 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Multi-tenancy models for SaaS billing
-model Tenant {
-  id            String    @id @default(cuid())
-  name          String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  users         User[]
-  messages      ContactMessage[]
-  subscription  Subscription?
-
-  @@index([name])
-}
-
-model Subscription {
-  id                   String    @id @default(cuid())
-  tenantId             String    @unique
-  stripeCustomerId     String    @unique
-  stripeSubscriptionId String?   @unique
-  stripePriceId        String?
-  stripeCurrentPeriodEnd DateTime?
-
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@index([tenantId])
-  @@index([stripeCustomerId])
-  @@index([stripeSubscriptionId])
-}
-
 model Branch {
   id                                String                      @id
   name                              String
@@ -62,6 +31,7 @@ model Branch {
   BranchAutomationConfig            BranchAutomationConfig?
   BranchConfig                      BranchConfig?
   BranchLandingContent              BranchLandingContent?
+  BranchMetrics                     BranchMetrics?
   BranchOnboardingResources         BranchOnboardingResources[]
   BranchPayoutRules                 BranchPayoutRules?
   BranchServiceArea                 BranchServiceArea[]
@@ -69,6 +39,7 @@ model Branch {
   BranchSops                        BranchSops[]
   CleanerApplication                CleanerApplication[]
   CleanerBalanceLedger              CleanerBalanceLedger[]
+  CleanerPayout                     CleanerPayout[]
   Customer                          Customer[]
   JamaicaPayout                     JamaicaPayout[]
   Job                               Job[]
@@ -81,6 +52,7 @@ model Branch {
   TransactionLedger                 TransactionLedger[]
   User_User_primaryBranchIdToBranch User[]                      @relation("User_primaryBranchIdToBranch")
   UserBranch                        UserBranch[]
+  WorkerRunLog                      WorkerRunLog[]
 
   @@index([managerId])
   @@index([pricingModelId])
@@ -275,51 +247,51 @@ model Contract {
 }
 
 model Customer {
-  id                                                       String            @id
+  id                                                       String                     @id
   firstName                                                String
   lastName                                                 String
-  email                                                    String            @unique
-  phone                                                    String?
+  email                                                    String                     @unique
+  phone                                                    String?                    @db.VarChar(50)
   defaultAddress                                           String?
   homeZipCode                                              String?
   branchId                                                 String?
-  stripeCustomerId                                         String?           @unique
-  loyaltyPoints                                            Int               @default(0)
-  createdAt                                                DateTime          @default(now())
+  stripeCustomerId                                         String?                    @unique
+  loyaltyPoints                                            Int                        @default(0)
+  createdAt                                                DateTime                   @default(now())
   updatedAt                                                DateTime
-  preferSameCleaner                                        Boolean           @default(false)
-  leadStatus                                               LeadStatus        @default(NEW)
-  whatsappOptIn                                            Boolean           @default(false)
+  preferSameCleaner                                        Boolean                    @default(false)
+  leadStatus                                               LeadStatus                 @default(NEW)
+  whatsappOptIn                                            Boolean                    @default(false)
+  isBlocked                                                Boolean                    @default(false)
+  riskFlags                                                String[]                   @default([])
+  riskScore                                                Int                        @default(0)
+  loginCode                                                String?
+  loginCodeExpiresAt                                       DateTime?
+  addressLine1                                             String?                    @db.VarChar(255)
+  addressLine2                                             String?                    @db.VarChar(255)
+  city                                                     String?                    @db.VarChar(100)
+  notifyEmail                                              Boolean                    @default(true)
+  notifySMS                                                Boolean                    @default(false)
+  postalCode                                               String?                    @db.VarChar(20)
+  state                                                    String?                    @db.VarChar(100)
   CleanerRating                                            CleanerRating[]
-  Branch                                                   Branch?           @relation(fields: [branchId], references: [id])
+  Branch                                                   Branch?                    @relation(fields: [branchId], references: [id])
+  CustomerJobChangeRequest                                 CustomerJobChangeRequest[]
+  CustomerLoginToken                                       CustomerLoginToken[]
   Job                                                      Job[]
-  MagicLoginToken                                          MagicLoginToken[]
   NurtureHistory                                           NurtureHistory[]
   NurtureSequence                                          NurtureSequence?
   ReferralCredit                                           ReferralCredit[]
-  ReferralEvent_ReferralEvent_referredCustomerIdToCustomer ReferralEvent[]   @relation("ReferralEvent_referredCustomerIdToCustomer")
-  ReferralEvent_ReferralEvent_referrerIdToCustomer         ReferralEvent[]   @relation("ReferralEvent_referrerIdToCustomer")
+  ReferralEvent_ReferralEvent_referredCustomerIdToCustomer ReferralEvent[]            @relation("ReferralEvent_referredCustomerIdToCustomer")
+  ReferralEvent_ReferralEvent_referrerIdToCustomer         ReferralEvent[]            @relation("ReferralEvent_referrerIdToCustomer")
   ReferralLink                                             ReferralLink[]
 
   @@index([branchId])
   @@index([email])
   @@index([homeZipCode])
   @@index([leadStatus])
-}
-
-model MagicLoginToken {
-  id         String    @id @default(cuid())
-  token      String    @unique
-  customerId String
-  expiresAt  DateTime
-  usedAt     DateTime?
-  createdAt  DateTime  @default(now())
-  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@index([token])
-  @@index([customerId])
-  @@index([expiresAt])
-  @@index([usedAt])
+  @@index([isBlocked])
+  @@index([riskScore])
 }
 
 model FranchiseApplication {
@@ -381,40 +353,39 @@ model JamaicaPayout {
 }
 
 model Job {
-  id                   String                 @id
-  sessionId            String?                @unique
-  branchId             String
-  customerId           String?
-  assignedCleanerId    String?
-  customerName         String?
-  preferredDate        DateTime?
-  preferredTime        String?
-  serviceType          String?
-  serviceLocation      String?
-  address              String?
-  totalPrice           Decimal?               @db.Decimal(10, 2)
-  createdAt            DateTime               @default(now())
-  assignedAt           DateTime?
-  onTheWayAt           DateTime?
-  completedAt          DateTime?
-  currency             String?                @default("USD")
-  paymentMethod        String?
-  jobQualityScore      Int?
-  appliedReferralCode  String?
-  promoApplied         String?
-  promoDiscount        Decimal?               @db.Decimal(10, 2)
-  checkoutSessionId    String?
-  paidAt               DateTime?
-  paymentIntentId      String?
-  paymentStatus        PaymentStatus          @default(PENDING)
-  status               String                 @default("pending")
-  AssignmentLog        AssignmentLog[]
-  CleanerBalanceLedger CleanerBalanceLedger[]
-  CleanerRating        CleanerRating?
-  ComplianceIssue      ComplianceIssue[]
-  User                 User?                  @relation(fields: [assignedCleanerId], references: [id])
-  Branch               Branch                 @relation(fields: [branchId], references: [id])
-  Customer             Customer?              @relation(fields: [customerId], references: [id])
+  id                       String                     @id
+  sessionId                String?                    @unique
+  branchId                 String
+  customerId               String?
+  assignedCleanerId        String?
+  customerName             String?
+  preferredDate            DateTime?
+  preferredTime            String?
+  serviceType              String?
+  serviceLocation          String?
+  address                  String?
+  totalPrice               Decimal?                   @db.Decimal(10, 2)
+  createdAt                DateTime                   @default(now())
+  assignedAt               DateTime?
+  onTheWayAt               DateTime?
+  completedAt              DateTime?
+  currency                 String?                    @default("USD")
+  paymentMethod            String?
+  jobQualityScore          Int?
+  appliedReferralCode      String?
+  promoApplied             String?
+  promoDiscount            Decimal?                   @db.Decimal(10, 2)
+  cancellationReason       String?
+  cancelledAt              DateTime?
+  status                   JobStatus                  @default(RECEIVED)
+  AssignmentLog            AssignmentLog[]
+  CleanerBalanceLedger     CleanerBalanceLedger[]
+  CleanerRating            CleanerRating?
+  ComplianceIssue          ComplianceIssue[]
+  CustomerJobChangeRequest CustomerJobChangeRequest[]
+  User                     User?                      @relation(fields: [assignedCleanerId], references: [id])
+  Branch                   Branch                     @relation(fields: [branchId], references: [id])
+  Customer                 Customer?                  @relation(fields: [customerId], references: [id])
 
   @@index([appliedReferralCode])
   @@index([assignedCleanerId])
@@ -423,7 +394,6 @@ model Job {
   @@index([jobQualityScore])
   @@index([preferredDate])
   @@index([status])
-  @@index([paymentStatus])
 }
 
 model AssignmentLog {
@@ -656,18 +626,20 @@ model ReferralLink {
 }
 
 model TrainingCertificate {
-  id             String         @id
-  certificateId  String         @unique
-  cleanerId      String         @unique
-  status         String         @default("ACTIVE")
-  issuedAt       DateTime       @default(now())
-  revokedAt      DateTime?
-  cleaner        User           @relation("TrainingCertificate_cleaner", fields: [cleanerId], references: [id], onDelete: Cascade, map: "TrainingCertificate_cleanerId_User_fkey")
-  trainingStatus TrainingStatus? @relation("TrainingCertificate_trainingStatus", fields: [cleanerId], references: [cleanerId], map: "TrainingCertificate_cleanerId_TrainingStatus_fkey")
+  id               String         @id
+  certificateId    String         @unique
+  cleanerId        String         @unique
+  status           String         @default("ACTIVE")
+  issuedAt         DateTime       @default(now())
+  revokedAt        DateTime?
+  trainingStatusId String         @unique
+  cleaner          User           @relation("TrainingCertificate_cleaner", fields: [cleanerId], references: [id], onDelete: Cascade, map: "TrainingCertificate_cleaner_fkey")
+  TrainingStatus   TrainingStatus @relation(fields: [trainingStatusId], references: [id], onDelete: Cascade, map: "TrainingCertificate_trainingstatus_fkey")
 
   @@index([certificateId])
   @@index([cleanerId])
   @@index([status])
+  @@index([trainingStatusId])
 }
 
 model TrainingLesson {
@@ -755,7 +727,7 @@ model TrainingStatus {
   overallStatus       String               @default("NOT_STARTED")
   lastModuleSlug      String?
   updatedAt           DateTime
-  TrainingCertificate TrainingCertificate? @relation("TrainingCertificate_trainingStatus")
+  TrainingCertificate TrainingCertificate?
   User                User                 @relation("TrainingStatus_cleaner", fields: [cleanerId], references: [id], onDelete: Cascade, map: "TrainingStatus_cleanerId_User_fkey")
 
   @@index([cleanerId])
@@ -791,26 +763,28 @@ model User {
   id                                  String                 @id
   email                               String                 @unique
   name                                String?
-  password                            String?                // Hashed password for SaaS users
+  phone                               String?
   role                                UserRole               @default(CLEANER)
   primaryBranchId                     String?
-  tenantId                            String?
   createdAt                           DateTime               @default(now())
   updatedAt                           DateTime
-  isActive                            Boolean                @default(false)
-  homeZip                             String?
-  preferredCities                     String[]               @default([])
-  isSuspended                         Boolean                @default(false)
-  warningCount                        Int                    @default(0)
   stripeAccountId                     String?
   stripeChargesEnabled                Boolean                @default(false)
   stripePayoutsEnabled                Boolean                @default(false)
   stripeOnboardingStatus              String?
   stripeRequirementsDueCount          Int                    @default(0)
   stripeLastAccountUpdateAt           DateTime?
+  isActive                            Boolean                @default(false)
+  homeZip                             String?
+  preferredCities                     String[]               @default([])
+  isSuspended                         Boolean                @default(false)
+  warningCount                        Int                    @default(0)
+  AuditLog                            AuditLog[]
   Branch_Branch_managerIdToUser       Branch[]               @relation("Branch_managerIdToUser")
   CleanerAvailability                 CleanerAvailability?
   CleanerBalanceLedger                CleanerBalanceLedger[]
+  CleanerPaymentMethod                CleanerPaymentMethod[]
+  CleanerPayout                       CleanerPayout[]
   CleanerRating                       CleanerRating[]
   ComplianceIssue                     ComplianceIssue[]
   JamaicaPaymentMethod                JamaicaPaymentMethod?
@@ -818,13 +792,12 @@ model User {
   Job                                 Job[]
   LessonProgress                      LessonProgress[]
   PayoutTransfer                      PayoutTransfer[]
-  TrainingCertificate                 TrainingCertificate? @relation("TrainingCertificate_cleaner")
+  TrainingCertificate                 TrainingCertificate?   @relation("TrainingCertificate_cleaner")
   TrainingQuizAttempt                 TrainingQuizAttempt[]
-  TrainingStatus                      TrainingStatus? @relation("TrainingStatus_cleaner")
+  TrainingStatus                      TrainingStatus?        @relation("TrainingStatus_cleaner")
   TransactionLedger                   TransactionLedger[]
   Branch_User_primaryBranchIdToBranch Branch?                @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
   UserBranch                          UserBranch[]
-  Tenant                              Tenant?                @relation(fields: [tenantId], references: [id])
 
   @@index([isActive])
   @@index([preferredCities])
@@ -832,7 +805,6 @@ model User {
   @@index([role])
   @@index([isSuspended])
   @@index([warningCount])
-  @@index([tenantId])
 }
 
 model UserBranch {
@@ -934,21 +906,192 @@ model TaxYearArchive {
 model ComplianceIssue {
   id           String                @id @default(cuid())
   cleanerId    String
+  jobId        String?
+  type         ComplianceIssueType
+  status       ComplianceIssueStatus
+  severity     ComplianceSeverity
+  reason       String
+  notes        String?
+  createdById  String?
+  resolvedById String?
   createdAt    DateTime              @default(now())
   resolvedAt   DateTime?
-  createdById  String?
-  jobId        String?
-  notes        String?
-  reason       String
-  resolvedById String?
-  type         ComplianceIssueType
-  severity     ComplianceSeverity
-  status       ComplianceIssueStatus
   cleaner      User                  @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
   job          Job?                  @relation(fields: [jobId], references: [id])
 
   @@index([cleanerId, status])
   @@index([jobId])
+}
+
+model InvestorAccessRequest {
+  id           String               @id @default(cuid())
+  name         String
+  email        String
+  organization String?
+  interest     String?
+  createdAt    DateTime             @default(now())
+  status       InvestorAccessStatus @default(PENDING)
+  approvedAt   DateTime?
+  approvedBy   String?
+}
+
+model ContactMessage {
+  id            String                @id @default(cuid())
+  role          String
+  name          String
+  email         String
+  organization  String?
+  message       String?
+  createdAt     DateTime              @default(now())
+  status        ContactMessageStatus  @default(NEW)
+  updatedAt     DateTime              @default(now()) @updatedAt
+  reviewedAt    DateTime?
+  repliedAt     DateTime?
+  archivedAt    DateTime?
+  internalNotes ContactInternalNote[]
+  replies       ContactReply[]
+}
+
+model ContactReply {
+  id               String         @id @default(cuid())
+  contactMessageId String
+  body             String
+  repliedByAdminId String?
+  createdAt        DateTime       @default(now())
+  sentViaEmail     Boolean        @default(true)
+  contactMessage   ContactMessage @relation(fields: [contactMessageId], references: [id], onDelete: Cascade)
+}
+
+model ContactReplyTemplate {
+  id        String   @id @default(cuid())
+  title     String
+  role      String
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model ContactInternalNote {
+  id               String         @id @default(cuid())
+  contactMessageId String
+  body             String
+  createdAt        DateTime       @default(now())
+  contactMessage   ContactMessage @relation(fields: [contactMessageId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id          String   @id
+  actorId     String?
+  actorRole   String?
+  action      String
+  entityType  String
+  entityId    String
+  description String?
+  changes     Json?
+  createdAt   DateTime @default(now())
+  User        User?    @relation(fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
+
+model BranchMetrics {
+  id              String   @id
+  branchId        String   @unique
+  jobsToday       Int      @default(0)
+  jobsThisWeek    Int      @default(0)
+  revenueThisWeek Float    @default(0)
+  unassignedJobs  Int      @default(0)
+  updatedAt       DateTime
+  Branch          Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+}
+
+model CleanerPaymentMethod {
+  id         String   @id
+  cleanerId  String
+  methodType String
+  label      String?
+  details    Json
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  User       User     @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@index([cleanerId])
+  @@index([cleanerId, isActive])
+}
+
+model CleanerPayout {
+  id              String   @id
+  cleanerId       String
+  branchId        String
+  fromDate        DateTime
+  toDate          DateTime
+  totalJobs       Int
+  grossRevenue    Float
+  cleanerEarnings Float
+  bonuses         Float
+  penalties       Float
+  branchProfit    Float
+  status          String   @default("DRAFT")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  Branch          Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  User            User     @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([cleanerId])
+  @@index([createdAt])
+  @@index([fromDate, toDate])
+  @@index([status])
+}
+
+model CustomerJobChangeRequest {
+  id          String   @id
+  jobId       String
+  customerId  String
+  requestedAt DateTime @default(now())
+  payload     Json
+  status      String   @default("PENDING")
+  Customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  Job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([jobId])
+  @@index([requestedAt])
+  @@index([status])
+}
+
+model CustomerLoginToken {
+  id         String   @id
+  customerId String
+  code       String
+  expiresAt  DateTime
+  used       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  Customer   Customer @relation(fields: [customerId], references: [id])
+
+  @@index([code, customerId])
+  @@index([customerId])
+}
+
+model WorkerRunLog {
+  id         String   @id
+  branchId   String
+  jobType    String
+  startedAt  DateTime
+  finishedAt DateTime
+  durationMs Int
+  status     String
+  error      String?
+  Branch     Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([jobType])
+  @@index([startedAt])
+  @@index([status])
 }
 
 enum BaseRateType {
@@ -1034,14 +1177,7 @@ enum UserRole {
   MANAGER
   CLEANER
   SUPPORT
-  BRANCH_OWNER
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
+  BRANCH_OPERATOR
 }
 
 enum LedgerEntryType {
@@ -1105,65 +1241,12 @@ enum ContactMessageStatus {
   ARCHIVED
 }
 
-model InvestorAccessRequest {
-  id           String                @id @default(cuid())
-  name         String
-  email        String
-  organization String?
-  interest     String?
-  status       InvestorAccessStatus  @default(PENDING)
-  approvedAt   DateTime?
-  approvedBy   String?
-  createdAt    DateTime              @default(now())
+enum JobStatus {
+  RECEIVED
+  CONFIRMED
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  CANCELLED_EMERGENCY
 }
-
-model ContactMessage {
-  id           String                @id @default(cuid())
-  role         String
-  name         String
-  email        String
-  organization String?
-  message      String?
-  status       ContactMessageStatus @default(NEW)
-  tenantId     String?
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
-  reviewedAt   DateTime?
-  repliedAt   DateTime?
-  archivedAt   DateTime?
-
-  replies      ContactReply[]
-  internalNotes ContactInternalNote[]
-  Tenant       Tenant?               @relation(fields: [tenantId], references: [id])
-
-  @@index([tenantId])
-}
-
-model ContactReply {
-  id               String   @id @default(cuid())
-  contactMessageId String
-  body             String
-  repliedByAdminId String?
-  sentViaEmail     Boolean  @default(true)
-  createdAt        DateTime @default(now())
-
-  contactMessage ContactMessage @relation(fields: [contactMessageId], references: [id], onDelete: Cascade)
-}
-
-model ContactReplyTemplate {
-  id        String   @id @default(cuid())
-  title     String
-  role      String   // Investor | Partner / Operator | Advisor | Other | All
-  body      String
-  createdAt DateTime @default(now())
-}
-
-model ContactInternalNote {
-  id               String   @id @default(cuid())
-  contactMessageId String
-  body             String
-  createdAt        DateTime @default(now())
-
-  contactMessage ContactMessage @relation(fields: [contactMessageId], references: [id], onDelete: Cascade)
-}
-

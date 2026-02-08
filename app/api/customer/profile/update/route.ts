@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { readCustomerSession } from '@/lib/customerSession';
+import { sendAccountUpdateNotice } from '@/lib/notifications/accountUpdateNotice';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -108,23 +109,9 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Find customer by session.customerId (security: never trust client-provided customerId)
+    // Find customer and drop updates that don't change anything (skip if no material change)
     const customer = await prisma.customer.findUnique({
       where: { id: session.customerId },
-    });
-
-    if (!customer) {
-      return NextResponse.json(
-        { error: 'Customer not found' },
-        { status: 404 },
-      );
-    }
-
-    // Update ONLY allowed fields (firstName, lastName, phone, defaultAddress)
-    // DO NOT update: email, id, createdAt, or any relations
-    const updated = await prisma.customer.update({
-      where: { id: session.customerId },
-      data: updates,
       select: {
         id: true,
         email: true,
@@ -135,6 +122,52 @@ export async function PATCH(req: NextRequest) {
         createdAt: true,
       },
     });
+
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Customer not found' },
+        { status: 404 },
+      );
+    }
+
+    const materialUpdates: Record<string, any> = {};
+    for (const [key, value] of Object.entries(updates)) {
+      const current = (customer as Record<string, any>)[key];
+      const cur = current == null ? null : String(current).trim();
+      const next = value == null ? null : String(value).trim();
+      if (cur !== next) materialUpdates[key] = updates[key];
+    }
+    if (Object.keys(materialUpdates).length === 0) {
+      return NextResponse.json({
+        success: true,
+        customer: {
+          id: customer.id,
+          email: customer.email,
+          firstName: customer.firstName,
+          lastName: customer.lastName,
+          phone: customer.phone,
+          defaultAddress: customer.defaultAddress,
+          createdAt: customer.createdAt,
+        },
+      });
+    }
+
+    // Update ONLY allowed fields (firstName, lastName, phone, defaultAddress)
+    const updated = await prisma.customer.update({
+      where: { id: session.customerId },
+      data: materialUpdates,
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        defaultAddress: true,
+        createdAt: true,
+      },
+    });
+
+    sendAccountUpdateNotice(session.customerId).catch(() => {});
 
     return NextResponse.json({
       success: true,

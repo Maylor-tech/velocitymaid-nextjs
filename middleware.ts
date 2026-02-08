@@ -11,16 +11,25 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith('/admin')) {
     const isLoginRoute = pathname === '/admin/login';
     const adminSession = req.cookies.get('admin_session')?.value;
+    let isAdminLoggedIn = false;
+    if (adminSession) {
+      if (adminSession === 'true') isAdminLoggedIn = true;
+      else {
+        try {
+          const s = JSON.parse(adminSession) as { userId?: string };
+          if (s?.userId) isAdminLoggedIn = true;
+        } catch {
+          /* ignore */
+        }
+      }
+    }
 
-    // Not logged in → redirect to login
-    if (!adminSession && !isLoginRoute) {
+    if (!isAdminLoggedIn && !isLoginRoute) {
       const loginUrl = req.nextUrl.clone();
       loginUrl.pathname = '/admin/login';
       return NextResponse.redirect(loginUrl);
     }
-
-    // Logged in → block login page
-    if (adminSession === 'true' && isLoginRoute) {
+    if (isAdminLoggedIn && isLoginRoute) {
       const jobsUrl = req.nextUrl.clone();
       jobsUrl.pathname = '/admin/jobs';
       return NextResponse.redirect(jobsUrl);

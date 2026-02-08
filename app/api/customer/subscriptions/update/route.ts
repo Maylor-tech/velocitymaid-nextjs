@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { findCustomerById } from '@/utils/customerData';
 import { getSubscriptionByCustomerId, updateSubscription } from '@/utils/subscriptionData';
+import { sendServicePauseNotice } from '@/lib/notifications/servicePauseNotice';
 import stripe from '@/utils/stripe';
 
 /**
@@ -58,6 +59,15 @@ export async function PATCH(request: NextRequest) {
         { success: false, error: 'Subscription not found' },
         { status: 404 }
       );
+    }
+
+    // Skip pause if already paused (no duplicate notice)
+    if (action === 'pause' && subscription.status === 'paused') {
+      return NextResponse.json({
+        success: true,
+        subscription,
+        message: 'Subscription is already paused',
+      });
     }
 
     // Update in Stripe
@@ -117,6 +127,14 @@ export async function PATCH(request: NextRequest) {
         { success: false, error: 'Failed to update subscription' },
         { status: 500 }
       );
+    }
+
+    // Send pause notice once per pause action (audit cooldown prevents duplicate)
+    if (action === 'pause') {
+      sendServicePauseNotice({
+        customerId: subscription.customerId,
+        subscriptionId: subscription.id,
+      }).catch(() => {});
     }
 
     return NextResponse.json({

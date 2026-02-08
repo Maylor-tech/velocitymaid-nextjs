@@ -1,41 +1,54 @@
-/**
- * Create or update admin user
- * 
- * Usage:
- *   npx tsx scripts/createAdmin.ts
- * 
- * Alternative (if tsx not available):
- *   npx ts-node --compiler-options '{"module":"commonjs"}' scripts/createAdmin.ts
- */
-
-import { prisma } from "../lib/prisma";
+import { prisma } from '../lib/prisma';
 
 async function main() {
-  const admin = await prisma.user.upsert({
-    where: { email: "maylortech007@gmail.com" },
-    update: {
-      role: "ADMIN",
-      isActive: true,
-      updatedAt: new Date(),
-    },
-    create: {
+  const email = 'laura@velocitymaid.com'; // <-- change if needed
+  const name = 'Laura';
+  const role = 'ADMIN'; // ADMIN | BRANCH_MANAGER
+
+  console.log('🔍 Checking for existing user...');
+
+  const existing = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existing) {
+    console.log('✅ User already exists. Updating role if needed.');
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        role,
+        name,
+        updatedAt: new Date(),
+      },
+    });
+
+    console.log('🎯 Admin access confirmed for:', email);
+    return;
+  }
+
+  console.log('➕ Creating new admin user...');
+
+  await prisma.user.create({
+    data: {
       id: `admin-${Date.now()}`,
-      email: "maylortech007@gmail.com",
-      name: "Brian Maylor",
-      role: "ADMIN",
-      isActive: true,
+      email,
+      name,
+      role,
       updatedAt: new Date(),
     },
   });
 
-  console.log("✅ Admin user ensured");
-  console.log(`   ID: ${admin.id}`);
-  console.log(`   Email: ${admin.email}`);
-  console.log(`   Name: ${admin.name}`);
-  console.log(`   Role: ${admin.role}`);
+  console.log('🚀 Admin user created successfully!');
+  console.log('📧 Email:', email);
+  console.log('🛡️ Role:', role);
 }
 
 main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
-
+  .catch((e) => {
+    console.error('❌ Failed to create admin:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

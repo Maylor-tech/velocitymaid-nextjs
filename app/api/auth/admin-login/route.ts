@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { prisma } from '@/lib/prisma';
+import { UserRole } from '@prisma/client';
+import { safeError } from '@/lib/safeError';
 
 export const dynamic = 'force-dynamic';
-
-const ADMIN_EMAIL = 'maylortech007@gmail.com';
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,17 +20,39 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Check if email matches admin email
-    if (normalizedEmail !== ADMIN_EMAIL.toLowerCase()) {
+    // Check that user exists and has ADMIN role (e.g. created via scripts/createAdmin.ts)
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true, email: true, role: true },
+    });
+
+    if (!user || user.role !== UserRole.ADMIN) {
       return NextResponse.json(
         { success: false, error: 'Invalid email address' },
         { status: 401 }
       );
     }
 
-    // Set admin session cookie
+    const branches = await prisma.userBranch.findMany({
+      where: { userId: user.id },
+      include: { branch: true },
+    });
+
+    if (branches.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No branch access assigned' },
+        { status: 403 }
+      );
+    }
+
+    const session = {
+      userId: user.id,
+      role: user.role,
+      branchId: branches[0].branchId,
+    };
+
     const cookieStore = await cookies();
-    cookieStore.set('admin_session', 'true', {
+    cookieStore.set('admin_session', JSON.stringify(session), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -38,10 +61,10 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[ADMIN LOGIN] Error:', error);
     return NextResponse.json(
-      { success: false, error: 'Login failed' },
+      { success: false, error: safeError() },
       { status: 500 }
     );
   }
