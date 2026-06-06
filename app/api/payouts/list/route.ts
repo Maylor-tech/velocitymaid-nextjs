@@ -12,12 +12,8 @@ import type { PayoutStatus, ServiceRegion } from '@/utils/payoutData';
  * Returns: List of payouts with optional filters
  */
 export async function GET(request: NextRequest) {
-  // TODO: Protect this route with admin authentication
-  // if (!isAdmin(request)) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-  // }
-
   try {
+    await requireRole(request, "ADMIN");
     const searchParams = request.nextUrl.searchParams;
     const cleanerId = searchParams.get('cleanerId');
     const periodStart = searchParams.get('periodStart');

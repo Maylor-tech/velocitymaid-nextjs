@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { BrandLogo } from '@/components/brand';
+import { brandClasses } from '@/lib/brand/tokens';
 import { 
   Calendar, 
   Settings, 
@@ -120,14 +122,14 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${brandClasses.bgPage}`}>
       {/* Top Navigation */}
-      <nav className="bg-white border-b border-gray-200 shadow-sm">
+      <nav className="bg-white border-b border-brand-forest/10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
-              <Link href="/customer/jobs" className="text-xl font-bold text-blue-600">
-                VelocityMaid
+              <Link href="/customer/jobs">
+                <BrandLogo size="sm" />
               </Link>
               <div className="hidden md:flex gap-1">
                 {navItems.map((item) => {
@@ -137,10 +139,10 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-sans font-medium transition-colors ${
                         isActive
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-brand-forest/10 text-brand-forest'
+                          : 'text-brand-slate/70 hover:bg-brand-forest/5'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -161,10 +163,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
                 <MessageSquare className="w-4 h-4" />
                 <span>Support</span>
               </a>
-              <Link
-                href="/book"
-                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
-              >
+              <Link href="/book" className={brandClasses.btnPrimary}>
                 Book a Service
               </Link>
               <span className="text-sm text-gray-600 hidden lg:inline">
@@ -192,10 +191,10 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-sans font-medium whitespace-nowrap transition-colors ${
                   isActive
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-brand-forest/10 text-brand-forest'
+                    : 'text-brand-slate/70 hover:bg-brand-forest/5'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -213,9 +212,9 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
       </div>
 
       {/* Support Banner */}
-      <div className="bg-blue-50 border-b border-blue-200 px-4 sm:px-6 lg:px-8 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <p className="text-sm text-blue-800">
+      <div className="calm-alert rounded-none border-x-0 border-t-0 px-4 sm:px-6 lg:px-8 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between w-full">
+          <p className="text-sm font-sans font-medium text-brand-slate/90">
             <strong>Need help?</strong> For same-day changes, call or WhatsApp us.
           </p>
           <div className="flex items-center gap-3">

@@ -212,20 +212,3 @@ function getDefaultDescription(type: IncentiveType): string {
   return descriptions[type] || 'Incentive bonus';
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

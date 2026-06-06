@@ -10,6 +10,7 @@ import PartnerHero from "@/components/PartnerHero";
 import Section from "@/components/Section";
 import PartnerValue from "@/components/PartnerValue";
 import PartnerPilotCTA from "@/components/PartnerPilotCTA";
+import MarketingShell from "@/components/layout/MarketingShell";
 
 export const metadata = {
   title: "Partner with VelocityMaid | Infrastructure for Trust at Scale",
@@ -18,27 +19,24 @@ export const metadata = {
 
 export default function PartnersPage() {
   return (
-    <>
+    <MarketingShell>
       <PartnerHero />
-
       <Section>
-        <h2 className="text-2xl font-semibold text-gray-900">
+        <h2 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight text-brand-forest">
           Built for Responsible Partnerships
         </h2>
-        <p className="mt-4 max-w-3xl text-gray-600">
-          VelocityMaid is designed to support partners who value clarity,
-          accountability, and deliberate growth.
+        <p className="mt-4 max-w-3xl text-sm sm:text-base font-sans font-medium text-brand-slate/80 leading-relaxed">
+          VelocityMaid supports partners who value clarity, accountability, and
+          deliberate growth.
         </p>
       </Section>
-
       <Section>
         <PartnerValue />
       </Section>
-
       <Section>
         <PartnerPilotCTA />
       </Section>
-    </>
+    </MarketingShell>
   );
 }
 

@@ -7,19 +7,17 @@
 
 export default function PartnerHero() {
   return (
-    <div className="border-b border-gray-200">
-      <div className="mx-auto max-w-6xl px-6 py-24">
-        <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+    <div className="border-b border-brand-forest/10">
+      <div className="mx-auto max-w-marketing px-4 sm:px-6 lg:px-8 py-20 lg:py-24">
+        <h1 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight text-brand-forest">
           Partner with VelocityMaid
         </h1>
-
-        <p className="mt-4 max-w-2xl text-lg text-gray-700">
-          Infrastructure for trust at scale.
+        <p className="mt-4 max-w-2xl text-lg font-sans font-medium text-brand-slate/80 leading-relaxed">
+          Operational infrastructure for hospitality-grade property care.
         </p>
-
-        <p className="mt-6 max-w-3xl text-gray-600">
-          VelocityMaid helps contractor-based organizations strengthen compliance
-          and readiness without disrupting existing operations.
+        <p className="mt-6 max-w-3xl text-sm sm:text-base font-sans font-medium text-brand-slate/70 leading-relaxed">
+          Strengthen compliance and readiness across your specialist network
+          without disrupting existing operations.
         </p>
       </div>
     </div>

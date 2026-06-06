@@ -1,5 +1,6 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -16,9 +17,7 @@ import { prisma } from '@/lib/prisma';
 export async function POST(
   request: NextRequest,
   { params }: { params: { branchId: string } }
-) {
-  // TODO: Add admin authentication check
-  try {
+) {  try {
     const { branchId } = params;
     // branchId is actually a slug in this context
     const slug = branchId;
@@ -49,6 +48,7 @@ export async function POST(
     // Update or create each service package
     for (const pkg of packages) {
       try {
+        await requireRole(request, "ADMIN");
         await prisma.branchServicePackage.upsert({
           where: {
             branchId_code: {
@@ -106,6 +106,7 @@ export async function POST(
       message: `Updated ${updatedPackages.length} service packages with multi-currency pricing`,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Set pricing error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to set pricing' },
@@ -113,6 +114,4 @@ export async function POST(
     );
   }
 }
-
-
 

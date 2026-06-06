@@ -7,6 +7,7 @@
 
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 import { sendTrainingPassedNotification } from '@/app/services/trainingNotifications';
 
@@ -14,9 +15,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { cleanerId: string } }
 ) {
-  try {
-    // TODO: Add admin authentication check
-    const { cleanerId } = params;
+  try {    const { cleanerId } = params;
+    await requireRole(request, "ADMIN");
     const body = await request.json();
     const { action } = body;
 
@@ -91,6 +91,7 @@ export async function POST(
         }
       }
     } catch (error) {
+      if (error instanceof NextResponse) return error;
       console.error('Error sending notification:', error);
       // Don't fail the override
     }
@@ -100,6 +101,7 @@ export async function POST(
       trainingStatus,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Override training status error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to override training status' },

@@ -3,7 +3,6 @@ export const fetchCache = 'force-no-store';
 
 import { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
 import { 
   Sparkles, 
@@ -15,18 +14,20 @@ import {
   Star, 
   Calendar,
   MapPin,
-  ArrowRight
+  ArrowRight,
+  Home,
 } from 'lucide-react';
 import { Suspense } from 'react';
+import BranchLandingNav from '@/components/layout/BranchLandingNav';
 import FAQAccordion from './components/FAQAccordion';
 import BeforeAfterGallery from './components/BeforeAfterGallery';
 
 export const metadata: Metadata = {
-  title: 'Professional House Cleaning in New Jersey | VelocityMaid',
+  title: 'New Jersey Cleaning Services | VelocityMaid',
   description: 'Reliable, background-checked cleaners in New Jersey. Flat-rate pricing, eco-friendly supplies, 100% satisfaction guarantee. Serving Newark, Jersey City, Elizabeth, and more.',
   keywords: 'house cleaning New Jersey, professional cleaners NJ, cleaning service Newark, Jersey City cleaning, Elizabeth cleaning, flat rate cleaning NJ',
   openGraph: {
-    title: 'Professional House Cleaning in New Jersey | VelocityMaid',
+    title: 'New Jersey Cleaning Services | VelocityMaid',
     description: 'Reliable, background-checked cleaners in New Jersey. Flat-rate pricing, eco-friendly supplies, 100% satisfaction guarantee.',
     url: 'https://velocitymaid.com/locations/new-jersey',
     siteName: 'VelocityMaid',
@@ -274,15 +275,15 @@ export default async function NewJerseyLandingPage() {
 
       {/* Promo Banner */}
       {activePromo && (
-        <div className="bg-gradient-to-r from-[#F8C548] to-[#F5B835] text-[#0A3D2F] py-4 px-4 sm:px-6 lg:px-8">
+        <div className="bg-vm-cyan text-vm-navy py-4 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex-1 text-center sm:text-left">
-              <h3 className="font-bold text-lg mb-1">{activePromo.title}</h3>
-              <p className="text-sm">{activePromo.description}</p>
+              <h3 className="font-heading font-bold text-lg mb-1">{activePromo.title}</h3>
+              <p className="text-sm font-body">{activePromo.description}</p>
             </div>
             <Link
               href={`/booking?branch=new-jersey&promo=${activePromo.month}-${activePromo.year}`}
-              className="bg-[#0A3D2F] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#083025] transition whitespace-nowrap"
+              className="bg-vm-navy text-white px-6 py-2 rounded-lg font-heading font-semibold hover:bg-vm-navy/90 transition whitespace-nowrap"
             >
               Book Now
             </Link>
@@ -290,229 +291,256 @@ export default async function NewJerseyLandingPage() {
         </div>
       )}
 
-      <div className="min-h-screen bg-white">
-        {/* Navigation */}
-        <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="flex items-center space-x-2">
-                <Sparkles className="w-8 h-8 text-[#0A3D2F]" />
-                <span className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
-                  VelocityMaid
-                </span>
-              </Link>
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/booking?branch=new-jersey"
-                  className="text-gray-700 hover:text-[#0A3D2F] transition font-semibold"
-                >
-                  Book Now
-                </Link>
-                <Link
-                  href="/booking?branch=new-jersey"
-                  className="bg-[#0A3D2F] text-white px-6 py-2 rounded-full font-semibold hover:bg-[#083025] transition"
-                >
-                  Check Availability
-                </Link>
-              </div>
-            </div>
-          </div>
-        </nav>
+      <div className="min-h-screen bg-white font-body">
+        <BranchLandingNav
+          bookingHref="/booking?branch=new-jersey"
+          bookingLabel="Check Availability"
+          secondaryHref="/booking?branch=new-jersey"
+          secondaryLabel="Book Now"
+          maxWidthClass="max-w-7xl"
+        />
 
         {/* SECTION 1: HERO */}
-        <section className="relative bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white py-20 md:py-32 overflow-hidden">
-          <div className="absolute inset-0 z-0">
-            <Image
-              src="/cleaning/clean-kitchen.jpg"
-              alt="Professional cleaning"
-              fill
-              className="object-cover opacity-20"
-              priority
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-          </div>
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
+        <section className="bg-vm-navy text-white py-20 md:py-32">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <div>
-                <h1 className="text-5xl md:text-6xl font-bold mb-6" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
-                  Professional House Cleaning in New Jersey
+                <h1 className="font-heading font-bold text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight">
+                  New Jersey Cleaning Services for{' '}
+                  <span className="text-vm-cyan">Homes, Apartments & Move-Ins</span>
                 </h1>
-                <p className="text-xl md:text-2xl text-gray-200 mb-8">
+                <p className="font-body text-white/60 text-xl md:text-2xl mb-8">
                   Reliable. Background Checked. Flat-Rate Pricing.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link
                     href="/booking?branch=new-jersey"
-                    className="bg-[#F8C548] text-[#0A3D2F] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#F5B835] transition shadow-lg text-center"
+                    className="bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-8 py-4 text-lg hover:bg-vm-cyan-dark transition text-center"
                   >
                     Book Now
                   </Link>
                   <Link
                     href="/booking?branch=new-jersey"
-                    className="bg-white text-[#0A3D2F] px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition shadow-lg text-center"
+                    className="border border-white/25 text-white/80 font-heading rounded-lg px-8 py-4 text-lg hover:bg-white/10 transition text-center"
                   >
                     Check Availability
                   </Link>
                 </div>
                 {/* Trust Badges */}
                 <div className="flex flex-wrap gap-6 mt-8">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-[#F8C548]" />
-                    <span className="text-sm">Background Checked</span>
+                  <div className="flex items-center gap-2 text-sm font-body text-white/60">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-vm-cyan/20">
+                      <CheckCircle2 className="h-2.5 w-2.5 text-vm-cyan" />
+                    </span>
+                    <span>Background Checked</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548]" />
-                    <span className="text-sm">Insured & Bonded</span>
+                  <div className="flex items-center gap-2 text-sm font-body text-white/60">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-vm-cyan/20">
+                      <CheckCircle2 className="h-2.5 w-2.5 text-vm-cyan" />
+                    </span>
+                    <span>Insured & Bonded</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-[#F8C548]" />
-                    <span className="text-sm">100% Satisfaction</span>
+                  <div className="flex items-center gap-2 text-sm font-body text-white/60">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-vm-cyan/20">
+                      <CheckCircle2 className="h-2.5 w-2.5 text-vm-cyan" />
+                    </span>
+                    <span>100% Satisfaction</span>
                   </div>
                 </div>
               </div>
-              <div className="relative h-96 md:h-[500px] rounded-lg overflow-hidden shadow-2xl">
-                <Image
-                  src="/cleaning/clean-kitchen.jpg"
-                  alt="Professional cleaning service"
-                  fill
-                  className="object-cover"
-                  priority
-                  onError={(e) => {
-                    e.currentTarget.src = 'https://via.placeholder.com/800x600?text=Professional+Cleaning';
-                  }}
-                />
+              <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <Home className="w-7 h-7 text-vm-cyan" />
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-vm-cyan font-body font-semibold">
+                      New Jersey • Essex, Union & Hudson
+                    </p>
+                    <p className="text-sm text-white/45 font-body">
+                      Professional house cleaning across North Jersey
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-4 text-sm">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-vm-cyan/10 rounded-lg">
+                      <Sparkles className="w-4 h-4 text-vm-cyan" />
+                    </span>
+                    <div>
+                      <p className="text-white font-heading font-medium text-sm">
+                        Basic House Cleaning
+                      </p>
+                      <p className="text-white/45 font-body text-xs mt-1">
+                        Dusting, vacuuming, mopping, bathroom and kitchen
+                        sanitizing — flat-rate pricing with no hidden fees.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-vm-cyan/10 rounded-lg">
+                      <Shield className="w-4 h-4 text-vm-cyan" />
+                    </span>
+                    <div>
+                      <p className="text-white font-heading font-medium text-sm">
+                        Deep Cleaning
+                      </p>
+                      <p className="text-white/45 font-body text-xs mt-1">
+                        Inside appliances, baseboards, light fixtures, and
+                        cabinet interiors for a comprehensive reset.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-vm-cyan/10 rounded-lg">
+                      <MapPin className="w-4 h-4 text-vm-cyan" />
+                    </span>
+                    <div>
+                      <p className="text-white font-heading font-medium text-sm">
+                        Move-In / Move-Out Cleaning
+                      </p>
+                      <p className="text-white/45 font-body text-xs mt-1">
+                        Complete deep clean for transitions — cabinets,
+                        appliances, windows, and final inspection included.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5 flex items-center justify-between text-xs text-white/45 font-body border-t border-white/10 pt-3">
+                  <span>Serving Newark, Jersey City & more</span>
+                  <span>Eco-friendly supplies included</span>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* SECTION 2: SERVICES */}
-        <section className="py-20 bg-white">
+        <section id="services" className="py-20 bg-vm-surface">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <p className="text-vm-cyan text-xs font-semibold uppercase tracking-widest font-body mb-2 text-center">
+              Our Services
+            </p>
+            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-12">
               Our Cleaning Services
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               {/* Basic Cleaning */}
-              <div className="bg-white border-2 border-gray-200 rounded-xl p-8 shadow-lg hover:shadow-xl transition">
-                <div className="w-16 h-16 bg-[#0A3D2F] rounded-lg flex items-center justify-center mb-6">
-                  <Sparkles className="w-8 h-8 text-[#F8C548]" />
+              <div className="bg-white border border-vm-border rounded-xl p-8 shadow-sm hover:shadow-md transition">
+                <div className="w-16 h-16 bg-[#EBF9FA] rounded-lg flex items-center justify-center mb-6">
+                  <Sparkles className="w-8 h-8 text-vm-cyan-dark" />
                 </div>
-                <h3 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <h3 className="font-heading font-bold text-vm-navy text-2xl mb-4">
                   Basic Cleaning
                 </h3>
-                <ul className="space-y-3 mb-6 text-gray-700">
+                <ul className="space-y-3 mb-6 text-vm-muted font-body">
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Dust all surfaces</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Vacuum & mop floors</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Clean & sanitize bathrooms</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Kitchen cleaning</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Trash removal</span>
                   </li>
                 </ul>
-                <div className="text-3xl font-bold text-[#0A3D2F] mb-4">
+                <div className="text-vm-cyan-dark font-heading font-semibold text-sm mb-4">
                   From ${basicPrice}
                 </div>
                 <Link
                   href="/booking?branch=new-jersey"
-                  className="block w-full bg-[#0A3D2F] text-white text-center py-3 rounded-lg font-semibold hover:bg-[#083025] transition"
+                  className="block w-full bg-vm-navy text-white text-center py-3 rounded-lg font-heading font-semibold hover:bg-vm-navy/90 transition"
                 >
                   Book Now
                 </Link>
               </div>
 
               {/* Deep Cleaning */}
-              <div className="bg-white border-2 border-[#F8C548] rounded-xl p-8 shadow-lg hover:shadow-xl transition">
-                <div className="w-16 h-16 bg-[#F8C548] rounded-lg flex items-center justify-center mb-6">
-                  <Sparkles className="w-8 h-8 text-[#0A3D2F]" />
+              <div className="bg-white border-2 border-vm-cyan rounded-xl p-8 shadow-sm hover:shadow-md transition">
+                <div className="w-16 h-16 bg-[#EBF9FA] rounded-lg flex items-center justify-center mb-6">
+                  <Sparkles className="w-8 h-8 text-vm-cyan-dark" />
                 </div>
-                <h3 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <h3 className="font-heading font-bold text-vm-navy text-2xl mb-4">
                   Deep Cleaning
                 </h3>
-                <ul className="space-y-3 mb-6 text-gray-700">
+                <ul className="space-y-3 mb-6 text-vm-muted font-body">
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Everything in Basic</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Inside appliances</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Baseboards & window sills</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Light fixtures & ceiling fans</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Cabinet interiors</span>
                   </li>
                 </ul>
-                <div className="text-3xl font-bold text-[#0A3D2F] mb-4">
+                <div className="text-vm-cyan-dark font-heading font-semibold text-sm mb-4">
                   From ${deepPrice}
                 </div>
                 <Link
                   href="/booking?branch=new-jersey"
-                  className="block w-full bg-[#F8C548] text-[#0A3D2F] text-center py-3 rounded-lg font-semibold hover:bg-[#F5B835] transition"
+                  className="block w-full bg-vm-cyan text-vm-navy text-center py-3 rounded-lg font-heading font-semibold hover:bg-vm-cyan-dark transition"
                 >
                   Book Now
                 </Link>
               </div>
 
               {/* Move-In/Out */}
-              <div className="bg-white border-2 border-gray-200 rounded-xl p-8 shadow-lg hover:shadow-xl transition">
-                <div className="w-16 h-16 bg-[#0A3D2F] rounded-lg flex items-center justify-center mb-6">
-                  <Sparkles className="w-8 h-8 text-[#F8C548]" />
+              <div className="bg-white border border-vm-border rounded-xl p-8 shadow-sm hover:shadow-md transition">
+                <div className="w-16 h-16 bg-[#EBF9FA] rounded-lg flex items-center justify-center mb-6">
+                  <Sparkles className="w-8 h-8 text-vm-cyan-dark" />
                 </div>
-                <h3 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <h3 className="font-heading font-bold text-vm-navy text-2xl mb-4">
                   Move-In/Move-Out
                 </h3>
-                <ul className="space-y-3 mb-6 text-gray-700">
+                <ul className="space-y-3 mb-6 text-vm-muted font-body">
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Complete deep clean</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Inside all cabinets</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Appliance deep clean</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Window cleaning</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#F8C548] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
                     <span>Final inspection</span>
                   </li>
                 </ul>
-                <div className="text-3xl font-bold text-[#0A3D2F] mb-4">
+                <div className="text-vm-cyan-dark font-heading font-semibold text-sm mb-4">
                   From ${moveInOutPrice}
                 </div>
                 <Link
                   href="/booking?branch=new-jersey"
-                  className="block w-full bg-[#0A3D2F] text-white text-center py-3 rounded-lg font-semibold hover:bg-[#083025] transition"
+                  className="block w-full bg-vm-navy text-white text-center py-3 rounded-lg font-heading font-semibold hover:bg-vm-navy/90 transition"
                 >
                   Book Now
                 </Link>
@@ -522,9 +550,9 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 3: BEFORE & AFTER GALLERY */}
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-12">
               See the Difference
             </h2>
             <Suspense fallback={<div>Loading gallery...</div>}>
@@ -534,87 +562,87 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 4: WHY CHOOSE US */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-vm-surface">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-12">
               Why Choose VelocityMaid New Jersey
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
-                <div className="w-20 h-20 bg-[#0A3D2F] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-10 h-10 text-[#F8C548]" />
+                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Shield className="w-10 h-10 text-vm-cyan" />
                 </div>
-                <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
                   Background Checked
                 </h3>
-                <p className="text-gray-600">All cleaners undergo thorough background checks</p>
+                <p className="text-vm-muted font-body">All cleaners undergo thorough background checks</p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-[#0A3D2F] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <DollarSign className="w-10 h-10 text-[#F8C548]" />
+                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
+                  <DollarSign className="w-10 h-10 text-vm-cyan" />
                 </div>
-                <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
                   Flat-Rate Pricing
                 </h3>
-                <p className="text-gray-600">Transparent pricing with no hidden fees</p>
+                <p className="text-vm-muted font-body">Transparent pricing with no hidden fees</p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-[#0A3D2F] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Leaf className="w-10 h-10 text-[#F8C548]" />
+                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Leaf className="w-10 h-10 text-vm-cyan" />
                 </div>
-                <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
                   Eco-Friendly Supplies
                 </h3>
-                <p className="text-gray-600">We use safe, eco-friendly cleaning products</p>
+                <p className="text-vm-muted font-body">We use safe, eco-friendly cleaning products</p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-[#0A3D2F] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Clock className="w-10 h-10 text-[#F8C548]" />
+                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-10 h-10 text-vm-cyan" />
                 </div>
-                <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
                   Reliable & On Time
                 </h3>
-                <p className="text-gray-600">Punctual service you can count on</p>
+                <p className="text-vm-muted font-body">Punctual service you can count on</p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-[#0A3D2F] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Star className="w-10 h-10 text-[#F8C548]" />
+                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Star className="w-10 h-10 text-vm-cyan" />
                 </div>
-                <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
                   100% Satisfaction Guarantee
                 </h3>
-                <p className="text-gray-600">Not happy? We'll come back and fix it - FREE</p>
+                <p className="text-vm-muted font-body">Not happy? We'll come back and fix it - FREE</p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-[#0A3D2F] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="w-10 h-10 text-[#F8C548]" />
+                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-10 h-10 text-vm-cyan" />
                 </div>
-                <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
                   Easy Online Booking
                 </h3>
-                <p className="text-gray-600">Book in minutes with our simple online system</p>
+                <p className="text-vm-muted font-body">Book in minutes with our simple online system</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* SECTION 5: SERVICE AREAS */}
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-4">
               Service Areas
             </h2>
-            <p className="text-center text-gray-600 mb-12 text-lg">
+            <p className="text-center text-vm-muted font-body mb-12 text-lg">
               Serving Essex, Union, and Hudson County
             </p>
             <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
               {serviceAreas.map((area) => (
                 <div
                   key={area}
-                  className="bg-white p-4 rounded-lg shadow-md text-center border-2 border-gray-200 hover:border-[#F8C548] transition"
+                  className="bg-white p-4 rounded-lg shadow-sm text-center border border-vm-border hover:border-vm-cyan transition"
                 >
-                  <MapPin className="w-6 h-6 text-[#0A3D2F] mx-auto mb-2" />
-                  <p className="font-semibold text-[#0A3D2F]">{area}</p>
+                  <MapPin className="w-6 h-6 text-vm-cyan-dark mx-auto mb-2" />
+                  <p className="font-heading font-semibold text-vm-navy">{area}</p>
                 </div>
               ))}
             </div>
@@ -622,23 +650,23 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 6: CUSTOMER REVIEWS */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-vm-surface">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-12">
               What Our Customers Say
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               {reviews.map((review, index) => (
-                <div key={index} className="bg-gray-50 p-6 rounded-xl shadow-md">
+                <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-vm-border">
                   <div className="flex items-center gap-1 mb-4">
                     {[...Array(review.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 fill-[#F8C548] text-[#F8C548]" />
+                      <Star key={i} className="w-5 h-5 fill-vm-cyan text-vm-cyan" />
                     ))}
                   </div>
-                  <p className="text-gray-700 mb-4 italic">"{review.text}"</p>
+                  <p className="text-vm-muted font-body mb-4 italic">&quot;{review.text}&quot;</p>
                   <div>
-                    <p className="font-semibold text-[#0A3D2F]">{review.name}</p>
-                    <p className="text-sm text-gray-600">{review.location}</p>
+                    <p className="font-heading font-semibold text-vm-navy">{review.name}</p>
+                    <p className="text-sm text-vm-muted font-body">{review.location}</p>
                   </div>
                 </div>
               ))}
@@ -647,14 +675,14 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 7: CTA BLOCK */}
-        <section className="py-20 bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white">
+        <section className="py-20 bg-vm-navy text-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="font-heading font-bold text-4xl md:text-5xl mb-6">
               Ready for a cleaner home?
             </h2>
             <Link
               href="/booking?branch=new-jersey"
-              className="inline-block bg-[#F8C548] text-[#0A3D2F] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#F5B835] transition shadow-lg"
+              className="inline-block bg-vm-cyan text-vm-navy font-heading font-semibold px-8 py-4 rounded-lg text-lg hover:bg-vm-cyan-dark transition"
             >
               Book Now
             </Link>
@@ -662,9 +690,9 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 8: FAQ */}
-        <section className="py-20 bg-white">
+        <section id="faq" className="py-20 bg-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-12">
               Frequently Asked Questions
             </h2>
             <Suspense fallback={<div>Loading FAQ...</div>}>
@@ -707,14 +735,14 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 9: FINAL CTA */}
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-vm-surface">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl mb-6">
               Let us handle the cleaning — you deserve the rest.
             </h2>
             <Link
               href="/booking?branch=new-jersey"
-              className="inline-flex items-center gap-2 bg-[#0A3D2F] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#083025] transition shadow-lg"
+              className="inline-flex items-center gap-2 bg-vm-navy text-white font-heading font-semibold px-8 py-4 rounded-lg text-lg hover:bg-vm-navy/90 transition"
             >
               Schedule a Cleaning
               <ArrowRight className="w-5 h-5" />
@@ -723,45 +751,45 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="bg-[#0A3D2F] text-white py-12">
+        <footer className="bg-vm-navy text-white py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-3 gap-8">
               <div>
                 <div className="flex items-center space-x-2 mb-4">
-                  <Sparkles className="w-8 h-8 text-[#F8C548]" />
-                  <span className="text-2xl font-bold" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                  <Sparkles className="w-8 h-8 text-vm-cyan" />
+                  <span className="font-heading font-bold text-2xl">
                     VelocityMaid
                   </span>
                 </div>
-                <p className="text-gray-300">Professional cleaning services in New Jersey</p>
+                <p className="text-white/60 font-body">Professional cleaning services in New Jersey</p>
               </div>
               <div>
-                <h3 className="font-bold mb-4">Quick Links</h3>
-                <ul className="space-y-2 text-gray-300">
+                <h3 className="font-heading font-bold mb-4">Quick Links</h3>
+                <ul className="space-y-2 text-white/60 font-body">
                   <li>
-                    <Link href="/booking?branch=new-jersey" className="hover:text-[#F8C548] transition">
+                    <Link href="/booking?branch=new-jersey" className="hover:text-vm-cyan transition">
                       Book Now
                     </Link>
                   </li>
                   <li>
-                    <Link href="/locations/new-jersey#services" className="hover:text-[#F8C548] transition">
+                    <Link href="/locations/new-jersey#services" className="hover:text-vm-cyan transition">
                       Services
                     </Link>
                   </li>
                   <li>
-                    <Link href="/locations/new-jersey#faq" className="hover:text-[#F8C548] transition">
+                    <Link href="/locations/new-jersey#faq" className="hover:text-vm-cyan transition">
                       FAQ
                     </Link>
                   </li>
                 </ul>
               </div>
               <div>
-                <h3 className="font-bold mb-4">Contact</h3>
-                <p className="text-gray-300">{branch?.primaryPhone || '(555) 123-4567'}</p>
-                <p className="text-gray-300">Serving New Jersey</p>
+                <h3 className="font-heading font-bold mb-4">Contact</h3>
+                <p className="text-white/60 font-body">{branch?.primaryPhone || '(555) 123-4567'}</p>
+                <p className="text-white/60 font-body">Serving New Jersey</p>
               </div>
             </div>
-            <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+            <div className="border-t border-white/10 mt-8 pt-8 text-center text-white/40 font-body">
               <p>&copy; 2025 VelocityMaid. All rights reserved.</p>
             </div>
           </div>

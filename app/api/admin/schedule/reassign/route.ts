@@ -21,8 +21,6 @@ interface ReassignRequest {
 export async function POST(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
-
     const body: ReassignRequest = await request.json();
     const { jobId, newCleanerId, sendWhatsApp = true } = body;
 
@@ -170,6 +168,7 @@ export async function POST(request: NextRequest) {
         : 'Job reassigned successfully.',
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Reassign job error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to reassign job' },

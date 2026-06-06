@@ -43,6 +43,7 @@ export async function POST(
       message: 'Application rejected',
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Reject cleaner application error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to reject application' },
@@ -50,6 +51,4 @@ export async function POST(
     );
   }
 }
-
-
 

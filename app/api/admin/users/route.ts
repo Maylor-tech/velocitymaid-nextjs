@@ -5,9 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest) {
-  // TODO: Add admin authentication check
-  try {
+export async function GET(request: NextRequest) {  try {
     const searchParams = request.nextUrl.searchParams;
     const role = searchParams.get('role');
 
@@ -29,6 +27,7 @@ export async function GET(request: NextRequest) {
       users,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('List users error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch users' },
@@ -36,6 +35,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-
 

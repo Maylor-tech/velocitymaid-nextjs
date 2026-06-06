@@ -328,6 +328,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('COMPLIANCE_OVERVIEW_ERROR:', error);
     return NextResponse.json(
       {
@@ -338,5 +339,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 

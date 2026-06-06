@@ -341,6 +341,7 @@ export async function POST(request: NextRequest) {
       results,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[BULK_EXECUTE_PAYOUTS] Error:", error);
     return NextResponse.json(
       {

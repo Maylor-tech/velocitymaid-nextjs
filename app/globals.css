@@ -3,66 +3,145 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 255, 255, 255;
-  
-  /* shadcn/ui variables */
-  --background: 0 0% 100%;
-  --foreground: 0 0% 3.9%;
+  /* VelocityMaid UX/DS v2.0.0 */
+  --brand-forest: #0b221e;
+  --brand-gold: #d4af37;
+  --brand-gold-hover: #c19a2e;
+  --brand-ivory: #fbf9f4;
+  --brand-slate: #2c3e3b;
+
+  --font-serif: "Playfair Display", Georgia, ui-serif, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  /* Semantic (shadcn) — mapped to brand */
+  --background: 40 33% 97%;
+  --foreground: 168 14% 20%;
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 3.9%;
+  --card-foreground: 168 14% 20%;
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 3.9%;
-  --primary: 200 95% 39%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 96.1%;
-  --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
-  --accent: 0 0% 96.1%;
-  --accent-foreground: 0 0% 9%;
-  --destructive: 0 84.2% 60.2%;
+  --popover-foreground: 168 14% 20%;
+  --primary: 168 50% 9%;
+  --primary-foreground: 40 33% 97%;
+  --secondary: 40 20% 94%;
+  --secondary-foreground: 168 14% 20%;
+  --muted: 40 15% 92%;
+  --muted-foreground: 168 10% 40%;
+  --accent: 46 65% 52%;
+  --accent-foreground: 168 50% 9%;
+  --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 89.8%;
-  --input: 0 0% 89.8%;
-  --ring: 0 0% 3.9%;
+  --border: 168 42% 9%;
+  /* Use border-border/10 in utilities for calm 10% forest strokes */
+  --input: 168 20% 85%;
+  --ring: 46 65% 52%;
   --radius: 0.5rem;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-brand-ivory text-brand-slate font-sans antialiased;
+    margin: 0;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-serif tracking-tight text-brand-forest;
+  }
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+@layer components {
+  /* Tactile rule — all branded buttons */
+  .btn-tactile {
+    transition:
+      transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+      background-color 160ms ease-out,
+      border-color 160ms ease-out;
+  }
+
+  .btn-tactile:active {
+    transform: scale(0.97);
+  }
+
+  .btn-brand-primary {
+    @apply bg-brand-forest text-brand-ivory font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md hover:bg-brand-forest/90 btn-tactile;
+  }
+
+  .btn-brand-secondary {
+    @apply bg-brand-gold hover:bg-brand-gold-hover text-brand-forest font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md btn-tactile;
+  }
+
+  .btn-brand-outline {
+    @apply border border-brand-forest/20 hover:border-brand-forest text-brand-forest font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded bg-transparent btn-tactile;
+  }
+
+  .card-brand {
+    @apply bg-white rounded-lg shadow-xl border border-border/50 p-6 lg:p-8 overflow-hidden relative;
+  }
+
+  .form-field-brand {
+    @apply w-full bg-white border border-border rounded px-3 py-2 text-sm text-brand-slate focus:outline-none focus:border-brand-forest transition-colors placeholder:text-muted-foreground/50;
+  }
+
+  .calm-alert {
+    @apply flex items-start gap-3 bg-brand-forest/5 p-4 rounded border border-brand-forest/10;
+  }
+
+  .trust-badge {
+    @apply flex items-center gap-2.5 px-3 py-1.5 bg-brand-forest/5 rounded-full border border-brand-forest/10 w-fit;
+  }
+
+  .stat-card-brand {
+    @apply bg-white rounded border border-border/50 p-5 flex flex-col gap-1 shadow-sm;
+  }
+
+  /* Legacy helpers — map to brand primary scale */
+  .btn-primary {
+    @apply btn-brand-primary;
+  }
+
+  .btn-secondary {
+    @apply btn-brand-outline;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-0.5;
+  }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+@layer utilities {
+  .animate-fadeIn {
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  .animate-slideInUp {
+    animation: slideInUp 0.8s ease-out;
+  }
+
+  .animate-scaleIn {
+    animation: scaleIn 0.6s ease-out;
+  }
+
+  .modal-enter {
+    animation: scaleIn 0.2s ease-out;
+  }
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Custom animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -74,25 +153,6 @@ html {
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.6s ease-out;
-}
-
-/* Button hover effects */
-.btn-primary {
-  @apply bg-primary-600 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 hover:bg-primary-700 hover:shadow-xl hover:scale-105;
-}
-
-.btn-secondary {
-  @apply bg-white text-primary-600 px-8 py-4 rounded-full font-semibold text-lg border-2 border-primary-600 transition-all duration-300 hover:bg-primary-50 hover:shadow-xl hover:scale-105;
-}
-
-/* Card effects */
-.card-hover {
-  @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-2;
-}
-
-/* Enhanced animations for new sections */
 @keyframes slideInUp {
   from {
     opacity: 0;
@@ -107,7 +167,7 @@ html {
 @keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
@@ -116,7 +176,8 @@ html {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -124,58 +185,39 @@ html {
   }
 }
 
-.animate-slideInUp {
-  animation: slideInUp 0.8s ease-out;
-}
-
-.animate-scaleIn {
-  animation: scaleIn 0.6s ease-out;
-}
-
 .animate-pulse-slow {
   animation: pulse 2s ease-in-out infinite;
 }
 
-/* Testimonial card enhancements */
 .testimonial-card {
   @apply transition-all duration-500 hover:shadow-2xl hover:-translate-y-3 hover:scale-105;
 }
 
-/* FAQ accordion animations */
-.faq-item {
-  @apply transition-all duration-300 ease-in-out;
-}
-
+.faq-item,
 .faq-content {
   @apply transition-all duration-300 ease-in-out;
 }
 
-/* Before/After gallery effects */
 .before-after-card {
   @apply transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:scale-105;
 }
 
-/* Service area banner animation */
 .service-banner {
   @apply transition-all duration-500 hover:shadow-lg;
 }
 
-/* Live chat widget animations */
 .chat-widget {
   @apply transition-all duration-300 hover:scale-110 hover:shadow-2xl;
 }
 
-/* Star rating animation */
 .star-rating {
   @apply transition-all duration-200 hover:scale-110;
 }
 
-/* Enhanced button effects */
 .btn-enhanced {
-  @apply transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95;
+  @apply btn-tactile transition-all duration-300 hover:shadow-xl hover:scale-[1.02];
 }
 
-/* Scroll animations */
 .scroll-reveal {
   opacity: 0;
   transform: translateY(30px);

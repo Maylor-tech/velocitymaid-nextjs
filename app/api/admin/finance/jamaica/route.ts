@@ -21,8 +21,6 @@ import {
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
-
     const searchParams = request.nextUrl.searchParams;
     const startDateStr = searchParams.get('startDate');
     const endDateStr = searchParams.get('endDate');

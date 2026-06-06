@@ -457,6 +457,7 @@ Any change to file contents will invalidate the signature and checksums.
       // Add manifest files to file list (they'll be included in ZIP automatically)
       // Note: Manifest files are written to base directory, so they're included when we archive the directory
     } catch (error: any) {
+      if (error instanceof NextResponse) return error;
       console.warn(
         "[DATA_ROOM_EXPORT] Manifest creation failed (continuing without signature):",
         error.message

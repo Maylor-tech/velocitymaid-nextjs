@@ -12,12 +12,8 @@ import type { ComplaintStatus, ServiceRegion } from '@/utils/complaintData';
  * Returns: List of complaints with optional filters
  */
 export async function GET(request: NextRequest) {
-  // TODO: Protect this route with admin authentication
-  // if (!isAdmin(request)) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-  // }
-
   try {
+    await requireRole(request, "ADMIN");
     const searchParams = request.nextUrl.searchParams;
     const statusParam = searchParams.get('status');
     const locationParam = searchParams.get('location');

@@ -16,7 +16,6 @@ import { sendWhatsAppMessage } from '@/app/services/whatsappService';
 export async function POST(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
     const body = await request.json();
     const { payoutId } = body;
 

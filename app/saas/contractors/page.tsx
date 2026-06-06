@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sparkles, Users, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
 import Link from 'next/link';
+import { isPublicDemoMode } from '@/lib/env/publicFlags';
 
 interface Contractor {
   id: string;
@@ -19,6 +20,7 @@ export default function ContractorsPage() {
   const router = useRouter();
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -27,48 +29,41 @@ export default function ContractorsPage() {
 
   const fetchContractors = async () => {
     try {
+      setLoadError(null);
       const response = await fetch('/api/saas/contractors');
+      if (response.status === 401) {
+        router.push('/saas/login');
+        return;
+      }
       if (!response.ok) {
-        if (response.status === 401) {
-          router.push('/saas/login');
+        if (isPublicDemoMode) {
+          setContractors([
+            {
+              id: 'demo-1',
+              name: 'Demo Contractor',
+              email: 'demo@example.com',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              completedJobs: 0,
+              rating: 5,
+            },
+          ]);
           return;
         }
-        throw new Error('Failed to fetch contractors');
+        setLoadError('Unable to load contractors. Please try again later.');
+        setContractors([]);
+        return;
       }
       const data = await response.json();
       setContractors(data.contractors || []);
     } catch (err) {
       console.error('Error fetching contractors:', err);
-      // Use mock data if API fails
-      setContractors([
-        {
-          id: '1',
-          name: 'John Smith',
-          email: 'john@example.com',
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          completedJobs: 45,
-          rating: 4.8,
-        },
-        {
-          id: '2',
-          name: 'Maria Garcia',
-          email: 'maria@example.com',
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          completedJobs: 32,
-          rating: 4.9,
-        },
-        {
-          id: '3',
-          name: 'David Johnson',
-          email: 'david@example.com',
-          isActive: false,
-          createdAt: new Date().toISOString(),
-          completedJobs: 18,
-          rating: 4.5,
-        },
-      ]);
+      if (isPublicDemoMode) {
+        setContractors([]);
+        return;
+      }
+      setLoadError('Unable to load contractors. Please try again later.');
+      setContractors([]);
     } finally {
       setLoading(false);
     }
@@ -119,6 +114,12 @@ export default function ContractorsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Contractor Management</h1>
           <p className="text-gray-600 mt-2">Manage all your independent contractors</p>
         </div>
+
+        {loadError && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {loadError}
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">

@@ -14,7 +14,8 @@ export async function POST(
   { params }: { params: { cleanerId: string } }
 ) {
   try {
-    // TODO: Add admin authentication check
+    await requireRole(request, "ADMIN");
+
     const { cleanerId } = params;
 
     // Delete all lesson progress

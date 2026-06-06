@@ -306,6 +306,7 @@ export async function GET(request: NextRequest) {
       health,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Finance overview error:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to fetch finance overview' },

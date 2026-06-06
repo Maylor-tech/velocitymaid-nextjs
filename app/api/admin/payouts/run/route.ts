@@ -83,6 +83,7 @@ async function getCleanerLevel(cleanerId: string): Promise<1 | 2 | 3 | 4 | null>
     const levelResult = calculateCleanerLevel(metrics);
     return levelResult.level;
   } catch (error) {
+    if (error instanceof NextResponse) return error;
     console.error('Error calculating cleaner level:', error);
     return null;
   }
@@ -327,5 +328,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 

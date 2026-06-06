@@ -236,6 +236,7 @@ export async function GET(
       },
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_IRIS_EXPORT] Error:", error);
 
     if (error instanceof Response) {

@@ -111,6 +111,7 @@ export async function POST(request: NextRequest) {
       integrity: result.integrity,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Worker run error:', error);
 
     // If it's our structured error from runFullOpsJob
@@ -134,21 +135,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

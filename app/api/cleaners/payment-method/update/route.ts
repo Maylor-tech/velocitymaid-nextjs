@@ -1,38 +1,21 @@
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 /**
- * Update Cleaner Payment Method API
  * POST /api/cleaners/payment-method/update
- * 
- * Allows cleaners to update their banking details
- * Only accessible by the cleaner themselves
+ * Updates payment method for the authenticated cleaner only.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from '@/lib/auth/requireRole';
 import { updateCleanerPaymentMethod } from '@/app/services/payouts/jamaicaPayoutService';
 
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Add authentication check - ensure user is updating their own payment method
-    // const session = await getServerSession();
-    // const cleanerId = session?.user?.id;
-    // if (!cleanerId) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
+    const auth = await requireRole(request, 'CLEANER');
     const body = await request.json();
-    const { cleanerId, bankName, accountNumber, accountType, whatsappNumber } = body;
+    const { bankName, accountNumber, accountType, whatsappNumber } = body;
 
-    if (!cleanerId) {
-      return NextResponse.json(
-        { success: false, error: 'Missing cleanerId' },
-        { status: 400 }
-      );
-    }
-
-    // TODO: Verify cleanerId matches authenticated user
-
-    const paymentMethod = await updateCleanerPaymentMethod(cleanerId, {
+    const paymentMethod = await updateCleanerPaymentMethod(auth.userId, {
       bankName,
       accountNumber,
       accountType,
@@ -43,13 +26,13 @@ export async function POST(request: NextRequest) {
       success: true,
       paymentMethod,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
     console.error('Update payment method error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to update payment method';
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to update payment method' },
+      { success: false, error: message },
       { status: 500 }
     );
   }
 }
-
-

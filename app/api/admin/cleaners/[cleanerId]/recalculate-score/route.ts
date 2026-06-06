@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level';
 
@@ -10,9 +11,7 @@ import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level'
 export async function POST(
   request: NextRequest,
   { params }: { params: { cleanerId: string } }
-) {
-  // TODO: Add admin authentication check
-  try {
+) {  try {
     const { cleanerId } = params;
 
     // Verify cleaner exists
@@ -102,6 +101,7 @@ export async function POST(
       calculatedAt: new Date().toISOString(),
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Recalculate score error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to recalculate score' },
@@ -109,21 +109,4 @@ export async function POST(
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

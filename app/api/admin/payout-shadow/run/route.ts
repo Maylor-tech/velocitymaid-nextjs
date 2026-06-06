@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       errorDetails: result.errorDetails || [],
     });
   } catch (error) {
+    if (error instanceof NextResponse) return error;
     console.error('=== PAYOUT ERROR START ===');
     console.error('Error:', error);
     console.error('Error type:', typeof error);

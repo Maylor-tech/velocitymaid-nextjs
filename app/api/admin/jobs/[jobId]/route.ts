@@ -188,6 +188,7 @@ export async function GET(
       job: formattedJob,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Error fetching job details:', error);
     return NextResponse.json(
       {

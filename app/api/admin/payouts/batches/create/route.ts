@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
       message: `Created payout batch with ${result.eligibleCleaners} eligible cleaner(s), total: $${(result.totalAmountCents / 100).toFixed(2)}`,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[CREATE_PAYOUT_BATCH] Error:", error);
     return NextResponse.json(
       {

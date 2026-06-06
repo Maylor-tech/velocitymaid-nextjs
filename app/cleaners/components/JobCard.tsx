@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import StatusBadge from './StatusBadge';
 import LocationBadge from './LocationBadge';
+import { JobChecklistPanel } from '@/components/cleaner/JobChecklistPanel';
 
 export interface CleanerJob {
   id: string;
@@ -24,6 +26,7 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, onStatusUpdate }: JobCardProps) {
+  const [showChecklist, setShowChecklist] = useState(false);
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { 
@@ -44,6 +47,10 @@ export default function JobCard({ job, onStatusUpdate }: JobCardProps) {
 
   const canMarkOnTheWay = job.status === 'confirmed' || job.status === 'assigned';
   const canMarkCompleted = job.status === 'on_the_way' || job.status === 'confirmed';
+  const checklistActive =
+    job.status === 'on_the_way' ||
+    job.status === 'confirmed' ||
+    job.status === 'assigned';
 
   return (
     <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200 hover:shadow-lg transition-shadow">
@@ -87,6 +94,21 @@ export default function JobCard({ job, onStatusUpdate }: JobCardProps) {
         <div className="mb-4 text-sm">
           <span className="text-gray-500">Total:</span>
           <span className="ml-2 font-semibold text-gray-900">${job.totalPrice.toFixed(2)}</span>
+        </div>
+      )}
+
+      {checklistActive && (
+        <div className="mb-4 pt-4 border-t border-brand-forest/10">
+          <button
+            type="button"
+            onClick={() => setShowChecklist(!showChecklist)}
+            className="text-xs font-sans font-bold uppercase tracking-wider text-brand-forest hover:text-brand-gold transition-colors"
+          >
+            {showChecklist ? "Hide" : "Open"} 50-Point Checklist
+          </button>
+          {showChecklist && (
+            <JobChecklistPanel jobId={job.id} active={checklistActive} />
+          )}
         </div>
       )}
 

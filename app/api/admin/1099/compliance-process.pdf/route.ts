@@ -310,6 +310,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_COMPLIANCE_PROCESS] Error:", error);
 
     if (error instanceof Response) {

@@ -75,6 +75,7 @@ export async function GET(request: NextRequest) {
       count: formattedLogs.length,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Get audit logs error:', error);
     return NextResponse.json(
       {
@@ -85,11 +86,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-
-
-
-
-
-
 

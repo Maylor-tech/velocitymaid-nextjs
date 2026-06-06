@@ -3,7 +3,16 @@ import { cn } from "../../lib/utils"
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link"
+    | "brand"
+    | "brandGold"
+    | "brandOutline"
   size?: "default" | "sm" | "lg" | "icon"
 }
 
@@ -12,7 +21,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         className={cn(
-          "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+          variant === "brand" ||
+            variant === "brandGold" ||
+            variant === "brandOutline"
+            ? "btn-tactile transition-[transform,background-color,border-color] duration-150"
+            : "transition-colors",
           {
             "bg-primary text-primary-foreground hover:bg-primary/90": variant === "default",
             "bg-destructive text-destructive-foreground hover:bg-destructive/90": variant === "destructive",
@@ -20,6 +34,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             "bg-secondary text-secondary-foreground hover:bg-secondary/80": variant === "secondary",
             "hover:bg-accent hover:text-accent-foreground": variant === "ghost",
             "text-primary underline-offset-4 hover:underline": variant === "link",
+            "bg-brand-forest text-brand-ivory font-bold uppercase tracking-wider text-xs hover:bg-brand-forest/90 shadow-md":
+              variant === "brand",
+            "bg-brand-gold hover:bg-brand-gold-hover text-brand-forest font-bold uppercase tracking-wider text-xs shadow-md":
+              variant === "brandGold",
+            "border border-brand-forest/20 hover:border-brand-forest text-brand-forest font-bold uppercase tracking-wider text-xs bg-transparent":
+              variant === "brandOutline",
           },
           {
             "h-10 px-4 py-2": size === "default",

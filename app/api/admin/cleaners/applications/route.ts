@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
       applications,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('List cleaner applications error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch applications' },
@@ -43,6 +44,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-
 

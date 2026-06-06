@@ -226,6 +226,7 @@ export async function POST(
       payout: updated,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[EXECUTE_PAYOUT] Error:", error);
     return NextResponse.json(
       {

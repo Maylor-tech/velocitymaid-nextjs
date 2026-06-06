@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[ASSIGN_CLEANER_API] Error:", error);
     return NextResponse.json(
       {

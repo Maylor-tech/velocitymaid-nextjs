@@ -54,7 +54,7 @@ function BookingWizard() {
 function BookingPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const branchSlug = searchParams.get('branch');
+  const branchSlug = searchParams.get('branch') || searchParams.get('location');
   const sessionId = searchParams.get('session_id');
 
   // If session_id is present, redirect to confirmation page
@@ -68,7 +68,7 @@ function BookingPageContent() {
   if (sessionId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
       </div>
     );
   }
@@ -85,7 +85,7 @@ export default function BookingPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
         </div>
       }
     >

@@ -121,14 +121,16 @@ export async function GET(request: NextRequest) {
         warning: "Failed to refresh from Stripe, using cached status",
       });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
     console.error("[STRIPE_STATUS] Error:", error);
+    const err = error as { message?: string; stack?: string };
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Failed to get Stripe status",
+        error: err?.message || "Failed to get Stripe status",
         details:
-          process.env.NODE_ENV === "development" ? error.stack : undefined,
+          process.env.NODE_ENV === "development" ? err?.stack : undefined,
       },
       { status: 500 }
     );

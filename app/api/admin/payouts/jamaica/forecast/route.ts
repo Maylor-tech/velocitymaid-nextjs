@@ -16,8 +16,6 @@ import { calculateTotalJamaicaBonuses } from '@/utils/jamaicaIncentives';
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
-
     const searchParams = request.nextUrl.searchParams;
     const weeks = parseInt(searchParams.get('weeks') || '4');
 
@@ -188,6 +186,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Get payout forecast error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate forecast' },
@@ -195,5 +194,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 

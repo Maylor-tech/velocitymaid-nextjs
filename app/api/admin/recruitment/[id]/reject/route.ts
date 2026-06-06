@@ -15,7 +15,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    // TODO: Add admin authentication check
+    await requireRole(request, "ADMIN");
 
     const { id } = params;
     const body = await request.json();

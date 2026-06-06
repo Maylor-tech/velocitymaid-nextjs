@@ -1,21 +1,22 @@
-/**
- * Demo Mode Banner Component
- * 
- * Displays a prominent yellow banner when DEMO_MODE is enabled.
- * Only visible when DEMO_MODE=true.
- */
-
 "use client";
 
 import { DEMO_MODE } from "../lib/demoMode";
+import { CalmAlert } from "./brand";
 
+/** Operational notice — calm forest/gold styling, not harsh yellow */
 export function DemoModeBanner() {
   if (!DEMO_MODE) return null;
 
   return (
-    <div className="w-full bg-yellow-500 text-black text-center py-2 font-semibold">
-      ⚠️ DEMO MODE — No real payments are being processed
-    </div>
+    <CalmAlert
+      className="rounded-none border-x-0 border-t-0 justify-center text-center"
+      icon={<span aria-hidden>◇</span>}
+    >
+      <span className="font-sans font-bold uppercase tracking-wider text-xs text-brand-forest">
+        Demo mode
+      </span>
+      <span className="mx-2 text-brand-slate/40">·</span>
+      No real payments are being processed
+    </CalmAlert>
   );
 }
-

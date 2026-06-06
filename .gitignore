@@ -44,5 +44,6 @@ next-env.d.ts
 
 # OS
 Thumbs.db
-.vercel
-.env*.local
+
+# accidental Windows npm cache paths
+%AppData%/

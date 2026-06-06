@@ -12,12 +12,8 @@ import { getAllCleaners } from '@/utils/cleanerData';
  * Returns: CSV file with payout data
  */
 export async function GET(request: NextRequest) {
-  // TODO: Protect this route with admin authentication
-  // if (!isAdmin(request)) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-  // }
-
   try {
+    await requireRole(request, "ADMIN");
     const searchParams = request.nextUrl.searchParams;
     const periodStart = searchParams.get('periodStart');
     const periodEnd = searchParams.get('periodEnd');

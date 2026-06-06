@@ -121,6 +121,7 @@ export async function GET(request: NextRequest) {
       count: formattedPayouts.length,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Get payouts error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get payouts' },
@@ -212,5 +213,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 

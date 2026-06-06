@@ -21,8 +21,6 @@ interface AssignRequest {
 export async function POST(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
-
     const body: AssignRequest = await request.json();
     const { jobId, cleanerId, sendWhatsApp = true } = body;
 
@@ -170,6 +168,7 @@ export async function POST(request: NextRequest) {
         : 'Job assigned successfully.',
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Assign job error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to assign job' },

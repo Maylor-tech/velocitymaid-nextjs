@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { nanoid } from 'nanoid';
+import { sendCustomerLoginCodeEmail } from '@/lib/email/sendCustomerLoginCode';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function generate6DigitCode(): string {
-  // Always 6 digits, zero-padded
   const num = Math.floor(100000 + Math.random() * 900000);
   return String(num);
 }
@@ -21,7 +21,6 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Find or create customer by email
     let customer = await prisma.customer.findUnique({
       where: { email: normalizedEmail },
     });
@@ -38,7 +37,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Invalidate previous unused codes for this customer
     await prisma.customerLoginToken.updateMany({
       where: {
         customerId: customer.id,
@@ -51,7 +49,7 @@ export async function POST(req: NextRequest) {
     });
 
     const code = generate6DigitCode();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     await prisma.customerLoginToken.create({
       data: {
@@ -61,37 +59,71 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // TODO: In production, send code via email/SendGrid, etc.
-    // For development, return code in response for easy testing.
     const isDev = process.env.NODE_ENV !== 'production';
+    let emailSent = false;
 
-    // Log code to console for easy access in development
+    if (process.env.RESEND_API_KEY) {
+      const result = await sendCustomerLoginCodeEmail({
+        email: normalizedEmail,
+        code,
+        expiresMinutes: 10,
+      });
+      emailSent = result.sent;
+      if (!result.sent) {
+        console.error('[request-code] Resend failed:', result.error);
+        if (!isDev) {
+          return NextResponse.json(
+            {
+              error:
+                'We could not send your login code. Please try again in a few minutes.',
+            },
+            { status: 503 }
+          );
+        }
+      }
+    } else if (!isDev) {
+      return NextResponse.json(
+        {
+          error:
+            'Email service is not configured. Please contact support.',
+        },
+        { status: 503 }
+      );
+    }
+
     if (isDev) {
       console.log('\n🔐 LOGIN CODE FOR', normalizedEmail);
       console.log('═══════════════════════════════════════');
       console.log('   CODE:', code);
+      console.log('   Email sent:', emailSent);
       console.log('═══════════════════════════════════════\n');
     }
 
     return NextResponse.json({
       success: true,
       email: normalizedEmail,
-      ...(isDev ? { code } : {}),
+      emailSent,
+      ...(isDev && !emailSent ? { code } : {}),
       expiresAt: expiresAt.toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in request-code:', error);
-    // Return more detailed error in development
-    const errorMessage = process.env.NODE_ENV === 'production' 
-      ? 'Failed to request login code' 
-      : error?.message || 'Failed to request login code';
-    
+    const errorMessage =
+      process.env.NODE_ENV === 'production'
+        ? 'Failed to request login code'
+        : error instanceof Error
+          ? error.message
+          : 'Failed to request login code';
+
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: process.env.NODE_ENV !== 'production' ? error?.stack : undefined
+        details:
+          process.env.NODE_ENV !== 'production' && error instanceof Error
+            ? error.stack
+            : undefined,
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

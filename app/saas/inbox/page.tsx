@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sparkles, Inbox, Mail, CheckCircle, Clock, Archive } from 'lucide-react';
 import Link from 'next/link';
+import { isPublicDemoMode } from '@/lib/env/publicFlags';
 
 interface Message {
   id: string;
@@ -20,6 +21,7 @@ export default function InboxPage() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'NEW' | 'REVIEWED' | 'REPLIED'>('all');
 
   useEffect(() => {
@@ -28,49 +30,31 @@ export default function InboxPage() {
 
   const fetchMessages = async () => {
     try {
+      setLoadError(null);
       const response = await fetch('/api/saas/messages');
+      if (response.status === 401) {
+        router.push('/saas/login');
+        return;
+      }
       if (!response.ok) {
-        if (response.status === 401) {
-          router.push('/saas/login');
+        if (isPublicDemoMode) {
+          setMessages([]);
           return;
         }
-        throw new Error('Failed to fetch messages');
+        setLoadError('Unable to load messages. Please try again later.');
+        setMessages([]);
+        return;
       }
       const data = await response.json();
       setMessages(data.messages || []);
     } catch (err) {
       console.error('Error fetching messages:', err);
-      // Use mock data if API fails
-      setMessages([
-        {
-          id: '1',
-          name: 'Jane Doe',
-          email: 'jane@example.com',
-          organization: 'ABC Cleaning Co.',
-          message: 'Interested in learning more about your platform.',
-          status: 'NEW',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          name: 'Bob Smith',
-          email: 'bob@example.com',
-          organization: 'Smith Services',
-          message: 'Would like to schedule a demo call.',
-          status: 'REVIEWED',
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-        },
-        {
-          id: '3',
-          name: 'Alice Johnson',
-          email: 'alice@example.com',
-          organization: null,
-          message: 'Thank you for the quick response!',
-          status: 'REPLIED',
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-          repliedAt: new Date(Date.now() - 86400000).toISOString(),
-        },
-      ]);
+      if (isPublicDemoMode) {
+        setMessages([]);
+        return;
+      }
+      setLoadError('Unable to load messages. Please try again later.');
+      setMessages([]);
     } finally {
       setLoading(false);
     }
@@ -146,6 +130,12 @@ export default function InboxPage() {
           <h1 className="text-3xl font-bold text-gray-900">Unified Inbox</h1>
           <p className="text-gray-600 mt-2">All communication logged in a single, auditable inbox</p>
         </div>
+
+        {loadError && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {loadError}
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">

@@ -1,23 +1,15 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from '@/lib/auth/requireRole';
 import { executeWeeklyPayouts } from '@/utils/runWeeklyPayouts';
 
 /**
- * Generate Payouts API
- * 
- * POST /api/payouts/generate
- * 
- * Manually triggers payout generation for a given period
- * TODO: Protect this route with admin authentication
+ * Generate Payouts API — POST /api/payouts/generate (admin only)
  */
 export async function POST(request: NextRequest) {
-  // TODO: Add admin authentication check
-  // if (!isAdmin(request)) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-  // }
-
   try {
+    await requireRole(request, "ADMIN");
     const body = await request.json();
     const { periodStart, periodEnd } = body;
 
@@ -42,10 +34,12 @@ export async function POST(request: NextRequest) {
       summary,
       message: 'Payout generation completed successfully',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
     console.error('Generate payouts error:', error);
+    const err = error as { message?: string };
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to generate payouts' },
+      { success: false, error: err.message || 'Failed to generate payouts' },
       { status: 500 }
     );
   }

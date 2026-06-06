@@ -15,7 +15,6 @@ import { getBranchPayouts } from '@/app/services/payouts/jamaicaPayoutService';
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
     const searchParams = request.nextUrl.searchParams;
     const branchId = searchParams.get('branchId');
     const status = searchParams.get('status') || undefined;

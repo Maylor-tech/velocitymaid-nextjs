@@ -1,18 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Loader2, CheckCircle, AlertCircle, CreditCard } from 'lucide-react';
 
 export default function CleanerPaymentMethodPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cleanerId, setCleanerId] = useState<string>('');
-
   const [formData, setFormData] = useState({
     bankName: '',
     accountNumber: '',
@@ -21,18 +17,29 @@ export default function CleanerPaymentMethodPage() {
   });
 
   useEffect(() => {
-    // TODO: Get cleanerId from session/auth
-    // For now, using a placeholder - replace with actual auth
-    const mockCleanerId = 'cleaner-id-placeholder';
-    setCleanerId(mockCleanerId);
-    fetchPaymentMethod(mockCleanerId);
+    loadPaymentMethod();
   }, []);
 
-  const fetchPaymentMethod = async (id: string) => {
+  const loadPaymentMethod = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/cleaners/payment-method/get?cleanerId=${id}`);
+      setError(null);
+
+      const meRes = await fetch('/api/cleaners/me');
+      const meData = await meRes.json();
+
+      if (!meRes.ok || !meData.success) {
+        setError(meData.error || 'Please log in to manage your payment method.');
+        return;
+      }
+
+      const response = await fetch('/api/cleaners/payment-method/get');
       const data = await response.json();
+
+      if (response.status === 401) {
+        setError('Please log in to manage your payment method.');
+        return;
+      }
 
       if (data.success && data.paymentMethod) {
         setFormData({
@@ -42,9 +49,9 @@ export default function CleanerPaymentMethodPage() {
           whatsappNumber: data.paymentMethod.whatsappNumber || '',
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching payment method:', err);
-      // Don't show error if no payment method exists yet
+      setError('Unable to load payment method. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -60,10 +67,7 @@ export default function CleanerPaymentMethodPage() {
       const response = await fetch('/api/cleaners/payment-method/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cleanerId,
-          ...formData,
-        }),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -91,7 +95,24 @@ export default function CleanerPaymentMethodPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#0A3D2F]" />
+      </div>
+    );
+  }
+
+  if (error && !formData.bankName && !formData.accountNumber) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-gray-700 mb-4">{error}</p>
+          <Link
+            href="/cleaners/login?redirect=/cleaners/payment-method"
+            className="text-[#0A3D2F] font-semibold hover:underline"
+          >
+            Log in to continue
+          </Link>
+        </div>
       </div>
     );
   }
@@ -102,14 +123,14 @@ export default function CleanerPaymentMethodPage() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link
-            href="/"
+            href="/cleaners/dashboard"
             className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <CreditCard className="w-6 h-6 text-blue-600" />
+            <CreditCard className="w-6 h-6 text-[#0A3D2F]" />
             Payment Method
           </h1>
           <p className="text-gray-600 mt-1">
@@ -208,7 +229,7 @@ export default function CleanerPaymentMethodPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3 bg-[#0A3D2F] text-white rounded-lg hover:bg-[#083025] transition-colors font-semibold flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>

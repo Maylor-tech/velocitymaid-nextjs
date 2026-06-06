@@ -181,6 +181,7 @@ export async function PATCH(
       payout: updated,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[MARK_PAID] Error:", error);
     return NextResponse.json(
       {

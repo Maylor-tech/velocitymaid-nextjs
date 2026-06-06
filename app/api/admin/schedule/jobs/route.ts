@@ -14,8 +14,6 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
-
     const searchParams = request.nextUrl.searchParams;
     const branchId = searchParams.get('branchId');
     const days = parseInt(searchParams.get('days') || '14'); // Default 14 days ahead
@@ -233,6 +231,7 @@ export async function GET(request: NextRequest) {
       count: jobsWithCleaners.length,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Get schedule jobs error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch jobs' },
@@ -240,5 +239,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 

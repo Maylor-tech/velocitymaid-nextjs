@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       message: `Generated ${result.created || 0} payout(s), skipped ${totalSkipped} job(s)`,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[ADMIN_GENERATE_PAYOUTS] Error:", error);
     console.error("[ADMIN_GENERATE_PAYOUTS] Error stack:", error.stack);
     return NextResponse.json(

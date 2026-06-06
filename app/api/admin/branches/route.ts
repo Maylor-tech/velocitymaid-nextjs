@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
       count: branches.length,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('BRANCH_FETCH_ERROR:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch branches' },
@@ -86,12 +87,8 @@ export async function GET(request: NextRequest) {
  * }
  */
 export async function POST(request: NextRequest) {
-  // TODO: Add admin authentication check
-  // if (!isAdmin(request)) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-  // }
-
   try {
+    await requireRole(request, "ADMIN");
     const body = await request.json();
     const {
       name,

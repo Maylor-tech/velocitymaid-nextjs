@@ -57,6 +57,7 @@ export async function GET(
       count: formattedLogs.length,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Get job audit logs error:', error);
     return NextResponse.json(
       {

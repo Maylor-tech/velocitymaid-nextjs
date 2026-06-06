@@ -201,6 +201,7 @@ export async function GET(
         : null,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_CANDIDATES] Error:", error);
 
     if (error instanceof Response) {

@@ -35,6 +35,7 @@ export async function GET(
       application,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Get cleaner application error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch application' },

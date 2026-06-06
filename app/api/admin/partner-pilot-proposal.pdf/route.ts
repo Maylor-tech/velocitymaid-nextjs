@@ -242,6 +242,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[ADMIN_PARTNER_PILOT_PROPOSAL] Error:", error);
 
     if (error instanceof Response) {

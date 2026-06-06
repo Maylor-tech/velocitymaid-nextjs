@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[WEEKLY_SUMMARY] Error:", error);
     console.error("[WEEKLY_SUMMARY] Error stack:", error.stack);
     return NextResponse.json(

@@ -1,11 +1,38 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import {
+  Inter,
+  Space_Grotesk,
+  Playfair_Display,
+  Plus_Jakarta_Sans,
+} from "next/font/google";
 import "./globals.css";
 import WhatsAppButton from "../components/WhatsAppButton";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { DemoModeBanner } from "../components/DemoModeBanner";
 
-const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "VelocityMaid | Professional Cleaning Services in New Jersey & Vermont",
@@ -50,6 +77,10 @@ export const metadata: Metadata = {
   verification: {
     // Add when you set up Google Search Console:
     // google: 'your-google-verification-code',
+  },
+  icons: {
+    icon: '/icon.svg',
+    apple: '/apple-icon.svg',
   },
 };
 
@@ -196,8 +227,11 @@ export default function RootLayout({
   ];
 
   return (
-    <html lang="en" className={inter.variable}>
-      <body className={inter.className}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${spaceGrotesk.variable} ${playfair.variable} ${plusJakarta.variable}`}
+    >
+      <body className={`${inter.className} font-body antialiased`}>
         <DemoModeBanner />
         {structuredData.map((data, index) => (
           <script

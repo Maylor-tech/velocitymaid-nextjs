@@ -18,12 +18,8 @@ import type { PayoutStatus, PaymentMethod } from '@/utils/payoutData';
  * }
  */
 export async function PATCH(request: NextRequest) {
-  // TODO: Protect this route with admin authentication
-  // if (!isAdmin(request)) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-  // }
-
   try {
+    await requireRole(request, "ADMIN");
     const body = await request.json();
     const { payoutId, status, deductions, paymentMethod, paymentReference } = body;
 

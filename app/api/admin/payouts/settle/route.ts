@@ -251,6 +251,7 @@ export async function POST(request: NextRequest) {
       payoutIds: settledPayoutIds,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[SETTLE] Error:", error);
     return NextResponse.json(
       {

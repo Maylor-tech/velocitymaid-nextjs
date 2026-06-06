@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sparkles, Shield, CheckCircle, Clock, XCircle, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import { isPublicDemoMode } from '@/lib/env/publicFlags';
 
 interface ComplianceMetrics {
   total: number;
@@ -31,6 +32,7 @@ export default function CompliancePage() {
   });
   const [items, setItems] = useState<ComplianceItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchComplianceData();
@@ -38,59 +40,36 @@ export default function CompliancePage() {
 
   const fetchComplianceData = async () => {
     try {
+      setLoadError(null);
       const response = await fetch('/api/saas/compliance');
+      if (response.status === 401) {
+        router.push('/saas/login');
+        return;
+      }
       if (!response.ok) {
-        if (response.status === 401) {
-          router.push('/saas/login');
+        if (isPublicDemoMode) {
+          setMetrics({ total: 0, verified: 0, pending: 0, expired: 0 });
+          setItems([]);
           return;
         }
-        throw new Error('Failed to fetch compliance data');
+        setLoadError('Unable to load compliance data. Please try again later.');
+        setMetrics({ total: 0, verified: 0, pending: 0, expired: 0 });
+        setItems([]);
+        return;
       }
       const data = await response.json();
       setMetrics(data.metrics || { total: 0, verified: 0, pending: 0, expired: 0 });
       setItems(data.items || []);
     } catch (err) {
       console.error('Error fetching compliance data:', err);
-      // Use mock data if API fails
-      setMetrics({
-        total: 12,
-        verified: 8,
-        pending: 3,
-        expired: 1,
-      });
-      setItems([
-        {
-          id: '1',
-          contractorName: 'John Smith',
-          documentType: 'W-9 Form',
-          status: 'verified',
-          expiryDate: '2026-12-31',
-          lastUpdated: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          contractorName: 'Maria Garcia',
-          documentType: 'Background Check',
-          status: 'verified',
-          expiryDate: '2026-06-30',
-          lastUpdated: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          contractorName: 'David Johnson',
-          documentType: 'Insurance Certificate',
-          status: 'pending',
-          lastUpdated: new Date().toISOString(),
-        },
-        {
-          id: '4',
-          contractorName: 'Sarah Williams',
-          documentType: 'License',
-          status: 'expired',
-          expiryDate: '2025-01-01',
-          lastUpdated: new Date().toISOString(),
-        },
-      ]);
+      if (isPublicDemoMode) {
+        setMetrics({ total: 0, verified: 0, pending: 0, expired: 0 });
+        setItems([]);
+        return;
+      }
+      setLoadError('Unable to load compliance data. Please try again later.');
+      setMetrics({ total: 0, verified: 0, pending: 0, expired: 0 });
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -171,6 +150,12 @@ export default function CompliancePage() {
           <h1 className="text-3xl font-bold text-gray-900">Compliance Tracking</h1>
           <p className="text-gray-600 mt-2">Stay audit-ready with automatic compliance document tracking</p>
         </div>
+
+        {loadError && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {loadError}
+          </div>
+        )}
 
         {/* Metrics */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">

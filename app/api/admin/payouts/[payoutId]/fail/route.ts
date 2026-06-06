@@ -149,6 +149,7 @@ export async function POST(
       payout: updated,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[FAIL_PAYOUT] Error:", error);
     return NextResponse.json(
       {

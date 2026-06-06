@@ -6,8 +6,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  // TODO: Add admin authentication check
   try {
+    await requireRole(request, "ADMIN");
     const { id } = params;
     const body = await request.json();
     const { status, internalNotes } = body;

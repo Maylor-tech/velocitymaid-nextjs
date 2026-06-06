@@ -17,6 +17,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from 'lucide-react';
+import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 
 interface JobDetails {
   id: string;
@@ -229,6 +230,13 @@ export default function JobDetailsPage() {
             </div>
           )}
         </div>
+
+        <JobChecklistSection
+          jobId={jobId}
+          mode="readonly"
+          apiBase="customer"
+          title="Hospitality Standards Progress"
+        />
 
         {/* Actions */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

@@ -15,7 +15,6 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
     // For now, allow in development mode
 
     const result = await createNJPayoutPolicy();

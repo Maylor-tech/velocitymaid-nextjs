@@ -1,13 +1,12 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { branchId: string } }
-) {
-  // TODO: Add admin authentication check
-  try {
+) {  try {
     const { branchId } = params;
     // branchId is actually a slug in this context
     const slug = branchId;
@@ -31,6 +30,7 @@ export async function PATCH(
       branch,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Update branch status error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update branch status' },
@@ -38,6 +38,4 @@ export async function PATCH(
     );
   }
 }
-
-
 

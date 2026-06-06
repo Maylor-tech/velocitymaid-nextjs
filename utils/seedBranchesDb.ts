@@ -275,6 +275,8 @@ async function seedVermont() {
     const branch = await prisma.branch.update({
       where: { slug: 'vermont' },
       data: {
+        name: 'Vermont — Okemo Valley',
+        regionLabel: 'Okemo Valley',
         country: 'United States',
         status: 'ACTIVE',
         updatedAt: new Date(),
@@ -322,12 +324,12 @@ async function seedVermont() {
     const newBranch = await tx.branch.create({
       data: {
         id: `branch-vt-${Date.now()}`,
-        name: 'Vermont',
+        name: 'Vermont — Okemo Valley',
         slug: 'vermont',
         country: 'United States',
         state: 'Vermont',
         city: 'Ludlow',
-        regionLabel: 'Vermont',
+        regionLabel: 'Okemo Valley',
         timezone: 'America/New_York',
         primaryPhone: '(802) 733-5348',
         whatsappNumber: '18027335348',

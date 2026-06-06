@@ -245,6 +245,7 @@ export async function POST(
       payout: updated,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[CONFIRM_PAID] Error:", error);
     return NextResponse.json(
       {

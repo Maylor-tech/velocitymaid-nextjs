@@ -35,11 +35,10 @@ interface ReferralData {
 export default function ReferralsPage() {
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [customerId, setCustomerId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
-
-  // Mock customer ID - in production, get from auth
-  const customerId = 'customer-id-placeholder';
 
   useEffect(() => {
     fetchReferralData();
@@ -47,25 +46,38 @@ export default function ReferralsPage() {
 
   const fetchReferralData = async () => {
     try {
-      // Fetch balance and referral link
-      const balanceRes = await fetch(`/api/referrals/get-balance?customerId=${customerId}`);
+      const meRes = await fetch('/api/customer/me');
+      const meData = await meRes.json();
+
+      if (!meRes.ok || !meData.success || !meData.customer?.id) {
+        setAuthError('Please log in to view your referral program.');
+        return;
+      }
+
+      const id = meData.customer.id as string;
+      setCustomerId(id);
+
+      const balanceRes = await fetch(`/api/referrals/get-balance?customerId=${id}`);
       const balanceData = await balanceRes.json();
 
       if (balanceData.success) {
         setReferralData({
           ...balanceData,
-          referredFriends: [], // Would fetch from API
+          referredFriends: [],
         });
+      } else {
+        setAuthError(balanceData.error || 'Unable to load referral information.');
       }
     } catch (error) {
       console.error('Fetch referral data error:', error);
+      setAuthError('Unable to load referral information. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleShare = async (method: 'whatsapp' | 'sms' | 'copy') => {
-    if (!referralData?.referralLink) return;
+    if (!referralData?.referralLink || !customerId) return;
 
     if (method === 'copy') {
       await navigator.clipboard.writeText(referralData.referralLink.url);
@@ -107,10 +119,18 @@ export default function ReferralsPage() {
     );
   }
 
-  if (!referralData) {
+  if (authError || !referralData) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-600">Unable to load referral information.</p>
+      <div className="text-center py-12 px-4">
+        <p className="text-gray-600 mb-4">{authError || 'Unable to load referral information.'}</p>
+        {authError && (
+          <a
+            href="/customer/login?redirect=/customer/referrals"
+            className="text-[#0A3D2F] font-semibold hover:underline"
+          >
+            Log in to continue
+          </a>
+        )}
       </div>
     );
   }

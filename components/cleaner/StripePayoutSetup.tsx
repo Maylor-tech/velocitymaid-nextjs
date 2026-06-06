@@ -7,6 +7,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface StripeStatus {
   hasAccount: boolean;
@@ -19,24 +20,46 @@ interface StripeStatus {
 }
 
 export function StripePayoutSetup() {
+  const searchParams = useSearchParams();
   const [status, setStatus] = useState<StripeStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [onboardingUrl, setOnboardingUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isCreatingLink, setIsCreatingLink] = useState(false);
 
   useEffect(() => {
-    fetchStatus();
-  }, []);
+    const onboarding = searchParams.get("stripe_onboarding");
+    if (onboarding === "success") {
+      setSuccessMessage("Stripe onboarding submitted. Refreshing your status…");
+    } else if (onboarding === "refresh") {
+      setError("Please complete any remaining steps to finish payout setup.");
+    }
+    fetchStatus(onboarding === "success");
+  }, [searchParams]);
 
-  const fetchStatus = async () => {
+  const fetchStatus = async (refresh = false) => {
     try {
-      const res = await fetch("/api/cleaner/stripe/status");
+      setError(null);
+      const url = refresh
+        ? "/api/cleaner/stripe/status?refresh=true"
+        : "/api/cleaner/stripe/status";
+      const res = await fetch(url);
       const data = await res.json();
+      if (res.status === 401) {
+        setError("Please log in as a cleaner to set up payouts.");
+        return;
+      }
       if (data.success) {
         setStatus(data.status);
+        if (data.status?.readyForPayouts) {
+          setSuccessMessage("Your payout account is ready.");
+        }
+      } else {
+        setError(data.error || "Unable to load payout status.");
       }
-    } catch (error) {
-      console.error("Failed to fetch Stripe status:", error);
+    } catch (err) {
+      console.error("Failed to fetch Stripe status:", err);
+      setError("Unable to load payout status. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -44,21 +67,24 @@ export function StripePayoutSetup() {
 
   const handleSetupPayouts = async () => {
     setIsCreatingLink(true);
+    setError(null);
     try {
       const res = await fetch("/api/cleaner/stripe/connect", {
         method: "POST",
       });
       const data = await res.json();
+      if (res.status === 401) {
+        setError("Please log in as a cleaner to continue.");
+        return;
+      }
       if (data.success && data.url) {
-        setOnboardingUrl(data.url);
-        // Redirect to Stripe onboarding
         window.location.href = data.url;
       } else {
-        alert("Failed to create onboarding link. Please try again.");
+        setError(data.error || "Failed to create onboarding link. Please try again.");
       }
-    } catch (error) {
-      console.error("Failed to create onboarding link:", error);
-      alert("Failed to create onboarding link. Please try again.");
+    } catch (err) {
+      console.error("Failed to create onboarding link:", err);
+      setError("Failed to create onboarding link. Please try again.");
     } finally {
       setIsCreatingLink(false);
     }
@@ -113,6 +139,14 @@ export function StripePayoutSetup() {
 
   return (
     <div className="rounded-xl border bg-white p-6 space-y-4">
+      {successMessage && (
+        <div className="rounded-md bg-green-50 p-3 text-green-800 text-sm">
+          {successMessage}
+        </div>
+      )}
+      {error && (
+        <div className="rounded-md bg-red-50 p-3 text-red-700 text-sm">{error}</div>
+      )}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Payout Setup</h2>
         <span
@@ -136,7 +170,7 @@ export function StripePayoutSetup() {
           <button
             onClick={handleSetupPayouts}
             disabled={isCreatingLink}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 bg-[#0A3D2F] text-white rounded-md hover:bg-[#083025] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isCreatingLink ? "Creating link..." : "Continue Setup"}
           </button>
@@ -150,7 +184,7 @@ export function StripePayoutSetup() {
           <button
             onClick={handleSetupPayouts}
             disabled={isCreatingLink}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 bg-[#0A3D2F] text-white rounded-md hover:bg-[#083025] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isCreatingLink ? "Setting up..." : "Set up payouts"}
           </button>

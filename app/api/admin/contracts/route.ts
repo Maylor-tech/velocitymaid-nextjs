@@ -13,8 +13,6 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
-
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type');
     const status = searchParams.get('status');
@@ -47,6 +45,7 @@ export async function GET(request: NextRequest) {
       count: contracts.length,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Get contracts error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch contracts' },

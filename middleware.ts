@@ -7,6 +7,56 @@ import {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // 🔐 OPS DASHBOARD — same session as admin
+  if (pathname.startsWith('/dashboard')) {
+    const adminSession = req.cookies.get('admin_session')?.value;
+    let isAdminLoggedIn = false;
+    if (adminSession) {
+      if (adminSession === 'true') isAdminLoggedIn = true;
+      else {
+        try {
+          const s = JSON.parse(adminSession) as { userId?: string };
+          if (s?.userId) isAdminLoggedIn = true;
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+    if (!isAdminLoggedIn) {
+      const loginUrl = req.nextUrl.clone();
+      loginUrl.pathname = '/admin/login';
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // 🔐 CLEANER PORTAL — shared cleanerId cookie
+  const isCleanerRoute =
+    pathname.startsWith('/cleaner') || pathname.startsWith('/cleaners');
+  if (isCleanerRoute) {
+    const cleanerPublicPrefixes = [
+      '/cleaners/login',
+      '/cleaners/apply',
+      '/cleaners/apply/success',
+    ];
+    const isCleanerPublic =
+      cleanerPublicPrefixes.some((p) => pathname === p || pathname.startsWith(p + '/')) ||
+      pathname.startsWith('/verify/certificate');
+
+    const cleanerId = req.cookies.get('cleanerId')?.value;
+    if (!cleanerId && !isCleanerPublic) {
+      const loginUrl = req.nextUrl.clone();
+      loginUrl.pathname = '/cleaners/login';
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (cleanerId && pathname === '/cleaners/login') {
+      const dashUrl = req.nextUrl.clone();
+      dashUrl.pathname = '/cleaners/dashboard';
+      return NextResponse.redirect(dashUrl);
+    }
+  }
+
   // 🔐 ADMIN ROUTE PROTECTION
   if (pathname.startsWith('/admin')) {
     const isLoginRoute = pathname === '/admin/login';
@@ -152,11 +202,15 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/admin/:path*',      // Admin route protection
-    '/branch-owner/:path*', // Block branch-owner routes in production
-    '/pilot/:path*',      // Block pilot routes in production
-    '/booking/:path*',    // Redirect legacy booking routes
-    '/customer/:path*',   // Customer portal auth
-    '/saas/:path*',       // SaaS portal auth
+    '/admin/:path*',
+    '/dashboard/:path*',
+    '/cleaner/:path*',
+    '/cleaners/:path*',
+    '/verify/certificate/:path*',
+    '/branch-owner/:path*',
+    '/pilot/:path*',
+    '/booking/:path*',
+    '/customer/:path*',
+    '/saas/:path*',
   ],
 };

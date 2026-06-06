@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[MANUAL_COMPLETE_JOB_API] Error:", error);
     return NextResponse.json(
       {

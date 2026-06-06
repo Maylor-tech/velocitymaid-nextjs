@@ -1,5 +1,6 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -13,9 +14,7 @@ import { prisma } from '@/lib/prisma';
 export async function POST(
   request: NextRequest,
   { params }: { params: { branchId: string } }
-) {
-  // TODO: Add admin authentication check
-  try {
+) {  try {
     const { branchId } = params;
     // branchId is actually a slug in this context
     const slug = branchId;
@@ -49,6 +48,7 @@ export async function POST(
       const normalizedZip = zipCode.trim().toUpperCase();
       
       try {
+        await requireRole(request, "ADMIN");
         await prisma.branchServiceArea.upsert({
           where: {
             branchId_zipCode: {
@@ -81,6 +81,7 @@ export async function POST(
       message: `Added ${addedCodes.length} service area(s). ${skippedCodes.length > 0 ? `${skippedCodes.length} skipped (may already exist).` : ''}`,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Add service areas error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to add service areas' },
@@ -88,6 +89,4 @@ export async function POST(
     );
   }
 }
-
-
 

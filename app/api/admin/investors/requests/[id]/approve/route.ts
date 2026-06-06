@@ -173,6 +173,7 @@ Confidential — Not for redistribution.
       message: "Request approved and email sent",
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[INVESTOR_APPROVAL] Error:", error);
 
     if (error instanceof Response) {

@@ -108,6 +108,7 @@ export async function POST(
       message: 'Application approved and user account created',
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Approve cleaner application error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to approve application' },
@@ -115,6 +116,4 @@ export async function POST(
     );
   }
 }
-
-
 

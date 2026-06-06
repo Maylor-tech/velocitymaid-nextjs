@@ -358,6 +358,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[ADMIN_SECURITY_OVERVIEW] Error:", error);
 
     if (error instanceof Response) {

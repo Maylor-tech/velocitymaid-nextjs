@@ -357,6 +357,7 @@ export async function POST(request: NextRequest) {
       results,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[BULK_CONFIRM_PAID] Error:", error);
     return NextResponse.json(
       {

@@ -2,30 +2,33 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getCustomerSession } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
 import { JobStatus } from '@prisma/client';
 import { requireCustomerJobOwnership } from '@/lib/auth/requireRole';
+import stripe from '@/utils/stripe';
 
 /**
  * POST /api/customer/jobs/[jobId]/pay
- * 
- * Get payment link for a job
- * 
- * Returns payment URL if available, or placeholder
+ *
+ * Jobs are paid at booking via Stripe Checkout. This endpoint confirms payment
+ * status or returns billing guidance — no placeholder "coming soon" responses.
  */
 export async function POST(
   request: NextRequest,
   { params }: { params: { jobId: string } }
 ) {
   try {
-    const auth = await requireCustomerJobOwnership(request, params.jobId);
-    const session = await getCustomerSession();
-    if (!session) throw new Error("Session not found after auth");
+    await requireCustomerJobOwnership(request, params.jobId);
 
-    // Get job
     const job = await prisma.job.findUnique({
       where: { id: params.jobId },
+      select: {
+        id: true,
+        status: true,
+        sessionId: true,
+        paymentMethod: true,
+        totalPrice: true,
+      },
     });
 
     if (!job) {
@@ -35,53 +38,54 @@ export async function POST(
       );
     }
 
-    // Verify job belongs to customer
-    if (job.customerId !== session.customerId) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 403 }
-      );
+    if (job.sessionId?.startsWith('cs_')) {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(job.sessionId);
+        if (session.payment_status === 'paid') {
+          return NextResponse.json({
+            success: true,
+            paid: true,
+            message: 'This job was paid at booking.',
+          });
+        }
+        if (session.url && session.payment_status === 'unpaid') {
+          return NextResponse.json({
+            success: true,
+            url: session.url,
+            message: 'Complete payment for this booking.',
+          });
+        }
+      } catch (stripeErr) {
+        console.error('[JOB_PAY] Stripe session lookup failed:', stripeErr);
+      }
     }
 
-    // Check if job is completed
-    if (job.status !== JobStatus.COMPLETED) {
-      return NextResponse.json(
-        { success: false, error: 'Can only pay for completed jobs' },
-        { status: 400 }
-      );
-    }
-
-    // TODO: Check for existing payment link or Stripe checkout URL
-    // For now, return placeholder
-    // If there's a paymentLink field on Job or a Payment model, query it here
-
-    // Check if there's a sessionId that might be a Stripe session
-    if (job.sessionId && job.sessionId.startsWith('cs_')) {
-      // This might be a Stripe checkout session ID
-      // In production, you'd verify and return the payment URL
+    if (job.paymentMethod && job.paymentMethod !== 'UNPAID') {
       return NextResponse.json({
         success: true,
-        placeholder: true,
-        message: 'Payment integration coming soon',
+        paid: true,
+        message: 'Payment is recorded for this job.',
       });
     }
 
-    // Return placeholder
-    return NextResponse.json({
-      success: true,
-      placeholder: true,
-      message: 'Online payments are coming soon. Please pay by card or cash on site.',
-    });
-  } catch (error: any) {
-    console.error('Get payment link error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to get payment link',
+        code: 'JOB_PAY_NOT_AVAILABLE',
+        error:
+          'Online payment for this job is not available. Bookings are paid at checkout; for billing questions use your account billing page.',
+        billingUrl: '/customer/billing',
       },
+      { status: 503 }
+    );
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
+    console.error('Get payment link error:', error);
+    const message =
+      error instanceof Error ? error.message : 'Failed to get payment status';
+    return NextResponse.json(
+      { success: false, error: message },
       { status: 500 }
     );
   }
 }
-
-

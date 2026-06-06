@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, User, Calendar, MapPin, DollarSign, CheckCircle, XCircle, AlertCircle, Clock, FileText } from 'lucide-react';
 import Link from 'next/link';
+import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
+import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
 
 interface Job {
   id: string;
@@ -529,6 +531,19 @@ export default function AdminJobDetailPage() {
             </p>
           </div>
         )}
+
+        <div className="mt-6">
+          <JobChecklistSection
+            jobId={jobId}
+            mode="audit"
+            apiBase="admin"
+            title="50-Point Hospitality Audit"
+          />
+          <p className="mt-2 text-[10px] font-sans text-gray-500">
+            {CARE_CHECKLIST_TOTAL} certified standards · timestamps from specialist
+            checklist submissions
+          </p>
+        </div>
 
         {/* Phase 2B: Admin Audit Log Timeline */}
         {/* Why audit logs exist: Track admin actions for compliance and debugging */}

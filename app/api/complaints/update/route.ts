@@ -17,12 +17,8 @@ import type { ComplaintStatus, ResolutionType } from '@/utils/complaintData';
  * }
  */
 export async function PATCH(request: NextRequest) {
-  // TODO: Protect this route with admin authentication
-  // if (!isAdmin(request)) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-  // }
-
   try {
+    await requireRole(request, "ADMIN");
     const body = await request.json();
     const { complaintId, status, resolutionType, adminNotes } = body;
 

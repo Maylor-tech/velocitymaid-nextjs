@@ -43,6 +43,8 @@ export default function AdminPayoutsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [processingBatchId, setProcessingBatchId] = useState<string | null>(null);
+  const [creatingBatch, setCreatingBatch] = useState(false);
+  const [createSuccess, setCreateSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBatches();
@@ -223,6 +225,51 @@ export default function AdminPayoutsPage() {
     });
   };
 
+  const handleCreateBatch = async () => {
+    const periodEnd = new Date();
+    const periodStart = new Date();
+    periodStart.setDate(periodStart.getDate() - 7);
+
+    if (
+      !confirm(
+        `Create a new payout batch for ${formatDate(periodStart.toISOString())} to ${formatDate(periodEnd.toISOString())}?`
+      )
+    ) {
+      return;
+    }
+
+    setCreatingBatch(true);
+    setError(null);
+    setCreateSuccess(null);
+
+    try {
+      const response = await fetch("/api/admin/payout-batches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          periodStart: periodStart.toISOString(),
+          periodEnd: periodEnd.toISOString(),
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to create payout batch");
+      }
+
+      setCreateSuccess(
+        data.message ||
+          `Batch created: ${data.summary?.eligibleCleaners ?? 0} cleaner(s), $${data.batch?.totalAmountDollars ?? "0.00"}`
+      );
+      await fetchBatches();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create batch";
+      setError(message);
+    } finally {
+      setCreatingBatch(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -235,24 +282,16 @@ export default function AdminPayoutsPage() {
             </p>
           </div>
           <button
-            onClick={() => {
-              const periodEnd = new Date();
-              const periodStart = new Date();
-              periodStart.setDate(periodStart.getDate() - 7);
-
-              if (
-                confirm(
-                  `Create a new payout batch for the period ${formatDate(periodStart.toISOString())} to ${formatDate(periodEnd.toISOString())}?`
-                )
-              ) {
-                // TODO: Open create batch modal or navigate to create page
-                alert("Batch creation feature coming soon");
-              }
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={handleCreateBatch}
+            disabled={creatingBatch}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Plus className="w-5 h-5" />
-            Create Batch
+            {creatingBatch ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Plus className="w-5 h-5" />
+            )}
+            {creatingBatch ? "Creating…" : "Create Batch"}
           </button>
         </div>
 
@@ -279,7 +318,12 @@ export default function AdminPayoutsPage() {
           </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error / Success Messages */}
+        {createSuccess && (
+          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6">
+            {createSuccess}
+          </div>
+        )}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
             {error}

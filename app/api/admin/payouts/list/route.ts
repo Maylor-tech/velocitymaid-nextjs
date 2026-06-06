@@ -174,6 +174,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[ADMIN_PAYOUTS_LIST] Error:", error);
     // Return empty list instead of throwing
     return NextResponse.json({

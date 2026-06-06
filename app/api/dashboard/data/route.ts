@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from "@/lib/auth/requireRole";
 import {
   getJobsToday,
   getJobsNext7Days,
@@ -20,6 +21,7 @@ export const revalidate = 10; // Revalidate every 10 seconds
 
 export async function GET(request: NextRequest) {
   try {
+    await requireRole(request, "ADMIN");
     const searchParams = request.nextUrl.searchParams;
     const regionParam = searchParams.get('region');
     
@@ -124,6 +126,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Dashboard data fetch error:', error);
     return NextResponse.json(
       {

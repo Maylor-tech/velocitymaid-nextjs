@@ -1,44 +1,30 @@
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 /**
- * Get Cleaner Payment Method API
- * GET /api/cleaners/payment-method/get?cleanerId=xxx
- * 
- * Gets cleaner's payment method details
- * Only accessible by the cleaner themselves or ADMIN
+ * GET /api/cleaners/payment-method/get
+ * Returns payment method for the authenticated cleaner.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from '@/lib/auth/requireRole';
 import { getCleanerPaymentMethod } from '@/app/services/payouts/jamaicaPayoutService';
 
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Add authentication check
-    const searchParams = request.nextUrl.searchParams;
-    const cleanerId = searchParams.get('cleanerId');
-
-    if (!cleanerId) {
-      return NextResponse.json(
-        { success: false, error: 'Missing cleanerId parameter' },
-        { status: 400 }
-      );
-    }
-
-    // TODO: Verify cleanerId matches authenticated user or user is ADMIN
-
-    const paymentMethod = await getCleanerPaymentMethod(cleanerId);
+    const auth = await requireRole(request, 'CLEANER');
+    const paymentMethod = await getCleanerPaymentMethod(auth.userId);
 
     return NextResponse.json({
       success: true,
       paymentMethod,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
     console.error('Get payment method error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to get payment method';
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to get payment method' },
+      { success: false, error: message },
       { status: 500 }
     );
   }
 }
-
-

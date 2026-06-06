@@ -15,8 +15,6 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
-
     const result = await validatePayoutEngine();
 
     return NextResponse.json({

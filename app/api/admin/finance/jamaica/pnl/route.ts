@@ -15,8 +15,6 @@ import { convertUSDToJMD } from '@/utils/currencyConverter';
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
-
     const searchParams = request.nextUrl.searchParams;
     const startDateStr = searchParams.get('startDate');
     const endDateStr = searchParams.get('endDate');
@@ -155,6 +153,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Get P&L error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch P&L data' },
@@ -165,8 +164,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Add admin authentication check
-
     const body = await request.json();
     const { amount, currency, description, transactionType = 'OPERATIONAL_EXPENSE' } = body;
 
@@ -213,5 +210,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 

@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
 
     // Get base URL for return/refresh URLs
     const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const returnUrl = `${origin}/cleaner/dashboard?stripe_onboarding=success`;
-    const refreshUrl = `${origin}/cleaner/dashboard?stripe_onboarding=refresh`;
+    const returnUrl = `${origin}/cleaner/stripe/connect?stripe_onboarding=success`;
+    const refreshUrl = `${origin}/cleaner/stripe/connect?stripe_onboarding=refresh`;
 
     let accountId = cleaner.stripeAccountId;
 
@@ -64,14 +64,16 @@ export async function POST(request: NextRequest) {
       url: onboardingUrl,
       accountId,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
     console.error("[STRIPE_CONNECT] Error:", error);
+    const err = error as { message?: string; stack?: string };
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Failed to create Stripe Connect account",
+        error: err?.message || "Failed to create Stripe Connect account",
         details:
-          process.env.NODE_ENV === "development" ? error.stack : undefined,
+          process.env.NODE_ENV === "development" ? err?.stack : undefined,
       },
       { status: 500 }
     );

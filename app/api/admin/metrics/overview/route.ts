@@ -309,6 +309,7 @@ export async function GET(request: NextRequest) {
       topCleaners,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Metrics overview error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -316,21 +317,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

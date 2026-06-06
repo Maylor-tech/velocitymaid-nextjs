@@ -1,23 +1,15 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from '@/lib/auth/requireRole';
 import { executeWeeklyIncentiveReport } from '@/utils/runWeeklyIncentiveReport';
 
 /**
- * Run Weekly Incentive Report API
- * 
- * POST /api/incentives/run-report
- * 
- * Manually triggers weekly incentive report calculation
- * TODO: Protect this route with admin authentication
+ * Run Weekly Incentive Report API — POST /api/incentives/run-report (admin only)
  */
 export async function POST(request: NextRequest) {
-  // TODO: Add admin authentication check
-  // if (!isAdmin(request)) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-  // }
-
   try {
+    await requireRole(request, "ADMIN");
     console.log('Manual weekly incentive report triggered');
     const summary = await executeWeeklyIncentiveReport();
 

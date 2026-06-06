@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
 
@@ -10,9 +11,7 @@ import { logAuditEntry } from '@/lib/audit';
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { cleanerId: string } }
-) {
-  // TODO: Add admin authentication check
-  try {
+) {  try {
     const { cleanerId } = params;
     const body = await request.json();
     const { overallStatus } = body;
@@ -85,6 +84,7 @@ export async function PATCH(
       },
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Update training status error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update training status' },
@@ -100,6 +100,7 @@ export async function GET(
   { params }: { params: { cleanerId: string } }
 ) {
   try {
+    await requireRole(request, "ADMIN");
     const { cleanerId } = params;
 
     const trainingStatus = await prisma.trainingStatus.findUnique({
@@ -124,6 +125,7 @@ export async function GET(
       },
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Get training status error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get training status' },

@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 
 // PATCH /api/admin/cleaners/[cleanerId]/availability
@@ -9,9 +10,7 @@ import { prisma } from '@/lib/prisma';
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { cleanerId: string } }
-) {
-  // TODO: Add admin authentication check
-  try {
+) {  try {
     const { cleanerId } = params;
     const body = await request.json();
     const { workingDays, timeRanges, maxDailyJobs, blackoutDates, isActive } = body;
@@ -106,6 +105,7 @@ export async function PATCH(
       },
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Update availability error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update availability' },
@@ -121,6 +121,7 @@ export async function GET(
   { params }: { params: { cleanerId: string } }
 ) {
   try {
+    await requireRole(request, "ADMIN");
     const { cleanerId } = params;
 
     const availability = await prisma.cleanerAvailability.findUnique({
@@ -145,6 +146,7 @@ export async function GET(
       },
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Get availability error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get availability' },
@@ -152,21 +154,4 @@ export async function GET(
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

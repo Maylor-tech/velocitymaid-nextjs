@@ -401,6 +401,7 @@ export async function GET(
       countdown,
     } as ReadinessResponse);
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_READINESS] Error:", error);
 
     if (error instanceof Response) {

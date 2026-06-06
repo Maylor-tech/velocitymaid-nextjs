@@ -352,6 +352,7 @@ export async function GET(
       cleaners: topCleaners,
     } as CallListResponse);
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_CALL_LIST] Error:", error);
 
     if (error instanceof Response) {

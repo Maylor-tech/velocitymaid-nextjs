@@ -383,6 +383,7 @@ model Job {
   CleanerRating            CleanerRating?
   ComplianceIssue          ComplianceIssue[]
   CustomerJobChangeRequest CustomerJobChangeRequest[]
+  JobChecklistItem         JobChecklistItem[]
   User                     User?                      @relation(fields: [assignedCleanerId], references: [id])
   Branch                   Branch                     @relation(fields: [branchId], references: [id])
   Customer                 Customer?                  @relation(fields: [customerId], references: [id])
@@ -411,6 +412,24 @@ model AssignmentLog {
   @@index([jobId])
   @@index([branchId])
   @@index([createdAt])
+}
+
+model JobChecklistItem {
+  id              String    @id @default(cuid())
+  jobId           String
+  checklistItemId String
+  completed       Boolean   @default(false)
+  completedAt     DateTime?
+  completedById   String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  job             Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  completedBy     User?     @relation("JobChecklistItem_completedBy", fields: [completedById], references: [id], onDelete: SetNull)
+
+  @@unique([jobId, checklistItemId])
+  @@index([jobId])
+  @@index([completedById])
 }
 
 model CleanerRating {
@@ -790,6 +809,7 @@ model User {
   JamaicaPaymentMethod                JamaicaPaymentMethod?
   JamaicaPayout                       JamaicaPayout[]
   Job                                 Job[]
+  JobChecklistItemCompleted           JobChecklistItem[]     @relation("JobChecklistItem_completedBy")
   LessonProgress                      LessonProgress[]
   PayoutTransfer                      PayoutTransfer[]
   TrainingCertificate                 TrainingCertificate?   @relation("TrainingCertificate_cleaner")

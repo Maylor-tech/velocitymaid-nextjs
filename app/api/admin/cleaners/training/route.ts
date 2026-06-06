@@ -14,9 +14,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(request, "ADMIN");
-    // TODO: Add admin authentication check
-    // For now, allow access (should be protected in production)
+    await requireRole(request, "ADMIN");    // For now, allow access (should be protected in production)
 
     // Get all cleaners with training status (Jamaica branch only)
     const cleaners = await prisma.user.findMany({
@@ -70,6 +68,7 @@ export async function GET(request: NextRequest) {
       cleaners: cleanersWithStatus,
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('Get training status error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch training status' },
@@ -77,5 +76,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 

@@ -14,7 +14,8 @@ export async function GET(
   { params }: { params: { cleanerId: string } }
 ) {
   try {
-    // TODO: Add admin authentication check
+    await requireRole(request, "ADMIN");
+
     const { cleanerId } = params;
 
     const cleaner = await prisma.user.findUnique({
