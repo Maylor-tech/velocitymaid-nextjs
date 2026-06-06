@@ -278,6 +278,52 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Market split — NJ + Vermont */}
+      <section className="py-12 px-6 bg-vm-navy">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="rounded-xl border border-white/10 p-8 flex flex-col gap-4">
+            <span className="text-xs font-semibold text-vm-cyan font-body uppercase tracking-widest">
+              Residential
+            </span>
+            <h2 className="text-2xl font-bold font-heading text-white">
+              New Jersey cleaning
+            </h2>
+            <p className="font-body text-white/60 text-sm leading-relaxed">
+              Home and apartment cleaning for NJ families. Newark, Jersey City, Paterson and
+              surrounding areas.
+            </p>
+            <a
+              href="/book?branch=new-jersey"
+              className="mt-auto inline-flex items-center text-vm-cyan font-heading font-semibold text-sm hover:underline"
+            >
+              Book NJ cleaning →
+            </a>
+          </div>
+
+          <div className="rounded-xl border border-vm-cyan/30 bg-white/5 p-8 flex flex-col gap-4 relative">
+            <span className="absolute top-4 right-4 bg-vm-cyan text-vm-navy text-xs font-semibold px-3 py-1 rounded-full font-body">
+              Now serving
+            </span>
+            <span className="text-xs font-semibold text-vm-cyan font-body uppercase tracking-widest">
+              Short-term rentals
+            </span>
+            <h2 className="text-2xl font-bold font-heading text-white">
+              Vermont cleaning
+            </h2>
+            <p className="font-body text-white/60 text-sm leading-relaxed">
+              Turnover cleaning for Airbnbs and ski rentals in the Okemo Valley. Locally operated
+              from Ludlow, VT.
+            </p>
+            <a
+              href="/vermont"
+              className="mt-auto inline-flex items-center text-vm-cyan font-heading font-semibold text-sm hover:underline"
+            >
+              Book Vermont cleaning →
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Reassurance Strip */}
       <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-gray-50 to-primary-50">
         <div className="max-w-4xl mx-auto text-center">
@@ -480,7 +526,7 @@ export default function Home() {
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">What Our Clients Say</h2>
@@ -617,53 +663,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Join Our Team Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-100">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Join the VelocityMaid Team</h2>
-            <p className="text-xl text-gray-600">Flexible schedules, competitive pay, and a supportive team environment</p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Become a Cleaner Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-8 card-hover">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Heart className="w-8 h-8 text-primary-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Become a Cleaner</h3>
-                <p className="text-gray-600">Start earning with flexible hours</p>
-              </div>
-              <a
-                href="/cleaners/apply"
-                className="block w-full bg-primary-600 text-white text-center py-3 px-6 rounded-full font-semibold hover:bg-primary-700 transition"
-                aria-label="Apply to become a cleaner"
-              >
-                Apply Now
-              </a>
-            </div>
-
-            {/* Franchise Opportunity Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-8 card-hover">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Building2 className="w-8 h-8 text-primary-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Franchise Opportunity</h3>
-                <p className="text-gray-600">Own a VelocityMaid location</p>
-              </div>
-              <a
-                href="/franchise/apply"
-                className="block w-full bg-primary-600 text-white text-center py-3 px-6 rounded-full font-semibold hover:bg-primary-700 transition"
-                aria-label="Learn more about franchise opportunities"
-              >
-                Learn More
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* FAQ Section */}
       <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-4xl mx-auto">
@@ -675,27 +674,27 @@ export default function Home() {
             {[
               {
                 question: "What areas do you serve?",
-                answer: "We proudly serve all of New Jersey, including Newark, Jersey City, Paterson, Elizabeth, Edison, and surrounding areas. Contact us to confirm service in your specific location."
+                answer: "We serve New Jersey (Newark, Jersey City, Paterson, and surrounding areas) and Vermont (Ludlow, Okemo Valley, Proctorsville, Cavendish, and nearby towns). Select your location when booking."
               },
               {
                 question: "Do I need to provide cleaning supplies?",
-                answer: "No! We bring all our own professional-grade cleaning supplies and equipment. You don't need to provide anything - just sit back and relax while we work."
+                answer: "No — we bring everything needed. If you have preferred products you'd like us to use, just let us know when booking."
               },
               {
                 question: "Are you insured and bonded?",
-                answer: "Yes, we are fully insured and bonded for your peace of mind. Our team is background-checked and trained to the highest standards of professionalism and safety."
+                answer: "Yes. All VelocityMaid cleaners are background-checked, insured, and bonded. You are fully covered on every visit."
               },
               {
                 question: "How do I schedule a cleaning?",
-                answer: "You can book online through our booking form, call us directly at (973) 280-9190, or message us on WhatsApp. We offer flexible scheduling to fit your needs."
+                answer: "Use our online booking form — it takes about 2 minutes. Select your location, service type, date, and pay securely. You will get a confirmation by email and SMS."
               },
               {
-                question: "What if I'm not satisfied with the cleaning?",
-                answer: "We offer a 100% satisfaction guarantee. If you're not completely happy with our service, we'll return within 24 hours to make it right at no additional cost."
+                question: "What if I am not satisfied with the cleaning?",
+                answer: "We offer a satisfaction guarantee. If something was not done right, contact us within 24 hours and we will return to fix it at no charge."
               },
               {
                 question: "Do you offer recurring services?",
-                answer: "Yes! We offer weekly, bi-weekly, and monthly recurring cleaning services at discounted rates. Contact us to set up a custom schedule that works for you."
+                answer: "Yes — weekly, bi-weekly, and monthly recurring cleanings are available at a discounted rate. Set it up during checkout."
               }
             ].map((faq, index) => (
               <FAQItem key={index} question={faq.question} answer={faq.answer} />
@@ -821,7 +820,7 @@ export default function Home() {
                 <span className="text-2xl font-bold">VelocityMaid</span>
               </div>
               <p className="text-gray-400">
-                Professional cleaning services you can trust.
+                Serving New Jersey and Vermont. Trusted since 2024.
               </p>
             </div>
             <div>
@@ -829,9 +828,10 @@ export default function Home() {
               <ul className="space-y-2">
                 <li><a href="#services" className="text-gray-400 hover:text-white transition">Services</a></li>
                 <li><a href="#pricing" className="text-gray-400 hover:text-white transition">Pricing</a></li>
-                <li><a href="#pay-now" className="text-gray-400 hover:text-white transition">Pay Now</a></li>
+                <li><a href="/customer/login" className="text-gray-400 hover:text-white transition">Pay Invoice</a></li>
                 <li><a href="#why-us" className="text-gray-400 hover:text-white transition">Why Us</a></li>
                 <li><a href="#contact" className="text-gray-400 hover:text-white transition">Contact</a></li>
+                <li><a href="/careers" className="text-gray-400 hover:text-white transition">Careers</a></li>
               </ul>
             </div>
             <div>
@@ -846,9 +846,21 @@ export default function Home() {
             <div>
               <h4 className="text-lg font-bold mb-4">Contact</h4>
               <ul className="space-y-2">
-                <li><a href={`tel:${phoneNumberTel}`} className="text-gray-400 hover:text-white transition">{phoneNumber}</a></li>
-                <li><a href={`mailto:${email}`} className="text-gray-400 hover:text-white transition">{email}</a></li>
-                <li className="text-gray-400">New Jersey</li>
+                <li>
+                  <a href={`tel:${phoneNumberTel}`} className="text-gray-400 hover:text-white transition">
+                    New Jersey — {phoneNumber}
+                  </a>
+                </li>
+                <li>
+                  <a href="tel:+18027335348" className="text-gray-400 hover:text-white transition">
+                    Vermont — (802) 733-5348
+                  </a>
+                </li>
+                <li>
+                  <a href={`mailto:${email}`} className="text-gray-400 hover:text-white transition">
+                    {email}
+                  </a>
+                </li>
               </ul>
             </div>
           </div>

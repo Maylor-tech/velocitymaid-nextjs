@@ -672,7 +672,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
                 Start your application today and be part of launching professional cleaning services in Port Antonio.
               </p>
               <a
-                href="/cleaners/apply?branch=port-antonio"
+                href="/cleaners/apply?market=jamaica"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors shadow-lg"
               >
                 {ctaLabel}

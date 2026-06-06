@@ -151,7 +151,7 @@ export default function WorkWithUsPage() {
               Competitive pay, flexible schedule, and professional training for local cleaners.
             </p>
             <Link
-              href="/cleaners/apply?branch=port-antonio"
+              href="/cleaners/apply?market=jamaica"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors shadow-lg"
             >
               Apply Now
@@ -341,7 +341,7 @@ export default function WorkWithUsPage() {
               Start your application today and be part of launching professional cleaning services in Port Antonio
             </p>
             <Link
-              href="/cleaners/apply?branch=port-antonio"
+              href="/cleaners/apply?market=jamaica"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-colors shadow-lg"
             >
               Apply Now

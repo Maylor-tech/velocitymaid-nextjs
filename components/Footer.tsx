@@ -12,7 +12,7 @@ export default function Footer() {
           <div>
             <BrandLogo size="sm" />
             <p className="mt-3 text-sm font-sans font-medium text-brand-slate/80 leading-relaxed">
-              Hospitality-level standards for primary estates and care programs.
+              Serving New Jersey and Vermont. Trusted since 2024.
             </p>
           </div>
           <div>
@@ -38,6 +38,16 @@ export default function Footer() {
           <div>
             <h4 className={footerHeadingClass}>Contact</h4>
             <ul className="mt-2 space-y-2 text-sm font-sans font-medium text-brand-slate/80">
+              <li>
+                <a href="tel:+19732809190" className="hover:text-brand-forest">
+                  New Jersey — (973) 280-9190
+                </a>
+              </li>
+              <li>
+                <a href="tel:+18027335348" className="hover:text-brand-forest">
+                  Vermont — (802) 733-5348
+                </a>
+              </li>
               <li>
                 <a href="mailto:hello@velocitymaid.com" className="hover:text-brand-forest">
                   hello@velocitymaid.com

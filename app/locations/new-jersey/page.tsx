@@ -81,51 +81,95 @@ export const metadata: Metadata = {
 
 
 
-export default async function NewJerseyLandingPage() {
-  // Fetch branch data
-  const branch = await prisma.branch.findUnique({
-    where: { slug: 'new-jersey' },
-    include: {
-      servicePackages: {
-        where: { isActive: true },
-        orderBy: { name: 'asc' },
+const DEFAULT_NJ_PRICING = {
+  basic: 120,
+  deep: 220,
+  moveInOut: 320,
+};
+
+const DEFAULT_NJ_PHONE = '(973) 280-9190';
+
+type NjBranchData = {
+  branch: {
+    id: string;
+    primaryPhone: string;
+    BranchServicePackage: Array<{
+      code: string;
+      basePrice: unknown;
+    }>;
+  } | null;
+  activePromo: {
+    title: string;
+    description: string;
+    month: number;
+    year: number;
+  } | null;
+};
+
+async function fetchNjPageData(): Promise<NjBranchData> {
+  try {
+    const branch = await prisma.branch.findUnique({
+      where: { slug: 'new-jersey' },
+      include: {
+        BranchServicePackage: {
+          where: { isActive: true },
+          orderBy: { name: 'asc' },
+        },
       },
-    },
-  });
+    });
 
-  // Fetch active promo
-  const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
-  
-  const activePromo = branch ? await prisma.promo.findFirst({
-    where: {
-      branchId: branch.id,
-      month: currentMonth,
-      year: currentYear,
-      active: true,
-      startDate: { lte: now },
-      endDate: { gte: now },
-    },
-  }) : null;
+    if (!branch) {
+      return { branch: null, activePromo: null };
+    }
 
-  // Default pricing if branch not found
-  const defaultPricing = {
-    basic: 120,
-    deep: 220,
-    moveInOut: 320,
-  };
+    let activePromo: NjBranchData['activePromo'] = null;
+    try {
+      const now = new Date();
+      activePromo = await prisma.promo.findFirst({
+        where: {
+          branchId: branch.id,
+          month: now.getMonth() + 1,
+          year: now.getFullYear(),
+          active: true,
+          startDate: { lte: now },
+          endDate: { gte: now },
+        },
+        select: {
+          title: true,
+          description: true,
+          month: true,
+          year: true,
+        },
+      });
+    } catch {
+      activePromo = null;
+    }
 
-  // Extract pricing from service packages
+    return { branch, activePromo };
+  } catch {
+    return { branch: null, activePromo: null };
+  }
+}
+
+export default async function NewJerseyLandingPage() {
+  const { branch, activePromo } = await fetchNjPageData();
+
+  const defaultPricing = DEFAULT_NJ_PRICING;
+
   const getServicePrice = (code: string): number => {
-    if (!branch?.servicePackages) return defaultPricing[code as keyof typeof defaultPricing] || 0;
-    const pkg = branch.servicePackages.find(p => p.code.toLowerCase().includes(code.toLowerCase()));
+    if (!branch?.BranchServicePackage?.length) {
+      return defaultPricing[code as keyof typeof defaultPricing] || 0;
+    }
+    const pkg = branch.BranchServicePackage.find((p) =>
+      p.code.toLowerCase().includes(code.toLowerCase())
+    );
     return pkg ? Number(pkg.basePrice) : defaultPricing[code as keyof typeof defaultPricing] || 0;
   };
 
   const basicPrice = getServicePrice('basic');
   const deepPrice = getServicePrice('deep');
   const moveInOutPrice = getServicePrice('moveinout');
+  const contactPhone = branch?.primaryPhone || DEFAULT_NJ_PHONE;
 
   // Service areas
   const serviceAreas = [
@@ -175,7 +219,7 @@ export default async function NewJerseyLandingPage() {
     image: 'https://velocitymaid.com/cleaning/clean-kitchen.jpg',
     '@id': 'https://velocitymaid.com/locations/new-jersey',
     url: 'https://velocitymaid.com/locations/new-jersey',
-    telephone: branch?.primaryPhone || '(555) 123-4567',
+    telephone: contactPhone,
     priceRange: '$$',
     address: {
       '@type': 'PostalAddress',
@@ -282,7 +326,7 @@ export default async function NewJerseyLandingPage() {
               <p className="text-sm font-body">{activePromo.description}</p>
             </div>
             <Link
-              href={`/booking?branch=new-jersey&promo=${activePromo.month}-${activePromo.year}`}
+              href={`/book?branch=new-jersey&promo=${activePromo.month}-${activePromo.year}`}
               className="bg-vm-navy text-white px-6 py-2 rounded-lg font-heading font-semibold hover:bg-vm-navy/90 transition whitespace-nowrap"
             >
               Book Now
@@ -293,9 +337,9 @@ export default async function NewJerseyLandingPage() {
 
       <div className="min-h-screen bg-white font-body">
         <BranchLandingNav
-          bookingHref="/booking?branch=new-jersey"
+          bookingHref="/book?branch=new-jersey"
           bookingLabel="Check Availability"
-          secondaryHref="/booking?branch=new-jersey"
+          secondaryHref="/book?branch=new-jersey"
           secondaryLabel="Book Now"
           maxWidthClass="max-w-7xl"
         />
@@ -314,13 +358,13 @@ export default async function NewJerseyLandingPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link
-                    href="/booking?branch=new-jersey"
+                    href="/book?branch=new-jersey"
                     className="bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-8 py-4 text-lg hover:bg-vm-cyan-dark transition text-center"
                   >
                     Book Now
                   </Link>
                   <Link
-                    href="/booking?branch=new-jersey"
+                    href="/book?branch=new-jersey"
                     className="border border-white/25 text-white/80 font-heading rounded-lg px-8 py-4 text-lg hover:bg-white/10 transition text-center"
                   >
                     Check Availability
@@ -457,7 +501,7 @@ export default async function NewJerseyLandingPage() {
                   From ${basicPrice}
                 </div>
                 <Link
-                  href="/booking?branch=new-jersey"
+                  href="/book?branch=new-jersey"
                   className="block w-full bg-vm-navy text-white text-center py-3 rounded-lg font-heading font-semibold hover:bg-vm-navy/90 transition"
                 >
                   Book Now
@@ -498,7 +542,7 @@ export default async function NewJerseyLandingPage() {
                   From ${deepPrice}
                 </div>
                 <Link
-                  href="/booking?branch=new-jersey"
+                  href="/book?branch=new-jersey"
                   className="block w-full bg-vm-cyan text-vm-navy text-center py-3 rounded-lg font-heading font-semibold hover:bg-vm-cyan-dark transition"
                 >
                   Book Now
@@ -539,7 +583,7 @@ export default async function NewJerseyLandingPage() {
                   From ${moveInOutPrice}
                 </div>
                 <Link
-                  href="/booking?branch=new-jersey"
+                  href="/book?branch=new-jersey"
                   className="block w-full bg-vm-navy text-white text-center py-3 rounded-lg font-heading font-semibold hover:bg-vm-navy/90 transition"
                 >
                   Book Now
@@ -681,7 +725,7 @@ export default async function NewJerseyLandingPage() {
               Ready for a cleaner home?
             </h2>
             <Link
-              href="/booking?branch=new-jersey"
+              href="/book?branch=new-jersey"
               className="inline-block bg-vm-cyan text-vm-navy font-heading font-semibold px-8 py-4 rounded-lg text-lg hover:bg-vm-cyan-dark transition"
             >
               Book Now
@@ -741,7 +785,7 @@ export default async function NewJerseyLandingPage() {
               Let us handle the cleaning — you deserve the rest.
             </h2>
             <Link
-              href="/booking?branch=new-jersey"
+              href="/book?branch=new-jersey"
               className="inline-flex items-center gap-2 bg-vm-navy text-white font-heading font-semibold px-8 py-4 rounded-lg text-lg hover:bg-vm-navy/90 transition"
             >
               Schedule a Cleaning
@@ -767,7 +811,7 @@ export default async function NewJerseyLandingPage() {
                 <h3 className="font-heading font-bold mb-4">Quick Links</h3>
                 <ul className="space-y-2 text-white/60 font-body">
                   <li>
-                    <Link href="/booking?branch=new-jersey" className="hover:text-vm-cyan transition">
+                    <Link href="/book?branch=new-jersey" className="hover:text-vm-cyan transition">
                       Book Now
                     </Link>
                   </li>
@@ -785,7 +829,7 @@ export default async function NewJerseyLandingPage() {
               </div>
               <div>
                 <h3 className="font-heading font-bold mb-4">Contact</h3>
-                <p className="text-white/60 font-body">{branch?.primaryPhone || '(555) 123-4567'}</p>
+                <p className="text-white/60 font-body">{contactPhone}</p>
                 <p className="text-white/60 font-body">Serving New Jersey</p>
               </div>
             </div>

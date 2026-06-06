@@ -7,8 +7,6 @@ import { ChevronDown, Menu, X } from "lucide-react";
 const LOCATIONS = [
   { href: "/locations/new-jersey", label: "New Jersey" },
   { href: "/vermont", label: "Vermont" },
-  { href: "/miami", label: "Miami" },
-  { href: "/jamaica", label: "Jamaica" },
 ];
 
 export interface SiteHeaderProps {

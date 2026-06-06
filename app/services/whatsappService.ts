@@ -123,7 +123,13 @@ export async function replyWithCleanerApply(
   to: string,
   branchSlug: string = 'port-antonio'
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const message = `Thanks for your interest in joining VelocityMaid! 👷\n\nApply here:\nhttps://velocitymaid.com/cleaners/apply?branch=${branchSlug}`;
+  const marketBySlug: Record<string, string> = {
+    'port-antonio': 'jamaica',
+    vermont: 'vermont',
+    'new-jersey': 'new-jersey',
+  };
+  const market = marketBySlug[branchSlug] ?? 'new-jersey';
+  const message = `Thanks for your interest in joining VelocityMaid! 👷\n\nApply here:\nhttps://velocitymaid.com/cleaners/apply?market=${market}`;
   return sendWhatsAppMessage(to, message);
 }
 
