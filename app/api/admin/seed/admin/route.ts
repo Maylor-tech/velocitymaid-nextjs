@@ -1,7 +1,8 @@
 /**
  * POST /api/admin/seed/admin
- * 
- * Creates a test admin user for development/testing
+ *
+ * Creates a test admin user for development/testing.
+ * In production: requires ADMIN_SEED_SECRET via x-admin-seed-secret header.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -12,12 +13,28 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
+  const isProduction = process.env.NODE_ENV === "production";
+  const secretKey = request.headers.get("x-admin-seed-secret");
+  const expectedSecret = process.env.ADMIN_SEED_SECRET;
+
+  if (isProduction) {
+    if (!expectedSecret || secretKey !== expectedSecret) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden" },
+        { status: 403 }
+      );
+    }
+  }
+
+  const seedEmail =
+    process.env.ADMIN_EMAIL?.trim().toLowerCase() || "admin@test.com";
+  const seedName = process.env.ADMIN_NAME?.trim() || "Test Admin";
+
   try {
-    // Check if admin already exists
     const existingAdmin = await prisma.user.findFirst({
       where: {
         role: UserRole.ADMIN,
-        email: "admin@test.com",
+        email: seedEmail,
       },
     });
 
@@ -33,12 +50,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create admin user
     const admin = await prisma.user.create({
       data: {
         id: `admin-test-${Date.now()}`,
-        email: "admin@test.com",
-        name: "Test Admin",
+        email: seedEmail,
+        name: seedName,
         role: UserRole.ADMIN,
         isActive: true,
         updatedAt: new Date(),
@@ -54,31 +70,14 @@ export async function POST(request: NextRequest) {
         name: admin.name,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[CREATE_ADMIN] Error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to create admin user",
+        error: error instanceof Error ? error.message : "Failed to create admin user",
       },
       { status: 500 }
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

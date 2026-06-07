@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { brandClasses } from "@/lib/brand/tokens";
 
 export default function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
@@ -14,7 +15,6 @@ export default function ContactForm() {
 
     const formData = new FormData(e.currentTarget);
     
-    // Map form values to API expected values
     const roleMap: Record<string, string> = {
       'partner': 'Partner / Operator',
       'investor': 'Investor',
@@ -45,12 +45,10 @@ export default function ContactForm() {
       }
 
       setSubmitted(true);
-      
-      // Dispatch custom event to show confirmation
       window.dispatchEvent(new CustomEvent("contactFormSubmitted"));
-    } catch (error: any) {
-      console.error("Failed to submit contact form:", error);
-      setError(error.message || "Failed to submit message. Please try again.");
+    } catch (err: unknown) {
+      console.error("Failed to submit contact form:", err);
+      setError(err instanceof Error ? err.message : "Failed to submit message. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -60,32 +58,25 @@ export default function ContactForm() {
     return null;
   }
 
+  const fieldClass = `${brandClasses.input} mt-1`;
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="mt-8 max-w-xl space-y-4"
-    >
+    <form onSubmit={handleSubmit} className="mt-8 max-w-xl space-y-4">
       {error && (
-        <div className="rounded-md bg-red-50 border border-red-200 p-4">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="rounded border border-destructive/20 bg-destructive/5 p-4">
+          <p className="text-sm text-destructive font-sans">{error}</p>
           <button
             type="button"
             onClick={() => setError(null)}
-            className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+            className="mt-2 text-sm text-brand-forest hover:underline font-sans"
           >
             Dismiss
           </button>
         </div>
       )}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          I'm reaching out as a
-        </label>
-        <select
-          name="role"
-          required
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        >
+        <label className={brandClasses.label}>I&apos;m reaching out as a</label>
+        <select name="role" required className={fieldClass}>
           <option value="">Select one</option>
           <option value="partner">Partner / Operator</option>
           <option value="investor">Investor</option>
@@ -95,57 +86,32 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Full name
-        </label>
-        <input
-          name="name"
-          required
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <label className={brandClasses.label}>Full name</label>
+        <input name="name" required className={fieldClass} />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Email address
-        </label>
-        <input
-          name="email"
-          type="email"
-          required
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <label className={brandClasses.label}>Email address</label>
+        <input name="email" type="email" required className={fieldClass} />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Organization (optional)
-        </label>
-        <input
-          name="organization"
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <label className={brandClasses.label}>Organization (optional)</label>
+        <input name="organization" className={fieldClass} />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Message
-        </label>
-        <textarea
-          name="message"
-          rows={4}
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <label className={brandClasses.label}>Message</label>
+        <textarea name="message" rows={4} className={fieldClass} />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="mt-4 inline-flex items-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+        className={`mt-4 ${brandClasses.btnPrimary} disabled:opacity-50`}
       >
         {loading ? "Submitting…" : "Send message"}
       </button>
     </form>
   );
 }
-

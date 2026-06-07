@@ -1,26 +1,24 @@
+import Link from "next/link";
+import { brandClasses } from "@/lib/brand/tokens";
+
 export default function PricingCTA() {
   return (
-    <div className="rounded-md border border-gray-200 bg-gray-50 p-8">
-      <h3 className="text-lg font-medium text-gray-900">
-        Let's Discuss Fit
+    <div className="rounded-xl border border-brand-forest/10 bg-white p-8 shadow-sm">
+      <h3 className="text-lg font-serif font-semibold text-brand-forest">
+        Let&apos;s Discuss Fit
       </h3>
 
-      <p className="mt-3 max-w-2xl text-gray-600">
+      <p className="mt-3 max-w-2xl text-brand-slate/70 font-sans">
         VelocityMaid pricing is designed to be fair, predictable, and aligned
-        with real operational needs. We're happy to discuss pilots, volume
+        with real operational needs. We&apos;re happy to discuss pilots, volume
         considerations, and rollout timing.
       </p>
 
       <div className="mt-6">
-        <a
-          href="/contact"
-          className="inline-flex items-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800"
-        >
+        <Link href="/contact" className={brandClasses.btnPrimary}>
           Request a conversation
-        </a>
+        </Link>
       </div>
     </div>
   );
 }
-
-

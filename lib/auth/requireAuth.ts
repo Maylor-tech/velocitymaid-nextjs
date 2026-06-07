@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
+import { allowLegacyAdminBypass, isLegacyAdminSession } from './adminBypass';
 
 export interface AuthContext {
   userId: string;
@@ -36,16 +37,15 @@ export async function requireAuth(request?: NextRequest): Promise<AuthContext> {
     (request?.headers.get("x-admin-id")) ||
     (request?.headers.get("authorization")?.replace("Bearer ", ""));
   
-  // Simple local-only auth: if admin_session cookie is "true", allow access
-  if (adminSession === "true") {
-    // For local admin, try to find or create a default tenant
+  // Legacy dev-only bypass — disabled in production
+  if (isLegacyAdminSession(adminSession) && allowLegacyAdminBypass()) {
     const defaultTenant = await prisma.tenant.findFirst({
       where: { name: "Default Tenant" },
     });
-    
+
     return {
       userId: "local-admin",
-      email: "maylortech007@gmail.com",
+      email: process.env.ADMIN_EMAIL || "dev-admin@localhost",
       tenantId: defaultTenant?.id || null,
       role: UserRole.ADMIN,
     };

@@ -1,51 +1,52 @@
 /**
- * Assign an admin user to a branch (e.g. Laura → NJ).
- * Creates/updates UserBranch so the admin has access to that branch.
+ * @deprecated Use scripts/setup-admin.ts (creates user + branch assignment)
  *
- * Usage: npx tsx scripts/assignAdminToBranch.ts
+ * npx dotenv-cli -e .env.local -- npx tsx scripts/setup-admin.ts
  */
-
 import { prisma } from '../lib/prisma';
 
-const NJ_BRANCH_SLUG = 'new-jersey';
-const ADMIN_EMAIL = 'laura@velocitymaid.com';
-
 async function main() {
+  const branchSlug = process.env.ADMIN_BRANCH_SLUG?.trim() || 'new-jersey';
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+
+  if (!adminEmail) {
+    console.error('FAIL: Set ADMIN_EMAIL in .env.local');
+    process.exit(1);
+  }
+
   const branch = await prisma.branch.findUnique({
-    where: { slug: NJ_BRANCH_SLUG },
+    where: { slug: branchSlug },
     select: { id: true, name: true, slug: true },
   });
 
   if (!branch) {
-    throw new Error(`Branch with slug "${NJ_BRANCH_SLUG}" not found. Run seed-nj-branch-operator first.`);
+    throw new Error(`Branch with slug "${branchSlug}" not found.`);
   }
 
   const user = await prisma.user.findUnique({
-    where: { email: ADMIN_EMAIL },
+    where: { email: adminEmail },
   });
 
   if (!user) {
-    throw new Error(`User not found: ${ADMIN_EMAIL}`);
+    throw new Error(`User not found: ${adminEmail}. Run setup-admin.ts first.`);
   }
-
-  const branchId = branch.id;
 
   await prisma.userBranch.upsert({
     where: {
       userId_branchId: {
         userId: user.id,
-        branchId,
+        branchId: branch.id,
       },
     },
     update: {},
     create: {
-      id: `ub-laura-nj-${Date.now()}`,
+      id: `ub-${user.id}-${branch.id}-${Date.now()}`,
       userId: user.id,
-      branchId,
+      branchId: branch.id,
     },
   });
 
-  console.log(`✅ Laura assigned to NJ branch (${branch.name} / ${branch.slug})`);
+  console.log(`✅ ${adminEmail} assigned to ${branch.name} (${branch.slug})`);
 }
 
 main()

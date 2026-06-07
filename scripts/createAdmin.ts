@@ -1,9 +1,20 @@
+/**
+ * @deprecated Use scripts/setup-admin.ts with ADMIN_EMAIL in .env.local
+ *
+ * npx dotenv-cli -e .env.local -- npx tsx scripts/setup-admin.ts
+ */
 import { prisma } from '../lib/prisma';
+import { UserRole } from '@prisma/client';
 
 async function main() {
-  const email = 'laura@velocitymaid.com'; // <-- change if needed
-  const name = 'Laura';
-  const role = 'ADMIN'; // ADMIN | BRANCH_MANAGER
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const name = process.env.ADMIN_NAME?.trim() || 'Admin';
+
+  if (!email) {
+    console.error('FAIL: Set ADMIN_EMAIL in .env.local');
+    console.error('Prefer: npx dotenv-cli -e .env.local -- npx tsx scripts/setup-admin.ts');
+    process.exit(1);
+  }
 
   console.log('🔍 Checking for existing user...');
 
@@ -12,36 +23,32 @@ async function main() {
   });
 
   if (existing) {
-    console.log('✅ User already exists. Updating role if needed.');
-
     await prisma.user.update({
       where: { email },
       data: {
-        role,
+        role: UserRole.ADMIN,
         name,
+        isActive: true,
         updatedAt: new Date(),
       },
     });
-
-    console.log('🎯 Admin access confirmed for:', email);
+    console.log('✅ Admin access confirmed for:', email);
     return;
   }
-
-  console.log('➕ Creating new admin user...');
 
   await prisma.user.create({
     data: {
       id: `admin-${Date.now()}`,
       email,
       name,
-      role,
+      role: UserRole.ADMIN,
+      isActive: true,
       updatedAt: new Date(),
     },
   });
 
-  console.log('🚀 Admin user created successfully!');
-  console.log('📧 Email:', email);
-  console.log('🛡️ Role:', role);
+  console.log('🚀 Admin user created:', email);
+  console.log('Next: npx dotenv-cli -e .env.local -- npx tsx scripts/setup-admin.ts');
 }
 
 main()

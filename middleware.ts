@@ -4,24 +4,26 @@ import {
   verifyCustomerSessionToken,
 } from './lib/customerSession';
 
+function isAdminSessionValid(adminSession: string | undefined): boolean {
+  if (!adminSession) return false;
+  if (adminSession === 'true') {
+    return process.env.NODE_ENV !== 'production';
+  }
+  try {
+    const s = JSON.parse(adminSession) as { userId?: string };
+    return Boolean(s?.userId);
+  } catch {
+    return false;
+  }
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // 🔐 OPS DASHBOARD — same session as admin
   if (pathname.startsWith('/dashboard')) {
     const adminSession = req.cookies.get('admin_session')?.value;
-    let isAdminLoggedIn = false;
-    if (adminSession) {
-      if (adminSession === 'true') isAdminLoggedIn = true;
-      else {
-        try {
-          const s = JSON.parse(adminSession) as { userId?: string };
-          if (s?.userId) isAdminLoggedIn = true;
-        } catch {
-          /* ignore */
-        }
-      }
-    }
+    const isAdminLoggedIn = isAdminSessionValid(adminSession);
     if (!isAdminLoggedIn) {
       const loginUrl = req.nextUrl.clone();
       loginUrl.pathname = '/admin/login';
@@ -61,18 +63,7 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith('/admin')) {
     const isLoginRoute = pathname === '/admin/login';
     const adminSession = req.cookies.get('admin_session')?.value;
-    let isAdminLoggedIn = false;
-    if (adminSession) {
-      if (adminSession === 'true') isAdminLoggedIn = true;
-      else {
-        try {
-          const s = JSON.parse(adminSession) as { userId?: string };
-          if (s?.userId) isAdminLoggedIn = true;
-        } catch {
-          /* ignore */
-        }
-      }
-    }
+    const isAdminLoggedIn = isAdminSessionValid(adminSession);
 
     if (!isAdminLoggedIn && !isLoginRoute) {
       const loginUrl = req.nextUrl.clone();

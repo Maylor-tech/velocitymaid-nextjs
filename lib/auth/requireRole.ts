@@ -6,6 +6,7 @@ import { getAuthenticatedBranchOperator } from "./branchOperatorAuth";
 import { prisma } from "../prisma";
 import { UserRole } from "@prisma/client";
 import { cookies } from "next/headers";
+import { allowLegacyAdminBypass, isLegacyAdminSession } from "./adminBypass";
 
 export type RequiredRole = "ADMIN" | "CUSTOMER" | "CLEANER" | "BRANCH_OWNER" | "BRANCH_OPERATOR";
 
@@ -74,12 +75,12 @@ export async function requireRole(
       } catch {
         // not JSON, fall through
       }
-      // Legacy: cookie was "true" (no branch scope)
-      if (adminSessionRaw === "true") {
+      // Legacy dev bypass — disabled in production
+      if (isLegacyAdminSession(adminSessionRaw) && allowLegacyAdminBypass()) {
         return {
           userId: "local-admin",
           role: "ADMIN",
-          email: "maylortech007@gmail.com",
+          email: process.env.ADMIN_EMAIL || "dev-admin@localhost",
         };
       }
     }
@@ -215,7 +216,7 @@ export async function requireRole(
 export async function getAdminAuthFromCookies(): Promise<AuthContext | null> {
   const cookieStore = await cookies();
   const adminSessionRaw = cookieStore.get("admin_session")?.value;
-  if (!adminSessionRaw || adminSessionRaw === "true") return null;
+  if (!adminSessionRaw || isLegacyAdminSession(adminSessionRaw)) return null;
   try {
     const session = JSON.parse(adminSessionRaw) as { userId?: string; branchId?: string };
     if (!session?.userId) return null;

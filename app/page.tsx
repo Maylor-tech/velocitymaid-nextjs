@@ -24,27 +24,28 @@ import { sendGAEvent } from '@next/third-parties/google';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import TestimonialsSection from '../components/TestimonialsSection';
 import SiteHeader from '../components/layout/SiteHeader';
+import { BrandLogo } from '@/components/brand';
 
 // FAQ Item Component
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div className="bg-white border border-brand-forest/10 rounded-2xl shadow-sm overflow-hidden">
       <button
-        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition"
+        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-brand-ivory/60 transition"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <h3 className="text-lg font-semibold text-gray-900">{question}</h3>
+        <h3 className="text-base font-serif font-semibold text-brand-forest">{question}</h3>
         {isOpen ? (
-          <ChevronUp className="w-5 h-5 text-primary-600" />
+          <ChevronUp className="w-5 h-5 text-brand-gold" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-primary-600" />
+          <ChevronDown className="w-5 h-5 text-brand-gold" />
         )}
       </button>
       {isOpen && (
-        <div className="px-6 pb-4">
-          <p className="text-gray-700 leading-relaxed">{answer}</p>
+        <div className="px-6 pb-4 border-t border-brand-forest/5">
+          <p className="text-brand-slate/80 leading-relaxed pt-3">{answer}</p>
         </div>
       )}
     </div>
@@ -58,19 +59,19 @@ function HeroPlaceholder() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="bg-vm-navy rounded-2xl min-h-[280px] sm:min-h-[360px] lg:min-h-[420px] flex flex-col items-center justify-center p-8 sm:p-10 text-center"
+      className="bg-white border border-brand-forest/10 rounded-2xl min-h-[280px] sm:min-h-[360px] lg:min-h-[420px] flex flex-col items-center justify-center p-8 sm:p-10 text-center shadow-sm"
     >
-      <p className="text-vm-cyan text-xs font-semibold uppercase tracking-widest font-body mb-8">
+      <p className="text-brand-gold text-xs font-sans font-bold uppercase tracking-widest mb-8">
         Now serving Vermont + New Jersey
       </p>
       <div className="grid grid-cols-2 gap-10 sm:gap-16 w-full max-w-xs">
         <div className="text-center">
-          <p className="font-heading font-bold text-4xl sm:text-5xl text-vm-cyan">3</p>
-          <p className="font-body text-sm text-white/60 mt-1">markets</p>
+          <p className="font-serif font-bold text-4xl sm:text-5xl text-brand-forest">3</p>
+          <p className="font-sans text-sm text-brand-slate/70 mt-1">markets</p>
         </div>
         <div className="text-center">
-          <p className="font-heading font-bold text-4xl sm:text-5xl text-vm-cyan">24hr</p>
-          <p className="font-body text-sm text-white/60 mt-1">booking window</p>
+          <p className="font-serif font-bold text-4xl sm:text-5xl text-brand-forest">24hr</p>
+          <p className="font-sans text-sm text-brand-slate/70 mt-1">booking window</p>
         </div>
       </div>
     </motion.div>
@@ -147,11 +148,11 @@ export default function Home() {
   const email = "hello@velocitymaid.com";
 
   return (
-    <div className="min-h-screen bg-vm-surface">
+    <div className="min-h-screen bg-brand-ivory">
       <SiteHeader homeAnchors bookingHref={bookingUrl} />
 
       {/* Hero Section */}
-      <section className="pt-12 pb-16 px-4 sm:px-6 lg:px-8 bg-vm-surface">
+      <section className="pt-12 pb-16 px-4 sm:px-6 lg:px-8 bg-brand-ivory">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -160,16 +161,16 @@ export default function Home() {
               transition={{ duration: 0.4 }}
             >
               <motion.h1 
-                className="font-heading font-bold text-vm-navy text-4xl sm:text-5xl lg:text-6xl mb-6 leading-tight"
+                className="font-serif font-bold text-brand-forest text-4xl sm:text-5xl lg:text-6xl mb-6 leading-tight"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
                 Reliable home cleaning,{' '}
-                <span className="text-vm-cyan">without the stress.</span>
+                <span className="text-brand-gold">without the stress.</span>
               </motion.h1>
               <motion.p 
-                className="font-body text-vm-muted text-lg sm:text-xl mb-4 leading-relaxed"
+                className="font-sans text-brand-slate/80 text-lg sm:text-xl mb-4 leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
@@ -177,7 +178,7 @@ export default function Home() {
                 Book in minutes. We'll handle the rest.
               </motion.p>
               <motion.p 
-                className="font-body text-sm text-vm-muted mb-8"
+                className="font-sans text-sm text-brand-slate/60 mb-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.15 }}
@@ -192,14 +193,14 @@ export default function Home() {
               >
                 <a 
                   href={bookingUrl}
-                  className="bg-vm-navy text-white font-heading font-semibold rounded-lg inline-flex items-center justify-center px-8 py-3.5 hover:bg-vm-cyan hover:text-vm-navy transition-colors shadow-md hover:shadow-lg"
+                  className="bg-brand-forest text-brand-ivory font-sans font-bold uppercase tracking-wider text-xs rounded inline-flex items-center justify-center px-8 py-3.5 hover:bg-brand-forest-hover transition shadow-md"
                   aria-label="Book your cleaning service"
                 >
                   Book a Service <ArrowRight className="ml-2 w-5 h-5" aria-hidden="true" />
                 </a>
                 <a 
                   href={`tel:${phoneNumberTel}`}
-                  className="border border-vm-border text-vm-navy font-heading inline-flex items-center justify-center rounded-lg px-6 py-3.5 font-medium hover:border-vm-cyan hover:text-vm-cyan transition-colors"
+                  className="border border-brand-forest/20 text-brand-forest font-sans inline-flex items-center justify-center rounded px-6 py-3.5 text-sm font-medium hover:bg-brand-forest/5 transition-colors"
                   aria-label={`Call VelocityMaid at ${phoneNumber}`}
                   onClick={() => {
                     sendGAEvent('event', 'phone_clicked', {
@@ -230,10 +231,10 @@ export default function Home() {
                     <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                     <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                   </div>
-                  <span className="ml-2 font-body text-sm text-vm-muted">Rated 5 stars by local customers</span>
+                  <span className="ml-2 font-sans text-sm text-brand-slate/70">Rated 5 stars by local customers</span>
                 </motion.div>
                 <motion.div 
-                  className="font-body text-sm text-vm-muted"
+                  className="font-sans text-sm text-brand-slate/70"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.5 }}
@@ -250,73 +251,73 @@ export default function Home() {
       </section>
 
       {/* Trust Bullets */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-brand-forest/5">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center text-center p-6 rounded-xl hover:bg-gray-50 transition-colors">
-              <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-                <Shield className="w-7 h-7 text-primary-600" />
+            <div className="flex flex-col items-center text-center p-6 rounded-xl border border-brand-forest/10 bg-brand-ivory/50 hover:shadow-sm transition">
+              <div className="w-14 h-14 bg-brand-forest/5 rounded-full flex items-center justify-center mb-4 border border-brand-forest/10">
+                <Shield className="w-7 h-7 text-brand-gold" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2 text-lg">Insured & background-checked cleaners</h3>
-              <p className="text-sm text-gray-600">All our cleaners are thoroughly vetted and fully insured</p>
+              <h3 className="font-serif font-semibold text-brand-forest mb-2 text-lg">Insured & background-checked cleaners</h3>
+              <p className="text-sm text-brand-slate/70">All our cleaners are thoroughly vetted and fully insured</p>
             </div>
-            <div className="flex flex-col items-center text-center p-6 rounded-xl hover:bg-gray-50 transition-colors">
-              <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-                <Calendar className="w-7 h-7 text-primary-600" />
+            <div className="flex flex-col items-center text-center p-6 rounded-xl border border-brand-forest/10 bg-brand-ivory/50 hover:shadow-sm transition">
+              <div className="w-14 h-14 bg-brand-forest/5 rounded-full flex items-center justify-center mb-4 border border-brand-forest/10">
+                <Calendar className="w-7 h-7 text-brand-gold" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2 text-lg">Easy online booking & rescheduling</h3>
-              <p className="text-sm text-gray-600">Book in minutes and manage your appointments anytime</p>
+              <h3 className="font-serif font-semibold text-brand-forest mb-2 text-lg">Easy online booking & rescheduling</h3>
+              <p className="text-sm text-brand-slate/70">Book in minutes and manage your appointments anytime</p>
             </div>
-            <div className="flex flex-col items-center text-center p-6 rounded-xl hover:bg-gray-50 transition-colors">
-              <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-                <Phone className="w-7 h-7 text-primary-600" />
+            <div className="flex flex-col items-center text-center p-6 rounded-xl border border-brand-forest/10 bg-brand-ivory/50 hover:shadow-sm transition">
+              <div className="w-14 h-14 bg-brand-forest/5 rounded-full flex items-center justify-center mb-4 border border-brand-forest/10">
+                <Phone className="w-7 h-7 text-brand-gold" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2 text-lg">Local support when you need it</h3>
-              <p className="text-sm text-gray-600">Real people ready to help, not automated responses</p>
+              <h3 className="font-serif font-semibold text-brand-forest mb-2 text-lg">Local support when you need it</h3>
+              <p className="text-sm text-brand-slate/70">Real people ready to help, not automated responses</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Market split — NJ + Vermont */}
-      <section className="py-12 px-6 bg-vm-navy">
+      <section className="py-12 px-6 bg-brand-ivory border-y border-brand-forest/5">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="rounded-xl border border-white/10 p-8 flex flex-col gap-4">
-            <span className="text-xs font-semibold text-vm-cyan font-body uppercase tracking-widest">
+          <div className="rounded-xl border border-brand-forest/10 bg-white p-8 flex flex-col gap-4 shadow-sm">
+            <span className="text-xs font-sans font-bold text-brand-gold uppercase tracking-widest">
               Residential
             </span>
-            <h2 className="text-2xl font-bold font-heading text-white">
+            <h2 className="text-2xl font-serif font-bold text-brand-forest">
               New Jersey cleaning
             </h2>
-            <p className="font-body text-white/60 text-sm leading-relaxed">
+            <p className="font-sans text-brand-slate/70 text-sm leading-relaxed">
               Home and apartment cleaning for NJ families. Newark, Jersey City, Paterson and
               surrounding areas.
             </p>
             <a
               href="/book?branch=new-jersey"
-              className="mt-auto inline-flex items-center text-vm-cyan font-heading font-semibold text-sm hover:underline"
+              className="mt-auto inline-flex items-center text-brand-forest font-sans font-bold uppercase tracking-wider text-xs hover:text-brand-gold transition"
             >
               Book NJ cleaning →
             </a>
           </div>
 
-          <div className="rounded-xl border border-vm-cyan/30 bg-white/5 p-8 flex flex-col gap-4 relative">
-            <span className="absolute top-4 right-4 bg-vm-cyan text-vm-navy text-xs font-semibold px-3 py-1 rounded-full font-body">
+          <div className="rounded-xl border border-brand-gold/30 bg-white p-8 flex flex-col gap-4 shadow-sm relative">
+            <span className="absolute top-4 right-4 bg-brand-gold/20 text-brand-forest text-xs font-sans font-bold px-3 py-1 rounded-full">
               Now serving
             </span>
-            <span className="text-xs font-semibold text-vm-cyan font-body uppercase tracking-widest">
+            <span className="text-xs font-sans font-bold text-brand-gold uppercase tracking-widest">
               Short-term rentals
             </span>
-            <h2 className="text-2xl font-bold font-heading text-white">
+            <h2 className="text-2xl font-serif font-bold text-brand-forest">
               Vermont cleaning
             </h2>
-            <p className="font-body text-white/60 text-sm leading-relaxed">
+            <p className="font-sans text-brand-slate/70 text-sm leading-relaxed">
               Turnover cleaning for Airbnbs and ski rentals in the Okemo Valley. Locally operated
               from Ludlow, VT.
             </p>
             <a
               href="/vermont"
-              className="mt-auto inline-flex items-center text-vm-cyan font-heading font-semibold text-sm hover:underline"
+              className="mt-auto inline-flex items-center text-brand-forest font-sans font-bold uppercase tracking-wider text-xs hover:text-brand-gold transition"
             >
               Book Vermont cleaning →
             </a>
@@ -325,12 +326,12 @@ export default function Home() {
       </section>
 
       {/* Reassurance Strip */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-gray-50 to-primary-50">
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-brand-ivory border-y border-brand-forest/5">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-xl text-gray-800 mb-3 font-semibold">
+          <p className="text-xl text-brand-forest mb-3 font-serif font-semibold">
             Your home is in good hands.
           </p>
-          <p className="text-gray-600 text-lg">
+          <p className="text-brand-slate/70 text-lg font-sans">
             We carefully vet our cleaners and stand behind every service.
           </p>
         </div>
@@ -343,18 +344,18 @@ export default function Home() {
         ) : (
           <div className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
             <div className="max-w-7xl mx-auto text-center">
-              <div className="h-64 bg-gray-100 rounded-2xl animate-pulse" />
+              <div className="h-64 bg-white rounded-2xl animate-pulse" />
             </div>
           </div>
         )}
       </section>
 
       {/* Before & After Transformations - Lazy Loaded */}
-      <section ref={beforeAfterRef} data-section="beforeAfter" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section ref={beforeAfterRef} data-section="beforeAfter" className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-ivory">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">See the VelocityMaid Difference</h2>
-            <p className="text-xl text-gray-600">Real homes. Real transformations. See why local New Jersey families trust us.</p>
+            <h2 className="text-4xl font-bold text-brand-forest mb-4">See the VelocityMaid Difference</h2>
+            <p className="text-xl text-brand-slate/70">Real homes. Real transformations. See why local New Jersey families trust us.</p>
           </div>
           
           {/* Before/After Slider - Featured Transformation */}
@@ -367,7 +368,7 @@ export default function Home() {
                   alt="Kitchen transformation - Newark, NJ"
                   className="w-full"
                 />
-                <p className="text-center text-gray-600 mt-4 text-lg font-semibold">
+                <p className="text-center text-brand-slate/70 mt-4 text-lg font-semibold">
                   Drag the slider to see the transformation
                 </p>
               </>
@@ -392,7 +393,7 @@ export default function Home() {
                 className="bg-white rounded-2xl shadow-lg overflow-hidden card-hover cursor-pointer relative"
                 onClick={() => setSelectedImage(image.src)}
               >
-                <div className="relative w-full aspect-[4/3] bg-gray-100">
+                <div className="relative w-full aspect-[4/3] bg-white">
                   <Image
                     src={image.src}
                     alt={image.alt}
@@ -420,7 +421,7 @@ export default function Home() {
                 </div>
                 <div className="p-4">
                   <p className={`text-center font-semibold ${
-                    image.badge === 'After' ? 'text-primary-600' : 'text-gray-900'
+                    image.badge === 'After' ? 'text-brand-gold' : 'text-brand-forest'
                   }`}>
                     {image.caption}
                   </p>
@@ -431,7 +432,7 @@ export default function Home() {
           <div className="text-center">
             <a 
               href="/gallery"
-              className="inline-flex items-center bg-primary-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-primary-700 transition"
+              className="inline-flex items-center bg-brand-forest text-white px-8 py-3 rounded-full font-semibold hover:bg-brand-forest-hover transition"
             >
               View Full Gallery <ArrowRight className="ml-2 w-5 h-5" />
             </a>
@@ -443,8 +444,8 @@ export default function Home() {
       <section id="why-us" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose VelocityMaid?</h2>
-            <p className="text-xl text-gray-600">Professional cleaning for busy Newark families</p>
+            <h2 className="text-4xl font-bold text-brand-forest mb-4">Why Choose VelocityMaid?</h2>
+            <p className="text-xl text-brand-slate/70">Professional cleaning for busy Newark families</p>
           </div>
           <div className="grid md:grid-cols-4 gap-8">
             {[
@@ -469,10 +470,10 @@ export default function Home() {
                 description: "100% satisfaction guaranteed or we'll make it right"
               }
             ].map((feature, index) => (
-              <div key={index} className="card-hover bg-gray-50 p-8 rounded-2xl text-center">
-                <feature.icon className="w-12 h-12 text-primary-600 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+              <div key={index} className="card-hover bg-brand-ivory p-8 rounded-2xl text-center">
+                <feature.icon className="w-12 h-12 text-brand-gold mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-brand-forest mb-2">{feature.title}</h3>
+                <p className="text-brand-slate/70">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -480,11 +481,11 @@ export default function Home() {
       </section>
 
       {/* Services */}
-      <section ref={servicesRef} data-section="services" id="services" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section ref={servicesRef} data-section="services" id="services" className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-ivory">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Services</h2>
-            <p className="text-xl text-gray-600">Comprehensive cleaning solutions for every need</p>
+            <h2 className="text-4xl font-bold text-brand-forest mb-4">Our Services</h2>
+            <p className="text-xl text-brand-slate/70">Comprehensive cleaning solutions for every need</p>
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             {[
@@ -502,12 +503,12 @@ export default function Home() {
               }
             ].map((service, index) => (
               <div key={index} className="bg-white p-8 rounded-2xl shadow-lg card-hover">
-                <service.icon className="w-12 h-12 text-primary-600 mb-4" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{service.title}</h3>
-                <p className="text-gray-600 mb-6">{service.description}</p>
+                <service.icon className="w-12 h-12 text-brand-gold mb-4" />
+                <h3 className="text-2xl font-bold text-brand-forest mb-2">{service.title}</h3>
+                <p className="text-brand-slate/70 mb-6">{service.description}</p>
                 <ul className="space-y-3">
                   {service.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-gray-700">
+                    <li key={idx} className="flex items-center text-brand-slate/80">
                       <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
                       {feature}
                     </li>
@@ -515,7 +516,7 @@ export default function Home() {
                 </ul>
                 <a 
                   href={bookingUrl}
-                  className="mt-6 inline-flex items-center text-primary-600 font-semibold hover:text-primary-700 transition"
+                  className="mt-6 inline-flex items-center text-brand-gold font-semibold hover:text-brand-forest transition"
                 >
                   Book This Service <ArrowRight className="ml-2 w-5 h-5" />
                 </a>
@@ -529,8 +530,8 @@ export default function Home() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">What Our Clients Say</h2>
-            <p className="text-xl text-gray-600">Real experiences from real customers</p>
+            <h2 className="text-4xl font-bold text-brand-forest mb-4">What Our Clients Say</h2>
+            <p className="text-xl text-brand-slate/70">Real experiences from real customers</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -553,16 +554,16 @@ export default function Home() {
                 rating: 5
               }
             ].map((testimonial, index) => (
-              <div key={index} className="bg-gray-50 p-8 rounded-2xl card-hover">
+              <div key={index} className="bg-brand-ivory p-8 rounded-2xl card-hover">
                 <div className="flex items-center mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                   ))}
                 </div>
-                <p className="text-gray-700 mb-6 italic">"{testimonial.text}"</p>
+                <p className="text-brand-slate/80 mb-6 italic">"{testimonial.text}"</p>
                 <div>
-                  <p className="font-bold text-gray-900">{testimonial.name}</p>
-                  <p className="text-sm text-gray-600">{testimonial.location}</p>
+                  <p className="font-bold text-brand-forest">{testimonial.name}</p>
+                  <p className="text-sm text-brand-slate/70">{testimonial.location}</p>
                 </div>
               </div>
             ))}
@@ -571,11 +572,11 @@ export default function Home() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-ivory">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Transparent Pricing</h2>
-            <p className="text-xl text-gray-600">No hidden fees, just clean homes</p>
+            <h2 className="text-4xl font-bold text-brand-forest mb-4">Transparent Pricing</h2>
+            <p className="text-xl text-brand-slate/70">No hidden fees, just clean homes</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -620,25 +621,25 @@ export default function Home() {
               <div 
                 key={index} 
                 className={`bg-white p-8 rounded-2xl shadow-lg card-hover ${
-                  plan.popular ? 'ring-2 ring-primary-600 relative' : ''
+                  plan.popular ? 'ring-2 ring-brand-gold relative' : ''
                 }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-primary-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                    <span className="bg-brand-forest text-white px-4 py-1 rounded-full text-sm font-semibold">
                       Most Popular
                     </span>
                   </div>
                 )}
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                <h3 className="text-2xl font-bold text-brand-forest mb-2">{plan.name}</h3>
                 <div className="mb-4">
-                  <span className="text-4xl font-bold text-primary-600">{plan.price}</span>
-                  <span className="text-gray-600">/service</span>
+                  <span className="text-4xl font-bold text-brand-gold">{plan.price}</span>
+                  <span className="text-brand-slate/70">/service</span>
                 </div>
-                <p className="text-gray-600 mb-6">{plan.description}</p>
+                <p className="text-brand-slate/70 mb-6">{plan.description}</p>
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-gray-700">
+                    <li key={idx} className="flex items-center text-brand-slate/80">
                       <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
                       {feature}
                     </li>
@@ -648,8 +649,8 @@ export default function Home() {
                   href={bookingUrl}
                   className={`block text-center py-3 px-6 rounded-full font-semibold transition ${
                     plan.popular 
-                      ? 'bg-primary-600 text-white hover:bg-primary-700' 
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      ? 'bg-brand-forest text-white hover:bg-brand-forest-hover' 
+                      : 'bg-white text-brand-forest hover:bg-gray-200'
                   }`}
                 >
                   Book Now
@@ -657,7 +658,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <p className="text-center text-gray-600 mt-8">
+          <p className="text-center text-brand-slate/70 mt-8">
             *Prices may vary based on home size and condition. Contact us for a custom quote.
           </p>
         </div>
@@ -667,8 +668,8 @@ export default function Home() {
       <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-            <p className="text-xl text-gray-600">Got questions? We've got answers</p>
+            <h2 className="text-4xl font-bold text-brand-forest mb-4">Frequently Asked Questions</h2>
+            <p className="text-xl text-brand-slate/70">Got questions? We've got answers</p>
           </div>
           <div className="space-y-4">
             {[
@@ -701,10 +702,10 @@ export default function Home() {
             ))}
           </div>
           <div className="text-center mt-12">
-            <p className="text-gray-600 mb-4">Still have questions?</p>
+            <p className="text-brand-slate/70 mb-4">Still have questions?</p>
             <a 
               href={`tel:${phoneNumberTel}`}
-              className="inline-flex items-center bg-primary-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-primary-700 transition"
+              className="inline-flex items-center bg-brand-forest text-white px-6 py-3 rounded-full font-semibold hover:bg-brand-forest-hover transition"
               onClick={() => {
                 sendGAEvent('event', 'phone_clicked', {
                   phone_number: phoneNumber,
@@ -719,20 +720,19 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary-600 to-primary-700">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-forest">
         <div className="max-w-4xl mx-auto text-center">
-          <Calendar className="w-16 h-16 text-white mx-auto mb-6" />
-          <h2 className="text-4xl font-bold text-white mb-4">
+          <Calendar className="w-16 h-16 text-brand-gold mx-auto mb-6" />
+          <h2 className="text-4xl font-serif font-bold text-brand-ivory mb-4">
             Ready for a Spotless Home?
           </h2>
-          <p className="text-xl text-primary-100 mb-8">
+          <p className="text-xl text-brand-ivory/80 mb-8 font-sans">
             Book your cleaning service today and experience the VelocityMaid difference
           </p>
           
-          {/* Security/Trust Badge */}
-          <div className="bg-sky-100 border-2 border-sky-600 p-6 rounded-xl text-center max-w-[600px] my-10 mx-auto">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">🔒 Safe & Secure Booking</h3>
-            <p className="text-gray-700">
+          <div className="bg-brand-ivory/10 border border-brand-ivory/20 p-6 rounded-xl text-center max-w-[600px] my-10 mx-auto">
+            <h3 className="text-xl font-serif font-bold text-brand-ivory mb-2">Safe & Secure Booking</h3>
+            <p className="text-brand-ivory/80 font-sans text-sm">
               Your payment information is protected by bank-level encryption. We use Stripe — your card details are never stored on our servers.
             </p>
           </div>
@@ -740,7 +740,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 
               href={bookingUrl}
-              className="bg-white text-primary-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition inline-flex items-center justify-center"
+              className="bg-brand-gold text-brand-forest px-8 py-4 rounded font-sans font-bold uppercase tracking-wider text-xs hover:bg-brand-gold-hover transition inline-flex items-center justify-center"
             >
               Book Online Now <ArrowRight className="ml-2 w-5 h-5" />
             </a>
@@ -765,13 +765,13 @@ export default function Home() {
       <section id="contact" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Get In Touch</h2>
-            <p className="text-xl text-gray-600">We're here to answer your questions</p>
+            <h2 className="text-4xl font-bold text-brand-forest mb-4">Get In Touch</h2>
+            <p className="text-xl text-brand-slate/70">We're here to answer your questions</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             <a 
               href={`tel:${phoneNumberTel}`}
-              className="bg-gray-50 p-8 rounded-2xl text-center card-hover"
+              className="bg-brand-ivory p-8 rounded-2xl text-center card-hover"
               onClick={() => {
                 sendGAEvent('event', 'phone_clicked', {
                   phone_number: phoneNumber,
@@ -779,92 +779,89 @@ export default function Home() {
                 });
               }}
             >
-              <Phone className="w-12 h-12 text-primary-600 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Call Us</h3>
-              <p className="text-gray-600">{phoneNumber}</p>
+              <Phone className="w-12 h-12 text-brand-gold mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-brand-forest mb-2">Call Us</h3>
+              <p className="text-brand-slate/70">{phoneNumber}</p>
             </a>
             <a 
               href={`mailto:${email}`}
-              className="bg-gray-50 p-8 rounded-2xl text-center card-hover"
+              className="bg-brand-ivory p-8 rounded-2xl text-center card-hover"
             >
-              <Mail className="w-12 h-12 text-primary-600 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Email Us</h3>
-              <p className="text-gray-600">{email}</p>
+              <Mail className="w-12 h-12 text-brand-gold mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-brand-forest mb-2">Email Us</h3>
+              <p className="text-brand-slate/70">{email}</p>
             </a>
             <a 
               href={`https://wa.me/${whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gray-50 p-8 rounded-2xl text-center card-hover"
+              className="bg-brand-ivory p-8 rounded-2xl text-center card-hover"
               onClick={() => {
                 sendGAEvent('event', 'whatsapp_clicked', {
                   location: 'contact_section'
                 });
               }}
             >
-              <MessageCircle className="w-12 h-12 text-primary-600 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">WhatsApp</h3>
-              <p className="text-gray-600">Chat with us instantly</p>
+              <MessageCircle className="w-12 h-12 text-brand-gold mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-brand-forest mb-2">WhatsApp</h3>
+              <p className="text-brand-slate/70">Chat with us instantly</p>
             </a>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+      <footer className="bg-brand-forest text-brand-ivory py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <Sparkles className="w-8 h-8 text-primary-400" />
-                <span className="text-2xl font-bold">VelocityMaid</span>
-              </div>
-              <p className="text-gray-400">
+              <BrandLogo variant="ivory" size="header" className="mb-4" />
+              <p className="text-brand-ivory/70 font-sans text-sm">
                 Serving New Jersey and Vermont. Trusted since 2024.
               </p>
             </div>
             <div>
-              <h4 className="text-lg font-bold mb-4">Quick Links</h4>
-              <ul className="space-y-2">
-                <li><a href="#services" className="text-gray-400 hover:text-white transition">Services</a></li>
-                <li><a href="#pricing" className="text-gray-400 hover:text-white transition">Pricing</a></li>
-                <li><a href="/customer/login" className="text-gray-400 hover:text-white transition">Pay Invoice</a></li>
-                <li><a href="#why-us" className="text-gray-400 hover:text-white transition">Why Us</a></li>
-                <li><a href="#contact" className="text-gray-400 hover:text-white transition">Contact</a></li>
-                <li><a href="/careers" className="text-gray-400 hover:text-white transition">Careers</a></li>
+              <h4 className="text-sm font-serif font-bold mb-4 uppercase tracking-wider">Quick Links</h4>
+              <ul className="space-y-2 text-sm font-sans">
+                <li><a href="#services" className="text-brand-ivory/70 hover:text-brand-gold transition">Services</a></li>
+                <li><a href="#pricing" className="text-brand-ivory/70 hover:text-brand-gold transition">Pricing</a></li>
+                <li><a href="/customer/login" className="text-brand-ivory/70 hover:text-brand-gold transition">Pay Invoice</a></li>
+                <li><a href="#why-us" className="text-brand-ivory/70 hover:text-brand-gold transition">Why Us</a></li>
+                <li><a href="#contact" className="text-brand-ivory/70 hover:text-brand-gold transition">Contact</a></li>
+                <li><a href="/careers" className="text-brand-ivory/70 hover:text-brand-gold transition">Careers</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-lg font-bold mb-4">Services</h4>
-              <ul className="space-y-2">
-                <li className="text-gray-400">Residential Cleaning</li>
-                <li className="text-gray-400">Commercial Cleaning</li>
-                <li className="text-gray-400">Deep Cleaning</li>
-                <li className="text-gray-400">Move In/Out</li>
+              <h4 className="text-sm font-serif font-bold mb-4 uppercase tracking-wider">Services</h4>
+              <ul className="space-y-2 text-sm font-sans text-brand-ivory/70">
+                <li>Residential Cleaning</li>
+                <li>Commercial Cleaning</li>
+                <li>Deep Cleaning</li>
+                <li>Move In/Out</li>
               </ul>
             </div>
             <div>
-              <h4 className="text-lg font-bold mb-4">Contact</h4>
-              <ul className="space-y-2">
+              <h4 className="text-sm font-serif font-bold mb-4 uppercase tracking-wider">Contact</h4>
+              <ul className="space-y-2 text-sm font-sans">
                 <li>
-                  <a href={`tel:${phoneNumberTel}`} className="text-gray-400 hover:text-white transition">
+                  <a href={`tel:${phoneNumberTel}`} className="text-brand-ivory/70 hover:text-brand-gold transition">
                     New Jersey — {phoneNumber}
                   </a>
                 </li>
                 <li>
-                  <a href="tel:+18027335348" className="text-gray-400 hover:text-white transition">
+                  <a href="tel:+18027335348" className="text-brand-ivory/70 hover:text-brand-gold transition">
                     Vermont — (802) 733-5348
                   </a>
                 </li>
                 <li>
-                  <a href={`mailto:${email}`} className="text-gray-400 hover:text-white transition">
+                  <a href={`mailto:${email}`} className="text-brand-ivory/70 hover:text-brand-gold transition">
                     {email}
                   </a>
                 </li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+          <div className="border-t border-brand-ivory/10 mt-12 pt-8 text-center text-brand-ivory/50 font-sans text-xs">
             <p>&copy; {new Date().getFullYear()} VelocityMaid. All rights reserved.</p>
           </div>
         </div>
