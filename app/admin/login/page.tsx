@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { BrandLogo } from '@/components/brand';
+import { brandClasses } from '@/lib/brand/tokens';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -41,61 +43,58 @@ export default function AdminLoginPage() {
       }
 
       router.push('/admin/jobs');
-    } catch (err: any) {
-      if (err?.status === 403) {
-        setError('You don\'t have admin access yet.');
-      } else if (err?.status === 404) {
-        setError('Email not found.');
-      } else {
-        console.error('Admin login issue:', err);
-        setError(null);
-      }
+    } catch (err: unknown) {
+      console.error('Admin login issue:', err);
+      setError(null);
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-sky-50">
-      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">VelocityMaid</h1>
-          <p className="text-sm font-medium text-gray-700 mb-1">Welcome back 👋</p>
-          <p className="text-sm text-gray-500">Enter your email to access the admin portal.</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">
-              Email Address
-            </label>
-            <input
-              type="email"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-              placeholder="admin@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoFocus
-            />
+    <div className="min-h-[100dvh] bg-brand-ivory px-4 pt-10 pb-8 sm:pt-14 sm:pb-12">
+      <div className="w-full max-w-sm mx-auto">
+        <div className="bg-white rounded-xl shadow-lg border border-brand-forest/10 p-6 sm:p-7">
+          <div className="text-center mb-6 flex flex-col items-center gap-2">
+            <BrandLogo size="auth" showTagline={false} />
+            <p className="text-[10px] font-sans font-bold uppercase tracking-wider text-brand-slate/60">
+              Admin Portal
+            </p>
+            <p className="text-xs font-sans text-brand-slate/60">
+              Enter your email to access operations.
+            </p>
           </div>
 
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-              {error}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <label className={brandClasses.label}>Email Address</label>
+              <input
+                type="email"
+                className={brandClasses.input}
+                placeholder="admin@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+              />
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-lg bg-sky-600 text-white py-2.5 text-sm font-semibold hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
+            {error && (
+              <div className="text-[11px] font-sans font-semibold text-destructive bg-destructive/5 border border-destructive/20 rounded px-3 py-2">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full ${brandClasses.btnPrimary} disabled:opacity-50`}
+            >
+              {isSubmitting ? 'Logging in…' : 'Continue'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
 }
-

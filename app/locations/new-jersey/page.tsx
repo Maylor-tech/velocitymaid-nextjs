@@ -5,7 +5,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { 
-  Sparkles, 
   CheckCircle2, 
   Shield, 
   DollarSign, 
@@ -16,8 +15,10 @@ import {
   MapPin,
   ArrowRight,
   Home,
+  Sparkles,
 } from 'lucide-react';
 import { Suspense } from 'react';
+import { BrandLogo } from '@/components/brand';
 import BranchLandingNav from '@/components/layout/BranchLandingNav';
 import FAQAccordion from './components/FAQAccordion';
 import BeforeAfterGallery from './components/BeforeAfterGallery';
@@ -319,15 +320,15 @@ export default async function NewJerseyLandingPage() {
 
       {/* Promo Banner */}
       {activePromo && (
-        <div className="bg-vm-cyan text-vm-navy py-4 px-4 sm:px-6 lg:px-8">
+        <div className="bg-brand-gold/15 border-b border-brand-gold/30 text-brand-forest py-4 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex-1 text-center sm:text-left">
-              <h3 className="font-heading font-bold text-lg mb-1">{activePromo.title}</h3>
-              <p className="text-sm font-body">{activePromo.description}</p>
+              <h3 className="font-serif font-bold text-lg mb-1">{activePromo.title}</h3>
+              <p className="text-sm font-sans text-brand-slate/80">{activePromo.description}</p>
             </div>
             <Link
               href={`/book?branch=new-jersey&promo=${activePromo.month}-${activePromo.year}`}
-              className="bg-vm-navy text-white px-6 py-2 rounded-lg font-heading font-semibold hover:bg-vm-navy/90 transition whitespace-nowrap"
+              className="bg-brand-forest text-brand-ivory px-6 py-2 rounded font-sans font-bold uppercase tracking-wider text-xs hover:bg-brand-forest-hover transition whitespace-nowrap shadow-sm"
             >
               Book Now
             </Link>
@@ -335,7 +336,7 @@ export default async function NewJerseyLandingPage() {
         </div>
       )}
 
-      <div className="min-h-screen bg-white font-body">
+      <div className="min-h-screen bg-brand-ivory font-sans">
         <BranchLandingNav
           bookingHref="/book?branch=new-jersey"
           bookingLabel="Check Availability"
@@ -345,110 +346,113 @@ export default async function NewJerseyLandingPage() {
         />
 
         {/* SECTION 1: HERO */}
-        <section className="bg-vm-navy text-white py-20 md:py-32">
+        <section className="bg-brand-ivory py-16 md:py-24 border-b border-brand-forest/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <div>
-                <h1 className="font-heading font-bold text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight">
+                <p className="text-brand-gold text-xs font-sans font-bold uppercase tracking-widest mb-4">
+                  New Jersey Property Care
+                </p>
+                <h1 className="font-serif font-bold text-brand-forest text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight">
                   New Jersey Cleaning Services for{' '}
-                  <span className="text-vm-cyan">Homes, Apartments & Move-Ins</span>
+                  <span className="text-brand-gold">Homes, Apartments & Move-Ins</span>
                 </h1>
-                <p className="font-body text-white/60 text-xl md:text-2xl mb-8">
+                <p className="font-sans text-brand-slate/80 text-lg md:text-xl mb-8 leading-relaxed">
                   Reliable. Background Checked. Flat-Rate Pricing.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Link
                     href="/book?branch=new-jersey"
-                    className="bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-8 py-4 text-lg hover:bg-vm-cyan-dark transition text-center"
+                    className="bg-brand-forest text-brand-ivory font-sans font-bold uppercase tracking-wider text-xs rounded px-8 py-4 hover:bg-brand-forest-hover transition text-center shadow-md"
                   >
                     Book Now
                   </Link>
                   <Link
                     href="/book?branch=new-jersey"
-                    className="border border-white/25 text-white/80 font-heading rounded-lg px-8 py-4 text-lg hover:bg-white/10 transition text-center"
+                    className="border border-brand-forest/20 text-brand-forest font-sans font-bold uppercase tracking-wider text-xs rounded px-8 py-4 hover:bg-brand-forest/5 transition text-center"
                   >
                     Check Availability
                   </Link>
                 </div>
                 {/* Trust Badges */}
-                <div className="flex flex-wrap gap-6 mt-8">
-                  <div className="flex items-center gap-2 text-sm font-body text-white/60">
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-vm-cyan/20">
-                      <CheckCircle2 className="h-2.5 w-2.5 text-vm-cyan" />
+                <div className="flex flex-wrap gap-4 mt-8">
+                  <div className="flex items-center gap-2 text-sm font-sans text-brand-slate/70">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-gold/20">
+                      <CheckCircle2 className="h-3 w-3 text-brand-gold" />
                     </span>
                     <span>Background Checked</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm font-body text-white/60">
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-vm-cyan/20">
-                      <CheckCircle2 className="h-2.5 w-2.5 text-vm-cyan" />
+                  <div className="flex items-center gap-2 text-sm font-sans text-brand-slate/70">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-gold/20">
+                      <CheckCircle2 className="h-3 w-3 text-brand-gold" />
                     </span>
                     <span>Insured & Bonded</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm font-body text-white/60">
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-vm-cyan/20">
-                      <CheckCircle2 className="h-2.5 w-2.5 text-vm-cyan" />
+                  <div className="flex items-center gap-2 text-sm font-sans text-brand-slate/70">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-gold/20">
+                      <CheckCircle2 className="h-3 w-3 text-brand-gold" />
                     </span>
                     <span>100% Satisfaction</span>
                   </div>
                 </div>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+              <div className="bg-white border border-brand-forest/10 rounded-xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
-                  <Home className="w-7 h-7 text-vm-cyan" />
+                  <Home className="w-7 h-7 text-brand-gold" />
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-vm-cyan font-body font-semibold">
+                    <p className="text-xs uppercase tracking-wide text-brand-gold font-sans font-bold">
                       New Jersey • Essex, Union & Hudson
                     </p>
-                    <p className="text-sm text-white/45 font-body">
+                    <p className="text-sm text-brand-slate/70 font-sans">
                       Professional house cleaning across North Jersey
                     </p>
                   </div>
                 </div>
                 <div className="space-y-4 text-sm">
                   <div className="flex items-start gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-vm-cyan/10 rounded-lg">
-                      <Sparkles className="w-4 h-4 text-vm-cyan" />
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-brand-forest/5 rounded-lg">
+                      <Sparkles className="w-4 h-4 text-brand-gold" />
                     </span>
                     <div>
-                      <p className="text-white font-heading font-medium text-sm">
+                      <p className="text-brand-forest font-serif font-semibold text-sm">
                         Basic House Cleaning
                       </p>
-                      <p className="text-white/45 font-body text-xs mt-1">
+                      <p className="text-brand-slate/60 font-sans text-xs mt-1">
                         Dusting, vacuuming, mopping, bathroom and kitchen
                         sanitizing — flat-rate pricing with no hidden fees.
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-vm-cyan/10 rounded-lg">
-                      <Shield className="w-4 h-4 text-vm-cyan" />
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-brand-forest/5 rounded-lg">
+                      <Shield className="w-4 h-4 text-brand-gold" />
                     </span>
                     <div>
-                      <p className="text-white font-heading font-medium text-sm">
+                      <p className="text-brand-forest font-serif font-semibold text-sm">
                         Deep Cleaning
                       </p>
-                      <p className="text-white/45 font-body text-xs mt-1">
+                      <p className="text-brand-slate/60 font-sans text-xs mt-1">
                         Inside appliances, baseboards, light fixtures, and
                         cabinet interiors for a comprehensive reset.
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-vm-cyan/10 rounded-lg">
-                      <MapPin className="w-4 h-4 text-vm-cyan" />
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-brand-forest/5 rounded-lg">
+                      <MapPin className="w-4 h-4 text-brand-gold" />
                     </span>
                     <div>
-                      <p className="text-white font-heading font-medium text-sm">
+                      <p className="text-brand-forest font-serif font-semibold text-sm">
                         Move-In / Move-Out Cleaning
                       </p>
-                      <p className="text-white/45 font-body text-xs mt-1">
+                      <p className="text-brand-slate/60 font-sans text-xs mt-1">
                         Complete deep clean for transitions — cabinets,
                         appliances, windows, and final inspection included.
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="mt-5 flex items-center justify-between text-xs text-white/45 font-body border-t border-white/10 pt-3">
+                <div className="mt-5 flex items-center justify-between text-xs text-brand-slate/60 font-sans border-t border-brand-forest/10 pt-3">
                   <span>Serving Newark, Jersey City & more</span>
                   <span>Eco-friendly supplies included</span>
                 </div>
@@ -458,133 +462,133 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 2: SERVICES */}
-        <section id="services" className="py-20 bg-vm-surface">
+        <section id="services" className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-vm-cyan text-xs font-semibold uppercase tracking-widest font-body mb-2 text-center">
+            <p className="text-brand-gold text-xs font-sans font-bold uppercase tracking-widest mb-2 text-center">
               Our Services
             </p>
-            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-12">
+            <h2 className="font-serif font-bold text-brand-forest text-3xl md:text-4xl text-center mb-12">
               Our Cleaning Services
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               {/* Basic Cleaning */}
-              <div className="bg-white border border-vm-border rounded-xl p-8 shadow-sm hover:shadow-md transition">
-                <div className="w-16 h-16 bg-[#EBF9FA] rounded-lg flex items-center justify-center mb-6">
-                  <Sparkles className="w-8 h-8 text-vm-cyan-dark" />
+              <div className="bg-white border border-brand-forest/10 rounded-xl p-8 shadow-sm hover:shadow-md transition">
+                <div className="w-16 h-16 bg-brand-forest/5 rounded-lg flex items-center justify-center mb-6">
+                  <Sparkles className="w-8 h-8 text-brand-gold-hover" />
                 </div>
-                <h3 className="font-heading font-bold text-vm-navy text-2xl mb-4">
+                <h3 className="font-heading font-bold text-brand-forest text-2xl mb-4">
                   Basic Cleaning
                 </h3>
-                <ul className="space-y-3 mb-6 text-vm-muted font-body">
+                <ul className="space-y-3 mb-6 text-brand-slate/70 font-body">
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Dust all surfaces</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Vacuum & mop floors</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Clean & sanitize bathrooms</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Kitchen cleaning</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Trash removal</span>
                   </li>
                 </ul>
-                <div className="text-vm-cyan-dark font-heading font-semibold text-sm mb-4">
+                <div className="text-brand-gold-hover font-heading font-semibold text-sm mb-4">
                   From ${basicPrice}
                 </div>
                 <Link
                   href="/book?branch=new-jersey"
-                  className="block w-full bg-vm-navy text-white text-center py-3 rounded-lg font-heading font-semibold hover:bg-vm-navy/90 transition"
+                  className="block w-full bg-brand-forest text-white text-center py-3 rounded-lg font-heading font-semibold hover:bg-brand-forest/90 transition"
                 >
                   Book Now
                 </Link>
               </div>
 
               {/* Deep Cleaning */}
-              <div className="bg-white border-2 border-vm-cyan rounded-xl p-8 shadow-sm hover:shadow-md transition">
-                <div className="w-16 h-16 bg-[#EBF9FA] rounded-lg flex items-center justify-center mb-6">
-                  <Sparkles className="w-8 h-8 text-vm-cyan-dark" />
+              <div className="bg-white border-2 border-brand-gold rounded-xl p-8 shadow-sm hover:shadow-md transition">
+                <div className="w-16 h-16 bg-brand-forest/5 rounded-lg flex items-center justify-center mb-6">
+                  <Sparkles className="w-8 h-8 text-brand-gold-hover" />
                 </div>
-                <h3 className="font-heading font-bold text-vm-navy text-2xl mb-4">
+                <h3 className="font-heading font-bold text-brand-forest text-2xl mb-4">
                   Deep Cleaning
                 </h3>
-                <ul className="space-y-3 mb-6 text-vm-muted font-body">
+                <ul className="space-y-3 mb-6 text-brand-slate/70 font-body">
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Everything in Basic</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Inside appliances</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Baseboards & window sills</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Light fixtures & ceiling fans</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Cabinet interiors</span>
                   </li>
                 </ul>
-                <div className="text-vm-cyan-dark font-heading font-semibold text-sm mb-4">
+                <div className="text-brand-gold-hover font-heading font-semibold text-sm mb-4">
                   From ${deepPrice}
                 </div>
                 <Link
                   href="/book?branch=new-jersey"
-                  className="block w-full bg-vm-cyan text-vm-navy text-center py-3 rounded-lg font-heading font-semibold hover:bg-vm-cyan-dark transition"
+                  className="block w-full bg-brand-gold text-brand-forest text-center py-3 rounded-lg font-heading font-semibold hover:bg-brand-gold-hover transition"
                 >
                   Book Now
                 </Link>
               </div>
 
               {/* Move-In/Out */}
-              <div className="bg-white border border-vm-border rounded-xl p-8 shadow-sm hover:shadow-md transition">
-                <div className="w-16 h-16 bg-[#EBF9FA] rounded-lg flex items-center justify-center mb-6">
-                  <Sparkles className="w-8 h-8 text-vm-cyan-dark" />
+              <div className="bg-white border border-brand-forest/10 rounded-xl p-8 shadow-sm hover:shadow-md transition">
+                <div className="w-16 h-16 bg-brand-forest/5 rounded-lg flex items-center justify-center mb-6">
+                  <Sparkles className="w-8 h-8 text-brand-gold-hover" />
                 </div>
-                <h3 className="font-heading font-bold text-vm-navy text-2xl mb-4">
+                <h3 className="font-heading font-bold text-brand-forest text-2xl mb-4">
                   Move-In/Move-Out
                 </h3>
-                <ul className="space-y-3 mb-6 text-vm-muted font-body">
+                <ul className="space-y-3 mb-6 text-brand-slate/70 font-body">
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Complete deep clean</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Inside all cabinets</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Appliance deep clean</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Window cleaning</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-vm-cyan mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-gold mt-0.5 flex-shrink-0" />
                     <span>Final inspection</span>
                   </li>
                 </ul>
-                <div className="text-vm-cyan-dark font-heading font-semibold text-sm mb-4">
+                <div className="text-brand-gold-hover font-heading font-semibold text-sm mb-4">
                   From ${moveInOutPrice}
                 </div>
                 <Link
                   href="/book?branch=new-jersey"
-                  className="block w-full bg-vm-navy text-white text-center py-3 rounded-lg font-heading font-semibold hover:bg-vm-navy/90 transition"
+                  className="block w-full bg-brand-forest text-white text-center py-3 rounded-lg font-heading font-semibold hover:bg-brand-forest/90 transition"
                 >
                   Book Now
                 </Link>
@@ -594,11 +598,17 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 3: BEFORE & AFTER GALLERY */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-brand-ivory">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-12">
-              See the Difference
+            <p className="text-brand-gold text-xs font-sans font-bold uppercase tracking-widest mb-2 text-center">
+              Hospitality Standards
+            </p>
+            <h2 className="font-serif font-bold text-brand-forest text-3xl md:text-4xl text-center mb-4">
+              Care You Can See
             </h2>
+            <p className="text-center text-brand-slate/70 font-sans text-sm mb-12 max-w-2xl mx-auto">
+              Every visit follows our structured property-care protocol — guest-ready results, every time.
+            </p>
             <Suspense fallback={<div>Loading gallery...</div>}>
               <BeforeAfterGallery />
             </Suspense>
@@ -606,65 +616,65 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 4: WHY CHOOSE US */}
-        <section className="py-20 bg-vm-surface">
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-12">
+            <h2 className="font-heading font-bold text-brand-forest text-4xl md:text-5xl text-center mb-12">
               Why Choose VelocityMaid New Jersey
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
-                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-10 h-10 text-vm-cyan" />
+                <div className="w-16 h-16 bg-brand-forest/5 border border-brand-forest/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Shield className="w-8 h-8 text-brand-gold" />
                 </div>
-                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
+                <h3 className="font-heading font-bold text-brand-forest text-xl mb-2">
                   Background Checked
                 </h3>
-                <p className="text-vm-muted font-body">All cleaners undergo thorough background checks</p>
+                <p className="text-brand-slate/70 font-body">All cleaners undergo thorough background checks</p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
-                  <DollarSign className="w-10 h-10 text-vm-cyan" />
+                <div className="w-16 h-16 bg-brand-forest/5 border border-brand-forest/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <DollarSign className="w-8 h-8 text-brand-gold" />
                 </div>
-                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
+                <h3 className="font-heading font-bold text-brand-forest text-xl mb-2">
                   Flat-Rate Pricing
                 </h3>
-                <p className="text-vm-muted font-body">Transparent pricing with no hidden fees</p>
+                <p className="text-brand-slate/70 font-body">Transparent pricing with no hidden fees</p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Leaf className="w-10 h-10 text-vm-cyan" />
+                <div className="w-16 h-16 bg-brand-forest/5 border border-brand-forest/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Leaf className="w-8 h-8 text-brand-gold" />
                 </div>
-                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
+                <h3 className="font-heading font-bold text-brand-forest text-xl mb-2">
                   Eco-Friendly Supplies
                 </h3>
-                <p className="text-vm-muted font-body">We use safe, eco-friendly cleaning products</p>
+                <p className="text-brand-slate/70 font-body">We use safe, eco-friendly cleaning products</p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Clock className="w-10 h-10 text-vm-cyan" />
+                <div className="w-16 h-16 bg-brand-forest/5 border border-brand-forest/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-8 h-8 text-brand-gold" />
                 </div>
-                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
+                <h3 className="font-heading font-bold text-brand-forest text-xl mb-2">
                   Reliable & On Time
                 </h3>
-                <p className="text-vm-muted font-body">Punctual service you can count on</p>
+                <p className="text-brand-slate/70 font-body">Punctual service you can count on</p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Star className="w-10 h-10 text-vm-cyan" />
+                <div className="w-16 h-16 bg-brand-forest/5 border border-brand-forest/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Star className="w-8 h-8 text-brand-gold" />
                 </div>
-                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
+                <h3 className="font-heading font-bold text-brand-forest text-xl mb-2">
                   100% Satisfaction Guarantee
                 </h3>
-                <p className="text-vm-muted font-body">Not happy? We'll come back and fix it - FREE</p>
+                <p className="text-brand-slate/70 font-body">Not happy? We'll come back and fix it - FREE</p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-vm-navy rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="w-10 h-10 text-vm-cyan" />
+                <div className="w-16 h-16 bg-brand-forest/5 border border-brand-forest/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-8 h-8 text-brand-gold" />
                 </div>
-                <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
+                <h3 className="font-heading font-bold text-brand-forest text-xl mb-2">
                   Easy Online Booking
                 </h3>
-                <p className="text-vm-muted font-body">Book in minutes with our simple online system</p>
+                <p className="text-brand-slate/70 font-body">Book in minutes with our simple online system</p>
               </div>
             </div>
           </div>
@@ -673,20 +683,20 @@ export default async function NewJerseyLandingPage() {
         {/* SECTION 5: SERVICE AREAS */}
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-4">
+            <h2 className="font-heading font-bold text-brand-forest text-4xl md:text-5xl text-center mb-4">
               Service Areas
             </h2>
-            <p className="text-center text-vm-muted font-body mb-12 text-lg">
+            <p className="text-center text-brand-slate/70 font-body mb-12 text-lg">
               Serving Essex, Union, and Hudson County
             </p>
             <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
               {serviceAreas.map((area) => (
                 <div
                   key={area}
-                  className="bg-white p-4 rounded-lg shadow-sm text-center border border-vm-border hover:border-vm-cyan transition"
+                  className="bg-white p-4 rounded-lg shadow-sm text-center border border-brand-forest/10 hover:border-brand-gold transition"
                 >
-                  <MapPin className="w-6 h-6 text-vm-cyan-dark mx-auto mb-2" />
-                  <p className="font-heading font-semibold text-vm-navy">{area}</p>
+                  <MapPin className="w-6 h-6 text-brand-gold-hover mx-auto mb-2" />
+                  <p className="font-heading font-semibold text-brand-forest">{area}</p>
                 </div>
               ))}
             </div>
@@ -694,23 +704,23 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 6: CUSTOMER REVIEWS */}
-        <section className="py-20 bg-vm-surface">
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-12">
+            <h2 className="font-heading font-bold text-brand-forest text-4xl md:text-5xl text-center mb-12">
               What Our Customers Say
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               {reviews.map((review, index) => (
-                <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-vm-border">
+                <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-brand-forest/10">
                   <div className="flex items-center gap-1 mb-4">
                     {[...Array(review.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 fill-vm-cyan text-vm-cyan" />
+                      <Star key={i} className="w-5 h-5 fill-brand-gold text-brand-gold" />
                     ))}
                   </div>
-                  <p className="text-vm-muted font-body mb-4 italic">&quot;{review.text}&quot;</p>
+                  <p className="text-brand-slate/70 font-body mb-4 italic">&quot;{review.text}&quot;</p>
                   <div>
-                    <p className="font-heading font-semibold text-vm-navy">{review.name}</p>
-                    <p className="text-sm text-vm-muted font-body">{review.location}</p>
+                    <p className="font-heading font-semibold text-brand-forest">{review.name}</p>
+                    <p className="text-sm text-brand-slate/70 font-body">{review.location}</p>
                   </div>
                 </div>
               ))}
@@ -719,14 +729,14 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 7: CTA BLOCK */}
-        <section className="py-20 bg-vm-navy text-white">
+        <section className="py-20 bg-brand-ivory border-y border-brand-forest/5">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="font-heading font-bold text-4xl md:text-5xl mb-6">
+            <h2 className="font-serif font-bold text-brand-forest text-3xl md:text-4xl mb-6">
               Ready for a cleaner home?
             </h2>
             <Link
               href="/book?branch=new-jersey"
-              className="inline-block bg-vm-cyan text-vm-navy font-heading font-semibold px-8 py-4 rounded-lg text-lg hover:bg-vm-cyan-dark transition"
+              className="inline-block bg-brand-gold text-brand-forest font-sans font-bold uppercase tracking-wider text-xs px-8 py-4 rounded hover:bg-brand-gold-hover transition shadow-md"
             >
               Book Now
             </Link>
@@ -736,7 +746,7 @@ export default async function NewJerseyLandingPage() {
         {/* SECTION 8: FAQ */}
         <section id="faq" className="py-20 bg-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl text-center mb-12">
+            <h2 className="font-heading font-bold text-brand-forest text-4xl md:text-5xl text-center mb-12">
               Frequently Asked Questions
             </h2>
             <Suspense fallback={<div>Loading FAQ...</div>}>
@@ -779,14 +789,14 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* SECTION 9: FINAL CTA */}
-        <section className="py-20 bg-vm-surface">
+        <section className="py-20 bg-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="font-heading font-bold text-vm-navy text-4xl md:text-5xl mb-6">
+            <h2 className="font-heading font-bold text-brand-forest text-4xl md:text-5xl mb-6">
               Let us handle the cleaning — you deserve the rest.
             </h2>
             <Link
               href="/book?branch=new-jersey"
-              className="inline-flex items-center gap-2 bg-vm-navy text-white font-heading font-semibold px-8 py-4 rounded-lg text-lg hover:bg-vm-navy/90 transition"
+              className="inline-flex items-center gap-2 bg-brand-forest text-white font-heading font-semibold px-8 py-4 rounded-lg text-lg hover:bg-brand-forest/90 transition"
             >
               Schedule a Cleaning
               <ArrowRight className="w-5 h-5" />
@@ -795,45 +805,40 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="bg-vm-navy text-white py-12">
+        <footer className="bg-brand-forest text-brand-ivory py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-3 gap-8">
               <div>
-                <div className="flex items-center space-x-2 mb-4">
-                  <Sparkles className="w-8 h-8 text-vm-cyan" />
-                  <span className="font-heading font-bold text-2xl">
-                    VelocityMaid
-                  </span>
-                </div>
-                <p className="text-white/60 font-body">Professional cleaning services in New Jersey</p>
+                <BrandLogo variant="ivory" size="header" className="mb-4" />
+                <p className="text-brand-ivory/70 font-sans text-sm">Professional cleaning services in New Jersey</p>
               </div>
               <div>
-                <h3 className="font-heading font-bold mb-4">Quick Links</h3>
-                <ul className="space-y-2 text-white/60 font-body">
+                <h3 className="font-serif font-bold mb-4 text-sm uppercase tracking-wider">Quick Links</h3>
+                <ul className="space-y-2 text-brand-ivory/70 font-sans text-sm">
                   <li>
-                    <Link href="/book?branch=new-jersey" className="hover:text-vm-cyan transition">
+                    <Link href="/book?branch=new-jersey" className="hover:text-brand-gold transition">
                       Book Now
                     </Link>
                   </li>
                   <li>
-                    <Link href="/locations/new-jersey#services" className="hover:text-vm-cyan transition">
+                    <Link href="/locations/new-jersey#services" className="hover:text-brand-gold transition">
                       Services
                     </Link>
                   </li>
                   <li>
-                    <Link href="/locations/new-jersey#faq" className="hover:text-vm-cyan transition">
+                    <Link href="/locations/new-jersey#faq" className="hover:text-brand-gold transition">
                       FAQ
                     </Link>
                   </li>
                 </ul>
               </div>
               <div>
-                <h3 className="font-heading font-bold mb-4">Contact</h3>
-                <p className="text-white/60 font-body">{contactPhone}</p>
-                <p className="text-white/60 font-body">Serving New Jersey</p>
+                <h3 className="font-serif font-bold mb-4 text-sm uppercase tracking-wider">Contact</h3>
+                <p className="text-brand-ivory/70 font-sans text-sm">{contactPhone}</p>
+                <p className="text-brand-ivory/70 font-sans text-sm">Serving New Jersey</p>
               </div>
             </div>
-            <div className="border-t border-white/10 mt-8 pt-8 text-center text-white/40 font-body">
+            <div className="border-t border-brand-ivory/10 mt-8 pt-8 text-center text-brand-ivory/50 font-sans text-xs">
               <p>&copy; 2025 VelocityMaid. All rights reserved.</p>
             </div>
           </div>

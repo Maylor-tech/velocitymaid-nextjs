@@ -62,18 +62,19 @@ export default function CustomerVerifyPage() {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${brandClasses.bgPage} px-4`}>
-      <div className={`w-full max-w-md ${brandClasses.card} modal-enter`}>
-        <div className="text-center mb-6 flex flex-col items-center gap-3">
-          <BrandLogo size="sm" />
-          <h1 className="text-2xl font-serif font-bold tracking-tight text-brand-forest">
-            Enter Your Code
-          </h1>
-          <p className="text-sm font-sans font-medium text-brand-slate/80">
-            We sent a 6-digit login code to{' '}
-            <span className="font-semibold text-brand-forest">{email || 'your email'}</span>
-          </p>
-        </div>
+    <div className="min-h-[100dvh] bg-brand-ivory px-4 pt-10 pb-8 sm:pt-14 sm:pb-12">
+      <div className="w-full max-w-sm mx-auto">
+        <div className="bg-white rounded-xl shadow-lg border border-brand-forest/10 p-6 sm:p-7 modal-enter">
+          <div className="text-center mb-6 flex flex-col items-center gap-2">
+            <BrandLogo size="auth" showTagline={false} />
+            <h1 className="text-lg font-serif font-bold tracking-tight text-brand-forest">
+              Enter Your Code
+            </h1>
+            <p className="text-xs font-sans text-brand-slate/70">
+              We sent a 6-digit login code to{' '}
+              <span className="font-semibold text-brand-forest">{email || 'your email'}</span>
+            </p>
+          </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!emailFromQuery && (
@@ -126,6 +127,7 @@ export default function CustomerVerifyPage() {
           <a href="/customer/login" className={brandClasses.link}>
             Go back
           </a>
+        </div>
         </div>
       </div>
     </div>

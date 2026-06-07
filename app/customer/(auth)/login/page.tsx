@@ -66,57 +66,60 @@ export default function CustomerLoginPage() {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${brandClasses.bgPage} px-4`}>
-      <div className={`w-full max-w-md ${brandClasses.card} modal-enter`}>
-        <div className="text-center mb-8 flex flex-col items-center gap-3">
-          <BrandLogo size="md" />
-          <p className="text-xs font-sans font-bold uppercase tracking-wider text-brand-slate/60">
-            Customer Portal
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className={brandClasses.label}>Email Address</label>
-            <input
-              type="email"
-              className={brandClasses.input}
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <p className="text-xs font-sans text-brand-slate/60">
-              Enter the email address you used when booking.
+    <div className="min-h-[100dvh] bg-brand-ivory px-4 pt-10 pb-8 sm:pt-14 sm:pb-12">
+      <div className="w-full max-w-sm mx-auto">
+        <div className="bg-white rounded-xl shadow-lg border border-brand-forest/10 p-6 sm:p-7 modal-enter">
+          <div className="text-center mb-6 flex flex-col items-center gap-2">
+            <BrandLogo size="auth" showTagline={false} />
+            <p className="text-[10px] font-sans font-bold uppercase tracking-wider text-brand-slate/60">
+              Customer Portal
             </p>
           </div>
 
-          {error && (
-            <div className="text-[11px] font-sans font-semibold text-destructive bg-destructive/5 border border-destructive/20 rounded px-3 py-2">
-              {error}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <label className={brandClasses.label}>Email Address</label>
+              <input
+                type="email"
+                className={brandClasses.input}
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+              />
+              <p className="text-xs font-sans text-brand-slate/60">
+                Enter the email address you used when booking.
+              </p>
             </div>
-          )}
 
-          {devCode && (
-            <div className="calm-alert text-xs">
-              <strong className="text-brand-forest">Dev mode code:</strong> {devCode}
-            </div>
-          )}
+            {error && (
+              <div className="text-[11px] font-sans font-semibold text-destructive bg-destructive/5 border border-destructive/20 rounded px-3 py-2">
+                {error}
+              </div>
+            )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full ${brandClasses.btnPrimary} disabled:opacity-50`}
-          >
-            {isSubmitting ? 'Sending code…' : 'Send Login Code'}
-          </button>
-        </form>
+            {devCode && (
+              <div className="calm-alert text-xs">
+                <strong className="text-brand-forest">Dev mode code:</strong> {devCode}
+              </div>
+            )}
 
-        <div className="mt-6 text-center text-xs font-sans text-brand-slate/60">
-          Don&apos;t have an account?{' '}
-          <a href="/book" className={brandClasses.link}>
-            Configure your care program
-          </a>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full ${brandClasses.btnPrimary} disabled:opacity-50`}
+            >
+              {isSubmitting ? 'Sending code…' : 'Send Login Code'}
+            </button>
+          </form>
+
+          <div className="mt-5 text-center text-xs font-sans text-brand-slate/60">
+            Don&apos;t have an account?{' '}
+            <a href="/book" className={brandClasses.link}>
+              Configure your care program
+            </a>
+          </div>
         </div>
       </div>
     </div>

@@ -10,7 +10,7 @@ export default function Footer() {
       <div className="mx-auto max-w-marketing px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-8 md:grid-cols-3">
           <div>
-            <BrandLogo size="sm" />
+            <BrandLogo size="portal" />
             <p className="mt-3 text-sm font-sans font-medium text-brand-slate/80 leading-relaxed">
               Serving New Jersey and Vermont. Trusted since 2024.
             </p>
