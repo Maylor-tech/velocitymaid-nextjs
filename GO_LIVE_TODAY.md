@@ -51,9 +51,9 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_YOUR_LIVE_KEY_HERE
 # Base URL (MUST be production domain)
 NEXT_PUBLIC_BASE_URL=https://velocitymaid.com
 
-# Email
+# Email (Resend — velocitymaid.com must be Verified in Resend Dashboard)
 RESEND_API_KEY=re_YOUR_API_KEY
-RESEND_FROM_EMAIL=VelocityMaid <noreply@velocitymaid.com>
+RESEND_FROM_EMAIL=VelocityMaid <no-reply@velocitymaid.com>
 ```
 
 ### ⚠️ IMPORTANT CHECKS:
@@ -70,6 +70,12 @@ RESEND_FROM_EMAIL=VelocityMaid <noreply@velocitymaid.com>
 3. **Database:**
    - ✅ Must use production database connection string
    - ✅ Must include `?sslmode=require`
+
+4. **Resend:**
+   - ✅ `RESEND_API_KEY` is set in Vercel Production (**required**)
+   - ✅ `RESEND_FROM_EMAIL=VelocityMaid <no-reply@velocitymaid.com>`
+   - ✅ Resend Dashboard → Domains → `velocitymaid.com` shows **Verified**
+   - ✅ Test locally: `npx dotenv-cli -e .env.local -- npx tsx scripts/test-resend.ts`
 
 ---
 

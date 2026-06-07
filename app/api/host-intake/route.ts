@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { getResendFromEmail } from "@/lib/email/resendClient";
 
 const NOTIFICATION_EMAIL =
   process.env.CONTACT_NOTIFICATIONS_EMAIL || "hello@velocitymaid.com";
@@ -156,7 +157,7 @@ export async function POST(req: NextRequest) {
     const subject = `New host inquiry — ${city}, VT — ${fullName}`;
 
     await resend.emails.send({
-      from: "VelocityMaid <no-reply@velocitymaid.com>",
+      from: getResendFromEmail(),
       to: [NOTIFICATION_EMAIL],
       replyTo: email,
       subject,

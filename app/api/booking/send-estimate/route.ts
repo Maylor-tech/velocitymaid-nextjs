@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { getResendFromEmail } from "@/lib/email/resendClient";
 
 import { Resend } from "resend";
 
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
 
     const emailResponse = await resend.emails.send({
 
-      from: "VelocityMaid <onboarding@resend.dev>",
+      from: getResendFromEmail(),
 
       to: normalizedEmail,
 

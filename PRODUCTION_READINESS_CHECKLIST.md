@@ -1,6 +1,6 @@
 # 🚀 Production Readiness Checklist
 
-**Date:** January 2025  
+**Date:** June 2025  
 **Status:** Pre-Launch Verification
 
 ---
@@ -39,12 +39,14 @@ NEXT_PUBLIC_BASE_URL=https://velocitymaid.com
 #### 4. Email Delivery (Resend)
 ```env
 RESEND_API_KEY=re_YOUR_API_KEY
-RESEND_FROM_EMAIL=VelocityMaid <noreply@velocitymaid.com>
+RESEND_FROM_EMAIL=VelocityMaid <no-reply@velocitymaid.com>
 ```
-- [ ] **Resend Dashboard:** https://resend.com/api-keys → Create API key
-- [ ] **Domain Setup:** Verify domain in Resend (if using custom domain)
-- [ ] **Vercel Production:** Add both variables
-- [ ] **Test:** Send test email from magic link endpoint
+- [ ] **Resend Dashboard:** https://resend.com/api-keys → Create API key (**required**)
+- [ ] **Domain verified:** Resend Dashboard → Domains → `velocitymaid.com` shows **Verified**
+- [ ] **From address:** `VelocityMaid <no-reply@velocitymaid.com>` (all transactional email uses `getResendFromEmail()` in code)
+- [ ] **Vercel Production:** Add both `RESEND_API_KEY` and `RESEND_FROM_EMAIL`
+- [ ] **Test:** `npx dotenv-cli -e .env.local -- npx tsx scripts/test-resend.ts`
+- [ ] **Do not use:** `onboarding@resend.dev` (sandbox — removed from codebase)
 
 ### Optional Variables (Recommended)
 
@@ -122,11 +124,11 @@ NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 
 ### Resend Configuration
 
-- [ ] **API Key Created:** In Resend dashboard
-- [ ] **Domain Verified:** (If using custom domain)
-- [ ] **From Address:** Set to `noreply@velocitymaid.com` or verified domain
-- [ ] **Test Email:** Send test magic link email
-- [ ] **Verify Delivery:** Check inbox (and spam folder)
+- [ ] **API Key Created:** In Resend dashboard (**required** for production)
+- [ ] **Domain Verified:** Resend Dashboard → Domains → `velocitymaid.com` shows **Verified**
+- [ ] **From Address:** `VelocityMaid <no-reply@velocitymaid.com>` via `RESEND_FROM_EMAIL`
+- [ ] **Test Email:** Run `npx dotenv-cli -e .env.local -- npx tsx scripts/test-resend.ts`
+- [ ] **Verify Delivery:** Check inbox (and spam folder) at test recipient
 
 ### Email Templates
 
@@ -304,7 +306,7 @@ npm run build && echo "✅ Build successful" || echo "❌ Build failed"
 
 ---
 
-**Last Updated:** January 2025  
+**Last Updated:** June 2025  
 **Next Review:** After first production booking
 
 

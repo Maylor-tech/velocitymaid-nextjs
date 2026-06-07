@@ -15,6 +15,7 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
 import { ContactMessageStatus } from "@prisma/client";
+import { getResendFromEmail } from "@/lib/email/resendClient";
 
 function getResend() {
   if (!process.env.RESEND_API_KEY) {
@@ -71,7 +72,7 @@ export async function POST(
       if (resend) {
         try {
           await resend.emails.send({
-            from: "VelocityMaid <no-reply@velocitymaid.com>",
+            from: getResendFromEmail(),
             to: [contact.email],
             subject: subject?.trim() || "VelocityMaid — Follow-up",
             html: `

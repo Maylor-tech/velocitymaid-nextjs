@@ -7,6 +7,7 @@ import { requireRole } from '@/lib/auth/requireRole';
 import { logAuditEntry } from '@/lib/audit';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
 import { Resend } from 'resend';
+import { getResendFromEmail } from '@/lib/email/resendClient';
 
 function getResend() {
   if (!process.env.RESEND_API_KEY) return null;
@@ -70,7 +71,7 @@ export async function POST(
         : 'As scheduled';
       resend.emails
         .send({
-          from: 'VelocityMaid <no-reply@velocitymaid.com>',
+          from: getResendFromEmail(),
           to: customerEmail,
           subject: 'Your cleaning is confirmed ✅',
           html: `

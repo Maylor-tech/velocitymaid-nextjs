@@ -257,6 +257,7 @@ export async function POST(req: NextRequest) {
       try {
         // Send email
         const { Resend } = await import("resend");
+        const { getResendFromEmail } = await import("@/lib/email/resendClient");
         const resend = new Resend(process.env.RESEND_API_KEY!);
 
         const subject = getW9ReminderEmailSubject(reminderNumber);
@@ -272,7 +273,7 @@ export async function POST(req: NextRequest) {
         });
 
         await resend.emails.send({
-          from: "VelocityMaid <onboarding@resend.dev>",
+          from: getResendFromEmail(),
           to: cleaner.cleanerEmail,
           subject,
           html,

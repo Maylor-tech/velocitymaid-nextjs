@@ -313,6 +313,7 @@ export async function POST(req: NextRequest) {
 
       try {
         const { Resend } = await import("resend");
+        const { getResendFromEmail } = await import("@/lib/email/resendClient");
         const resend = new Resend(process.env.RESEND_API_KEY!);
 
         const subject = getWeekly1099ReadinessEmailSubject(
@@ -338,7 +339,7 @@ export async function POST(req: NextRequest) {
         });
 
         await resend.emails.send({
-          from: "VelocityMaid <onboarding@resend.dev>",
+          from: getResendFromEmail(),
           to: admin.email,
           subject,
           html,

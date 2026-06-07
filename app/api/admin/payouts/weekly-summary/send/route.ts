@@ -17,7 +17,7 @@ import {
   getWeeklyPayoutSummaryHTML,
   getWeeklyPayoutSummaryText,
 } from "@/lib/email/templates/weeklyPayoutSummary";
-import { resend } from "@/lib/email/resendClient";
+import { resend, getResendFromEmail } from "@/lib/email/resendClient";
 
 export const dynamic = "force-dynamic";
 
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
         const text = getWeeklyPayoutSummaryText(summary, baseUrl);
 
         await resend.emails.send({
-          from: "VelocityMaid <onboarding@resend.dev>",
+          from: getResendFromEmail(),
           to: summary.cleanerEmail,
           subject,
           html,

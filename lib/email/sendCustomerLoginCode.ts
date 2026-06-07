@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { brand } from "@/lib/brand/tokens";
+import { getResendFromEmail } from "@/lib/email/resendClient";
 
 function getResend(): Resend | null {
   if (!process.env.RESEND_API_KEY) return null;
@@ -17,12 +18,9 @@ export async function sendCustomerLoginCodeEmail(params: {
   }
 
   const { email, code, expiresMinutes = 10 } = params;
-  const from =
-    process.env.RESEND_FROM_EMAIL || "VelocityMaid <noreply@velocitymaid.com>";
-
   try {
     await resend.emails.send({
-      from,
+      from: getResendFromEmail(),
       to: [email],
       subject: "Your VelocityMaid sign-in code",
       html: `

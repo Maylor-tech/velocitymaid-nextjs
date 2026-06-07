@@ -57,15 +57,23 @@ NEXT_PUBLIC_BASE_URL=https://velocitymaid.com
 ### 4. **Email Service (Resend)** 🔴
 ```env
 RESEND_API_KEY=re_YOUR_API_KEY
-RESEND_FROM_EMAIL=VelocityMaid <noreply@velocitymaid.com>
+RESEND_FROM_EMAIL=VelocityMaid <no-reply@velocitymaid.com>
 ```
 
 **Status Check:**
-- [ ] `RESEND_API_KEY` exists and starts with `re_`
-- [ ] `RESEND_FROM_EMAIL` exists (optional but recommended)
+- [ ] `RESEND_API_KEY` exists and starts with `re_` (**required** — bookings, login codes, billing, and admin replies will not send without it)
+- [ ] `RESEND_FROM_EMAIL` is set to `VelocityMaid <no-reply@velocitymaid.com>`
+- [ ] **Resend Dashboard → Domains:** `velocitymaid.com` shows **Verified**
+- [ ] Do **not** use `onboarding@resend.dev` in production (sandbox sender)
 
 **Where to get:**
 - Resend Dashboard → API Keys → Create API key
+- Resend Dashboard → Domains → confirm `velocitymaid.com` is Verified (DNS records complete)
+
+**Local test:**
+```bash
+npx dotenv-cli -e .env.local -- npx tsx scripts/test-resend.ts
+```
 
 ---
 
@@ -120,6 +128,8 @@ These don't appear to be standard Next.js/Stripe environment variables. They mig
    - ✅ `DATABASE_URL` (must be production database)
    - ✅ `NEXT_PUBLIC_BASE_URL` (must be `https://velocitymaid.com`)
    - ✅ `RESEND_API_KEY` (must be `re_...`)
+   - ✅ `RESEND_FROM_EMAIL` (`VelocityMaid <no-reply@velocitymaid.com>`)
+   - ✅ Resend domain `velocitymaid.com` is **Verified**
 
 ### If Any Are Missing:
 

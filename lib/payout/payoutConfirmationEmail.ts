@@ -179,6 +179,7 @@ export async function sendPayoutConfirmationEmail(
 
     // Import Resend dynamically
     const { Resend } = await import("resend");
+    const { getResendFromEmail } = await import("@/lib/email/resendClient");
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     // Format data
@@ -217,7 +218,7 @@ export async function sendPayoutConfirmationEmail(
 
     // Send email
     await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "VelocityMaid <onboarding@resend.dev>",
+      from: getResendFromEmail(),
       to: transfer.cleaner.email,
       subject: `Payout Confirmed: $${amount} - VelocityMaid`,
       html: getPayoutConfirmationEmailHTML(emailData),

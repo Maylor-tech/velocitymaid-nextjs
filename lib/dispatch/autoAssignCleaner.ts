@@ -231,6 +231,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AutoAssignResult
       // Lazy import to prevent build-time errors if Resend is not configured
       try {
         const { Resend } = await import('resend');
+        const { getResendFromEmail } = await import('@/lib/email/resendClient');
         const resend = new Resend(process.env.RESEND_API_KEY);
         const formattedDate = job.preferredDate
           ? new Date(job.preferredDate).toLocaleDateString("en-US", {
@@ -243,7 +244,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AutoAssignResult
 
         resend.emails
           .send({
-            from: "VelocityMaid <onboarding@resend.dev>",
+            from: getResendFromEmail(),
             to: selectedCleaner.email,
             subject: "🧹 New Job Assigned (Auto)",
             html: `

@@ -105,10 +105,11 @@ export async function POST(req: NextRequest) {
     if (process.env.RESEND_API_KEY) {
       try {
         const { Resend } = await import('resend');
+        const { getResendFromEmail } = await import('@/lib/email/resendClient');
         const resend = new Resend(process.env.RESEND_API_KEY);
 
         await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'VelocityMaid <noreply@velocitymaid.com>',
+          from: getResendFromEmail(),
           to: customer.email,
           subject: 'Your secure login link - VelocityMaid',
           html: `

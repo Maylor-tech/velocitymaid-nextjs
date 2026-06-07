@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
 import { autoReplyTemplates } from "@/lib/contact/autoReplyTemplates";
+import { getResendFromEmail } from "@/lib/email/resendClient";
 
 function getResend() {
   if (!process.env.RESEND_API_KEY) {
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
       if (to) {
         try {
           await resend.emails.send({
-            from: "VelocityMaid <no-reply@velocitymaid.com>",
+            from: getResendFromEmail(),
             to: [to],
             subject: `New Contact Message (${role})`,
             html: `
@@ -119,7 +120,7 @@ ${message || "—"}
           autoReplyTemplates[role] || autoReplyTemplates["other"];
 
         await resend.emails.send({
-          from: "VelocityMaid <no-reply@velocitymaid.com>",
+          from: getResendFromEmail(),
           to: [email],
           subject: template.subject,
           html: template.html(name),
