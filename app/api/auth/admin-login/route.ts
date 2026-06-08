@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
 import { safeError } from '@/lib/safeError';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     const branches = await prisma.userBranch.findMany({
       where: { userId: user.id },
-      include: { branch: true },
+      select: { branchId: true },
     });
 
     if (branches.length === 0) {

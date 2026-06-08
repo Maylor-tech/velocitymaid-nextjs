@@ -52,7 +52,7 @@ export async function requireRole(
           if (admin) {
             const branches = await prisma.userBranch.findMany({
               where: { userId: admin.id },
-              include: { branch: true },
+              include: { Branch: true },
             });
             if (branches.length === 0) {
               return {
@@ -68,7 +68,7 @@ export async function requireRole(
               role: "ADMIN",
               email: admin.email,
               branchId: activeBranch.branchId,
-              branchName: activeBranch.branch.name,
+              branchName: activeBranch.Branch.name,
             };
           }
         }
@@ -115,7 +115,7 @@ export async function requireRole(
 
     const branches = await prisma.userBranch.findMany({
       where: { userId: admin.id },
-      include: { branch: true },
+      include: { Branch: true },
     });
     if (branches.length === 0) {
       return { userId: admin.id, role: "ADMIN", email: admin.email };
@@ -126,7 +126,7 @@ export async function requireRole(
       role: "ADMIN",
       email: admin.email,
       branchId: activeBranch.branchId,
-      branchName: activeBranch.branch.name,
+      branchName: activeBranch.Branch.name,
     };
   }
 
@@ -227,7 +227,7 @@ export async function getAdminAuthFromCookies(): Promise<AuthContext | null> {
     if (!admin) return null;
     const branches = await prisma.userBranch.findMany({
       where: { userId: admin.id },
-      include: { branch: true },
+      include: { Branch: true },
     });
     if (branches.length === 0) {
       return { userId: admin.id, role: "ADMIN", email: admin.email, branchId: session.branchId };
@@ -238,7 +238,7 @@ export async function getAdminAuthFromCookies(): Promise<AuthContext | null> {
       role: "ADMIN",
       email: admin.email,
       branchId: activeBranch.branchId,
-      branchName: activeBranch.branch.name,
+      branchName: activeBranch.Branch.name,
     };
   } catch {
     return null;
