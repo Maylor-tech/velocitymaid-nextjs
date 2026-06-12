@@ -43,11 +43,42 @@ export async function GET(request: NextRequest) {
         totalPrice: true,
         paymentStatus: true,
         currency: true,
+        JobPayout: {
+          select: {
+            id: true,
+            status: true,
+            cleanerAmount: true,
+            currency: true,
+            paidAt: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
+
+    const jobPayouts = await prisma.jobPayout.findMany({
+      where: { cleanerId },
+      select: {
+        id: true,
+        jobId: true,
+        status: true,
+        cleanerAmount: true,
+        currency: true,
+        paidAt: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    let readyPayoutTotal = 0;
+    let paidPayoutTotal = 0;
+    for (const payout of jobPayouts) {
+      const amount = Number(payout.cleanerAmount);
+      if (payout.status === 'READY') readyPayoutTotal += amount;
+      if (payout.status === 'PAID') paidPayoutTotal += amount;
+    }
 
     // Phase 2C: Calculate totals
     const now = new Date();
@@ -84,6 +115,9 @@ export async function GET(request: NextRequest) {
         totalPrice: price,
         paymentStatus: job.paymentStatus,
         currency: job.currency || 'USD',
+        payoutStatus: job.JobPayout?.status ?? null,
+        payoutAmount: job.JobPayout ? Number(job.JobPayout.cleanerAmount) : null,
+        payoutPaidAt: job.JobPayout?.paidAt?.toISOString() ?? null,
       };
     });
 
@@ -95,8 +129,22 @@ export async function GET(request: NextRequest) {
         monthTotal,
         weekTotal,
       },
+      payouts: {
+        readyTotal: readyPayoutTotal,
+        paidTotal: paidPayoutTotal,
+        items: jobPayouts.map((p) => ({
+          id: p.id,
+          jobId: p.jobId,
+          status: p.status,
+          amount: Number(p.cleanerAmount),
+          currency: p.currency,
+          paidAt: p.paidAt?.toISOString() ?? null,
+          createdAt: p.createdAt.toISOString(),
+        })),
+      },
     });
   } catch (error: any) {
+    if (error instanceof NextResponse) return error;
     console.error('[CLEANER_EARNINGS] Error:', error);
     return NextResponse.json(
       {

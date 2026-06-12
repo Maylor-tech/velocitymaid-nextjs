@@ -1,32 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthenticatedCleaner } from "@/lib/cleanerAuth";
 import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
+import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
  * GET /api/cleaner/jobs/[jobId]
- * 
- * Get a specific job assigned to the authenticated cleaner
+ *
+ * Get a specific job assigned to the authenticated cleaner.
  */
 export async function GET(
   req: NextRequest,
   { params }: { params: { jobId: string } }
 ) {
   try {
-    const jobId = params.jobId;
-    await requireCleanerJobAssignment(req, jobId);
-    const authResult = await getAuthenticatedCleaner(req);
-    const cleanerId = authResult.cleanerId!;
+    const auth = await requireCleanerJobAssignment(req, params.jobId);
 
-    // 2. Find job and verify assignment
     const job = await prisma.job.findUnique({
-      where: { id: jobId },
+      where: { id: params.jobId },
       select: {
         id: true,
         status: true,
+        paymentStatus: true,
         customerName: true,
         serviceType: true,
         serviceLocation: true,
@@ -36,11 +33,22 @@ export async function GET(
         totalPrice: true,
         currency: true,
         assignedAt: true,
-        assignedCleanerId: true, // Include in select
+        assignedCleanerId: true,
+        onTheWayAt: true,
+        completedAt: true,
         Branch: {
           select: {
             id: true,
             name: true,
+          },
+        },
+        Customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
           },
         },
       },
@@ -48,24 +56,27 @@ export async function GET(
 
     if (!job) {
       return NextResponse.json(
-        { error: "Job not found" },
+        { success: false, error: "Job not found" },
         { status: 404 }
       );
     }
 
-    // 3. Verify job is assigned to this cleaner
-    if (job.assignedCleanerId !== cleanerId) {
+    if (job.assignedCleanerId !== auth.userId) {
       return NextResponse.json(
-        { error: "Job is not assigned to you" },
+        {
+          success: false,
+          error: "This job is not assigned to your cleaner account.",
+        },
         { status: 403 }
       );
     }
 
-    // Format dates for JSON
     const formattedJob = {
       ...job,
-      preferredDate: job.preferredDate?.toISOString() || null,
-      assignedAt: job.assignedAt?.toISOString() || null,
+      preferredDate: job.preferredDate?.toISOString() ?? null,
+      assignedAt: job.assignedAt?.toISOString() ?? null,
+      onTheWayAt: job.onTheWayAt?.toISOString() ?? null,
+      completedAt: job.completedAt?.toISOString() ?? null,
       totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
     };
 
@@ -73,12 +84,16 @@ export async function GET(
       success: true,
       job: formattedJob,
     });
-  } catch (err: any) {
-    console.error("[CLEANER_JOB] Error:", err);
+  } catch (error) {
+    const authResp = rethrowIfAuthResponse(error);
+    if (authResp) return authResp;
+    console.error("[CLEANER_JOB]", error);
     return NextResponse.json(
-      { error: err?.message || "Failed to fetch job" },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fetch job",
+      },
       { status: 500 }
     );
   }
 }
-

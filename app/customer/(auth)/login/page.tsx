@@ -14,7 +14,7 @@ export default function CustomerLoginPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const redirectUrl = searchParams.get('redirect') || '/customer/dashboard';
+  const redirectUrl = searchParams.get('redirect') || '/customer/jobs';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

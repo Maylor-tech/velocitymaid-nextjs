@@ -30,7 +30,7 @@ interface CustomerJob {
     name: string;
     avatarUrl?: string;
   } | null;
-  paymentStatus?: 'UNPAID' | 'PAID' | 'REFUNDED' | 'PARTIAL';
+  paymentStatus?: 'UNPAID' | 'PAID' | 'DEPOSIT_PAID' | 'BALANCE_DUE' | 'REFUNDED' | 'PARTIAL';
   rating?: {
     score: number;
     comment?: string;
@@ -134,8 +134,8 @@ export default function CustomerJobsPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
+      assigned: { color: 'bg-blue-100 text-blue-800', icon: User, label: 'Cleaner assigned' },
       pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending confirmation' },
-      assigned: { color: 'bg-blue-100 text-blue-800', icon: User, label: 'Assigned' },
       in_progress: { color: 'bg-purple-100 text-purple-800', icon: Clock, label: 'In Progress' },
       completed: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Completed' },
       cancelled: { color: 'bg-red-100 text-red-800', icon: XCircle, label: 'Cancelled' },
@@ -164,6 +164,8 @@ export default function CustomerJobsPage() {
     const config: Record<string, { color: string; label: string }> = {
       UNPAID: { color: 'bg-red-100 text-red-800', label: 'Unpaid' },
       PAID: { color: 'bg-green-100 text-green-800', label: 'Paid' },
+      DEPOSIT_PAID: { color: 'bg-blue-100 text-blue-800', label: 'Deposit Paid' },
+      BALANCE_DUE: { color: 'bg-orange-100 text-orange-800', label: 'Balance Due' },
       REFUNDED: { color: 'bg-gray-100 text-gray-800', label: 'Refunded' },
       PARTIAL: { color: 'bg-yellow-100 text-yellow-800', label: 'Partial' },
     };
@@ -336,6 +338,17 @@ export default function CustomerJobsPage() {
                         <span className="truncate">{job.address}</span>
                       </div>
                     </div>
+
+                    {job.paymentStatus === 'BALANCE_DUE' && (
+                      <p className="mt-3 text-sm font-medium text-orange-700">
+                        Your service is complete — tap to pay the remaining balance securely.
+                      </p>
+                    )}
+                    {job.status.toLowerCase() === 'assigned' && job.paymentStatus === 'DEPOSIT_PAID' && (
+                      <p className="mt-3 text-sm text-blue-700">
+                        Your cleaner is assigned. Tap for details and updates.
+                      </p>
+                    )}
 
                     {job.cleaner && (
                       <div className="mt-4 pt-4 border-t border-gray-200 flex items-center gap-3">

@@ -1,8 +1,23 @@
 /**
  * Job Status Lifecycle Helper
- * 
+ *
  * Provides safe status transitions and validation for job status changes
  */
+
+import { JobStatus as PrismaJobStatus } from '@prisma/client';
+
+/** Use with Prisma `status: { notIn: ... }` — excludes terminal job states */
+export const ACTIVE_JOB_STATUS_EXCLUDE: PrismaJobStatus[] = [
+  PrismaJobStatus.CANCELLED,
+  PrismaJobStatus.CANCELLED_EMERGENCY,
+  PrismaJobStatus.COMPLETED,
+];
+
+/** Exclude only cancelled states (e.g. weekly workload counts include completed jobs) */
+export const CANCELLED_JOB_STATUS_EXCLUDE: PrismaJobStatus[] = [
+  PrismaJobStatus.CANCELLED,
+  PrismaJobStatus.CANCELLED_EMERGENCY,
+];
 
 export const JOB_STATUSES = [
   "RECEIVED",

@@ -44,13 +44,9 @@ export default function CleanerJobsPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        // Handle authentication errors
         if (res.status === 401) {
-          setError("Please log in to view your jobs");
-          // Optionally redirect to login
-          setTimeout(() => {
-            router.push("/cleaners/login");
-          }, 2000);
+          setError("Please log in at /cleaners/login to view your assigned jobs.");
+          setTimeout(() => router.push("/cleaners/login"), 2000);
           return;
         }
         throw new Error(data.error || data.message || "Failed to fetch jobs");
@@ -232,11 +228,11 @@ export default function CleanerJobsPage() {
                     </div>
                   </div>
 
-                  <div className="ml-4 text-right">
+                  <div className="ml-4 text-right flex flex-col items-end gap-2">
                     {getStatusAction(job.status)}
-                    <p className="text-xs text-gray-400 mt-1">
-                      View Details →
-                    </p>
+                    <span className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
+                      Open Job →
+                    </span>
                   </div>
                 </div>
               </Link>

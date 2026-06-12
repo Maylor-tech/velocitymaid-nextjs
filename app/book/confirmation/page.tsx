@@ -10,6 +10,7 @@ function BookingConfirmationContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [paymentMode, setPaymentMode] = useState<'full' | 'deposit'>('full');
   const [showMagicLink, setShowMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkEmail, setMagicLinkEmail] = useState('');
@@ -174,6 +175,7 @@ function BookingConfirmationContent() {
           }
           
           setJobId(data.jobId);
+          setPaymentMode(data.paymentMode === 'deposit' ? 'deposit' : 'full');
           setStatus('success');
           
           // Auto-redirect to customer jobs after 2 seconds (use replace to avoid back button issues)
@@ -246,7 +248,11 @@ function BookingConfirmationContent() {
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Processing Your Booking</h1>
-          <p className="text-gray-600">Please wait while we confirm your payment...</p>
+          <p className="text-gray-600">
+            {paymentMode === 'deposit'
+              ? 'Please wait while we confirm your deposit...'
+              : 'Please wait while we confirm your payment...'}
+          </p>
         </div>
       </div>
     );
@@ -286,11 +292,16 @@ function BookingConfirmationContent() {
           You're all set 🎉
         </h1>
         <p className="text-lg text-gray-600 mb-6">
-          Your payment was successful and your cleaning has been booked.
+          {paymentMode === 'deposit'
+            ? 'Your $25 booking deposit was received. We’ll review and confirm your cleaning shortly.'
+            : 'Your payment was successful and your cleaning has been booked.'}
         </p>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
           <p className="text-sm text-blue-800">
-            <strong>What's next:</strong> We're preparing your service now. You can track updates anytime from your dashboard.
+            <strong>What&apos;s next:</strong>{' '}
+            {paymentMode === 'deposit'
+              ? 'Our team will confirm your booking and assign your cleaner. You’ll pay the remaining balance after service.'
+              : "We're preparing your service now. You can track updates anytime from your dashboard."}
           </p>
         </div>
 

@@ -17,6 +17,9 @@ const branchLabels: Record<string, string> = {
   miami: 'Miami',
 };
 
+const depositMode = process.env.NEXT_PUBLIC_BOOKING_PAYMENT_MODE === 'deposit';
+const depositAmount = process.env.NEXT_PUBLIC_BOOKING_DEPOSIT_DOLLARS || '25';
+
 const flexibilityLabels: Record<string, string> = {
   FLEXIBLE: 'Flexible',
   EXACT_TIME: 'Exact time preferred',
@@ -423,6 +426,17 @@ export default function ReviewStep() {
                 {formatCurrency(quote.total, quote.currency)}
               </span>
             </div>
+
+            {depositMode && (
+              <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                <p className="font-medium">Booking deposit today: ${depositAmount}</p>
+                <p className="mt-1 text-blue-800">
+                  Pay a ${depositAmount} deposit now to reserve your cleaning. The remaining balance
+                  ({formatCurrency(Math.max(0, quote.total - Number(depositAmount)), quote.currency)})
+                  is due after service.
+                </p>
+              </div>
+            )}
 
             {/* Time & Cleaners */}
             <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4 text-sm">

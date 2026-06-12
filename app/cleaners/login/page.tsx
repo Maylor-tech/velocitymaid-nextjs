@@ -26,9 +26,7 @@ export default function CleanerLoginPage() {
       const data = await response.json();
 
       if (response.ok && data.ok) {
-        // Redirect to compliance checklist (for demo flow)
-        // Can be changed to /cleaner/jobs for production
-        router.push('/cleaner/compliance');
+        router.push('/cleaner/jobs');
       } else {
         setError(data.error || 'Login failed');
       }
@@ -83,7 +81,7 @@ export default function CleanerLoginPage() {
 
         <div className="mt-6 pt-6 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
-            Test credentials: Use phone +19735556677 or +18025556677
+            Local test: log in with your seeded cleaner email (e.g. cleaner.nj@velocitymaid.com)
           </p>
         </div>
       </div>

@@ -20,6 +20,8 @@ import Stripe from 'stripe';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { autoAssignCleaner } from '@/lib/cleaner-assignment';
+import { isDepositBookingMode } from '@/lib/booking/paymentConfig';
+import { upsertJobFromCheckoutSession } from '@/lib/booking/upsertJobFromCheckoutSession';
 
 function getStripe() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -203,48 +205,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 🚨 STEP 7: Get total price from Stripe session
-    const totalPrice = session.amount_total ? session.amount_total / 100 : null;
-
-    // 🚨 STEP 8: Create job with payment confirmation (IDEMPOTENT)
-    // Using upsert ensures safe retries - if job already exists, no duplicate is created
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:177',message:'Creating job via upsert',data:{runId,sessionId,branchId,customerId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'K'})}).catch(()=>{});
-    // #endregion
-    const job = await prisma.job.upsert({
-      where: { sessionId: session.id },
-      update: {},
-      create: {
-        id: randomUUID(),
-
-        // 🔐 Stripe binding (critical for audit trail)
-        sessionId: session.id,
-
-        // 🏢 Business context
-        branchId,
-        customerId,
-        customerName: `${firstName} ${lastInitial}`.trim(),
-
-        // 📅 Booking details
-        preferredDate,
-        preferredTime,
-        serviceType,
-        serviceLocation,
-        address,
-
-        // 💰 Pricing
-        totalPrice: totalPrice ? totalPrice : null,
-        currency,
-
-        // ⚙️ State
-        status: 'RECEIVED',
-        paymentMethod: 'card',
-
-        // 🎁 Promotions
-        appliedReferralCode: referralCode,
-        promoApplied: promoCode,
-        promoDiscount: promoDiscount ? promoDiscount : null,
-      },
+    // 🚨 STEP 8: Create job with payment confirmation (idempotent by sessionId)
+    const { job } = await upsertJobFromCheckoutSession({
+      session,
+      metadata,
+      customerId,
     });
 
     console.log(`[BOOKING CREATE] Job created: ${job.id} for session ${sessionId}${customerId ? ` (customer ${customerId})` : ''}`);
@@ -252,12 +217,16 @@ export async function POST(req: NextRequest) {
     fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:221',message:'Job created successfully',data:{runId,jobId:job.id,sessionId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'K'})}).catch(()=>{});
     // #endregion
 
-    // Auto-assign cleaner (non-blocking)
-    try {
-      const assignmentResult = await autoAssignCleaner(job.id);
-      console.log('[BOOKING CREATE] Auto-assignment result:', assignmentResult);
-    } catch (assignError: any) {
-      console.error('[BOOKING CREATE] Auto-assignment error (non-fatal):', assignError.message);
+    // Auto-assign cleaner only for legacy full-pay bookings
+    if (!isDepositBookingMode()) {
+      try {
+        const assignmentResult = await autoAssignCleaner(job.id);
+        console.log('[BOOKING CREATE] Auto-assignment result:', assignmentResult);
+      } catch (assignError: any) {
+        console.error('[BOOKING CREATE] Auto-assignment error (non-fatal):', assignError.message);
+      }
+    } else {
+      console.log('[BOOKING CREATE] Deposit mode — skipping auto-assign pending admin review');
     }
 
     // Track referral event if referral code exists (non-blocking)
@@ -285,7 +254,10 @@ export async function POST(req: NextRequest) {
       success: true,
       jobId: job.id,
       customerId,
-      message: 'Booking created successfully',
+      paymentMode: isDepositBookingMode() ? 'deposit' : 'full',
+      message: isDepositBookingMode()
+        ? 'Booking deposit received — pending admin review'
+        : 'Booking created successfully',
     });
   } catch (error: any) {
     // #region agent log

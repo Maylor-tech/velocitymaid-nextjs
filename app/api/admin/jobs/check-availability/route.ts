@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
+import { ACTIVE_JOB_STATUS_EXCLUDE } from '@/lib/jobStatus';
 
 export async function POST(request: NextRequest) {
   try {
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
           lte: dayEnd,
         },
         status: {
-          notIn: ['cancelled', 'completed', 'DECLINED'],
+          notIn: ACTIVE_JOB_STATUS_EXCLUDE,
         },
       },
     });
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
             lte: dayEnd,
           },
           status: {
-            notIn: ['cancelled', 'completed', 'DECLINED'],
+            notIn: ACTIVE_JOB_STATUS_EXCLUDE,
           },
         },
         select: {

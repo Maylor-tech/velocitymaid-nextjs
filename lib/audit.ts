@@ -5,6 +5,7 @@
  */
 
 import { prisma } from './prisma';
+import { randomUUID } from 'crypto';
 
 export interface AuditLogParams {
   actorId?: string | null;
@@ -20,6 +21,7 @@ export async function logAuditEntry(params: AuditLogParams) {
   try {
     await prisma.auditLog.create({
       data: {
+        id: randomUUID(),
         actorId: params.actorId ?? null,
         actorRole: params.actorRole ?? null,
         action: params.action,

@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
 
     await prisma.customerLoginToken.create({
       data: {
+        id: nanoid(),
         customerId: customer.id,
         code,
         expiresAt,

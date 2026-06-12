@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, User, Calendar, MapPin, DollarSign, CheckCircle, XC
 import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
+import { getJobLoopProgress } from '@/lib/booking/jobLoopProgress';
 
 interface Job {
   id: string;
@@ -19,6 +20,11 @@ interface Job {
   totalPrice: number | null;
   currency: string | null;
   paymentStatus: string;
+  reviewStatus?: string;
+  quotedTotal?: number | null;
+  depositAmount?: number | null;
+  amountPaid?: number | null;
+  balanceDue?: number | null;
   assignedCleanerId: string | null;
   assignedCleaner: {
     id: string;
@@ -37,6 +43,32 @@ interface Job {
     email: string;
     phone: string | null;
   } | null;
+  JobPayout?: {
+    id: string;
+    cleanerId?: string;
+    grossAmount: number | null;
+    cleanerAmount: number | null;
+    platformFee: number | null;
+    currency: string;
+    status: string;
+    rulesVersion: string | null;
+    paidAt: string | null;
+    executionMethod?: string | null;
+    externalReferenceId?: string | null;
+    policyEvalDetails?: {
+      paymentSettlement?: {
+        methodType?: string;
+        label?: string | null;
+        reference?: string | null;
+        timestamp?: string;
+      };
+    } | null;
+  } | null;
+  payoutEligibility?: {
+    eligible: boolean;
+    reason: string;
+    payoutRecord: { id: string; status: string } | null;
+  };
 }
 
 interface Cleaner {
@@ -67,10 +99,16 @@ export default function AdminJobDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [assigning, setAssigning] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
   const [selectedCleanerId, setSelectedCleanerId] = useState<string>('');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  const [testCompleting, setTestCompleting] = useState(false);
+  const [markingPayoutPaid, setMarkingPayoutPaid] = useState(false);
+  const [payoutMethod, setPayoutMethod] = useState('');
+  const [payoutNote, setPayoutNote] = useState('');
+  const [payoutReference, setPayoutReference] = useState('');
 
   useEffect(() => {
     if (jobId) {
@@ -182,6 +220,125 @@ export default function AdminJobDetailPage() {
     }
   };
 
+  const handleReview = async (action: 'approve' | 'reject') => {
+    try {
+      setReviewLoading(true);
+      const response = await fetch(`/api/admin/jobs/${jobId}/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: action === 'reject' ? JSON.stringify({ reason: 'Rejected by admin' }) : undefined,
+      });
+      const data = await response.json();
+      if (data.success) {
+        let toast = action === 'approve' ? 'Booking approved' : 'Booking rejected';
+        if (action === 'reject') {
+          const refund = data.refund as { status?: string; amount?: number; error?: string } | undefined;
+          if (refund?.status === 'refunded') {
+            toast = `Booking rejected. Deposit refunded ($${refund.amount?.toFixed(2) ?? '25.00'}).`;
+          } else if (refund?.status === 'already_refunded') {
+            toast = 'Booking rejected. Deposit was already refunded.';
+          } else if (data.warning) {
+            toast = data.warning;
+            setToastType('error');
+          }
+        }
+        setToastMessage(toast);
+        if (action !== 'reject' || !data.warning) {
+          setToastType('success');
+        }
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 5000);
+        fetchJob();
+        fetchAuditLogs();
+      } else {
+        throw new Error(data.error || 'Review action failed');
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Review action failed';
+      setToastMessage(message);
+      setToastType('error');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const handleTestComplete = async () => {
+    if (
+      !confirm(
+        'Dev only: mark this job COMPLETED and set BALANCE_DUE? This skips the cleaner portal workflow.'
+      )
+    ) {
+      return;
+    }
+    try {
+      setTestCompleting(true);
+      const response = await fetch(`/api/admin/jobs/${jobId}/test-complete`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Test complete failed');
+      setToastMessage(data.message || 'Job marked complete for testing');
+      setToastType('success');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+      fetchJob();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Test complete failed';
+      setToastMessage(message);
+      setToastType('error');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    } finally {
+      setTestCompleting(false);
+    }
+  };
+
+  const handleMarkPayoutPaid = async () => {
+    if (
+      !confirm(
+        'Mark this cleaner payout as PAID? Use this after you have paid the cleaner manually (Zelle, CashApp, bank, cash, or check).'
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setMarkingPayoutPaid(true);
+      const response = await fetch(`/api/admin/jobs/${jobId}/payout/mark-paid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paidMethodType: payoutMethod || undefined,
+          paidMethodLabel: payoutNote || undefined,
+          reference: payoutReference || undefined,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to mark payout as paid');
+      }
+      setToastMessage(data.message || 'Cleaner payout marked as PAID');
+      setToastType('success');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+      setPayoutMethod('');
+      setPayoutNote('');
+      setPayoutReference('');
+      fetchJob();
+      fetchAuditLogs();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to mark payout as paid';
+      setToastMessage(message);
+      setToastType('error');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    } finally {
+      setMarkingPayoutPaid(false);
+    }
+  };
+
   const handleAssign = async (confirmReassign: boolean = false) => {
     if (!selectedCleanerId) {
       setToastMessage('Please select a cleaner');
@@ -213,7 +370,10 @@ export default function AdminJobDetailPage() {
           jobId,
           cleanerId: selectedCleanerId,
           sendWhatsApp: true,
-          confirmReassign: confirmReassign || (job?.assignedCleanerId && job.assignedCleanerId !== selectedCleanerId),
+          confirmReassign: Boolean(
+            confirmReassign ||
+              (job?.assignedCleanerId && job.assignedCleanerId !== selectedCleanerId)
+          ),
         }),
       });
 
@@ -261,16 +421,55 @@ export default function AdminJobDetailPage() {
     return 'bg-gray-100 text-gray-800';
   };
 
+  const getPayoutStatusColor = (status: string) => {
+    switch (status.toUpperCase()) {
+      case 'PAID':
+        return 'bg-green-100 text-green-800';
+      case 'READY':
+        return 'bg-blue-100 text-blue-800';
+      case 'FAILED':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  /** JobPayout is one-to-one in Prisma; tolerate legacy array API responses. */
+  const jobPayout = job
+    ? Array.isArray(job.JobPayout)
+      ? job.JobPayout[0] ?? null
+      : job.JobPayout ?? null
+    : null;
+
+  const payoutSettlement = jobPayout?.policyEvalDetails?.paymentSettlement;
+
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
       case 'PAID':
         return 'bg-green-100 text-green-800';
+      case 'DEPOSIT_PAID':
+        return 'bg-blue-100 text-blue-800';
+      case 'BALANCE_DUE':
+        return 'bg-orange-100 text-orange-800';
       case 'PENDING':
         return 'bg-yellow-100 text-yellow-800';
       case 'FAILED':
         return 'bg-red-100 text-red-800';
       case 'REFUNDED':
         return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getReviewStatusColor = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return 'bg-green-100 text-green-800';
+      case 'REJECTED':
+        return 'bg-red-100 text-red-800';
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -309,8 +508,27 @@ export default function AdminJobDetailPage() {
 
   // Phase 2A: Payment Gating - Only allow assignment if payment is PAID
   // Phase 1: Also check job status allows assignment
-  const canAssign = job && job.paymentStatus === 'PAID' && (job.status === 'CONFIRMED' || job.status === 'RECEIVED' || !job.assignedCleanerId);
-  const isPaymentBlocked = job && job.paymentStatus !== 'PAID';
+  const isJobAssignable =
+    job &&
+    (job.paymentStatus === 'PAID' ||
+      (job.paymentStatus === 'DEPOSIT_PAID' && job.reviewStatus === 'APPROVED'));
+  const canAssign =
+    job &&
+    isJobAssignable &&
+    (job.status === 'CONFIRMED' || job.status === 'RECEIVED' || !job.assignedCleanerId);
+  const isPaymentBlocked = job && !isJobAssignable;
+  const needsReview =
+    job?.paymentStatus === 'DEPOSIT_PAID' && job?.reviewStatus === 'PENDING';
+
+  const loopProgress = job
+    ? getJobLoopProgress(job.id, {
+        status: job.status,
+        paymentStatus: job.paymentStatus,
+        reviewStatus: job.reviewStatus,
+        assignedCleanerId: job.assignedCleanerId,
+        balanceDue: job.balanceDue,
+      })
+    : null;
 
   if (loading) {
     return (
@@ -370,13 +588,259 @@ export default function AdminJobDetailPage() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Details</h1>
               <p className="text-gray-600">Job ID: {job.id}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 justify-end">
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(job.status)}`}>
                 {job.status}
               </span>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(job.paymentStatus)}`}>
-                {job.paymentStatus}
+                Payment: {job.paymentStatus}
               </span>
+              {job.reviewStatus && (
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getReviewStatusColor(job.reviewStatus)}`}>
+                  Review: {job.reviewStatus}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {loopProgress && (
+          <div className="bg-white rounded-xl shadow-sm border border-indigo-200 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-1">Operational Progress</h2>
+            <p className="text-sm text-indigo-800 font-medium mb-4">{loopProgress.label}</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {loopProgress.steps.map((step) => (
+                <span
+                  key={step.id}
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    step.done
+                      ? 'bg-green-100 text-green-800'
+                      : step.current
+                        ? 'bg-indigo-100 text-indigo-900 ring-2 ring-indigo-300'
+                        : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  {step.done ? '✓ ' : step.current ? '→ ' : ''}
+                  {step.label}
+                </span>
+              ))}
+            </div>
+            <p className="text-sm text-gray-700 mb-4">{loopProgress.nextAction}</p>
+            <div className="flex flex-wrap gap-3">
+              {loopProgress.cleanerJobUrl && (
+                <Link
+                  href={loopProgress.cleanerJobUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+                >
+                  Open Cleaner Job →
+                </Link>
+              )}
+              <Link
+                href="/cleaners/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center rounded-lg border border-purple-300 px-4 py-2 text-sm font-medium text-purple-800 hover:bg-purple-50"
+              >
+                Cleaner Login
+              </Link>
+              {loopProgress.customerJobUrl && (
+                <Link
+                  href={loopProgress.customerJobUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                >
+                  Open Customer Job →
+                </Link>
+              )}
+              {process.env.NODE_ENV === 'development' &&
+                job.assignedCleanerId &&
+                job.status !== 'COMPLETED' && (
+                  <button
+                    type="button"
+                    onClick={handleTestComplete}
+                    disabled={testCompleting}
+                    className="inline-flex items-center rounded-lg border border-amber-400 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-60"
+                  >
+                    {testCompleting ? 'Completing…' : 'Dev only — skip cleaner workflow'}
+                  </button>
+                )}
+            </div>
+            {job.assignedCleaner && loopProgress.step === 'ASSIGNED' && (
+              <p className="mt-3 text-xs text-gray-500">
+                Log in as <strong>{job.assignedCleaner.email}</strong> at /cleaners/login, then
+                open the cleaner job link above → Accept → Start → Complete.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Payment Summary */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment Summary</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="rounded-lg bg-gray-50 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Quoted Total</p>
+              <p className="mt-1 text-lg font-semibold text-gray-900">
+                {formatCurrency(job.quotedTotal ?? job.totalPrice, job.currency)}
+              </p>
+            </div>
+            <div className="rounded-lg bg-gray-50 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Deposit Paid</p>
+              <p className="mt-1 text-lg font-semibold text-gray-900">
+                {formatCurrency(job.depositAmount ?? job.amountPaid, job.currency)}
+              </p>
+            </div>
+            <div className="rounded-lg bg-gray-50 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Paid to Date</p>
+              <p className="mt-1 text-lg font-semibold text-green-800">
+                {formatCurrency(job.amountPaid, job.currency)}
+              </p>
+            </div>
+            <div className="rounded-lg bg-gray-50 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Balance Due</p>
+              <p className={`mt-1 text-lg font-semibold ${(job.balanceDue ?? 0) > 0 ? 'text-orange-700' : 'text-gray-900'}`}>
+                {formatCurrency(job.balanceDue ?? 0, job.currency)}
+              </p>
+            </div>
+            <div className="rounded-lg bg-gray-50 p-4 col-span-2 md:col-span-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Status</p>
+              <div className="mt-2 flex flex-col gap-2">
+                <span className={`inline-flex w-fit px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(job.paymentStatus)}`}>
+                  {job.paymentStatus}
+                </span>
+                {job.reviewStatus && (
+                  <span className={`inline-flex w-fit px-2 py-1 rounded-full text-xs font-medium ${getReviewStatusColor(job.reviewStatus)}`}>
+                    Review: {job.reviewStatus}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-100 pt-6">
+            <div className="rounded-lg border border-gray-200 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-2">
+                Refund Status
+              </p>
+              {job.paymentStatus === 'REFUNDED' ? (
+                <p className="text-sm font-medium text-gray-800">
+                  Deposit refunded to customer
+                </p>
+              ) : job.reviewStatus === 'REJECTED' ? (
+                <p className="text-sm text-orange-800">
+                  Booking rejected — check audit log if deposit refund is pending
+                </p>
+              ) : (
+                <p className="text-sm text-gray-600">No deposit refund issued</p>
+              )}
+            </div>
+            <div className="rounded-lg border border-gray-200 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-2">
+                Cleaner Payout
+              </p>
+              {jobPayout ? (
+                <div className="text-sm text-gray-900 space-y-2">
+                  <span
+                    className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getPayoutStatusColor(jobPayout.status)}`}
+                  >
+                    {jobPayout.status}
+                  </span>
+                  <p>
+                    {formatCurrency(jobPayout.cleanerAmount, job.currency)} to cleaner
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Gross {formatCurrency(jobPayout.grossAmount, job.currency)}
+                    {jobPayout.platformFee != null
+                      ? ` · platform ${formatCurrency(jobPayout.platformFee, job.currency)}`
+                      : ''}
+                    {jobPayout.rulesVersion ? ` · rules ${jobPayout.rulesVersion}` : ''}
+                  </p>
+                  {jobPayout.paidAt && (
+                    <p className="text-xs text-gray-500">
+                      Paid at {new Date(jobPayout.paidAt).toLocaleString()}
+                    </p>
+                  )}
+                  {(jobPayout.executionMethod || payoutSettlement?.methodType) && (
+                    <p className="text-xs text-gray-500">
+                      Method: {jobPayout.executionMethod || payoutSettlement?.methodType}
+                    </p>
+                  )}
+                  {(payoutSettlement?.label || payoutSettlement?.reference || jobPayout.externalReferenceId) && (
+                    <p className="text-xs text-gray-500">
+                      {payoutSettlement?.label ? `Note: ${payoutSettlement.label}` : null}
+                      {payoutSettlement?.label && (payoutSettlement?.reference || jobPayout.externalReferenceId) ? ' · ' : null}
+                      {(payoutSettlement?.reference || jobPayout.externalReferenceId)
+                        ? `Ref: ${payoutSettlement?.reference || jobPayout.externalReferenceId}`
+                        : null}
+                    </p>
+                  )}
+                  {jobPayout.status === 'READY' && (
+                    <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+                      <p className="text-xs font-medium text-gray-700">
+                        Pay cleaner manually, then mark paid here
+                      </p>
+                      <select
+                        value={payoutMethod}
+                        onChange={(e) => setPayoutMethod(e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
+                      >
+                        <option value="">Payment method (optional)</option>
+                        <option value="ZELLE">Zelle</option>
+                        <option value="CASHAPP">Cash App</option>
+                        <option value="VENMO">Venmo</option>
+                        <option value="BANK">Bank transfer</option>
+                        <option value="CASH">Cash</option>
+                        <option value="CHECK">Check</option>
+                      </select>
+                      <input
+                        type="text"
+                        value={payoutNote}
+                        onChange={(e) => setPayoutNote(e.target.value)}
+                        placeholder="Payment note (optional)"
+                        className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={payoutReference}
+                        onChange={(e) => setPayoutReference(e.target.value)}
+                        placeholder="Reference / transaction ID (optional)"
+                        className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleMarkPayoutPaid}
+                        disabled={markingPayoutPaid}
+                        className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                      >
+                        {markingPayoutPaid ? 'Marking paid…' : 'Mark Cleaner Paid'}
+                      </button>
+                    </div>
+                  )}
+                  {jobPayout.status === 'FAILED' && (
+                    <p className="text-xs text-red-600">
+                      Payout failed — review and retry or mark paid manually after resolving.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-700">No payout created yet</p>
+              )}
+              {!jobPayout && job.payoutEligibility?.reason && (
+                <p className="mt-1 text-xs text-gray-500">{job.payoutEligibility.reason}</p>
+              )}
+              {job.payoutEligibility && (
+                <p
+                  className={`mt-2 text-xs font-medium ${
+                    job.payoutEligibility.eligible ? 'text-green-700' : 'text-gray-500'
+                  }`}
+                >
+                  Eligibility:{' '}
+                  {job.payoutEligibility.eligible ? 'Ready' : 'Not eligible'}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -417,9 +881,33 @@ export default function AdminJobDetailPage() {
               <p className="text-gray-900">{job.address || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Price</p>
-              <p className="text-gray-900 font-semibold">{formatCurrency(job.totalPrice, job.currency)}</p>
+              <p className="text-sm text-gray-500">Quoted Total</p>
+              <p className="text-gray-900 font-semibold">
+                {formatCurrency(job.quotedTotal ?? job.totalPrice, job.currency)}
+              </p>
             </div>
+            {(job.depositAmount != null || job.amountPaid != null) && (
+              <>
+                <div>
+                  <p className="text-sm text-gray-500">Deposit / Paid</p>
+                  <p className="text-gray-900">
+                    {formatCurrency(job.amountPaid ?? job.depositAmount, job.currency)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Balance Due</p>
+                  <p className="text-gray-900">
+                    {formatCurrency(job.balanceDue ?? 0, job.currency)}
+                  </p>
+                </div>
+              </>
+            )}
+            {job.reviewStatus && (
+              <div>
+                <p className="text-sm text-gray-500">Review Status</p>
+                <p className="text-gray-900">{job.reviewStatus}</p>
+              </div>
+            )}
             {job.assignedCleaner && (
               <div>
                 <p className="text-sm text-gray-500">Assigned Cleaner</p>
@@ -429,6 +917,33 @@ export default function AdminJobDetailPage() {
             )}
           </div>
         </div>
+
+        {needsReview && (
+          <div className="bg-white rounded-xl shadow-sm border border-blue-200 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Booking Review</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              $25 deposit received. Approve this booking to allow cleaner assignment.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={reviewLoading}
+                onClick={() => handleReview('approve')}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60"
+              >
+                Approve Booking
+              </button>
+              <button
+                type="button"
+                disabled={reviewLoading}
+                onClick={() => handleReview('reject')}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-60"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Assignment Section */}
         {/* Phase 2A: Payment Gating - Show assignment UI only if payment is PAID */}
@@ -442,9 +957,13 @@ export default function AdminJobDetailPage() {
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-900">Payment required before assignment</p>
+                  <p className="text-sm font-medium text-yellow-900">
+                    {needsReview ? 'Admin review required before assignment' : 'Payment required before assignment'}
+                  </p>
                   <p className="text-sm text-yellow-800 mt-1">
-                    This job must be PAID before a cleaner can be assigned. Current payment status: {job.paymentStatus}
+                    {needsReview
+                      ? 'Approve the deposit booking before assigning a cleaner.'
+                      : `Payment must be confirmed before assignment. Current status: ${job.paymentStatus}`}
                   </p>
                 </div>
               </div>
@@ -503,7 +1022,7 @@ export default function AdminJobDetailPage() {
                   </select>
                 </div>
                 <button
-                  onClick={handleAssign}
+                  onClick={() => handleAssign()}
                   disabled={assigning || !selectedCleanerId}
                   className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >

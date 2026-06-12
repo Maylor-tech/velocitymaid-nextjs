@@ -3,6 +3,9 @@
 import { useBooking } from "../BookingContext";
 import { Loader2 } from "lucide-react";
 
+const depositMode = process.env.NEXT_PUBLIC_BOOKING_PAYMENT_MODE === 'deposit';
+const depositLabel = process.env.NEXT_PUBLIC_BOOKING_DEPOSIT_DOLLARS || '25';
+
 const serviceTypeLabels: Record<string, string> = {
   STANDARD: 'Standard Cleaning',
   DEEP_CLEAN: 'Deep Clean',
@@ -128,6 +131,8 @@ export default function ConfirmationStep() {
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             Submitting...
           </>
+        ) : depositMode ? (
+          `Pay $${depositLabel} Deposit & Book`
         ) : (
           "Confirm Booking"
         )}

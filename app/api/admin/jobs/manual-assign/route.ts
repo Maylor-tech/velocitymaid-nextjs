@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 import { PaymentStatus } from '@prisma/client';
+import { isJobAssignable } from '@/lib/booking/jobPayment';
 import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
 import { logAuditEntry } from '@/lib/audit';
 import { logAdminEvent } from '@/lib/auditLog';
@@ -72,12 +73,17 @@ export async function POST(request: NextRequest) {
     // This prevents wasted API calls and ensures payment is verified first
     // Why unpaid jobs are blocked: Cleaners should only be assigned to jobs that are guaranteed to pay
     // This protects cleaner time and ensures payment integrity before assignment
-    if (job.paymentStatus !== PaymentStatus.PAID) {
+    if (!isJobAssignable(job)) {
+      const needsReview =
+        job.paymentStatus === PaymentStatus.DEPOSIT_PAID &&
+        job.reviewStatus !== 'APPROVED';
       return NextResponse.json(
         {
           success: false,
-          error: 'Job must be PAID before assignment',
-          code: 'PAYMENT_REQUIRED',
+          error: needsReview
+            ? 'Booking must be approved before cleaner assignment'
+            : 'Job payment must be confirmed before assignment',
+          code: needsReview ? 'REVIEW_REQUIRED' : 'PAYMENT_REQUIRED',
         },
         { status: 400 }
       );
@@ -119,7 +125,7 @@ export async function POST(request: NextRequest) {
     const cleaner = await prisma.user.findUnique({
       where: { id: cleanerId, role: 'CLEANER' },
       include: {
-        primaryBranch: {
+        Branch_User_primaryBranchIdToBranch: {
           select: {
             id: true,
             country: true,
@@ -135,7 +141,7 @@ export async function POST(request: NextRequest) {
             },
           },
         },
-        trainingStatus: {
+        TrainingStatus: {
           select: {
             overallStatus: true,
           },
@@ -215,7 +221,7 @@ export async function POST(request: NextRequest) {
       job.Branch.slug === 'port-antonio';
 
     if (isJamaicaBranch) {
-      if (cleaner.trainingStatus?.overallStatus !== 'PASSED') {
+      if (cleaner.TrainingStatus?.overallStatus !== 'PASSED') {
         return NextResponse.json(
           {
             success: false,

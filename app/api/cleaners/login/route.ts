@@ -17,6 +17,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
+import { prisma } from '@/lib/prisma';
+import { UserRole } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,13 +32,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create a deterministic cleanerId from identifier
-    // (safe for demo, stable across sessions, same identifier = same ID)
-    const cleanerId = crypto
+    const normalized = identifier.trim().toLowerCase();
+    let cleanerId = crypto
       .createHash('sha256')
-      .update(identifier.trim().toLowerCase())
+      .update(normalized)
       .digest('hex')
-      .substring(0, 32); // Use first 32 chars for cleaner ID format
+      .substring(0, 32);
+
+    // Email login must resolve to the real User.id so assignedCleanerId matches the session cookie.
+    if (normalized.includes('@')) {
+      const cleaner = await prisma.user.findFirst({
+        where: {
+          email: normalized,
+          role: UserRole.CLEANER,
+          isActive: true,
+        },
+        select: { id: true },
+      });
+      if (cleaner) {
+        cleanerId = cleaner.id;
+      } else {
+        return NextResponse.json(
+          { error: 'No active cleaner account found for that email' },
+          { status: 404 }
+        );
+      }
+    }
 
     // Set HTTP-only cookie with cleaner ID
     const cookieStore = await cookies();

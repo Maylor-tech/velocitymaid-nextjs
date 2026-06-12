@@ -4,6 +4,12 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
+import {
+  getBookingDepositCents,
+  getBookingDepositDollars,
+  isDepositBookingMode,
+} from '@/lib/booking/paymentConfig';
+import { assertStripeTestModeForDepositBooking } from '@/lib/stripe/stripeMode';
 
 function getStripe() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -54,6 +60,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    assertStripeTestModeForDepositBooking();
 
     const BASE_URL =
       process.env.NEXT_PUBLIC_BASE_URL ??
@@ -218,8 +226,26 @@ export async function POST(req: NextRequest) {
       metadata.specialInstructions = String(specialInstructions).slice(0, 450);
     }
 
+    const depositMode = isDepositBookingMode();
+    const quotedTotal = Number(totalPrice);
+    metadata.quotedTotal = String(quotedTotal);
+    metadata.paymentType = depositMode ? 'deposit' : 'full';
+    if (depositMode) {
+      metadata.depositAmount = String(getBookingDepositDollars());
+    }
+
+    const chargeCents = depositMode
+      ? getBookingDepositCents()
+      : Math.round(quotedTotal * 100);
+    const lineItemName = depositMode
+      ? 'VelocityMaid Booking Deposit'
+      : 'Cleaning Service';
+    const lineItemDescription = depositMode
+      ? `$${getBookingDepositDollars()} deposit — service total ${quotedTotal.toFixed(2)} ${String(currency).toUpperCase()}`
+      : undefined;
+
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'checkout/route.ts:163',message:'Creating Stripe checkout session',data:{runId,email,totalPrice,currency},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'checkout/route.ts:163',message:'Creating Stripe checkout session',data:{runId,email,totalPrice:quotedTotal,chargeCents,depositMode,currency},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E'})}).catch(()=>{});
     // #endregion
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -228,8 +254,11 @@ export async function POST(req: NextRequest) {
         {
           price_data: {
             currency: String(currency).toLowerCase(),
-            product_data: { name: 'Cleaning Service' },
-            unit_amount: Math.round(Number(totalPrice) * 100),
+            product_data: {
+              name: lineItemName,
+              ...(lineItemDescription ? { description: lineItemDescription } : {}),
+            },
+            unit_amount: chargeCents,
           },
           quantity: 1,
         },

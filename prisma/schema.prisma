@@ -43,6 +43,7 @@ model Branch {
   Customer                          Customer[]
   JamaicaPayout                     JamaicaPayout[]
   Job                               Job[]
+  JobPayout                         JobPayout[]
   Lead                              Lead[]
   NurtureSequence                   NurtureSequence[]
   PayoutTransfer                    PayoutTransfer[]
@@ -365,6 +366,19 @@ model Job {
   serviceLocation          String?
   address                  String?
   totalPrice               Decimal?                   @db.Decimal(10, 2)
+  quotedTotal              Decimal?                   @db.Decimal(10, 2)
+  depositAmount            Decimal?                   @db.Decimal(10, 2)
+  amountPaid               Decimal?                   @db.Decimal(10, 2)
+  balanceDue               Decimal?                   @db.Decimal(10, 2)
+  paymentStatus            PaymentStatus              @default(PENDING)
+  reviewStatus             JobReviewStatus            @default(PENDING)
+  depositPaymentIntentId   String?
+  balanceSessionId         String?                    @unique
+  balancePaymentIntentId   String?
+  depositPaidAt            DateTime?
+  balancePaidAt            DateTime?
+  approvedAt               DateTime?
+  approvedById             String?
   createdAt                DateTime                   @default(now())
   assignedAt               DateTime?
   onTheWayAt               DateTime?
@@ -385,8 +399,10 @@ model Job {
   CustomerJobChangeRequest CustomerJobChangeRequest[]
   JobChecklistItem         JobChecklistItem[]
   User                     User?                      @relation(fields: [assignedCleanerId], references: [id])
+  ApprovedBy               User?                      @relation("JobApprovedBy", fields: [approvedById], references: [id])
   Branch                   Branch                     @relation(fields: [branchId], references: [id])
   Customer                 Customer?                  @relation(fields: [customerId], references: [id])
+  JobPayout                JobPayout?
 
   @@index([appliedReferralCode])
   @@index([assignedCleanerId])
@@ -395,6 +411,37 @@ model Job {
   @@index([jobQualityScore])
   @@index([preferredDate])
   @@index([status])
+  @@index([paymentStatus])
+  @@index([reviewStatus])
+}
+
+model JobPayout {
+  id                    String    @id
+  jobId                 String    @unique
+  cleanerId             String
+  branchId              String
+  grossAmount           Decimal   @db.Decimal(10, 2)
+  cleanerAmount         Decimal   @db.Decimal(10, 2)
+  platformFee           Decimal   @db.Decimal(10, 2)
+  currency              String    @default("USD")
+  status                String    @default("READY")
+  rulesVersion          String?
+  policyVersionId       String?
+  policyEvalDetails     Json?
+  paymentMethodSnapshot Json?
+  executionMethod       String?
+  externalReferenceId   String?
+  createdAt             DateTime  @default(now())
+  paidAt                DateTime?
+  executedAt            DateTime?
+  Job                   Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  User                  User      @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  Branch                Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([cleanerId])
+  @@index([branchId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model AssignmentLog {
@@ -809,6 +856,8 @@ model User {
   JamaicaPaymentMethod                JamaicaPaymentMethod?
   JamaicaPayout                       JamaicaPayout[]
   Job                                 Job[]
+  JobPayout                           JobPayout[]
+  JobsApproved                        Job[]                  @relation("JobApprovedBy")
   JobChecklistItemCompleted           JobChecklistItem[]     @relation("JobChecklistItem_completedBy")
   LessonProgress                      LessonProgress[]
   PayoutTransfer                      PayoutTransfer[]
@@ -1265,8 +1314,24 @@ enum JobStatus {
   RECEIVED
   CONFIRMED
   ASSIGNED
+  ON_THE_WAY
   IN_PROGRESS
   COMPLETED
   CANCELLED
   CANCELLED_EMERGENCY
+}
+
+enum PaymentStatus {
+  PENDING
+  DEPOSIT_PAID
+  BALANCE_DUE
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum JobReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

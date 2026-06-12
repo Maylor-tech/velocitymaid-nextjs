@@ -10,7 +10,7 @@ export default function CustomerVerifyPage() {
   const router = useRouter();
 
   const emailFromQuery = searchParams.get('email') || '';
-  const redirectUrl = searchParams.get('redirect') || '/customer/dashboard';
+  const redirectUrl = searchParams.get('redirect') || '/customer/jobs';
 
   const [code, setCode] = useState('');
   const [email, setEmail] = useState(emailFromQuery);

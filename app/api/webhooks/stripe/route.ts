@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { randomUUID } from 'crypto';
 import { sendCustomerConfirmation } from '@/lib/sendCustomerConfirmation';
 import { sendAdminNotification } from '@/lib/sendAdminNotification';
 import { sendInvoiceReceiptForPayment } from '@/lib/notifications/invoiceReceipt';
@@ -11,6 +12,11 @@ import { prisma } from '@/lib/prisma';
 import { autoAssignCleaner } from '@/lib/cleaner-assignment';
 import { getStripeAccountStatus } from '@/lib/stripe/connect';
 import { getStripe } from '@/lib/stripe';
+import { isDepositBookingMode } from '@/lib/booking/paymentConfig';
+import { computeJobPaymentFromSession } from '@/lib/booking/jobPayment';
+import { upsertJobFromCheckoutSession } from '@/lib/booking/upsertJobFromCheckoutSession';
+import { PaymentStatus } from '@prisma/client';
+import { createPayoutIfEligible } from '@/src/server/payout/createPayoutIfEligible';
 
 /**
  * Stripe Webhook Handler
@@ -56,6 +62,38 @@ async function verifyWebhookSignature(
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const metadata = session.metadata || {};
+
+  if (metadata.paymentType === 'balance' && metadata.jobId) {
+    const paymentFields = computeJobPaymentFromSession(session, metadata);
+    const paymentIntentId =
+      typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id || null;
+
+    await prisma.job.update({
+      where: { id: metadata.jobId },
+      data: {
+        amountPaid: paymentFields.amountPaid,
+        balanceDue: paymentFields.balanceDue,
+        paymentStatus: PaymentStatus.PAID,
+        balanceSessionId: session.id,
+        balancePaymentIntentId: paymentIntentId,
+        balancePaidAt: new Date(),
+      },
+    });
+
+    const payoutResult = await createPayoutIfEligible(metadata.jobId);
+    console.log(
+      `Balance payment recorded for job ${metadata.jobId}; payout:`,
+      payoutResult
+    );
+
+    return {
+      success: true,
+      message: 'Balance payment recorded',
+      payout: payoutResult,
+    };
+  }
   
   // Extract booking data from metadata
   const phone = metadata.phone;
@@ -147,10 +185,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     } else {
       const firstName = metadata.firstName || '';
       const lastInitial = metadata.lastInitial || '';
-      const customerName = `${firstName}${lastInitial ? ` ${lastInitial}` : ''}`.trim();
       const email = metadata.email || '';
-      const totalPrice = session.amount_total ? session.amount_total / 100 : 0;
-      const preferredDate = metadata.preferredDate ? new Date(metadata.preferredDate) : null;
 
       // Create or find Customer record to link to Job
       let customerId: string | null = null;
@@ -172,12 +207,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
             customer = await prisma.customer.create({
               data: {
+                id: randomUUID(),
                 firstName,
                 lastName: lastInitial || '',
                 email,
                 phone: phone || null,
                 branchId,
                 homeZipCode,
+                updatedAt: new Date(),
               },
             });
           } else {
@@ -203,53 +240,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         }
       }
 
-      // Check if job already exists for this session
-      const existingJob = await prisma.job.findUnique({
-        where: { sessionId: session.id },
+      // Idempotent job create — safe if confirmation page already created the job
+      const { job, created } = await upsertJobFromCheckoutSession({
+        session,
+        metadata,
+        customerId,
       });
+      jobId = job.id;
+      console.log(
+        created
+          ? `Job created for session ${session.id}: ${jobId}${customerId ? ` (linked to customer ${customerId})` : ''}`
+          : `Job already exists for session ${session.id}: ${jobId}`
+      );
 
-      if (existingJob) {
-        jobId = existingJob.id;
-        console.log(`Job already exists for session ${session.id}: ${jobId}`);
-        
-        // Update customerId if it wasn't set before
-        if (customerId && !existingJob.customerId) {
-          await prisma.job.update({
-            where: { id: existingJob.id },
-            data: { customerId },
-          });
-        }
-      } else {
-        // Create new job with customerId linked
-        const newJob = await prisma.job.create({
-          data: {
-            sessionId: session.id,
-            branchId,
-            customerId, // Link to customer for preferSameCleaner logic
-            customerName,
-            preferredDate,
-            preferredTime: metadata.preferredTime || null,
-            serviceType: metadata.serviceType || null,
-            serviceLocation: metadata.serviceLocation || null,
-            address: metadata.address || null,
-            status: 'pending',
-            totalPrice: totalPrice,
-            currency: metadata.currency || 'USD',
-            paymentMethod: 'card',
-            appliedReferralCode: metadata.referralCode || null,
-            promoApplied: metadata.promoCode || null,
-            promoDiscount: metadata.referralDiscount ? parseFloat(metadata.referralDiscount) : null,
-          },
-        });
-        jobId = newJob.id;
-        console.log(`Job created for session ${session.id}: ${jobId}${customerId ? ` (linked to customer ${customerId})` : ''}`);
-
-        // Auto-assign cleaner (non-blocking - don't fail if this fails)
+      if (created && !isDepositBookingMode()) {
         try {
-          const assignmentResult = await autoAssignCleaner(newJob.id);
+          const assignmentResult = await autoAssignCleaner(job.id);
           console.log('Auto-assignment result:', assignmentResult);
-        } catch (assignError: any) {
-          console.error('Auto-assignment error (non-fatal):', assignError.message || assignError);
+        } catch (assignError: unknown) {
+          const msg = assignError instanceof Error ? assignError.message : String(assignError);
+          console.error('Auto-assignment error (non-fatal):', msg);
         }
       }
     }
@@ -272,20 +282,22 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       const customerName = `${firstName}${lastInitial ? ` ${lastInitial}` : ''}`.trim();
 
       if (customerName) {
-        // Get total price from session amount
-        const totalPrice = session.amount_total ? session.amount_total / 100 : 0;
+        const quotedTotal = metadata.quotedTotal
+          ? parseFloat(metadata.quotedTotal)
+          : session.amount_total
+            ? session.amount_total / 100
+            : 0;
 
-        // Send admin notification (non-blocking) - routing handled inside function
         sendAdminNotification(
           whatsappPhoneNumberId,
           whatsappToken,
           {
             customerName,
             serviceType: metadata.serviceType || '',
-            totalPrice,
+            totalPrice: quotedTotal,
             address: metadata.address || '',
             preferredDate: metadata.preferredDate || '',
-            serviceLocation: serviceLocation || 'new_jersey', // Include serviceLocation for routing
+            serviceLocation: serviceLocation || 'new_jersey',
           }
         ).then((adminResult) => {
           if (adminResult.success) {

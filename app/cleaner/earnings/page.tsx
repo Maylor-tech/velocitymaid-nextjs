@@ -25,6 +25,9 @@ interface Job {
   totalPrice: number;
   paymentStatus: string;
   currency: string;
+  payoutStatus?: string | null;
+  payoutAmount?: number | null;
+  payoutPaidAt?: string | null;
 }
 
 interface EarningsData {
@@ -33,6 +36,19 @@ interface EarningsData {
     lifetimeTotal: number;
     monthTotal: number;
     weekTotal: number;
+  };
+  payouts?: {
+    readyTotal: number;
+    paidTotal: number;
+    items: Array<{
+      id: string;
+      jobId: string;
+      status: string;
+      amount: number;
+      currency: string;
+      paidAt: string | null;
+      createdAt: string;
+    }>;
   };
 }
 
@@ -163,6 +179,28 @@ export default function CleanerEarningsPage() {
           <p className="text-gray-600">View your completed jobs and earnings</p>
         </div>
 
+        {/* Payout summary from JobPayout records */}
+        {data.payouts && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-blue-200 p-6">
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Ready to Pay</h3>
+              <p className="text-2xl font-bold text-blue-700">
+                {formatCurrency(data.payouts.readyTotal)}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Awaiting admin manual payout
+              </p>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6">
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Paid Out</h3>
+              <p className="text-2xl font-bold text-green-700">
+                {formatCurrency(data.payouts.paidTotal)}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Marked PAID by admin</p>
+            </div>
+          </div>
+        )}
+
         {/* Payout Status Card */}
         <div className="mb-6">
           <PayoutStatusCard />
@@ -233,6 +271,9 @@ export default function CleanerEarningsPage() {
                       Amount
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Payout
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Payment Status
                     </th>
                   </tr>
@@ -248,6 +289,20 @@ export default function CleanerEarningsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {formatCurrency(job.totalPrice, job.currency)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {job.payoutStatus ? (
+                          <span className="inline-flex flex-col gap-0.5">
+                            <span>{job.payoutStatus}</span>
+                            {job.payoutAmount != null && (
+                              <span className="text-xs text-gray-500">
+                                {formatCurrency(job.payoutAmount, job.currency)}
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getPaymentStatusBadge(job.paymentStatus)}

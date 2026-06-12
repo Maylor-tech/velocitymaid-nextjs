@@ -1,4 +1,6 @@
 import { prisma } from './prisma';
+import { JobStatus } from '@prisma/client';
+import { ACTIVE_JOB_STATUS_EXCLUDE, CANCELLED_JOB_STATUS_EXCLUDE } from './jobStatus';
 import { sendCleanerAssignment } from './sendCleanerAssignment';
 import { getCleanerAverageJQS } from '../utils/jobQualityScore';
 import { isCleanerTrainingEligible } from '../utils/trainingEligibility';
@@ -118,7 +120,7 @@ async function isCleanerAvailableForJob(
           lte: dayEnd,
         },
         status: {
-          notIn: ['cancelled', 'completed', 'DECLINED'],
+          notIn: ACTIVE_JOB_STATUS_EXCLUDE,
         },
       },
     });
@@ -138,7 +140,7 @@ async function isCleanerAvailableForJob(
             lte: dayEnd,
           },
           status: {
-            notIn: ['cancelled', 'completed', 'DECLINED'],
+            notIn: ACTIVE_JOB_STATUS_EXCLUDE,
           },
         },
         select: {
@@ -214,7 +216,7 @@ async function selectBestCleanerForJob(job: {
           where: {
             customerId,
             assignedCleanerId: { not: null },
-            status: 'completed',
+            status: JobStatus.COMPLETED,
           },
           orderBy: {
             completedAt: 'desc',
@@ -369,7 +371,7 @@ async function selectBestCleanerForJob(job: {
               lt: weekEnd,
             },
             status: {
-              notIn: ['cancelled', 'completed'],
+              notIn: ACTIVE_JOB_STATUS_EXCLUDE,
             },
           },
         });
@@ -480,7 +482,7 @@ export async function findBestCleaner(
           assignedCleanerId: cleaner.id,
           preferredDate: scheduledDate,
           status: {
-            notIn: ['cancelled', 'completed'],
+            notIn: ACTIVE_JOB_STATUS_EXCLUDE,
           },
         },
       });
@@ -498,7 +500,7 @@ export async function findBestCleaner(
             lt: weekEnd,
           },
           status: {
-            notIn: ['cancelled'],
+            notIn: CANCELLED_JOB_STATUS_EXCLUDE,
           },
         },
       });

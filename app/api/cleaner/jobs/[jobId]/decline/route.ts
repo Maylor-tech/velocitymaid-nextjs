@@ -5,6 +5,7 @@ import { getAuthenticatedCleaner } from "@/lib/cleanerAuth";
 import { JobStatus } from "@prisma/client";
 import { autoAssignCleaner } from "@/lib/dispatch/autoAssignCleaner";
 import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
+import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -141,10 +142,12 @@ export async function PATCH(
       job: updatedJob,
       message: "Job declined. It will be reassigned automatically.",
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const authResp = rethrowIfAuthResponse(err);
+    if (authResp) return authResp;
     console.error("[CLEANER_DECLINE] Error:", err);
     return NextResponse.json(
-      { error: err?.message || "Failed to decline job" },
+      { error: err instanceof Error ? err.message : "Failed to decline job" },
       { status: 500 }
     );
   }

@@ -11,10 +11,12 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { JobStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getCleanerAverageJQS } from '@/utils/jobQualityScore';
 import { computeAssignmentScore, CleanerForScoring } from '@/lib/assignment-scoring';
 import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level';
+import { ACTIVE_JOB_STATUS_EXCLUDE } from '@/lib/jobStatus';
 
 function startOfToday(): Date {
   const d = new Date();
@@ -70,20 +72,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const branchIdParam = searchParams.get('branchId');
     const jobId = searchParams.get('jobId');
-    const branchId = auth.branchId ?? branchIdParam;
 
-    if (!branchId) {
-      return NextResponse.json({
-        success: true,
-        cleaners: [],
-      });
-    }
-
-    // Load job to check date/time if jobId provided
+    // Load job first when jobId provided — used for branch resolution and availability
     const job = jobId
       ? await prisma.job.findUnique({
           where: { id: jobId },
           select: {
+            branchId: true,
             preferredDate: true,
             preferredTime: true,
             serviceLocation: true,
@@ -91,6 +86,16 @@ export async function GET(request: NextRequest) {
           },
         })
       : null;
+
+    const branchId = auth.branchId ?? branchIdParam ?? job?.branchId ?? null;
+
+    if (!branchId) {
+      return NextResponse.json({
+        success: true,
+        cleaners: [],
+        message: 'Provide branchId or jobId to list cleaners for assignment',
+      });
+    }
 
     const jobDate = job?.preferredDate ? new Date(job.preferredDate) : null;
     const jobTime = job?.preferredTime ?? null;
@@ -187,7 +192,7 @@ export async function GET(request: NextRequest) {
             lte: weekEnd,
           },
           status: {
-            notIn: ['cancelled', 'completed'],
+            notIn: ACTIVE_JOB_STATUS_EXCLUDE,
           },
         },
       });
@@ -208,7 +213,7 @@ export async function GET(request: NextRequest) {
               lte: dayEnd,
             },
             status: {
-              notIn: ['cancelled', 'completed'],
+              notIn: ACTIVE_JOB_STATUS_EXCLUDE,
             },
           },
         });
@@ -230,7 +235,7 @@ export async function GET(request: NextRequest) {
               lte: dayEnd,
             },
             status: {
-              notIn: ['cancelled', 'completed'],
+              notIn: ACTIVE_JOB_STATUS_EXCLUDE,
             },
           },
           select: {
@@ -395,7 +400,7 @@ export async function GET(request: NextRequest) {
           : 0;
 
         const totalAssigned = allJobsForLevel.length;
-        const completedCount = allJobsForLevel.filter((j) => j.status === 'completed').length;
+        const completedCount = allJobsForLevel.filter((j) => j.status === JobStatus.COMPLETED).length;
         const completionRate = totalAssigned > 0 ? (completedCount / totalAssigned) * 100 : 0;
 
         const ratings = await prisma.cleanerRating.findMany({

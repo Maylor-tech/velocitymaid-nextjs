@@ -2,12 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, Calendar, MapPin, DollarSign, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, Calendar, MapPin, DollarSign, CheckCircle, XCircle, Phone, Mail } from "lucide-react";
 import Link from "next/link";
+import { JobChecklistPanel } from "@/components/cleaner/JobChecklistPanel";
+
+interface CustomerInfo {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+}
 
 interface Job {
   id: string;
   status: string;
+  paymentStatus?: string;
   customerName: string | null;
   serviceType: string | null;
   preferredDate: string | null;
@@ -17,10 +27,24 @@ interface Job {
   totalPrice: number | null;
   currency: string | null;
   assignedAt: string | null;
+  Customer?: CustomerInfo | null;
   Branch: {
     id: string;
     name: string;
   } | null;
+}
+
+function authMessage(status: number, error?: string): string {
+  if (status === 401) {
+    return "Please log in at /cleaners/login with your cleaner email to view this job.";
+  }
+  if (status === 403) {
+    return error || "This job is not assigned to your cleaner account. Log in with the assigned cleaner's email.";
+  }
+  if (status === 404) {
+    return "Job not found. It may have been removed or reassigned.";
+  }
+  return error || "Failed to load job";
 }
 
 export default function CleanerJobDetailPage() {
@@ -47,13 +71,18 @@ export default function CleanerJobDetailPage() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to fetch job");
+        if (res.status === 401) {
+          setTimeout(() => router.push("/cleaners/login"), 2500);
+        }
+        setError(authMessage(res.status, data.error));
+        setJob(null);
+        return;
       }
 
       setJob(data.job);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to fetch job:", err);
-      setError(err.message || "Failed to load job");
+      setError(err instanceof Error ? err.message : "Failed to load job");
     } finally {
       setLoading(false);
     }
@@ -76,12 +105,11 @@ export default function CleanerJobDetailPage() {
         throw new Error(data.error || "Failed to accept job");
       }
 
-      // Refresh job data
       await fetchJob();
-      alert("Job accepted! You're now on the way. Customer has been notified.");
-    } catch (err: any) {
+      alert("Job accepted! You're now on the way.");
+    } catch (err: unknown) {
       console.error("Failed to accept job:", err);
-      alert(err.message || "Failed to accept job");
+      alert(err instanceof Error ? err.message : "Failed to accept job");
     } finally {
       setProcessing(false);
     }
@@ -104,19 +132,18 @@ export default function CleanerJobDetailPage() {
         throw new Error(data.error || "Failed to start job");
       }
 
-      // Refresh job data
       await fetchJob();
-      alert("Job started! Service is now in progress. Customer has been notified.");
-    } catch (err: any) {
+      alert("Job started! Service is now in progress.");
+    } catch (err: unknown) {
       console.error("Failed to start job:", err);
-      alert(err.message || "Failed to start job");
+      alert(err instanceof Error ? err.message : "Failed to start job");
     } finally {
       setProcessing(false);
     }
   };
 
   const handleComplete = async () => {
-    if (!confirm("Mark job as COMPLETED? This will create a payout and request a customer rating.")) {
+    if (!confirm("Mark job as COMPLETED? Customer will be prompted to pay any remaining balance.")) {
       return;
     }
 
@@ -132,12 +159,16 @@ export default function CleanerJobDetailPage() {
         throw new Error(data.error || "Failed to complete job");
       }
 
-      // Refresh job data
       await fetchJob();
-      alert("Job completed! Payout created and customer rating requested.");
-    } catch (err: any) {
+      alert(
+        data.message ||
+          (data.job?.paymentStatus === "BALANCE_DUE"
+            ? "Job completed. Customer balance is now due before payout."
+            : "Job completed successfully.")
+      );
+    } catch (err: unknown) {
       console.error("Failed to complete job:", err);
-      alert(err.message || "Failed to complete job");
+      alert(err instanceof Error ? err.message : "Failed to complete job");
     } finally {
       setProcessing(false);
     }
@@ -164,13 +195,11 @@ export default function CleanerJobDetailPage() {
         throw new Error(data.error || "Failed to decline job");
       }
 
-      // Redirect to jobs list
       router.push("/cleaner/jobs");
-      // Show success message (alert for now, can be replaced with toast)
       alert("Job declined. It will be reassigned automatically.");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to decline job:", err);
-      alert(err.message || "Failed to decline job");
+      alert(err instanceof Error ? err.message : "Failed to decline job");
     } finally {
       setProcessing(false);
     }
@@ -209,6 +238,11 @@ export default function CleanerJobDetailPage() {
     return colors[status] || "bg-gray-100 text-gray-800";
   };
 
+  const customerDisplayName =
+    job?.Customer
+      ? `${job.Customer.firstName} ${job.Customer.lastName}`.trim()
+      : job?.customerName;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -230,6 +264,14 @@ export default function CleanerJobDetailPage() {
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             {error || "Job not found"}
           </div>
+          {error?.includes("log in") && (
+            <Link
+              href="/cleaners/login"
+              className="mt-4 inline-block text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Go to cleaner login →
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -239,11 +281,14 @@ export default function CleanerJobDetailPage() {
   const canStart = job.status === "ON_THE_WAY";
   const canComplete = job.status === "IN_PROGRESS";
   const canDecline = job.status === "ASSIGNED";
+  const showChecklist =
+    job.status === "ON_THE_WAY" ||
+    job.status === "IN_PROGRESS" ||
+    job.status === "COMPLETED";
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <Link
             href="/cleaner/jobs"
@@ -254,7 +299,7 @@ export default function CleanerJobDetailPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold mb-2">
-                {job.customerName || "Job Details"}
+                {customerDisplayName || "Job Details"}
               </h1>
               <p className="text-gray-600 text-sm font-mono">{job.id}</p>
             </div>
@@ -268,11 +313,10 @@ export default function CleanerJobDetailPage() {
           </div>
         </div>
 
-        {/* Action Buttons */}
         {(canAccept || canStart || canComplete || canDecline) && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <h2 className="font-semibold mb-4">Actions</h2>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               {canAccept && (
                 <button
                   onClick={handleAccept}
@@ -333,8 +377,29 @@ export default function CleanerJobDetailPage() {
           </div>
         )}
 
-        {/* Job Details */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="font-semibold text-lg mb-4">Customer</h2>
+          <div className="space-y-3">
+            {job.Customer?.email && (
+              <div className="flex items-center gap-2 text-gray-700">
+                <Mail className="w-4 h-4 text-gray-400" />
+                <a href={`mailto:${job.Customer.email}`} className="hover:underline">
+                  {job.Customer.email}
+                </a>
+              </div>
+            )}
+            {job.Customer?.phone && (
+              <div className="flex items-center gap-2 text-gray-700">
+                <Phone className="w-4 h-4 text-gray-400" />
+                <a href={`tel:${job.Customer.phone}`} className="hover:underline">
+                  {job.Customer.phone}
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="font-semibold text-lg mb-4">Job Details</h2>
 
           <div className="space-y-4">
@@ -399,8 +464,14 @@ export default function CleanerJobDetailPage() {
             )}
           </div>
         </div>
+
+        {showChecklist && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="font-semibold text-lg mb-2">Service Checklist</h2>
+            <JobChecklistPanel jobId={jobId} active={showChecklist} />
+          </div>
+        )}
       </div>
     </div>
   );
 }
-

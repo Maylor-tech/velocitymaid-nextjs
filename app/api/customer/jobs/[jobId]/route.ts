@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { readCustomerSession } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
+import { PaymentStatus } from '@prisma/client';
 import { requireCustomerJobOwnership } from '@/lib/auth/requireRole';
 
 /**
@@ -94,13 +95,26 @@ export async function GET(
     }
 
     // Calculate pricing breakdown
-    const subtotal = job.totalPrice ? Number(job.totalPrice) : null;
-    const fees = 0; // TODO: Calculate fees if applicable
+    const serviceTotal = job.quotedTotal
+      ? Number(job.quotedTotal)
+      : job.totalPrice
+        ? Number(job.totalPrice)
+        : null;
+    const subtotal = serviceTotal;
+    const fees = 0;
     const total = subtotal !== null ? subtotal + fees : null;
 
-    // Determine payment status
-    let paymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED' | 'PARTIAL' = 'UNPAID';
-    // TODO: Check Payment model if it exists
+    let paymentStatus:
+      | 'UNPAID'
+      | 'PAID'
+      | 'DEPOSIT_PAID'
+      | 'BALANCE_DUE'
+      | 'REFUNDED'
+      | 'PARTIAL' = 'UNPAID';
+    if (job.paymentStatus === PaymentStatus.PAID) paymentStatus = 'PAID';
+    else if (job.paymentStatus === PaymentStatus.DEPOSIT_PAID) paymentStatus = 'DEPOSIT_PAID';
+    else if (job.paymentStatus === PaymentStatus.BALANCE_DUE) paymentStatus = 'BALANCE_DUE';
+    else if (job.paymentStatus === PaymentStatus.REFUNDED) paymentStatus = 'REFUNDED';
 
     return NextResponse.json({
       success: true,
@@ -127,10 +141,14 @@ export async function GET(
         serviceType: job.serviceType || undefined,
         scheduledDate: job.preferredDate?.toISOString() || undefined,
         timeWindow: job.preferredTime || undefined,
-        price: job.totalPrice ? Number(job.totalPrice) : null,
+        price: serviceTotal,
+        amountPaid: job.amountPaid ? Number(job.amountPaid) : null,
+        balanceDue: job.balanceDue ? Number(job.balanceDue) : null,
+        depositAmount: job.depositAmount ? Number(job.depositAmount) : null,
         currency: job.currency || 'USD',
         branchName: job.Branch?.name || undefined,
         paymentStatus,
+        reviewStatus: job.reviewStatus,
         rating: job.CleanerRating
           ? {
               score: job.CleanerRating.rating,
