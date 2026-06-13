@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Calendar, MapPin, DollarSign } from "lucide-react";
 import Link from "next/link";
+import CleanerPortalNav from "@/components/cleaner/CleanerPortalNav";
+import TrainingIncompleteBanner from "@/components/cleaner/TrainingIncompleteBanner";
 
 interface Job {
   id: string;
@@ -28,6 +30,26 @@ export default function CleanerJobsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [training, setTraining] = useState<{
+    status: string;
+    modulesCompleted: number;
+    modulesTotal: number;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/cleaner/training")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (json?.status) {
+          setTraining({
+            status: json.status,
+            modulesCompleted: json.modulesCompleted,
+            modulesTotal: json.modulesTotal,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetchJobs();
@@ -134,6 +156,16 @@ export default function CleanerJobsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
+        <CleanerPortalNav />
+
+        {training && training.status !== "CERTIFIED" && (
+          <TrainingIncompleteBanner
+            status={training.status}
+            modulesCompleted={training.modulesCompleted}
+            modulesTotal={training.modulesTotal}
+          />
+        )}
+
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold mb-2">My Jobs</h1>

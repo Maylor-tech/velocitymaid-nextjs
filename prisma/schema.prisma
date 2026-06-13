@@ -852,6 +852,7 @@ model User {
   CleanerPaymentMethod                CleanerPaymentMethod[]
   CleanerPayout                       CleanerPayout[]
   CleanerRating                       CleanerRating[]
+  CleanerTrainingProgress             CleanerTrainingProgress[]
   ComplianceIssue                     ComplianceIssue[]
   JamaicaPaymentMethod                JamaicaPaymentMethod?
   JamaicaPayout                       JamaicaPayout[]
@@ -970,6 +971,19 @@ model TaxYearArchive {
   summaryJson    Json
 
   @@index([year])
+}
+
+model CleanerTrainingProgress {
+  id          String   @id @default(cuid())
+  cleanerId   String
+  moduleSlug  String
+  completedAt DateTime @default(now())
+  quizScore   Int?
+  User        User     @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@unique([cleanerId, moduleSlug])
+  @@index([cleanerId])
+  @@index([moduleSlug])
 }
 
 model ComplianceIssue {

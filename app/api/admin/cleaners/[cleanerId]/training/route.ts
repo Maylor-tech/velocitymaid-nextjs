@@ -2,7 +2,9 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from "@/lib/auth/requireRole";
+import { requireRole } from '@/lib/auth/requireRole';
+import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
+import { getCertificationSummary } from '@/lib/cleaners/trainingProgress';
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
 
@@ -107,21 +109,32 @@ export async function GET(
       where: { cleanerId },
     });
 
-    if (!trainingStatus) {
-      return NextResponse.json({
-        success: true,
-        trainingStatus: null,
-      });
-    }
+    const certification = await getCertificationSummary(cleanerId);
 
     return NextResponse.json({
       success: true,
-      trainingStatus: {
-        id: trainingStatus.id,
-        cleanerId: trainingStatus.cleanerId,
-        overallStatus: trainingStatus.overallStatus,
-        lastModuleSlug: trainingStatus.lastModuleSlug,
-        updatedAt: trainingStatus.updatedAt,
+      trainingStatus: trainingStatus
+        ? {
+            id: trainingStatus.id,
+            cleanerId: trainingStatus.cleanerId,
+            overallStatus: trainingStatus.overallStatus,
+            lastModuleSlug: trainingStatus.lastModuleSlug,
+            updatedAt: trainingStatus.updatedAt,
+          }
+        : null,
+      certification: {
+        status: certification.status,
+        modulesCompleted: certification.modulesCompleted,
+        modulesTotal: certification.modulesTotal,
+        quizScore: certification.quizScore,
+        certifiedAt: certification.certifiedAt,
+        modules: certification.modules.map((m) => ({
+          slug: m.slug,
+          title: m.title,
+          completed: m.completed,
+          completedAt: m.completedAt,
+          quizScore: m.quizScore,
+        })),
       },
     });
   } catch (error: any) {

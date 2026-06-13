@@ -49,6 +49,19 @@ export default function CleanerProfileDrawer({
     lastModuleSlug: string | null;
     updatedAt: string;
   } | null>(null);
+  const [certification, setCertification] = useState<{
+    status: string;
+    modulesCompleted: number;
+    modulesTotal: number;
+    quizScore: number | null;
+    certifiedAt: string | null;
+    modules?: Array<{
+      slug: string;
+      title: string;
+      completed: boolean;
+      quizScore: number | null;
+    }>;
+  } | null>(null);
   const [updatingTraining, setUpdatingTraining] = useState(false);
   const [certificates, setCertificates] = useState<Array<{
     id: string;
@@ -188,6 +201,9 @@ export default function CleanerProfileDrawer({
             const trainingData = await trainingRes.json();
             if (trainingData.success && trainingData.trainingStatus) {
               setTrainingStatus(trainingData.trainingStatus);
+            }
+            if (trainingData.success && trainingData.certification) {
+              setCertification(trainingData.certification);
             }
           }
         } catch (trainingErr) {
@@ -785,6 +801,42 @@ export default function CleanerProfileDrawer({
                   </div>
                 )}
               </section>
+
+              {/* VelocityMaid certification (MVP) */}
+              {certification && (
+                <section>
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                    VelocityMaid Certification
+                  </h3>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Status</span>
+                      <span
+                        className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          certification.status === 'CERTIFIED'
+                            ? 'bg-green-100 text-green-800'
+                            : certification.status === 'IN_PROGRESS'
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {certification.status.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      Modules: {certification.modulesCompleted} / {certification.modulesTotal}
+                    </p>
+                    {certification.quizScore != null && (
+                      <p className="text-xs text-gray-600">Quiz score: {certification.quizScore}%</p>
+                    )}
+                    {certification.certifiedAt && (
+                      <p className="text-xs text-gray-600">
+                        Certified: {new Date(certification.certifiedAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </section>
+              )}
 
               {/* Training Status Section - Phase 3 Part B */}
               <section>

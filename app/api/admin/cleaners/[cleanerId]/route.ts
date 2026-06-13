@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level';
 import { getCleanerAverageJQS } from '@/utils/jobQualityScore';
+import { getCertificationSummary } from '@/lib/cleaners/trainingProgress';
 
 // Helper to get start of week (Sunday)
 function startOfWeek(date: Date): Date {
@@ -359,6 +360,8 @@ export async function GET(
         : null,
     };
 
+    const certificationSummary = await getCertificationSummary(cleanerId);
+
     // Format jobs
     const formattedUpcomingJobs = upcomingJobs.map((job) => ({
       id: job.id,
@@ -411,6 +414,13 @@ export async function GET(
       compliance: {
         status: complianceStatus,
         issues,
+      },
+      certification: {
+        status: certificationSummary.status,
+        modulesCompleted: certificationSummary.modulesCompleted,
+        modulesTotal: certificationSummary.modulesTotal,
+        quizScore: certificationSummary.quizScore,
+        certifiedAt: certificationSummary.certifiedAt,
       },
       upcomingJobs: formattedUpcomingJobs,
       recentJobs: formattedRecentJobs,

@@ -328,7 +328,7 @@ End-to-end run completed successfully in **local** development with **Stripe tes
 | **Date** | 2026-06-12 |
 | **Environment** | Local (`localhost:3000`) |
 | **Stripe mode** | Test (`sk_test_` / `pk_test_`, `stripe listen`) |
-| **Customer / job** | Caryll M — `d4bd1994-f4ec-4a51-8890-06830083c90a` |
+| **Customer / job** | Caryll M — `d4bd1994-f4ec-4a51-8890-06830083c90a` (**closed** — COMPLETED/PAID/payout PAID; do not reuse for cleaner-completion tests) |
 | **Cleaner** | John Cleaner (Test) — `cleaner.nj@velocitymaid.com` |
 | **Final job status** | `COMPLETED` |
 | **Payment status** | `PAID` |

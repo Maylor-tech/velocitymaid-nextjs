@@ -39,10 +39,18 @@ async function login(): Promise<string> {
 }
 
 async function prepareAssignedJob(cleanerId: string): Promise<string> {
+  const closedJobIds = (
+    process.env.TEST_CLOSED_JOB_IDS || 'd4bd1994-f4ec-4a51-8890-06830083c90a'
+  )
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   const candidates = await prisma.job.findMany({
     where: {
       assignedCleanerId: cleanerId,
       paymentStatus: PaymentStatus.DEPOSIT_PAID,
+      id: { notIn: closedJobIds },
       NOT: {
         JobPayout: { status: 'PAID' },
       },
