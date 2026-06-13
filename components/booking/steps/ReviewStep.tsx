@@ -17,9 +17,6 @@ const branchLabels: Record<string, string> = {
   miami: 'Miami',
 };
 
-const depositMode = process.env.NEXT_PUBLIC_BOOKING_PAYMENT_MODE === 'deposit';
-const depositAmount = process.env.NEXT_PUBLIC_BOOKING_DEPOSIT_DOLLARS || '25';
-
 const flexibilityLabels: Record<string, string> = {
   FLEXIBLE: 'Flexible',
   EXACT_TIME: 'Exact time preferred',
@@ -28,7 +25,9 @@ const flexibilityLabels: Record<string, string> = {
 };
 
 export default function ReviewStep() {
-  const { data } = useBooking();
+  const { data, paymentConfig } = useBooking();
+  const depositMode = paymentConfig.depositMode;
+  const depositAmount = String(paymentConfig.depositDollars);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quote, setQuote] = useState<BookingQuoteResult | null>(null);

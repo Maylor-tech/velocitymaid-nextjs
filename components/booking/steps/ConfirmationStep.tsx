@@ -3,9 +3,6 @@
 import { useBooking } from "../BookingContext";
 import { Loader2 } from "lucide-react";
 
-const depositMode = process.env.NEXT_PUBLIC_BOOKING_PAYMENT_MODE === 'deposit';
-const depositLabel = process.env.NEXT_PUBLIC_BOOKING_DEPOSIT_DOLLARS || '25';
-
 const serviceTypeLabels: Record<string, string> = {
   STANDARD: 'Standard Cleaning',
   DEEP_CLEAN: 'Deep Clean',
@@ -13,7 +10,9 @@ const serviceTypeLabels: Record<string, string> = {
 };
 
 export default function ConfirmationStep() {
-  const { data, submitBooking, loading, error } = useBooking();
+  const { data, submitBooking, loading, error, paymentConfig } = useBooking();
+  const depositMode = paymentConfig.depositMode;
+  const depositLabel = String(paymentConfig.depositDollars);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'Not selected';

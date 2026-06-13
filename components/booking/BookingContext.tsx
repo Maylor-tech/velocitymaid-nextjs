@@ -1,11 +1,19 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { BookingDraft, BookingStep } from './types';
+
+export type BookingPaymentConfig = {
+  mode: 'full' | 'deposit';
+  depositMode: boolean;
+  depositDollars: number;
+  depositCents: number;
+};
 
 interface BookingContextType {
   data: BookingDraft;
   step: BookingStep;
+  paymentConfig: BookingPaymentConfig;
   update: (updates: Partial<BookingDraft>) => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -59,6 +67,13 @@ interface BookingProviderProps {
   initialBranchSlug?: string | null;
 }
 
+const defaultPaymentConfig: BookingPaymentConfig = {
+  mode: 'full',
+  depositMode: false,
+  depositDollars: 25,
+  depositCents: 2500,
+};
+
 export function BookingProvider({ children, initialBranchSlug }: BookingProviderProps) {
   const [data, setData] = useState<BookingDraft>({
     ...initialData,
@@ -67,6 +82,25 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
   const [step, setStep] = useState<BookingStep>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentConfig, setPaymentConfig] = useState<BookingPaymentConfig>(defaultPaymentConfig);
+
+  useEffect(() => {
+    fetch('/api/booking/payment-config')
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.success) {
+          setPaymentConfig({
+            mode: result.mode === 'deposit' ? 'deposit' : 'full',
+            depositMode: Boolean(result.depositMode),
+            depositDollars: Number(result.depositDollars) || 25,
+            depositCents: Number(result.depositCents) || 2500,
+          });
+        }
+      })
+      .catch(() => {
+        // Keep default full mode if config fetch fails
+      });
+  }, []);
 
   const update = useCallback((updates: Partial<BookingDraft>) => {
     setData((prev) => ({ ...prev, ...updates }));
@@ -287,6 +321,7 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
   const value: BookingContextType = {
     data,
     step,
+    paymentConfig,
     update,
     nextStep,
     prevStep,

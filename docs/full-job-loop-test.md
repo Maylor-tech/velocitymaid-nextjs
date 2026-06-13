@@ -335,7 +335,7 @@ Flow exercised: deposit → admin approve → assign → cleaner accept/start/co
 | Environment | Stripe keys | `BOOKING_PAYMENT_MODE=deposit` |
 |-------------|-------------|--------------------------------|
 | **Local / staging** | Test keys only (`sk_test_`, `pk_test_`) | OK for QA when `stripe listen` or staging webhook is configured |
-| **Production** | Live keys (`sk_live_`, `pk_live_`) | Enable **only after** live webhook endpoint is registered and verified in Stripe Dashboard |
+| **Production (Vercel)** | Live keys (`sk_live_`, `pk_live_`) | Set `BOOKING_PAYMENT_MODE=deposit` on Vercel → redeploy. Checkout charges **$25**; UI reads `/api/booking/payment-config` at runtime. |
 
 Checklist before production cutover:
 
