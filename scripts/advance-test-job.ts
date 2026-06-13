@@ -1,6 +1,6 @@
 import { JobStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '../lib/prisma';
-import { computeBalanceDueAfterCompletion } from '../lib/booking/jobPayment';
+import { resolveCompletionPaymentUpdate } from '../lib/booking/jobPayment';
 
 /**
  * Move one assigned deposit job to today and optionally mark COMPLETED + BALANCE_DUE
@@ -19,6 +19,7 @@ async function main() {
       status: JobStatus.ASSIGNED,
       assignedCleanerId: { not: null },
       paymentStatus: PaymentStatus.DEPOSIT_PAID,
+      NOT: { JobPayout: { status: 'PAID' } },
       ...(customerHint
         ? { customerName: { contains: customerHint, mode: 'insensitive' } }
         : {}),
@@ -27,6 +28,7 @@ async function main() {
     include: {
       Customer: { select: { email: true, firstName: true } },
       User: { select: { email: true, name: true } },
+      JobPayout: { select: { status: true } },
     },
   });
 
@@ -35,17 +37,20 @@ async function main() {
       where: {
         status: JobStatus.ASSIGNED,
         assignedCleanerId: { not: null },
+        paymentStatus: PaymentStatus.DEPOSIT_PAID,
+        NOT: { JobPayout: { status: 'PAID' } },
       },
       orderBy: { createdAt: 'desc' },
       include: {
         Customer: { select: { email: true, firstName: true } },
         User: { select: { email: true, name: true } },
+        JobPayout: { select: { status: true } },
       },
     });
   }
 
   if (!job) {
-    console.log('No ASSIGNED job found. Assign a cleaner in admin first.');
+    console.log('No ASSIGNED deposit job found. Assign a cleaner in admin first.');
     return;
   }
 
@@ -58,16 +63,19 @@ async function main() {
   };
 
   if (complete) {
-    const balanceDue = computeBalanceDueAfterCompletion({
-      quotedTotal: job.quotedTotal ? Number(job.quotedTotal) : null,
-      totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
-      amountPaid: job.amountPaid ? Number(job.amountPaid) : null,
-    });
+    const paymentUpdate = resolveCompletionPaymentUpdate(
+      job.paymentStatus,
+      {
+        quotedTotal: job.quotedTotal ? Number(job.quotedTotal) : null,
+        totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
+        amountPaid: job.amountPaid ? Number(job.amountPaid) : null,
+      },
+      { payoutStatus: job.JobPayout?.status ?? null }
+    );
     Object.assign(updates, {
       status: JobStatus.COMPLETED,
       completedAt: new Date(),
-      paymentStatus: PaymentStatus.BALANCE_DUE,
-      balanceDue,
+      ...(paymentUpdate ?? {}),
     });
   }
 

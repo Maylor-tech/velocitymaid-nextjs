@@ -39,24 +39,24 @@ async function login(): Promise<string> {
 }
 
 async function prepareAssignedJob(cleanerId: string): Promise<string> {
-  let job = await prisma.job.findFirst({
+  const candidates = await prisma.job.findMany({
     where: {
       assignedCleanerId: cleanerId,
       paymentStatus: PaymentStatus.DEPOSIT_PAID,
+      NOT: {
+        JobPayout: { status: 'PAID' },
+      },
     },
     orderBy: { createdAt: 'desc' },
+    take: 5,
   });
 
-  if (!job) {
-    job = await prisma.job.findFirst({
-      where: { assignedCleanerId: cleanerId },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
+  const job = candidates[0];
 
   if (!job) {
     throw new Error(
-      'No job assigned to test cleaner. Assign one in admin or run deposit booking first.'
+      'No DEPOSIT_PAID job without a PAID payout found for test cleaner. ' +
+        'Book a fresh deposit job for the full loop — do not reuse a fully paid job.'
     );
   }
 

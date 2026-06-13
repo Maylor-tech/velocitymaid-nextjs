@@ -115,6 +115,46 @@ export function computeBalanceDueAfterCompletion(job: {
   return Math.max(0, Math.round((quoted - paid) * 100) / 100);
 }
 
+/**
+ * On cleaner/admin completion, only DEPOSIT_PAID may transition to BALANCE_DUE.
+ * Never downgrade PAID (or jobs with a PAID payout) back to BALANCE_DUE.
+ */
+export function shouldTransitionDepositToBalanceDue(
+  paymentStatus: PaymentStatus
+): boolean {
+  return paymentStatus === PaymentStatus.DEPOSIT_PAID;
+}
+
+export type CompletionPaymentFields = {
+  quotedTotal: number | null;
+  totalPrice: number | null;
+  amountPaid: number | null;
+};
+
+/**
+ * Payment fields to apply when marking a job COMPLETED.
+ * Returns null when payment status must not change (already PAID, payout PAID, etc.).
+ */
+export function resolveCompletionPaymentUpdate(
+  paymentStatus: PaymentStatus,
+  job: CompletionPaymentFields,
+  options?: { payoutStatus?: string | null }
+): { paymentStatus: PaymentStatus.BALANCE_DUE; balanceDue: number } | null {
+  if (paymentStatus === PaymentStatus.PAID) {
+    return null;
+  }
+  if (options?.payoutStatus === 'PAID') {
+    return null;
+  }
+  if (!shouldTransitionDepositToBalanceDue(paymentStatus)) {
+    return null;
+  }
+  return {
+    paymentStatus: PaymentStatus.BALANCE_DUE,
+    balanceDue: computeBalanceDueAfterCompletion(job),
+  };
+}
+
 export function formatPaymentStatusLabel(status: PaymentStatus): string {
   switch (status) {
     case PaymentStatus.DEPOSIT_PAID:

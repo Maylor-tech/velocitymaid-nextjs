@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
 import { getAuthenticatedCleaner } from '@/lib/cleanerAuth';
-import { JobStatus, PaymentStatus } from '@prisma/client';
+import { JobStatus } from '@prisma/client';
 import { requireCleanerJobAssignment } from '@/lib/auth/requireRole';
-import { computeBalanceDueAfterCompletion } from '@/lib/booking/jobPayment';
+import { computeBalanceDueAfterCompletion, resolveCompletionPaymentUpdate } from '@/lib/booking/jobPayment';
 import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
 
 export const runtime = 'nodejs';
@@ -55,6 +55,27 @@ export async function PATCH(
       return NextResponse.json({ error: 'Job is not assigned to you' }, { status: 403 });
     }
 
+    if (job.status === JobStatus.COMPLETED) {
+      const existing = await prisma.job.findUnique({
+        where: { id: jobId },
+        select: {
+          id: true,
+          status: true,
+          paymentStatus: true,
+          balanceDue: true,
+          completedAt: true,
+        },
+      });
+      return NextResponse.json({
+        success: true,
+        job: {
+          ...existing,
+          balanceDue: existing?.balanceDue ? Number(existing.balanceDue) : null,
+        },
+        message: 'Job already completed.',
+      });
+    }
+
     if (job.status !== JobStatus.IN_PROGRESS) {
       return NextResponse.json(
         {
@@ -66,29 +87,29 @@ export async function PATCH(
       );
     }
 
-    const awaitingBalance =
-      job.paymentStatus === PaymentStatus.DEPOSIT_PAID ||
-      job.paymentStatus === PaymentStatus.BALANCE_DUE;
+    const payout = await prisma.jobPayout.findUnique({
+      where: { jobId },
+      select: { status: true },
+    });
+
+    const paymentUpdate = resolveCompletionPaymentUpdate(
+      job.paymentStatus,
+      {
+        quotedTotal: job.quotedTotal ? Number(job.quotedTotal) : null,
+        totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
+        amountPaid: job.amountPaid ? Number(job.amountPaid) : null,
+      },
+      { payoutStatus: payout?.status ?? null }
+    );
+
     const completionTimestamp = new Date();
-    const balanceDue = awaitingBalance
-      ? computeBalanceDueAfterCompletion({
-          quotedTotal: job.quotedTotal ? Number(job.quotedTotal) : null,
-          totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
-          amountPaid: job.amountPaid ? Number(job.amountPaid) : null,
-        })
-      : null;
 
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
       data: {
         status: JobStatus.COMPLETED,
         completedAt: completionTimestamp,
-        ...(awaitingBalance
-          ? {
-              paymentStatus: PaymentStatus.BALANCE_DUE,
-              balanceDue,
-            }
-          : {}),
+        ...(paymentUpdate ?? {}),
       },
       select: {
         id: true,
@@ -139,7 +160,7 @@ export async function PATCH(
         ...updatedJob,
         balanceDue: updatedJob.balanceDue ? Number(updatedJob.balanceDue) : null,
       },
-      message: awaitingBalance
+      message: paymentUpdate
         ? 'Job completed. Customer balance is now due before payout.'
         : 'Job completed successfully.',
     });

@@ -2,10 +2,10 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { JobStatus, PaymentStatus } from '@prisma/client';
+import { JobStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
-import { computeBalanceDueAfterCompletion } from '@/lib/booking/jobPayment';
+import { resolveCompletionPaymentUpdate } from '@/lib/booking/jobPayment';
 
 /**
  * POST /api/admin/jobs/[jobId]/test-complete
@@ -39,7 +39,11 @@ export async function POST(
     }
 
     if (job.status === JobStatus.COMPLETED) {
-      return NextResponse.json({ success: true, message: 'Job already completed', job });
+      return NextResponse.json({
+        success: true,
+        message: 'Job already completed',
+        job,
+      });
     }
 
     const allowed = [
@@ -58,35 +62,33 @@ export async function POST(
       );
     }
 
-    const awaitingBalance =
-      job.paymentStatus === PaymentStatus.DEPOSIT_PAID ||
-      job.paymentStatus === PaymentStatus.BALANCE_DUE;
+    const payout = await prisma.jobPayout.findUnique({
+      where: { jobId },
+      select: { status: true },
+    });
 
-    const balanceDue = awaitingBalance
-      ? computeBalanceDueAfterCompletion({
-          quotedTotal: job.quotedTotal ? Number(job.quotedTotal) : null,
-          totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
-          amountPaid: job.amountPaid ? Number(job.amountPaid) : null,
-        })
-      : null;
+    const paymentUpdate = resolveCompletionPaymentUpdate(
+      job.paymentStatus,
+      {
+        quotedTotal: job.quotedTotal ? Number(job.quotedTotal) : null,
+        totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
+        amountPaid: job.amountPaid ? Number(job.amountPaid) : null,
+      },
+      { payoutStatus: payout?.status ?? null }
+    );
 
     const updated = await prisma.job.update({
       where: { id: jobId },
       data: {
         status: JobStatus.COMPLETED,
         completedAt: new Date(),
-        ...(awaitingBalance
-          ? {
-              paymentStatus: PaymentStatus.BALANCE_DUE,
-              balanceDue,
-            }
-          : {}),
+        ...(paymentUpdate ?? {}),
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: awaitingBalance
+      message: paymentUpdate
         ? 'Job marked COMPLETED with BALANCE_DUE (dev test shortcut)'
         : 'Job marked COMPLETED (dev test shortcut)',
       job: updated,

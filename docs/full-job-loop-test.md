@@ -292,6 +292,8 @@ npm run build
 | "Failed to fetch job" / 401 | Not logged in — use `/cleaners/login` with `cleaner.nj@velocitymaid.com` |
 | "Not assigned to you" / 403 | Cookie cleaner id ≠ `assignedCleanerId` — log out and re-login with the assigned cleaner email |
 | Complete blocked | Job must be `IN_PROGRESS` (Accept → Start first) at `/cleaner/jobs/[jobId]` |
+| Reused fully paid job for cleaner test | **Do not** rerun cleaner completion on a job that is already `PAID` or has `JobPayout.status = PAID`. Book a **fresh deposit job** per full-loop test. Automated script `test-cleaner-job-flow.ts` only picks `DEPOSIT_PAID` jobs without a PAID payout. |
+| `paymentStatus=BALANCE_DUE` but payout `PAID` | Data drift from re-testing on a closed job. Dry-run: `npx dotenv-cli -e .env.local -- npx tsx scripts/repair-paid-payout-payment-status.ts` · Apply locally: add `-- --apply --force-local` |
 | No next step after assign | Admin job detail → **Operational Progress** → **Open Cleaner Job →** |
 | Balance pay blocked | Job must be `COMPLETED` + `BALANCE_DUE` + `balanceDue > 0` |
 | Payout missing after balance pay | Check `stripe listen` logs; verify `STRIPE_WEBHOOK_SECRET`; confirm `JobPayout` migration applied |
