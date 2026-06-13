@@ -22,12 +22,21 @@ import { UserRole } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    let body: { identifier?: unknown };
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON body. Send { "identifier": "email or phone" }.' },
+        { status: 400 }
+      );
+    }
+
     const { identifier } = body;
 
     if (!identifier || typeof identifier !== 'string') {
       return NextResponse.json(
-        { error: 'Identifier required' },
+        { error: 'Identifier required (email or phone)' },
         { status: 400 }
       );
     }
@@ -70,12 +79,13 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ ok: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[CLEANER_LOGIN] Error:', err);
-    return NextResponse.json(
-      { error: 'Login failed' },
-      { status: 500 }
-    );
+    const message =
+      err instanceof Error && err.message.includes('connect')
+        ? 'Database unavailable. Check DATABASE_URL and try again.'
+        : 'Login failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

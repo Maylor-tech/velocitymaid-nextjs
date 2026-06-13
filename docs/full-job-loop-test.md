@@ -141,7 +141,17 @@ If assignment fails with `NOT_APPROVED`, re-run `scripts/seed-cleaner.ts`.
 ### 4. Cleaner completion flow
 
 **Login URL:** `/cleaners/login` (note: login lives under `/cleaners/*`; the job portal is `/cleaner/*`)  
-**Email:** `cleaner.nj@velocitymaid.com` (must match the assigned cleaner — cookie stores real `User.id` from email lookup)
+**Method:** Email-only, passwordless — enter the seeded cleaner email; no magic link or OTP. The API sets an HTTP-only `cleanerId` cookie (real `User.id` for email logins).  
+**Email:** `cleaner.nj@velocitymaid.com` (must match the assigned cleaner)
+
+**Automated test:**
+
+```bash
+npx dotenv-cli -e .env.local -- npx tsx scripts/test-cleaner-login.ts
+npx dotenv-cli -e .env.local -- npx tsx scripts/test-cleaner-job-flow.ts
+```
+
+**Note:** Shell `curl` on Windows can mangle JSON and return `{ "error": "Login failed" }`. Use the scripts above or the browser form.
 
 After login you are redirected to **My Jobs** at `/cleaner/jobs`.
 

@@ -53,9 +53,10 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
     if (cleanerId && pathname === '/cleaners/login') {
-      const dashUrl = req.nextUrl.clone();
-      dashUrl.pathname = '/cleaners/dashboard';
-      return NextResponse.redirect(dashUrl);
+      const jobsUrl = req.nextUrl.clone();
+      jobsUrl.pathname = '/cleaner/jobs';
+      jobsUrl.searchParams.delete('redirect');
+      return NextResponse.redirect(jobsUrl);
     }
   }
 

@@ -1,24 +1,40 @@
 /**
- * Seed Active Cleaner for New Jersey Branch
+ * Seed Active Cleaner for a branch (default: New Jersey)
  *
- * Creates an ACTIVE cleaner linked to New Jersey branch with an APPROVED application.
+ * Creates or updates an ACTIVE cleaner with APPROVED application and branch link.
  *
  * Run with:
  *   npx dotenv-cli -e .env.local -- npx tsx scripts/seed-cleaner.ts
  *
- * Optional env:
- *   E2E_CLEANER_EMAIL  (default: cleaner.nj@velocitymaid.com)
- *   E2E_CLEANER_NAME   (default: John Cleaner (Test))
+ * Env (preferred):
+ *   TEST_CLEANER_EMAIL   (default: cleaner.nj@velocitymaid.com)
+ *   TEST_CLEANER_NAME    (default: John Cleaner (Test))
+ *   TEST_BRANCH_SLUG     (default: new-jersey)
+ *
+ * Legacy aliases still supported: E2E_CLEANER_EMAIL, E2E_CLEANER_NAME
  */
 
 import { randomUUID } from 'crypto';
 import { prisma } from '../lib/prisma';
-import { CleanerApplicationStatus, UserRole } from '@prisma/client';
+import { BranchStatus, CleanerApplicationStatus, UserRole } from '@prisma/client';
 
-const CLEANER_EMAIL =
-  process.env.E2E_CLEANER_EMAIL?.trim().toLowerCase() ||
-  'cleaner.nj@velocitymaid.com';
-const CLEANER_NAME = process.env.E2E_CLEANER_NAME?.trim() || 'John Cleaner (Test)';
+const CLEANER_EMAIL = (
+  process.env.TEST_CLEANER_EMAIL ||
+  process.env.E2E_CLEANER_EMAIL ||
+  'cleaner.nj@velocitymaid.com'
+)
+  .trim()
+  .toLowerCase();
+
+const CLEANER_NAME =
+  process.env.TEST_CLEANER_NAME?.trim() ||
+  process.env.E2E_CLEANER_NAME?.trim() ||
+  'John Cleaner (Test)';
+
+const BRANCH_SLUG =
+  process.env.TEST_BRANCH_SLUG?.trim() ||
+  process.env.E2E_BRANCH_SLUG?.trim() ||
+  'new-jersey';
 
 async function ensureApprovedApplication(cleanerId: string, branchId: string, email: string) {
   const existing = await prisma.cleanerApplication.findFirst({
@@ -53,52 +69,51 @@ async function ensureApprovedApplication(cleanerId: string, branchId: string, em
   return application.id;
 }
 
+async function findOrCreateBranch(slug: string) {
+  let branch = await prisma.branch.findUnique({
+    where: { slug },
+    select: { id: true, name: true, slug: true },
+  });
+
+  if (branch) return branch;
+
+  branch = await prisma.branch.findFirst({
+    where: {
+      OR: [
+        { slug: { contains: slug.replace('-', ''), mode: 'insensitive' } },
+        { name: { contains: slug.replace('-', ' '), mode: 'insensitive' } },
+      ],
+    },
+    select: { id: true, name: true, slug: true },
+  });
+
+  if (branch) return branch;
+
+  console.log(`⚠️  Branch "${slug}" not found. Creating New Jersey branch...`);
+  const created = await prisma.branch.create({
+    data: {
+      id: `branch-nj-${Date.now()}`,
+      name: 'New Jersey',
+      slug: 'new-jersey',
+      country: 'US',
+      state: 'New Jersey',
+      city: 'Newark',
+      regionLabel: 'New Jersey',
+      timezone: 'America/New_York',
+      primaryPhone: '(973) 280-9190',
+      whatsappNumber: '19732809190',
+      status: BranchStatus.ACTIVE,
+      updatedAt: new Date(),
+    },
+  });
+
+  return { id: created.id, name: created.name, slug: created.slug };
+}
+
 async function seedCleaner() {
   try {
-    let njBranch = await prisma.branch.findUnique({
-      where: { slug: 'new-jersey' },
-      select: { id: true, name: true, slug: true },
-    });
-
-    if (!njBranch) {
-      njBranch = await prisma.branch.findFirst({
-        where: {
-          OR: [
-            { name: { contains: 'Jersey', mode: 'insensitive' } },
-            { slug: { contains: 'jersey', mode: 'insensitive' } },
-          ],
-        },
-        select: { id: true, name: true, slug: true },
-      });
-
-      if (!njBranch) {
-        console.log('⚠️  New Jersey branch not found. Creating it...');
-        const newBranch = await prisma.branch.create({
-          data: {
-            id: `branch-nj-${Date.now()}`,
-            name: 'New Jersey',
-            slug: 'new-jersey',
-            country: 'US',
-            state: 'New Jersey',
-            city: 'Newark',
-            regionLabel: 'New Jersey',
-            timezone: 'America/New_York',
-            primaryPhone: '(973) 280-9190',
-            whatsappNumber: '19732809190',
-            status: 'ACTIVE',
-            updatedAt: new Date(),
-          },
-        });
-        njBranch = {
-          id: newBranch.id,
-          name: newBranch.name,
-          slug: newBranch.slug,
-        };
-        console.log(`✅ Created branch: ${njBranch.name} (${njBranch.id})`);
-      }
-    }
-
-    console.log(`✅ Found branch: ${njBranch.name} (${njBranch.id})`);
+    const branch = await findOrCreateBranch(BRANCH_SLUG);
+    console.log(`✅ Found branch: ${branch.name} (${branch.id})`);
 
     const existingCleaner = await prisma.user.findUnique({
       where: { email: CLEANER_EMAIL },
@@ -112,7 +127,8 @@ async function seedCleaner() {
         where: { id: existingCleaner.id },
         data: {
           isActive: true,
-          primaryBranchId: njBranch.id,
+          isSuspended: false,
+          primaryBranchId: branch.id,
           role: UserRole.CLEANER,
           name: CLEANER_NAME,
           updatedAt: new Date(),
@@ -127,7 +143,7 @@ async function seedCleaner() {
           email: CLEANER_EMAIL,
           name: CLEANER_NAME,
           role: UserRole.CLEANER,
-          primaryBranchId: njBranch.id,
+          primaryBranchId: branch.id,
           isActive: true,
           isSuspended: false,
           warningCount: 0,
@@ -141,27 +157,27 @@ async function seedCleaner() {
       where: {
         userId_branchId: {
           userId: cleanerId,
-          branchId: njBranch.id,
+          branchId: branch.id,
         },
       },
       create: {
-        id: `ub-${cleanerId}-${njBranch.id}`,
+        id: `ub-${cleanerId}-${branch.id}`,
         userId: cleanerId,
-        branchId: njBranch.id,
+        branchId: branch.id,
       },
       update: {},
     });
 
     const applicationId = await ensureApprovedApplication(
       cleanerId,
-      njBranch.id,
+      branch.id,
       CLEANER_EMAIL
     );
 
     const verified = await prisma.user.findUnique({
       where: { id: cleanerId },
       include: {
-        UserBranch: { where: { branchId: njBranch.id } },
+        UserBranch: { where: { branchId: branch.id } },
       },
     });
 
@@ -169,14 +185,17 @@ async function seedCleaner() {
     console.log(`   Email: ${verified?.email}`);
     console.log(`   ID: ${verified?.id}`);
     console.log(`   Name: ${verified?.name}`);
+    console.log(`   Role: ${verified?.role}`);
     console.log(`   Active: ${verified?.isActive}`);
     console.log(`   Primary Branch ID: ${verified?.primaryBranchId}`);
     console.log(`   Application ID: ${applicationId} (APPROVED)`);
     console.log(`   UserBranch Links: ${verified?.UserBranch.length || 0}`);
     console.log('\n🔐 Cleaner login (local dev):');
-    console.log(`   Visit /cleaners/login and enter email: ${CLEANER_EMAIL}`);
+    console.log(`   1. Visit http://localhost:3000/cleaners/login`);
+    console.log(`   2. Enter email only (no password): ${CLEANER_EMAIL}`);
+    console.log(`   3. Job portal: /cleaner/jobs`);
 
-    if (verified?.isActive && verified?.primaryBranchId === njBranch.id) {
+    if (verified?.isActive && verified?.primaryBranchId === branch.id) {
       console.log('\n✅ Cleaner seeded successfully!');
     } else {
       console.log('\n⚠️  Warning: Cleaner may not be properly configured');
