@@ -36,14 +36,16 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "VelocityMaid | Professional Cleaning Services in New Jersey & Vermont",
-  description: "VelocityMaid provides reliable home and apartment cleaning services across New Jersey and Vermont. Specializing in move-in/out cleaning, deep cleaning, and maintenance cleaning. Trusted by 100+ customers with 5-star reviews.",
+  description:
+    "VelocityMaid offers professional cleaning services in New Jersey and Vermont. Home and apartment cleaning for NJ families. Turnover cleaning for Vermont Airbnbs and short-term rentals. Book online in minutes.",
   keywords: "cleaning services, maid service, house cleaning, commercial cleaning, New Jersey, professional cleaners, Newark cleaning, Jersey City cleaning",
   authors: [{ name: "VelocityMaid" }],
   creator: "VelocityMaid",
   publisher: "VelocityMaid",
   openGraph: {
     title: "VelocityMaid | Professional Cleaning Services in New Jersey & Vermont",
-    description: "VelocityMaid provides reliable home and apartment cleaning services across New Jersey and Vermont, specializing in move-in/out cleaning, deep cleaning, and maintenance cleaning.",
+    description:
+      "VelocityMaid offers professional cleaning services in New Jersey and Vermont. Home and apartment cleaning for NJ families. Turnover cleaning for Vermont Airbnbs and short-term rentals. Book online in minutes.",
     type: "website",
     locale: "en_US",
     siteName: "VelocityMaid",
@@ -79,7 +81,10 @@ export const metadata: Metadata = {
     // google: 'your-google-verification-code',
   },
   icons: {
-    icon: '/icon.svg',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
     apple: '/apple-icon.svg',
   },
 };

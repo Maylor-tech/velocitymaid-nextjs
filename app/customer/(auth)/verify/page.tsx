@@ -51,7 +51,7 @@ export default function CustomerVerifyPage() {
         throw new Error(data.error || 'Invalid or expired code.');
       }
 
-      router.push(redirectUrl || '/customer/dashboard');
+      router.push(redirectUrl || '/customer/jobs');
     } catch (err: unknown) {
       console.error(err);
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';

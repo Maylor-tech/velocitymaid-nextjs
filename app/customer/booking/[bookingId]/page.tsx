@@ -126,7 +126,7 @@ export default function BookingDetailsPage() {
       if (data.success) {
         alert('Booking cancelled successfully');
         setShowCancelModal(false);
-        router.push('/customer/dashboard');
+        router.push('/customer/jobs');
       } else {
         alert(data.error || 'Failed to cancel booking');
       }
@@ -190,7 +190,7 @@ export default function BookingDetailsPage() {
           <p className="text-red-600 font-medium mb-4">Error</p>
           <p className="text-red-500 text-sm mb-4">{error || 'Booking not found'}</p>
           <button
-            onClick={() => router.push('/customer/dashboard')}
+            onClick={() => router.push('/customer/jobs')}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             Back to Dashboard

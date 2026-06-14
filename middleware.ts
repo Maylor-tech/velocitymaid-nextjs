@@ -177,12 +177,19 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Logged in, trying to access login/verify → redirect to dashboard
+  // Logged in, trying to access login/verify → redirect to jobs home
   if (session && isAuthRoute) {
-    const dashUrl = req.nextUrl.clone();
-    dashUrl.pathname = '/customer/dashboard';
-    dashUrl.searchParams.delete('redirect');
-    return NextResponse.redirect(dashUrl);
+    const jobsUrl = req.nextUrl.clone();
+    jobsUrl.pathname = '/customer/jobs';
+    jobsUrl.searchParams.delete('redirect');
+    return NextResponse.redirect(jobsUrl);
+  }
+
+  // Legacy dashboard route → jobs home
+  if (session && pathname === '/customer/dashboard') {
+    const jobsUrl = req.nextUrl.clone();
+    jobsUrl.pathname = '/customer/jobs';
+    return NextResponse.redirect(jobsUrl);
   }
 
   // Otherwise allow request

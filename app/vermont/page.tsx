@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Metadata } from 'next';
 import Link from 'next/link';
 import BranchLandingNav from '@/components/layout/BranchLandingNav';
+import VermontGallery from '@/components/home/VermontGallery';
 import {
   Mountain,
   Home,
@@ -38,6 +39,7 @@ export default function VermontPage() {
         phone="+18027335348"
         phoneDisplay="(802) 733-5348"
         email="hello@velocitymaid.com"
+        marketTagline="vermont"
       />
 
       {/* Hero */}
@@ -222,6 +224,8 @@ export default function VermontPage() {
             </div>
           </div>
         </section>
+
+        <VermontGallery />
 
         {/* Service Area & How It Works */}
         <section className="grid md:grid-cols-2 gap-10 items-start">

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import { 
   Sparkles, 
   Shield, 
@@ -24,6 +23,8 @@ import { sendGAEvent } from '@next/third-parties/google';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import TestimonialsSection from '../components/TestimonialsSection';
 import SiteHeader from '../components/layout/SiteHeader';
+import PricingSection from '../components/home/PricingSection';
+import VermontGallery from '@/components/home/VermontGallery';
 import { BrandLogo } from '@/components/brand';
 
 // FAQ Item Component
@@ -49,32 +50,6 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         </div>
       )}
     </div>
-  );
-}
-
-// Hero placeholder — replace with property photo when available
-function HeroPlaceholder() {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-      className="bg-white border border-brand-forest/10 rounded-2xl min-h-[280px] sm:min-h-[360px] lg:min-h-[420px] flex flex-col items-center justify-center p-8 sm:p-10 text-center shadow-sm"
-    >
-      <p className="text-brand-gold text-xs font-sans font-bold uppercase tracking-widest mb-8">
-        Now serving Vermont + New Jersey
-      </p>
-      <div className="grid grid-cols-2 gap-10 sm:gap-16 w-full max-w-xs">
-        <div className="text-center">
-          <p className="font-serif font-bold text-4xl sm:text-5xl text-brand-forest">3</p>
-          <p className="font-sans text-sm text-brand-slate/70 mt-1">markets</p>
-        </div>
-        <div className="text-center">
-          <p className="font-serif font-bold text-4xl sm:text-5xl text-brand-forest">24hr</p>
-          <p className="font-sans text-sm text-brand-slate/70 mt-1">booking window</p>
-        </div>
-      </div>
-    </motion.div>
   );
 }
 
@@ -151,104 +126,169 @@ export default function Home() {
     <div className="min-h-screen bg-brand-ivory">
       <SiteHeader homeAnchors bookingHref={bookingUrl} />
 
-      {/* Hero Section */}
-      <section className="pt-12 pb-16 px-4 sm:px-6 lg:px-8 bg-brand-ivory">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
+      {/* ── HERO ── */}
+      <section className="bg-vm-navy pt-16 pb-0 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-vm-cyan" />
+              <span className="font-body text-xs text-white/70 tracking-wide">
+                Serving New Jersey & Vermont since 2024
+              </span>
+            </div>
+          </div>
+
+          <div className="text-center mb-4">
+            <h1 className="font-heading font-bold text-white text-4xl md:text-5xl leading-tight tracking-tight mb-4">
+              Professional cleaning,
+              <br />
+              <span className="text-vm-cyan">wherever you need it.</span>
+            </h1>
+            <p className="font-body text-white/55 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+              Choose your market below. We&apos;ll handle the rest.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-12 max-w-4xl mx-auto">
+            <a
+              href="/locations/new-jersey"
+              className="group relative rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-vm-cyan/40 transition-all duration-300 overflow-hidden p-8 flex flex-col"
             >
-              <motion.h1 
-                className="font-serif font-bold text-brand-forest text-4xl sm:text-5xl lg:text-6xl mb-6 leading-tight"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
+              <div className="flex items-center justify-between mb-6">
+                <span className="font-body text-xs font-semibold text-vm-cyan uppercase tracking-widest">
+                  Residential
+                </span>
+                <span className="font-body text-xs text-white/35">NJ</span>
+              </div>
+
+              <h2 className="font-heading font-bold text-white text-2xl mb-3 leading-tight">
+                New Jersey
+                <br />
+                home cleaning
+              </h2>
+
+              <p className="font-body text-white/55 text-sm leading-relaxed mb-8 flex-1">
+                Reliable home and apartment cleaning for NJ families. Newark, Jersey City,
+                Paterson and surrounding areas.
+              </p>
+
+              <ul className="space-y-2 mb-8">
+                {[
+                  'Standard, deep & move-in/out cleans',
+                  'Online booking in 2 minutes',
+                  'Vetted, insured cleaners',
+                ].map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-center gap-2 font-body text-sm text-white/65"
+                  >
+                    <span className="text-vm-cyan text-xs">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                <span className="font-heading font-semibold text-white text-sm group-hover:text-vm-cyan transition-colors">
+                  Book NJ cleaning →
+                </span>
+                <span className="font-body text-xs text-white/35">From $120</span>
+              </div>
+            </a>
+
+            <a
+              href="/vermont"
+              className="group relative rounded-2xl border border-vm-cyan/30 bg-vm-cyan/5 hover:bg-vm-cyan/10 hover:border-vm-cyan/60 transition-all duration-300 overflow-hidden p-8 flex flex-col"
+            >
+              <div className="absolute top-4 right-4 hidden sm:block">
+                <span className="bg-vm-cyan text-vm-navy font-heading font-semibold text-xs px-3 py-1 rounded-full">
+                  Now serving
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between mb-6">
+                <span className="font-body text-xs font-semibold text-vm-cyan uppercase tracking-widest">
+                  Short-term rentals
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="sm:hidden bg-vm-cyan text-vm-navy font-heading font-semibold text-xs px-2 py-0.5 rounded-full">
+                    New
+                  </span>
+                  <span className="font-body text-xs text-white/35">VT</span>
+                </div>
+              </div>
+
+              <h2 className="font-heading font-bold text-white text-2xl mb-3 leading-tight">
+                Vermont Airbnb
+                <br />& rental cleaning
+              </h2>
+
+              <p className="font-body text-white/55 text-sm leading-relaxed mb-8 flex-1">
+                Turnover cleaning for ski rentals, Airbnbs, and second homes in the Okemo
+                Valley. Locally operated from Ludlow, VT.
+              </p>
+
+              <ul className="space-y-2 mb-8">
+                {[
+                  'Between-guest turnovers, every time',
+                  'Photo report after every clean',
+                  'Remote owner friendly',
+                ].map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-center gap-2 font-body text-sm text-white/65"
+                  >
+                    <span className="text-vm-cyan text-xs">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex items-center justify-between pt-4 border-t border-vm-cyan/20">
+                <span className="font-heading font-semibold text-white text-sm group-hover:text-vm-cyan transition-colors">
+                  Book Vermont cleaning →
+                </span>
+                <span className="font-body text-xs text-white/35">From $225</span>
+              </div>
+            </a>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-6 py-8 mt-4 border-t border-white/10">
+            <div className="flex items-center gap-2">
+              <span className="text-vm-cyan text-xs">★★★★★</span>
+              <span className="font-body text-xs text-white/50">
+                Rated 5 stars by local customers
+              </span>
+            </div>
+            <div className="w-px h-3 bg-white/20 hidden md:block" />
+            <div className="flex items-center gap-2">
+              <span className="font-body text-xs text-white/50">Trusted since 2024</span>
+            </div>
+            <div className="w-px h-3 bg-white/20 hidden md:block" />
+            <div className="flex items-center gap-2">
+              <span className="font-body text-xs text-white/50">
+                Insured & background-checked
+              </span>
+            </div>
+            <div className="w-px h-3 bg-white/20 hidden md:block" />
+            <div className="flex items-center gap-2">
+              <a
+                href={`tel:${phoneNumberTel}`}
+                className="font-body text-xs text-vm-cyan hover:underline"
+                onClick={() => {
+                  sendGAEvent('event', 'phone_clicked', {
+                    phone_number: phoneNumber,
+                    location: 'hero_section',
+                  });
+                }}
               >
-                Reliable home cleaning,{' '}
-                <span className="text-brand-gold">without the stress.</span>
-              </motion.h1>
-              <motion.p 
-                className="font-sans text-brand-slate/80 text-lg sm:text-xl mb-4 leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-              >
-                Book in minutes. We'll handle the rest.
-              </motion.p>
-              <motion.p 
-                className="font-sans text-sm text-brand-slate/60 mb-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.15 }}
-              >
-                Takes about 2 minutes to book
-              </motion.p>
-              <motion.div 
-                className="flex flex-col sm:flex-row gap-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                <a 
-                  href={bookingUrl}
-                  className="bg-brand-forest text-brand-ivory font-sans font-bold uppercase tracking-wider text-xs rounded inline-flex items-center justify-center px-8 py-3.5 hover:bg-brand-forest-hover transition shadow-md"
-                  aria-label="Book your cleaning service"
-                >
-                  Book a Service <ArrowRight className="ml-2 w-5 h-5" aria-hidden="true" />
-                </a>
-                <a 
-                  href={`tel:${phoneNumberTel}`}
-                  className="border border-brand-forest/20 text-brand-forest font-sans inline-flex items-center justify-center rounded px-6 py-3.5 text-sm font-medium hover:bg-brand-forest/5 transition-colors"
-                  aria-label={`Call VelocityMaid at ${phoneNumber}`}
-                  onClick={() => {
-                    sendGAEvent('event', 'phone_clicked', {
-                      phone_number: phoneNumber,
-                      location: 'hero_section'
-                    });
-                  }}
-                >
-                  <Phone className="mr-2 w-5 h-5" aria-hidden="true" /> Call {phoneNumber}
-                </a>
-              </motion.div>
-              <motion.div 
-                className="mt-10 flex flex-wrap items-center gap-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-              >
-                <motion.div 
-                  className="flex items-center"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.4 }}
-                >
-                  <div className="flex">
-                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  </div>
-                  <span className="ml-2 font-sans text-sm text-brand-slate/70">Rated 5 stars by local customers</span>
-                </motion.div>
-                <motion.div 
-                  className="font-sans text-sm text-brand-slate/70"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.5 }}
-                >
-                  Trusted since 2024
-                </motion.div>
-              </motion.div>
-            </motion.div>
-            <div className="relative">
-              <HeroPlaceholder />
+                Call {phoneNumber}
+              </a>
             </div>
           </div>
         </div>
       </section>
+      {/* ── END HERO ── */}
 
       {/* Trust Bullets */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-brand-forest/5">
@@ -275,52 +315,6 @@ export default function Home() {
               <h3 className="font-serif font-semibold text-brand-forest mb-2 text-lg">Local support when you need it</h3>
               <p className="text-sm text-brand-slate/70">Real people ready to help, not automated responses</p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Market split — NJ + Vermont */}
-      <section className="py-12 px-6 bg-brand-ivory border-y border-brand-forest/5">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="rounded-xl border border-brand-forest/10 bg-white p-8 flex flex-col gap-4 shadow-sm">
-            <span className="text-xs font-sans font-bold text-brand-gold uppercase tracking-widest">
-              Residential
-            </span>
-            <h2 className="text-2xl font-serif font-bold text-brand-forest">
-              New Jersey cleaning
-            </h2>
-            <p className="font-sans text-brand-slate/70 text-sm leading-relaxed">
-              Home and apartment cleaning for NJ families. Newark, Jersey City, Paterson and
-              surrounding areas.
-            </p>
-            <a
-              href="/book?branch=new-jersey"
-              className="mt-auto inline-flex items-center text-brand-forest font-sans font-bold uppercase tracking-wider text-xs hover:text-brand-gold transition"
-            >
-              Book NJ cleaning →
-            </a>
-          </div>
-
-          <div className="rounded-xl border border-brand-gold/30 bg-white p-8 flex flex-col gap-4 shadow-sm relative">
-            <span className="absolute top-4 right-4 bg-brand-gold/20 text-brand-forest text-xs font-sans font-bold px-3 py-1 rounded-full">
-              Now serving
-            </span>
-            <span className="text-xs font-sans font-bold text-brand-gold uppercase tracking-widest">
-              Short-term rentals
-            </span>
-            <h2 className="text-2xl font-serif font-bold text-brand-forest">
-              Vermont cleaning
-            </h2>
-            <p className="font-sans text-brand-slate/70 text-sm leading-relaxed">
-              Turnover cleaning for Airbnbs and ski rentals in the Okemo Valley. Locally operated
-              from Ludlow, VT.
-            </p>
-            <a
-              href="/vermont"
-              className="mt-auto inline-flex items-center text-brand-forest font-sans font-bold uppercase tracking-wider text-xs hover:text-brand-gold transition"
-            >
-              Book Vermont cleaning →
-            </a>
           </div>
         </div>
       </section>
@@ -354,6 +348,9 @@ export default function Home() {
       <section ref={beforeAfterRef} data-section="beforeAfter" className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-ivory">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
+            <p className="text-center text-xs font-semibold font-body text-vm-muted uppercase tracking-widest mb-4">
+              New Jersey
+            </p>
             <h2 className="text-4xl font-bold text-brand-forest mb-4">See the VelocityMaid Difference</h2>
             <p className="text-xl text-brand-slate/70">Real homes. Real transformations. See why local New Jersey families trust us.</p>
           </div>
@@ -439,6 +436,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <VermontGallery />
 
       {/* Why Choose Us */}
       <section id="why-us" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
@@ -571,98 +570,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-ivory">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-brand-forest mb-4">Transparent Pricing</h2>
-            <p className="text-xl text-brand-slate/70">No hidden fees, just clean homes</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Basic Clean",
-                price: "$120",
-                description: "Perfect for regular maintenance",
-                features: [
-                  "Kitchen cleaning",
-                  "Bathroom cleaning",
-                  "Dusting & vacuuming",
-                  "Floor mopping",
-                  "Trash removal"
-                ]
-              },
-              {
-                name: "Deep Clean",
-                price: "$220",
-                description: "Thorough top-to-bottom cleaning",
-                features: [
-                  "Everything in Basic",
-                  "Inside appliances",
-                  "Baseboards & windows",
-                  "Cabinet exteriors",
-                  "Detailed bathroom scrub"
-                ],
-                popular: true
-              },
-              {
-                name: "Move In/Out",
-                price: "$320",
-                description: "Complete property cleaning",
-                features: [
-                  "Everything in Deep Clean",
-                  "Inside cabinets",
-                  "Inside closets",
-                  "Garage (if applicable)",
-                  "Full property sanitization"
-                ]
-              }
-            ].map((plan, index) => (
-              <div 
-                key={index} 
-                className={`bg-white p-8 rounded-2xl shadow-lg card-hover ${
-                  plan.popular ? 'ring-2 ring-brand-gold relative' : ''
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-brand-forest text-white px-4 py-1 rounded-full text-sm font-semibold">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                <h3 className="text-2xl font-bold text-brand-forest mb-2">{plan.name}</h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-brand-gold">{plan.price}</span>
-                  <span className="text-brand-slate/70">/service</span>
-                </div>
-                <p className="text-brand-slate/70 mb-6">{plan.description}</p>
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-brand-slate/80">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <a 
-                  href={bookingUrl}
-                  className={`block text-center py-3 px-6 rounded-full font-semibold transition ${
-                    plan.popular 
-                      ? 'bg-brand-forest text-white hover:bg-brand-forest-hover' 
-                      : 'bg-white text-brand-forest hover:bg-gray-200'
-                  }`}
-                >
-                  Book Now
-                </a>
-              </div>
-            ))}
-          </div>
-          <p className="text-center text-brand-slate/70 mt-8">
-            *Prices may vary based on home size and condition. Contact us for a custom quote.
-          </p>
-        </div>
-      </section>
+      <PricingSection />
 
       {/* FAQ Section */}
       <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">

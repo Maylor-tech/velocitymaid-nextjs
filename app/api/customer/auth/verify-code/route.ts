@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       success: true,
-      redirectTo: '/customer/dashboard',
+      redirectTo: '/customer/jobs',
     });
 
     res.cookies.set(COOKIE_NAME, sessionToken, {

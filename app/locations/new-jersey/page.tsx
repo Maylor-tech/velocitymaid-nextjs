@@ -343,6 +343,7 @@ export default async function NewJerseyLandingPage() {
           secondaryHref="/book?branch=new-jersey"
           secondaryLabel="Book Now"
           maxWidthClass="max-w-7xl"
+          marketTagline="new-jersey"
         />
 
         {/* SECTION 1: HERO */}

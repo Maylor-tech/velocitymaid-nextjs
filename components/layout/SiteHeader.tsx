@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronDown, Menu, X } from "lucide-react";
-import { BrandLogo } from "@/components/brand";
+import { VelocityMaidWordmark } from "@/components/brand";
 
 const LOCATIONS = [
   { href: "/locations/new-jersey", label: "New Jersey" },
@@ -55,8 +55,7 @@ export default function SiteHeader({
       <div className="mx-auto max-w-marketing px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="shrink-0 min-w-0">
-            <BrandLogo size="header" className="hidden sm:flex" />
-            <BrandLogo size="mobile" showTagline={false} className="sm:hidden" />
+            <VelocityMaidWordmark variant="homepage" wordmarkFill="#0F1C2E" />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6" aria-label="Main">

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X, Phone, Mail } from "lucide-react";
-import { BrandLogo } from "@/components/brand";
+import { VelocityMaidWordmark, type VelocityMaidMarketTagline } from "@/components/brand";
 
 export interface BranchLandingNavProps {
   bookingHref: string;
@@ -14,6 +14,7 @@ export interface BranchLandingNavProps {
   phoneDisplay?: string;
   email?: string;
   maxWidthClass?: string;
+  marketTagline?: VelocityMaidMarketTagline;
 }
 
 export default function BranchLandingNav({
@@ -25,6 +26,7 @@ export default function BranchLandingNav({
   phoneDisplay,
   email,
   maxWidthClass = "max-w-6xl",
+  marketTagline = "new-jersey",
 }: BranchLandingNavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -37,8 +39,17 @@ export default function BranchLandingNav({
         className={`${maxWidthClass} mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4`}
       >
         <Link href="/" className="shrink-0 min-w-0">
-          <BrandLogo size="header" className="hidden sm:flex" />
-          <BrandLogo size="mobile" showTagline={false} className="sm:hidden" />
+          <VelocityMaidWordmark
+            variant="market"
+            market={marketTagline}
+            wordmarkFill="#0F1C2E"
+            className="hidden sm:block"
+          />
+          <VelocityMaidWordmark
+            variant="homepage"
+            wordmarkFill="#0F1C2E"
+            className="sm:hidden"
+          />
         </Link>
 
         {/* Desktop nav */}
