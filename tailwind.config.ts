@@ -9,10 +9,10 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "vm-navy": "#0F1C2E",
-        "vm-cyan": "#00C2CB",
-        "vm-cyan-dark": "#00A8B0",
-        "vm-surface": "#F4F6F9",
+        "vm-navy": "#061B44",
+        "vm-cyan": "#22D3EE",
+        "vm-cyan-dark": "#1BB8D4",
+        "vm-surface": "#FFFFFF",
         "vm-text": "#1A1A2E",
         "vm-muted": "#6B7280",
         "vm-border": "#E0E4EA",

@@ -3,66 +3,19 @@
 import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
+import {
+  VERMONT_GALLERY_PHOTOS,
+  VERMONT_GALLERY_HEADLINE,
+  VERMONT_GALLERY_SUBHEADLINE,
+  VERMONT_GALLERY_TRUST_LINE,
+} from "@/lib/vermont/middleburyPhotos";
 
 /** Set to true once photos are in public/images/vermont/ */
-export const VERMONT_GALLERY_ENABLED = false;
-
-const PHOTOS = [
-  {
-    src: "/images/vermont/vermont-kitchen.jpg",
-    alt: "Clean white kitchen at Vermont short-term rental",
-    room: "Kitchen",
-  },
-  {
-    src: "/images/vermont/vermont-living-room.jpg",
-    alt: "Living room at Vermont rental property",
-    room: "Living room",
-  },
-  {
-    src: "/images/vermont/vermont-reading-room.jpg",
-    alt: "Reading room with bay window Vermont",
-    room: "Reading room",
-  },
-  {
-    src: "/images/vermont/vermont-attic-bedroom-1.jpg",
-    alt: "Attic bedroom with exposed wood ceiling Vermont",
-    room: "Attic bedroom",
-  },
-  {
-    src: "/images/vermont/vermont-attic-bedroom-2.jpg",
-    alt: "Second attic suite at Vermont rental",
-    room: "Attic suite",
-  },
-  {
-    src: "/images/vermont/vermont-attic-lounge.jpg",
-    alt: "Upstairs lounge with TV Vermont rental",
-    room: "Upstairs lounge",
-  },
-  {
-    src: "/images/vermont/vermont-nook.jpg",
-    alt: "Cozy reading nook with octagon window Vermont",
-    room: "Reading nook",
-  },
-  {
-    src: "/images/vermont/vermont-screened-porch.jpg",
-    alt: "Screened porch with wicker furniture Vermont",
-    room: "Screened porch",
-  },
-  {
-    src: "/images/vermont/vermont-dining-room.jpg",
-    alt: "Dining room with stained glass pendant Vermont",
-    room: "Dining room",
-  },
-  {
-    src: "/images/vermont/vermont-laundry-room.jpg",
-    alt: "Laundry room at Vermont rental property",
-    room: "Laundry room",
-  },
-];
+export const VERMONT_GALLERY_ENABLED = true;
 
 const TRUST = [
   "Photo report after every clean",
-  "Locally operated from Ludlow, VT",
+  "Locally operated from Middlebury, VT",
   "Turnover-ready in time for check-in",
 ];
 
@@ -86,20 +39,21 @@ export default function VermontGallery() {
     setImgErrors((prev) => ({ ...prev, [index]: true }));
   };
 
+  const photos = VERMONT_GALLERY_PHOTOS;
+  const current = photos[active];
+
   return (
-    <section className="py-16 px-6 bg-vm-surface">
+    <section className="py-16 px-6 bg-white border-t border-vm-border">
       <div className="max-w-5xl mx-auto">
         <div className="mb-10">
           <p className="text-xs font-semibold font-body text-vm-cyan uppercase tracking-widest mb-2">
-            Vermont properties
+            {VERMONT_GALLERY_TRUST_LINE}
           </p>
           <h2 className="text-3xl font-bold font-heading text-vm-navy mb-3">
-            Real Vermont homes we care for
+            {VERMONT_GALLERY_HEADLINE}
           </h2>
-          <p className="font-body text-vm-muted text-sm max-w-xl leading-relaxed">
-            Middlebury, VT — a charming 4-bedroom, 2.5-bath home on Airbnb, VRBO,
-            and Booking.com. VelocityMaid handles every turnover so the owner can
-            manage confidently from out of state.
+          <p className="font-body text-vm-muted text-sm max-w-2xl leading-relaxed">
+            {VERMONT_GALLERY_SUBHEADLINE}
           </p>
         </div>
 
@@ -111,8 +65,8 @@ export default function VermontGallery() {
             <PhotoFallback />
           ) : (
             <Image
-              src={PHOTOS[active].src}
-              alt={PHOTOS[active].alt}
+              src={current.src}
+              alt={current.alt}
               fill
               className="object-cover transition-opacity duration-300"
               sizes="(max-width: 768px) 100vw, 900px"
@@ -124,11 +78,11 @@ export default function VermontGallery() {
             className="absolute bottom-0 left-0 right-0 px-5 py-4"
             style={{
               background:
-                "linear-gradient(to top, rgba(0,0,0,0.65), transparent)",
+                "linear-gradient(to top, rgba(6,27,68,0.85), transparent)",
             }}
           >
             <span className="text-white font-heading font-semibold text-sm">
-              {PHOTOS[active].room}
+              {current.label}
             </span>
             <span className="text-white/55 font-body text-xs ml-2">
               Middlebury, Vermont
@@ -136,13 +90,16 @@ export default function VermontGallery() {
           </div>
         </div>
 
-        <div className="grid grid-cols-5 gap-2 mb-10 md:grid-cols-10">
-          {PHOTOS.map((photo, i) => (
+        <div
+          className={`grid gap-2 mb-10 grid-cols-3 sm:grid-cols-6`}
+        >
+          {photos.map((photo, i) => (
             <button
               key={photo.src}
               type="button"
               onClick={() => setActive(i)}
-              aria-label={`View ${photo.room}`}
+              aria-label={`View ${photo.label}`}
+              aria-current={active === i ? "true" : undefined}
               className={`relative rounded-lg overflow-hidden transition-all focus:outline-none focus:ring-2 focus:ring-vm-cyan ${
                 active === i
                   ? "ring-2 ring-vm-cyan ring-offset-2 opacity-100"
@@ -155,10 +112,10 @@ export default function VermontGallery() {
               ) : (
                 <Image
                   src={photo.src}
-                  alt={photo.room}
+                  alt={photo.label}
                   fill
                   className="object-cover"
-                  sizes="80px"
+                  sizes="120px"
                   onError={() => markError(i)}
                 />
               )}

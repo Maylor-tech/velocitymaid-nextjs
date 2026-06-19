@@ -34,13 +34,13 @@ export default function VelocityMaidWordmark({
         role="img"
         className={className}
       >
-        <polygon points="0,2 12,38 24,2 18,2 12,25 6,2" fill="#00C2CB" />
+        <polygon points="0,2 12,38 24,2 18,2 12,25 6,2" fill="#22D3EE" />
         <line
           x1="0"
           y1="39"
           x2="24"
           y2="39"
-          stroke="#00C2CB"
+          stroke="#22D3EE"
           strokeWidth="1.5"
           opacity="0.35"
         />
@@ -69,13 +69,13 @@ export default function VelocityMaidWordmark({
       role="img"
       className={className}
     >
-      <polygon points="0,2 14,46 28,2 21,2 14,30 7,2" fill="#00C2CB" />
+      <polygon points="0,2 14,46 28,2 21,2 14,30 7,2" fill="#22D3EE" />
       <line
         x1="0"
         y1="47"
         x2="28"
         y2="47"
-        stroke="#00C2CB"
+        stroke="#22D3EE"
         strokeWidth="2"
         opacity="0.35"
       />
@@ -96,7 +96,7 @@ export default function VelocityMaidWordmark({
         fontFamily="Arial, sans-serif"
         fontWeight="400"
         fontSize="9"
-        fill="#00C2CB"
+        fill="#22D3EE"
         letterSpacing="3"
       >
         {MARKET_TAGLINE[market]}

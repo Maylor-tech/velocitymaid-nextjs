@@ -25,6 +25,7 @@ import TestimonialsSection from '../components/TestimonialsSection';
 import SiteHeader from '../components/layout/SiteHeader';
 import PricingSection from '../components/home/PricingSection';
 import VermontGallery from '@/components/home/VermontGallery';
+import { MIDDLEBURY_PHOTO_PATHS } from '@/lib/vermont/middleburyPhotos';
 import { BrandLogo } from '@/components/brand';
 
 // FAQ Item Component
@@ -198,14 +199,30 @@ export default function Home() {
 
             <a
               href="/vermont"
-              className="group relative rounded-2xl border border-vm-cyan/30 bg-vm-cyan/5 hover:bg-vm-cyan/10 hover:border-vm-cyan/60 transition-all duration-300 overflow-hidden p-8 flex flex-col"
+              className="group relative rounded-2xl border border-vm-cyan/30 bg-vm-cyan/5 hover:bg-vm-cyan/10 hover:border-vm-cyan/60 transition-all duration-300 overflow-hidden flex flex-col"
             >
-              <div className="absolute top-4 right-4 hidden sm:block">
-                <span className="bg-vm-cyan text-vm-navy font-heading font-semibold text-xs px-3 py-1 rounded-full">
-                  Now serving
-                </span>
+              <div className="relative w-full h-36 sm:h-40">
+                <Image
+                  src={MIDDLEBURY_PHOTO_PATHS.exteriorHero}
+                  alt="VelocityMaid Vermont vacation rental exterior in Middlebury"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 400px"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(to top, rgba(6,27,68,0.75), transparent 60%)",
+                  }}
+                />
+                <div className="absolute top-4 right-4 hidden sm:block">
+                  <span className="bg-vm-cyan text-vm-navy font-heading font-semibold text-xs px-3 py-1 rounded-full">
+                    Now serving
+                  </span>
+                </div>
               </div>
-
+              <div className="p-8 flex flex-col flex-1">
               <div className="flex items-center justify-between mb-6">
                 <span className="font-body text-xs font-semibold text-vm-cyan uppercase tracking-widest">
                   Short-term rentals
@@ -249,6 +266,7 @@ export default function Home() {
                   Book Vermont cleaning →
                 </span>
                 <span className="font-body text-xs text-white/35">From $225</span>
+              </div>
               </div>
             </a>
           </div>
