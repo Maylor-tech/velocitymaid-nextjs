@@ -1349,3 +1349,20 @@ enum JobReviewStatus {
   APPROVED
   REJECTED
 }
+
+model Tip {
+  id                    String   @id @default(cuid())
+  amount                Int
+  currency              String   @default("usd")
+  guestName             String?
+  guestMessage          String?
+  cleanerName           String?
+  propertyAddress       String?
+  stripePaymentIntentId String?  @unique
+  status                String   @default("pending")
+  market                String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("tips")
+}

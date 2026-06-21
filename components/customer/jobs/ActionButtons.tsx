@@ -46,7 +46,7 @@ export default function ActionButtons({ status, jobDate, onRequestChange, onCanc
       <button
         onClick={onRequestChange}
         disabled={disabled || !canRequestChange}
-        className="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-2 px-6 py-3 bg-vm-surface text-vm-navy border border-vm-navy/20 rounded-lg hover:bg-vm-navy/5 transition-colors font-body font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         title={!canRequestChange ? 'Changes must be requested at least 4 hours before your appointment' : ''}
       >
         <Calendar className="w-4 h-4" />
@@ -56,7 +56,7 @@ export default function ActionButtons({ status, jobDate, onRequestChange, onCanc
       <button
         onClick={onCancel}
         disabled={disabled || !canCancel}
-        className="inline-flex items-center gap-2 px-6 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-2 px-6 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-body font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         title={!canCancel ? 'Cancellations must be made at least 2 hours before your appointment' : ''}
       >
         <XCircle className="w-4 h-4" />

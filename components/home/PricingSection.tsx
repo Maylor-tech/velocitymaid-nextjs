@@ -122,13 +122,13 @@ export default function PricingSection() {
   const activePricing = market === "nj" ? njPricing : vermontPricing;
 
   return (
-    <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-ivory">
+    <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-vm-surface">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-brand-forest mb-4">
+          <h2 className="text-4xl font-heading font-bold text-vm-navy mb-4">
             Transparent Pricing
           </h2>
-          <p className="text-xl text-brand-slate/70">
+          <p className="text-xl text-vm-muted font-body">
             No hidden fees, just clean homes
           </p>
         </div>
@@ -162,44 +162,44 @@ export default function PricingSection() {
           {activePricing.map((plan) => (
             <div
               key={plan.name}
-              className={`bg-white p-8 rounded-2xl shadow-lg card-hover ${
-                plan.highlight ? "ring-2 ring-brand-gold relative" : ""
+              className={`bg-vm-white p-8 rounded-2xl shadow-lg card-hover ${
+                plan.highlight ? "ring-2 ring-vm-cyan relative" : ""
               }`}
             >
               {plan.highlight && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-brand-forest text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  <span className="bg-vm-navy text-vm-white px-4 py-1 rounded-full text-sm font-heading font-semibold">
                     Most Popular
                   </span>
                 </div>
               )}
-              <h3 className="text-2xl font-bold text-brand-forest mb-2">
+              <h3 className="text-2xl font-heading font-bold text-vm-navy mb-2">
                 {plan.name}
               </h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-brand-gold">
+                <span className="text-4xl font-heading font-bold text-vm-cyan">
                   {plan.price}
                 </span>
-                <span className="text-brand-slate/70"> {plan.per}</span>
+                <span className="text-vm-muted font-body"> {plan.per}</span>
               </div>
-              <p className="text-brand-slate/70 mb-6">{plan.description}</p>
+              <p className="text-vm-muted font-body mb-6">{plan.description}</p>
               <ul className="space-y-3 mb-8">
                 {plan.features.map((feature) => (
                   <li
                     key={feature}
-                    className="flex items-center text-brand-slate/80"
+                    className="flex items-center text-vm-text font-body"
                   >
-                    <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-vm-cyan mr-3 flex-shrink-0" />
                     {feature}
                   </li>
                 ))}
               </ul>
               <a
                 href={plan.href}
-                className={`block text-center py-3 px-6 rounded-full font-semibold transition ${
+                className={`block text-center py-3 px-6 rounded-full font-heading font-semibold transition ${
                   plan.highlight
-                    ? "bg-brand-forest text-white hover:bg-brand-forest-hover"
-                    : "bg-white text-brand-forest hover:bg-gray-200"
+                    ? "bg-vm-navy text-vm-white hover:bg-vm-navy/90"
+                    : "bg-vm-white text-vm-navy border border-vm-navy/10 hover:bg-vm-surface"
                 }`}
               >
                 {plan.cta}
@@ -230,7 +230,7 @@ export default function PricingSection() {
           </p>
         )}
 
-        <p className="text-center text-brand-slate/70 mt-8">
+        <p className="text-center text-vm-muted font-body mt-8">
           *Prices may vary based on home size and condition. Contact us for a
           custom quote.
         </p>

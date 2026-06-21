@@ -1,10 +1,15 @@
-<svg width="64" height="64" viewBox="0 0 64 64" 
+<svg width="64" height="64" viewBox="0 0 64 64"
   xmlns="http://www.w3.org/2000/svg">
   <rect width="64" height="64" rx="12" fill="#0F1C2E"/>
-  <polygon 
-    points="16,10 32,52 48,10 39,10 32,36 25,10" 
-    fill="#00C2CB"/>
-  <line 
-    x1="16" y1="54" x2="48" y2="54" 
-    stroke="#00C2CB" stroke-width="2.5" opacity="0.35"/>
+  <g transform="translate(8.2,7.72) scale(0.476)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M8,42 L50,10 L92,42 L92,92 L8,92 Z M39,64 L61,64 L61,92 L39,92 Z"
+      fill="#00C2CB"/>
+    <path
+      d="M74,14 L75.56,18.44 L80,20 L75.56,21.56 L74,26 L72.44,21.56 L68,20 L72.44,18.44 Z"
+      fill="#FFFFFF"/>
+    <circle cx="74" cy="20" r="1.5" fill="#0F1C2E"/>
+  </g>
 </svg>

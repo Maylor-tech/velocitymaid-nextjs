@@ -59,29 +59,29 @@ export default function PayBalanceSection({
   };
 
   return (
-    <div className="rounded-xl border border-[#D4AF37]/50 bg-[#FBF9F4] p-6 shadow-sm">
+    <div className="rounded-xl border border-orange-200 bg-vm-surface p-6 shadow-sm">
       <div className="flex items-start gap-3 mb-4">
-        <div className="rounded-full bg-[#0B221E]/10 p-2">
-          <ClipboardCheck className="w-5 h-5 text-[#0B221E]" aria-hidden />
+        <div className="rounded-full bg-vm-navy/10 p-2">
+          <ClipboardCheck className="w-5 h-5 text-vm-navy" aria-hidden />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-[#0B221E]">Your service is complete.</h2>
-          <p className="mt-1 text-sm text-[#2C3E3B]">
+          <h2 className="text-lg font-heading font-semibold text-vm-navy">Your service is complete.</h2>
+          <p className="mt-1 text-sm text-vm-text font-body">
             Review your checklist and service details above. When you&apos;re ready, pay the
             remaining balance securely through Stripe.
           </p>
         </div>
       </div>
 
-      <ul className="mb-5 space-y-2 text-sm text-[#2C3E3B]">
+      <ul className="mb-5 space-y-2 text-sm text-vm-text font-body">
         <li className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#0B221E] shrink-0" aria-hidden />
+          <ShieldCheck className="w-4 h-4 text-vm-cyan shrink-0" aria-hidden />
           Card payments are processed securely — we never store your full card number.
         </li>
         <li className="flex items-center gap-2">
-          <CreditCard className="w-4 h-4 text-[#0B221E] shrink-0" aria-hidden />
+          <CreditCard className="w-4 h-4 text-vm-cyan shrink-0" aria-hidden />
           Remaining balance:{' '}
-          <span className="font-semibold text-[#0B221E]">{formatCurrency(balanceDue)}</span>
+          <span className="font-semibold text-orange-700">{formatCurrency(balanceDue)}</span>
         </li>
       </ul>
 
@@ -99,7 +99,7 @@ export default function PayBalanceSection({
         type="button"
         onClick={handlePayBalance}
         disabled={loading}
-        className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-[#0B221E] px-6 py-3 text-sm font-semibold text-[#FBF9F4] transition-colors hover:bg-[#0B221E]/90 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-vm-navy px-6 py-3 text-sm font-heading font-semibold text-vm-white transition-colors hover:bg-vm-navy/90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? (
           <>
