@@ -10,9 +10,18 @@ export interface ButtonProps
     | "secondary"
     | "ghost"
     | "link"
+    /** @deprecated LEGACY forest/gold palette — use "navy" | "cyan" | "navyOutline" */
     | "brand"
+    /** @deprecated LEGACY forest/gold palette — use "navy" | "cyan" | "navyOutline" */
     | "brandGold"
+    /** @deprecated LEGACY forest/gold palette — use "navy" | "cyan" | "navyOutline" */
     | "brandOutline"
+    /** Approved primary CTA — Navy fill, White text (lib/brand/buttons.ts) */
+    | "navy"
+    /** Approved accent CTA — Cyan fill, Navy text (lib/brand/buttons.ts) */
+    | "cyan"
+    /** Approved outline — Navy border/text (lib/brand/buttons.ts) */
+    | "navyOutline"
   size?: "default" | "sm" | "lg" | "icon"
 }
 
@@ -24,7 +33,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
           variant === "brand" ||
             variant === "brandGold" ||
-            variant === "brandOutline"
+            variant === "brandOutline" ||
+            variant === "navy" ||
+            variant === "cyan" ||
+            variant === "navyOutline"
             ? "btn-tactile transition-[transform,background-color,border-color] duration-150"
             : "transition-colors",
           {
@@ -34,12 +46,24 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             "bg-secondary text-secondary-foreground hover:bg-secondary/80": variant === "secondary",
             "hover:bg-accent hover:text-accent-foreground": variant === "ghost",
             "text-primary underline-offset-4 hover:underline": variant === "link",
+            // @deprecated LEGACY — forest/gold palette, see lib/brand/tokens.ts
             "bg-brand-forest text-brand-ivory font-bold uppercase tracking-wider text-xs hover:bg-brand-forest/90 shadow-md":
               variant === "brand",
+            // @deprecated LEGACY — forest/gold palette, see lib/brand/tokens.ts
             "bg-brand-gold hover:bg-brand-gold-hover text-brand-forest font-bold uppercase tracking-wider text-xs shadow-md":
               variant === "brandGold",
+            // @deprecated LEGACY — forest/gold palette, see lib/brand/tokens.ts
             "border border-brand-forest/20 hover:border-brand-forest text-brand-forest font-bold uppercase tracking-wider text-xs bg-transparent":
               variant === "brandOutline",
+            // Approved — Navy primary CTA (lib/brand/buttons.ts → buttonTokens.primary)
+            "bg-vm-navy text-vm-white font-heading font-bold uppercase tracking-wider text-xs hover:bg-vm-navy/90 shadow-md":
+              variant === "navy",
+            // Approved — Cyan accent CTA (lib/brand/buttons.ts → buttonTokens.accent)
+            "bg-vm-cyan text-vm-navy font-heading font-bold uppercase tracking-wider text-xs hover:bg-vm-cyan-dark shadow-md":
+              variant === "cyan",
+            // Approved — Navy outline (lib/brand/buttons.ts → buttonTokens.outline)
+            "border border-vm-navy/20 hover:border-vm-navy text-vm-navy font-heading font-bold uppercase tracking-wider text-xs bg-transparent":
+              variant === "navyOutline",
           },
           {
             "h-10 px-4 py-2": size === "default",

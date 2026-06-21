@@ -144,8 +144,8 @@ export default function CustomerProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-3 text-gray-600">Loading profile...</span>
+        <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
+        <span className="ml-3 text-vm-muted font-body">Loading profile...</span>
       </div>
     );
   }
@@ -154,8 +154,8 @@ export default function CustomerProfilePage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Profile</h1>
-          <p className="text-gray-600">Manage your account information</p>
+          <h1 className="text-3xl font-heading font-bold text-vm-navy mb-2">Profile</h1>
+          <p className="text-vm-muted font-body">Manage your account information</p>
         </div>
 
         {/* Success Message */}
@@ -175,16 +175,16 @@ export default function CustomerProfilePage() {
         )}
 
         {/* Profile Form */}
-        <form onSubmit={handleSave} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form onSubmit={handleSave} className="bg-vm-white rounded-xl shadow-sm border border-vm-navy/10 p-6">
           <div className="space-y-6">
             {/* Name Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="firstName" className="block text-sm font-medium text-vm-text font-body mb-2">
                   First Name <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-vm-muted" />
                   <input
                     id="firstName"
                     type="text"
@@ -201,8 +201,8 @@ export default function CustomerProfilePage() {
                     }}
                     required
                     minLength={2}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                      validationErrors.firstName ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
+                      validationErrors.firstName ? 'border-red-300' : 'border-vm-navy/20'
                     }`}
                   />
                 </div>
@@ -212,11 +212,11 @@ export default function CustomerProfilePage() {
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="lastName" className="block text-sm font-medium text-vm-text font-body mb-2">
                   Last Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-vm-muted" />
                   <input
                     id="lastName"
                     type="text"
@@ -232,8 +232,8 @@ export default function CustomerProfilePage() {
                       }
                     }}
                     minLength={2}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                      validationErrors.lastName ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
+                      validationErrors.lastName ? 'border-red-300' : 'border-vm-navy/20'
                     }`}
                   />
                 </div>
@@ -245,29 +245,29 @@ export default function CustomerProfilePage() {
 
             {/* Email (Read-only) */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-vm-text font-body mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-vm-muted" />
                 <input
                   id="email"
                   type="email"
                   value={profile?.email || ''}
                   disabled
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                  className="w-full pl-10 pr-4 py-3 border border-vm-navy/20 rounded-lg bg-vm-surface text-vm-muted cursor-not-allowed font-body"
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
+              <p className="mt-1 text-xs text-vm-muted font-body">Email cannot be changed</p>
             </div>
 
             {/* Phone */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="phone" className="block text-sm font-medium text-vm-text font-body mb-2">
                 Phone Number
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-vm-muted" />
                 <input
                   id="phone"
                   type="tel"
@@ -282,8 +282,8 @@ export default function CustomerProfilePage() {
                       });
                     }
                   }}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                    validationErrors.phone ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
+                    validationErrors.phone ? 'border-red-300' : 'border-vm-navy/20'
                   }`}
                   placeholder="(973) 555-1234"
                 />
@@ -291,16 +291,16 @@ export default function CustomerProfilePage() {
               {validationErrors.phone && (
                 <p className="mt-1 text-sm text-red-600">{validationErrors.phone}</p>
               )}
-              <p className="mt-1 text-xs text-gray-500">Format: 7-20 digits, spaces, dashes, parentheses, or plus sign</p>
+              <p className="mt-1 text-xs text-vm-muted font-body">Format: 7-20 digits, spaces, dashes, parentheses, or plus sign</p>
             </div>
 
             {/* Default Address */}
             <div>
-              <label htmlFor="defaultAddress" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="defaultAddress" className="block text-sm font-medium text-vm-text font-body mb-2">
                 Default Address
               </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <MapPin className="absolute left-3 top-3 w-5 h-5 text-vm-muted" />
                 <textarea
                   id="defaultAddress"
                   value={defaultAddress}
@@ -316,8 +316,8 @@ export default function CustomerProfilePage() {
                   }}
                   rows={3}
                   minLength={5}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
-                    validationErrors.defaultAddress ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
+                    validationErrors.defaultAddress ? 'border-red-300' : 'border-vm-navy/20'
                   }`}
                   placeholder="123 Main St, City, State ZIP"
                 />
@@ -328,12 +328,12 @@ export default function CustomerProfilePage() {
             </div>
 
             {/* Account Info (Read-only) */}
-            <div className="pt-6 border-t border-gray-200">
-              <h3 className="text-sm font-medium text-gray-700 mb-4">Account Information</h3>
+            <div className="pt-6 border-t border-vm-navy/10">
+              <h3 className="text-sm font-medium text-vm-text font-body mb-4">Account Information</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Member Since</span>
-                  <span className="text-gray-900">
+                  <span className="text-vm-muted font-body">Member Since</span>
+                  <span className="text-vm-navy font-body">
                     {profile?.createdAt
                       ? new Date(profile.createdAt).toLocaleDateString('en-US', {
                           year: 'numeric',
@@ -347,11 +347,11 @@ export default function CustomerProfilePage() {
             </div>
 
             {/* Submit Button */}
-            <div className="pt-6 border-t border-gray-200">
+            <div className="pt-6 border-t border-vm-navy/10">
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full md:w-auto px-6 py-3 bg-vm-navy text-vm-white rounded-lg font-heading font-semibold hover:bg-vm-navy/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <span className="flex items-center justify-center gap-2">

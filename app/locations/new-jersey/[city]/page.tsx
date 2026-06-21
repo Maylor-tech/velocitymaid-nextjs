@@ -7,7 +7,6 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { 
   Sparkles, 
-  CheckCircle2, 
   Shield, 
   DollarSign, 
   Leaf, 
@@ -18,7 +17,6 @@ import {
 } from 'lucide-react';
 import { getCityDisplayName, getZipsForCity, getAllNJCities } from '@/utils/cityRouting';
 import FAQAccordion from '../../new-jersey/components/FAQAccordion';
-import BeforeAfterGallery from '../../new-jersey/components/BeforeAfterGallery';
 
 interface PageProps {
   params: { city: string };
@@ -38,11 +36,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const branch = await prisma.branch.findUnique({
     where: { slug: 'new-jersey' },
     include: {
-      landingContent: true,
+      BranchLandingContent: true,
     },
   });
 
-  const cityContent = branch?.landingContent?.cityContent as any;
+  const cityContent = branch?.BranchLandingContent?.cityContent as any;
   const cityData = cityContent?.[citySlug];
 
   const seoTitle = cityData?.seoTitle || `Professional House Cleaning in ${cityName}, NJ | VelocityMaid`;
@@ -75,11 +73,11 @@ export default async function CityLandingPage({ params }: PageProps) {
   const branch = await prisma.branch.findUnique({
     where: { slug: 'new-jersey' },
     include: {
-      servicePackages: {
+      BranchServicePackage: {
         where: { isActive: true },
         orderBy: { name: 'asc' },
       },
-      landingContent: true,
+      BranchLandingContent: true,
     },
   });
 
@@ -88,7 +86,7 @@ export default async function CityLandingPage({ params }: PageProps) {
   }
 
   // Get city-specific content
-  const cityContent = branch.landingContent?.cityContent as any;
+  const cityContent = branch.BranchLandingContent?.cityContent as any;
   const cityData = cityContent?.[citySlug] || {};
 
   // Default pricing
@@ -99,8 +97,8 @@ export default async function CityLandingPage({ params }: PageProps) {
   };
 
   const getServicePrice = (code: string): number => {
-    if (!branch.servicePackages) return defaultPricing[code as keyof typeof defaultPricing] || 0;
-    const pkg = branch.servicePackages.find(p => p.code.toLowerCase().includes(code.toLowerCase()));
+    if (!branch.BranchServicePackage) return defaultPricing[code as keyof typeof defaultPricing] || 0;
+    const pkg = branch.BranchServicePackage.find(p => p.code.toLowerCase().includes(code.toLowerCase()));
     return pkg ? Number(pkg.basePrice) : defaultPricing[code as keyof typeof defaultPricing] || 0;
   };
 
@@ -140,7 +138,7 @@ export default async function CityLandingPage({ params }: PageProps) {
   // Hero content
   const headline = cityData.headline || `Professional House Cleaning in ${cityName}, New Jersey`;
   const subheadline = cityData.subheadline || `Reliable, background-checked cleaners in ${cityName}. Flat-rate pricing, eco-friendly supplies, 100% satisfaction guarantee.`;
-  const heroImageUrl = cityData.heroImageUrl || branch.landingContent?.heroImageUrl || '/cleaning/clean-kitchen.jpg';
+  const heroImageUrl = cityData.heroImageUrl || branch.BranchLandingContent?.heroImageUrl || '/cleaning/clean-kitchen.jpg';
 
   // Structured Data
   const localBusinessSchema = {
@@ -171,20 +169,20 @@ export default async function CityLandingPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
       />
 
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-vm-white">
         {/* Navigation */}
-        <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <nav className="bg-vm-white shadow-sm border-b border-vm-navy/10 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center space-x-2">
-                <Sparkles className="w-8 h-8 text-[#0A3D2F]" />
-                <span className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <Sparkles className="w-8 h-8 text-vm-cyan" />
+                <span className="text-2xl font-heading font-bold text-vm-navy">
                   VelocityMaid
                 </span>
               </Link>
               <Link
                 href={`/booking?branch=new-jersey&city=${citySlug}`}
-                className="bg-[#0A3D2F] text-white px-6 py-2 rounded-full font-semibold hover:bg-[#083025] transition"
+                className="bg-vm-navy text-vm-white px-6 py-2 rounded-full font-heading font-semibold hover:bg-vm-navy/90 transition"
               >
                 Book Now
               </Link>
@@ -193,26 +191,26 @@ export default async function CityLandingPage({ params }: PageProps) {
         </nav>
 
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white py-20 md:py-32">
+        <section className="bg-vm-navy text-vm-white py-20 md:py-32">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <MapPin className="w-16 h-16 text-[#F8C548] mx-auto mb-6" />
-              <h1 className="text-5xl md:text-6xl font-bold mb-6" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+              <MapPin className="w-16 h-16 text-vm-cyan mx-auto mb-6" />
+              <h1 className="text-5xl md:text-6xl font-heading font-bold mb-6">
                 {headline}
               </h1>
-              <p className="text-xl md:text-2xl text-gray-200 mb-8">
+              <p className="text-xl md:text-2xl text-vm-white/80 font-body mb-8">
                 {subheadline}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   href={`/booking?branch=new-jersey&city=${citySlug}`}
-                  className="bg-[#F8C548] text-[#0A3D2F] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#F5B835] transition shadow-lg"
+                  className="bg-vm-cyan text-vm-navy px-8 py-4 rounded-xl font-heading font-bold text-lg hover:bg-vm-cyan-dark transition shadow-lg"
                 >
                   Book a Cleaning
                 </Link>
                 <Link
                   href="/locations/new-jersey"
-                  className="bg-white/10 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/20 transition border-2 border-white/30"
+                  className="bg-vm-white/10 text-vm-white px-8 py-4 rounded-xl font-heading font-bold text-lg hover:bg-vm-white/20 transition border-2 border-vm-white/30"
                 >
                   View All NJ Areas
                 </Link>
@@ -222,19 +220,19 @@ export default async function CityLandingPage({ params }: PageProps) {
         </section>
 
         {/* Services Section */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-vm-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="text-4xl md:text-5xl font-heading font-bold text-center mb-12 text-vm-navy">
               Our Cleaning Services in {cityName}
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-white border-2 border-[#0A3D2F] rounded-xl p-8 text-center">
-                <DollarSign className="w-16 h-16 text-[#0A3D2F] mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+              <div className="bg-vm-white border-2 border-vm-navy/20 rounded-xl p-8 text-center">
+                <DollarSign className="w-16 h-16 text-vm-cyan mx-auto mb-4" />
+                <h3 className="text-2xl font-heading font-bold text-vm-navy mb-4">
                   Basic Cleaning
                 </h3>
-                <p className="text-gray-600 mb-6">Starting at ${basicPrice}</p>
-                <ul className="text-left text-gray-700 space-y-2 mb-6">
+                <p className="text-vm-muted font-body mb-6">Starting at ${basicPrice}</p>
+                <ul className="text-left text-vm-text font-body space-y-2 mb-6">
                   <li>✓ Dusting & vacuuming</li>
                   <li>✓ Bathroom sanitization</li>
                   <li>✓ Kitchen cleaning</li>
@@ -242,13 +240,13 @@ export default async function CityLandingPage({ params }: PageProps) {
                 </ul>
               </div>
 
-              <div className="bg-white border-2 border-[#0A3D2F] rounded-xl p-8 text-center">
-                <Leaf className="w-16 h-16 text-[#0A3D2F] mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+              <div className="bg-vm-white border-2 border-vm-navy/20 rounded-xl p-8 text-center">
+                <Leaf className="w-16 h-16 text-vm-cyan mx-auto mb-4" />
+                <h3 className="text-2xl font-heading font-bold text-vm-navy mb-4">
                   Deep Cleaning
                 </h3>
-                <p className="text-gray-600 mb-6">Starting at ${deepPrice}</p>
-                <ul className="text-left text-gray-700 space-y-2 mb-6">
+                <p className="text-vm-muted font-body mb-6">Starting at ${deepPrice}</p>
+                <ul className="text-left text-vm-text font-body space-y-2 mb-6">
                   <li>✓ Everything in basic</li>
                   <li>✓ Inside appliances</li>
                   <li>✓ Baseboards & windowsills</li>
@@ -256,13 +254,13 @@ export default async function CityLandingPage({ params }: PageProps) {
                 </ul>
               </div>
 
-              <div className="bg-white border-2 border-[#0A3D2F] rounded-xl p-8 text-center">
-                <Clock className="w-16 h-16 text-[#0A3D2F] mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+              <div className="bg-vm-white border-2 border-vm-navy/20 rounded-xl p-8 text-center">
+                <Clock className="w-16 h-16 text-vm-cyan mx-auto mb-4" />
+                <h3 className="text-2xl font-heading font-bold text-vm-navy mb-4">
                   Move-In/Out
                 </h3>
-                <p className="text-gray-600 mb-6">Starting at ${moveInOutPrice}</p>
-                <ul className="text-left text-gray-700 space-y-2 mb-6">
+                <p className="text-vm-muted font-body mb-6">Starting at ${moveInOutPrice}</p>
+                <ul className="text-left text-vm-text font-body space-y-2 mb-6">
                   <li>✓ Comprehensive deep clean</li>
                   <li>✓ Cabinet interiors</li>
                   <li>✓ Window cleaning</li>
@@ -274,19 +272,19 @@ export default async function CityLandingPage({ params }: PageProps) {
         </section>
 
         {/* Service Areas */}
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-vm-surface">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="text-4xl md:text-5xl font-heading font-bold text-center mb-12 text-vm-navy">
               We Serve {cityName}
             </h2>
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <p className="text-center text-gray-700 mb-6">
+            <div className="bg-vm-white rounded-xl shadow-lg p-8">
+              <p className="text-center text-vm-text font-body mb-6">
                 We provide cleaning services in the following ZIP codes:
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {cityZips.map((zip) => (
-                  <div key={zip} className="text-center p-4 bg-[#F3F1EB] rounded-lg">
-                    <span className="font-semibold text-[#0A3D2F]">{zip}</span>
+                  <div key={zip} className="text-center p-4 bg-vm-surface rounded-lg border border-vm-navy/10">
+                    <span className="font-heading font-semibold text-vm-navy">{zip}</span>
                   </div>
                 ))}
               </div>
@@ -295,23 +293,23 @@ export default async function CityLandingPage({ params }: PageProps) {
         </section>
 
         {/* Testimonials */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-vm-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="text-4xl md:text-5xl font-heading font-bold text-center mb-12 text-vm-navy">
               What {cityName} Customers Say
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               {testimonials.map((testimonial: any, index: number) => (
-                <div key={index} className="bg-[#F3F1EB] rounded-xl p-6">
+                <div key={index} className="bg-vm-surface rounded-xl p-6 border border-vm-navy/10">
                   <div className="flex items-center gap-1 mb-4">
                     {[...Array(testimonial.rating || 5)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-[#F8C548] fill-current" />
+                      <Star key={i} className="w-5 h-5 text-vm-cyan fill-vm-cyan" />
                     ))}
                   </div>
-                  <p className="text-gray-700 mb-4 italic">"{testimonial.text}"</p>
+                  <p className="text-vm-text font-body mb-4 italic">"{testimonial.text}"</p>
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-[#0A3D2F]">{testimonial.name}</span>
-                    <span className="text-sm text-gray-600">{testimonial.location}</span>
+                    <span className="font-heading font-semibold text-vm-navy">{testimonial.name}</span>
+                    <span className="text-sm text-vm-muted font-body">{testimonial.location}</span>
                   </div>
                 </div>
               ))}
@@ -320,41 +318,41 @@ export default async function CityLandingPage({ params }: PageProps) {
         </section>
 
         {/* Why Choose Us */}
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-vm-surface">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="text-4xl md:text-5xl font-heading font-bold text-center mb-12 text-vm-navy">
               Why Choose VelocityMaid in {cityName}?
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
-                <Shield className="w-12 h-12 text-[#0A3D2F] mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <Shield className="w-12 h-12 text-vm-cyan mx-auto mb-4" />
+                <h3 className="text-xl font-heading font-bold text-vm-navy mb-2">
                   Background Checked
                 </h3>
-                <p className="text-gray-600">All cleaners are thoroughly vetted</p>
+                <p className="text-vm-muted font-body">All cleaners are thoroughly vetted</p>
               </div>
               <div className="text-center">
-                <DollarSign className="w-12 h-12 text-[#0A3D2F] mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <DollarSign className="w-12 h-12 text-vm-cyan mx-auto mb-4" />
+                <h3 className="text-xl font-heading font-bold text-vm-navy mb-2">
                   Flat-Rate Pricing
                 </h3>
-                <p className="text-gray-600">No hidden fees, transparent pricing</p>
+                <p className="text-vm-muted font-body">No hidden fees, transparent pricing</p>
               </div>
               <div className="text-center">
-                <Leaf className="w-12 h-12 text-[#0A3D2F] mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <Leaf className="w-12 h-12 text-vm-cyan mx-auto mb-4" />
+                <h3 className="text-xl font-heading font-bold text-vm-navy mb-2">
                   Eco-Friendly
                 </h3>
-                <p className="text-gray-600">Safe, green cleaning products</p>
+                <p className="text-vm-muted font-body">Safe, green cleaning products</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* FAQ */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-vm-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#0A3D2F]" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="text-4xl md:text-5xl font-heading font-bold text-center mb-12 text-vm-navy">
               Frequently Asked Questions
             </h2>
             <FAQAccordion faqs={faqs} />
@@ -362,17 +360,17 @@ export default async function CityLandingPage({ params }: PageProps) {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-gradient-to-r from-[#0A3D2F] to-[#083025] text-white">
+        <section className="py-20 bg-vm-navy text-vm-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6">
               Ready to Experience Clean?
             </h2>
-            <p className="text-xl text-gray-200 mb-8">
+            <p className="text-xl text-vm-white/80 font-body mb-8">
               Book your cleaning service in {cityName} today!
             </p>
             <Link
               href={`/booking?branch=new-jersey&city=${citySlug}`}
-              className="inline-flex items-center gap-2 bg-[#F8C548] text-[#0A3D2F] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#F5B835] transition shadow-lg"
+              className="inline-flex items-center gap-2 bg-vm-cyan text-vm-navy px-8 py-4 rounded-xl font-heading font-bold text-lg hover:bg-vm-cyan-dark transition shadow-lg"
             >
               Book Now
               <ArrowRight className="w-5 h-5" />

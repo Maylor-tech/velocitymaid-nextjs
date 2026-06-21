@@ -6,13 +6,13 @@ interface MarketingShellProps {
   showFooter?: boolean;
 }
 
-/** Shared marketing layout: header + ivory page + footer */
+/** Shared marketing layout: header + surface page + footer */
 export default function MarketingShell({
   children,
   showFooter = true,
 }: MarketingShellProps) {
   return (
-    <div className="min-h-screen bg-brand-ivory flex flex-col">
+    <div className="min-h-screen bg-vm-surface flex flex-col">
       <SiteHeader />
       <div className="flex-1">{children}</div>
       {showFooter && <Footer />}

@@ -204,8 +204,8 @@ function JobDetailsContent() {
   if (loading && !job) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-3 text-gray-600">Loading job details...</span>
+        <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
+        <span className="ml-3 text-vm-muted font-body">Loading job details...</span>
       </div>
     );
   }
@@ -229,9 +229,9 @@ function JobDetailsContent() {
   return (
     <div className="space-y-6">
       {balancePaymentPending && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 flex items-center gap-3">
-          <Loader2 className="w-5 h-5 animate-spin text-blue-600 shrink-0" />
-          <p className="text-sm text-blue-900">Confirming your secure payment…</p>
+        <div className="rounded-lg border border-vm-cyan/20 bg-vm-cyan/10 p-4 flex items-center gap-3">
+          <Loader2 className="w-5 h-5 animate-spin text-vm-cyan shrink-0" />
+          <p className="text-sm text-vm-navy font-body">Confirming your secure payment…</p>
         </div>
       )}
 
@@ -262,16 +262,16 @@ function JobDetailsContent() {
       <div>
         <button
           onClick={() => router.back()}
-          className="text-gray-600 hover:text-gray-900 mb-4 flex items-center gap-2"
+          className="text-vm-muted hover:text-vm-navy font-body mb-4 flex items-center gap-2"
         >
           ← Back to Jobs
         </button>
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-heading font-bold text-vm-navy mb-2">
               {job.serviceType || 'Cleaning Service'}
             </h1>
-            {job.number && <p className="text-gray-500">Job #{job.number}</p>}
+            {job.number && <p className="text-vm-muted font-body">Job #{job.number}</p>}
           </div>
           <JobStatusBadge status={job.status} />
         </div>
@@ -285,7 +285,7 @@ function JobDetailsContent() {
         />
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-vm-white rounded-xl shadow-sm border border-vm-navy/10 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <JobDetailSection
             icon={<Calendar className="w-5 h-5" />}
@@ -327,9 +327,9 @@ function JobDetailsContent() {
         )}
 
         {job.notes && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Notes</h3>
-            <p className="text-sm text-gray-600">{job.notes}</p>
+          <div className="mt-6 pt-6 border-t border-vm-navy/10">
+            <h3 className="text-sm font-medium text-vm-text font-body mb-2">Notes</h3>
+            <p className="text-sm text-vm-muted font-body">{job.notes}</p>
           </div>
         )}
       </div>
@@ -341,8 +341,8 @@ function JobDetailsContent() {
         title="Hospitality Standards Progress"
       />
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Actions</h2>
+      <div className="bg-vm-white rounded-xl shadow-sm border border-vm-navy/10 p-6">
+        <h2 className="text-lg font-heading font-semibold text-vm-navy mb-4">Actions</h2>
         <ActionButtons
           status={job.status}
           jobDate={job.date || job.scheduledDate || undefined}
@@ -378,8 +378,8 @@ export default function JobDetailsPage() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <span className="ml-3 text-gray-600">Loading job details...</span>
+          <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
+          <span className="ml-3 text-vm-muted font-body">Loading job details...</span>
         </div>
       }
     >

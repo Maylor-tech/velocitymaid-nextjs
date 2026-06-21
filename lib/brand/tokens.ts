@@ -1,6 +1,11 @@
 /**
- * VelocityMaid Unified Experience System — brand tokens v2.0.0
- * @see UX/DS handoff specification
+ * @deprecated LEGACY — "VelocityMaid Unified Experience System" brand
+ * tokens v2.0.0. This forest/gold/ivory/slate palette is NOT part of the
+ * approved velocitymaid-brand-guidelines.docx (approved palette is Navy
+ * #0F1C2E / Cyan #00C2CB / White, see lib/brand/colors.ts). Still
+ * referenced by ~32 files including the global header, footer, and most
+ * marketing pages — see Brand Audit Report §3–§5 and the Component
+ * Standardization Plan for the phased migration. Do not use in new code.
  */
 export const brand = {
   forest: "#0B221E",

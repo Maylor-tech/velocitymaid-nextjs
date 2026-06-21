@@ -134,7 +134,7 @@ export default function CustomerJobsPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
-      assigned: { color: 'bg-blue-100 text-blue-800', icon: User, label: 'Cleaner assigned' },
+      assigned: { color: 'bg-vm-cyan/15 text-vm-navy', icon: User, label: 'Cleaner assigned' },
       pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending confirmation' },
       in_progress: { color: 'bg-purple-100 text-purple-800', icon: Clock, label: 'In Progress' },
       completed: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Completed' },
@@ -144,7 +144,7 @@ export default function CustomerJobsPage() {
     };
 
     const config = statusConfig[status.toLowerCase()] || {
-      color: 'bg-gray-100 text-gray-800',
+      color: 'bg-vm-surface text-vm-text',
       icon: AlertCircle,
       label: status,
     };
@@ -164,13 +164,13 @@ export default function CustomerJobsPage() {
     const config: Record<string, { color: string; label: string }> = {
       UNPAID: { color: 'bg-red-100 text-red-800', label: 'Unpaid' },
       PAID: { color: 'bg-green-100 text-green-800', label: 'Paid' },
-      DEPOSIT_PAID: { color: 'bg-blue-100 text-blue-800', label: 'Deposit Paid' },
+      DEPOSIT_PAID: { color: 'bg-vm-cyan/15 text-vm-navy', label: 'Deposit Paid' },
       BALANCE_DUE: { color: 'bg-orange-100 text-orange-800', label: 'Balance Due' },
-      REFUNDED: { color: 'bg-gray-100 text-gray-800', label: 'Refunded' },
+      REFUNDED: { color: 'bg-vm-surface text-vm-text', label: 'Refunded' },
       PARTIAL: { color: 'bg-yellow-100 text-yellow-800', label: 'Partial' },
     };
 
-    const paymentConfig = config[status] || { color: 'bg-gray-100 text-gray-800', label: status };
+    const paymentConfig = config[status] || { color: 'bg-vm-surface text-vm-text', label: status };
 
     return (
       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${paymentConfig.color}`}>
@@ -186,10 +186,10 @@ export default function CustomerJobsPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+          <h1 className="text-3xl font-heading font-bold text-vm-navy mb-1">
             {customerName ? `Welcome back, ${customerName}` : 'My Jobs'}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-vm-muted font-body">
             {activeTab === 'upcoming' 
               ? "Here's a quick view of your upcoming cleanings."
               : "View your past cleaning appointments."}
@@ -198,7 +198,7 @@ export default function CustomerJobsPage() {
         {activeTab === 'upcoming' && (
           <Link
             href="/book"
-            className="hidden md:flex items-center gap-2 px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-sm"
+            className="hidden md:flex items-center gap-2 px-4 py-2 border-2 border-vm-cyan text-vm-cyan rounded-lg font-heading font-semibold hover:bg-vm-surface transition-colors text-sm"
           >
             Book a new cleaning
           </Link>
@@ -206,24 +206,24 @@ export default function CustomerJobsPage() {
       </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-vm-navy/10">
           <nav className="flex gap-4">
             <button
               onClick={() => setActiveTab('upcoming')}
-              className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+              className={`px-4 py-2 font-body font-medium border-b-2 transition-colors ${
                 activeTab === 'upcoming'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-vm-cyan text-vm-cyan'
+                  : 'border-transparent text-vm-muted hover:text-vm-navy'
               }`}
             >
               Upcoming ({upcomingJobs.length})
             </button>
             <button
               onClick={() => setActiveTab('past')}
-              className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+              className={`px-4 py-2 font-body font-medium border-b-2 transition-colors ${
                 activeTab === 'past'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-vm-cyan text-vm-cyan'
+                  : 'border-transparent text-vm-muted hover:text-vm-navy'
               }`}
             >
               Past Jobs ({pastJobs.length})
@@ -234,8 +234,8 @@ export default function CustomerJobsPage() {
         {/* Loading State */}
         {(!authChecked || loading) && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <span className="ml-3 text-gray-600">
+            <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
+            <span className="ml-3 text-vm-muted font-body">
               {!authChecked ? 'Verifying access...' : 'Loading jobs...'}
             </span>
           </div>
@@ -253,8 +253,8 @@ export default function CustomerJobsPage() {
 
         {/* What's happening now? Helper */}
         {!loading && !error && activeTab === 'upcoming' && upcomingJobs.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
+          <div className="bg-vm-cyan/10 border border-vm-cyan/20 rounded-lg p-4">
+            <p className="text-sm text-vm-navy font-body">
               <strong>What's happening now?</strong> We're confirming details and assigning a vetted cleaner. You'll get updates by email or SMS.
             </p>
           </div>
@@ -264,27 +264,27 @@ export default function CustomerJobsPage() {
         {!loading && !error && (
           <>
             {jobs.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <div className="bg-vm-white rounded-xl shadow-sm border border-vm-navy/10 p-12 text-center">
+                <Calendar className="w-12 h-12 text-vm-muted mx-auto mb-4" />
+                <h2 className="text-xl font-heading font-semibold text-vm-navy mb-2">
                   {activeTab === 'upcoming' 
                     ? "No upcoming cleanings yet" 
                     : "No past cleanings yet"}
                 </h2>
                 {activeTab === 'upcoming' ? (
                   <>
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-vm-muted font-body mb-6">
                       Book in minutes and we'll take care of the rest.
                     </p>
                     <Link
                       href="/book"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-vm-navy text-vm-white rounded-lg hover:bg-vm-navy/90 transition-colors font-heading font-semibold"
                     >
                       Book a Service
                     </Link>
                   </>
                 ) : (
-                  <p className="text-gray-600">
+                  <p className="text-vm-muted font-body">
                     Your completed cleanings will appear here.
                   </p>
                 )}
@@ -295,12 +295,12 @@ export default function CustomerJobsPage() {
                   <Link
                     key={job.id}
                     href={`/customer/jobs/${job.id}`}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                    className="bg-vm-white rounded-xl shadow-sm border border-vm-navy/10 p-6 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-start gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <h3 className="text-lg font-heading font-semibold text-vm-navy">
                             {job.serviceType || 'Cleaning Service'}
                           </h3>
                           <div className="flex items-center gap-2 flex-wrap">
@@ -309,31 +309,31 @@ export default function CustomerJobsPage() {
                           </div>
                         </div>
                         {job.status.toLowerCase() === 'pending' && (
-                          <p className="text-xs text-gray-500 mt-1 ml-0">We're assigning your cleaner.</p>
+                          <p className="text-xs text-vm-muted font-body mt-1 ml-0">We're assigning your cleaner.</p>
                         )}
                         {job.number && (
-                          <p className="text-sm text-gray-500 mt-1">Job #{job.number}</p>
+                          <p className="text-sm text-vm-muted font-body mt-1">Job #{job.number}</p>
                         )}
                       </div>
                       {job.price !== null && (
                         <div className="text-right">
-                          <p className="text-lg font-bold text-gray-900">{formatCurrency(job.price)}</p>
+                          <p className="text-lg font-heading font-bold text-vm-navy">{formatCurrency(job.price)}</p>
                         </div>
                       )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-vm-text font-body">
                         <Calendar className="w-4 h-4" />
                         <span>{formatDate(job.scheduledDate)}</span>
                       </div>
                       {job.timeWindow && (
-                        <div className="flex items-center gap-2 text-gray-600">
+                        <div className="flex items-center gap-2 text-vm-text font-body">
                           <Clock className="w-4 h-4" />
                           <span>{job.timeWindow}</span>
                         </div>
                       )}
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-vm-text font-body">
                         <MapPin className="w-4 h-4" />
                         <span className="truncate">{job.address}</span>
                       </div>
@@ -345,37 +345,37 @@ export default function CustomerJobsPage() {
                       </p>
                     )}
                     {job.status.toLowerCase() === 'assigned' && job.paymentStatus === 'DEPOSIT_PAID' && (
-                      <p className="mt-3 text-sm text-blue-700">
+                      <p className="mt-3 text-sm text-vm-cyan font-body">
                         Your cleaner is assigned. Tap for details and updates.
                       </p>
                     )}
 
                     {job.cleaner && (
-                      <div className="mt-4 pt-4 border-t border-gray-200 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-4 h-4 text-blue-600" />
+                      <div className="mt-4 pt-4 border-t border-vm-navy/10 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-vm-cyan/15 rounded-full flex items-center justify-center">
+                          <User className="w-4 h-4 text-vm-cyan" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{job.cleaner.name}</p>
-                          <p className="text-xs text-gray-500">Assigned Cleaner</p>
+                          <p className="text-sm font-medium text-vm-navy font-body">{job.cleaner.name}</p>
+                          <p className="text-xs text-vm-muted font-body">Assigned Cleaner</p>
                         </div>
                       </div>
                     )}
 
                     {job.rating && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="mt-4 pt-4 border-t border-vm-navy/10">
                         <div className="flex items-center gap-2">
                           <div className="flex">
                             {Array.from({ length: 5 }).map((_, i) => (
                               <span
                                 key={i}
-                                className={i < job.rating!.score ? 'text-yellow-400' : 'text-gray-300'}
+                                className={i < job.rating!.score ? 'text-vm-cyan' : 'text-vm-muted/40'}
                               >
                                 ★
                               </span>
                             ))}
                           </div>
-                          <span className="text-sm text-gray-600">Rated</span>
+                          <span className="text-sm text-vm-muted font-body">Rated</span>
                         </div>
                       </div>
                     )}
