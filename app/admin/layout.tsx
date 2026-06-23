@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { getAdminAuthFromCookies } from '@/lib/auth/requireRole';
+import { BrandLogo } from '@/components/brand';
 
 export default async function AdminLayout({
   children,
@@ -21,14 +22,17 @@ export default async function AdminLayout({
     <div className="min-h-screen bg-gray-50">
       <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
         <div className="flex items-center gap-4">
-          <Link href="/admin/jobs" className="text-gray-900 hover:text-gray-700">
-            <h1 className="text-lg font-semibold">Admin</h1>
+          <Link href="/admin/jobs" className="flex items-center" aria-label="VelocityMaid Admin">
+            <BrandLogo variant="forest" size="md" />
           </Link>
-          {auth?.branchName && (
-            <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-0.5 text-xs font-medium text-blue-800">
-              Branch: {auth.branchName}
-            </span>
-          )}
+          {auth &&
+            (auth.branchName ? (
+              <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-0.5 text-xs font-medium text-blue-800">
+                Branch: {auth.branchName}
+              </span>
+            ) : (
+              <span className="font-body text-xs text-vm-muted">All Markets</span>
+            ))}
         </div>
         {/* Right-side controls can go here (e.g. logout, nav links) */}
       </header>

@@ -392,7 +392,14 @@ model Job {
   cancellationReason       String?
   cancelledAt              DateTime?
   status                   JobStatus                  @default(RECEIVED)
+  completedBy              String?
+  cleanDurationMins        Int?
+  notifiedAt               DateTime?
+  internalNotes            String?
+  marketLabel              String?
+  archivedAt               DateTime?
   AssignmentLog            AssignmentLog[]
+  photos                   CleanPhoto[]
   CleanerBalanceLedger     CleanerBalanceLedger[]
   CleanerRating            CleanerRating?
   ComplianceIssue          ComplianceIssue[]
@@ -413,6 +420,20 @@ model Job {
   @@index([status])
   @@index([paymentStatus])
   @@index([reviewStatus])
+  @@index([archivedAt])
+}
+
+model CleanPhoto {
+  id         String   @id @default(cuid())
+  jobId      String
+  url        String
+  caption    String?
+  uploadedBy String?
+  uploadedAt DateTime @default(now())
+  Job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@map("clean_photos")
 }
 
 model JobPayout {

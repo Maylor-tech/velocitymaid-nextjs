@@ -22,11 +22,20 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const cleanerId = searchParams.get('cleanerId');
     const unassignedOnly = searchParams.get('unassignedOnly') === 'true';
+    const includeArchived = searchParams.get('includeArchived') === 'true';
     const search = searchParams.get('search') || '';
 
-    // Branch scope: branch-scoped admins see only their branch; client branchId allowed only when it matches
+    // Branch scope: branch-scoped admins see only their branch; full-access
+    // admins may filter by the client-supplied branch value (id or slug).
     const branchIdParam = searchParams.get('branchId');
-    const branchId = auth.branchId ?? (branchIdParam && branchIdParam !== 'all' ? branchIdParam : undefined);
+    const branchFilter =
+      auth.branchId ??
+      (branchIdParam && branchIdParam !== 'all' && branchIdParam !== ''
+        ? branchIdParam
+        : undefined);
+    // Branch values from the UI are slugs ("vermont" | "new-jersey"); a
+    // branch-scoped session supplies a Branch.id (uuid).
+    const BRANCH_SLUGS = new Set(['vermont', 'new-jersey']);
 
     // Parse dates
     const dateFrom = searchParams.get('dateFrom')
@@ -40,8 +49,17 @@ export async function GET(request: NextRequest) {
     // Build where clause
     const where: any = {};
 
-    if (branchId) {
-      where.branchId = branchId;
+    // Soft-delete: hide archived jobs unless explicitly requested.
+    if (!includeArchived) {
+      where.archivedAt = null;
+    }
+
+    if (branchFilter) {
+      if (BRANCH_SLUGS.has(branchFilter)) {
+        where.Branch = { slug: branchFilter };
+      } else {
+        where.branchId = branchFilter;
+      }
     }
 
     if (status && status !== 'all') {
@@ -101,6 +119,8 @@ export async function GET(request: NextRequest) {
         assignedAt: true,
         onTheWayAt: true,
         completedAt: true,
+        notifiedAt: true,
+        archivedAt: true,
         status: true,
         paymentStatus: true,
         reviewStatus: true,
@@ -185,6 +205,8 @@ export async function GET(request: NextRequest) {
       assignedAt: job.assignedAt?.toISOString() || null,
       onTheWayAt: job.onTheWayAt?.toISOString() || null,
       completedAt: job.completedAt?.toISOString() || null,
+      notifiedAt: job.notifiedAt?.toISOString() || null,
+      archivedAt: job.archivedAt?.toISOString() || null,
       jobQualityScore: job.jobQualityScore,
       appliedReferralCode: job.appliedReferralCode,
       promoApplied: job.promoApplied,

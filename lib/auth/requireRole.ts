@@ -10,6 +10,37 @@ import { allowLegacyAdminBypass, isLegacyAdminSession } from "./adminBypass";
 
 export type RequiredRole = "ADMIN" | "CUSTOMER" | "CLEANER" | "BRANCH_OWNER" | "BRANCH_OPERATOR";
 
+type AdminBranchRow = { branchId: string; Branch: { name: string } };
+
+/**
+ * Resolve the branch scope for an admin user.
+ *
+ * Full-access ("super"/owner) admins are NOT scoped to a single branch — they
+ * can see and manage jobs across every market. An admin is treated as
+ * full-access when their email matches ADMIN_EMAIL (the owner account) or when
+ * they have access to anything other than exactly one branch.
+ *
+ * Single-branch admins (e.g. a New-Jersey-only operator) stay scoped to that
+ * branch, so their access is unchanged.
+ */
+function resolveAdminBranchScope(
+  email: string | null | undefined,
+  branches: AdminBranchRow[]
+): { branchId?: string; branchName?: string } {
+  const ownerEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const isOwner =
+    !!ownerEmail && !!email && email.trim().toLowerCase() === ownerEmail;
+
+  if (isOwner || branches.length !== 1) {
+    return {};
+  }
+
+  return {
+    branchId: branches[0].branchId,
+    branchName: branches[0].Branch.name,
+  };
+}
+
 export interface AuthContext {
   userId: string;
   role: RequiredRole;
@@ -54,21 +85,11 @@ export async function requireRole(
               where: { userId: admin.id },
               include: { Branch: true },
             });
-            if (branches.length === 0) {
-              return {
-                userId: admin.id,
-                role: "ADMIN",
-                email: admin.email,
-                branchId: session.branchId,
-              };
-            }
-            const activeBranch = branches[0];
             return {
               userId: admin.id,
               role: "ADMIN",
               email: admin.email,
-              branchId: activeBranch.branchId,
-              branchName: activeBranch.Branch.name,
+              ...resolveAdminBranchScope(admin.email, branches),
             };
           }
         }
@@ -117,16 +138,11 @@ export async function requireRole(
       where: { userId: admin.id },
       include: { Branch: true },
     });
-    if (branches.length === 0) {
-      return { userId: admin.id, role: "ADMIN", email: admin.email };
-    }
-    const activeBranch = branches[0];
     return {
       userId: admin.id,
       role: "ADMIN",
       email: admin.email,
-      branchId: activeBranch.branchId,
-      branchName: activeBranch.Branch.name,
+      ...resolveAdminBranchScope(admin.email, branches),
     };
   }
 
@@ -229,16 +245,11 @@ export async function getAdminAuthFromCookies(): Promise<AuthContext | null> {
       where: { userId: admin.id },
       include: { Branch: true },
     });
-    if (branches.length === 0) {
-      return { userId: admin.id, role: "ADMIN", email: admin.email, branchId: session.branchId };
-    }
-    const activeBranch = branches[0];
     return {
       userId: admin.id,
       role: "ADMIN",
       email: admin.email,
-      branchId: activeBranch.branchId,
-      branchName: activeBranch.Branch.name,
+      ...resolveAdminBranchScope(admin.email, branches),
     };
   } catch {
     return null;
