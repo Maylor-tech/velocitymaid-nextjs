@@ -27,10 +27,10 @@ export default function PricingFAQ() {
       {items.map((item) => (
         <div
           key={item.q}
-          className="rounded-xl border border-brand-forest/10 bg-white p-6 shadow-sm"
+          className="rounded-xl border border-vm-border bg-white p-6 shadow-sm"
         >
-          <h4 className="font-serif font-semibold text-brand-forest">{item.q}</h4>
-          <p className="mt-2 text-brand-slate/70 font-sans text-sm leading-relaxed">
+          <h4 className="font-heading font-semibold text-vm-navy">{item.q}</h4>
+          <p className="mt-2 text-vm-muted font-sans text-sm leading-relaxed">
             {item.a}
           </p>
         </div>

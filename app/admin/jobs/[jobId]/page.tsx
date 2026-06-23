@@ -25,6 +25,9 @@ interface Job {
   depositAmount?: number | null;
   amountPaid?: number | null;
   balanceDue?: number | null;
+  paymentMethod?: string | null;
+  paymentReference?: string | null;
+  paidAt?: string | null;
   assignedCleanerId: string | null;
   assignedCleaner: {
     id: string;
@@ -109,6 +112,13 @@ export default function AdminJobDetailPage() {
   const [payoutMethod, setPayoutMethod] = useState('');
   const [payoutNote, setPayoutNote] = useState('');
   const [payoutReference, setPayoutReference] = useState('');
+  const [showMarkPaid, setShowMarkPaid] = useState(false);
+  const [markingPaid, setMarkingPaid] = useState(false);
+  const [markPaidAmount, setMarkPaidAmount] = useState('');
+  const [markPaidMethod, setMarkPaidMethod] = useState('PayPal');
+  const [markPaidReference, setMarkPaidReference] = useState('');
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
 
   useEffect(() => {
     if (jobId) {
@@ -336,6 +346,97 @@ export default function AdminJobDetailPage() {
       setTimeout(() => setShowToast(false), 5000);
     } finally {
       setMarkingPayoutPaid(false);
+    }
+  };
+
+  const openMarkPaid = () => {
+    const suggested =
+      (job?.balanceDue && job.balanceDue > 0
+        ? job.balanceDue
+        : job?.quotedTotal ?? job?.totalPrice) ?? null;
+    setMarkPaidAmount(suggested != null ? String(suggested) : '');
+    setMarkPaidMethod('PayPal');
+    setMarkPaidReference('');
+    setShowMarkPaid(true);
+  };
+
+  const handleMarkPaid = async () => {
+    const amount = Number(markPaidAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setToastMessage('Enter a valid amount greater than 0');
+      setToastType('error');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
+    try {
+      setMarkingPaid(true);
+      const response = await fetch(`/api/admin/jobs/${jobId}/mark-paid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount,
+          method: markPaidMethod,
+          reference: markPaidReference || undefined,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to record payment');
+      }
+      setToastMessage(data.message || 'Payment recorded');
+      setToastType('success');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+      setShowMarkPaid(false);
+      setMarkPaidReference('');
+      fetchJob();
+      fetchAuditLogs();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to record payment';
+      setToastMessage(message);
+      setToastType('error');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    } finally {
+      setMarkingPaid(false);
+    }
+  };
+
+  const handleSendInvite = async () => {
+    const customerId = job?.customer?.id;
+    if (!customerId) {
+      setToastMessage('No customer record linked to this job');
+      setToastType('error');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
+    try {
+      setSendingInvite(true);
+      const response = await fetch(`/api/admin/customers/${customerId}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send invite');
+      }
+      setInviteSent(true);
+      setToastMessage('Invite sent');
+      setToastType('success');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to send invite';
+      setToastMessage(message);
+      setToastType('error');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    } finally {
+      setSendingInvite(false);
     }
   };
 
@@ -720,6 +821,112 @@ export default function AdminJobDetailPage() {
             </div>
           </div>
 
+          {(job.paymentStatus === 'PENDING' || job.paymentStatus === 'DEPOSIT_PAID') && (
+            <div className="mt-6 border-t border-gray-100 pt-6">
+              {!showMarkPaid ? (
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm text-gray-600">
+                    Collected payment outside Stripe (PayPal, cash, etc.)? Record it here.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={openMarkPaid}
+                    className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                  >
+                    <DollarSign className="w-4 h-4" />
+                    Mark as Paid
+                  </button>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                  <h3 className="mb-3 text-sm font-semibold text-gray-900">Record a payment</h3>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-700">
+                        Amount received ($)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={markPaidAmount}
+                        onChange={(e) => setMarkPaidAmount(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-700">
+                        Payment method
+                      </label>
+                      <select
+                        value={markPaidMethod}
+                        onChange={(e) => setMarkPaidMethod(e.target.value)}
+                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                      >
+                        <option value="PayPal">PayPal</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Stripe">Stripe</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-700">
+                        Reference / note (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={markPaidReference}
+                        onChange={(e) => setMarkPaidReference(e.target.value)}
+                        placeholder="e.g. PayPal txn ID"
+                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleMarkPaid}
+                      disabled={markingPaid}
+                      className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+                    >
+                      {markingPaid ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Recording…
+                        </>
+                      ) : (
+                        'Confirm Payment'
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowMarkPaid(false)}
+                      disabled={markingPaid}
+                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {job.paymentStatus === 'PAID' && (job.paymentMethod || job.paidAt) && (
+            <div className="mt-6 border-t border-gray-100 pt-6">
+              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4">
+                <CheckCircle className="h-5 w-5 shrink-0 text-green-600" />
+                <p className="text-sm text-green-900">
+                  {formatCurrency(job.amountPaid, job.currency)} received
+                  {job.paymentMethod ? ` via ${job.paymentMethod}` : ''}
+                  {job.paidAt ? ` on ${formatDate(job.paidAt)}` : ''}
+                  {job.paymentReference ? ` · Ref: ${job.paymentReference}` : ''}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-100 pt-6">
             <div className="rounded-lg border border-gray-200 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-2">
@@ -855,7 +1062,29 @@ export default function AdminJobDetailPage() {
                 {job.customerName || (job.customer ? `${job.customer.firstName} ${job.customer.lastName}` : 'N/A')}
               </p>
               {job.customer?.email && (
-                <p className="text-sm text-gray-500">{job.customer.email}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <p className="text-sm text-gray-500">{job.customer.email}</p>
+                  <button
+                    type="button"
+                    onClick={handleSendInvite}
+                    disabled={sendingInvite}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-vm-navy/20 bg-vm-navy/5 px-2.5 py-1 text-xs font-semibold text-vm-navy transition-colors hover:bg-vm-navy/10 disabled:opacity-60"
+                  >
+                    {sendingInvite ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Sending…
+                      </>
+                    ) : inviteSent ? (
+                      <>
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                        Invite sent
+                      </>
+                    ) : (
+                      'Send Portal Invite'
+                    )}
+                  </button>
+                </div>
               )}
               {job.customer?.phone && (
                 <p className="text-sm text-gray-500">{job.customer.phone}</p>

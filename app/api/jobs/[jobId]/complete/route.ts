@@ -155,6 +155,7 @@ export async function POST(
           invoiceAmount,
           paypalEmail,
           market,
+          jobId: job.id,
         });
 
         if (emailResult.sent) {

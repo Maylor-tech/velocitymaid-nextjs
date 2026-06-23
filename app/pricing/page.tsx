@@ -13,7 +13,7 @@ export default function PricingPage() {
         <PricingTiers />
       </Section>
       <Section>
-        <h2 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight text-brand-forest">
+        <h2 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight text-vm-navy">
           Pricing FAQ
         </h2>
         <div className="mt-8">

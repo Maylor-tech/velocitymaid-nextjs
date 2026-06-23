@@ -10,6 +10,7 @@ import {
   CheckCircle,
   X,
   ImageIcon,
+  Link2,
 } from "lucide-react";
 
 interface JobInfo {
@@ -55,7 +56,22 @@ export default function MarkCleanCompletePage() {
   const [uploading, setUploading] = useState(false);
   const [uploadedPhotos, setUploadedPhotos] = useState<UploadedPhoto[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCopyUploadLink = async () => {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/cleaner/upload/${jobId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2500);
+    } catch {
+      // Fallback for browsers without clipboard API
+      window.prompt("Copy this upload link:", url);
+    }
+  };
 
   const [completedBy, setCompletedBy] = useState("");
   const [durationMins, setDurationMins] = useState("");
@@ -355,9 +371,32 @@ export default function MarkCleanCompletePage() {
 
         {/* Photo upload */}
         <section className="mb-6 rounded-xl border border-vm-border bg-vm-white p-6">
-          <h2 className="mb-4 font-heading text-base font-semibold text-vm-navy">
-            Upload photos from the clean
-          </h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-heading text-base font-semibold text-vm-navy">
+              Upload photos from the clean
+            </h2>
+            <button
+              type="button"
+              onClick={handleCopyUploadLink}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-vm-navy/20 bg-vm-navy/5 px-3 py-1.5 font-heading text-xs font-semibold text-vm-navy transition-colors hover:bg-vm-navy/10"
+            >
+              {linkCopied ? (
+                <>
+                  <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                  Link copied!
+                </>
+              ) : (
+                <>
+                  <Link2 className="h-3.5 w-3.5" />
+                  Copy Caryll&apos;s upload link
+                </>
+              )}
+            </button>
+          </div>
+          <p className="-mt-2 mb-4 font-body text-xs text-vm-muted">
+            Text this link to the cleaner — they can upload photos from their
+            phone with no login.
+          </p>
 
           <div
             onDragOver={(e) => {

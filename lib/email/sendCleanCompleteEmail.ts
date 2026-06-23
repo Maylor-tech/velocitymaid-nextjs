@@ -1,4 +1,5 @@
 import { resend, getResendFromEmail } from "./resendClient";
+import { prisma } from "@/lib/prisma";
 
 export interface CleanCompletePhoto {
   url: string;
@@ -15,6 +16,37 @@ export interface SendCleanCompleteEmailParams {
   invoiceAmount?: number;
   paypalEmail: string;
   market: "vermont" | "new-jersey";
+  /** When provided, a 3-day follow-up review request is scheduled after send. */
+  jobId?: string;
+}
+
+const REVIEW_FOLLOWUP_DELAY_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
+
+/**
+ * Schedule a one-time review-request follow-up for 3 days out. Best-effort:
+ * never throws, and de-dupes so re-notifying a job doesn't pile up requests.
+ */
+async function scheduleReviewRequest(
+  jobId: string,
+  clientEmail: string
+): Promise<void> {
+  try {
+    const existing = await prisma.reviewRequest.findFirst({
+      where: { jobId },
+      select: { id: true },
+    });
+    if (existing) return;
+
+    await prisma.reviewRequest.create({
+      data: {
+        jobId,
+        clientEmail,
+        scheduledFor: new Date(Date.now() + REVIEW_FOLLOWUP_DELAY_MS),
+      },
+    });
+  } catch (err) {
+    console.error("[review-request schedule]", err);
+  }
 }
 
 export interface SendCleanCompleteEmailResult {
@@ -285,6 +317,11 @@ export async function sendCleanCompleteEmail(
 
     if (error) {
       return { sent: false, error: error.message };
+    }
+
+    // Schedule the 3-day follow-up review request after a successful send.
+    if (params.jobId) {
+      await scheduleReviewRequest(params.jobId, params.toEmail);
     }
 
     return { sent: true, id: data?.id };

@@ -68,7 +68,7 @@ export default function ContactForm() {
           <button
             type="button"
             onClick={() => setError(null)}
-            className="mt-2 text-sm text-brand-forest hover:underline font-sans"
+            className="mt-2 text-sm text-vm-navy hover:underline font-sans"
           >
             Dismiss
           </button>

@@ -5,15 +5,17 @@ export const dynamic = "force-dynamic";
  * Clean Photo Upload API
  * POST /api/jobs/[jobId]/photos
  *
- * Internal-only (admin) endpoint. Accepts multipart/form-data with one or
- * more `files` entries and an optional `uploadedBy` field, uploads each file
- * to the public Supabase Storage bucket "clean-photos", and persists a
- * CleanPhoto row per upload.
+ * Accepts multipart/form-data with one or more `files` entries and an optional
+ * `uploadedBy` field, uploads each file to the public Supabase Storage bucket
+ * "clean-photos", and persists a CleanPhoto row per upload.
+ *
+ * Access model: the unguessable job ID (a cuid) is the access key, so cleaners
+ * can upload from a no-login mobile link (/cleaner/upload/[jobId]) and admins
+ * can upload from the complete page. The job must exist or the request 404s.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth/requireRole";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 const BUCKET = "clean-photos";
@@ -22,7 +24,10 @@ const ALLOWED_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
+  "image/heic",
+  "image/heif",
   "video/mp4",
+  "video/quicktime",
 ]);
 
 let bucketReady = false;
@@ -53,8 +58,6 @@ export async function POST(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(request, "ADMIN");
-
     const { jobId } = params;
     if (!jobId) {
       return NextResponse.json(
@@ -100,7 +103,7 @@ export async function POST(
         return NextResponse.json(
           {
             success: false,
-            error: `Unsupported file type: ${file.type || "unknown"}. Allowed: JPEG, PNG, WebP, MP4.`,
+            error: `Unsupported file type: ${file.type || "unknown"}. Allowed: JPEG, PNG, WebP, HEIC, MP4, MOV.`,
           },
           { status: 400 }
         );
