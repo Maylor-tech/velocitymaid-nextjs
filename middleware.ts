@@ -155,6 +155,13 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  // Guest tip flow — public, no customer session required
+  if (pathname === '/customer/tip' || pathname.startsWith('/customer/tip/')) {
+    const tipUrl = req.nextUrl.clone();
+    tipUrl.pathname = '/tip';
+    return NextResponse.redirect(tipUrl);
+  }
+
   // Only handle customer portal paths here.
   // (Admin/auth logic can be added separately or above with early returns.)
   const isCustomerRoute = pathname.startsWith('/customer');

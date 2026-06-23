@@ -9,13 +9,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "vm-navy": "#061B44",
-        "vm-cyan": "#22D3EE",
-        "vm-cyan-dark": "#1BB8D4",
-        "vm-surface": "#FFFFFF",
+        // VelocityMaid approved brand palette — values verified byte-exact
+        // against velocitymaid-brand-guidelines.docx (Color System table).
+        // Canonical TS source + contrast notes: lib/brand/colors.ts.
+        // Do not change these hex values without updating the approved
+        // brand guidelines first. See Brand Audit Report §1 for history —
+        // these previously held incorrect hex values (e.g. vm-navy was
+        // #061B44, vm-cyan was #22D3EE) that did not match the approved
+        // guidelines; corrected as part of the brand implementation audit.
+        "vm-navy": "#0F1C2E",
+        "vm-cyan": "#00C2CB",
+        "vm-cyan-dark": "#00A8B0",
+        "vm-surface": "#F4F6F9",
         "vm-text": "#1A1A2E",
         "vm-muted": "#6B7280",
+        "vm-white": "#FFFFFF",
+        // Not part of the approved 7-color palette — utility-only hairline
+        // border neutral. Flagged in Brand Audit Report §1 as a non-standard
+        // addition; kept as-is to avoid an unreviewed visual change to every
+        // bordered component that depends on it.
         "vm-border": "#E0E4EA",
+        /**
+         * @deprecated LEGACY — "UX/DS v2.0.0" palette. NOT part of the
+         * approved VelocityMaid brand guidelines (which specify Navy/Cyan/
+         * White only). Still referenced by ~32 files — global header,
+         * footer, contact, pricing, partners pages, etc. See Brand Audit
+         * Report §3–§5 and the Component Standardization Plan for the
+         * phased migration to the vm-* approved tokens above. Do not use
+         * in new code.
+         */
         brand: {
           forest: "#0B221E",
           "forest-hover": "#091916",
@@ -74,14 +96,26 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
+        // Approved brand typefaces (velocitymaid-brand-guidelines.docx:
+        // "Display: Space Grotesk Bold. Body: Inter Regular/SemiBold. No
+        // alternate fonts."). Use font-heading for all headlines/wordmark/
+        // buttons and font-body for all body copy/forms/tables.
         heading: ["var(--font-space-grotesk)", "sans-serif"],
         body: ["var(--font-inter)", "sans-serif"],
+        /**
+         * @deprecated LEGACY — Plus Jakarta Sans / Playfair Display are not
+         * in the approved brand guidelines ("no alternate fonts"). These
+         * remain mapped for ~20 existing files that reference font-sans /
+         * font-serif (see Brand Audit Report §2). Use font-body / font-heading
+         * above for new code.
+         */
         sans: [
           "var(--font-sans)",
           "Plus Jakarta Sans",
           "system-ui",
           "sans-serif",
         ],
+        /** @deprecated LEGACY — see font-sans note above. */
         serif: [
           "var(--font-serif)",
           "Playfair Display",

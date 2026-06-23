@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X, Phone, Mail } from "lucide-react";
-import { VelocityMaidWordmark, type VelocityMaidMarketTagline } from "@/components/brand";
+import { BrandLogo } from "@/components/brand";
+import { cn } from "@/lib/utils";
 
 export interface BranchLandingNavProps {
   bookingHref: string;
@@ -14,8 +15,20 @@ export interface BranchLandingNavProps {
   phoneDisplay?: string;
   email?: string;
   maxWidthClass?: string;
-  marketTagline?: VelocityMaidMarketTagline;
+  /**
+   * @deprecated No longer rendered. The approved brand system uses one
+   * fixed tagline ("Come home to clean.") everywhere — there is no
+   * market-specific variant. Prop kept so existing callers compile
+   * unchanged.
+   */
+  marketTagline?: "vermont" | "new-jersey";
 }
+
+const navLinkClass =
+  "font-body text-sm text-white hover:text-vm-cyan transition-colors";
+
+const ctaClassName =
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md btn-tactile transition-[transform,background-color,border-color] duration-150 bg-vm-cyan text-vm-navy font-heading font-semibold uppercase tracking-wider text-xs hover:bg-vm-cyan-dark shadow-md px-4 py-2.5";
 
 export default function BranchLandingNav({
   bookingHref,
@@ -26,39 +39,22 @@ export default function BranchLandingNav({
   phoneDisplay,
   email,
   maxWidthClass = "max-w-6xl",
-  marketTagline = "new-jersey",
 }: BranchLandingNavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const ctaClassName =
-    "inline-flex items-center justify-center bg-brand-forest text-brand-ivory font-sans font-bold uppercase tracking-wider text-xs rounded px-4 py-2.5 hover:bg-brand-forest-hover transition shadow-sm";
-
   return (
-    <header className="sticky top-0 z-50 bg-brand-ivory/95 backdrop-blur-sm border-b border-brand-forest/10">
+    <header className="sticky top-0 z-50 w-full bg-vm-navy border-b border-white/10">
       <div
         className={`${maxWidthClass} mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4`}
       >
         <Link href="/" className="shrink-0 min-w-0">
-          <VelocityMaidWordmark
-            variant="market"
-            market={marketTagline}
-            wordmarkFill="#0F1C2E"
-            className="hidden sm:block"
-          />
-          <VelocityMaidWordmark
-            variant="homepage"
-            wordmarkFill="#0F1C2E"
-            className="sm:hidden"
-          />
+          <BrandLogo variant="ivory" size="header" showTagline={false} />
         </Link>
 
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-4 md:gap-6">
           {phone && (
-            <a
-              href={`tel:${phone}`}
-              className="flex items-center gap-2 font-sans text-brand-slate/70 hover:text-brand-forest text-sm transition"
-            >
+            <a href={`tel:${phone}`} className={cn("flex items-center gap-2", navLinkClass)}>
               <Phone className="w-4 h-4 shrink-0" />
               {phoneDisplay ?? phone}
             </a>
@@ -66,17 +62,14 @@ export default function BranchLandingNav({
           {email && (
             <a
               href={`mailto:${email}`}
-              className="hidden md:flex items-center gap-2 font-sans text-brand-slate/70 hover:text-brand-forest text-sm transition"
+              className={cn("hidden md:flex items-center gap-2", navLinkClass)}
             >
               <Mail className="w-4 h-4 shrink-0" />
               {email}
             </a>
           )}
           {secondaryHref && secondaryLabel && (
-            <Link
-              href={secondaryHref}
-              className="font-sans text-brand-slate/70 hover:text-brand-forest text-sm transition"
-            >
+            <Link href={secondaryHref} className={navLinkClass}>
               {secondaryLabel}
             </Link>
           )}
@@ -89,13 +82,13 @@ export default function BranchLandingNav({
         <div className="flex sm:hidden items-center gap-2">
           <Link
             href={bookingHref}
-            className={`${ctaClassName} text-[10px] px-3 py-2`}
+            className={cn(ctaClassName, "text-[10px] px-3 py-2")}
           >
             {bookingLabel}
           </Link>
           <button
             type="button"
-            className="p-2 text-brand-forest"
+            className="p-2 text-white hover:text-vm-cyan transition-colors"
             onClick={() => setMenuOpen((open) => !open)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
@@ -107,14 +100,14 @@ export default function BranchLandingNav({
 
       {menuOpen && (
         <nav
-          className={`sm:hidden border-t border-brand-forest/10 ${maxWidthClass} mx-auto px-4 sm:px-6 lg:px-8 pb-4`}
+          className={`sm:hidden border-t border-white/10 ${maxWidthClass} mx-auto px-4 sm:px-6 lg:px-8 pb-4`}
           aria-label="Mobile"
         >
           <div className="flex flex-col gap-1 pt-3">
             {phone && (
               <a
                 href={`tel:${phone}`}
-                className="flex items-center gap-2 py-2 font-sans text-brand-slate/70 hover:text-brand-forest text-sm"
+                className={cn("flex items-center gap-2 py-2", navLinkClass)}
                 onClick={() => setMenuOpen(false)}
               >
                 <Phone className="w-4 h-4 shrink-0" />
@@ -124,7 +117,7 @@ export default function BranchLandingNav({
             {email && (
               <a
                 href={`mailto:${email}`}
-                className="flex items-center gap-2 py-2 font-sans text-brand-slate/70 hover:text-brand-forest text-sm"
+                className={cn("flex items-center gap-2 py-2", navLinkClass)}
                 onClick={() => setMenuOpen(false)}
               >
                 <Mail className="w-4 h-4 shrink-0" />
@@ -134,7 +127,7 @@ export default function BranchLandingNav({
             {secondaryHref && secondaryLabel && (
               <Link
                 href={secondaryHref}
-                className="py-2 font-sans text-brand-slate/70 hover:text-brand-forest text-sm"
+                className={cn("py-2", navLinkClass)}
                 onClick={() => setMenuOpen(false)}
               >
                 {secondaryLabel}
@@ -142,7 +135,7 @@ export default function BranchLandingNav({
             )}
             <Link
               href={bookingHref}
-              className="py-2 font-sans text-brand-slate/70 hover:text-brand-forest text-sm"
+              className={cn("py-2", navLinkClass)}
               onClick={() => setMenuOpen(false)}
             >
               {bookingLabel}

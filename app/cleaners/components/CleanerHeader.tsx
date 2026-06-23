@@ -16,16 +16,16 @@ export default function CleanerHeader({ name, region, branchName, branchSlug, on
   const displayLocation = branchName || (region === 'new_jersey' ? 'New Jersey' : region === 'vermont' ? 'Vermont' : null);
 
   return (
-    <div className="bg-brand-forest text-brand-ivory py-6 px-6 rounded-xl shadow-lg mb-6 border border-brand-forest/20">
+    <div className="bg-vm-navy text-vm-white py-6 px-6 rounded-xl shadow-lg mb-6 border border-vm-navy/20">
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
           <BrandLogo variant="ivory" size="portal" className="mb-3" />
-          <h1 className="text-xl font-serif font-bold mb-1">Welcome, {name}</h1>
+          <h1 className="text-xl font-heading font-bold mb-1">Welcome, {name}</h1>
           <div className="flex items-center gap-2">
             {displayLocation && (
               <LocationBadge location={region} branchName={branchName} branchSlug={branchSlug} />
             )}
-            <span className="text-brand-ivory/70 text-xs font-sans font-bold uppercase tracking-wider">
+            <span className="text-vm-white/70 text-xs font-body font-bold uppercase tracking-wider">
               Specialist Portal
             </span>
           </div>

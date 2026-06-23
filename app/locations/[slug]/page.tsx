@@ -15,7 +15,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps) {
   const branch = await prisma.branch.findUnique({
     where: { slug: params.slug },
-    include: { landingContent: true },
+    include: { BranchLandingContent: true },
   });
   
   if (!branch) {
@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: PageProps) {
   
   // Port Antonio specific metadata
   if (branch.slug === 'port-antonio') {
-    const seoTitle = branch.landingContent?.seoTitle || 'Professional Cleaning Services in Port Antonio, Jamaica | VelocityMaid';
-    const seoDescription = branch.landingContent?.seoDescription || 'VelocityMaid provides trusted, affordable, and professional house cleaning services in Port Antonio, Portland, Jamaica.';
+    const seoTitle = branch.BranchLandingContent?.seoTitle || 'Professional Cleaning Services in Port Antonio, Jamaica | VelocityMaid';
+    const seoDescription = branch.BranchLandingContent?.seoDescription || 'VelocityMaid provides trusted, affordable, and professional house cleaning services in Port Antonio, Portland, Jamaica.';
     
     // JSON-LD LocalBusiness schema
     const jsonLd = {
@@ -57,8 +57,8 @@ export async function generateMetadata({ params }: PageProps) {
   }
   
   return {
-    title: branch.landingContent?.seoTitle || `VelocityMaid – ${branch.name}`,
-    description: branch.landingContent?.seoDescription || `Professional cleaning services in ${branch.city}, ${branch.state}`,
+    title: branch.BranchLandingContent?.seoTitle || `VelocityMaid – ${branch.name}`,
+    description: branch.BranchLandingContent?.seoDescription || `Professional cleaning services in ${branch.city}, ${branch.state}`,
   };
 }
 
@@ -66,14 +66,14 @@ export default async function BranchLandingPage({ params }: PageProps) {
   const branch = await prisma.branch.findUnique({
     where: { slug: params.slug },
     include: {
-      servicePackages: {
+      BranchServicePackage: {
         where: { isActive: true },
         orderBy: { name: 'asc' },
       },
-      serviceAreas: {
+      BranchServiceArea: {
         orderBy: { zipCode: 'asc' },
       },
-      landingContent: true,
+      BranchLandingContent: true,
     },
   });
 
@@ -81,9 +81,9 @@ export default async function BranchLandingPage({ params }: PageProps) {
     notFound();
   }
 
-  const servicePackages = branch.servicePackages;
-  const serviceAreas = branch.serviceAreas;
-  const landingContent = branch.landingContent;
+  const servicePackages = branch.BranchServicePackage;
+  const serviceAreas = branch.BranchServiceArea;
+  const landingContent = branch.BranchLandingContent;
 
   // Coming Soon Page
   if (branch.status === 'COMING_SOON') {

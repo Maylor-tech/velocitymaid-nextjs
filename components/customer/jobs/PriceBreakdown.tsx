@@ -1,5 +1,3 @@
-import { DollarSign } from 'lucide-react';
-
 interface PriceBreakdownProps {
   subtotal: number | null;
   fees: number;
@@ -37,11 +35,11 @@ export default function PriceBreakdown({
     (balanceDue != null && balanceDue > 0);
 
   return (
-    <div className="mt-6 pt-6 border-t border-gray-200">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">Pricing</h3>
-      <div className="space-y-2 text-sm">
+    <div className="mt-6 pt-6 border-t border-vm-navy/10">
+      <h3 className="text-sm font-medium text-vm-text font-body mb-3">Pricing</h3>
+      <div className="space-y-2 text-sm font-body">
         {subtotal !== null && (
-          <div className="flex justify-between text-gray-600">
+          <div className="flex justify-between text-vm-muted">
             <span>Service total</span>
             <span>{formatCurrency(subtotal)}</span>
           </div>
@@ -49,13 +47,13 @@ export default function PriceBreakdown({
         {showDepositBreakdown && (
           <>
             {depositAmount != null && (
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-vm-muted">
                 <span>Booking deposit</span>
                 <span>{formatCurrency(depositAmount)}</span>
               </div>
             )}
             {amountPaid != null && (
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-vm-muted">
                 <span>Paid to date</span>
                 <span className="text-green-700">{formatCurrency(amountPaid)}</span>
               </div>
@@ -69,14 +67,14 @@ export default function PriceBreakdown({
           </>
         )}
         {fees > 0 && (
-          <div className="flex justify-between text-gray-600">
+          <div className="flex justify-between text-vm-muted">
             <span>Fees</span>
             <span>{formatCurrency(fees)}</span>
           </div>
         )}
-        <div className="flex justify-between pt-2 border-t border-gray-200">
-          <span className="font-medium text-gray-900">Quoted total</span>
-          <span className="font-medium text-gray-900">{formatCurrency(total)}</span>
+        <div className="flex justify-between pt-2 border-t border-vm-navy/10">
+          <span className="font-medium text-vm-navy">Quoted total</span>
+          <span className="font-medium text-vm-navy">{formatCurrency(total)}</span>
         </div>
       </div>
     </div>

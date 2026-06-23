@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
-import { VelocityMaidWordmark } from "@/components/brand";
+import { BrandLogo } from "@/components/brand";
+import { cn } from "@/lib/utils";
 
 const LOCATIONS = [
   { href: "/locations/new-jersey", label: "New Jersey" },
@@ -16,10 +18,27 @@ export interface SiteHeaderProps {
   bookingHref?: string;
 }
 
+function isNavActive(href: string, pathname: string): boolean {
+  if (href.startsWith("/#")) return false;
+  if (href === pathname) return true;
+  if (href !== "/" && pathname.startsWith(href)) return true;
+  return false;
+}
+
+const navLinkClass = (active: boolean) =>
+  cn(
+    "font-body text-sm transition-colors",
+    active ? "text-vm-cyan" : "text-white hover:text-vm-cyan"
+  );
+
+const ctaClassName =
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md btn-tactile transition-[transform,background-color,border-color] duration-150 bg-vm-cyan text-vm-navy font-heading font-semibold uppercase tracking-wider text-xs hover:bg-vm-cyan-dark shadow-md px-4 py-2.5";
+
 export default function SiteHeader({
   homeAnchors = false,
   bookingHref = "/book?branch=new-jersey",
 }: SiteHeaderProps) {
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -43,19 +62,17 @@ export default function SiteHeader({
         { href: "/partners", label: "Partners" },
       ];
 
-  const ctaClassName =
-    "inline-flex items-center justify-center bg-brand-forest text-brand-ivory font-sans font-bold uppercase tracking-wider text-xs rounded px-4 py-2.5 hover:bg-brand-forest-hover transition shadow-sm";
-
   return (
     <header
-      className={`sticky top-0 z-50 w-full bg-brand-ivory/95 backdrop-blur-sm border-b border-brand-forest/10 transition-all duration-300 ${
-        scrolled ? "shadow-sm py-2" : "py-3"
-      }`}
+      className={cn(
+        "sticky top-0 z-50 w-full bg-vm-navy border-b border-white/10 transition-all duration-300",
+        scrolled ? "shadow-md py-2" : "py-3"
+      )}
     >
       <div className="mx-auto max-w-marketing px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="shrink-0 min-w-0">
-            <VelocityMaidWordmark variant="homepage" wordmarkFill="#0F1C2E" />
+            <BrandLogo variant="ivory" size="header" showTagline={false} />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6" aria-label="Main">
@@ -63,7 +80,7 @@ export default function SiteHeader({
               <Link
                 key={item.label}
                 href={item.href}
-                className="font-sans text-brand-slate/70 hover:text-brand-forest text-sm transition-colors"
+                className={navLinkClass(isNavActive(item.href, pathname))}
               >
                 {item.label}
               </Link>
@@ -71,18 +88,28 @@ export default function SiteHeader({
             <div className="relative group">
               <button
                 type="button"
-                className="font-sans text-brand-slate/70 hover:text-brand-forest text-sm flex items-center gap-1 transition-colors"
+                className={cn(
+                  "font-body text-sm flex items-center gap-1 transition-colors",
+                  LOCATIONS.some((loc) => isNavActive(loc.href, pathname))
+                    ? "text-vm-cyan"
+                    : "text-white hover:text-vm-cyan"
+                )}
               >
                 Locations
                 <ChevronDown className="w-4 h-4" />
               </button>
-              <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-brand-forest/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className="absolute top-full left-0 mt-2 w-48 bg-vm-navy rounded-lg shadow-lg border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                 <div className="py-2">
                   {LOCATIONS.map((loc) => (
                     <Link
                       key={loc.href}
                       href={loc.href}
-                      className="block px-4 py-2 text-sm font-sans text-brand-slate/70 hover:bg-brand-ivory hover:text-brand-forest"
+                      className={cn(
+                        "block px-4 py-2 text-sm font-body transition-colors",
+                        isNavActive(loc.href, pathname)
+                          ? "text-vm-cyan"
+                          : "text-white hover:text-vm-cyan hover:bg-white/5"
+                      )}
                     >
                       {loc.label}
                     </Link>
@@ -92,22 +119,22 @@ export default function SiteHeader({
             </div>
             <Link
               href="/customer/login"
-              className="font-sans text-brand-slate/70 hover:text-brand-forest text-sm transition-colors"
+              className={navLinkClass(pathname.startsWith("/customer"))}
             >
               Customer Portal
             </Link>
             <Link href={bookingHref} className={ctaClassName}>
-              Book a Service
+              Book Now
             </Link>
           </nav>
 
           <div className="flex items-center gap-2 lg:hidden">
-            <Link href={bookingHref} className={`${ctaClassName} text-[10px] px-3 py-2`}>
-              Book
+            <Link href={bookingHref} className={cn(ctaClassName, "text-[10px] px-3 py-2")}>
+              Book Now
             </Link>
             <button
               type="button"
-              className="p-2 text-brand-forest"
+              className="p-2 text-white hover:text-vm-cyan transition-colors"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
@@ -119,27 +146,30 @@ export default function SiteHeader({
 
         {menuOpen && (
           <nav
-            className="lg:hidden mt-4 pt-4 border-t border-brand-forest/10 pb-2 flex flex-col gap-1"
+            className="lg:hidden mt-4 pt-4 border-t border-white/10 pb-2 flex flex-col gap-1"
             aria-label="Mobile"
           >
             {navLinks.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="py-2 text-sm font-sans text-brand-slate/70 hover:text-brand-forest"
+                className={cn("py-2 text-sm font-body", navLinkClass(isNavActive(item.href, pathname)))}
                 onClick={() => setMenuOpen(false)}
               >
                 {item.label}
               </Link>
             ))}
-            <p className="text-[10px] font-sans font-bold uppercase tracking-wider text-brand-slate/50 mt-2 mb-1">
+            <p className="text-[10px] font-heading font-bold uppercase tracking-wider text-vm-cyan mt-2 mb-1">
               Locations
             </p>
             {LOCATIONS.map((loc) => (
               <Link
                 key={loc.href}
                 href={loc.href}
-                className="py-1.5 text-sm font-sans text-brand-slate/70 hover:text-brand-forest"
+                className={cn(
+                  "py-1.5 text-sm font-body",
+                  navLinkClass(isNavActive(loc.href, pathname))
+                )}
                 onClick={() => setMenuOpen(false)}
               >
                 {loc.label}
@@ -147,14 +177,17 @@ export default function SiteHeader({
             ))}
             <Link
               href="/customer/login"
-              className="py-2 text-sm font-sans text-brand-slate/70"
+              className={cn(
+                "py-2 text-sm font-body",
+                navLinkClass(pathname.startsWith("/customer"))
+              )}
               onClick={() => setMenuOpen(false)}
             >
               Customer Portal
             </Link>
             <Link
               href="/cleaners/apply"
-              className="py-2 text-sm font-sans text-brand-slate/70"
+              className="py-2 text-sm font-body text-white hover:text-vm-cyan transition-colors"
               onClick={() => setMenuOpen(false)}
             >
               Apply as Specialist

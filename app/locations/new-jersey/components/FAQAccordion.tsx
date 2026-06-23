@@ -20,24 +20,24 @@ export default function FAQAccordion({ faqs }: FAQAccordionProps) {
       {faqs.map((faq, index) => (
         <div
           key={index}
-          className="border border-brand-forest/10 rounded-xl overflow-hidden bg-white shadow-sm"
+          className="border border-vm-navy/10 rounded-xl overflow-hidden bg-vm-white shadow-sm"
         >
           <button
             type="button"
             onClick={() => setOpenIndex(openIndex === index ? null : index)}
-            className="w-full px-5 py-4 text-left flex items-center justify-between gap-4 hover:bg-brand-ivory/60 transition"
+            className="w-full px-5 py-4 text-left flex items-center justify-between gap-4 hover:bg-vm-surface transition"
           >
-            <span className="font-serif font-semibold text-brand-forest text-sm sm:text-base">
+            <span className="font-heading font-semibold text-vm-navy text-sm sm:text-base">
               {faq.question}
             </span>
             {openIndex === index ? (
-              <ChevronUp className="w-5 h-5 text-brand-gold shrink-0" />
+              <ChevronUp className="w-5 h-5 text-vm-cyan shrink-0" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-brand-gold shrink-0" />
+              <ChevronDown className="w-5 h-5 text-vm-cyan shrink-0" />
             )}
           </button>
           {openIndex === index && (
-            <div className="px-5 py-4 bg-brand-ivory/40 border-t border-brand-forest/5 text-brand-slate/80 font-sans text-sm leading-relaxed">
+            <div className="px-5 py-4 bg-vm-surface border-t border-vm-navy/5 text-vm-text font-body text-sm leading-relaxed">
               {faq.answer}
             </div>
           )}

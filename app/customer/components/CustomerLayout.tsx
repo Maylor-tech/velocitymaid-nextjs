@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { BrandLogo } from '@/components/brand';
-import { brandClasses } from '@/lib/brand/tokens';
 import { 
   Calendar, 
   Settings, 
@@ -87,11 +86,11 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-vm-surface flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-          <p className="mt-2 text-xs text-gray-400">If this takes too long, you'll be redirected to login</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-vm-cyan"></div>
+          <p className="mt-4 text-vm-muted font-body">Loading...</p>
+          <p className="mt-2 text-xs text-vm-muted/70 font-body">If this takes too long, you'll be redirected to login</p>
         </div>
       </div>
     );
@@ -100,14 +99,14 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
   // 🚨 SAFETY FIX: If not authenticated and not loading, redirect to login
   if (!customer && !loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-vm-surface flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Unable to load customer information.</p>
+          <p className="text-vm-muted font-body mb-4">Unable to load customer information.</p>
           <button
             onClick={() => {
               window.location.href = '/customer/login';
             }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-vm-navy text-vm-white rounded-lg hover:bg-vm-navy/90 transition-colors font-body"
           >
             Go to Login
           </button>
@@ -122,9 +121,9 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
   ];
 
   return (
-    <div className={`min-h-screen ${brandClasses.bgPage}`}>
+    <div className="min-h-screen bg-vm-surface">
       {/* Top Navigation */}
-      <nav className="bg-white border-b border-brand-forest/10 shadow-sm">
+      <nav className="bg-vm-white border-b border-vm-navy/10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
@@ -139,10 +138,10 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-sans font-medium transition-colors ${
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-body font-medium transition-colors ${
                         isActive
-                          ? 'bg-brand-forest/10 text-brand-forest'
-                          : 'text-brand-slate/70 hover:bg-brand-forest/5'
+                          ? 'bg-vm-navy/10 text-vm-navy'
+                          : 'text-vm-muted hover:bg-vm-navy/5'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -157,21 +156,24 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
                 href="https://wa.me/19732809190"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium"
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-vm-muted hover:bg-vm-surface rounded-lg transition-colors text-sm font-body font-medium"
                 title="WhatsApp Support"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Support</span>
               </a>
-              <Link href="/book" className={brandClasses.btnPrimary}>
+              <Link
+                href="/book"
+                className="bg-vm-navy text-vm-white font-body font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md hover:bg-vm-navy/90 btn-tactile"
+              >
                 Book a Service
               </Link>
-              <span className="text-sm text-gray-600 hidden lg:inline">
+              <span className="text-sm text-vm-muted font-body hidden lg:inline">
                 {customer?.firstName} {customer?.lastName}
               </span>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2 text-vm-muted hover:bg-vm-surface rounded-lg transition-colors text-sm font-body font-medium"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Logout</span>
@@ -182,7 +184,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
       </nav>
 
       {/* Mobile Navigation */}
-      <div className="md:hidden bg-white border-b border-gray-200">
+      <div className="md:hidden bg-vm-white border-b border-vm-navy/10">
         <div className="px-4 py-2 flex gap-1 overflow-x-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -191,10 +193,10 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-sans font-medium whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-body font-medium whitespace-nowrap transition-colors ${
                   isActive
-                    ? 'bg-brand-forest/10 text-brand-forest'
-                    : 'text-brand-slate/70 hover:bg-brand-forest/5'
+                    ? 'bg-vm-navy/10 text-vm-navy'
+                    : 'text-vm-muted hover:bg-vm-navy/5'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -204,7 +206,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
           })}
           <Link
             href="/book"
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm whitespace-nowrap hover:bg-blue-700 transition-colors ml-auto"
+            className="flex items-center gap-2 px-4 py-2 bg-vm-navy text-vm-white rounded-lg font-heading font-semibold text-sm whitespace-nowrap hover:bg-vm-navy/90 transition-colors ml-auto"
           >
             Book a Service
           </Link>
@@ -212,15 +214,15 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
       </div>
 
       {/* Support Banner */}
-      <div className="calm-alert rounded-none border-x-0 border-t-0 px-4 sm:px-6 lg:px-8 py-3">
+      <div className="flex bg-vm-navy/5 border-b border-vm-navy/10 px-4 sm:px-6 lg:px-8 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between w-full">
-          <p className="text-sm font-sans font-medium text-brand-slate/90">
+          <p className="text-sm font-body font-medium text-vm-text">
             <strong>Need help?</strong> For same-day changes, call or WhatsApp us.
           </p>
           <div className="flex items-center gap-3">
             <a
               href="tel:9732809190"
-              className="flex items-center gap-2 text-sm text-blue-700 hover:text-blue-900 font-medium"
+              className="flex items-center gap-2 text-sm text-vm-cyan hover:text-vm-cyan-dark font-body font-medium"
             >
               <Phone className="w-4 h-4" />
               (973) 280-9190
@@ -229,7 +231,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
               href="https://wa.me/19732809190"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-green-700 hover:text-green-900 font-medium"
+              className="flex items-center gap-2 text-sm text-green-700 hover:text-green-900 font-body font-medium"
             >
               <MessageSquare className="w-4 h-4" />
               WhatsApp
@@ -245,4 +247,3 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
     </div>
   );
 }
-

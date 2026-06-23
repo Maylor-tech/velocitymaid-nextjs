@@ -1,4 +1,14 @@
+/**
+ * @deprecated LEGACY — renders the retired V-chevron mark and per-market
+ * taglines ("VERMONT" / "NEW JERSEY"), neither of which is part of the
+ * approved velocitymaid-logo-system-v1 (house + sparkle icon, single fixed
+ * tagline "COME HOME TO CLEAN."). No longer used by SiteHeader or
+ * BranchLandingNav — both now render `BrandLogo` from ./BrandLogo. Kept
+ * only so any unknown external references don't break at build time. Do
+ * not use in new code.
+ */
 import React from "react";
+import { colors } from "../../lib/brand/colors";
 
 export type VelocityMaidWordmarkVariant = "homepage" | "market";
 export type VelocityMaidMarketTagline = "vermont" | "new-jersey";
@@ -34,13 +44,13 @@ export default function VelocityMaidWordmark({
         role="img"
         className={className}
       >
-        <polygon points="0,2 12,38 24,2 18,2 12,25 6,2" fill="#22D3EE" />
+        <polygon points="0,2 12,38 24,2 18,2 12,25 6,2" fill={colors.primaryCyan} />
         <line
           x1="0"
           y1="39"
           x2="24"
           y2="39"
-          stroke="#22D3EE"
+          stroke={colors.primaryCyan}
           strokeWidth="1.5"
           opacity="0.35"
         />
@@ -69,13 +79,13 @@ export default function VelocityMaidWordmark({
       role="img"
       className={className}
     >
-      <polygon points="0,2 14,46 28,2 21,2 14,30 7,2" fill="#22D3EE" />
+      <polygon points="0,2 14,46 28,2 21,2 14,30 7,2" fill={colors.primaryCyan} />
       <line
         x1="0"
         y1="47"
         x2="28"
         y2="47"
-        stroke="#22D3EE"
+        stroke={colors.primaryCyan}
         strokeWidth="2"
         opacity="0.35"
       />
@@ -96,7 +106,7 @@ export default function VelocityMaidWordmark({
         fontFamily="Arial, sans-serif"
         fontWeight="400"
         fontSize="9"
-        fill="#22D3EE"
+        fill={colors.primaryCyan}
         letterSpacing="3"
       >
         {MARKET_TAGLINE[market]}

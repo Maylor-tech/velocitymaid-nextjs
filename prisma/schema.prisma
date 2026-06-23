@@ -268,6 +268,7 @@ model Customer {
   riskScore                                                Int                        @default(0)
   loginCode                                                String?
   loginCodeExpiresAt                                       DateTime?
+  invitedAt                                                DateTime?
   addressLine1                                             String?                    @db.VarChar(255)
   addressLine2                                             String?                    @db.VarChar(255)
   city                                                     String?                    @db.VarChar(100)
@@ -377,6 +378,8 @@ model Job {
   balancePaymentIntentId   String?
   depositPaidAt            DateTime?
   balancePaidAt            DateTime?
+  paidAt                   DateTime?
+  paymentReference         String?
   approvedAt               DateTime?
   approvedById             String?
   createdAt                DateTime                   @default(now())
@@ -392,7 +395,14 @@ model Job {
   cancellationReason       String?
   cancelledAt              DateTime?
   status                   JobStatus                  @default(RECEIVED)
+  completedBy              String?
+  cleanDurationMins        Int?
+  notifiedAt               DateTime?
+  internalNotes            String?
+  marketLabel              String?
+  archivedAt               DateTime?
   AssignmentLog            AssignmentLog[]
+  photos                   CleanPhoto[]
   CleanerBalanceLedger     CleanerBalanceLedger[]
   CleanerRating            CleanerRating?
   ComplianceIssue          ComplianceIssue[]
@@ -413,6 +423,34 @@ model Job {
   @@index([status])
   @@index([paymentStatus])
   @@index([reviewStatus])
+  @@index([archivedAt])
+}
+
+model CleanPhoto {
+  id         String   @id @default(cuid())
+  jobId      String
+  url        String
+  caption    String?
+  uploadedBy String?
+  uploadedAt DateTime @default(now())
+  Job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@map("clean_photos")
+}
+
+model ReviewRequest {
+  id           String    @id @default(cuid())
+  jobId        String
+  clientEmail  String
+  scheduledFor DateTime
+  sentAt       DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([jobId])
+  @@index([scheduledFor])
+  @@index([sentAt])
+  @@map("review_requests")
 }
 
 model JobPayout {
@@ -1348,4 +1386,21 @@ enum JobReviewStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+model Tip {
+  id                    String   @id @default(cuid())
+  amount                Int
+  currency              String   @default("usd")
+  guestName             String?
+  guestMessage          String?
+  cleanerName           String?
+  propertyAddress       String?
+  stripePaymentIntentId String?  @unique
+  status                String   @default("pending")
+  market                String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("tips")
 }

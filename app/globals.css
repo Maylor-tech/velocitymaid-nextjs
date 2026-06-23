@@ -3,7 +3,18 @@
 @tailwind utilities;
 
 :root {
-  /* VelocityMaid UX/DS v2.0.0 */
+  /*
+   * DEPRECATED LEGACY — "VelocityMaid UX/DS v2.0.0" forest/gold palette and
+   * Playfair/Plus Jakarta Sans fonts below are NOT part of the approved
+   * velocitymaid-brand-guidelines.docx. Approved tokens live in
+   * lib/brand/colors.ts (Navy #0F1C2E / Cyan #00C2CB / White) and are wired
+   * into Tailwind as vm-navy / vm-cyan / vm-cyan-dark / vm-surface /
+   * vm-white / vm-text / vm-muted (see tailwind.config.ts). Approved fonts
+   * are Space Grotesk (font-heading) and Inter (font-body), already loaded
+   * in app/layout.tsx. This block is left functionally unchanged — ~32
+   * files still depend on it — see the Brand Audit Report and Component
+   * Standardization Plan for the migration path. Do not add new usages.
+   */
   --brand-forest: #0b221e;
   --brand-gold: #d4af37;
   --brand-gold-hover: #c19a2e;
@@ -48,7 +59,7 @@
   }
 
   body {
-    @apply bg-brand-ivory text-brand-slate font-sans antialiased;
+    @apply bg-vm-surface text-vm-text font-body antialiased;
     margin: 0;
     max-width: 100vw;
     overflow-x: hidden;
@@ -61,7 +72,7 @@
   h1,
   h2,
   h3 {
-    @apply font-serif tracking-tight text-brand-forest;
+    @apply font-heading tracking-tight;
   }
 }
 

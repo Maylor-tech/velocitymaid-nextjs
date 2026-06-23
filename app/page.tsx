@@ -18,6 +18,7 @@ import {
   ArrowRight,
   ChevronDown,
   ChevronUp,
+  X,
 } from 'lucide-react';
 import { sendGAEvent } from '@next/third-parties/google';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
@@ -33,21 +34,21 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="bg-white border border-brand-forest/10 rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-vm-white border border-vm-navy/10 rounded-2xl shadow-sm overflow-hidden">
       <button
-        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-brand-ivory/60 transition"
+        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-vm-surface transition"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <h3 className="text-base font-serif font-semibold text-brand-forest">{question}</h3>
+        <h3 className="text-base font-heading font-semibold text-vm-navy">{question}</h3>
         {isOpen ? (
-          <ChevronUp className="w-5 h-5 text-brand-gold" />
+          <ChevronUp className="w-5 h-5 text-vm-cyan" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-brand-gold" />
+          <ChevronDown className="w-5 h-5 text-vm-cyan" />
         )}
       </button>
       {isOpen && (
-        <div className="px-6 pb-4 border-t border-brand-forest/5">
-          <p className="text-brand-slate/80 leading-relaxed pt-3">{answer}</p>
+        <div className="px-6 pb-4 border-t border-vm-navy/5">
+          <p className="text-vm-text font-body leading-relaxed pt-3">{answer}</p>
         </div>
       )}
     </div>
@@ -124,7 +125,7 @@ export default function Home() {
   const email = "hello@velocitymaid.com";
 
   return (
-    <div className="min-h-screen bg-brand-ivory">
+    <div className="min-h-screen bg-vm-surface">
       <SiteHeader homeAnchors bookingHref={bookingUrl} />
 
       {/* ── HERO ── */}
@@ -309,41 +310,41 @@ export default function Home() {
       {/* ── END HERO ── */}
 
       {/* Trust Bullets */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-brand-forest/5">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-vm-white border-t border-vm-navy/5">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center text-center p-6 rounded-xl border border-brand-forest/10 bg-brand-ivory/50 hover:shadow-sm transition">
-              <div className="w-14 h-14 bg-brand-forest/5 rounded-full flex items-center justify-center mb-4 border border-brand-forest/10">
-                <Shield className="w-7 h-7 text-brand-gold" />
+            <div className="flex flex-col items-center text-center p-6 rounded-xl border border-vm-navy/10 bg-vm-surface hover:shadow-sm transition">
+              <div className="w-14 h-14 bg-vm-navy/5 rounded-full flex items-center justify-center mb-4 border border-vm-navy/10">
+                <Shield className="w-7 h-7 text-vm-cyan" />
               </div>
-              <h3 className="font-serif font-semibold text-brand-forest mb-2 text-lg">Insured & background-checked cleaners</h3>
-              <p className="text-sm text-brand-slate/70">All our cleaners are thoroughly vetted and fully insured</p>
+              <h3 className="font-heading font-semibold text-vm-navy mb-2 text-lg">Insured & background-checked cleaners</h3>
+              <p className="text-sm text-vm-muted font-body">All our cleaners are thoroughly vetted and fully insured</p>
             </div>
-            <div className="flex flex-col items-center text-center p-6 rounded-xl border border-brand-forest/10 bg-brand-ivory/50 hover:shadow-sm transition">
-              <div className="w-14 h-14 bg-brand-forest/5 rounded-full flex items-center justify-center mb-4 border border-brand-forest/10">
-                <Calendar className="w-7 h-7 text-brand-gold" />
+            <div className="flex flex-col items-center text-center p-6 rounded-xl border border-vm-navy/10 bg-vm-surface hover:shadow-sm transition">
+              <div className="w-14 h-14 bg-vm-navy/5 rounded-full flex items-center justify-center mb-4 border border-vm-navy/10">
+                <Calendar className="w-7 h-7 text-vm-cyan" />
               </div>
-              <h3 className="font-serif font-semibold text-brand-forest mb-2 text-lg">Easy online booking & rescheduling</h3>
-              <p className="text-sm text-brand-slate/70">Book in minutes and manage your appointments anytime</p>
+              <h3 className="font-heading font-semibold text-vm-navy mb-2 text-lg">Easy online booking & rescheduling</h3>
+              <p className="text-sm text-vm-muted font-body">Book in minutes and manage your appointments anytime</p>
             </div>
-            <div className="flex flex-col items-center text-center p-6 rounded-xl border border-brand-forest/10 bg-brand-ivory/50 hover:shadow-sm transition">
-              <div className="w-14 h-14 bg-brand-forest/5 rounded-full flex items-center justify-center mb-4 border border-brand-forest/10">
-                <Phone className="w-7 h-7 text-brand-gold" />
+            <div className="flex flex-col items-center text-center p-6 rounded-xl border border-vm-navy/10 bg-vm-surface hover:shadow-sm transition">
+              <div className="w-14 h-14 bg-vm-navy/5 rounded-full flex items-center justify-center mb-4 border border-vm-navy/10">
+                <Phone className="w-7 h-7 text-vm-cyan" />
               </div>
-              <h3 className="font-serif font-semibold text-brand-forest mb-2 text-lg">Local support when you need it</h3>
-              <p className="text-sm text-brand-slate/70">Real people ready to help, not automated responses</p>
+              <h3 className="font-heading font-semibold text-vm-navy mb-2 text-lg">Local support when you need it</h3>
+              <p className="text-sm text-vm-muted font-body">Real people ready to help, not automated responses</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Reassurance Strip */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-brand-ivory border-y border-brand-forest/5">
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-vm-surface border-y border-vm-navy/5">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-xl text-brand-forest mb-3 font-serif font-semibold">
+          <p className="text-xl text-vm-navy mb-3 font-heading font-semibold">
             Your home is in good hands.
           </p>
-          <p className="text-brand-slate/70 text-lg font-sans">
+          <p className="text-vm-muted text-lg font-body">
             We carefully vet our cleaners and stand behind every service.
           </p>
         </div>
@@ -363,14 +364,14 @@ export default function Home() {
       </section>
 
       {/* Before & After Transformations - Lazy Loaded */}
-      <section ref={beforeAfterRef} data-section="beforeAfter" className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-ivory">
+      <section ref={beforeAfterRef} data-section="beforeAfter" className="py-20 px-4 sm:px-6 lg:px-8 bg-vm-surface">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-center text-xs font-semibold font-body text-vm-muted uppercase tracking-widest mb-4">
               New Jersey
             </p>
-            <h2 className="text-4xl font-bold text-brand-forest mb-4">See the VelocityMaid Difference</h2>
-            <p className="text-xl text-brand-slate/70">Real homes. Real transformations. See why local New Jersey families trust us.</p>
+            <h2 className="text-4xl font-heading font-bold text-vm-navy mb-4">See the VelocityMaid Difference</h2>
+            <p className="text-xl text-vm-muted font-body">Real homes. Real transformations. See why local New Jersey families trust us.</p>
           </div>
           
           {/* Before/After Slider - Featured Transformation */}
@@ -383,7 +384,7 @@ export default function Home() {
                   alt="Kitchen transformation - Newark, NJ"
                   className="w-full"
                 />
-                <p className="text-center text-brand-slate/70 mt-4 text-lg font-semibold">
+                <p className="text-center text-vm-muted font-body mt-4 text-lg font-semibold">
                   Drag the slider to see the transformation
                 </p>
               </>
@@ -436,7 +437,7 @@ export default function Home() {
                 </div>
                 <div className="p-4">
                   <p className={`text-center font-semibold ${
-                    image.badge === 'After' ? 'text-brand-gold' : 'text-brand-forest'
+                    image.badge === 'After' ? 'text-vm-cyan' : 'text-vm-navy'
                   }`}>
                     {image.caption}
                   </p>
@@ -447,7 +448,7 @@ export default function Home() {
           <div className="text-center">
             <a 
               href="/gallery"
-              className="inline-flex items-center bg-brand-forest text-white px-8 py-3 rounded-full font-semibold hover:bg-brand-forest-hover transition"
+              className="inline-flex items-center bg-vm-navy text-vm-white px-8 py-3 rounded-full font-heading font-semibold hover:bg-vm-navy/90 transition"
             >
               View Full Gallery <ArrowRight className="ml-2 w-5 h-5" />
             </a>
@@ -461,8 +462,8 @@ export default function Home() {
       <section id="why-us" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-brand-forest mb-4">Why Choose VelocityMaid?</h2>
-            <p className="text-xl text-brand-slate/70">Professional cleaning for busy Newark families</p>
+            <h2 className="text-4xl font-heading font-bold text-vm-navy mb-4">Why Choose VelocityMaid?</h2>
+            <p className="text-xl text-vm-muted font-body">Professional cleaning for busy Newark families</p>
           </div>
           <div className="grid md:grid-cols-4 gap-8">
             {[
@@ -487,10 +488,10 @@ export default function Home() {
                 description: "100% satisfaction guaranteed or we'll make it right"
               }
             ].map((feature, index) => (
-              <div key={index} className="card-hover bg-brand-ivory p-8 rounded-2xl text-center">
-                <feature.icon className="w-12 h-12 text-brand-gold mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-brand-forest mb-2">{feature.title}</h3>
-                <p className="text-brand-slate/70">{feature.description}</p>
+              <div key={index} className="card-hover bg-vm-surface p-8 rounded-2xl text-center">
+                <feature.icon className="w-12 h-12 text-vm-cyan mx-auto mb-4" />
+                <h3 className="text-xl font-heading font-bold text-vm-navy mb-2">{feature.title}</h3>
+                <p className="text-vm-muted font-body">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -498,11 +499,11 @@ export default function Home() {
       </section>
 
       {/* Services */}
-      <section ref={servicesRef} data-section="services" id="services" className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-ivory">
+      <section ref={servicesRef} data-section="services" id="services" className="py-20 px-4 sm:px-6 lg:px-8 bg-vm-surface">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-brand-forest mb-4">Our Services</h2>
-            <p className="text-xl text-brand-slate/70">Comprehensive cleaning solutions for every need</p>
+            <h2 className="text-4xl font-heading font-bold text-vm-navy mb-4">Our Services</h2>
+            <p className="text-xl text-vm-muted font-body">Comprehensive cleaning solutions for every need</p>
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             {[
@@ -520,20 +521,20 @@ export default function Home() {
               }
             ].map((service, index) => (
               <div key={index} className="bg-white p-8 rounded-2xl shadow-lg card-hover">
-                <service.icon className="w-12 h-12 text-brand-gold mb-4" />
-                <h3 className="text-2xl font-bold text-brand-forest mb-2">{service.title}</h3>
-                <p className="text-brand-slate/70 mb-6">{service.description}</p>
+                <service.icon className="w-12 h-12 text-vm-cyan mb-4" />
+                <h3 className="text-2xl font-heading font-bold text-vm-navy mb-2">{service.title}</h3>
+                <p className="text-vm-muted font-body mb-6">{service.description}</p>
                 <ul className="space-y-3">
                   {service.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-brand-slate/80">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                    <li key={idx} className="flex items-center text-vm-text font-body">
+                      <CheckCircle className="w-5 h-5 text-vm-cyan mr-3" />
                       {feature}
                     </li>
                   ))}
                 </ul>
                 <a 
                   href={bookingUrl}
-                  className="mt-6 inline-flex items-center text-brand-gold font-semibold hover:text-brand-forest transition"
+                  className="mt-6 inline-flex items-center text-vm-cyan font-heading font-semibold hover:text-vm-cyan-dark transition"
                 >
                   Book This Service <ArrowRight className="ml-2 w-5 h-5" />
                 </a>
@@ -547,8 +548,8 @@ export default function Home() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-brand-forest mb-4">What Our Clients Say</h2>
-            <p className="text-xl text-brand-slate/70">Real experiences from real customers</p>
+            <h2 className="text-4xl font-heading font-bold text-vm-navy mb-4">What Our Clients Say</h2>
+            <p className="text-xl text-vm-muted font-body">Real experiences from real customers</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -571,16 +572,16 @@ export default function Home() {
                 rating: 5
               }
             ].map((testimonial, index) => (
-              <div key={index} className="bg-brand-ivory p-8 rounded-2xl card-hover">
+              <div key={index} className="bg-vm-surface p-8 rounded-2xl card-hover">
                 <div className="flex items-center mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    <Star key={i} className="w-5 h-5 text-vm-cyan fill-vm-cyan" />
                   ))}
                 </div>
-                <p className="text-brand-slate/80 mb-6 italic">"{testimonial.text}"</p>
+                <p className="text-vm-text font-body mb-6 italic">"{testimonial.text}"</p>
                 <div>
-                  <p className="font-bold text-brand-forest">{testimonial.name}</p>
-                  <p className="text-sm text-brand-slate/70">{testimonial.location}</p>
+                  <p className="font-heading font-bold text-vm-navy">{testimonial.name}</p>
+                  <p className="text-sm text-vm-muted font-body">{testimonial.location}</p>
                 </div>
               </div>
             ))}
@@ -594,8 +595,8 @@ export default function Home() {
       <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-brand-forest mb-4">Frequently Asked Questions</h2>
-            <p className="text-xl text-brand-slate/70">Got questions? We've got answers</p>
+            <h2 className="text-4xl font-heading font-bold text-vm-navy mb-4">Frequently Asked Questions</h2>
+            <p className="text-xl text-vm-muted font-body">Got questions? We've got answers</p>
           </div>
           <div className="space-y-4">
             {[
@@ -628,10 +629,10 @@ export default function Home() {
             ))}
           </div>
           <div className="text-center mt-12">
-            <p className="text-brand-slate/70 mb-4">Still have questions?</p>
+            <p className="text-vm-muted font-body mb-4">Still have questions?</p>
             <a 
               href={`tel:${phoneNumberTel}`}
-              className="inline-flex items-center bg-brand-forest text-white px-6 py-3 rounded-full font-semibold hover:bg-brand-forest-hover transition"
+              className="inline-flex items-center bg-vm-navy text-vm-white px-6 py-3 rounded-full font-heading font-semibold hover:bg-vm-navy/90 transition"
               onClick={() => {
                 sendGAEvent('event', 'phone_clicked', {
                   phone_number: phoneNumber,
@@ -646,19 +647,19 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-forest">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-vm-navy">
         <div className="max-w-4xl mx-auto text-center">
-          <Calendar className="w-16 h-16 text-brand-gold mx-auto mb-6" />
-          <h2 className="text-4xl font-serif font-bold text-brand-ivory mb-4">
+          <Calendar className="w-16 h-16 text-vm-cyan mx-auto mb-6" />
+          <h2 className="text-4xl font-heading font-bold text-vm-white mb-4">
             Ready for a Spotless Home?
           </h2>
-          <p className="text-xl text-brand-ivory/80 mb-8 font-sans">
+          <p className="text-xl text-vm-white/80 mb-8 font-body">
             Book your cleaning service today and experience the VelocityMaid difference
           </p>
           
-          <div className="bg-brand-ivory/10 border border-brand-ivory/20 p-6 rounded-xl text-center max-w-[600px] my-10 mx-auto">
-            <h3 className="text-xl font-serif font-bold text-brand-ivory mb-2">Safe & Secure Booking</h3>
-            <p className="text-brand-ivory/80 font-sans text-sm">
+          <div className="bg-vm-white/10 border border-vm-white/20 p-6 rounded-xl text-center max-w-[600px] my-10 mx-auto">
+            <h3 className="text-xl font-heading font-bold text-vm-white mb-2">Safe & Secure Booking</h3>
+            <p className="text-vm-white/80 font-body text-sm">
               Your payment information is protected by bank-level encryption. We use Stripe — your card details are never stored on our servers.
             </p>
           </div>
@@ -666,7 +667,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 
               href={bookingUrl}
-              className="bg-brand-gold text-brand-forest px-8 py-4 rounded font-sans font-bold uppercase tracking-wider text-xs hover:bg-brand-gold-hover transition inline-flex items-center justify-center"
+              className="bg-vm-cyan text-vm-navy px-8 py-4 rounded font-body font-bold uppercase tracking-wider text-xs hover:bg-vm-cyan-dark transition inline-flex items-center justify-center"
             >
               Book Online Now <ArrowRight className="ml-2 w-5 h-5" />
             </a>
@@ -691,13 +692,13 @@ export default function Home() {
       <section id="contact" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-brand-forest mb-4">Get In Touch</h2>
-            <p className="text-xl text-brand-slate/70">We're here to answer your questions</p>
+            <h2 className="text-4xl font-bold text-vm-navy mb-4">Get In Touch</h2>
+            <p className="text-xl text-vm-muted">We're here to answer your questions</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            <a 
+            <a
               href={`tel:${phoneNumberTel}`}
-              className="bg-brand-ivory p-8 rounded-2xl text-center card-hover"
+              className="bg-vm-surface p-8 rounded-2xl text-center card-hover"
               onClick={() => {
                 sendGAEvent('event', 'phone_clicked', {
                   phone_number: phoneNumber,
@@ -705,61 +706,61 @@ export default function Home() {
                 });
               }}
             >
-              <Phone className="w-12 h-12 text-brand-gold mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-brand-forest mb-2">Call Us</h3>
-              <p className="text-brand-slate/70">{phoneNumber}</p>
+              <Phone className="w-12 h-12 text-vm-cyan mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-vm-navy mb-2">Call Us</h3>
+              <p className="text-vm-muted">{phoneNumber}</p>
             </a>
-            <a 
+            <a
               href={`mailto:${email}`}
-              className="bg-brand-ivory p-8 rounded-2xl text-center card-hover"
+              className="bg-vm-surface p-8 rounded-2xl text-center card-hover"
             >
-              <Mail className="w-12 h-12 text-brand-gold mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-brand-forest mb-2">Email Us</h3>
-              <p className="text-brand-slate/70">{email}</p>
+              <Mail className="w-12 h-12 text-vm-cyan mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-vm-navy mb-2">Email Us</h3>
+              <p className="text-vm-muted">{email}</p>
             </a>
-            <a 
+            <a
               href={`https://wa.me/${whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-brand-ivory p-8 rounded-2xl text-center card-hover"
+              className="bg-vm-surface p-8 rounded-2xl text-center card-hover"
               onClick={() => {
                 sendGAEvent('event', 'whatsapp_clicked', {
                   location: 'contact_section'
                 });
               }}
             >
-              <MessageCircle className="w-12 h-12 text-brand-gold mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-brand-forest mb-2">WhatsApp</h3>
-              <p className="text-brand-slate/70">Chat with us instantly</p>
+              <MessageCircle className="w-12 h-12 text-vm-cyan mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-vm-navy mb-2">WhatsApp</h3>
+              <p className="text-vm-muted">Chat with us instantly</p>
             </a>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-brand-forest text-brand-ivory py-12 px-4 sm:px-6 lg:px-8">
+      <footer className="bg-vm-navy text-vm-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <BrandLogo variant="ivory" size="header" className="mb-4" />
-              <p className="text-brand-ivory/70 font-sans text-sm">
+              <p className="text-vm-white/70 font-body text-sm">
                 Serving New Jersey and Vermont. Trusted since 2024.
               </p>
             </div>
             <div>
-              <h4 className="text-sm font-serif font-bold mb-4 uppercase tracking-wider">Quick Links</h4>
-              <ul className="space-y-2 text-sm font-sans">
-                <li><a href="#services" className="text-brand-ivory/70 hover:text-brand-gold transition">Services</a></li>
-                <li><a href="#pricing" className="text-brand-ivory/70 hover:text-brand-gold transition">Pricing</a></li>
-                <li><a href="/customer/login" className="text-brand-ivory/70 hover:text-brand-gold transition">Pay Invoice</a></li>
-                <li><a href="#why-us" className="text-brand-ivory/70 hover:text-brand-gold transition">Why Us</a></li>
-                <li><a href="#contact" className="text-brand-ivory/70 hover:text-brand-gold transition">Contact</a></li>
-                <li><a href="/careers" className="text-brand-ivory/70 hover:text-brand-gold transition">Careers</a></li>
+              <h4 className="text-sm font-heading font-bold mb-4 uppercase tracking-wider">Quick Links</h4>
+              <ul className="space-y-2 text-sm font-body">
+                <li><a href="#services" className="text-vm-white/70 hover:text-vm-cyan transition">Services</a></li>
+                <li><a href="#pricing" className="text-vm-white/70 hover:text-vm-cyan transition">Pricing</a></li>
+                <li><a href="/customer/login" className="text-vm-white/70 hover:text-vm-cyan transition">Pay Invoice</a></li>
+                <li><a href="#why-us" className="text-vm-white/70 hover:text-vm-cyan transition">Why Us</a></li>
+                <li><a href="#contact" className="text-vm-white/70 hover:text-vm-cyan transition">Contact</a></li>
+                <li><a href="/careers" className="text-vm-white/70 hover:text-vm-cyan transition">Careers</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-serif font-bold mb-4 uppercase tracking-wider">Services</h4>
-              <ul className="space-y-2 text-sm font-sans text-brand-ivory/70">
+              <h4 className="text-sm font-heading font-bold mb-4 uppercase tracking-wider">Services</h4>
+              <ul className="space-y-2 text-sm font-body text-vm-white/70">
                 <li>Residential Cleaning</li>
                 <li>Commercial Cleaning</li>
                 <li>Deep Cleaning</li>
@@ -767,27 +768,27 @@ export default function Home() {
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-serif font-bold mb-4 uppercase tracking-wider">Contact</h4>
-              <ul className="space-y-2 text-sm font-sans">
+              <h4 className="text-sm font-heading font-bold mb-4 uppercase tracking-wider">Contact</h4>
+              <ul className="space-y-2 text-sm font-body">
                 <li>
-                  <a href={`tel:${phoneNumberTel}`} className="text-brand-ivory/70 hover:text-brand-gold transition">
+                  <a href={`tel:${phoneNumberTel}`} className="text-vm-white/70 hover:text-vm-cyan transition">
                     New Jersey — {phoneNumber}
                   </a>
                 </li>
                 <li>
-                  <a href="tel:+18027335348" className="text-brand-ivory/70 hover:text-brand-gold transition">
+                  <a href="tel:+18027335348" className="text-vm-white/70 hover:text-vm-cyan transition">
                     Vermont — (802) 733-5348
                   </a>
                 </li>
                 <li>
-                  <a href={`mailto:${email}`} className="text-brand-ivory/70 hover:text-brand-gold transition">
+                  <a href={`mailto:${email}`} className="text-vm-white/70 hover:text-vm-cyan transition">
                     {email}
                   </a>
                 </li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-brand-ivory/10 mt-12 pt-8 text-center text-brand-ivory/50 font-sans text-xs">
+          <div className="border-t border-vm-white/10 mt-12 pt-8 text-center text-vm-white/50 font-body text-xs">
             <p>&copy; {new Date().getFullYear()} VelocityMaid. All rights reserved.</p>
           </div>
         </div>
