@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   title: "Vermont Cleaning Services | VelocityMaid — Middlebury & Okemo Valley",
   description:
     "VelocityMaid offers turnover cleaning, deep cleans, and property readiness for Vermont vacation rentals and second homes in Middlebury and the Okemo Valley.",
+  keywords:
+    "Vermont cleaning services, Airbnb turnover cleaning Vermont, vacation rental cleaning, Middlebury cleaning, Okemo Valley cleaning, Ludlow VT cleaning, short-term rental cleaning, second home cleaning, deep cleaning Vermont, professional cleaners Vermont",
   openGraph: {
     title: "Vermont Cleaning Services | VelocityMaid",
     description:
