@@ -1,43 +1,78 @@
 /**
  * Admin Command Center Dashboard
- * 
+ *
  * /admin
- * 
- * Operational command center: Awareness + Action
- * Every metric leads to an action. Every action updates a metric.
+ *
+ * Live operational command center: market stats, job pipeline, contact
+ * messages, and quick actions. Every metric reflects live business data.
  */
 
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { 
-  Mail, 
-  Briefcase, 
-  ArrowRight, 
-  CheckCircle2, 
-  Clock, 
+import {
+  Mail,
+  Briefcase,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
   Archive,
   MessageSquare,
-  Users
+  MapPin,
+  Loader2,
+  Plus,
+  DollarSign,
 } from "lucide-react";
 
-interface DashboardMetrics {
-  messages: {
-    NEW: number;
-    REVIEWED: number;
-    REPLIED: number;
-    ARCHIVED: number;
-    total: number;
-  };
-  investorRequests: {
-    PENDING: number;
-    APPROVED: number;
-    total: number;
-  };
+interface MessageMetrics {
+  NEW: number;
+  REVIEWED: number;
+  REPLIED: number;
+  ARCHIVED: number;
+  total: number;
 }
 
+interface MarketStat {
+  activeClients: number;
+  completedThisMonth: number;
+  revenueThisMonth: number;
+}
+
+interface PipelineStats {
+  scheduled: number;
+  inProgress: number;
+  completed: number;
+  archived: number;
+}
+
+interface CommandCenterStats {
+  markets: {
+    vermont: MarketStat;
+    "new-jersey": MarketStat;
+  };
+  pipeline: PipelineStats;
+}
+
+const EMPTY_MARKET: MarketStat = {
+  activeClients: 0,
+  completedThisMonth: 0,
+  revenueThisMonth: 0,
+};
+
+const EMPTY_STATS: CommandCenterStats = {
+  markets: { vermont: EMPTY_MARKET, "new-jersey": EMPTY_MARKET },
+  pipeline: { scheduled: 0, inProgress: 0, completed: 0, archived: 0 },
+};
+
+const num = (v: unknown): number =>
+  typeof v === "number" && Number.isFinite(v) ? v : 0;
+
+const formatMoney = (v: unknown): string =>
+  `$${num(v).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+
+/** Card matching the existing Contact Messages icon-box style. */
 function MetricCard({
   title,
   count,
@@ -66,9 +101,7 @@ function MetricCard({
           <div>
             <p className="text-sm font-medium text-gray-600">{title}</p>
             <p className="text-2xl font-semibold text-gray-900 mt-1">{count}</p>
-            {status && (
-              <p className="text-xs text-gray-500 mt-1">{status}</p>
-            )}
+            {status && <p className="text-xs text-gray-500 mt-1">{status}</p>}
           </div>
         </div>
         <ArrowRight className="w-5 h-5 text-gray-400" />
@@ -77,78 +110,162 @@ function MetricCard({
   );
 }
 
+function MarketStatItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <div>
+      <p className="text-2xl font-semibold text-vm-navy">{value}</p>
+      <p className="mt-1 text-xs font-medium text-vm-muted">{label}</p>
+    </div>
+  );
+}
+
+function MarketCard({
+  label,
+  clientsLabel,
+  turnoverLabel,
+  stat,
+}: {
+  label: string;
+  clientsLabel: string;
+  turnoverLabel: string;
+  stat: MarketStat;
+}) {
+  return (
+    <div className="rounded-xl border border-vm-border bg-white p-6">
+      <div className="mb-5 flex items-center gap-2">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-vm-navy">
+          <MapPin className="h-4 w-4 text-white" />
+        </span>
+        <h3 className="text-base font-semibold text-vm-navy">{label}</h3>
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <MarketStatItem label={clientsLabel} value={num(stat.activeClients)} />
+        <MarketStatItem
+          label={turnoverLabel}
+          value={num(stat.completedThisMonth)}
+        />
+        <MarketStatItem
+          label="Revenue This Month"
+          value={formatMoney(stat.revenueThisMonth)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function QuickAction({
+  href,
+  label,
+  icon: Icon,
+}: {
+  href: string;
+  label: string;
+  icon: any;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-center gap-2 rounded-lg border border-vm-navy/30 bg-white px-4 py-3 text-sm font-semibold text-vm-navy transition-colors hover:bg-vm-navy/5"
+    >
+      <Icon className="h-4 w-4 text-vm-cyan" />
+      {label}
+    </Link>
+  );
+}
+
 export default function AdminCommandCenter() {
-  const router = useRouter();
   const pathname = usePathname();
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [messages, setMessages] = useState<MessageMetrics | null>(null);
+  const [stats, setStats] = useState<CommandCenterStats>(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchMetrics();
-    
-    // Listen for status updates from inbox
+    fetchData();
+
     const handleStatusUpdate = () => {
-      fetchMetrics();
+      fetchData();
     };
     window.addEventListener("messageStatusUpdated", handleStatusUpdate);
-    
+
     return () => {
       window.removeEventListener("messageStatusUpdated", handleStatusUpdate);
     };
   }, []);
 
-  // Refresh metrics when returning to dashboard (pathname change)
   useEffect(() => {
     if (pathname === "/admin") {
-      fetchMetrics();
+      fetchData();
     }
   }, [pathname]);
 
-  const fetchMetrics = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch authoritative metrics from dedicated endpoint
-      const metricsRes = await fetch("/api/admin/dashboard/metrics", {
-        cache: "no-store",
-        credentials: "include",
-      });
+      const [metricsRes, statsRes] = await Promise.all([
+        fetch("/api/admin/dashboard/metrics", {
+          cache: "no-store",
+          credentials: "include",
+        }),
+        fetch("/api/admin/dashboard/command-center", {
+          cache: "no-store",
+          credentials: "include",
+        }),
+      ]);
+
       const metricsData = await metricsRes.json();
+      const statsData = await statsRes.json();
 
-      // Fetch investor requests
-      const investorRes = await fetch("/api/admin/investors/requests", {
-        cache: "no-store",
+      if (!metricsData.success) {
+        throw new Error(metricsData.error || "Failed to fetch metrics");
+      }
+
+      const m = metricsData.metrics || {};
+      setMessages({
+        NEW: num(m.NEW),
+        REVIEWED: num(m.REVIEWED),
+        REPLIED: num(m.REPLIED),
+        ARCHIVED: num(m.ARCHIVED),
+        total: num(m.NEW) + num(m.REVIEWED) + num(m.REPLIED) + num(m.ARCHIVED),
       });
-      const investorData = await investorRes.json();
 
-      if (metricsData.success && investorData.success) {
-        const messageMetrics = metricsData.metrics || {};
-        const investorRequests = investorData.requests || [];
-
-        setMetrics({
-          messages: {
-            NEW: messageMetrics.NEW || 0,
-            REVIEWED: messageMetrics.REVIEWED || 0,
-            REPLIED: messageMetrics.REPLIED || 0,
-            ARCHIVED: messageMetrics.ARCHIVED || 0,
-            total: (messageMetrics.NEW || 0) + 
-                   (messageMetrics.REVIEWED || 0) + 
-                   (messageMetrics.REPLIED || 0) + 
-                   (messageMetrics.ARCHIVED || 0),
+      if (statsData.success) {
+        const vermont = statsData.markets?.vermont ?? EMPTY_MARKET;
+        const newJersey = statsData.markets?.["new-jersey"] ?? EMPTY_MARKET;
+        const pipeline = statsData.pipeline ?? EMPTY_STATS.pipeline;
+        setStats({
+          markets: {
+            vermont: {
+              activeClients: num(vermont.activeClients),
+              completedThisMonth: num(vermont.completedThisMonth),
+              revenueThisMonth: num(vermont.revenueThisMonth),
+            },
+            "new-jersey": {
+              activeClients: num(newJersey.activeClients),
+              completedThisMonth: num(newJersey.completedThisMonth),
+              revenueThisMonth: num(newJersey.revenueThisMonth),
+            },
           },
-          investorRequests: {
-            PENDING: investorRequests.filter((r: any) => r.status === "PENDING").length,
-            APPROVED: investorRequests.filter((r: any) => r.status === "APPROVED").length,
-            total: investorRequests.length,
+          pipeline: {
+            scheduled: num(pipeline.scheduled),
+            inProgress: num(pipeline.inProgress),
+            completed: num(pipeline.completed),
+            archived: num(pipeline.archived),
           },
         });
       } else {
-        throw new Error("Failed to fetch metrics");
+        setStats(EMPTY_STATS);
       }
     } catch (err: any) {
-      console.error("Failed to fetch dashboard metrics:", err);
+      console.error("Failed to fetch dashboard data:", err);
       setError(err.message || "Failed to load dashboard");
     } finally {
       setLoading(false);
@@ -159,13 +276,13 @@ export default function AdminCommandCenter() {
     return (
       <div className="mx-auto max-w-7xl px-6 py-12">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-vm-navy"></div>
         </div>
       </div>
     );
   }
 
-  if (error || !metrics) {
+  if (error || !messages) {
     return (
       <div className="mx-auto max-w-7xl px-6 py-12">
         <div className="rounded-md bg-red-50 border border-red-200 p-6">
@@ -179,10 +296,81 @@ export default function AdminCommandCenter() {
     <div className="mx-auto max-w-7xl px-6 py-12">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-gray-900">Command Center</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          The admin dashboard shows real-time operational readiness — how many communications require attention, how many are in progress, and how many are resolved.
+        <h1 className="text-3xl font-semibold text-vm-navy">Command Center</h1>
+        <p className="mt-2 text-sm text-vm-muted">
+          Live operational snapshot — jobs, revenue, clients, and messages
+          across Vermont and New Jersey.
         </p>
+      </div>
+
+      {/* Market Stats Row */}
+      <div className="mb-12">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <MarketCard
+            label="Vermont — Okemo Valley"
+            clientsLabel="Active Host Accounts"
+            turnoverLabel="Turnovers This Month"
+            stat={stats.markets.vermont}
+          />
+          <MarketCard
+            label="New Jersey"
+            clientsLabel="Active Residential Clients"
+            turnoverLabel="Cleans This Month"
+            stat={stats.markets["new-jersey"]}
+          />
+        </div>
+      </div>
+
+      {/* Job Pipeline Stats */}
+      <div className="mb-12">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="flex items-center text-lg font-medium text-vm-navy">
+            <Briefcase className="mr-2 h-5 w-5" />
+            Job Pipeline
+          </h2>
+          <Link
+            href="/admin/jobs"
+            className="flex items-center text-sm text-vm-muted hover:text-vm-navy"
+          >
+            View all
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <MetricCard
+            title="Scheduled"
+            count={stats.pipeline.scheduled}
+            status="Upcoming"
+            href="/admin/jobs"
+            icon={Clock}
+            color="bg-vm-navy"
+          />
+          <MetricCard
+            title="In Progress"
+            count={stats.pipeline.inProgress}
+            status="Active now"
+            href="/admin/jobs"
+            icon={Loader2}
+            color="bg-vm-cyan"
+          />
+          <MetricCard
+            title="Completed"
+            count={stats.pipeline.completed}
+            status="All time"
+            href="/admin/jobs"
+            icon={CheckCircle2}
+            color="bg-green-600"
+          />
+          <MetricCard
+            title="Archived"
+            count={stats.pipeline.archived}
+            status="Soft-deleted"
+            href="/admin/jobs"
+            icon={Archive}
+            color="bg-gray-400"
+          />
+        </div>
       </div>
 
       {/* Messages Section */}
@@ -204,7 +392,7 @@ export default function AdminCommandCenter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard
             title="New Messages"
-            count={metrics.messages.NEW}
+            count={messages.NEW}
             status="Requires attention"
             href="/admin/inbox?status=NEW"
             icon={Mail}
@@ -212,7 +400,7 @@ export default function AdminCommandCenter() {
           />
           <MetricCard
             title="Reviewed"
-            count={metrics.messages.REVIEWED}
+            count={messages.REVIEWED}
             status="In progress"
             href="/admin/inbox?status=REVIEWED"
             icon={Clock}
@@ -220,7 +408,7 @@ export default function AdminCommandCenter() {
           />
           <MetricCard
             title="Replied"
-            count={metrics.messages.REPLIED}
+            count={messages.REPLIED}
             status="Response sent"
             href="/admin/inbox?status=REPLIED"
             icon={CheckCircle2}
@@ -228,7 +416,7 @@ export default function AdminCommandCenter() {
           />
           <MetricCard
             title="Archived"
-            count={metrics.messages.ARCHIVED}
+            count={messages.ARCHIVED}
             status="Completed"
             href="/admin/inbox?status=ARCHIVED"
             icon={Archive}
@@ -238,100 +426,22 @@ export default function AdminCommandCenter() {
 
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            Total: <span className="font-medium text-gray-900">{metrics.messages.total}</span> messages
-          </p>
-        </div>
-      </div>
-
-      {/* Investor Requests Section */}
-      <div className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-medium text-gray-900 flex items-center">
-            <Briefcase className="w-5 h-5 mr-2" />
-            Investor Access Requests
-          </h2>
-          <Link
-            href="/admin/investors/requests"
-            className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
-          >
-            View all
-            <ArrowRight className="w-4 h-4 ml-1" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <MetricCard
-            title="Pending Approval"
-            count={metrics.investorRequests.PENDING}
-            status="Awaiting review"
-            href="/admin/investors/requests?status=PENDING"
-            icon={Clock}
-            color="bg-yellow-600"
-          />
-          <MetricCard
-            title="Approved"
-            count={metrics.investorRequests.APPROVED}
-            status="Access granted"
-            href="/admin/investors/requests?status=APPROVED"
-            icon={CheckCircle2}
-            color="bg-green-600"
-          />
-        </div>
-
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500">
-            Total: <span className="font-medium text-gray-900">{metrics.investorRequests.total}</span> requests
+            Total:{" "}
+            <span className="font-medium text-gray-900">{messages.total}</span>{" "}
+            messages
           </p>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="border-t pt-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link
-            href="/admin/inbox"
-            className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-          >
-            <div className="flex items-center space-x-3">
-              <Mail className="w-5 h-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-900">Open Inbox</span>
-            </div>
-            <ArrowRight className="w-4 h-4 text-gray-400" />
-          </Link>
-          <Link
-            href="/admin/investors/requests"
-            className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-          >
-            <div className="flex items-center space-x-3">
-              <Briefcase className="w-5 h-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-900">Review Investor Requests</span>
-            </div>
-            <ArrowRight className="w-4 h-4 text-gray-400" />
-          </Link>
-          <Link
-            href="/admin/contact/templates"
-            className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-          >
-            <div className="flex items-center space-x-3">
-              <Users className="w-5 h-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-900">Manage Reply Templates</span>
-            </div>
-            <ArrowRight className="w-4 h-4 text-gray-400" />
-          </Link>
+      <div className="border-t border-vm-border pt-8">
+        <h2 className="mb-4 text-lg font-medium text-vm-navy">Quick Actions</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <QuickAction href="/admin/jobs/new" label="New Job" icon={Plus} />
+          <QuickAction href="/admin/jobs" label="View All Jobs" icon={Briefcase} />
+          <QuickAction href="/tip" label="Tip Activity" icon={DollarSign} />
         </div>
-      </div>
-
-      {/* Governance Statement */}
-      <div className="mt-12 p-6 bg-gray-50 border border-gray-200 rounded-lg">
-        <p className="text-sm text-gray-700 italic text-center">
-          "VelocityMaid treats communication as governance, not correspondence."
-        </p>
-        <p className="text-xs text-gray-500 text-center mt-2">
-          Every interaction is logged, tracked, and auditable. No messages disappear. No responses go unrecorded.
-        </p>
       </div>
     </div>
   );
 }
-
