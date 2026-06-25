@@ -43,7 +43,7 @@ export interface BookingSchedule {
 }
 
 export interface BookingDraft {
-  country: string | null; // Country selection (required before branch)
+  market: string | null; // Market selection (required before branch; slug-aligned)
   serviceType: ServiceType | null;
   branchSlug: string | null;
   contact: BookingContactInfo;

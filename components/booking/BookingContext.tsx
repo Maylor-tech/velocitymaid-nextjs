@@ -25,8 +25,10 @@ interface BookingContextType {
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
+const BOOKABLE_MARKETS = new Set(['new-jersey', 'vermont']);
+
 const initialData: BookingDraft = {
-  country: null, // Country must be selected first
+  market: null, // Market must be selected first
   serviceType: null,
   branchSlug: null,
   contact: {
@@ -75,9 +77,15 @@ const defaultPaymentConfig: BookingPaymentConfig = {
 };
 
 export function BookingProvider({ children, initialBranchSlug }: BookingProviderProps) {
-  const [data, setData] = useState<BookingDraft>({
-    ...initialData,
-    branchSlug: initialBranchSlug || null,
+  const [data, setData] = useState<BookingDraft>(() => {
+    const branchSlug = initialBranchSlug || null;
+    const market =
+      branchSlug && BOOKABLE_MARKETS.has(branchSlug) ? branchSlug : null;
+    return {
+      ...initialData,
+      branchSlug,
+      market,
+    };
   });
   const [step, setStep] = useState<BookingStep>(0);
   const [loading, setLoading] = useState(false);
@@ -109,9 +117,9 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
   const nextStep = useCallback(() => {
     // Validate before moving to next step
     if (step === 0) {
-      // Step 0: Context Selection - require country, branchSlug, and serviceType
-      if (!data.country) {
-        setError('Please select a country to continue.');
+      // Step 0: Context Selection - require market, branchSlug, and serviceType
+      if (!data.market) {
+        setError('Please select a market to continue.');
         return;
       }
       if (!data.branchSlug) {
@@ -127,7 +135,7 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
     // Clear any previous errors
     setError(null);
     setStep((prev) => Math.min(prev + 1, 5) as BookingStep);
-  }, [step, data.country, data.branchSlug, data.serviceType]);
+  }, [step, data.market, data.branchSlug, data.serviceType]);
 
   const prevStep = useCallback(() => {
     setStep((prev) => Math.max(prev - 1, 0) as BookingStep);
@@ -162,9 +170,9 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
       // Check for missing required fields
       const missingFields: string[] = [];
       
-      // Context validation (country and branch required)
-      if (!data.country) {
-        missingFields.push('Country');
+      // Context validation (market and branch required)
+      if (!data.market) {
+        missingFields.push('Market');
       }
       if (!data.branchSlug) {
         missingFields.push('Location/Branch');
@@ -210,7 +218,7 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
       }
       
       // Additional check for critical required fields (backup validation)
-      if (!data.country || !data.contact.firstName || !data.contact.email || !data.serviceType || !data.branchSlug) {
+      if (!data.market || !data.contact.firstName || !data.contact.email || !data.serviceType || !data.branchSlug) {
         throw new Error('Missing required fields. Please complete all steps.');
       }
 
