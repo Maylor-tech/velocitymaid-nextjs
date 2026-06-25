@@ -32,9 +32,9 @@ interface ContactMessage {
 }
 
 function statusColor(status: string) {
-  if (status === "NEW") return "bg-blue-100 text-blue-800";
-  if (status === "REVIEWED") return "bg-yellow-100 text-yellow-800";
-  return "bg-green-100 text-green-800";
+  if (status === "NEW") return "bg-vm-cyan-tint text-blue-800";
+  if (status === "REVIEWED") return "bg-vm-warning-bg text-yellow-800";
+  return "bg-vm-success-bg text-green-800";
 }
 
 interface ReplyTemplate {
@@ -114,7 +114,7 @@ function ReplyBox({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
+        className="text-sm text-vm-muted hover:text-vm-text hover:underline"
       >
         Reply
       </button>
@@ -175,7 +175,7 @@ function ReplyBox({
             setError(null);
           }}
           disabled={sending}
-          className="text-sm text-gray-600 hover:text-gray-900 hover:underline disabled:opacity-50"
+          className="text-sm text-vm-muted hover:text-vm-text hover:underline disabled:opacity-50"
         >
           Cancel
         </button>
@@ -245,7 +245,7 @@ export default function AdminContactPage() {
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-vm-muted" />
         </div>
       </div>
     );
@@ -263,26 +263,26 @@ export default function AdminContactPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
-      <h1 className="text-2xl font-semibold text-gray-900">
+      <h1 className="text-2xl font-semibold text-vm-text">
         Contact Messages
       </h1>
 
-      <p className="mt-2 text-gray-600">
+      <p className="mt-2 text-vm-muted">
         Review contact form submissions from partners, investors, and operators.
       </p>
 
       <div className="mt-8 divide-y border border-gray-200 rounded-md">
         {messages.length === 0 ? (
-          <div className="p-6 text-sm text-gray-500 text-center">
+          <div className="p-6 text-sm text-vm-muted text-center">
             No messages yet.
           </div>
         ) : (
           messages.map((message) => (
             <div key={message.id} className="p-4 hover:bg-gray-50">
               <div className="flex items-center justify-between mb-2">
-                <div className="font-medium text-gray-900">
+                <div className="font-medium text-vm-text">
                   {message.name}{" "}
-                  <span className="text-sm text-gray-500">({message.role})</span>
+                  <span className="text-sm text-vm-muted">({message.role})</span>
                 </div>
                 <span
                   className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${statusColor(
@@ -292,11 +292,11 @@ export default function AdminContactPage() {
                   {message.status}
                 </span>
               </div>
-              <div className="text-sm text-gray-600 mt-1">
+              <div className="text-sm text-vm-muted mt-1">
                 {message.email} {message.organization ? `· ${message.organization}` : ""}
               </div>
               {message.message && (
-                <p className="mt-2 text-sm text-gray-700 whitespace-pre-wrap">
+                <p className="mt-2 text-sm text-vm-text whitespace-pre-wrap">
                   {message.message}
                 </p>
               )}
@@ -304,10 +304,10 @@ export default function AdminContactPage() {
                 <div className="mt-4 space-y-3 border-l-2 border-gray-200 pl-4">
                   {message.replies.map((reply) => (
                     <div key={reply.id} className="text-sm">
-                      <div className="text-xs text-gray-400 mb-1">
+                      <div className="text-xs text-vm-muted mb-1">
                         Reply sent {new Date(reply.createdAt).toLocaleString()}
                       </div>
-                      <p className="text-gray-700 whitespace-pre-wrap">
+                      <p className="text-vm-text whitespace-pre-wrap">
                         {reply.body}
                       </p>
                     </div>
@@ -315,14 +315,14 @@ export default function AdminContactPage() {
                 </div>
               )}
               <div className="mt-3 flex items-center justify-between">
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-vm-muted">
                   {new Date(message.createdAt).toLocaleString()}
                 </div>
                 <div className="space-x-2">
                   {message.status === "NEW" && (
                     <button
                       onClick={() => updateStatus(message.id, "REVIEWED")}
-                      className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
+                      className="text-sm text-vm-muted hover:text-vm-text hover:underline"
                     >
                       Mark reviewed
                     </button>
@@ -336,7 +336,7 @@ export default function AdminContactPage() {
                       />
                       <button
                         onClick={() => updateStatus(message.id, "REPLIED")}
-                        className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
+                        className="text-sm text-vm-muted hover:text-vm-text hover:underline"
                       >
                         Mark replied
                       </button>
@@ -344,7 +344,7 @@ export default function AdminContactPage() {
                   )}
                   <a
                     href={`/api/admin/contact-messages/${message.id}/export`}
-                    className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
+                    className="text-sm text-vm-muted hover:text-vm-text hover:underline"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -405,8 +405,8 @@ function InternalNotesBox({
       {notes.length > 0 && (
         <div className="mb-3 space-y-2">
           {notes.map((note) => (
-            <div key={note.id} className="text-sm italic text-gray-500">
-              <div className="text-xs text-gray-400 mb-1">
+            <div key={note.id} className="text-sm italic text-vm-muted">
+              <div className="text-xs text-vm-muted mb-1">
                 {new Date(note.createdAt).toLocaleString()}
               </div>
               <p className="whitespace-pre-wrap">{note.body}</p>
@@ -417,7 +417,7 @@ function InternalNotesBox({
       {!open ? (
         <button
           onClick={() => setOpen(true)}
-          className="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+          className="text-xs text-vm-muted hover:text-vm-text hover:underline"
         >
           + Add internal note (not sent)
         </button>
@@ -445,7 +445,7 @@ function InternalNotesBox({
                 setText("");
               }}
               disabled={saving}
-              className="text-xs text-gray-600 hover:text-gray-900 hover:underline disabled:opacity-50"
+              className="text-xs text-vm-muted hover:text-vm-text hover:underline disabled:opacity-50"
             >
               Cancel
             </button>

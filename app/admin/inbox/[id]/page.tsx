@@ -185,11 +185,11 @@ export default function AdminInboxDetailPage() {
   };
 
   function statusColor(status: string) {
-    if (status === "NEW") return "bg-blue-100 text-blue-800";
-    if (status === "REVIEWED") return "bg-yellow-100 text-yellow-800";
-    if (status === "REPLIED") return "bg-green-100 text-green-800";
-    if (status === "ARCHIVED") return "bg-gray-100 text-gray-800";
-    return "bg-gray-100 text-gray-800";
+    if (status === "NEW") return "bg-vm-cyan-tint text-blue-800";
+    if (status === "REVIEWED") return "bg-vm-warning-bg text-yellow-800";
+    if (status === "REPLIED") return "bg-vm-success-bg text-green-800";
+    if (status === "ARCHIVED") return "bg-gray-100 text-vm-text";
+    return "bg-gray-100 text-vm-text";
   }
 
   function statusLabel(status: string) {
@@ -206,7 +206,7 @@ export default function AdminInboxDetailPage() {
     return (
       <div className="mx-auto max-w-4xl px-6 py-12">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-vm-muted" />
         </div>
       </div>
     );
@@ -234,13 +234,13 @@ export default function AdminInboxDetailPage() {
       <div className="mb-8">
         <Link
           href="/admin/inbox"
-          className="flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center text-sm text-vm-muted hover:text-vm-text mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to inbox
         </Link>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">Message Thread</h1>
+          <h1 className="text-2xl font-semibold text-vm-text">Message Thread</h1>
           
           {/* Status Badge - Always Visible */}
           <span
@@ -260,7 +260,7 @@ export default function AdminInboxDetailPage() {
             <button
               onClick={markAsRead}
               disabled={updatingStatus}
-              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-vm-text hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Eye className="w-4 h-4 mr-2" />
               Mark as Read
@@ -277,7 +277,7 @@ export default function AdminInboxDetailPage() {
           <button
             onClick={() => setShowArchiveConfirm(true)}
             disabled={updatingStatus || sendingReply}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-vm-text hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Archive className="w-4 h-4 mr-2" />
             Archive
@@ -289,15 +289,15 @@ export default function AdminInboxDetailPage() {
       {showArchiveConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Archive this conversation?</h3>
-            <p className="text-sm text-gray-600 mb-6">
+            <h3 className="text-lg font-medium text-vm-text mb-2">Archive this conversation?</h3>
+            <p className="text-sm text-vm-muted mb-6">
               This will mark the conversation as archived. It will be removed from the main inbox but remain accessible via filter/search. The conversation history will never be deleted.
             </p>
             <div className="flex items-center justify-end space-x-3">
               <button
                 onClick={() => setShowArchiveConfirm(false)}
                 disabled={updatingStatus}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-vm-text hover:text-vm-text disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -318,14 +318,14 @@ export default function AdminInboxDetailPage() {
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-vm-text">
                 FROM: {message.name} ({message.role})
               </p>
               {message.organization && (
-                <p className="text-sm text-gray-600">ORG: {message.organization}</p>
+                <p className="text-sm text-vm-muted">ORG: {message.organization}</p>
               )}
             </div>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-vm-muted">
               RECEIVED: {new Date(message.createdAt).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
@@ -333,12 +333,12 @@ export default function AdminInboxDetailPage() {
               })}
             </span>
           </div>
-          <p className="text-sm text-gray-600">{message.email}</p>
+          <p className="text-sm text-vm-muted">{message.email}</p>
         </div>
 
         <div className="border-t pt-4">
-          <p className="text-sm font-medium text-gray-900 mb-2">MESSAGE:</p>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">
+          <p className="text-sm font-medium text-vm-text mb-2">MESSAGE:</p>
+          <p className="text-sm text-vm-text whitespace-pre-wrap">
             {message.message || "(No message provided)"}
           </p>
         </div>
@@ -347,7 +347,7 @@ export default function AdminInboxDetailPage() {
       {/* Replies */}
       {message.replies && message.replies.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-sm font-medium text-gray-900 mb-4">REPLIES:</h2>
+          <h2 className="text-sm font-medium text-vm-text mb-4">REPLIES:</h2>
           <div className="space-y-4">
             {message.replies.map((reply) => (
               <div
@@ -357,12 +357,12 @@ export default function AdminInboxDetailPage() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    <span className="text-xs font-medium text-gray-700">Admin</span>
+                    <span className="text-xs font-medium text-vm-text">Admin</span>
                     {reply.sentViaEmail && (
-                      <span className="text-xs text-gray-500">• Sent via email</span>
+                      <span className="text-xs text-vm-muted">• Sent via email</span>
                     )}
                   </div>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-vm-muted">
                     {new Date(reply.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
@@ -370,7 +370,7 @@ export default function AdminInboxDetailPage() {
                     })}
                   </span>
                 </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap mt-2">
+                <p className="text-sm text-vm-text whitespace-pre-wrap mt-2">
                   {reply.body}
                 </p>
               </div>
@@ -382,10 +382,10 @@ export default function AdminInboxDetailPage() {
       {/* Inline Reply Composer */}
       {showReplyComposer && message.status !== "ARCHIVED" && (
         <div className="bg-white border border-gray-200 rounded-md p-6 mb-6">
-          <h3 className="text-sm font-medium text-gray-900 mb-4">Reply</h3>
+          <h3 className="text-sm font-medium text-vm-text mb-4">Reply</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-vm-text mb-1">
                 Subject
               </label>
               <input
@@ -398,7 +398,7 @@ export default function AdminInboxDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-vm-text mb-1">
                 Message
               </label>
               <textarea
@@ -418,7 +418,7 @@ export default function AdminInboxDetailPage() {
                   setReplySubject("");
                 }}
                 disabled={sendingReply}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-vm-text hover:text-vm-text disabled:opacity-50"
               >
                 Cancel
               </button>

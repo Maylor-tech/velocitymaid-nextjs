@@ -62,16 +62,16 @@ export default function TransactionsPage() {
 
   const getTransactionTypeColor = (type: string) => {
     const colorMap: Record<string, string> = {
-      PAYMENT_RECEIVED: 'bg-green-100 text-green-800',
-      PAYOUT_PAID: 'bg-red-100 text-red-800',
-      BONUS_ISSUED: 'bg-yellow-100 text-yellow-800',
+      PAYMENT_RECEIVED: 'bg-vm-success-bg text-green-800',
+      PAYOUT_PAID: 'bg-vm-danger-bg text-red-800',
+      BONUS_ISSUED: 'bg-vm-warning-bg text-yellow-800',
       REFUND: 'bg-orange-100 text-orange-800',
-      CASH_RECEIPT: 'bg-blue-100 text-blue-800',
+      CASH_RECEIPT: 'bg-vm-cyan-tint text-blue-800',
       BANK_TRANSFER: 'bg-purple-100 text-purple-800',
-      SUPPLIES: 'bg-gray-100 text-gray-800',
-      OPERATIONAL_EXPENSE: 'bg-gray-100 text-gray-800',
+      SUPPLIES: 'bg-gray-100 text-vm-text',
+      OPERATIONAL_EXPENSE: 'bg-gray-100 text-vm-text',
     };
-    return colorMap[type] || 'bg-gray-100 text-gray-800';
+    return colorMap[type] || 'bg-gray-100 text-vm-text';
   };
 
   if (loading) {
@@ -79,7 +79,7 @@ export default function TransactionsPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading transactions...</p>
+          <p className="mt-4 text-vm-muted">Loading transactions...</p>
         </div>
       </div>
     );
@@ -90,14 +90,14 @@ export default function TransactionsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Transaction Ledger</h1>
-          <p className="text-gray-600">All financial transactions across branches</p>
+          <h1 className="text-3xl font-bold text-vm-text mb-2">Transaction Ledger</h1>
+          <p className="text-vm-muted">All financial transactions across branches</p>
         </div>
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
           <div className="flex items-center gap-4">
-            <Filter className="w-5 h-5 text-gray-600" />
+            <Filter className="w-5 h-5 text-vm-muted" />
             <select
               value={filter.transactionType}
               onChange={(e) => setFilter({ ...filter, transactionType: e.target.value })}
@@ -122,18 +122,18 @@ export default function TransactionsPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Type</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Description</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Branch</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Cleaner</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Amount</th>
+                  <th className="text-left py-3 px-4 font-semibold text-vm-text">Date</th>
+                  <th className="text-left py-3 px-4 font-semibold text-vm-text">Type</th>
+                  <th className="text-left py-3 px-4 font-semibold text-vm-text">Description</th>
+                  <th className="text-left py-3 px-4 font-semibold text-vm-text">Branch</th>
+                  <th className="text-left py-3 px-4 font-semibold text-vm-text">Cleaner</th>
+                  <th className="text-right py-3 px-4 font-semibold text-vm-text">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {transactions.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-500">
+                    <td colSpan={6} className="text-center py-8 text-vm-muted">
                       No transactions found
                     </td>
                   </tr>
@@ -143,7 +143,7 @@ export default function TransactionsPage() {
                       key={transaction.id}
                       className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                     >
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-vm-muted">
                         {new Date(transaction.createdAt).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
@@ -161,13 +161,13 @@ export default function TransactionsPage() {
                           {transaction.transactionType.replace(/_/g, ' ')}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-900">
+                      <td className="py-3 px-4 text-sm text-vm-text">
                         {transaction.description || '—'}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-vm-muted">
                         {transaction.branch?.name || '—'}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-vm-muted">
                         {transaction.cleaner?.name || '—'}
                       </td>
                       <td className="py-3 px-4 text-right">

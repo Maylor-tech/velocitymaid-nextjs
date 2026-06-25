@@ -27,7 +27,7 @@ export default async function AdminLayout({
           </Link>
           {auth &&
             (auth.branchName ? (
-              <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-0.5 text-xs font-medium text-blue-800">
+              <span className="inline-flex items-center rounded-full bg-vm-cyan-tint px-3 py-0.5 text-xs font-medium text-blue-800">
                 Branch: {auth.branchName}
               </span>
             ) : (

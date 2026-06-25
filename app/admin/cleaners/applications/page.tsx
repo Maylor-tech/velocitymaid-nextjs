@@ -140,11 +140,11 @@ export default function CleanerApplicationsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-vm-success-bg text-green-800';
       case 'REJECTED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-vm-danger-bg text-red-800';
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-vm-warning-bg text-yellow-800';
     }
   };
 
@@ -161,7 +161,7 @@ export default function CleanerApplicationsPage() {
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="text-center py-12">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading applications...</p>
+          <p className="mt-4 text-vm-muted">Loading applications...</p>
         </div>
       </div>
     );
@@ -171,15 +171,15 @@ export default function CleanerApplicationsPage() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Cleaner Applications</h1>
-          <p className="text-gray-600">Review and manage cleaner applications</p>
+          <h1 className="text-3xl font-bold text-vm-text mb-2">Cleaner Applications</h1>
+          <p className="text-vm-muted">Review and manage cleaner applications</p>
         </div>
 
         {/* Toast Notification */}
         {showToast && (
           <div
             className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-              toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+              toastType === 'success' ? 'bg-vm-success text-white' : 'bg-vm-danger text-white'
             }`}
           >
             {toastMessage}
@@ -189,7 +189,7 @@ export default function CleanerApplicationsPage() {
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-vm-text mb-1">Status</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -202,7 +202,7 @@ export default function CleanerApplicationsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+            <label className="block text-sm font-medium text-vm-text mb-1">Branch</label>
             <select
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}
@@ -225,29 +225,29 @@ export default function CleanerApplicationsPage() {
         {/* Applications Table */}
         {applications.length === 0 ? (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
-            <p className="text-gray-500">No applications found</p>
+            <p className="text-vm-muted">No applications found</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Applicant
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Branch
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Experience
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Applied
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -256,15 +256,15 @@ export default function CleanerApplicationsPage() {
                 {applications.map((app) => (
                   <tr key={app.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{app.name}</div>
-                      <div className="text-sm text-gray-500">{app.email}</div>
-                      <div className="text-sm text-gray-500">{app.phone}</div>
+                      <div className="text-sm font-medium text-vm-text">{app.name}</div>
+                      <div className="text-sm text-vm-muted">{app.email}</div>
+                      <div className="text-sm text-vm-muted">{app.phone}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{app.Branch.name}</div>
-                      <div className="text-sm text-gray-500">{app.Branch.city}, {app.Branch.state}</div>
+                      <div className="text-sm text-vm-text">{app.Branch.name}</div>
+                      <div className="text-sm text-vm-muted">{app.Branch.city}, {app.Branch.state}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
                       {app.experienceLevel || 'Not specified'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -272,7 +272,7 @@ export default function CleanerApplicationsPage() {
                         {app.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
                       {formatDate(app.createdAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">

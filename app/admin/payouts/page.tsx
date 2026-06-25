@@ -81,17 +81,17 @@ export default function AdminPayoutsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "DRAFT":
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-vm-text";
       case "APPROVED":
-        return "bg-blue-100 text-blue-800";
+        return "bg-vm-cyan-tint text-blue-800";
       case "PROCESSING":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-vm-warning-bg text-yellow-800";
       case "COMPLETED":
-        return "bg-green-100 text-green-800";
+        return "bg-vm-success-bg text-green-800";
       case "FAILED":
-        return "bg-red-100 text-red-800";
+        return "bg-vm-danger-bg text-red-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-vm-text";
     }
   };
 
@@ -276,15 +276,15 @@ export default function AdminPayoutsPage() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Payout Batches</h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <h1 className="text-3xl font-bold text-vm-text">Payout Batches</h1>
+            <p className="mt-1 text-sm text-vm-muted">
               Manage and process cleaner payout batches
             </p>
           </div>
           <button
             onClick={handleCreateBatch}
             disabled={creatingBatch}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {creatingBatch ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -298,8 +298,8 @@ export default function AdminPayoutsPage() {
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
           <div className="flex items-center gap-4">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <label className="text-sm font-medium text-gray-700">Status:</label>
+            <Filter className="w-5 h-5 text-vm-muted" />
+            <label className="text-sm font-medium text-vm-text">Status:</label>
             <select
               value={statusFilter}
               onChange={(e) => {
@@ -334,11 +334,11 @@ export default function AdminPayoutsPage() {
         {loading ? (
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
-            <p className="mt-4 text-gray-600">Loading batches...</p>
+            <p className="mt-4 text-vm-muted">Loading batches...</p>
           </div>
         ) : batches.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <p className="text-gray-500">No payout batches found</p>
+            <p className="text-vm-muted">No payout batches found</p>
           </div>
         ) : (
           <>
@@ -347,22 +347,22 @@ export default function AdminPayoutsPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Period
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Amount
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Transfers
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Created
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -371,7 +371,7 @@ export default function AdminPayoutsPage() {
                   {batches.map((batch) => (
                     <tr key={batch.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-vm-text">
                           {formatDate(batch.periodStart)} - {formatDate(batch.periodEnd)}
                         </div>
                       </td>
@@ -383,14 +383,14 @@ export default function AdminPayoutsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-vm-text">
                           {batch.totalAmountDollars}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
                         {batch.transferCount} transfer{batch.transferCount !== 1 ? "s" : ""}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
                         {formatDateTime(batch.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -456,17 +456,17 @@ export default function AdminPayoutsPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-vm-text bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-vm-text">
                   Page {page} of {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-vm-text bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>

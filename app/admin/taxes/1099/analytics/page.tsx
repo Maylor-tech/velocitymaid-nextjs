@@ -49,17 +49,17 @@ const BLOCKER_LABELS: Record<string, string> = {
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; icon: any }> = {
   READY: {
-    bg: "bg-green-100",
+    bg: "bg-vm-success-bg",
     text: "text-green-800",
     icon: CheckCircle,
   },
   AT_RISK: {
-    bg: "bg-yellow-100",
+    bg: "bg-vm-warning-bg",
     text: "text-yellow-800",
     icon: AlertCircle,
   },
   NOT_READY: {
-    bg: "bg-red-100",
+    bg: "bg-vm-danger-bg",
     text: "text-red-800",
     icon: XCircle,
   },
@@ -209,7 +209,7 @@ export default function AnalyticsPage() {
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <p className="text-gray-600">No archived tax years found. Analytics will be available after tax years are archived.</p>
+            <p className="text-vm-muted">No archived tax years found. Analytics will be available after tax years are archived.</p>
           </div>
         </div>
       </div>
@@ -231,17 +231,17 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-vm-text mb-2">
               Year-over-Year Compliance Analytics
             </h1>
-            <p className="text-gray-600">
+            <p className="text-vm-muted">
               Strategic insights and trends across tax years
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleDownloadBoardSummary}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="flex items-center gap-2 px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy"
               title="Download board-ready PDF summary (no sensitive data)"
             >
               <FileText className="w-4 h-4" />
@@ -249,7 +249,7 @@ export default function AnalyticsPage() {
             </button>
             <button
               onClick={handleDownloadInvestorSummary}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              className="flex items-center gap-2 px-4 py-2 bg-vm-success text-white rounded-lg hover:bg-vm-success"
               title="High-level compliance overview for investors & partners"
             >
               <FileText className="w-4 h-4" />
@@ -297,7 +297,7 @@ export default function AnalyticsPage() {
             </button>
             <button
               onClick={handleDownloadPartnerPilotProposal}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              className="flex items-center gap-2 px-4 py-2 bg-vm-success text-white rounded-lg hover:bg-vm-success"
               title="Generate branded partner pilot proposal PDF (safe for legal + ops teams)"
             >
               <FileText className="w-4 h-4" />
@@ -310,10 +310,10 @@ export default function AnalyticsPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg font-semibold text-vm-text mb-2">
                 Compliance Data Room
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-vm-muted">
                 One-click export of all compliance documentation for investors, auditors, and due diligence
               </p>
             </div>
@@ -326,7 +326,7 @@ export default function AnalyticsPage() {
               Download Data Room (ZIP)
             </button>
           </div>
-          <div className="mt-4 text-xs text-gray-500">
+          <div className="mt-4 text-xs text-vm-muted">
             <p>Includes: Governance summaries, tax compliance docs, security overview, audit logs, and sample exports</p>
             <p className="mt-1">No sensitive data • Read-only • Safe for sharing</p>
           </div>
@@ -342,10 +342,10 @@ export default function AnalyticsPage() {
                 <TrendingDown className="w-8 h-8 text-red-600" />
               )}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-vm-text">
                   Readiness Trend
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-vm-muted">
                   {data.trends.readinessImproving
                     ? "Compliance is improving year over year"
                     : "Compliance needs attention"}
@@ -359,7 +359,7 @@ export default function AnalyticsPage() {
 
         {/* Section 1: Readiness Trend (Line Chart) */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold text-vm-text mb-4">
             Readiness Score Trend
           </h2>
           <div className="relative h-64 flex items-end">
@@ -380,15 +380,15 @@ export default function AnalyticsPage() {
                       style={{ height: `${height}%` }}
                       title={`${year.year}: ${year.finalScore.toFixed(1)}/100`}
                     >
-                      <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap">
+                      <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium text-vm-text whitespace-nowrap">
                         {year.finalScore.toFixed(0)}
                       </div>
                     </div>
                   </div>
-                  <div className="text-xs font-medium text-gray-700 mt-2">
+                  <div className="text-xs font-medium text-vm-text mt-2">
                     {year.year}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-vm-muted">
                     {getStatusBadge(year.status)}
                   </div>
                 </div>
@@ -399,29 +399,29 @@ export default function AnalyticsPage() {
 
         {/* Section 2: Readiness Timeline Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold text-vm-text mb-4">
             Readiness Timeline
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-vm-text">
                     Year
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-vm-text">
                     Final Score
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-vm-text">
                     Status
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-vm-text">
                     Eligible Cleaners
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-vm-text">
                     Verified W-9 %
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-vm-text">
                     Archived
                   </th>
                 </tr>
@@ -429,22 +429,22 @@ export default function AnalyticsPage() {
               <tbody>
                 {sortedYears.map((year) => (
                   <tr key={year.year} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm font-medium text-gray-900">
+                    <td className="py-3 px-4 text-sm font-medium text-vm-text">
                       {year.year}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-700">
+                    <td className="py-3 px-4 text-sm text-vm-text">
                       {year.finalScore.toFixed(1)}/100
                     </td>
                     <td className="py-3 px-4 text-sm">
                       {getStatusBadge(year.status)}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-700">
+                    <td className="py-3 px-4 text-sm text-vm-text">
                       {year.eligibleCleaners}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-700">
+                    <td className="py-3 px-4 text-sm text-vm-text">
                       {year.verifiedW9Pct}%
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-700">
+                    <td className="py-3 px-4 text-sm text-vm-text">
                       {new Date(year.archiveDate).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -461,7 +461,7 @@ export default function AnalyticsPage() {
         {/* Section 3: Blocker Trends */}
         {allBlockerTypes.size > 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold text-vm-text mb-4">
               Blocker Trends
             </h2>
             <div className="space-y-4">
@@ -474,10 +474,10 @@ export default function AnalyticsPage() {
                 return (
                   <div key={year.year} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-gray-700">
+                      <span className="font-medium text-vm-text">
                         {year.year}
                       </span>
-                      <span className="text-gray-500">
+                      <span className="text-vm-muted">
                         {totalBlockers} blocker{totalBlockers !== 1 ? "s" : ""}
                       </span>
                     </div>
@@ -495,7 +495,7 @@ export default function AnalyticsPage() {
                         return (
                           <div
                             key={blockerType}
-                            className="bg-blue-500 rounded transition-all hover:opacity-80"
+                            className="bg-vm-navy rounded transition-all hover:opacity-80"
                             style={{ width: `${width}%` }}
                             title={`${getBlockerLabel(blockerType)}: ${count}`}
                           />
@@ -507,7 +507,7 @@ export default function AnalyticsPage() {
               })}
             </div>
             <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-vm-muted">
                 Stacked bars show relative proportion of each blocker type per year
               </p>
             </div>
@@ -516,35 +516,35 @@ export default function AnalyticsPage() {
 
         {/* Section 4: Operational Efficiency */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold text-vm-text mb-4">
             Operational Efficiency
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">
+              <div className="text-sm text-vm-muted mb-1">
                 Median Days to W-9 Submission
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-vm-text">
                 {data.efficiency.medianDaysToSubmit !== null
                   ? `${data.efficiency.medianDaysToSubmit} days`
                   : "N/A"}
               </div>
             </div>
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">
+              <div className="text-sm text-vm-muted mb-1">
                 Median Days to Verification
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-vm-text">
                 {data.efficiency.medianDaysToVerify !== null
                   ? `${data.efficiency.medianDaysToVerify} days`
                   : "N/A"}
               </div>
             </div>
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">
+              <div className="text-sm text-vm-muted mb-1">
                 Avg Reminders per Cleaner
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-vm-text">
                 {data.efficiency.avgRemindersPerCleaner !== null
                   ? data.efficiency.avgRemindersPerCleaner.toFixed(1)
                   : "N/A"}
@@ -555,18 +555,18 @@ export default function AnalyticsPage() {
 
         {/* Section 5: Leadership Insights */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold text-vm-text mb-4">
             Leadership Insights
           </h2>
           <div className="space-y-4">
             {sortedYears.map((year) => (
               <div key={year.year} className="border-l-4 border-blue-500 pl-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-vm-text">
                     {year.year} Insights:
                   </span>
                 </div>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                <ul className="list-disc list-inside space-y-1 text-sm text-vm-text">
                   {year.insights.map((insight, idx) => (
                     <li key={idx}>{insight}</li>
                   ))}

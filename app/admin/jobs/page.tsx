@@ -418,9 +418,9 @@ function getPrimaryAction(job: Job): {
 function getStatusBadge(status: string): { label: string; cls: string } {
   switch (status) {
     case "COMPLETED":
-      return { label: "Completed", cls: "bg-green-100 text-green-700" };
+      return { label: "Completed", cls: "bg-vm-success-bg text-green-700" };
     case "CONFIRMED":
-      return { label: "Confirmed", cls: "bg-blue-100 text-blue-700" };
+      return { label: "Confirmed", cls: "bg-vm-cyan-tint text-blue-700" };
     case "ASSIGNED":
       return { label: "Scheduled", cls: "bg-purple-100 text-purple-700" };
     case "ON_THE_WAY":
@@ -428,31 +428,31 @@ function getStatusBadge(status: string): { label: string; cls: string } {
     case "IN_PROGRESS":
       return { label: "In progress", cls: "bg-purple-100 text-purple-700" };
     case "RECEIVED":
-      return { label: "Received", cls: "bg-gray-100 text-gray-600" };
+      return { label: "Received", cls: "bg-gray-100 text-vm-muted" };
     case "CANCELLED":
     case "CANCELLED_EMERGENCY":
-      return { label: "Cancelled", cls: "bg-red-100 text-red-700" };
+      return { label: "Cancelled", cls: "bg-vm-danger-bg text-red-700" };
     default:
-      return { label: status, cls: "bg-gray-100 text-gray-600" };
+      return { label: status, cls: "bg-gray-100 text-vm-muted" };
   }
 }
 
 function getPaymentBadge(status: string): { label: string; cls: string } {
   switch (status) {
     case "PAID":
-      return { label: "Paid", cls: "bg-green-100 text-green-700" };
+      return { label: "Paid", cls: "bg-vm-success-bg text-green-700" };
     case "DEPOSIT_PAID":
-      return { label: "Deposit Paid", cls: "bg-blue-100 text-blue-700" };
+      return { label: "Deposit Paid", cls: "bg-vm-cyan-tint text-blue-700" };
     case "PENDING":
       return { label: "Pending", cls: "bg-amber-100 text-amber-700" };
     case "BALANCE_DUE":
       return { label: "Balance Due", cls: "bg-amber-100 text-amber-700" };
     case "REFUNDED":
-      return { label: "Refunded", cls: "bg-gray-100 text-gray-600" };
+      return { label: "Refunded", cls: "bg-gray-100 text-vm-muted" };
     case "FAILED":
-      return { label: "Failed", cls: "bg-red-100 text-red-700" };
+      return { label: "Failed", cls: "bg-vm-danger-bg text-red-700" };
     default:
-      return { label: status, cls: "bg-gray-100 text-gray-600" };
+      return { label: status, cls: "bg-gray-100 text-vm-muted" };
   }
 }
 
@@ -675,7 +675,7 @@ function JobRow({
             type="button"
             onClick={onConfirmArchive}
             disabled={busy}
-            className="inline-flex items-center gap-1 rounded-lg bg-red-500 px-3 py-1.5 font-heading text-sm text-white transition-colors hover:bg-red-600 disabled:opacity-60"
+            className="inline-flex items-center gap-1 rounded-lg bg-vm-danger px-3 py-1.5 font-heading text-sm text-white transition-colors hover:bg-vm-danger disabled:opacity-60"
           >
             {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
             Yes, archive

@@ -52,15 +52,15 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-brand-ivory px-4 pt-10 pb-8 sm:pt-14 sm:pb-12">
+    <div className="min-h-[100dvh] bg-vm-surface px-4 pt-10 pb-8 sm:pt-14 sm:pb-12">
       <div className="w-full max-w-sm mx-auto">
-        <div className="bg-white rounded-xl shadow-lg border border-brand-forest/10 p-6 sm:p-7">
+        <div className="bg-white rounded-xl shadow-lg border border-vm-navy/10 p-6 sm:p-7">
           <div className="text-center mb-6 flex flex-col items-center gap-2">
             <BrandLogo size="auth" showTagline={false} />
-            <p className="text-[10px] font-sans font-bold uppercase tracking-wider text-brand-slate/60">
+            <p className="text-[10px] font-sans font-bold uppercase tracking-wider text-vm-text/60">
               Admin Portal
             </p>
-            <p className="text-xs font-sans text-brand-slate/60">
+            <p className="text-xs font-sans text-vm-text/60">
               Enter your email to access operations.
             </p>
           </div>

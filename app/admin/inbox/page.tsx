@@ -28,11 +28,11 @@ interface ContactMessage {
 }
 
 function statusColor(status: string) {
-  if (status === "NEW") return "bg-blue-100 text-blue-800";
-  if (status === "REVIEWED") return "bg-yellow-100 text-yellow-800";
-  if (status === "REPLIED") return "bg-green-100 text-green-800";
-  if (status === "ARCHIVED") return "bg-gray-100 text-gray-800";
-  return "bg-gray-100 text-gray-800";
+  if (status === "NEW") return "bg-vm-cyan-tint text-blue-800";
+  if (status === "REVIEWED") return "bg-vm-warning-bg text-yellow-800";
+  if (status === "REPLIED") return "bg-vm-success-bg text-green-800";
+  if (status === "ARCHIVED") return "bg-gray-100 text-vm-text";
+  return "bg-gray-100 text-vm-text";
 }
 
 function roleIcon(role: string) {
@@ -105,7 +105,7 @@ export default function AdminInboxPage() {
     return (
       <div className="mx-auto max-w-6xl px-6 py-12">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-vm-muted" />
         </div>
       </div>
     );
@@ -128,8 +128,8 @@ export default function AdminInboxPage() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Inbox</h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <h1 className="text-2xl font-semibold text-vm-text">Inbox</h1>
+        <p className="mt-2 text-sm text-vm-muted">
           VelocityMaid treats communication as governance, not correspondence.
         </p>
       </div>
@@ -145,14 +145,14 @@ export default function AdminInboxPage() {
                 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap
                 ${
                   activeTab === tab.id
-                    ? "border-gray-900 text-gray-900"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-gray-900 text-vm-text"
+                    : "border-transparent text-vm-muted hover:text-vm-text hover:border-gray-300"
                 }
               `}
             >
               {tab.label}
               {tab.count !== null && tab.count > 0 && (
-                <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+                <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-vm-text">
                   {tab.count}
                 </span>
               )}
@@ -165,8 +165,8 @@ export default function AdminInboxPage() {
       <div className="divide-y border border-gray-200 rounded-md bg-white">
         {filteredMessages.length === 0 ? (
           <div className="p-12 text-center">
-            <Mail className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-sm text-gray-500">No messages in this category.</p>
+            <Mail className="w-12 h-12 mx-auto text-vm-muted mb-4" />
+            <p className="text-sm text-vm-muted">No messages in this category.</p>
           </div>
         ) : (
           filteredMessages.map((message) => (
@@ -182,16 +182,16 @@ export default function AdminInboxPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-vm-text truncate">
                         {message.name}
                       </p>
-                      <span className="text-xs text-gray-500">({message.role})</span>
+                      <span className="text-xs text-vm-muted">({message.role})</span>
                     </div>
-                    <p className="text-sm text-gray-600 truncate mt-1">
+                    <p className="text-sm text-vm-muted truncate mt-1">
                       {message.organization || message.email}
                     </p>
                     {message.message && (
-                      <p className="text-sm text-gray-500 line-clamp-2 mt-1">
+                      <p className="text-sm text-vm-muted line-clamp-2 mt-1">
                         {message.message}
                       </p>
                     )}
@@ -205,7 +205,7 @@ export default function AdminInboxPage() {
                   >
                     {message.status}
                   </span>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                  <span className="text-xs text-vm-muted whitespace-nowrap">
                     {new Date(message.createdAt).toLocaleDateString()}
                   </span>
                 </div>

@@ -249,7 +249,7 @@ export default function Admin1099Page() {
   const getStatusBadge = (status: string | null, verified: boolean) => {
     if (verified) {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-green-800">
           <CheckCircle className="w-3 h-3" />
           Verified
         </span>
@@ -258,7 +258,7 @@ export default function Admin1099Page() {
 
     if (status === "SUBMITTED") {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-vm-cyan-tint text-blue-800">
           <AlertCircle className="w-3 h-3" />
           Submitted
         </span>
@@ -267,7 +267,7 @@ export default function Admin1099Page() {
 
     if (status === "REJECTED") {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-vm-danger-bg text-red-800">
           <XCircle className="w-3 h-3" />
           Rejected
         </span>
@@ -275,7 +275,7 @@ export default function Admin1099Page() {
     }
 
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-vm-text">
         <AlertCircle className="w-3 h-3" />
         No Tax Profile
       </span>
@@ -287,7 +287,7 @@ export default function Admin1099Page() {
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+            <Loader2 className="w-8 h-8 animate-spin text-vm-cyan-dark" />
           </div>
         </div>
       </div>
@@ -300,8 +300,8 @@ export default function Admin1099Page() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">1099 Tax Forms</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-vm-text mb-2">1099 Tax Forms</h1>
+            <p className="text-vm-muted">
               View and export 1099 candidates for tax reporting
             </p>
           </div>
@@ -360,7 +360,7 @@ export default function Admin1099Page() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-vm-text mb-2">
                 <Calendar className="w-4 h-4 inline mr-1" />
                 Tax Year
               </label>
@@ -378,14 +378,14 @@ export default function Admin1099Page() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-vm-text mb-2">
                 <DollarSign className="w-4 h-4 inline mr-1" />
                 Threshold
               </label>
               <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg">
                 ${threshold.toLocaleString()}+
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-vm-muted mt-1">
                 {year === 2025
                   ? "2025 threshold: $600.01"
                   : "2026+ threshold: $2,000.01"}
@@ -395,7 +395,7 @@ export default function Admin1099Page() {
             <div className="flex items-end gap-2">
               <button
                 onClick={handleDownloadCandidates}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="flex items-center gap-2 px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy"
               >
                 <Download className="w-4 h-4" />
                 Export CSV
@@ -405,7 +405,7 @@ export default function Admin1099Page() {
             <div className="flex items-end gap-2">
               <button
                 onClick={handleDownloadIRIS}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                className="flex items-center gap-2 px-4 py-2 bg-vm-success text-white rounded-lg hover:bg-vm-success"
               >
                 <FileText className="w-4 h-4" />
                 Export IRIS
@@ -430,35 +430,35 @@ export default function Admin1099Page() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <Target className="w-6 h-6 text-blue-600" />
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-vm-text">
                   Jan 31 Readiness Score
                 </h2>
               </div>
               {readinessLoading && (
-                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                <Loader2 className="w-4 h-4 animate-spin text-vm-muted" />
               )}
             </div>
 
             <div className="mb-6">
               <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-4xl font-bold text-gray-900">
+                <span className="text-4xl font-bold text-vm-text">
                   {readinessData.overallScore.toFixed(1)}
                 </span>
-                <span className="text-lg text-gray-500">/ 100</span>
+                <span className="text-lg text-vm-muted">/ 100</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                 <div
                   className={`h-full transition-all ${
                     readinessData.overallScore >= 80
-                      ? "bg-green-600"
+                      ? "bg-vm-success"
                       : readinessData.overallScore >= 60
-                      ? "bg-yellow-600"
-                      : "bg-red-600"
+                      ? "bg-vm-warning"
+                      : "bg-vm-danger"
                   }`}
                   style={{ width: `${readinessData.overallScore}%` }}
                 />
               </div>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-vm-muted mt-2">
                 Based on {readinessData.eligibleCleanersCount} eligible cleaner
                 {readinessData.eligibleCleanersCount !== 1 ? "s" : ""}
               </p>
@@ -467,7 +467,7 @@ export default function Admin1099Page() {
             {/* Top Blockers */}
             {readinessData.blockers.length > 0 && (
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">
+                <h3 className="text-sm font-medium text-vm-text mb-3">
                   Top Blockers
                 </h3>
                 <div className="space-y-2">
@@ -483,11 +483,11 @@ export default function Admin1099Page() {
                     >
                       <div className="flex items-center gap-2">
                         <AlertCircle className="w-4 h-4 text-orange-600" />
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-vm-text">
                           {blocker.label}
                         </span>
                       </div>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-vm-muted">
                         {blocker.count} cleaner{blocker.count !== 1 ? "s" : ""}
                       </span>
                     </button>
@@ -528,21 +528,21 @@ export default function Admin1099Page() {
                     className="flex items-center justify-between p-4 bg-white rounded-lg border border-red-200"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-red-100 text-red-700 rounded-full flex items-center justify-center font-bold text-sm">
+                      <div className="flex-shrink-0 w-8 h-8 bg-vm-danger-bg text-red-700 rounded-full flex items-center justify-center font-bold text-sm">
                         {index + 1}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-vm-text">
                           {blocker.label}
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-vm-muted">
                           Affects {blocker.count} cleaner{blocker.count !== 1 ? "s" : ""}
                         </div>
                       </div>
                     </div>
                     <button
                       onClick={() => handleBlockerClick(blocker.type)}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium"
+                      className="px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger text-sm font-medium"
                     >
                       View Affected
                     </button>
@@ -559,8 +559,8 @@ export default function Admin1099Page() {
               <div className="flex items-center gap-3">
                 <Users className="w-8 h-8 text-blue-600" />
                 <div>
-                  <p className="text-sm text-gray-600">Total Candidates</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-vm-muted">Total Candidates</p>
+                  <p className="text-2xl font-bold text-vm-text">
                     {summary.totalCandidates}
                   </p>
                 </div>
@@ -571,8 +571,8 @@ export default function Admin1099Page() {
               <div className="flex items-center gap-3">
                 <DollarSign className="w-8 h-8 text-green-600" />
                 <div>
-                  <p className="text-sm text-gray-600">Total Amount</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-vm-muted">Total Amount</p>
+                  <p className="text-2xl font-bold text-vm-text">
                     ${parseFloat(summary.totalAmount).toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -586,8 +586,8 @@ export default function Admin1099Page() {
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-8 h-8 text-green-600" />
                 <div>
-                  <p className="text-sm text-gray-600">Verified</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-vm-muted">Verified</p>
+                  <p className="text-2xl font-bold text-vm-text">
                     {summary.verifiedCount}
                   </p>
                 </div>
@@ -598,8 +598,8 @@ export default function Admin1099Page() {
               <div className="flex items-center gap-3">
                 <AlertCircle className="w-8 h-8 text-yellow-600" />
                 <div>
-                  <p className="text-sm text-gray-600">Unverified</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-vm-muted">Unverified</p>
+                  <p className="text-2xl font-bold text-vm-text">
                     {summary.unverifiedCount}
                   </p>
                 </div>
@@ -618,13 +618,13 @@ export default function Admin1099Page() {
         {/* Candidates Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-vm-text">
               1099 Candidates ({candidates.length})
             </h2>
           </div>
 
           {candidates.length === 0 ? (
-            <div className="px-6 py-12 text-center text-gray-500">
+            <div className="px-6 py-12 text-center text-vm-muted">
               No candidates found for {year}. Candidates must meet the ${threshold.toLocaleString()} threshold.
             </div>
           ) : (
@@ -632,22 +632,22 @@ export default function Admin1099Page() {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Cleaner
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Tax Profile
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       TIN (Masked)
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Address
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Total Amount
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Transfers
                     </th>
                   </tr>
@@ -657,10 +657,10 @@ export default function Admin1099Page() {
                     <tr key={candidate.cleanerId} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-vm-text">
                             {candidate.cleanerName || "N/A"}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-vm-muted">
                             {candidate.cleanerEmail}
                           </div>
                         </div>
@@ -672,17 +672,17 @@ export default function Admin1099Page() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-vm-text">
                           {candidate.tinLast4 || "N/A"}
                         </div>
                         {candidate.tinType && (
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-vm-muted">
                             {candidate.tinType}
                           </div>
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-vm-text">
                           {candidate.legalName && (
                             <div className="font-medium mb-1">{candidate.legalName}</div>
                           )}
@@ -700,7 +700,7 @@ export default function Admin1099Page() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-vm-text">
                           ${parseFloat(candidate.totalAmount).toLocaleString("en-US", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
@@ -708,7 +708,7 @@ export default function Admin1099Page() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-vm-muted">
                           {candidate.transferCount}
                         </div>
                       </td>

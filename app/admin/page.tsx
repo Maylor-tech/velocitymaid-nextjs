@@ -99,12 +99,12 @@ function MetricCard({
             <Icon className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600">{title}</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-1">{count}</p>
-            {status && <p className="text-xs text-gray-500 mt-1">{status}</p>}
+            <p className="text-sm font-medium text-vm-muted">{title}</p>
+            <p className="text-2xl font-semibold text-vm-text mt-1">{count}</p>
+            {status && <p className="text-xs text-vm-muted mt-1">{status}</p>}
           </div>
         </div>
-        <ArrowRight className="w-5 h-5 text-gray-400" />
+        <ArrowRight className="w-5 h-5 text-vm-muted" />
       </div>
     </Link>
   );
@@ -360,7 +360,7 @@ export default function AdminCommandCenter() {
             status="All time"
             href="/admin/jobs"
             icon={CheckCircle2}
-            color="bg-green-600"
+            color="bg-vm-success"
           />
           <MetricCard
             title="Archived"
@@ -376,13 +376,13 @@ export default function AdminCommandCenter() {
       {/* Messages Section */}
       <div className="mb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-medium text-gray-900 flex items-center">
+          <h2 className="text-lg font-medium text-vm-text flex items-center">
             <MessageSquare className="w-5 h-5 mr-2" />
             Contact Messages
           </h2>
           <Link
             href="/admin/inbox"
-            className="text-sm text-gray-600 hover:text-gray-900 flex items-center"
+            className="text-sm text-vm-muted hover:text-vm-text flex items-center"
           >
             View all
             <ArrowRight className="w-4 h-4 ml-1" />
@@ -412,7 +412,7 @@ export default function AdminCommandCenter() {
             status="Response sent"
             href="/admin/inbox?status=REPLIED"
             icon={CheckCircle2}
-            color="bg-green-600"
+            color="bg-vm-success"
           />
           <MetricCard
             title="Archived"
@@ -425,9 +425,9 @@ export default function AdminCommandCenter() {
         </div>
 
         <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-vm-muted">
             Total:{" "}
-            <span className="font-medium text-gray-900">{messages.total}</span>{" "}
+            <span className="font-medium text-vm-text">{messages.total}</span>{" "}
             messages
           </p>
         </div>
