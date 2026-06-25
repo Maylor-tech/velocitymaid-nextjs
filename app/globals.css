@@ -60,12 +60,6 @@
    * files still depend on it — see the Brand Audit Report and Component
    * Standardization Plan for the migration path. Do not add new usages.
    */
-  --brand-forest: #0b221e;
-  --brand-gold: #d4af37;
-  --brand-gold-hover: #c19a2e;
-  --brand-ivory: #fbf9f4;
-  --brand-slate: #2c3e3b;
-
   --font-serif: "Playfair Display", Georgia, ui-serif, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
 
@@ -135,15 +129,15 @@
   }
 
   .btn-brand-primary {
-    @apply bg-brand-forest text-brand-ivory font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md hover:bg-brand-forest/90 btn-tactile;
+    @apply bg-vm-navy text-vm-white font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md hover:bg-vm-navy/90 btn-tactile;
   }
 
   .btn-brand-secondary {
-    @apply bg-brand-gold hover:bg-brand-gold-hover text-brand-forest font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md btn-tactile;
+    @apply bg-vm-cyan hover:bg-vm-cyan-dark text-vm-navy font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md btn-tactile;
   }
 
   .btn-brand-outline {
-    @apply border border-brand-forest/20 hover:border-brand-forest text-brand-forest font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded bg-transparent btn-tactile;
+    @apply border border-vm-navy/20 hover:border-vm-navy text-vm-navy font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded bg-transparent btn-tactile;
   }
 
   .card-brand {
@@ -151,15 +145,15 @@
   }
 
   .form-field-brand {
-    @apply w-full bg-white border border-border rounded px-3 py-2 text-sm text-brand-slate focus:outline-none focus:border-brand-forest transition-colors placeholder:text-muted-foreground/50;
+    @apply w-full bg-white border border-border rounded px-3 py-2 text-sm text-vm-text focus:outline-none focus:border-vm-navy transition-colors placeholder:text-muted-foreground/50;
   }
 
   .calm-alert {
-    @apply flex items-start gap-3 bg-brand-forest/5 p-4 rounded border border-brand-forest/10;
+    @apply flex items-start gap-3 bg-vm-navy/5 p-4 rounded border border-vm-navy/10;
   }
 
   .trust-badge {
-    @apply flex items-center gap-2.5 px-3 py-1.5 bg-brand-forest/5 rounded-full border border-brand-forest/10 w-fit;
+    @apply flex items-center gap-2.5 px-3 py-1.5 bg-vm-navy/5 rounded-full border border-vm-navy/10 w-fit;
   }
 
   .stat-card-brand {
