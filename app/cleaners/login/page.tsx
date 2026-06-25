@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { BrandLogo } from '@/components/brand';
 
 export default function CleanerLoginPage() {
   const router = useRouter();
@@ -40,9 +41,9 @@ export default function CleanerLoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-vm-text mb-2">VelocityMaid</h1>
-          <h2 className="text-xl text-vm-muted">Cleaner Login</h2>
+        <div className="text-center mb-8 flex flex-col items-center gap-2">
+          <BrandLogo theme="light" size="auth" showTagline={false} />
+          <h2 className="text-xl text-vm-muted font-heading">Cleaner Login</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

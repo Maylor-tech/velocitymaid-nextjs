@@ -66,7 +66,7 @@ export default function CustomerVerifyPage() {
       <div className="w-full max-w-sm mx-auto">
         <div className="bg-white rounded-xl shadow-lg border border-vm-navy/10 p-6 sm:p-7 modal-enter">
           <div className="text-center mb-6 flex flex-col items-center gap-2">
-            <BrandLogo size="auth" showTagline={false} />
+            <BrandLogo theme="light" size="auth" showTagline={false} />
             <h1 className="text-lg font-serif font-bold tracking-tight text-vm-navy">
               Enter Your Code
             </h1>

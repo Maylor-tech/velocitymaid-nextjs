@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, ArrowRight } from "lucide-react";
+import { BrandLogo } from "@/components/brand";
 import Toast from "@/components/ui/toast";
 import {
   APPLY_MARKET_CONFIG,
@@ -21,10 +23,14 @@ interface Branch {
 }
 
 const inputClass =
-  "w-full border border-vm-border rounded-lg px-4 py-3 font-body text-sm text-vm-text focus:outline-none focus:border-vm-cyan focus:ring-1 focus:ring-vm-cyan/30 transition-colors";
-const labelClass = "font-body text-sm font-medium text-vm-text mb-1 block";
+  "w-full border border-vm-border rounded-lg px-4 py-3 font-body text-sm text-vm-text focus:outline-none focus:border-vm-cyan focus:ring-1 focus:ring-vm-cyan transition-colors";
+const labelClass =
+  "font-heading font-semibold text-vm-navy text-sm mb-1 block";
 const helperClass = "font-body text-xs text-vm-muted mt-1";
 const sectionDividerClass = "border-t border-vm-border pt-6 mt-6";
+
+const USA_SUBTITLE =
+  "Join the VelocityMaid team and help us deliver professional cleaning and property care across Vermont and New Jersey.";
 
 export default function CleanerApplyForm() {
   const router = useRouter();
@@ -34,6 +40,8 @@ export default function CleanerApplyForm() {
     searchParams.get("branch")
   );
   const marketConfig = APPLY_MARKET_CONFIG[market];
+  const pageSubtitle =
+    market === "jamaica" ? marketConfig.subtitle : USA_SUBTITLE;
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -230,17 +238,28 @@ export default function CleanerApplyForm() {
   };
 
   return (
-    <div className="min-h-screen bg-vm-surface flex items-center justify-center p-6 py-12">
-      <div className="bg-white border border-vm-border rounded-xl shadow-sm max-w-xl w-full mx-auto px-8 py-8">
-        <div className="text-center mb-8">
-          <span className="inline-block bg-vm-cyan/10 text-vm-cyan text-xs font-semibold px-3 py-1 rounded-full mb-4">
-            {marketConfig.badge}
-          </span>
-          <h1 className="font-heading font-bold text-vm-navy text-3xl">
-            Apply to be a Cleaner
-          </h1>
-          <p className="font-body text-vm-muted mt-2">{marketConfig.subtitle}</p>
+    <div className="min-h-screen bg-vm-surface flex flex-col">
+      <header className="w-full bg-vm-navy py-5 px-6">
+        <div className="max-w-xl mx-auto">
+          <Link href="/">
+            <BrandLogo theme="dark" size="header" showTagline={false} />
+          </Link>
         </div>
+      </header>
+
+      <div className="flex-1 flex flex-col items-center px-6 py-10 sm:py-12">
+        <div className="bg-white border border-vm-border rounded-2xl shadow-sm max-w-xl w-full mx-auto p-8 sm:p-10">
+          <div className="text-center mb-8">
+            <span className="inline-block bg-vm-cyan/10 text-vm-cyan text-xs font-semibold font-body px-3 py-1 rounded-full mb-4">
+              {marketConfig.badge}
+            </span>
+            <h1 className="font-heading font-bold text-vm-navy text-2xl">
+              Apply to be a Cleaner
+            </h1>
+            <p className="font-body text-vm-muted text-base mt-2">
+              {pageSubtitle}
+            </p>
+          </div>
 
         <Toast
           message={
@@ -532,7 +551,7 @@ export default function CleanerApplyForm() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-vm-navy text-white font-heading font-semibold py-3 rounded-lg hover:bg-vm-cyan hover:text-vm-navy transition-colors duration-200 mt-2 inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            className="w-full bg-vm-cyan text-vm-navy font-heading font-semibold py-4 rounded-lg hover:bg-vm-cyan-dark transition-colors duration-200 mt-2 inline-flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {submitting ? (
               <>
@@ -545,6 +564,12 @@ export default function CleanerApplyForm() {
             )}
           </button>
         </form>
+        </div>
+
+        <p className="text-vm-muted text-xs text-center py-6 font-body max-w-xl">
+          VelocityMaid · Professional Cleaning &amp; Property Readiness · Vermont
+          &amp; New Jersey
+        </p>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Loader2 } from "lucide-react";
+import { BrandLogo } from "@/components/brand";
 import CleanerApplyForm from "@/components/cleaners/CleanerApplyForm";
 import {
   APPLY_MARKET_CONFIG,
@@ -28,8 +29,15 @@ export default function CleanerApplyPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-vm-surface flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
+        <div className="min-h-screen bg-vm-surface flex flex-col">
+          <header className="w-full bg-vm-navy py-5 px-6">
+            <div className="max-w-xl mx-auto">
+              <BrandLogo theme="dark" size="header" showTagline={false} />
+            </div>
+          </header>
+          <div className="flex-1 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
+          </div>
         </div>
       }
     >

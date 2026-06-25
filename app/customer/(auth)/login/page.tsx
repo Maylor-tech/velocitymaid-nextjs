@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { BrandLogo } from '@/components/brand';
 
 export default function CustomerLoginPage() {
   const [email, setEmail] = useState('');
@@ -66,38 +68,9 @@ export default function CustomerLoginPage() {
   return (
     <div className="min-h-screen bg-vm-navy flex flex-col">
       <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10">
-        <a href="/" className="flex items-center gap-3">
-          <svg
-            width="120"
-            height="32"
-            viewBox="0 0 200 40"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="VelocityMaid"
-            role="img"
-          >
-            <polygon points="0,2 12,38 24,2 18,2 12,25 6,2" fill="#00C2CB" />
-            <line
-              x1="0"
-              y1="39"
-              x2="24"
-              y2="39"
-              stroke="#00C2CB"
-              strokeWidth="1.5"
-              opacity="0.35"
-            />
-            <text
-              x="33"
-              y="26"
-              fontFamily="Space Grotesk,Arial,sans-serif"
-              fontWeight="700"
-              fontSize="19"
-              fill="#ffffff"
-              letterSpacing="-0.4"
-            >
-              VelocityMaid
-            </text>
-          </svg>
-        </a>
+        <Link href="/">
+          <BrandLogo theme="dark" size="header" showTagline={false} />
+        </Link>
         <a
           href="/vermont/host-intake"
           className="text-white/60 font-body text-sm hover:text-white transition-colors"

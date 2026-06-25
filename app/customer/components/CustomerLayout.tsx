@@ -128,7 +128,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/customer/jobs">
-                <BrandLogo size="portal" />
+                <BrandLogo theme="light" size="portal" showTagline={false} />
               </Link>
               <div className="hidden md:flex gap-1">
                 {navItems.map((item) => {
