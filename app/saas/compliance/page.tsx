@@ -84,7 +84,7 @@ export default function CompliancePage() {
       case 'expired':
         return <XCircle className="w-5 h-5 text-red-600" />;
       default:
-        return <AlertTriangle className="w-5 h-5 text-gray-400" />;
+        return <AlertTriangle className="w-5 h-5 text-vm-muted" />;
     }
   };
 
@@ -92,19 +92,19 @@ export default function CompliancePage() {
     switch (status) {
       case 'verified':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-vm-success-bg text-green-800">
             Verified
           </span>
         );
       case 'pending':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-vm-warning-bg text-yellow-800">
             Pending
           </span>
         );
       case 'expired':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-vm-danger-bg text-red-800">
             Expired
           </span>
         );
@@ -117,8 +117,8 @@ export default function CompliancePage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading compliance data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vm-navy mx-auto mb-4"></div>
+          <p className="text-vm-muted">Loading compliance data...</p>
         </div>
       </div>
     );
@@ -131,12 +131,12 @@ export default function CompliancePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link href="/saas" className="flex items-center space-x-2">
-              <Sparkles className="w-7 h-7 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900">VelocityMaid</span>
+              <Sparkles className="w-7 h-7 text-vm-cyan-dark" />
+              <span className="text-xl font-bold text-vm-text">VelocityMaid</span>
             </Link>
             <Link
               href="/saas/dashboard"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-vm-muted hover:text-vm-text"
             >
               ← Back to Dashboard
             </Link>
@@ -147,8 +147,8 @@ export default function CompliancePage() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Compliance Tracking</h1>
-          <p className="text-gray-600 mt-2">Stay audit-ready with automatic compliance document tracking</p>
+          <h1 className="text-3xl font-bold text-vm-text">Compliance Tracking</h1>
+          <p className="text-vm-muted mt-2">Stay audit-ready with automatic compliance document tracking</p>
         </div>
 
         {loadError && (
@@ -161,10 +161,10 @@ export default function CompliancePage() {
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
-              <Shield className="w-8 h-8 text-primary-600 mr-3" />
+              <Shield className="w-8 h-8 text-vm-cyan-dark mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Total Documents</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.total}</p>
+                <p className="text-sm text-vm-muted">Total Documents</p>
+                <p className="text-2xl font-bold text-vm-text">{metrics.total}</p>
               </div>
             </div>
           </div>
@@ -172,8 +172,8 @@ export default function CompliancePage() {
             <div className="flex items-center">
               <CheckCircle className="w-8 h-8 text-green-600 mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Verified</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.verified}</p>
+                <p className="text-sm text-vm-muted">Verified</p>
+                <p className="text-2xl font-bold text-vm-text">{metrics.verified}</p>
               </div>
             </div>
           </div>
@@ -181,8 +181,8 @@ export default function CompliancePage() {
             <div className="flex items-center">
               <Clock className="w-8 h-8 text-yellow-600 mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.pending}</p>
+                <p className="text-sm text-vm-muted">Pending</p>
+                <p className="text-2xl font-bold text-vm-text">{metrics.pending}</p>
               </div>
             </div>
           </div>
@@ -190,8 +190,8 @@ export default function CompliancePage() {
             <div className="flex items-center">
               <XCircle className="w-8 h-8 text-red-600 mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Expired</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.expired}</p>
+                <p className="text-sm text-vm-muted">Expired</p>
+                <p className="text-2xl font-bold text-vm-text">{metrics.expired}</p>
               </div>
             </div>
           </div>
@@ -200,25 +200,25 @@ export default function CompliancePage() {
         {/* Compliance Items */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Compliance Documents</h2>
+            <h2 className="text-lg font-semibold text-vm-text">Compliance Documents</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Contractor
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Document Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Expiry Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Last Updated
                   </th>
                 </tr>
@@ -226,26 +226,26 @@ export default function CompliancePage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={5} className="px-6 py-8 text-center text-vm-muted">
                       No compliance documents yet.
                     </td>
                   </tr>
                 ) : (
                   items.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-vm-text">
                         {item.contractorName}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-text">
                         {item.documentType}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(item.status)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
                         {item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : '—'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
                         {new Date(item.lastUpdated).toLocaleDateString()}
                       </td>
                     </tr>

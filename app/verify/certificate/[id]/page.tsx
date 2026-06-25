@@ -65,8 +65,8 @@ export default async function VerifyCertificatePage({ params }: PageProps) {
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Certificate Verification</h1>
-            <p className="text-gray-600">VelocityMaid Jamaica Training Program</p>
+            <h1 className="text-3xl font-bold text-vm-text mb-2">Certificate Verification</h1>
+            <p className="text-vm-muted">VelocityMaid Jamaica Training Program</p>
           </div>
 
           {/* Status */}
@@ -100,40 +100,40 @@ export default async function VerifyCertificatePage({ params }: PageProps) {
             <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
               <Award className="w-6 h-6 text-yellow-500" />
               <div className="flex-1">
-                <p className="text-sm text-gray-600">Certificate ID</p>
-                <p className="font-mono font-semibold text-gray-900">{certificate.certificateId}</p>
+                <p className="text-sm text-vm-muted">Certificate ID</p>
+                <p className="font-mono font-semibold text-vm-text">{certificate.certificateId}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Cleaner Name</p>
-                <p className="font-semibold text-gray-900">{certificate.cleaner.name || 'Unknown'}</p>
+                <p className="text-sm text-vm-muted mb-1">Cleaner Name</p>
+                <p className="font-semibold text-vm-text">{certificate.cleaner.name || 'Unknown'}</p>
               </div>
               <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Branch</p>
-                <p className="font-semibold text-gray-900">
+                <p className="text-sm text-vm-muted mb-1">Branch</p>
+                <p className="font-semibold text-vm-text">
                   {certificate.cleaner.primaryBranch?.name || 'Unknown'}
                 </p>
               </div>
               <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Date Issued</p>
-                <p className="font-semibold text-gray-900">{issuedDate}</p>
+                <p className="text-sm text-vm-muted mb-1">Date Issued</p>
+                <p className="font-semibold text-vm-text">{issuedDate}</p>
               </div>
               <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Status</p>
-                <p className="font-semibold text-gray-900 capitalize">{certificate.status.toLowerCase()}</p>
+                <p className="text-sm text-vm-muted mb-1">Status</p>
+                <p className="font-semibold text-vm-text capitalize">{certificate.status.toLowerCase()}</p>
               </div>
             </div>
 
             <div className="p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Training Completion</p>
-              <p className="font-semibold text-gray-900">
+              <p className="text-sm text-vm-muted mb-1">Training Completion</p>
+              <p className="font-semibold text-vm-text">
                 {completedProgress.length} of {allLessons.length} lessons completed
               </p>
               <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                 <div
-                  className="bg-blue-600 h-2 rounded-full"
+                  className="bg-vm-navy h-2 rounded-full"
                   style={{
                     width: `${allLessons.length > 0 ? (completedProgress.length / allLessons.length) * 100 : 0}%`,
                   }}
@@ -144,10 +144,10 @@ export default async function VerifyCertificatePage({ params }: PageProps) {
 
           {/* Footer */}
           <div className="text-center pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-vm-muted">
               This certificate was issued by VelocityMaid for completion of the Jamaica Training Program.
             </p>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-vm-muted mt-2">
               For questions, contact support@velocitymaid.com
             </p>
           </div>

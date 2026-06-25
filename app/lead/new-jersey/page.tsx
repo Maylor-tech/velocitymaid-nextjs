@@ -62,7 +62,7 @@ export default function LeadCapturePage() {
           <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
             Thank You!
           </h2>
-          <p className="text-gray-700 mb-6">
+          <p className="text-vm-text mb-6">
             We've received your information and will contact you shortly via WhatsApp.
           </p>
           <Link
@@ -96,7 +96,7 @@ export default function LeadCapturePage() {
           <h1 className="text-4xl font-bold text-[#0A3D2F] mb-2 text-center" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
             Get Your Free Quote
           </h1>
-          <p className="text-gray-600 text-center mb-8">
+          <p className="text-vm-muted text-center mb-8">
             Tell us about your cleaning needs and we'll get back to you right away!
           </p>
 
@@ -252,7 +252,7 @@ export default function LeadCapturePage() {
                   onChange={(e) => setFormData({ ...formData, previousService: e.target.checked })}
                   className="w-4 h-4 text-[#0A3D2F] border-gray-300 rounded focus:ring-[#F8C548]"
                 />
-                <span className="text-sm text-gray-700">I've used a cleaning service before</span>
+                <span className="text-sm text-vm-text">I've used a cleaning service before</span>
               </label>
             </div>
 

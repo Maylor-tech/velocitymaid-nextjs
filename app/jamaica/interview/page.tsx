@@ -54,8 +54,8 @@ export default function InterviewPage() {
           <div className="flex items-center gap-3">
             <Calendar className="w-8 h-8 text-blue-600" />
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Schedule Your Interview</h1>
-              <p className="text-gray-600 mt-1">
+              <h1 className="text-3xl font-bold text-vm-text">Schedule Your Interview</h1>
+              <p className="text-vm-muted mt-1">
                 Book a time to speak with our team about joining VelocityMaid Jamaica
               </p>
             </div>
@@ -75,8 +75,8 @@ export default function InterviewPage() {
 
         {/* Instructions */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Interview Details</h3>
-          <ul className="space-y-2 text-gray-700">
+          <h3 className="text-lg font-semibold text-vm-text mb-2">Interview Details</h3>
+          <ul className="space-y-2 text-vm-text">
             <li>• Interview will be conducted via video call (Zoom/Google Meet)</li>
             <li>• Please have your ID and any relevant documents ready</li>
             <li>• The interview typically takes 15-20 minutes</li>

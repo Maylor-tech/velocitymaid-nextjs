@@ -131,16 +131,16 @@ export default function CityMarketingPage({ params }: PageProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2">
-              <Sparkles className="w-8 h-8 text-primary-600" />
-              <span className="text-2xl font-bold text-gray-900">VelocityMaid</span>
+              <Sparkles className="w-8 h-8 text-vm-cyan-dark" />
+              <span className="text-2xl font-bold text-vm-text">VelocityMaid</span>
             </Link>
             <div className="flex items-center gap-4">
-              <a href="/booking" className="text-gray-700 hover:text-primary-600 transition">
+              <a href="/booking" className="text-vm-text hover:text-vm-cyan-dark transition">
                 Book Now
               </a>
               <a
                 href={`tel:${branch.primaryPhone}`}
-                className="bg-primary-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-primary-700 transition"
+                className="bg-vm-navy text-white px-6 py-2 rounded-full font-semibold hover:bg-vm-navy transition"
               >
                 Call {branch.primaryPhone}
               </a>
@@ -150,7 +150,7 @@ export default function CityMarketingPage({ params }: PageProps) {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-primary-600 to-primary-700 text-white py-20 md:py-32 overflow-hidden">
+      <section className="relative bg-gradient-to-r from-vm-navy to-vm-navy text-white py-20 md:py-32 overflow-hidden">
         {content.heroImage && (
           <div className="absolute inset-0 z-0">
             <Image
@@ -160,26 +160,26 @@ export default function CityMarketingPage({ params }: PageProps) {
               className="object-cover opacity-20"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-600/90 to-primary-700/90"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-vm-navy/90 to-vm-navy/90"></div>
           </div>
         )}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
             {content.title}
           </h1>
-          <p className="text-xl text-primary-100 mb-8 drop-shadow-md max-w-3xl">
+          <p className="text-xl text-vm-muted mb-8 drop-shadow-md max-w-3xl">
             {content.description}
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
               href="/booking"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary-600 rounded-lg font-semibold hover:bg-primary-50 transition-colors shadow-lg"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-vm-cyan-dark rounded-lg font-semibold hover:bg-vm-surface transition-colors shadow-lg"
             >
               Book Your Cleaning <ArrowRight className="w-5 h-5" />
             </Link>
             <a
               href={`tel:${branch.primaryPhone}`}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-400 transition-colors shadow-lg"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-vm-surface text-white rounded-lg font-semibold hover:bg-vm-surface transition-colors shadow-lg"
             >
               <Phone className="w-5 h-5" />
               {branch.primaryPhone}
@@ -191,14 +191,14 @@ export default function CityMarketingPage({ params }: PageProps) {
       {/* Highlights */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          <h2 className="text-3xl font-bold text-vm-text mb-8 text-center">
             Why Choose VelocityMaid in {city.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}?
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {content.highlights.map((highlight, index) => (
               <div key={index} className="bg-gray-50 p-6 rounded-xl">
-                <CheckCircle className="w-8 h-8 text-primary-600 mb-3" />
-                <p className="font-semibold text-gray-900">{highlight}</p>
+                <CheckCircle className="w-8 h-8 text-vm-cyan-dark mb-3" />
+                <p className="font-semibold text-vm-text">{highlight}</p>
               </div>
             ))}
           </div>
@@ -208,14 +208,14 @@ export default function CityMarketingPage({ params }: PageProps) {
       {/* Areas We Serve */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          <h2 className="text-3xl font-bold text-vm-text mb-8 text-center">
             Areas We Serve
           </h2>
           <div className="flex flex-wrap justify-center gap-3">
             {content.areas.map((area, index) => (
               <span
                 key={index}
-                className="px-4 py-2 bg-white text-primary-600 rounded-full text-sm font-medium shadow-sm"
+                className="px-4 py-2 bg-white text-vm-cyan-dark rounded-full text-sm font-medium shadow-sm"
               >
                 <MapPin className="w-4 h-4 inline mr-1" />
                 {area}
@@ -228,14 +228,14 @@ export default function CityMarketingPage({ params }: PageProps) {
       {/* Services */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          <h2 className="text-3xl font-bold text-vm-text mb-8 text-center">
             Our Cleaning Services
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-gray-50 p-8 rounded-xl">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Basic Clean</h3>
-              <p className="text-gray-600 mb-4">Perfect for regular maintenance</p>
-              <ul className="space-y-2 text-gray-700">
+              <h3 className="text-xl font-bold text-vm-text mb-3">Basic Clean</h3>
+              <p className="text-vm-muted mb-4">Perfect for regular maintenance</p>
+              <ul className="space-y-2 text-vm-text">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
                   Kitchen & Bathrooms
@@ -250,10 +250,10 @@ export default function CityMarketingPage({ params }: PageProps) {
                 </li>
               </ul>
             </div>
-            <div className="bg-primary-50 p-8 rounded-xl border-2 border-primary-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Deep Clean</h3>
-              <p className="text-gray-600 mb-4">Thorough top-to-bottom service</p>
-              <ul className="space-y-2 text-gray-700">
+            <div className="bg-vm-surface p-8 rounded-xl border-2 border-vm-border">
+              <h3 className="text-xl font-bold text-vm-text mb-3">Deep Clean</h3>
+              <p className="text-vm-muted mb-4">Thorough top-to-bottom service</p>
+              <ul className="space-y-2 text-vm-text">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
                   Everything in Basic
@@ -269,9 +269,9 @@ export default function CityMarketingPage({ params }: PageProps) {
               </ul>
             </div>
             <div className="bg-gray-50 p-8 rounded-xl">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Move In/Out</h3>
-              <p className="text-gray-600 mb-4">Complete property cleaning</p>
-              <ul className="space-y-2 text-gray-700">
+              <h3 className="text-xl font-bold text-vm-text mb-3">Move In/Out</h3>
+              <p className="text-vm-muted mb-4">Complete property cleaning</p>
+              <ul className="space-y-2 text-vm-text">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
                   Everything in Deep Clean
@@ -294,7 +294,7 @@ export default function CityMarketingPage({ params }: PageProps) {
       {content.testimonials && content.testimonials.length > 0 && (
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+            <h2 className="text-3xl font-bold text-vm-text mb-8 text-center">
               What Our Customers Say
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
@@ -305,8 +305,8 @@ export default function CityMarketingPage({ params }: PageProps) {
                       <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
-                  <p className="text-gray-700 mb-4 italic">"{testimonial.text}"</p>
-                  <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                  <p className="text-vm-text mb-4 italic">"{testimonial.text}"</p>
+                  <p className="font-semibold text-vm-text">{testimonial.name}</p>
                 </div>
               ))}
             </div>
@@ -315,18 +315,18 @@ export default function CityMarketingPage({ params }: PageProps) {
       )}
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-primary-600 text-white">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-vm-navy text-white">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">
             Ready to Experience the VelocityMaid Difference?
           </h2>
-          <p className="text-xl text-primary-100 mb-8">
+          <p className="text-xl text-vm-muted mb-8">
             Book your cleaning service today and see why {city.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} families trust us
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/booking"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-600 rounded-lg font-semibold text-lg hover:bg-primary-50 transition shadow-lg"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-vm-cyan-dark rounded-lg font-semibold text-lg hover:bg-vm-surface transition shadow-lg"
             >
               Book Online Now <ArrowRight className="w-5 h-5" />
             </Link>
@@ -334,7 +334,7 @@ export default function CityMarketingPage({ params }: PageProps) {
               href={`https://wa.me/${branch.whatsappNumber.replace(/[^0-9]/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-green-600 text-white rounded-lg font-semibold text-lg hover:bg-green-700 transition shadow-lg"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-vm-success text-white rounded-lg font-semibold text-lg hover:bg-vm-success transition shadow-lg"
             >
               <MessageCircle className="w-5 h-5" />
               WhatsApp Us

@@ -16,7 +16,7 @@ function VillaSignSuccessContent() {
         <h1 className="text-4xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
           Partnership Agreement Signed!
         </h1>
-        <p className="text-lg text-gray-600 mb-8">
+        <p className="text-lg text-vm-muted mb-8">
           Your Villa Partnership Agreement has been generated and saved. Our team will review and contact you within 24-48 hours.
         </p>
         {contractId && (

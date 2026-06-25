@@ -52,7 +52,7 @@ export default function ApartmentPartnersPage() {
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center space-x-2">
                 <Sparkles className="w-8 h-8 text-[#0A3D2F]" />
-                <span className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <span className="text-2xl font-bold text-vm-text" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   VelocityMaid
                 </span>
               </Link>
@@ -73,7 +73,7 @@ export default function ApartmentPartnersPage() {
               <h1 className="text-5xl md:text-6xl font-bold mb-6" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                 Apartment Complex Partnership Program
               </h1>
-              <p className="text-xl md:text-2xl text-gray-200 mb-8">
+              <p className="text-xl md:text-2xl text-vm-muted mb-8">
                 Professional cleaning services for property managers and apartment complexes
               </p>
               <Link
@@ -100,7 +100,7 @@ export default function ApartmentPartnersPage() {
                 <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   Enhanced Resident Satisfaction
                 </h3>
-                <p className="text-gray-600">Professional cleaning services increase resident satisfaction and retention rates.</p>
+                <p className="text-vm-muted">Professional cleaning services increase resident satisfaction and retention rates.</p>
               </div>
               <div className="text-center">
                 <div className="w-20 h-20 bg-[#0A3D2F] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -109,7 +109,7 @@ export default function ApartmentPartnersPage() {
                 <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   Fast Turnaround
                 </h3>
-                <p className="text-gray-600">Quick move-out cleaning means faster apartment turnover and reduced vacancy time.</p>
+                <p className="text-vm-muted">Quick move-out cleaning means faster apartment turnover and reduced vacancy time.</p>
               </div>
               <div className="text-center">
                 <div className="w-20 h-20 bg-[#0A3D2F] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -118,7 +118,7 @@ export default function ApartmentPartnersPage() {
                 <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   Volume Discounts
                 </h3>
-                <p className="text-gray-600">Partnership pricing provides significant savings compared to individual bookings.</p>
+                <p className="text-vm-muted">Partnership pricing provides significant savings compared to individual bookings.</p>
               </div>
             </div>
           </div>
@@ -261,7 +261,7 @@ export default function ApartmentPartnersPage() {
             <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
               Ready to Partner With Us?
             </h2>
-            <p className="text-xl text-gray-200 mb-8">
+            <p className="text-xl text-vm-muted mb-8">
               Join apartment complexes across New Jersey who trust VelocityMaid for professional cleaning services
             </p>
             <Link
@@ -309,7 +309,7 @@ export default function ApartmentPartnersPage() {
                   <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                     {doc.name}
                   </h3>
-                  <p className="text-gray-600 text-sm">Download PDF</p>
+                  <p className="text-vm-muted text-sm">Download PDF</p>
                 </a>
               ))}
             </div>

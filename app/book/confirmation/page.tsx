@@ -247,8 +247,8 @@ function BookingConfirmationContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Processing Your Booking</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-vm-text mb-2">Processing Your Booking</h1>
+          <p className="text-vm-muted">
             {paymentMode === 'deposit'
               ? 'Please wait while we confirm your deposit...'
               : 'Please wait while we confirm your payment...'}
@@ -263,18 +263,18 @@ function BookingConfirmationContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 text-center">
           <XCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Booking Failed</h1>
-          <p className="text-lg text-gray-600 mb-6">{error || 'Something went wrong'}</p>
+          <h1 className="text-3xl font-bold text-vm-text mb-4">Booking Failed</h1>
+          <p className="text-lg text-vm-muted mb-6">{error || 'Something went wrong'}</p>
           <div className="flex gap-4 justify-center">
             <button
               onClick={() => router.push('/book')}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-3 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors"
             >
               Try Again
             </button>
             <button
               onClick={() => router.push('/')}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              className="px-6 py-3 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors"
             >
               Go Home
             </button>
@@ -288,10 +288,10 @@ function BookingConfirmationContent() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 text-center">
         <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-vm-text mb-2">
           You're all set 🎉
         </h1>
-        <p className="text-lg text-gray-600 mb-6">
+        <p className="text-lg text-vm-muted mb-6">
           {paymentMode === 'deposit'
             ? 'Your $25 booking deposit was received. We’ll review and confirm your cleaning shortly.'
             : 'Your payment was successful and your cleaning has been booked.'}
@@ -314,7 +314,7 @@ function BookingConfirmationContent() {
             {!showMagicLink ? (
               <button
                 onClick={() => setShowMagicLink(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors text-sm"
               >
                 Send me a login link
               </button>
@@ -335,7 +335,7 @@ function BookingConfirmationContent() {
                 <button
                   onClick={sendMagicLink}
                   disabled={magicLinkLoading || !magicLinkEmail}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {magicLinkLoading ? 'Sending...' : 'Send'}
                 </button>
@@ -358,13 +358,13 @@ function BookingConfirmationContent() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={() => router.push("/customer/jobs?status=received")}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+            className="px-6 py-3 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-semibold"
           >
             View My Jobs
           </button>
           <a
             href="tel:9732809190"
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium text-center"
+            className="px-6 py-3 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors font-medium text-center"
           >
             Contact Support
           </a>
@@ -380,7 +380,7 @@ export default function BookingConfirmationPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-vm-muted">Loading...</p>
         </div>
       </div>
     }>

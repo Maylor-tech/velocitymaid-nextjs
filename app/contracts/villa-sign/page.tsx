@@ -123,7 +123,7 @@ export default function VillaSignPage() {
           <h1 className="text-4xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
             Villa Partnership Agreement
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-vm-muted">
             Please fill out the form below to sign your partnership agreement
           </p>
         </div>
@@ -147,7 +147,7 @@ export default function VillaSignPage() {
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="name" className="block text-sm font-medium text-vm-text mb-1">
               Manager/Owner Name *
             </label>
             <input
@@ -161,7 +161,7 @@ export default function VillaSignPage() {
           </div>
 
           <div>
-            <label htmlFor="propertyName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="propertyName" className="block text-sm font-medium text-vm-text mb-1">
               Property Name *
             </label>
             <input
@@ -175,7 +175,7 @@ export default function VillaSignPage() {
           </div>
 
           <div>
-            <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="businessName" className="block text-sm font-medium text-vm-text mb-1">
               Business Name (if applicable)
             </label>
             <input
@@ -188,7 +188,7 @@ export default function VillaSignPage() {
           </div>
 
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="phone" className="block text-sm font-medium text-vm-text mb-1">
               Phone Number (876-xxx-xxxx) *
             </label>
             <input
@@ -203,7 +203,7 @@ export default function VillaSignPage() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-vm-text mb-1">
               Email Address
             </label>
             <input
@@ -216,7 +216,7 @@ export default function VillaSignPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               Signature *
             </label>
             <div className="border-2 border-gray-300 rounded-lg p-4 bg-white">
@@ -231,7 +231,7 @@ export default function VillaSignPage() {
               <button
                 type="button"
                 onClick={clearSignature}
-                className="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                className="mt-2 px-4 py-2 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors text-sm"
               >
                 Clear Signature
               </button>
@@ -250,7 +250,7 @@ export default function VillaSignPage() {
                 className="mt-1 w-5 h-5 text-[#0A3D2F] focus:ring-[#0A3D2F] border-gray-300 rounded"
                 required
               />
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-vm-text">
                 I have read, understood, and agree to be bound by all terms and conditions of this Villa Partnership Agreement. *
               </span>
             </label>

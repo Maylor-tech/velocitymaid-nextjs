@@ -41,13 +41,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50">
+    <div className="min-h-screen bg-gradient-to-br from-vm-surface via-white to-vm-surface">
       {/* Navigation */}
       <nav className="bg-white/95 backdrop-blur-sm shadow-sm py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link href="/saas" className="flex items-center space-x-2">
-            <Sparkles className="w-7 h-7 text-primary-600" />
-            <span className="text-xl font-bold text-gray-900">VelocityMaid</span>
+            <Sparkles className="w-7 h-7 text-vm-cyan-dark" />
+            <span className="text-xl font-bold text-vm-text">VelocityMaid</span>
           </Link>
         </div>
       </nav>
@@ -55,8 +55,8 @@ export default function LoginPage() {
       {/* Login Form */}
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600 mb-8">
+          <h1 className="text-3xl font-bold text-vm-text mb-2">Welcome Back</h1>
+          <p className="text-vm-muted mb-8">
             Sign in to your VelocityMaid account
           </p>
 
@@ -68,7 +68,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-vm-text mb-2">
                 Email Address
               </label>
               <input
@@ -77,13 +77,13 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                 placeholder="john@company.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-vm-text mb-2">
                 Password
               </label>
               <input
@@ -92,7 +92,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                 placeholder="Enter your password"
               />
             </div>
@@ -100,7 +100,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-primary-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-vm-navy text-white py-3 px-6 rounded-lg font-semibold hover:bg-vm-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isSubmitting ? (
                 'Signing In...'
@@ -113,9 +113,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-sm text-gray-600 text-center">
+          <p className="mt-6 text-sm text-vm-muted text-center">
             Don't have an account?{' '}
-            <Link href="/saas/signup" className="text-primary-600 hover:underline font-medium">
+            <Link href="/saas/signup" className="text-vm-cyan-dark hover:underline font-medium">
               Sign up
             </Link>
           </p>

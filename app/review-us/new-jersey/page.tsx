@@ -48,7 +48,7 @@ export default function ReviewUsPage() {
 
           <h1 className="text-5xl md:text-6xl font-bold mb-4">Thank You! 🙏</h1>
 
-          <p className="text-xl md:text-2xl text-gray-200 mb-8">
+          <p className="text-xl md:text-2xl text-vm-muted mb-8">
 
             We'd love to hear about your experience with VelocityMaid New Jersey
 
@@ -70,7 +70,7 @@ export default function ReviewUsPage() {
 
             </h2>
 
-            <p className="text-lg text-gray-700 mb-6">
+            <p className="text-lg text-vm-text mb-6">
 
               Your feedback helps us improve and helps other customers find great services
 
@@ -134,7 +134,7 @@ export default function ReviewUsPage() {
 
                     <QrCode className="w-24 h-24 text-[#0A3D2F] mx-auto mb-2" />
 
-                    <p className="text-sm text-gray-600">Scan to review</p>
+                    <p className="text-sm text-vm-muted">Scan to review</p>
 
                   </div>
 
@@ -144,7 +144,7 @@ export default function ReviewUsPage() {
 
             </div>
 
-            <p className="text-sm text-gray-600 mt-4">
+            <p className="text-sm text-vm-muted mt-4">
 
               Scan QR code to leave a review
 
@@ -158,7 +158,7 @@ export default function ReviewUsPage() {
 
             <h3 className="text-xl font-bold mb-3">We Appreciate Your Feedback</h3>
 
-            <ul className="list-disc list-inside space-y-2 text-gray-700">
+            <ul className="list-disc list-inside space-y-2 text-vm-text">
 
               <li>Improve our services</li>
 
@@ -196,7 +196,7 @@ export default function ReviewUsPage() {
 
 
 
-        <div className="text-center text-gray-300">
+        <div className="text-center text-vm-muted">
 
           <Link href="/locations/new-jersey" className="hover:text-white">
 

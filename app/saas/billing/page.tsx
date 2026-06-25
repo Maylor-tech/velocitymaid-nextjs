@@ -80,8 +80,8 @@ export default function BillingPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vm-navy mx-auto mb-4"></div>
+          <p className="text-vm-muted">Loading...</p>
         </div>
       </div>
     );
@@ -96,12 +96,12 @@ export default function BillingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link href="/saas" className="flex items-center space-x-2">
-              <Sparkles className="w-7 h-7 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900">VelocityMaid</span>
+              <Sparkles className="w-7 h-7 text-vm-cyan-dark" />
+              <span className="text-xl font-bold text-vm-text">VelocityMaid</span>
             </Link>
             <Link
               href="/saas/dashboard"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-vm-muted hover:text-vm-text"
             >
               ← Back to Dashboard
             </Link>
@@ -112,8 +112,8 @@ export default function BillingPage() {
       {/* Billing Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Billing & Subscription</h1>
-          <p className="text-gray-600 mt-2">Manage your subscription plan</p>
+          <h1 className="text-3xl font-bold text-vm-text">Billing & Subscription</h1>
+          <p className="text-vm-muted mt-2">Manage your subscription plan</p>
         </div>
 
         {hasActiveSubscription && (
@@ -137,29 +137,29 @@ export default function BillingPage() {
             <div
               key={tier.plan}
               className={`bg-white rounded-lg shadow-sm border p-6 ${
-                tier.popular ? 'ring-2 ring-primary-600 relative' : 'border-gray-200'
+                tier.popular ? 'ring-2 ring-vm-cyan relative' : 'border-gray-200'
               }`}
             >
               {tier.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-primary-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  <span className="bg-vm-navy text-white px-4 py-1 rounded-full text-sm font-semibold">
                     Most Popular
                   </span>
                 </div>
               )}
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{tier.name}</h3>
+              <h3 className="text-2xl font-bold text-vm-text mb-2">{tier.name}</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-gray-900">{tier.price}</span>
-                <span className="text-gray-600">/month</span>
+                <span className="text-4xl font-bold text-vm-text">{tier.price}</span>
+                <span className="text-vm-muted">/month</span>
               </div>
-              <p className="text-gray-600 mb-6">{tier.contractors}</p>
+              <p className="text-vm-muted mb-6">{tier.contractors}</p>
               <button
                 onClick={() => handleSubscribe(tier.plan)}
                 disabled={processing !== null || hasActiveSubscription}
                 className={`w-full py-3 px-6 rounded-lg font-semibold transition ${
                   tier.popular
-                    ? 'bg-primary-600 text-white hover:bg-primary-700'
-                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    ? 'bg-vm-navy text-white hover:bg-vm-navy'
+                    : 'bg-gray-100 text-vm-text hover:bg-gray-200'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {processing === tier.plan ? (
@@ -174,7 +174,7 @@ export default function BillingPage() {
           ))}
         </div>
 
-        <div className="mt-8 text-center text-sm text-gray-600">
+        <div className="mt-8 text-center text-sm text-vm-muted">
           <p>All plans include a 14-day free trial. No credit card required to start.</p>
         </div>
       </div>

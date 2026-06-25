@@ -16,7 +16,7 @@ export default function ContractPacketPage() {
           <h1 className="text-4xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
             Official Contract Packet
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-vm-muted">
             Complete legal agreements and service documentation for VelocityMaid Jamaica
           </p>
         </div>
@@ -25,7 +25,7 @@ export default function ContractPacketPage() {
           <h2 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
             What's Included
           </h2>
-          <ul className="space-y-3 text-gray-700">
+          <ul className="space-y-3 text-vm-text">
             <li className="flex items-start gap-3">
               <span className="text-[#F8C548] font-bold">•</span>
               <span>Cover page and introduction letter</span>
@@ -105,7 +105,7 @@ export default function ContractPacketPage() {
           <h2 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
             Instructions
           </h2>
-          <ol className="space-y-3 text-gray-700 list-decimal list-inside">
+          <ol className="space-y-3 text-vm-text list-decimal list-inside">
             <li>Download the contract packet using the button above</li>
             <li>Review all documents carefully</li>
             <li>Print or save for your records</li>
@@ -113,7 +113,7 @@ export default function ContractPacketPage() {
             <li>Contact us via WhatsApp if you have any questions</li>
           </ol>
           <div className="mt-6 p-4 bg-[#F3F1EB] rounded-lg">
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-vm-text">
               <strong>Note:</strong> The downloaded file is an HTML document that can be printed to PDF using your browser's 
               print function (Ctrl+P or Cmd+P). For best results, select "Save as PDF" as the destination.
             </p>

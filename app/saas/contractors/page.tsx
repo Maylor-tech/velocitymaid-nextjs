@@ -81,8 +81,8 @@ export default function ContractorsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading contractors...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vm-navy mx-auto mb-4"></div>
+          <p className="text-vm-muted">Loading contractors...</p>
         </div>
       </div>
     );
@@ -95,12 +95,12 @@ export default function ContractorsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link href="/saas" className="flex items-center space-x-2">
-              <Sparkles className="w-7 h-7 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900">VelocityMaid</span>
+              <Sparkles className="w-7 h-7 text-vm-cyan-dark" />
+              <span className="text-xl font-bold text-vm-text">VelocityMaid</span>
             </Link>
             <Link
               href="/saas/dashboard"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-vm-muted hover:text-vm-text"
             >
               ← Back to Dashboard
             </Link>
@@ -111,8 +111,8 @@ export default function ContractorsPage() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Contractor Management</h1>
-          <p className="text-gray-600 mt-2">Manage all your independent contractors</p>
+          <h1 className="text-3xl font-bold text-vm-text">Contractor Management</h1>
+          <p className="text-vm-muted mt-2">Manage all your independent contractors</p>
         </div>
 
         {loadError && (
@@ -125,10 +125,10 @@ export default function ContractorsPage() {
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
-              <Users className="w-8 h-8 text-primary-600 mr-3" />
+              <Users className="w-8 h-8 text-vm-cyan-dark mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Total Contractors</p>
-                <p className="text-2xl font-bold text-gray-900">{contractors.length}</p>
+                <p className="text-sm text-vm-muted">Total Contractors</p>
+                <p className="text-2xl font-bold text-vm-text">{contractors.length}</p>
               </div>
             </div>
           </div>
@@ -136,17 +136,17 @@ export default function ContractorsPage() {
             <div className="flex items-center">
               <CheckCircle className="w-8 h-8 text-green-600 mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-gray-900">{activeCount}</p>
+                <p className="text-sm text-vm-muted">Active</p>
+                <p className="text-2xl font-bold text-vm-text">{activeCount}</p>
               </div>
             </div>
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
-              <XCircle className="w-8 h-8 text-gray-400 mr-3" />
+              <XCircle className="w-8 h-8 text-vm-muted mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Inactive</p>
-                <p className="text-2xl font-bold text-gray-900">{inactiveCount}</p>
+                <p className="text-sm text-vm-muted">Inactive</p>
+                <p className="text-2xl font-bold text-vm-text">{inactiveCount}</p>
               </div>
             </div>
           </div>
@@ -155,13 +155,13 @@ export default function ContractorsPage() {
         {/* Search */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-vm-muted w-5 h-5" />
             <input
               type="text"
               placeholder="Search contractors by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
             />
           </div>
         </div>
@@ -172,19 +172,19 @@ export default function ContractorsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Contractor
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Jobs Completed
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Rating
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Joined
                   </th>
                 </tr>
@@ -192,7 +192,7 @@ export default function ContractorsPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredContractors.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={5} className="px-6 py-8 text-center text-vm-muted">
                       {searchTerm ? 'No contractors found matching your search.' : 'No contractors yet.'}
                     </td>
                   </tr>
@@ -201,37 +201,37 @@ export default function ContractorsPage() {
                     <tr key={contractor.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{contractor.name}</div>
-                          <div className="text-sm text-gray-500">{contractor.email}</div>
+                          <div className="text-sm font-medium text-vm-text">{contractor.name}</div>
+                          <div className="text-sm text-vm-muted">{contractor.email}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {contractor.isActive ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-vm-success-bg text-green-800">
                             <CheckCircle className="w-3 h-3 mr-1" />
                             Active
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-vm-text">
                             <XCircle className="w-3 h-3 mr-1" />
                             Inactive
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-text">
                         {contractor.completedJobs || 0}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-text">
                         {contractor.rating ? (
                           <div className="flex items-center">
                             <span className="font-medium">{contractor.rating}</span>
-                            <span className="text-gray-400 ml-1">/ 5.0</span>
+                            <span className="text-vm-muted ml-1">/ 5.0</span>
                           </div>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-vm-muted">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
                         {new Date(contractor.createdAt).toLocaleDateString()}
                       </td>
                     </tr>

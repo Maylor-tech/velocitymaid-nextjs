@@ -57,27 +57,27 @@ export default function VillaPitchDeckPage() {
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#F8C548]">
               <h3 className="text-xl font-bold text-[#0A3D2F] mb-3">Slide 1-2</h3>
-              <p className="text-gray-700">Cover page and company introduction</p>
+              <p className="text-vm-text">Cover page and company introduction</p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#2B70C9]">
               <h3 className="text-xl font-bold text-[#0A3D2F] mb-3">Slide 3-4</h3>
-              <p className="text-gray-700">Why villas need professional turnovers and our 6-step system</p>
+              <p className="text-vm-text">Why villas need professional turnovers and our 6-step system</p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#F8C548]">
               <h3 className="text-xl font-bold text-[#0A3D2F] mb-3">Slide 5-6</h3>
-              <p className="text-gray-700">Quality standards and transparent pricing (JMD)</p>
+              <p className="text-vm-text">Quality standards and transparent pricing (JMD)</p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#2B70C9]">
               <h3 className="text-xl font-bold text-[#0A3D2F] mb-3">Slide 7-8</h3>
-              <p className="text-gray-700">Partnership benefits and customer testimonials</p>
+              <p className="text-vm-text">Partnership benefits and customer testimonials</p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#F8C548]">
               <h3 className="text-xl font-bold text-[#0A3D2F] mb-3">Slide 9-10</h3>
-              <p className="text-gray-700">Coverage areas and call to action</p>
+              <p className="text-vm-text">Coverage areas and call to action</p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#2B70C9]">
               <h3 className="text-xl font-bold text-[#0A3D2F] mb-3">Slide 11</h3>
-              <p className="text-gray-700">Contact information and QR codes</p>
+              <p className="text-vm-text">Contact information and QR codes</p>
             </div>
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function VillaPitchDeckPage() {
             How to Use This Pitch Deck
           </h2>
           <div className="bg-[#F3F1EB] rounded-xl p-8">
-            <ol className="space-y-4 text-gray-700 list-decimal list-inside">
+            <ol className="space-y-4 text-vm-text list-decimal list-inside">
               <li className="text-lg">
                 <strong>Download the pitch deck</strong> using the button above
               </li>
@@ -108,7 +108,7 @@ export default function VillaPitchDeckPage() {
               </li>
             </ol>
             <div className="mt-8 p-4 bg-white rounded-lg border-2 border-[#F8C548]">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-vm-text">
                 <strong>Pro Tip:</strong> For best results, use landscape orientation when printing. The deck is designed 
                 for 11" x 8.5" (letter landscape) format, perfect for presentations and screen sharing.
               </p>
@@ -147,7 +147,7 @@ export default function VillaPitchDeckPage() {
               href="https://wa.me/18765551985?text=Hi%20VelocityMaid,%20I'd%20like%20to%20learn%20more%20about%20the%20Villa%20Partnership%20Program."
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors text-lg"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-vm-success text-white rounded-xl font-semibold hover:bg-vm-success transition-colors text-lg"
             >
               WhatsApp Us
             </a>

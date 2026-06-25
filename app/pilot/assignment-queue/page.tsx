@@ -35,8 +35,8 @@ export default function AssignmentQueuePage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
-          <p className="text-gray-600">Page not found</p>
+          <h1 className="text-2xl font-bold text-vm-text mb-2">404</h1>
+          <p className="text-vm-muted">Page not found</p>
         </div>
       </div>
     );
@@ -80,15 +80,15 @@ export default function AssignmentQueuePage() {
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
       case "critical":
-        return "bg-red-100 text-red-800 border-red-300";
+        return "bg-vm-danger-bg text-red-800 border-red-300";
       case "high":
         return "bg-orange-100 text-orange-800 border-orange-300";
       case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
+        return "bg-vm-warning-bg text-yellow-800 border-yellow-300";
       case "low":
-        return "bg-gray-100 text-gray-800 border-gray-300";
+        return "bg-gray-100 text-vm-text border-gray-300";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-vm-text";
     }
   };
 
@@ -101,7 +101,7 @@ export default function AssignmentQueuePage() {
       case "pending":
         return <Clock className="w-4 h-4 text-yellow-600" />;
       default:
-        return <AlertCircle className="w-4 h-4 text-gray-600" />;
+        return <AlertCircle className="w-4 h-4 text-vm-muted" />;
     }
   };
 
@@ -140,7 +140,7 @@ export default function AssignmentQueuePage() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold mb-2">Assignment Queue</h1>
-        <p className="text-gray-600">
+        <p className="text-vm-muted">
           Jobs waiting for assignment. SLA: 60 minutes during business hours.
         </p>
       </div>
@@ -150,19 +150,19 @@ export default function AssignmentQueuePage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold">{queue.length}</div>
-            <div className="text-sm text-gray-600">Total Pending</div>
+            <div className="text-sm text-vm-muted">Total Pending</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-red-600">{violations}</div>
-            <div className="text-sm text-gray-600">SLA Violations</div>
+            <div className="text-sm text-vm-muted">SLA Violations</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-yellow-600">{pending}</div>
-            <div className="text-sm text-gray-600">Within SLA</div>
+            <div className="text-sm text-vm-muted">Within SLA</div>
           </CardContent>
         </Card>
       </div>
@@ -171,7 +171,7 @@ export default function AssignmentQueuePage() {
       <div className="space-y-4">
         {queue.length === 0 ? (
           <Card>
-            <CardContent className="pt-6 text-center text-gray-500">
+            <CardContent className="pt-6 text-center text-vm-muted">
               No jobs in assignment queue
             </CardContent>
           </Card>
@@ -190,13 +190,13 @@ export default function AssignmentQueuePage() {
                       </Badge>
                       <div className="flex items-center gap-1">
                         {getSLAStatusIcon(item.slaStatus)}
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-vm-muted">
                           {item.slaStatus.toUpperCase()}
                         </span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-vm-muted">
                       <div>
                         <span className="font-medium">Service:</span>{" "}
                         {item.serviceType || "N/A"}

@@ -218,14 +218,14 @@ export default function GalleryPage() {
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2 text-primary-600 hover:text-primary-700">
+            <Link href="/" className="flex items-center space-x-2 text-vm-cyan-dark hover:text-vm-cyan-dark">
               <ArrowLeft className="w-5 h-5" />
               <Sparkles className="w-6 h-6" />
               <span className="text-xl font-bold">VelocityMaid</span>
             </Link>
             <Link 
               href="/"
-              className="text-gray-600 hover:text-primary-600 transition"
+              className="text-vm-muted hover:text-vm-cyan-dark transition"
             >
               Back to Home
             </Link>
@@ -234,12 +234,12 @@ export default function GalleryPage() {
       </header>
 
       {/* Gallery Header */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary-50 to-white">
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-vm-surface to-white">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-vm-text mb-4">
             Our Work Gallery
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-vm-muted mb-8">
             Real homes. Real transformations. See the VelocityMaid difference.
           </p>
 
@@ -251,8 +251,8 @@ export default function GalleryPage() {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-6 py-2 rounded-full font-semibold transition ${
                   selectedCategory === category
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    ? 'bg-vm-navy text-white'
+                    : 'bg-white text-vm-text hover:bg-gray-100 border border-gray-300'
                 }`}
               >
                 {category}
@@ -260,7 +260,7 @@ export default function GalleryPage() {
             ))}
           </div>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-vm-muted">
             Showing {filteredImages.length} {filteredImages.length === 1 ? 'photo' : 'photos'}
             {selectedCategory !== 'All' && ` in ${selectedCategory}`}
           </p>
@@ -272,10 +272,10 @@ export default function GalleryPage() {
         <div className="max-w-7xl mx-auto">
           {filteredImages.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-xl text-gray-600 mb-4">No photos found in this category.</p>
+              <p className="text-xl text-vm-muted mb-4">No photos found in this category.</p>
               <button
                 onClick={() => setSelectedCategory('All')}
-                className="text-primary-600 hover:text-primary-700 font-semibold"
+                className="text-vm-cyan-dark hover:text-vm-cyan-dark font-semibold"
               >
                 View all photos
               </button>
@@ -306,16 +306,16 @@ export default function GalleryPage() {
                     {image.badge && (
                       <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-bold ${
                         image.badge === 'Before' 
-                          ? 'bg-red-500 text-white' 
-                          : 'bg-green-500 text-white'
+                          ? 'bg-vm-danger text-white' 
+                          : 'bg-vm-success text-white'
                       }`}>
                         {image.badge}
                       </div>
                     )}
                   </div>
                   <div className="p-4">
-                    <p className="font-semibold text-gray-900 text-sm mb-1">{image.category}</p>
-                    <p className="text-xs text-gray-600">{image.location}</p>
+                    <p className="font-semibold text-vm-text text-sm mb-1">{image.category}</p>
+                    <p className="text-xs text-vm-muted">{image.location}</p>
                   </div>
                 </div>
               ))}
@@ -335,7 +335,7 @@ export default function GalleryPage() {
         >
           {/* Close Button */}
           <button
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition z-[101] bg-black bg-opacity-70 rounded-full p-3 hover:bg-opacity-90"
+            className="absolute top-4 right-4 text-white hover:text-vm-muted transition z-[101] bg-black bg-opacity-70 rounded-full p-3 hover:bg-opacity-90"
             onClick={(e) => {
               e.stopPropagation();
               closeLightbox();
@@ -349,7 +349,7 @@ export default function GalleryPage() {
           {filteredImages.length > 1 && (
             <>
               <button
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition z-[101] bg-black bg-opacity-70 rounded-full p-3 hover:bg-opacity-90"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-vm-muted transition z-[101] bg-black bg-opacity-70 rounded-full p-3 hover:bg-opacity-90"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigateImage('prev');
@@ -359,7 +359,7 @@ export default function GalleryPage() {
                 <ChevronLeft className="w-8 h-8" />
               </button>
               <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition z-[101] bg-black bg-opacity-70 rounded-full p-3 hover:bg-opacity-90"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-vm-muted transition z-[101] bg-black bg-opacity-70 rounded-full p-3 hover:bg-opacity-90"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigateImage('next');
@@ -395,24 +395,24 @@ export default function GalleryPage() {
           {filteredImages[selectedImageIndex] && (
             <div className="absolute bottom-16 left-1/2 -translate-x-1/2 text-center text-white bg-black bg-opacity-70 rounded-lg px-6 py-3 max-w-2xl z-[101]">
               <p className="font-semibold text-lg">{filteredImages[selectedImageIndex].category}</p>
-              <p className="text-sm text-gray-300">{filteredImages[selectedImageIndex].location}</p>
+              <p className="text-sm text-vm-muted">{filteredImages[selectedImageIndex].location}</p>
             </div>
           )}
         </div>
       )}
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary-600 to-primary-700">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-vm-navy to-vm-navy">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Transform Your Home?
           </h2>
-          <p className="text-xl text-primary-100 mb-8">
+          <p className="text-xl text-vm-muted mb-8">
             Book your cleaning service today and experience the VelocityMaid difference
           </p>
           <Link
             href="/book"
-            className="inline-flex items-center bg-white text-primary-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition"
+            className="inline-flex items-center bg-white text-vm-cyan-dark px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition"
           >
             Book Your Cleaning Service
           </Link>

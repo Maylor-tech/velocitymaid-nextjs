@@ -62,7 +62,7 @@ export default function InstagramContentPackPage() {
             <h2 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
               How to Use
             </h2>
-            <ol className="space-y-3 text-gray-700 list-decimal list-inside">
+            <ol className="space-y-3 text-vm-text list-decimal list-inside">
               <li>Click on any graphic below to view it</li>
               <li>Open in browser (HTML format)</li>
               <li>Press Ctrl+P (or Cmd+P on Mac)</li>
@@ -71,7 +71,7 @@ export default function InstagramContentPackPage() {
               <li>Download captions from the caption files</li>
             </ol>
             <div className="mt-6 p-4 bg-white rounded-lg border-2 border-[#F8C548]">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-vm-text">
                 <strong>Pro Tip:</strong> For best quality PNG export, use a browser extension like "Full Page Screen Capture" 
                 or use Chrome DevTools to capture the element at exact dimensions (1080x1080 for feed, 1080x1920 for stories).
               </p>
@@ -91,7 +91,7 @@ export default function InstagramContentPackPage() {
               <div key={graphic.num} className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#F8C548]">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-2xl font-bold text-[#0A3D2F]">#{graphic.num}</span>
-                  <span className="text-sm text-gray-500">1080x1080</span>
+                  <span className="text-sm text-vm-muted">1080x1080</span>
                 </div>
                 <h3 className="text-lg font-bold text-[#0A3D2F] mb-4">{graphic.title}</h3>
                 <div className="flex gap-2">
@@ -135,11 +135,11 @@ export default function InstagramContentPackPage() {
             Need Help Exporting?
           </h2>
           <div className="bg-[#F3F1EB] rounded-xl p-8">
-            <p className="text-lg text-gray-700 mb-6">
+            <p className="text-lg text-vm-text mb-6">
               All graphics are generated as HTML that can be converted to PNG. For automated conversion, 
               consider using a headless browser like Puppeteer or a screenshot service.
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-vm-muted">
               The HTML files are optimized for 1080x1080 (feed) and 1080x1920 (story) dimensions. 
               Use browser DevTools or screenshot tools to capture at exact dimensions for best quality.
             </p>

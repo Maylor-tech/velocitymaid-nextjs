@@ -152,15 +152,15 @@ export default function VillaSOPPage() {
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Villa Turnover SOP</h1>
-              <p className="text-gray-600 mt-1">
+              <h1 className="text-3xl font-bold text-vm-text">Villa Turnover SOP</h1>
+              <p className="text-vm-muted mt-1">
                 Standard Operating Procedures for Villa Turnover Cleaning
               </p>
             </div>
             <div className="flex gap-4">
               <button
                 onClick={handlePrint}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors"
               >
                 <Download className="w-5 h-5" />
                 Print / Export PDF
@@ -173,12 +173,12 @@ export default function VillaSOPPage() {
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Overview</h2>
-          <p className="text-gray-700 mb-4">
+          <h2 className="text-2xl font-bold text-vm-text mb-4">Overview</h2>
+          <p className="text-vm-text mb-4">
             This Standard Operating Procedure (SOP) outlines the complete process for villa turnover cleaning. 
             All cleaners must follow these procedures to ensure consistent quality and guest satisfaction.
           </p>
-          <p className="text-gray-700">
+          <p className="text-vm-text">
             Each section below details the specific steps required for that area of the villa. 
             Click on any section to expand and view the detailed checklist.
           </p>
@@ -201,12 +201,12 @@ export default function VillaSOPPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Icon className="w-6 h-6 text-blue-600" />
-                    <h3 className="text-xl font-bold text-gray-900">{section.title}</h3>
+                    <h3 className="text-xl font-bold text-vm-text">{section.title}</h3>
                   </div>
                   {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-gray-500" />
+                    <ChevronUp className="w-5 h-5 text-vm-muted" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                    <ChevronDown className="w-5 h-5 text-vm-muted" />
                   )}
                 </button>
 
@@ -216,7 +216,7 @@ export default function VillaSOPPage() {
                       {section.content.map((item, index) => (
                         <li key={index} className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{item}</span>
+                          <span className="text-vm-text">{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -229,8 +229,8 @@ export default function VillaSOPPage() {
 
         {/* Footer Note */}
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Important Notes</h3>
-          <ul className="space-y-2 text-gray-700">
+          <h3 className="text-lg font-semibold text-vm-text mb-2">Important Notes</h3>
+          <ul className="space-y-2 text-vm-text">
             <li>• All cleaning must be completed to 5-star standards</li>
             <li>• Photo documentation is required for every turnover</li>
             <li>• Damage reports must be submitted within 2 hours of completion</li>
