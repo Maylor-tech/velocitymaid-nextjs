@@ -5,28 +5,30 @@
  * font / container vars are defined here for upcoming phases; only --vm-* is
  * wired into Tailwind in Phase 0-1. Values are the approved palette. */
 :root {
-  --vm-navy: #0F1C2E;
-  --vm-cyan: #00C2CB;
-  --vm-cyan-dark: #00A8B0;
-  --vm-surface: #F4F6F9;
-  --vm-text: #1A1A2E;
-  --vm-muted: #6B7280;
-  --vm-white: #FFFFFF;
-  --vm-border: #E2E8F0;
+  /* Stored as space-separated RGB channels so Tailwind opacity modifiers
+   * (bg-vm-navy/10, etc.) work via rgb(var(--vm-x) / <alpha-value>). */
+  --vm-navy: 15 28 46;          /* #0F1C2E */
+  --vm-cyan: 0 194 203;         /* #00C2CB */
+  --vm-cyan-dark: 0 168 176;    /* #00A8B0 */
+  --vm-surface: 244 246 249;    /* #F4F6F9 */
+  --vm-text: 26 26 46;          /* #1A1A2E */
+  --vm-muted: 107 114 128;      /* #6B7280 */
+  --vm-white: 255 255 255;      /* #FFFFFF */
+  --vm-border: 226 232 240;     /* #E2E8F0 */
 
   /* Semantic status tints (calm — never neon) */
-  --vm-cyan-tint:   #E6FAFB;
-  --vm-success:     #1F8A5B;
-  --vm-success-bg:  #E7F5EE;
-  --vm-warning:     #B7791F;
-  --vm-warning-bg:  #FBF3E2;
-  --vm-danger:      #C0392B;
-  --vm-danger-bg:   #FCEDEC;
+  --vm-cyan-tint:   230 250 251; /* #E6FAFB */
+  --vm-success:     31 138 91;   /* #1F8A5B */
+  --vm-success-bg:  231 245 238; /* #E7F5EE */
+  --vm-warning:     183 121 31;  /* #B7791F */
+  --vm-warning-bg:  251 243 226; /* #FBF3E2 */
+  --vm-danger:      192 57 43;   /* #C0392B */
+  --vm-danger-bg:   252 237 236; /* #FCEDEC */
   --vm-info:        var(--vm-cyan);
   --vm-info-bg:     var(--vm-cyan-tint);
   /* "In progress" is the one sanctioned non-navy/cyan accent (indigo) */
-  --vm-progress:    #4338CA;
-  --vm-progress-bg: #EEF0FF;
+  --vm-progress:    67 56 202;   /* #4338CA */
+  --vm-progress-bg: 238 240 255; /* #EEF0FF */
 
   --font-heading: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;

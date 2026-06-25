@@ -15,31 +15,34 @@ const config: Config = {
         // to the approved palette (lib/brand/colors.ts / brand guidelines), so
         // this is a non-visual change. Update the values in globals.tokens.css,
         // not here.
-        "vm-navy": "var(--vm-navy)", // #0F1C2E
-        "vm-cyan": "var(--vm-cyan)", // #00C2CB
-        "vm-cyan-dark": "var(--vm-cyan-dark)", // #00A8B0
-        "vm-surface": "var(--vm-surface)", // #F4F6F9
-        "vm-text": "var(--vm-text)", // #1A1A2E
-        "vm-muted": "var(--vm-muted)", // #6B7280
-        "vm-white": "var(--vm-white)", // #FFFFFF
+        // Wrapped in rgb(... / <alpha-value>) so Tailwind opacity modifiers
+        // (e.g. bg-vm-navy/10) work; the --vm-* vars hold space-separated RGB
+        // channels (see app/globals.css).
+        "vm-navy": "rgb(var(--vm-navy) / <alpha-value>)", // #0F1C2E
+        "vm-cyan": "rgb(var(--vm-cyan) / <alpha-value>)", // #00C2CB
+        "vm-cyan-dark": "rgb(var(--vm-cyan-dark) / <alpha-value>)", // #00A8B0
+        "vm-surface": "rgb(var(--vm-surface) / <alpha-value>)", // #F4F6F9
+        "vm-text": "rgb(var(--vm-text) / <alpha-value>)", // #1A1A2E
+        "vm-muted": "rgb(var(--vm-muted) / <alpha-value>)", // #6B7280
+        "vm-white": "rgb(var(--vm-white) / <alpha-value>)", // #FFFFFF
         // Utility-only hairline border neutral (not in the approved 7-color
         // palette). Now sourced from --vm-border. NOTE: the DS token value is
         // #E2E8F0; the repo previously hardcoded #E0E4EA (see globals.tokens.css).
-        "vm-border": "var(--vm-border)", // #E2E8F0
+        "vm-border": "rgb(var(--vm-border) / <alpha-value>)", // #E2E8F0
         // Semantic status tints (Phase 3.0 prerequisite). Additive only —
         // sourced from --vm-* custom properties in app/globals.css. Calm,
         // never neon. Consumed by the DS status map (lib/brand/status.ts).
-        "vm-cyan-tint": "var(--vm-cyan-tint)",
-        "vm-success": "var(--vm-success)",
-        "vm-success-bg": "var(--vm-success-bg)",
-        "vm-warning": "var(--vm-warning)",
-        "vm-warning-bg": "var(--vm-warning-bg)",
-        "vm-danger": "var(--vm-danger)",
-        "vm-danger-bg": "var(--vm-danger-bg)",
-        "vm-info": "var(--vm-info)",
-        "vm-info-bg": "var(--vm-info-bg)",
-        "vm-progress": "var(--vm-progress)",
-        "vm-progress-bg": "var(--vm-progress-bg)",
+        "vm-cyan-tint": "rgb(var(--vm-cyan-tint) / <alpha-value>)",
+        "vm-success": "rgb(var(--vm-success) / <alpha-value>)",
+        "vm-success-bg": "rgb(var(--vm-success-bg) / <alpha-value>)",
+        "vm-warning": "rgb(var(--vm-warning) / <alpha-value>)",
+        "vm-warning-bg": "rgb(var(--vm-warning-bg) / <alpha-value>)",
+        "vm-danger": "rgb(var(--vm-danger) / <alpha-value>)",
+        "vm-danger-bg": "rgb(var(--vm-danger-bg) / <alpha-value>)",
+        "vm-info": "rgb(var(--vm-info) / <alpha-value>)",
+        "vm-info-bg": "rgb(var(--vm-info-bg) / <alpha-value>)",
+        "vm-progress": "rgb(var(--vm-progress) / <alpha-value>)",
+        "vm-progress-bg": "rgb(var(--vm-progress-bg) / <alpha-value>)",
         /**
          * @deprecated LEGACY — "UX/DS v2.0.0" palette. NOT part of the
          * approved VelocityMaid brand guidelines (which specify Navy/Cyan/
