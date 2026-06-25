@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, Home, Sparkles, ArrowRight } from 'lucide-react';
+import { CheckCircle, Home, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CleanerApplySuccess() {
@@ -40,20 +40,13 @@ export default function CleanerApplySuccess() {
             </ul>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Link
               href="/"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-vm-navy text-white rounded-lg font-semibold hover:bg-vm-navy transition-colors"
             >
               <Home className="w-5 h-5" />
               Return to Homepage
-            </Link>
-            <Link
-              href="/locations/port-antonio"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-vm-cyan-dark border-2 border-vm-navy rounded-lg font-semibold hover:bg-vm-surface transition-colors"
-            >
-              Learn More
-              <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
         </div>
