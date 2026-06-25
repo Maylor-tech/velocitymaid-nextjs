@@ -234,7 +234,7 @@ export default function GalleryPage() {
       </header>
 
       {/* Gallery Header */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-vm-surface to-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-vm-surface to-white">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-vm-text mb-4">
             Our Work Gallery
@@ -268,7 +268,7 @@ export default function GalleryPage() {
       </section>
 
       {/* Gallery Grid */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           {filteredImages.length === 0 ? (
             <div className="text-center py-20">
@@ -402,7 +402,7 @@ export default function GalleryPage() {
       )}
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-vm-navy to-vm-navy">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-vm-navy to-vm-navy">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Transform Your Home?

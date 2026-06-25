@@ -66,7 +66,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8 mt-auto">
+      <footer className="bg-gray-900 text-white py-20 px-4 sm:px-6 lg:px-8 mt-auto">
         <div className="max-w-7xl mx-auto text-center text-vm-muted">
           <p>
             &copy; {new Date().getFullYear()} VelocityMaid.{" "}

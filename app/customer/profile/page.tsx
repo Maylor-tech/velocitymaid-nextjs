@@ -201,7 +201,7 @@ export default function CustomerProfilePage() {
                     }}
                     required
                     minLength={2}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
+                    className={`w-full pl-8 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
                       validationErrors.firstName ? 'border-red-300' : 'border-vm-navy/20'
                     }`}
                   />
@@ -232,7 +232,7 @@ export default function CustomerProfilePage() {
                       }
                     }}
                     minLength={2}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
+                    className={`w-full pl-8 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
                       validationErrors.lastName ? 'border-red-300' : 'border-vm-navy/20'
                     }`}
                   />
@@ -255,7 +255,7 @@ export default function CustomerProfilePage() {
                   type="email"
                   value={profile?.email || ''}
                   disabled
-                  className="w-full pl-10 pr-4 py-3 border border-vm-navy/20 rounded-lg bg-vm-surface text-vm-muted cursor-not-allowed font-body"
+                  className="w-full pl-8 pr-4 py-3 border border-vm-navy/20 rounded-lg bg-vm-surface text-vm-muted cursor-not-allowed font-body"
                 />
               </div>
               <p className="mt-1 text-xs text-vm-muted font-body">Email cannot be changed</p>
@@ -282,7 +282,7 @@ export default function CustomerProfilePage() {
                       });
                     }
                   }}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
+                  className={`w-full pl-8 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
                     validationErrors.phone ? 'border-red-300' : 'border-vm-navy/20'
                   }`}
                   placeholder="(973) 555-1234"
@@ -316,7 +316,7 @@ export default function CustomerProfilePage() {
                   }}
                   rows={3}
                   minLength={5}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
+                  className={`w-full pl-8 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none font-body ${
                     validationErrors.defaultAddress ? 'border-red-300' : 'border-vm-navy/20'
                   }`}
                   placeholder="123 Main St, City, State ZIP"

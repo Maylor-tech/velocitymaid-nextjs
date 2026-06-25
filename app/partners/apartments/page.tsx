@@ -67,7 +67,7 @@ export default function ApartmentPartnersPage() {
         </nav>
 
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white py-20 md:py-32">
+        <section className="bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-5xl md:text-6xl font-bold mb-6" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>

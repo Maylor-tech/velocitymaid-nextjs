@@ -111,7 +111,7 @@ export default function CustomerLoginPage() {
           <div className="bg-white rounded-2xl overflow-hidden">
             <div className="h-1 bg-vm-cyan w-full" />
 
-            <div className="px-8 py-10">
+            <div className="px-8 py-8">
               <div className="mb-8">
                 <div className="inline-flex items-center gap-2 bg-vm-cyan/10 border border-vm-cyan/20 rounded-full px-3 py-1 mb-6">
                   <div className="w-1.5 h-1.5 rounded-full bg-vm-cyan" />

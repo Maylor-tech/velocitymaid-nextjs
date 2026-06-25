@@ -68,7 +68,7 @@ export default function CorporateNJPage() {
         </nav>
 
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white py-20 md:py-32">
+        <section className="bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <Building2 className="w-20 h-20 text-[#F8C548] mx-auto mb-6" />

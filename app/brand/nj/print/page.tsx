@@ -68,7 +68,7 @@ export default function PrintPackPage() {
       </section>
 
       {/* Instructions */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="bg-[#F3F1EB] rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>

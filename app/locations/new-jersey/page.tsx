@@ -347,7 +347,7 @@ export default async function NewJerseyLandingPage() {
         />
 
         {/* SECTION 1: HERO */}
-        <section className="bg-vm-surface py-16 md:py-24 border-b border-vm-navy/5">
+        <section className="bg-vm-surface py-20 md:py-20 border-b border-vm-navy/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <div>
@@ -806,7 +806,7 @@ export default async function NewJerseyLandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="bg-vm-navy text-vm-white py-12">
+        <footer className="bg-vm-navy text-vm-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-3 gap-8">
               <div>

@@ -150,7 +150,7 @@ export default function CityMarketingPage({ params }: PageProps) {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-vm-navy to-vm-navy text-white py-20 md:py-32 overflow-hidden">
+      <section className="relative bg-gradient-to-r from-vm-navy to-vm-navy text-white py-20 overflow-hidden">
         {content.heroImage && (
           <div className="absolute inset-0 z-0">
             <Image
@@ -189,7 +189,7 @@ export default function CityMarketingPage({ params }: PageProps) {
       </section>
 
       {/* Highlights */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-vm-text mb-8 text-center">
             Why Choose VelocityMaid in {city.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}?
@@ -206,7 +206,7 @@ export default function CityMarketingPage({ params }: PageProps) {
       </section>
 
       {/* Areas We Serve */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-vm-text mb-8 text-center">
             Areas We Serve
@@ -226,7 +226,7 @@ export default function CityMarketingPage({ params }: PageProps) {
       </section>
 
       {/* Services */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-vm-text mb-8 text-center">
             Our Cleaning Services
@@ -292,7 +292,7 @@ export default function CityMarketingPage({ params }: PageProps) {
 
       {/* Testimonials */}
       {content.testimonials && content.testimonials.length > 0 && (
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-3xl font-bold text-vm-text mb-8 text-center">
               What Our Customers Say
@@ -315,7 +315,7 @@ export default function CityMarketingPage({ params }: PageProps) {
       )}
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-vm-navy text-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-vm-navy text-white">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">
             Ready to Experience the VelocityMaid Difference?

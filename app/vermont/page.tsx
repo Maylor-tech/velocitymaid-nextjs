@@ -86,8 +86,8 @@ export default function VermontPage() {
 
       {/* Hero */}
       <section className="bg-vm-navy">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-3 py-1 text-xs font-body font-medium text-vm-cyan mb-4">
                 <Snowflake className="w-3 h-3" />
@@ -152,7 +152,7 @@ export default function VermontPage() {
         </div>
       </section>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-16">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 space-y-16">
         {/* Property care */}
         <section className="grid md:grid-cols-2 gap-8 items-center">
           <div className="relative rounded-xl overflow-hidden border border-vm-border aspect-[4/3]">
@@ -293,7 +293,7 @@ export default function VermontPage() {
         <VermontGallery />
 
         {/* Service Area & How It Works */}
-        <section className="grid md:grid-cols-2 gap-10 items-start">
+        <section className="grid md:grid-cols-2 gap-8 items-start">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <MapPin className="w-5 h-5 text-vm-cyan" />

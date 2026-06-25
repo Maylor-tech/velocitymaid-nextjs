@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-vm-surface px-4 pt-10 pb-8 sm:pt-14 sm:pb-12">
+    <div className="min-h-[100dvh] bg-vm-surface px-4 pt-8 pb-8 sm:pt-14 sm:pb-12">
       <div className="w-full max-w-sm mx-auto">
         <div className="bg-white rounded-xl shadow-lg border border-vm-navy/10 p-6 sm:p-7">
           <div className="text-center mb-6 flex flex-col items-center gap-2">

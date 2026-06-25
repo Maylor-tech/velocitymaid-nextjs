@@ -242,7 +242,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
             </section>
 
             {/* Villa-Specific Section */}
-            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-50 to-orange-50">
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-50 to-orange-50">
               <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-12">
                   <h2 className="text-3xl md:text-4xl font-bold text-vm-text mb-4">
@@ -321,7 +321,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
             </section>
 
             {/* Pricing Overview (JMD) */}
-            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
               <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-12">
                   <h2 className="text-3xl md:text-4xl font-bold text-vm-text mb-4">
@@ -423,7 +423,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
 
           {/* Services Section */}
           {servicePackages.length > 0 && (
-            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
               <div className="max-w-6xl mx-auto">
                 <h2 className="text-3xl font-bold text-vm-text mb-4 text-center">
                   Our Cleaning Services
@@ -454,7 +454,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
           )}
 
           {/* Why Choose Us Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-vm-text mb-4 text-center">
                 Why Choose VelocityMaid in Jamaica?
@@ -523,7 +523,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
 
           {/* Testimonials Section */}
           {testimonials.length > 0 && (
-            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
               <div className="max-w-6xl mx-auto">
                 <h2 className="text-3xl font-bold text-vm-text mb-4 text-center">
                   What Our Customers Say
@@ -552,7 +552,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
           )}
 
           {/* Service Areas Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-vm-text mb-4 text-center">
                 Areas We Serve in Portland
@@ -575,7 +575,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
           </section>
 
           {/* Why Join Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-vm-text mb-12 text-center">
                 Why Join VelocityMaid?
@@ -616,7 +616,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
           </section>
 
           {/* How It Works Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-vm-text mb-12 text-center">
                 How It Works
@@ -663,7 +663,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
           </section>
 
           {/* CTA Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
             <div className="max-w-2xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-vm-text mb-4">
                 Ready to Join Our Team?
@@ -682,7 +682,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
           </section>
 
           {/* Contact Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-vm-text mb-4">Questions?</h2>
               <p className="text-vm-muted mb-6">
