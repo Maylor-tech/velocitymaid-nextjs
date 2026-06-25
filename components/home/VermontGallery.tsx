@@ -43,9 +43,9 @@ export default function VermontGallery() {
   const current = photos[active];
 
   return (
-    <section className="py-16 px-6 bg-white border-t border-vm-border">
+    <section className="py-20 px-6 bg-white border-t border-vm-border">
       <div className="max-w-5xl mx-auto">
-        <div className="mb-10">
+        <div className="mb-8">
           <p className="text-xs font-semibold font-body text-vm-cyan uppercase tracking-widest mb-2">
             {VERMONT_GALLERY_TRUST_LINE}
           </p>
@@ -91,7 +91,7 @@ export default function VermontGallery() {
         </div>
 
         <div
-          className={`grid gap-2 mb-10 grid-cols-3 sm:grid-cols-6`}
+          className={`grid gap-2 mb-8 grid-cols-3 sm:grid-cols-6`}
         >
           {photos.map((photo, i) => (
             <button

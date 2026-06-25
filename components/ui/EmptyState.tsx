@@ -14,7 +14,7 @@ export default function EmptyState({
   onAction,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
+    <div className="flex flex-col items-center justify-center py-20 text-center">
       <h2 className="text-xl font-semibold text-vm-text">{title}</h2>
 
       {subtitle && (

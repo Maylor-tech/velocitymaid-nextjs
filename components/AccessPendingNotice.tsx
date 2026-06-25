@@ -7,7 +7,7 @@
 
 export default function AccessPendingNotice() {
   return (
-    <div className="mt-10 rounded-md border border-vm-border bg-vm-surface p-6">
+    <div className="mt-8 rounded-md border border-vm-border bg-vm-surface p-6">
       <h4 className="font-medium text-vm-text">
         Access Request Received
       </h4>

@@ -127,6 +127,10 @@ const config: Config = {
         marketing: "var(--container-marketing)", // 1200px (was 80rem / 1280px)
         portal: "90rem",
       },
+      spacing: {
+        // DS §10 section rhythm — wired to --space-20 in globals.css (80px)
+        20: "var(--space-20)",
+      },
     },
   },
   plugins: [],

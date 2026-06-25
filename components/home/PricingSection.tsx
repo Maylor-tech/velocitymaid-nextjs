@@ -133,7 +133,7 @@ export default function PricingSection() {
           </p>
         </div>
 
-        <div className="flex items-center justify-center gap-2 mb-10">
+        <div className="flex items-center justify-center gap-2 mb-8">
           <button
             type="button"
             onClick={() => setMarket("nj")}

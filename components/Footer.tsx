@@ -7,7 +7,7 @@ import { BrandLogo } from "./brand";
 export default function Footer() {
   return (
     <footer className="border-t border-vm-cyan/10 bg-vm-navy">
-      <div className="mx-auto max-w-marketing px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-marketing px-4 py-20 sm:px-6 lg:px-8">
         <div className="grid gap-8 md:grid-cols-3">
           <div>
             <BrandLogo variant="ivory" size="portal" showTagline={false} />

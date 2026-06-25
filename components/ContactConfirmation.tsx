@@ -25,7 +25,7 @@ export default function ContactConfirmation() {
   }
 
   return (
-    <div className="mt-10 max-w-xl rounded-md border border-vm-border bg-vm-surface p-6">
+    <div className="mt-8 max-w-xl rounded-md border border-vm-border bg-vm-surface p-6">
       <h4 className="font-medium text-vm-text">
         Message received
       </h4>

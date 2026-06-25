@@ -7,7 +7,7 @@
 
 export default function PartnerValue() {
   return (
-    <div className="grid gap-10 md:grid-cols-2">
+    <div className="grid gap-8 md:grid-cols-2">
       <div>
         <h3 className="text-lg font-medium text-vm-text">
           Low-Disruption Adoption

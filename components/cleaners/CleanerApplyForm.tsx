@@ -231,7 +231,7 @@ export default function CleanerApplyForm() {
 
   return (
     <div className="min-h-screen bg-vm-surface flex items-center justify-center p-6 py-12">
-      <div className="bg-white border border-vm-border rounded-xl shadow-sm max-w-xl w-full mx-auto px-8 py-10">
+      <div className="bg-white border border-vm-border rounded-xl shadow-sm max-w-xl w-full mx-auto px-8 py-8">
         <div className="text-center mb-8">
           <span className="inline-block bg-vm-cyan/10 text-vm-cyan text-xs font-semibold px-3 py-1 rounded-full mb-4">
             {marketConfig.badge}

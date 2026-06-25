@@ -185,7 +185,7 @@ export default function CleanerProfileDrawer({
   return (
     <Drawer title="Cleaner Profile" open={open} onClose={onClose}>
       {loading && (
-        <div className="flex justify-center py-10">
+        <div className="flex justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin text-vm-muted" />
         </div>
       )}
@@ -667,7 +667,7 @@ export default function CleanerProfileDrawer({
       )}
 
       {!loading && !data && (
-        <div className="flex items-center justify-center py-10">
+        <div className="flex items-center justify-center py-8">
           <p className="text-vm-muted">Cleaner not found</p>
         </div>
       )}
