@@ -230,12 +230,12 @@ export default function CleanerJobDetailPage() {
   const getStatusBadgeColor = (status: string) => {
     const colors: Record<string, string> = {
       ASSIGNED: "bg-purple-100 text-purple-800",
-      ON_THE_WAY: "bg-blue-100 text-blue-800",
-      IN_PROGRESS: "bg-yellow-100 text-yellow-800",
-      COMPLETED: "bg-green-100 text-green-800",
-      CANCELLED: "bg-red-100 text-red-800",
+      ON_THE_WAY: "bg-vm-cyan-tint text-blue-800",
+      IN_PROGRESS: "bg-vm-warning-bg text-yellow-800",
+      COMPLETED: "bg-vm-success-bg text-green-800",
+      CANCELLED: "bg-vm-danger-bg text-red-800",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return colors[status] || "bg-gray-100 text-vm-text";
   };
 
   const customerDisplayName =
@@ -261,7 +261,7 @@ export default function CleanerJobDetailPage() {
           >
             ← Back to Jobs
           </Link>
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="bg-vm-danger-bg border border-red-400 text-red-700 px-4 py-3 rounded">
             {error || "Job not found"}
           </div>
           {error?.includes("log in") && (
@@ -301,7 +301,7 @@ export default function CleanerJobDetailPage() {
               <h1 className="text-2xl font-semibold mb-2">
                 {customerDisplayName || "Job Details"}
               </h1>
-              <p className="text-gray-600 text-sm font-mono">{job.id}</p>
+              <p className="text-vm-muted text-sm font-mono">{job.id}</p>
             </div>
             <span
               className={`px-3 py-1 rounded text-sm font-medium ${getStatusBadgeColor(
@@ -324,7 +324,7 @@ export default function CleanerJobDetailPage() {
                   className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
                     processing
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-700"
+                      : "bg-vm-success hover:bg-vm-success"
                   }`}
                 >
                   <CheckCircle className="w-5 h-5" />
@@ -338,7 +338,7 @@ export default function CleanerJobDetailPage() {
                   className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
                     processing
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
+                      : "bg-vm-navy hover:bg-vm-navy"
                   }`}
                 >
                   <CheckCircle className="w-5 h-5" />
@@ -366,7 +366,7 @@ export default function CleanerJobDetailPage() {
                   className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
                     processing
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-red-600 hover:bg-red-700"
+                      : "bg-vm-danger hover:bg-vm-danger"
                   }`}
                 >
                   <XCircle className="w-5 h-5" />
@@ -381,16 +381,16 @@ export default function CleanerJobDetailPage() {
           <h2 className="font-semibold text-lg mb-4">Customer</h2>
           <div className="space-y-3">
             {job.Customer?.email && (
-              <div className="flex items-center gap-2 text-gray-700">
-                <Mail className="w-4 h-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-vm-text">
+                <Mail className="w-4 h-4 text-vm-muted" />
                 <a href={`mailto:${job.Customer.email}`} className="hover:underline">
                   {job.Customer.email}
                 </a>
               </div>
             )}
             {job.Customer?.phone && (
-              <div className="flex items-center gap-2 text-gray-700">
-                <Phone className="w-4 h-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-vm-text">
+                <Phone className="w-4 h-4 text-vm-muted" />
                 <a href={`tel:${job.Customer.phone}`} className="hover:underline">
                   {job.Customer.phone}
                 </a>
@@ -404,10 +404,10 @@ export default function CleanerJobDetailPage() {
 
           <div className="space-y-4">
             <div className="flex items-start gap-3">
-              <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+              <Calendar className="w-5 h-5 text-vm-muted mt-0.5" />
               <div>
                 <p className="font-medium">Date & Time</p>
-                <p className="text-gray-600">
+                <p className="text-vm-muted">
                   {formatDate(job.preferredDate)} at {formatTime(job.preferredTime)}
                 </p>
               </div>
@@ -415,10 +415,10 @@ export default function CleanerJobDetailPage() {
 
             {job.address && (
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                <MapPin className="w-5 h-5 text-vm-muted mt-0.5" />
                 <div>
                   <p className="font-medium">Address</p>
-                  <p className="text-gray-600">{job.address}</p>
+                  <p className="text-vm-muted">{job.address}</p>
                 </div>
               </div>
             )}
@@ -426,22 +426,22 @@ export default function CleanerJobDetailPage() {
             {job.serviceType && (
               <div>
                 <p className="font-medium">Service Type</p>
-                <p className="text-gray-600">{job.serviceType}</p>
+                <p className="text-vm-muted">{job.serviceType}</p>
               </div>
             )}
 
             {job.serviceLocation && (
               <div>
                 <p className="font-medium">Service Location</p>
-                <p className="text-gray-600">{job.serviceLocation}</p>
+                <p className="text-vm-muted">{job.serviceLocation}</p>
               </div>
             )}
 
             <div className="flex items-start gap-3">
-              <DollarSign className="w-5 h-5 text-gray-400 mt-0.5" />
+              <DollarSign className="w-5 h-5 text-vm-muted mt-0.5" />
               <div>
                 <p className="font-medium">Total Price</p>
-                <p className="text-gray-600">
+                <p className="text-vm-muted">
                   {formatPrice(job.totalPrice, job.currency)}
                 </p>
               </div>
@@ -450,14 +450,14 @@ export default function CleanerJobDetailPage() {
             {job.Branch && (
               <div>
                 <p className="font-medium">Branch</p>
-                <p className="text-gray-600">{job.Branch.name}</p>
+                <p className="text-vm-muted">{job.Branch.name}</p>
               </div>
             )}
 
             {job.assignedAt && (
               <div>
                 <p className="font-medium">Assigned At</p>
-                <p className="text-gray-600">
+                <p className="text-vm-muted">
                   {new Date(job.assignedAt).toLocaleString("en-US")}
                 </p>
               </div>

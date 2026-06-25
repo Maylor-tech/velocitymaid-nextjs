@@ -174,7 +174,7 @@ export default function CleanerAvailabilityPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading availability settings...</p>
+          <p className="mt-4 text-vm-muted">Loading availability settings...</p>
         </div>
       </div>
     );
@@ -191,8 +191,8 @@ export default function CleanerAvailabilityPage() {
           >
             ← Back to Dashboard
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Availability</h1>
-          <p className="text-gray-600">Set your working days, hours, and unavailable dates</p>
+          <h1 className="text-3xl font-bold text-vm-text mb-2">My Availability</h1>
+          <p className="text-vm-muted">Set your working days, hours, and unavailable dates</p>
         </div>
 
         {/* Success Message */}
@@ -213,11 +213,11 @@ export default function CleanerAvailabilityPage() {
 
         {/* Working Days */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-vm-text mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-blue-600" />
             Working Days
           </h2>
-          <p className="text-sm text-gray-600 mb-4">Select the days you're available to work</p>
+          <p className="text-sm text-vm-muted mb-4">Select the days you're available to work</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
             {DAYS_OF_WEEK.map((day) => (
               <button
@@ -225,8 +225,8 @@ export default function CleanerAvailabilityPage() {
                 onClick={() => handleWorkingDayToggle(day.value)}
                 className={`px-4 py-3 rounded-lg font-medium transition-colors ${
                   availability.workingDays.includes(day.value)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-vm-navy text-white'
+                    : 'bg-gray-100 text-vm-text hover:bg-gray-200'
                 }`}
               >
                 {day.label.slice(0, 3)}
@@ -237,17 +237,17 @@ export default function CleanerAvailabilityPage() {
 
         {/* Time Ranges */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-vm-text mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5 text-blue-600" />
             Working Hours
           </h2>
-          <p className="text-sm text-gray-600 mb-4">Set your available time ranges</p>
+          <p className="text-sm text-vm-muted mb-4">Set your available time ranges</p>
           <div className="space-y-4">
             {availability.timeRanges.map((range, index) => (
               <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <label className="block text-sm font-medium text-vm-text mb-1">Start Time</label>
                     <input
                       type="time"
                       value={range.start}
@@ -256,7 +256,7 @@ export default function CleanerAvailabilityPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <label className="block text-sm font-medium text-vm-text mb-1">End Time</label>
                     <input
                       type="time"
                       value={range.end}
@@ -277,7 +277,7 @@ export default function CleanerAvailabilityPage() {
             ))}
             <button
               onClick={addTimeRange}
-              className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+              className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-vm-muted hover:border-blue-500 hover:text-blue-600 transition-colors"
             >
               + Add Another Time Range
             </button>
@@ -286,8 +286,8 @@ export default function CleanerAvailabilityPage() {
 
         {/* Max Daily Jobs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Maximum Daily Jobs</h2>
-          <p className="text-sm text-gray-600 mb-4">How many jobs can you handle per day?</p>
+          <h2 className="text-xl font-bold text-vm-text mb-4">Maximum Daily Jobs</h2>
+          <p className="text-sm text-vm-muted mb-4">How many jobs can you handle per day?</p>
           <div className="flex items-center gap-4">
             <input
               type="number"
@@ -302,14 +302,14 @@ export default function CleanerAvailabilityPage() {
               }
               className="w-24 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-            <span className="text-gray-600">jobs per day</span>
+            <span className="text-vm-muted">jobs per day</span>
           </div>
         </div>
 
         {/* Blackout Dates */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Blackout Dates</h2>
-          <p className="text-sm text-gray-600 mb-4">Dates when you're unavailable</p>
+          <h2 className="text-xl font-bold text-vm-text mb-4">Blackout Dates</h2>
+          <p className="text-sm text-vm-muted mb-4">Dates when you're unavailable</p>
           <div className="space-y-4">
             <div className="flex gap-4">
               <input
@@ -321,7 +321,7 @@ export default function CleanerAvailabilityPage() {
               />
               <button
                 onClick={addBlackoutDate}
-                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                className="px-6 py-2 bg-gray-100 text-vm-text rounded-lg hover:bg-gray-200 transition-colors font-medium"
               >
                 Add Date
               </button>
@@ -333,7 +333,7 @@ export default function CleanerAvailabilityPage() {
                     key={date}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                   >
-                    <span className="text-gray-700">
+                    <span className="text-vm-text">
                       {new Date(date).toLocaleDateString('en-US', {
                         weekday: 'long',
                         year: 'numeric',
@@ -358,14 +358,14 @@ export default function CleanerAvailabilityPage() {
         <div className="flex justify-end gap-4">
           <Link
             href="/cleaners/dashboard"
-            className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+            className="px-6 py-3 border border-gray-300 rounded-lg text-vm-text hover:bg-gray-50 transition-colors font-medium"
           >
             Cancel
           </Link>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
+            className="px-6 py-3 bg-vm-navy text-white rounded-lg hover:bg-vm-navy disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
           >
             {saving ? (
               <>

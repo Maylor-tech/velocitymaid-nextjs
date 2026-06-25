@@ -85,7 +85,7 @@ export default function BranchProfitabilityPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Loading profitability data...</p>
+            <p className="mt-4 text-vm-muted">Loading profitability data...</p>
           </div>
         </div>
       </div>
@@ -101,7 +101,7 @@ export default function BranchProfitabilityPage() {
             <p className="text-red-500 text-sm mt-2">{error}</p>
             <button
               onClick={fetchProfitabilityData}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="mt-4 px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger transition-colors"
             >
               Retry
             </button>

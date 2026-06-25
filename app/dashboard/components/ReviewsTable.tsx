@@ -20,12 +20,12 @@ export default function ReviewsTable({ reviews, region }: ReviewsTableProps) {
         {Array.from({ length: 5 }).map((_, i) => (
           <span
             key={i}
-            className={i < rating ? 'text-yellow-400' : 'text-gray-300'}
+            className={i < rating ? 'text-yellow-400' : 'text-vm-muted'}
           >
             ★
           </span>
         ))}
-        <span className="ml-2 text-sm text-gray-600">{rating}/5</span>
+        <span className="ml-2 text-sm text-vm-muted">{rating}/5</span>
       </div>
     );
   };
@@ -33,37 +33,37 @@ export default function ReviewsTable({ reviews, region }: ReviewsTableProps) {
   if (reviews.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Customer Reviews — Latest 20</h2>
-        <p className="text-gray-500 text-center py-8">No reviews yet</p>
+        <h2 className="text-xl font-bold text-vm-text mb-4">Customer Reviews — Latest 20</h2>
+        <p className="text-vm-muted text-center py-8">No reviews yet</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 overflow-x-auto">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Customer Reviews — Latest 20</h2>
+      <h2 className="text-xl font-bold text-vm-text mb-4">Customer Reviews — Latest 20</h2>
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Job ID
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Cleaner
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Rating
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Comment
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Region
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Date
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Re-clean
             </th>
           </tr>
@@ -76,22 +76,22 @@ export default function ReviewsTable({ reviews, region }: ReviewsTableProps) {
                 review.rating <= 3 ? 'bg-red-50' : ''
               }`}
             >
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 {review.jobId.substring(0, 12)}...
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 {review.cleanerId}
               </td>
               <td className="px-4 py-3 whitespace-nowrap">
                 {renderStars(review.rating)}
               </td>
-              <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate">
-                {review.comment || <span className="text-gray-400">No comment</span>}
+              <td className="px-4 py-3 text-sm text-vm-text max-w-xs truncate">
+                {review.comment || <span className="text-vm-muted">No comment</span>}
               </td>
               <td className="px-4 py-3 whitespace-nowrap">
                 <LocationBadge location={review.serviceLocation} />
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-muted">
                 {formatDate(review.createdAt)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm">
@@ -100,7 +100,7 @@ export default function ReviewsTable({ reviews, region }: ReviewsTableProps) {
                     Yes
                   </span>
                 ) : (
-                  <span className="text-gray-400">No</span>
+                  <span className="text-vm-muted">No</span>
                 )}
               </td>
             </tr>

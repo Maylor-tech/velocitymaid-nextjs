@@ -57,23 +57,23 @@ export default function JobCard({ job, onStatusUpdate }: JobCardProps) {
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold text-gray-900">{job.customerName}</h3>
+            <h3 className="text-lg font-semibold text-vm-text">{job.customerName}</h3>
             <LocationBadge location={job.serviceLocation} />
             <StatusBadge status={job.status} />
           </div>
-          <p className="text-sm text-gray-600 mb-1">{job.address}</p>
+          <p className="text-sm text-vm-muted mb-1">{job.address}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-sm mb-4">
         <div>
-          <span className="text-gray-500 block mb-1">Date & Time</span>
-          <span className="font-medium text-gray-900">{formatDate(job.preferredDate)}</span>
-          <span className="text-gray-600 ml-2">{formatTime(job.preferredTime)}</span>
+          <span className="text-vm-muted block mb-1">Date & Time</span>
+          <span className="font-medium text-vm-text">{formatDate(job.preferredDate)}</span>
+          <span className="text-vm-muted ml-2">{formatTime(job.preferredTime)}</span>
         </div>
         <div>
-          <span className="text-gray-500 block mb-1">Service</span>
-          <span className="font-medium text-gray-900">{job.serviceType}</span>
+          <span className="text-vm-muted block mb-1">Service</span>
+          <span className="font-medium text-vm-text">{job.serviceType}</span>
         </div>
       </div>
 
@@ -85,24 +85,24 @@ export default function JobCard({ job, onStatusUpdate }: JobCardProps) {
       )}
 
       {job.phone && (
-        <div className="mb-4 text-sm text-gray-600">
+        <div className="mb-4 text-sm text-vm-muted">
           <span className="font-medium">Customer Phone:</span> {job.phone}
         </div>
       )}
 
       {job.totalPrice && (
         <div className="mb-4 text-sm">
-          <span className="text-gray-500">Total:</span>
-          <span className="ml-2 font-semibold text-gray-900">${job.totalPrice.toFixed(2)}</span>
+          <span className="text-vm-muted">Total:</span>
+          <span className="ml-2 font-semibold text-vm-text">${job.totalPrice.toFixed(2)}</span>
         </div>
       )}
 
       {checklistActive && (
-        <div className="mb-4 pt-4 border-t border-brand-forest/10">
+        <div className="mb-4 pt-4 border-t border-vm-navy/10">
           <button
             type="button"
             onClick={() => setShowChecklist(!showChecklist)}
-            className="text-xs font-sans font-bold uppercase tracking-wider text-brand-forest hover:text-brand-gold transition-colors"
+            className="text-xs font-sans font-bold uppercase tracking-wider text-vm-navy hover:text-vm-cyan transition-colors"
           >
             {showChecklist ? "Hide" : "Open"} 50-Point Checklist
           </button>
@@ -125,18 +125,18 @@ export default function JobCard({ job, onStatusUpdate }: JobCardProps) {
         {canMarkCompleted && (
           <button
             onClick={() => onStatusUpdate?.(job.id, 'completed')}
-            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
+            className="flex-1 px-4 py-2 bg-vm-success text-white rounded-lg hover:bg-vm-success transition-colors font-medium text-sm"
           >
             Mark as Completed
           </button>
         )}
         {job.status === 'completed' && (
-          <div className="flex-1 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-center font-medium text-sm">
+          <div className="flex-1 px-4 py-2 bg-gray-100 text-vm-muted rounded-lg text-center font-medium text-sm">
             ✓ Completed
           </div>
         )}
         {job.status === 'cancelled' && (
-          <div className="flex-1 px-4 py-2 bg-red-100 text-red-600 rounded-lg text-center font-medium text-sm">
+          <div className="flex-1 px-4 py-2 bg-vm-danger-bg text-red-600 rounded-lg text-center font-medium text-sm">
             Cancelled
           </div>
         )}

@@ -36,8 +36,8 @@ export default function BranchOwnerCleanersPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
-          <p className="text-gray-600">Page not found</p>
+          <h1 className="text-2xl font-bold text-vm-text mb-2">404</h1>
+          <p className="text-vm-muted">Page not found</p>
         </div>
       </div>
     );
@@ -116,7 +116,7 @@ export default function BranchOwnerCleanersPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading cleaners...</p>
+          <p className="mt-4 text-vm-muted">Loading cleaners...</p>
         </div>
       </div>
     );
@@ -145,8 +145,8 @@ export default function BranchOwnerCleanersPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Cleaner Oversight</h1>
-            <p className="text-gray-600 mt-2">
+            <h1 className="text-3xl font-bold text-vm-text">Cleaner Oversight</h1>
+            <p className="text-vm-muted mt-2">
               View and manage cleaners assigned to your branch
             </p>
           </div>
@@ -161,8 +161,8 @@ export default function BranchOwnerCleanersPage() {
             <div className="flex items-center gap-4">
               <Users className="w-8 h-8 text-purple-600" />
               <div>
-                <p className="text-2xl font-bold text-gray-900">{cleaners.length}</p>
-                <p className="text-sm text-gray-600">Active Cleaners</p>
+                <p className="text-2xl font-bold text-vm-text">{cleaners.length}</p>
+                <p className="text-sm text-vm-muted">Active Cleaners</p>
               </div>
             </div>
           </CardContent>
@@ -172,8 +172,8 @@ export default function BranchOwnerCleanersPage() {
         {cleaners.length === 0 ? (
           <Card>
             <CardContent className="pt-6 text-center py-12">
-              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No cleaners assigned to your branch</p>
+              <Users className="w-12 h-12 text-vm-muted mx-auto mb-4" />
+              <p className="text-vm-muted">No cleaners assigned to your branch</p>
             </CardContent>
           </Card>
         ) : (
@@ -186,17 +186,17 @@ export default function BranchOwnerCleanersPage() {
                       {/* Cleaner Info */}
                       <div>
                         <div className="flex items-center gap-3 mb-2">
-                          <User className="w-5 h-5 text-gray-400" />
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <User className="w-5 h-5 text-vm-muted" />
+                          <h3 className="text-lg font-semibold text-vm-text">
                             {cleaner.name || "Unnamed Cleaner"}
                           </h3>
                           {cleaner.isActive ? (
-                            <Badge className="bg-green-100 text-green-800">Active</Badge>
+                            <Badge className="bg-vm-success-bg text-green-800">Active</Badge>
                           ) : (
-                            <Badge className="bg-red-100 text-red-800">Inactive</Badge>
+                            <Badge className="bg-vm-danger-bg text-red-800">Inactive</Badge>
                           )}
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600 ml-8">
+                        <div className="flex items-center gap-4 text-sm text-vm-muted ml-8">
                           <div className="flex items-center gap-1">
                             <Mail className="w-4 h-4" />
                             <span>{cleaner.email}</span>
@@ -213,21 +213,21 @@ export default function BranchOwnerCleanersPage() {
                       {/* Stats Grid */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 ml-8">
                         <div>
-                          <p className="text-xs text-gray-500">Total Jobs</p>
+                          <p className="text-xs text-vm-muted">Total Jobs</p>
                           <p className="text-lg font-semibold">{cleaner.stats.totalJobs}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Completed</p>
+                          <p className="text-xs text-vm-muted">Completed</p>
                           <p className="text-lg font-semibold">{cleaner.stats.completedJobs}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Avg Rating</p>
+                          <p className="text-xs text-vm-muted">Avg Rating</p>
                           <p className="text-lg font-semibold">
                             {cleaner.stats.avgRating ? `${cleaner.stats.avgRating}/5` : "—"}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Payment Method</p>
+                          <p className="text-xs text-vm-muted">Payment Method</p>
                           {cleaner.stats.paymentMethodStatus.verified ? (
                             <CheckCircle2 className="w-5 h-5 text-green-600 mt-1" />
                           ) : (
@@ -239,22 +239,22 @@ export default function BranchOwnerCleanersPage() {
                       {/* Status Indicators */}
                       <div className="flex flex-wrap gap-2 ml-8">
                         {cleaner.stats.paymentMethodStatus.status === "verified" && (
-                          <Badge className="bg-green-100 text-green-800">
+                          <Badge className="bg-vm-success-bg text-green-800">
                             Payment Verified
                           </Badge>
                         )}
                         {cleaner.stats.paymentMethodStatus.status === "pending" && (
-                          <Badge className="bg-yellow-100 text-yellow-800">
+                          <Badge className="bg-vm-warning-bg text-yellow-800">
                             Payment Pending
                           </Badge>
                         )}
                         {cleaner.stats.paymentMethodStatus.status === "none" && (
-                          <Badge className="bg-red-100 text-red-800">
+                          <Badge className="bg-vm-danger-bg text-red-800">
                             No Payment Method
                           </Badge>
                         )}
                         {cleaner.stats.trainingStatus && (
-                          <Badge className="bg-blue-100 text-blue-800">
+                          <Badge className="bg-vm-cyan-tint text-blue-800">
                             Training: {cleaner.stats.trainingStatus}
                           </Badge>
                         )}

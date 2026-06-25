@@ -20,8 +20,8 @@ export default function TestAuthPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
-          <p className="text-gray-600">Page not found</p>
+          <h1 className="text-2xl font-bold text-vm-text mb-2">404</h1>
+          <p className="text-vm-muted">Page not found</p>
         </div>
       </div>
     );
@@ -74,7 +74,7 @@ export default function TestAuthPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               Branch Owner User ID
             </label>
             <input
@@ -84,7 +84,7 @@ export default function TestAuthPage() {
               placeholder="Enter user ID with BRANCH_OWNER role"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-vm-muted mt-2">
               Get this from your database: SELECT id FROM "User" WHERE role = 'BRANCH_OWNER';
             </p>
           </div>
@@ -108,7 +108,7 @@ export default function TestAuthPage() {
           )}
 
           <div className="border-t pt-4">
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-vm-muted">
               <strong>Note:</strong> This is a test page. In production, branch owners would log in through a proper authentication flow.
             </p>
           </div>

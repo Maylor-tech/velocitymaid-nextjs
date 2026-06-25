@@ -113,7 +113,7 @@ export default function ReferralsPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0A3D2F] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading referral information...</p>
+          <p className="text-vm-muted">Loading referral information...</p>
         </div>
       </div>
     );
@@ -122,7 +122,7 @@ export default function ReferralsPage() {
   if (authError || !referralData) {
     return (
       <div className="text-center py-12 px-4">
-        <p className="text-gray-600 mb-4">{authError || 'Unable to load referral information.'}</p>
+        <p className="text-vm-muted mb-4">{authError || 'Unable to load referral information.'}</p>
         {authError && (
           <a
             href="/customer/login?redirect=/customer/referrals"
@@ -143,7 +143,7 @@ export default function ReferralsPage() {
           <h1 className="text-4xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
             Referral Program
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-vm-muted">
             Refer friends and earn $20 for each booking
           </p>
         </div>
@@ -155,7 +155,7 @@ export default function ReferralsPage() {
               <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                 Your Referral Balance
               </h2>
-              <p className="text-gray-200">Available credits to use</p>
+              <p className="text-vm-muted">Available credits to use</p>
             </div>
             <DollarSign className="w-12 h-12 text-[#F8C548]" />
           </div>
@@ -164,11 +164,11 @@ export default function ReferralsPage() {
           </div>
           <div className="flex gap-6 text-sm">
             <div>
-              <span className="text-gray-300">Pending:</span>{' '}
+              <span className="text-vm-muted">Pending:</span>{' '}
               <span className="font-semibold">${referralData.balance.pending.toFixed(2)}</span>
             </div>
             <div>
-              <span className="text-gray-300">Applied:</span>{' '}
+              <span className="text-vm-muted">Applied:</span>{' '}
               <span className="font-semibold">${referralData.balance.applied.toFixed(2)}</span>
             </div>
           </div>
@@ -199,14 +199,14 @@ export default function ReferralsPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <button
                 onClick={() => handleShare('whatsapp')}
-                className="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2"
+                className="bg-vm-success text-white px-4 py-3 rounded-lg hover:bg-vm-success transition flex items-center justify-center gap-2"
               >
                 <MessageCircle className="w-5 h-5" />
                 WhatsApp
               </button>
               <button
                 onClick={() => handleShare('sms')}
-                className="bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2"
+                className="bg-vm-navy text-white px-4 py-3 rounded-lg hover:bg-vm-navy transition flex items-center justify-center gap-2"
               >
                 <MessageCircle className="w-5 h-5" />
                 SMS
@@ -231,7 +231,7 @@ export default function ReferralsPage() {
             {qrCodeUrl && (
               <div className="mt-6 text-center">
                 <img src={qrCodeUrl} alt="Referral QR Code" className="mx-auto border-4 border-[#F8C548] rounded-lg" />
-                <p className="text-sm text-gray-600 mt-2">Scan to share your referral link</p>
+                <p className="text-sm text-vm-muted mt-2">Scan to share your referral link</p>
               </div>
             )}
           </div>
@@ -244,21 +244,21 @@ export default function ReferralsPage() {
             <div className="text-3xl font-bold text-[#0A3D2F] mb-1">
               {referralData.stats.totalReferrals}
             </div>
-            <p className="text-gray-600">Total Referrals</p>
+            <p className="text-vm-muted">Total Referrals</p>
           </div>
           <div className="bg-white rounded-xl p-6 shadow-md text-center">
             <CheckCircle2 className="w-8 h-8 text-[#F8C548] mx-auto mb-2" />
             <div className="text-3xl font-bold text-[#0A3D2F] mb-1">
               {referralData.stats.pendingReferrals}
             </div>
-            <p className="text-gray-600">Pending</p>
+            <p className="text-vm-muted">Pending</p>
           </div>
           <div className="bg-white rounded-xl p-6 shadow-md text-center">
             <Gift className="w-8 h-8 text-[#2B70C9] mx-auto mb-2" />
             <div className="text-3xl font-bold text-[#0A3D2F] mb-1">
               {referralData.stats.totalCredits}
             </div>
-            <p className="text-gray-600">Credits Earned</p>
+            <p className="text-vm-muted">Credits Earned</p>
           </div>
         </div>
 
@@ -273,14 +273,14 @@ export default function ReferralsPage() {
                 <div key={friend.id} className="flex items-center justify-between p-4 bg-[#F3F1EB] rounded-lg">
                   <div>
                     <p className="font-semibold text-[#0A3D2F]">{friend.name}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-vm-muted">
                       {new Date(friend.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                     friend.status === 'COMPLETED' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
+                      ? 'bg-vm-success-bg text-green-800' 
+                      : 'bg-vm-warning-bg text-yellow-800'
                   }`}>
                     {friend.status}
                   </span>
@@ -288,8 +288,8 @@ export default function ReferralsPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-600">
-              <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+            <div className="text-center py-8 text-vm-muted">
+              <Users className="w-12 h-12 mx-auto mb-4 text-vm-muted" />
               <p>No referrals yet. Start sharing your link to earn credits!</p>
             </div>
           )}
@@ -307,7 +307,7 @@ export default function ReferralsPage() {
               </div>
               <div>
                 <h3 className="font-bold text-[#0A3D2F] mb-1">Share Your Link</h3>
-                <p className="text-gray-700">Share your referral link with friends via WhatsApp, SMS, or copy</p>
+                <p className="text-vm-text">Share your referral link with friends via WhatsApp, SMS, or copy</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -316,7 +316,7 @@ export default function ReferralsPage() {
               </div>
               <div>
                 <h3 className="font-bold text-[#0A3D2F] mb-1">Friend Books</h3>
-                <p className="text-gray-700">Your friend books a cleaning using your referral link</p>
+                <p className="text-vm-text">Your friend books a cleaning using your referral link</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -325,7 +325,7 @@ export default function ReferralsPage() {
               </div>
               <div>
                 <h3 className="font-bold text-[#0A3D2F] mb-1">You Both Get $20</h3>
-                <p className="text-gray-700">Your friend gets $20 off, and you get $20 credit after their cleaning is completed</p>
+                <p className="text-vm-text">Your friend gets $20 off, and you get $20 credit after their cleaning is completed</p>
               </div>
             </div>
           </div>

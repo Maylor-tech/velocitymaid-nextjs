@@ -23,19 +23,19 @@ export default function BookingStatusBadge({ status, size = 'md' }: BookingStatu
   const getStatusColor = (status: BookingStatus) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-vm-warning-bg text-yellow-800';
       case 'assigned':
       case 'confirmed':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-vm-cyan-tint text-blue-800';
       case 'on_the_way':
         return 'bg-purple-100 text-purple-800';
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-vm-success-bg text-green-800';
       case 'cancelled':
       case 'cancelled_by_customer':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-vm-text';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-vm-text';
     }
   };
 

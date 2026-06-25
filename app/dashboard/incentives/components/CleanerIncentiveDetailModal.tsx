@@ -58,12 +58,12 @@ export default function CleanerIncentiveDetailModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-vm-text">
             Incentive Details - {cleanerName || cleanerId.substring(0, 12)}...
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
+            className="text-vm-muted hover:text-vm-muted text-2xl"
           >
             ×
           </button>
@@ -73,33 +73,33 @@ export default function CleanerIncentiveDetailModal({
           {loading ? (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-gray-600">Loading...</p>
+              <p className="mt-2 text-vm-muted">Loading...</p>
             </div>
           ) : incentives.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No incentive data available</p>
+            <p className="text-vm-muted text-center py-8">No incentive data available</p>
           ) : (
             <>
               {/* Current Performance */}
               {latestIncentive && (
                 <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6 border-2 border-blue-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Performance</h3>
+                  <h3 className="text-lg font-semibold text-vm-text mb-4">Current Performance</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Tier</p>
+                      <p className="text-sm text-vm-muted mb-1">Tier</p>
                       <TierBadge tier={latestIncentive.tier} size="lg" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Total Jobs</p>
-                      <p className="text-2xl font-bold text-gray-900">{latestIncentive.totalJobs}</p>
+                      <p className="text-sm text-vm-muted mb-1">Total Jobs</p>
+                      <p className="text-2xl font-bold text-vm-text">{latestIncentive.totalJobs}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Avg Rating</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm text-vm-muted mb-1">Avg Rating</p>
+                      <p className="text-2xl font-bold text-vm-text">
                         {latestIncentive.avgRating.toFixed(1)}/5
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Bonus</p>
+                      <p className="text-sm text-vm-muted mb-1">Bonus</p>
                       <p className="text-2xl font-bold text-green-600">
                         ${latestIncentive.bonusAmount.toFixed(2)}
                       </p>
@@ -110,7 +110,7 @@ export default function CleanerIncentiveDetailModal({
 
               {/* Weekly Incentive History */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Incentive History</h3>
+                <h3 className="text-lg font-semibold text-vm-text mb-4">Weekly Incentive History</h3>
                 <div className="space-y-3">
                   {incentives.map((incentive) => (
                     <div
@@ -120,7 +120,7 @@ export default function CleanerIncentiveDetailModal({
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
                           <TierBadge tier={incentive.tier} size="sm" />
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-vm-muted">
                             {formatDate(incentive.periodStart)} - {formatDate(incentive.periodEnd)}
                           </span>
                         </div>
@@ -130,19 +130,19 @@ export default function CleanerIncentiveDetailModal({
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="text-gray-600">Jobs: </span>
+                          <span className="text-vm-muted">Jobs: </span>
                           <span className="font-medium">{incentive.totalJobs}</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Rating: </span>
+                          <span className="text-vm-muted">Rating: </span>
                           <span className="font-medium">{incentive.avgRating.toFixed(1)}/5</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">On-Time: </span>
+                          <span className="text-vm-muted">On-Time: </span>
                           <span className="font-medium">{incentive.onTimeRate.toFixed(1)}%</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Complaints: </span>
+                          <span className="text-vm-muted">Complaints: </span>
                           <span className="font-medium">{incentive.complaintRate.toFixed(1)}%</span>
                         </div>
                       </div>

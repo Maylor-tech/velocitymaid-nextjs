@@ -26,11 +26,11 @@ interface JobCardProps {
 }
 
 const statusColors = {
-  scheduled: 'bg-gray-100 text-gray-800',
-  confirmed: 'bg-blue-100 text-blue-800',
-  assigned: 'bg-yellow-100 text-yellow-800',
-  completed: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
+  scheduled: 'bg-gray-100 text-vm-text',
+  confirmed: 'bg-vm-cyan-tint text-blue-800',
+  assigned: 'bg-vm-warning-bg text-yellow-800',
+  completed: 'bg-vm-success-bg text-green-800',
+  cancelled: 'bg-vm-danger-bg text-red-800',
 };
 
 const statusLabels = {
@@ -61,10 +61,10 @@ export default function JobCard({ job }: JobCardProps) {
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-gray-900">{job.customerName}</h3>
+            <h3 className="font-semibold text-vm-text">{job.customerName}</h3>
             <LocationBadge location={job.serviceLocation} />
           </div>
-          <p className="text-sm text-gray-600">{job.address}</p>
+          <p className="text-sm text-vm-muted">{job.address}</p>
         </div>
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[job.status]}`}>
           {statusLabels[job.status]}
@@ -73,26 +73,26 @@ export default function JobCard({ job }: JobCardProps) {
 
       <div className="grid grid-cols-2 gap-2 text-sm mb-3">
         <div>
-          <span className="text-gray-500">Date:</span>
+          <span className="text-vm-muted">Date:</span>
           <span className="ml-2 font-medium">{formatDate(job.preferredDate)}</span>
         </div>
         <div>
-          <span className="text-gray-500">Time:</span>
+          <span className="text-vm-muted">Time:</span>
           <span className="ml-2 font-medium">{formatTime(job.preferredTime)}</span>
         </div>
         <div>
-          <span className="text-gray-500">Service:</span>
+          <span className="text-vm-muted">Service:</span>
           <span className="ml-2 font-medium">{job.serviceType}</span>
         </div>
         <div>
-          <span className="text-gray-500">Price:</span>
+          <span className="text-vm-muted">Price:</span>
           <span className="ml-2 font-medium">${job.totalPrice.toFixed(2)}</span>
         </div>
       </div>
 
       {job.assignedCleanerName && (
         <div className="mt-2 pt-2 border-t border-gray-200">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-vm-muted">
             <span className="font-medium">Cleaner:</span> {job.assignedCleanerName}
           </p>
         </div>
@@ -104,7 +104,7 @@ export default function JobCard({ job }: JobCardProps) {
         </div>
       )}
 
-      <div className="mt-2 flex gap-2 text-xs text-gray-500">
+      <div className="mt-2 flex gap-2 text-xs text-vm-muted">
         {job.confirmationSent && <span>✓ Confirmed</span>}
         {job.reminderSent && <span>✓ Reminder Sent</span>}
       </div>

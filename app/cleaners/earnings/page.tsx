@@ -81,7 +81,7 @@ export default function CleanerEarningsPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading earnings...</p>
+          <p className="mt-4 text-vm-muted">Loading earnings...</p>
         </div>
       </div>
     );
@@ -118,32 +118,32 @@ export default function CleanerEarningsPage() {
             <ArrowLeft className="w-4 h-4" />
             Back to Dashboard
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Earnings</h1>
-          <p className="text-gray-600">Track your earnings, bonuses, and payouts</p>
+          <h1 className="text-3xl font-bold text-vm-text mb-2">My Earnings</h1>
+          <p className="text-vm-muted">Track your earnings, bonuses, and payouts</p>
         </div>
 
         {/* Current Week Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">This Week's Earnings</h3>
+              <h3 className="text-sm font-medium text-vm-muted">This Week's Earnings</h3>
               <DollarSign className="w-5 h-5 text-green-600" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.currentWeek.earnings, 'JMD')}
             </p>
-            <p className="text-sm text-gray-500 mt-1">{data.currentWeek.jobCount} jobs</p>
+            <p className="text-sm text-vm-muted mt-1">{data.currentWeek.jobCount} jobs</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">This Week's Bonuses</h3>
+              <h3 className="text-sm font-medium text-vm-muted">This Week's Bonuses</h3>
               <Award className="w-5 h-5 text-yellow-600" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.currentWeek.bonuses, 'JMD')}
             </p>
-            <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+            <div className="text-xs text-vm-muted mt-1 space-y-0.5">
               <div>JQS: {formatCurrency(data.bonusesEarned.thisWeek.jqsBonus, 'JMD')}</div>
               <div>Reviews: {formatCurrency(data.bonusesEarned.thisWeek.reviewBonus, 'JMD')}</div>
               <div>Attendance: {formatCurrency(data.bonusesEarned.thisWeek.attendanceBonus, 'JMD')}</div>
@@ -152,19 +152,19 @@ export default function CleanerEarningsPage() {
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Week Projection</h3>
+              <h3 className="text-sm font-medium text-vm-muted">Week Projection</h3>
               <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.currentWeek.projection, 'JMD')}
             </p>
-            <p className="text-sm text-gray-500 mt-1">Earnings + Bonuses</p>
+            <p className="text-sm text-vm-muted mt-1">Earnings + Bonuses</p>
           </div>
         </div>
 
         {/* Weekly Earnings History */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Last 4 Weeks</h2>
+          <h2 className="text-xl font-bold text-vm-text mb-4">Last 4 Weeks</h2>
           <div className="space-y-3">
             {data.weeklyEarnings.map((week, index) => (
               <div
@@ -172,21 +172,21 @@ export default function CleanerEarningsPage() {
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-vm-text">
                     Week of {new Date(week.weekStart).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                     })}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-vm-muted">
                     {week.jobCount} jobs • {formatCurrency(week.earnings, 'JMD')} earnings
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-vm-text">
                     {formatCurrency(week.earnings + week.bonuses, 'JMD')}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-vm-muted">
                     +{formatCurrency(week.bonuses, 'JMD')} bonuses
                   </p>
                 </div>
@@ -198,7 +198,7 @@ export default function CleanerEarningsPage() {
         {/* Pending Payouts */}
         {data.pendingPayouts.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-vm-text mb-4 flex items-center gap-2">
               <Clock className="w-5 h-5 text-orange-600" />
               Pending Payouts
             </h2>
@@ -209,8 +209,8 @@ export default function CleanerEarningsPage() {
                   className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200"
                 >
                   <div>
-                    <p className="font-medium text-gray-900">{payout.period}</p>
-                    <p className="text-sm text-gray-600">Status: {payout.status}</p>
+                    <p className="font-medium text-vm-text">{payout.period}</p>
+                    <p className="text-sm text-vm-muted">Status: {payout.status}</p>
                   </div>
                   <p className="text-xl font-bold text-orange-600">
                     {formatCurrency(payout.amount, 'JMD')}
@@ -223,20 +223,20 @@ export default function CleanerEarningsPage() {
 
         {/* Earnings Calendar Summary */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-vm-text mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-blue-600" />
             Last 30 Days Summary
           </h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600">Total Earnings</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-vm-muted">Total Earnings</p>
+              <p className="text-2xl font-bold text-vm-text">
                 {formatCurrency(data.earningsCalendar.last30Days, 'JMD')}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Jobs Completed</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-vm-muted">Jobs Completed</p>
+              <p className="text-2xl font-bold text-vm-text">
                 {data.earningsCalendar.jobCount}
               </p>
             </div>

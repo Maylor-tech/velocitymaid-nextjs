@@ -28,59 +28,59 @@ export default function PayoutsTable({
   const getStatusColor = (status: CleanerPayout['status']) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-vm-warning-bg text-yellow-800';
       case 'approved':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-vm-cyan-tint text-blue-800';
       case 'paid':
-        return 'bg-green-100 text-green-800';
+        return 'bg-vm-success-bg text-green-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-vm-text';
     }
   };
 
   if (payouts.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Payouts</h2>
-        <p className="text-gray-500 text-center py-8">No payouts found</p>
+        <h2 className="text-xl font-bold text-vm-text mb-4">Payouts</h2>
+        <p className="text-vm-muted text-center py-8">No payouts found</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 overflow-x-auto">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Payouts</h2>
+      <h2 className="text-xl font-bold text-vm-text mb-4">Payouts</h2>
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Cleaner
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Branch
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Period
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Jobs
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Base
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Bonus
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Deductions
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Net Payout
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Status
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Actions
             </th>
           </tr>
@@ -93,19 +93,19 @@ export default function PayoutsTable({
                 payout.status === 'pending' ? 'bg-yellow-50' : ''
               }`}
             >
-              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-vm-text">
                 {cleanerMap.get(payout.cleanerId) || payout.cleanerId.substring(0, 12) + '...'}
               </td>
               <td className="px-4 py-3 whitespace-nowrap">
                 <LocationBadge location={payout.branch} />
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-muted">
                 {formatDate(payout.periodStart)} - {formatDate(payout.periodEnd)}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 {payout.totalJobs}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 ${payout.baseEarnings.toFixed(2)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm text-green-600">
@@ -114,7 +114,7 @@ export default function PayoutsTable({
               <td className="px-4 py-3 whitespace-nowrap text-sm text-red-600">
                 ${payout.deductions.toFixed(2)}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-vm-text">
                 ${payout.netPayout.toFixed(2)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap">

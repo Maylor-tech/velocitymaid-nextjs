@@ -83,7 +83,7 @@ export default function QuizForm({ quizData, lessonId, onSubmit }: QuizFormProps
     <form onSubmit={handleSubmit} className="space-y-8">
       {quizData.questions.map((question, questionIndex) => (
         <div key={questionIndex} className="border-b border-gray-200 pb-6 last:border-b-0">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-vm-text mb-4">
             {questionIndex + 1}. {question.question}
           </h3>
           <div className="space-y-3">
@@ -104,7 +104,7 @@ export default function QuizForm({ quizData, lessonId, onSubmit }: QuizFormProps
                   onChange={() => handleAnswerChange(questionIndex, optionIndex)}
                   className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 focus:ring-2"
                 />
-                <span className="ml-3 text-gray-700">{option}</span>
+                <span className="ml-3 text-vm-text">{option}</span>
               </label>
             ))}
           </div>
@@ -121,7 +121,7 @@ export default function QuizForm({ quizData, lessonId, onSubmit }: QuizFormProps
         <button
           type="submit"
           disabled={submitting || !allAnswered}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
+          className="px-6 py-3 bg-vm-navy text-white rounded-lg hover:bg-vm-navy disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
         >
           {submitting ? (
             <>

@@ -24,15 +24,15 @@ export default function BookingFeed({ bookings }: BookingFeedProps) {
   if (bookings.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">New Bookings (Last 24h)</h2>
-        <p className="text-gray-500 text-center py-4">No new bookings in the last 24 hours</p>
+        <h2 className="text-xl font-bold text-vm-text mb-4">New Bookings (Last 24h)</h2>
+        <p className="text-vm-muted text-center py-4">No new bookings in the last 24 hours</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">New Bookings (Last 24h)</h2>
+      <h2 className="text-xl font-bold text-vm-text mb-4">New Bookings (Last 24h)</h2>
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {bookings.map((booking) => (
           <div
@@ -42,14 +42,14 @@ export default function BookingFeed({ bookings }: BookingFeedProps) {
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-gray-900">{booking.customerName}</span>
+                  <span className="font-semibold text-vm-text">{booking.customerName}</span>
                   <LocationBadge location={booking.serviceLocation} />
                 </div>
-                <p className="text-sm text-gray-600">{booking.serviceType}</p>
+                <p className="text-sm text-vm-muted">{booking.serviceType}</p>
               </div>
-              <span className="text-xs text-gray-500">{formatTime(booking.createdAt)}</span>
+              <span className="text-xs text-vm-muted">{formatTime(booking.createdAt)}</span>
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-vm-muted">
               <span>{booking.preferredDate}</span>
               <span className="mx-2">•</span>
               <span>${booking.totalPrice.toFixed(2)}</span>

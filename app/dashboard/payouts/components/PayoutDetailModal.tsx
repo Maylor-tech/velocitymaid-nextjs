@@ -85,10 +85,10 @@ export default function PayoutDetailModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Payout Details</h2>
+          <h2 className="text-2xl font-bold text-vm-text">Payout Details</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
+            className="text-vm-muted hover:text-vm-muted text-2xl"
           >
             ×
           </button>
@@ -98,45 +98,45 @@ export default function PayoutDetailModal({
           {/* Payout Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Payout ID</p>
-              <p className="font-mono text-sm text-gray-900">{payout.id}</p>
+              <p className="text-sm text-vm-muted mb-1">Payout ID</p>
+              <p className="font-mono text-sm text-vm-text">{payout.id}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-1">Status</p>
-              <p className="font-medium text-gray-900 capitalize">{payout.status}</p>
+              <p className="text-sm text-vm-muted mb-1">Status</p>
+              <p className="font-medium text-vm-text capitalize">{payout.status}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-1">Cleaner</p>
-              <p className="font-medium text-gray-900">{cleaner?.name || payout.cleanerId}</p>
+              <p className="text-sm text-vm-muted mb-1">Cleaner</p>
+              <p className="font-medium text-vm-text">{cleaner?.name || payout.cleanerId}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-1">Branch</p>
+              <p className="text-sm text-vm-muted mb-1">Branch</p>
               <LocationBadge location={payout.branch} />
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-1">Period</p>
-              <p className="text-gray-900">{formatDate(payout.periodStart)} - {formatDate(payout.periodEnd)}</p>
+              <p className="text-sm text-vm-muted mb-1">Period</p>
+              <p className="text-vm-text">{formatDate(payout.periodStart)} - {formatDate(payout.periodEnd)}</p>
             </div>
           </div>
 
           {/* Earnings Breakdown */}
           <div className="border-t border-gray-200 pt-4">
-            <h3 className="font-semibold text-gray-900 mb-3">Earnings Breakdown</h3>
+            <h3 className="font-semibold text-vm-text mb-3">Earnings Breakdown</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total Jobs</p>
-                <p className="text-xl font-bold text-gray-900">{payout.totalJobs}</p>
+                <p className="text-sm text-vm-muted mb-1">Total Jobs</p>
+                <p className="text-xl font-bold text-vm-text">{payout.totalJobs}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Base Earnings</p>
-                <p className="text-xl font-bold text-gray-900">${payout.baseEarnings.toFixed(2)}</p>
+                <p className="text-sm text-vm-muted mb-1">Base Earnings</p>
+                <p className="text-xl font-bold text-vm-text">${payout.baseEarnings.toFixed(2)}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Bonus Earnings</p>
+                <p className="text-sm text-vm-muted mb-1">Bonus Earnings</p>
                 <p className="text-xl font-bold text-green-600">${payout.bonusEarnings.toFixed(2)}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Net Payout</p>
+                <p className="text-sm text-vm-muted mb-1">Net Payout</p>
                 <p className="text-xl font-bold text-blue-600">${payout.netPayout.toFixed(2)}</p>
               </div>
             </div>
@@ -144,11 +144,11 @@ export default function PayoutDetailModal({
 
           {/* Update Form */}
           <div className="border-t border-gray-200 pt-4">
-            <h3 className="font-semibold text-gray-900 mb-4">Update Payout</h3>
+            <h3 className="font-semibold text-vm-text mb-4">Update Payout</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <label className="block text-sm font-medium text-vm-text mb-2">Status</label>
                 <select
                   value={status || payout.status}
                   onChange={(e) => setStatus(e.target.value as PayoutStatus)}
@@ -161,7 +161,7 @@ export default function PayoutDetailModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Deductions</label>
+                <label className="block text-sm font-medium text-vm-text mb-2">Deductions</label>
                 <input
                   type="number"
                   step="0.01"
@@ -174,7 +174,7 @@ export default function PayoutDetailModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                <label className="block text-sm font-medium text-vm-text mb-2">Payment Method</label>
                 <select
                   value={paymentMethod !== '' ? paymentMethod || '' : payout.paymentMethod || ''}
                   onChange={(e) => setPaymentMethod((e.target.value || null) as PaymentMethod | null)}
@@ -189,7 +189,7 @@ export default function PayoutDetailModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Reference</label>
+                <label className="block text-sm font-medium text-vm-text mb-2">Payment Reference</label>
                 <input
                   type="text"
                   value={paymentReference || payout.paymentReference || ''}
@@ -206,13 +206,13 @@ export default function PayoutDetailModal({
             <button
               onClick={handleUpdate}
               disabled={updating}
-              className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+              className="flex-1 bg-vm-navy text-white py-3 rounded-lg font-semibold hover:bg-vm-navy transition-colors disabled:bg-gray-400"
             >
               {updating ? 'Updating...' : 'Save Changes'}
             </button>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+              className="px-6 py-3 bg-gray-200 text-vm-text rounded-lg font-semibold hover:bg-gray-300 transition-colors"
             >
               Cancel
             </button>

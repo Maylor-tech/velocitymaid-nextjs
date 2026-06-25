@@ -32,26 +32,26 @@ export default function BranchBreakdownTable({ newJersey, vermont }: BranchBreak
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 overflow-x-auto">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Branch Breakdown</h2>
+      <h2 className="text-xl font-bold text-vm-text mb-4">Branch Breakdown</h2>
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Branch
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Jobs
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Revenue
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Cost Estimate
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Profit
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Margin %
             </th>
           </tr>
@@ -63,20 +63,20 @@ export default function BranchBreakdownTable({ newJersey, vermont }: BranchBreak
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     branch.branch === 'new_jersey'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-green-100 text-green-800'
+                      ? 'bg-vm-cyan-tint text-blue-800'
+                      : 'bg-vm-success-bg text-green-800'
                   }`}
                 >
                   {branch.branch === 'new_jersey' ? 'New Jersey' : 'Vermont'}
                 </span>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 {branch.jobs}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 ${branch.revenue.toFixed(2)}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-muted">
                 ${branch.costEstimate.toFixed(2)}
               </td>
               <td
@@ -96,12 +96,12 @@ export default function BranchBreakdownTable({ newJersey, vermont }: BranchBreak
             </tr>
           ))}
           <tr className="bg-gray-50 font-semibold">
-            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">Total</td>
-            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{total.jobs}</td>
-            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">Total</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">{total.jobs}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
               ${total.revenue.toFixed(2)}
             </td>
-            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
               ${total.costEstimate.toFixed(2)}
             </td>
             <td

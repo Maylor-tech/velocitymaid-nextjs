@@ -93,21 +93,21 @@ export default function CleanerCompliancePage() {
     switch (status) {
       case "ALL_SET":
         return (
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-vm-success-bg text-green-800">
             <CheckCircle className="w-4 h-4" />
             All Set
           </span>
         );
       case "ACTION_REQUIRED":
         return (
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800">
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-vm-danger-bg text-red-800">
             <AlertCircle className="w-4 h-4" />
             Action Required
           </span>
         );
       case "UNDER_REVIEW":
         return (
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-vm-warning-bg text-yellow-800">
             <Clock className="w-4 h-4" />
             Under Review
           </span>
@@ -137,7 +137,7 @@ export default function CleanerCompliancePage() {
       case "statements":
         return <Receipt className="w-6 h-6 text-purple-600" />;
       default:
-        return <CheckCircle className="w-6 h-6 text-gray-600" />;
+        return <CheckCircle className="w-6 h-6 text-vm-muted" />;
     }
   };
 
@@ -166,8 +166,8 @@ export default function CleanerCompliancePage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Compliance Checklist</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-vm-text mb-2">Compliance Checklist</h1>
+          <p className="text-vm-muted">
             Complete these items to ensure uninterrupted payment processing
           </p>
         </div>
@@ -192,7 +192,7 @@ export default function CleanerCompliancePage() {
         {/* Overall Status Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Overall Status</h2>
+            <h2 className="text-lg font-semibold text-vm-text">Overall Status</h2>
             {getStatusBadge(data.overallStatus)}
           </div>
 
@@ -201,19 +201,19 @@ export default function CleanerCompliancePage() {
               <div className="text-2xl font-bold text-green-600">
                 {data.summary.completedItems}
               </div>
-              <div className="text-sm text-gray-600">Complete</div>
+              <div className="text-sm text-vm-muted">Complete</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">
                 {data.summary.incompleteItems}
               </div>
-              <div className="text-sm text-gray-600">Incomplete</div>
+              <div className="text-sm text-vm-muted">Incomplete</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-yellow-600">
                 {data.summary.pendingItems}
               </div>
-              <div className="text-sm text-gray-600">Pending/Review</div>
+              <div className="text-sm text-vm-muted">Pending/Review</div>
             </div>
           </div>
 
@@ -221,10 +221,10 @@ export default function CleanerCompliancePage() {
           {data.readinessScore !== undefined && (
             <div className="mb-4 pt-4 border-t border-gray-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-vm-text">
                   Jan 31 Readiness Score
                 </span>
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-2xl font-bold text-vm-text">
                   {data.readinessScore.toFixed(1)}/100
                 </span>
               </div>
@@ -232,10 +232,10 @@ export default function CleanerCompliancePage() {
                 <div
                   className={`h-full transition-all ${
                     data.readinessScore >= 80
-                      ? "bg-green-600"
+                      ? "bg-vm-success"
                       : data.readinessScore >= 60
-                      ? "bg-yellow-600"
-                      : "bg-red-600"
+                      ? "bg-vm-warning"
+                      : "bg-vm-danger"
                   }`}
                   style={{ width: `${data.readinessScore}%` }}
                 />
@@ -255,8 +255,8 @@ export default function CleanerCompliancePage() {
               } rounded-lg p-3`}
             >
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-600" />
-                <span className="text-sm text-gray-700">
+                <Calendar className="w-4 h-4 text-vm-muted" />
+                <span className="text-sm text-vm-text">
                   <strong>{data.countdown.daysRemaining} day{data.countdown.daysRemaining !== 1 ? "s" : ""}</strong> until Jan 31 tax deadline
                 </span>
               </div>
@@ -274,10 +274,10 @@ export default function CleanerCompliancePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {getSectionIcon(section.id)}
-                  <h3 className="text-lg font-semibold text-gray-900">{section.title}</h3>
+                  <h3 className="text-lg font-semibold text-vm-text">{section.title}</h3>
                 </div>
                 {section.allComplete && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-green-800">
                     <CheckCircle className="w-3 h-3" />
                     Complete
                   </span>
@@ -295,10 +295,10 @@ export default function CleanerCompliancePage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
-                        <h4 className="text-sm font-medium text-gray-900 mb-1">
+                        <h4 className="text-sm font-medium text-vm-text mb-1">
                           {item.label}
                         </h4>
-                        <p className="text-sm text-gray-600">{item.description}</p>
+                        <p className="text-sm text-vm-muted">{item.description}</p>
                       </div>
                       {item.actionUrl && item.actionLabel && (
                         <Link

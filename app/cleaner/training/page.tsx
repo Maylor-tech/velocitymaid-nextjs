@@ -80,8 +80,8 @@ export default function CleanerTrainingPage() {
         <CleanerPortalNav />
 
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900">VelocityMaid Certification</h1>
-          <p className="mt-1 text-gray-600">
+          <h1 className="text-2xl font-semibold text-vm-text">VelocityMaid Certification</h1>
+          <p className="mt-1 text-vm-muted">
             Complete all modules and pass the quiz to receive live job assignments.
           </p>
         </div>
@@ -101,7 +101,7 @@ export default function CleanerTrainingPage() {
           </div>
         )}
 
-        <div className="mb-4 text-sm text-gray-600">
+        <div className="mb-4 text-sm text-vm-muted">
           Progress: {data.modulesCompleted} / {data.modulesTotal} required modules
         </div>
 
@@ -116,14 +116,14 @@ export default function CleanerTrainingPage() {
                   {mod.completed ? (
                     <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
                   ) : (
-                    <Circle className="mt-0.5 h-5 w-5 shrink-0 text-gray-300" />
+                    <Circle className="mt-0.5 h-5 w-5 shrink-0 text-vm-muted" />
                   )}
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                    <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">
                       Module {mod.order}
                     </p>
-                    <h2 className="text-lg font-semibold text-gray-900">{mod.title}</h2>
-                    <p className="mt-1 text-sm text-gray-600">{mod.description}</p>
+                    <h2 className="text-lg font-semibold text-vm-text">{mod.title}</h2>
+                    <p className="mt-1 text-sm text-vm-muted">{mod.description}</p>
                     {mod.quizScore != null && (
                       <p className="mt-1 text-xs text-green-700">Quiz score: {mod.quizScore}%</p>
                     )}
@@ -131,7 +131,7 @@ export default function CleanerTrainingPage() {
                 </div>
                 <Link
                   href={moduleHref(mod)}
-                  className="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className="shrink-0 rounded-lg bg-vm-navy px-4 py-2 text-sm font-medium text-white hover:bg-vm-navy"
                 >
                   {actionLabel(mod)}
                 </Link>

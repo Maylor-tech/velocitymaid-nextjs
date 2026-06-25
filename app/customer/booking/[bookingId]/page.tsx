@@ -177,7 +177,7 @@ export default function BookingDetailsPage() {
       <CustomerLayout>
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-vm-muted">Loading...</p>
         </div>
       </CustomerLayout>
     );
@@ -191,7 +191,7 @@ export default function BookingDetailsPage() {
           <p className="text-red-500 text-sm mb-4">{error || 'Booking not found'}</p>
           <button
             onClick={() => router.push('/customer/jobs')}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger transition-colors"
           >
             Back to Dashboard
           </button>
@@ -205,18 +205,18 @@ export default function BookingDetailsPage() {
       <div className="mb-6">
         <button
           onClick={() => router.back()}
-          className="text-gray-600 hover:text-gray-900 mb-4 flex items-center gap-2"
+          className="text-vm-muted hover:text-vm-text mb-4 flex items-center gap-2"
         >
           ← Back
         </button>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Booking Details</h1>
+        <h1 className="text-3xl font-bold text-vm-text mb-2">Booking Details</h1>
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-vm-text mb-2">
               {formatServiceType(booking.serviceType)}
             </h2>
             <div className="flex items-center gap-3">
@@ -229,35 +229,35 @@ export default function BookingDetailsPage() {
         {/* Details Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="flex items-start gap-3">
-            <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+            <Calendar className="w-5 h-5 text-vm-muted mt-0.5" />
             <div>
-              <p className="text-sm text-gray-600 mb-1">Date</p>
-              <p className="font-medium text-gray-900">{formatDate(booking.preferredDate)}</p>
+              <p className="text-sm text-vm-muted mb-1">Date</p>
+              <p className="font-medium text-vm-text">{formatDate(booking.preferredDate)}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
+            <Clock className="w-5 h-5 text-vm-muted mt-0.5" />
             <div>
-              <p className="text-sm text-gray-600 mb-1">Time</p>
-              <p className="font-medium text-gray-900">{booking.preferredTime || 'TBD'}</p>
+              <p className="text-sm text-vm-muted mb-1">Time</p>
+              <p className="font-medium text-vm-text">{booking.preferredTime || 'TBD'}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+            <MapPin className="w-5 h-5 text-vm-muted mt-0.5" />
             <div>
-              <p className="text-sm text-gray-600 mb-1">Address</p>
-              <p className="font-medium text-gray-900">{booking.address}</p>
+              <p className="text-sm text-vm-muted mb-1">Address</p>
+              <p className="font-medium text-vm-text">{booking.address}</p>
             </div>
           </div>
 
           {booking.totalPrice > 0 && (
             <div className="flex items-start gap-3">
-              <DollarSign className="w-5 h-5 text-gray-400 mt-0.5" />
+              <DollarSign className="w-5 h-5 text-vm-muted mt-0.5" />
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total Price</p>
-                <p className="font-medium text-gray-900">
+                <p className="text-sm text-vm-muted mb-1">Total Price</p>
+                <p className="font-medium text-vm-text">
                   {/* Check if booking has currency field (Jamaica bookings) */}
                   {(booking as any).currency === 'JMD' 
                     ? `JMD $${booking.totalPrice.toLocaleString()}`
@@ -270,10 +270,10 @@ export default function BookingDetailsPage() {
 
           {booking.assignedCleanerName && (
             <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-gray-400 mt-0.5" />
+              <User className="w-5 h-5 text-vm-muted mt-0.5" />
               <div>
-                <p className="text-sm text-gray-600 mb-1">Assigned Cleaner</p>
-                <p className="font-medium text-gray-900">{booking.assignedCleanerName}</p>
+                <p className="text-sm text-vm-muted mb-1">Assigned Cleaner</p>
+                <p className="font-medium text-vm-text">{booking.assignedCleanerName}</p>
               </div>
             </div>
           )}
@@ -282,12 +282,12 @@ export default function BookingDetailsPage() {
         {/* Add-ons */}
         {booking.addOns && booking.addOns.length > 0 && (
           <div className="mb-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 mb-2">Add-ons</p>
+            <p className="text-sm text-vm-muted mb-2">Add-ons</p>
             <div className="flex flex-wrap gap-2">
               {booking.addOns.map((addon, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                  className="px-3 py-1 bg-vm-cyan-tint text-blue-800 rounded-full text-sm"
                 >
                   {addon}
                 </span>
@@ -299,8 +299,8 @@ export default function BookingDetailsPage() {
         {/* Special Instructions */}
         {booking.specialInstructions && (
           <div className="mb-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 mb-2">Special Instructions</p>
-            <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{booking.specialInstructions}</p>
+            <p className="text-sm text-vm-muted mb-2">Special Instructions</p>
+            <p className="text-vm-text bg-gray-50 p-3 rounded-lg">{booking.specialInstructions}</p>
           </div>
         )}
 
@@ -309,17 +309,17 @@ export default function BookingDetailsPage() {
           <div className="mb-6 pt-6 border-t border-gray-200">
             {review ? (
               <div>
-                <p className="text-sm text-gray-600 mb-2">Your Review</p>
+                <p className="text-sm text-vm-muted mb-2">Your Review</p>
                 <div className="flex items-center gap-2 mb-2">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <span key={i} className={i < review.rating ? 'text-yellow-400 text-xl' : 'text-gray-300 text-xl'}>
+                    <span key={i} className={i < review.rating ? 'text-yellow-400 text-xl' : 'text-vm-muted text-xl'}>
                       ★
                     </span>
                   ))}
-                  <span className="text-gray-600">({review.rating}/5)</span>
+                  <span className="text-vm-muted">({review.rating}/5)</span>
                 </div>
                 {review.comment && (
-                  <p className="text-gray-700 italic mb-2">"{review.comment}"</p>
+                  <p className="text-vm-text italic mb-2">"{review.comment}"</p>
                 )}
                 <Link
                   href={`/review/${booking.id}`}
@@ -330,10 +330,10 @@ export default function BookingDetailsPage() {
               </div>
             ) : (
               <div>
-                <p className="text-sm text-gray-600 mb-3">No review yet</p>
+                <p className="text-sm text-vm-muted mb-3">No review yet</p>
                 <Link
                   href={`/review/${booking.id}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-medium"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-vm-warning text-white rounded-lg hover:bg-vm-warning transition-colors font-medium"
                 >
                   <Star className="w-4 h-4" />
                   Leave a Review
@@ -348,7 +348,7 @@ export default function BookingDetailsPage() {
           {canReschedule && (
             <button
               onClick={() => setShowRescheduleModal(true)}
-              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              className="px-6 py-2 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors font-medium"
             >
               Reschedule
             </button>
@@ -356,7 +356,7 @@ export default function BookingDetailsPage() {
           {canCancel && (
             <button
               onClick={() => setShowCancelModal(true)}
-              className="px-6 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium"
+              className="px-6 py-2 bg-vm-danger-bg text-red-700 rounded-lg hover:bg-vm-danger-bg transition-colors font-medium"
             >
               Cancel Booking
             </button>
@@ -365,7 +365,7 @@ export default function BookingDetailsPage() {
             href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || '19731234567'}?text=Hi, I need help with booking ${booking.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-vm-success text-white rounded-lg hover:bg-vm-success transition-colors font-medium"
           >
             <MessageSquare className="w-4 h-4" />
             Contact Support
@@ -378,17 +378,17 @@ export default function BookingDetailsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Reschedule Booking</h2>
+              <h2 className="text-xl font-bold text-vm-text">Reschedule Booking</h2>
               <button
                 onClick={() => setShowRescheduleModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-vm-muted hover:text-vm-muted"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">New Date</label>
+                <label className="block text-sm font-medium text-vm-text mb-2">New Date</label>
                 <input
                   type="date"
                   value={newDate}
@@ -399,7 +399,7 @@ export default function BookingDetailsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">New Time</label>
+                <label className="block text-sm font-medium text-vm-text mb-2">New Time</label>
                 <select
                   value={newTime}
                   onChange={(e) => setNewTime(e.target.value)}
@@ -417,13 +417,13 @@ export default function BookingDetailsPage() {
               <button
                 onClick={handleReschedule}
                 disabled={updating || !newDate || !newTime}
-                className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                className="flex-1 bg-vm-navy text-white py-2 rounded-lg font-semibold hover:bg-vm-navy transition-colors disabled:bg-gray-400"
               >
                 {updating ? 'Rescheduling...' : 'Confirm Reschedule'}
               </button>
               <button
                 onClick={() => setShowRescheduleModal(false)}
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="px-6 py-2 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Cancel
               </button>
@@ -437,19 +437,19 @@ export default function BookingDetailsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Cancel Booking</h2>
+              <h2 className="text-xl font-bold text-vm-text">Cancel Booking</h2>
               <button
                 onClick={() => setShowCancelModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-vm-muted hover:text-vm-muted"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-gray-600 mb-4">
+            <p className="text-vm-muted mb-4">
               Are you sure you want to cancel this booking? This action cannot be undone.
             </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-vm-text mb-2">
                 Reason for cancellation (optional)
               </label>
               <textarea
@@ -464,13 +464,13 @@ export default function BookingDetailsPage() {
               <button
                 onClick={handleCancel}
                 disabled={updating}
-                className="flex-1 bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:bg-gray-400"
+                className="flex-1 bg-vm-danger text-white py-2 rounded-lg font-semibold hover:bg-vm-danger transition-colors disabled:bg-gray-400"
               >
                 {updating ? 'Cancelling...' : 'Confirm Cancellation'}
               </button>
               <button
                 onClick={() => setShowCancelModal(false)}
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="px-6 py-2 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Keep Booking
               </button>

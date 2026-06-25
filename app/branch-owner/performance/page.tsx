@@ -43,8 +43,8 @@ export default function BranchOwnerPerformancePage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
-          <p className="text-gray-600">Page not found</p>
+          <h1 className="text-2xl font-bold text-vm-text mb-2">404</h1>
+          <p className="text-vm-muted">Page not found</p>
         </div>
       </div>
     );
@@ -83,7 +83,7 @@ export default function BranchOwnerPerformancePage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading performance metrics...</p>
+          <p className="mt-4 text-vm-muted">Loading performance metrics...</p>
         </div>
       </div>
     );
@@ -113,8 +113,8 @@ export default function BranchOwnerPerformancePage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Performance Flags</h1>
-            <p className="text-gray-600 mt-2">
+            <h1 className="text-3xl font-bold text-vm-text">Performance Flags</h1>
+            <p className="text-vm-muted mt-2">
               Internal metrics and flags for your branch
             </p>
           </div>
@@ -140,18 +140,18 @@ export default function BranchOwnerPerformancePage() {
           <CardContent>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold text-gray-900">
+                <span className="text-3xl font-bold text-vm-text">
                   {performance.cancellationRate.value}%
                 </span>
                 {performance.cancellationRate.flagged ? (
-                  <Badge className="bg-yellow-100 text-yellow-800">
+                  <Badge className="bg-vm-warning-bg text-yellow-800">
                     Above Threshold ({performance.cancellationRate.threshold}%)
                   </Badge>
                 ) : (
-                  <Badge className="bg-green-100 text-green-800">Within Normal Range</Badge>
+                  <Badge className="bg-vm-success-bg text-green-800">Within Normal Range</Badge>
                 )}
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-vm-muted">
                 {performance.cancellationRate.cancelledJobs} cancelled out of {performance.cancellationRate.totalJobs} total jobs (last 30 days)
               </p>
               {performance.cancellationRate.flagged && (
@@ -178,7 +178,7 @@ export default function BranchOwnerPerformancePage() {
           <CardContent>
             {performance.cleanerIssues.flagged ? (
               <div className="space-y-3">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-vm-muted">
                   {performance.cleanerIssues.count} cleaner(s) with repeated low ratings:
                 </p>
                 <div className="space-y-2">
@@ -188,8 +188,8 @@ export default function BranchOwnerPerformancePage() {
                       className="flex items-center justify-between p-3 bg-white rounded-lg border border-orange-200"
                     >
                       <div>
-                        <p className="font-medium text-gray-900">{issue.cleanerName}</p>
-                        <p className="text-xs text-gray-600">
+                        <p className="font-medium text-vm-text">{issue.cleanerName}</p>
+                        <p className="text-xs text-vm-muted">
                           {issue.lowRatingCount} low rating(s) in the last 30 days
                         </p>
                       </div>
@@ -205,7 +205,7 @@ export default function BranchOwnerPerformancePage() {
             ) : (
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <p className="text-sm text-gray-600">No cleaners with repeated issues</p>
+                <p className="text-sm text-vm-muted">No cleaners with repeated issues</p>
               </div>
             )}
           </CardContent>
@@ -227,17 +227,17 @@ export default function BranchOwnerPerformancePage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-vm-text">
                     {performance.responseTime.averageHours !== null
                       ? `${performance.responseTime.averageHours} hours`
                       : "N/A"}
                   </p>
-                  <p className="text-xs text-gray-600">Average time from assignment to job date</p>
+                  <p className="text-xs text-vm-muted">Average time from assignment to job date</p>
                 </div>
                 {performance.responseTime.flagged ? (
-                  <Badge className="bg-red-100 text-red-800">Slow Response</Badge>
+                  <Badge className="bg-vm-danger-bg text-red-800">Slow Response</Badge>
                 ) : (
-                  <Badge className="bg-green-100 text-green-800">Good Response</Badge>
+                  <Badge className="bg-vm-success-bg text-green-800">Good Response</Badge>
                 )}
               </div>
               {performance.responseTime.slowResponseCount > 0 && (
@@ -260,16 +260,16 @@ export default function BranchOwnerPerformancePage() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-3xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-vm-text">
                   {performance.jobsNeedingAttention.count}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-vm-muted">
                   Pending or assigned jobs past their scheduled date
                 </p>
               </div>
               {performance.jobsNeedingAttention.flagged && (
                 <Link href="/branch-owner/jobs?filter=attention">
-                  <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                  <button className="px-4 py-2 bg-vm-warning text-white rounded-lg hover:bg-vm-warning">
                     View Jobs →
                   </button>
                 </Link>

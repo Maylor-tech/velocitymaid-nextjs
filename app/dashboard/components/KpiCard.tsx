@@ -26,10 +26,10 @@ export default function KpiCard({ title, value, subtitle, icon, trend }: KpiCard
     <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-gray-900">{formatValue(value)}</p>
+          <p className="text-sm font-medium text-vm-muted mb-1">{title}</p>
+          <p className="text-3xl font-bold text-vm-text">{formatValue(value)}</p>
           {subtitle && (
-            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+            <p className="text-xs text-vm-muted mt-1">{subtitle}</p>
           )}
         </div>
         {icon && (
@@ -37,7 +37,7 @@ export default function KpiCard({ title, value, subtitle, icon, trend }: KpiCard
         )}
       </div>
       {trend && (
-        <div className={`mt-2 text-xs ${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-500'}`}>
+        <div className={`mt-2 text-xs ${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-vm-muted'}`}>
           {trend === 'up' && '↑'} {trend === 'down' && '↓'} {trend === 'neutral' && '→'}
         </div>
       )}

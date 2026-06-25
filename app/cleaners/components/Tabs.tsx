@@ -23,7 +23,7 @@ export default function Tabs({ activeTab, onTabChange }: TabsProps) {
           className={`px-6 py-3 font-semibold transition-colors border-b-2 ${
             activeTab === tab.id
               ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
+              : 'border-transparent text-vm-muted hover:text-vm-text'
           }`}
         >
           {tab.label}

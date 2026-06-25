@@ -101,7 +101,7 @@ export default function CleanerUploadClient({ jobId, address }: Props) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-vm-surface p-6">
         <div className="w-full max-w-sm rounded-2xl border border-green-200 bg-vm-white p-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-vm-success-bg">
             <CheckCircle className="h-9 w-9 text-green-600" />
           </div>
           <h1 className="mt-5 font-heading text-2xl font-semibold text-vm-navy">

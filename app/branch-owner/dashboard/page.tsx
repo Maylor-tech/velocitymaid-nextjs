@@ -23,8 +23,8 @@ export default function BranchOwnerDashboardPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
-          <p className="text-gray-600">Page not found</p>
+          <h1 className="text-2xl font-bold text-vm-text mb-2">404</h1>
+          <p className="text-vm-muted">Page not found</p>
         </div>
       </div>
     );
@@ -77,7 +77,7 @@ export default function BranchOwnerDashboardPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <p className="mt-4 text-vm-muted">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -99,7 +99,7 @@ export default function BranchOwnerDashboardPage() {
                   </p>
                   <a
                     href="/branch-owner/test-auth"
-                    className="inline-block px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm"
+                    className="inline-block px-4 py-2 bg-vm-warning text-white rounded-lg hover:bg-vm-warning text-sm"
                   >
                     Go to Test Auth Page →
                   </a>
@@ -107,7 +107,7 @@ export default function BranchOwnerDashboardPage() {
               )}
               <button
                 onClick={fetchDashboard}
-                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="mt-4 px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger"
               >
                 Try Again
               </button>
@@ -127,8 +127,8 @@ export default function BranchOwnerDashboardPage() {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Branch Dashboard</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-vm-text">Branch Dashboard</h1>
+          <p className="text-vm-muted mt-2">
             Operational overview for your branch
           </p>
         </div>
@@ -138,13 +138,13 @@ export default function BranchOwnerDashboardPage() {
           {/* Jobs Today */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-vm-muted">
                 Jobs Today
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <p className="text-3xl font-bold text-gray-900">{metrics.jobsToday}</p>
+                <p className="text-3xl font-bold text-vm-text">{metrics.jobsToday}</p>
                 <Calendar className="w-8 h-8 text-blue-600" />
               </div>
             </CardContent>
@@ -153,13 +153,13 @@ export default function BranchOwnerDashboardPage() {
           {/* Jobs This Week */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-vm-muted">
                 Jobs This Week
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <p className="text-3xl font-bold text-gray-900">{metrics.jobsThisWeek}</p>
+                <p className="text-3xl font-bold text-vm-text">{metrics.jobsThisWeek}</p>
                 <Calendar className="w-8 h-8 text-green-600" />
               </div>
             </CardContent>
@@ -168,13 +168,13 @@ export default function BranchOwnerDashboardPage() {
           {/* Active Cleaners */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-vm-muted">
                 Active Cleaners
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <p className="text-3xl font-bold text-gray-900">{metrics.activeCleaners}</p>
+                <p className="text-3xl font-bold text-vm-text">{metrics.activeCleaners}</p>
                 <Users className="w-8 h-8 text-purple-600" />
               </div>
             </CardContent>
@@ -183,13 +183,13 @@ export default function BranchOwnerDashboardPage() {
           {/* Jobs Needing Attention */}
           <Card className={metrics.jobsNeedingAttention > 0 ? "border-yellow-300 bg-yellow-50" : ""}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-vm-muted">
                 Needs Attention
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <p className="text-3xl font-bold text-gray-900">{metrics.jobsNeedingAttention}</p>
+                <p className="text-3xl font-bold text-vm-text">{metrics.jobsNeedingAttention}</p>
                 <AlertTriangle className="w-8 h-8 text-yellow-600" />
               </div>
               {metrics.jobsNeedingAttention > 0 && (
@@ -213,13 +213,13 @@ export default function BranchOwnerDashboardPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900">Manage Jobs</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-vm-text">Manage Jobs</p>
+                  <p className="text-sm text-vm-muted">
                     Assign, reassign, or flag jobs for review
                   </p>
                 </div>
                 <Link href="/branch-owner/jobs">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  <button className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy">
                     View Jobs
                   </button>
                 </Link>
@@ -235,8 +235,8 @@ export default function BranchOwnerDashboardPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900">Manage Cleaners</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-vm-text">Manage Cleaners</p>
+                  <p className="text-sm text-vm-muted">
                     View profiles, ratings, and request actions
                   </p>
                 </div>
