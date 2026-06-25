@@ -1,0 +1,40 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Forms" subtitle="Input, Select, Checkbox, Switch in FormRow" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style> body { margin: 0; background: var(--vm-white); padding: 22px; } </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { Input, Select, Checkbox, Switch, FormRow } = window.VelocityMaidDesignSystem_2d9dc2;
+function Demo() {
+  return (
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24,maxWidth:640}}>
+      <FormRow label="Full name" required helpText="As it appears on your booking">
+        <Input placeholder="Jordan Avery" />
+      </FormRow>
+      <FormRow label="Service" required>
+        <Select defaultValue=""><option value="" disabled>Choose a service</option><option>Standard cleaning</option><option>Deep clean</option><option>Move in / out</option></Select>
+      </FormRow>
+      <FormRow label="ZIP code" error="Not in our service area yet">
+        <Input invalid defaultValue="00000" />
+      </FormRow>
+      <div style={{display:"flex",flexDirection:"column",gap:14,justifyContent:"center"}}>
+        <Checkbox label="Bring eco-friendly supplies" defaultChecked />
+        <Checkbox label="Text me arrival updates" />
+        <Switch label="Recurring weekly clean" defaultChecked />
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>
