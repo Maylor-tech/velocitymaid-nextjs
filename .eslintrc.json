@@ -6,7 +6,7 @@
     ],
     "rules": {
       "no-restricted-syntax": [
-        "warn",
+        "error",
         {
           "selector": "Literal[value=/\\b(brand-forest|brand-gold|brand-ivory|brand-slate)\\b/]",
           "message": "Legacy forest/gold palette is deprecated. Use vm-navy / vm-cyan / vm-* tokens (see design-system)."

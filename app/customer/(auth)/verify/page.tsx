@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { BrandLogo } from '@/components/brand';
-import { brandClasses } from '@/lib/brand/tokens';
+import { brandClasses } from '@/lib/brand/colors';
 
 export default function CustomerVerifyPage() {
   const searchParams = useSearchParams();

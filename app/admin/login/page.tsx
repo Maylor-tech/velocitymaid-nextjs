@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BrandLogo } from '@/components/brand';
-import { brandClasses } from '@/lib/brand/tokens';
+import { brandClasses } from '@/lib/brand/colors';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');

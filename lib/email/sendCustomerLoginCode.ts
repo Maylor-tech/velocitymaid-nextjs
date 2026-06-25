@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { brand } from "@/lib/brand/tokens";
+import { colors } from "@/lib/brand/colors";
 import { getResendFromEmail } from "@/lib/email/resendClient";
 
 function getResend(): Resend | null {
@@ -25,12 +25,12 @@ export async function sendCustomerLoginCodeEmail(params: {
       subject: "Your VelocityMaid sign-in code",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #334155;">
-          <h2 style="color: ${brand.forest}; margin-bottom: 8px;">Your sign-in code</h2>
+          <h2 style="color: ${colors.primaryNavy}; margin-bottom: 8px;">Your sign-in code</h2>
           <p style="margin: 0 0 24px;">Enter this code on the VelocityMaid customer portal to continue:</p>
-          <div style="background: ${brand.ivory}; border: 2px solid ${brand.forest}; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
-            <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: ${brand.forest};">${code}</span>
+          <div style="background: ${colors.surface}; border: 2px solid ${colors.primaryNavy}; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: ${colors.primaryNavy};">${code}</span>
           </div>
-          <p style="font-size: 14px; color: ${brand.slate}; margin: 0;">
+          <p style="font-size: 14px; color: ${colors.text}; margin: 0;">
             This code expires in ${expiresMinutes} minutes. If you didn't request it, you can ignore this email.
           </p>
         </div>

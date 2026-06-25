@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { brandClasses } from "@/lib/brand/tokens";
+import { brandClasses } from "@/lib/brand/colors";
 
 export default function PricingCTA() {
   return (

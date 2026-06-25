@@ -43,23 +43,6 @@ const config: Config = {
         "vm-info-bg": "rgb(var(--vm-info-bg) / <alpha-value>)",
         "vm-progress": "rgb(var(--vm-progress) / <alpha-value>)",
         "vm-progress-bg": "rgb(var(--vm-progress-bg) / <alpha-value>)",
-        /**
-         * @deprecated LEGACY — "UX/DS v2.0.0" palette. NOT part of the
-         * approved VelocityMaid brand guidelines (which specify Navy/Cyan/
-         * White only). Still referenced by ~32 files — global header,
-         * footer, contact, pricing, partners pages, etc. See Brand Audit
-         * Report §3–§5 and the Component Standardization Plan for the
-         * phased migration to the vm-* approved tokens above. Do not use
-         * in new code.
-         */
-        brand: {
-          forest: "#0B221E",
-          "forest-hover": "#091916",
-          gold: "#D4AF37",
-          "gold-hover": "#C19A2E",
-          ivory: "#FBF9F4",
-          slate: "#2C3E3B",
-        },
         border: "hsl(var(--border) / <alpha-value>)",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -76,16 +59,6 @@ const config: Config = {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          50: "#F5F3EE",
-          100: "#EBE8DF",
-          200: "#D4CFC0",
-          300: "#A8A090",
-          400: "#5C6B66",
-          500: "#3D524E",
-          600: "#0B221E",
-          700: "#091916",
-          800: "#071412",
-          900: "#050F0D",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
