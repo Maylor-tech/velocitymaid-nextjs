@@ -51,7 +51,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-vm-text bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
       >
         <Calculator className="w-4 h-4" />
         Pricing Helper
@@ -60,14 +60,14 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Job Pricing Calculator</h2>
+            <div className="sticky top-0 bg-white border-b border-vm-border px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-vm-text">Job Pricing Calculator</h2>
               <button
                 onClick={() => {
                   setIsOpen(false);
                   setBreakdown(null);
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-vm-muted hover:text-gray-600 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -77,7 +77,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
               {/* Input Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Base Rate ($)
                   </label>
                   <input
@@ -90,7 +90,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Bedrooms
                   </label>
                   <input
@@ -102,7 +102,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Bathrooms
                   </label>
                   <input
@@ -114,7 +114,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Square Feet (optional)
                   </label>
                   <input
@@ -127,7 +127,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Travel Distance (km)
                   </label>
                   <input
@@ -154,7 +154,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                     }}
                     className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">Deep Clean</span>
+                  <span className="text-sm text-vm-text">Deep Clean</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -166,53 +166,53 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                     }}
                     className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">Move-out Clean</span>
+                  <span className="text-sm text-vm-text">Move-out Clean</span>
                 </label>
               </div>
 
               {/* Calculate Button */}
               <button
                 onClick={handleCalculate}
-                className="w-full px-4 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
+                className="w-full px-4 py-3 bg-vm-navy text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
               >
                 Calculate Price
               </button>
 
               {/* Breakdown */}
               {breakdown && (
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Price Breakdown</h3>
+                <div className="bg-vm-surface rounded-lg p-4 space-y-2">
+                  <h3 className="text-sm font-semibold text-vm-text mb-3">Price Breakdown</h3>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Base:</span>
-                      <span className="text-gray-900">{formatCurrency(breakdown.base)}</span>
+                      <span className="text-vm-muted">Base:</span>
+                      <span className="text-vm-text">{formatCurrency(breakdown.base)}</span>
                     </div>
                     {breakdown.sizeAdjustment > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Size Adjustment:</span>
-                        <span className="text-gray-900">+{formatCurrency(breakdown.sizeAdjustment)}</span>
+                        <span className="text-vm-muted">Size Adjustment:</span>
+                        <span className="text-vm-text">+{formatCurrency(breakdown.sizeAdjustment)}</span>
                       </div>
                     )}
                     {breakdown.typeAdjustment > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Type Adjustment:</span>
-                        <span className="text-gray-900">+{formatCurrency(breakdown.typeAdjustment)}</span>
+                        <span className="text-vm-muted">Type Adjustment:</span>
+                        <span className="text-vm-text">+{formatCurrency(breakdown.typeAdjustment)}</span>
                       </div>
                     )}
                     {breakdown.travelFee > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Travel Fee:</span>
-                        <span className="text-gray-900">+{formatCurrency(breakdown.travelFee)}</span>
+                        <span className="text-vm-muted">Travel Fee:</span>
+                        <span className="text-vm-text">+{formatCurrency(breakdown.travelFee)}</span>
                       </div>
                     )}
                     {breakdown.discount > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Discount:</span>
+                        <span className="text-vm-muted">Discount:</span>
                         <span className="text-red-600">-{formatCurrency(breakdown.discount)}</span>
                       </div>
                     )}
                     <div className="flex justify-between pt-2 border-t border-gray-300">
-                      <span className="font-semibold text-gray-900">Total:</span>
+                      <span className="font-semibold text-vm-text">Total:</span>
                       <span className="font-bold text-lg text-primary-600">{formatCurrency(breakdown.total)}</span>
                     </div>
                   </div>

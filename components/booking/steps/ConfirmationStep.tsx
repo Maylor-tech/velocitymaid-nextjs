@@ -122,7 +122,7 @@ export default function ConfirmationStep() {
         className={`w-full px-6 py-3 rounded-lg font-semibold text-white transition-colors flex items-center justify-center ${
           loading
             ? "bg-blue-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
+            : "bg-vm-navy hover:bg-blue-700"
         }`}
       >
         {loading ? (

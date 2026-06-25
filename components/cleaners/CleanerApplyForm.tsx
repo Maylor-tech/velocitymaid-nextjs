@@ -355,7 +355,7 @@ export default function CleanerApplyForm() {
                 }
                 disabled={!formData.country}
                 className={`${inputClass} ${
-                  !formData.country ? "opacity-50 cursor-not-allowed bg-gray-50" : ""
+                  !formData.country ? "opacity-50 cursor-not-allowed bg-vm-surface" : ""
                 }`}
                 required
                 aria-required="true"

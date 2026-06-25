@@ -132,7 +132,7 @@ export default function ServiceStep() {
               <div className="flex items-center gap-3">
                 <Globe
                   className={`w-6 h-6 ${
-                    data.country === country.code ? 'text-vm-cyan' : 'text-gray-400'
+                    data.country === country.code ? 'text-vm-cyan' : 'text-vm-muted'
                   }`}
                 />
                 <h3 className="font-heading font-medium text-vm-text text-lg">
@@ -277,7 +277,7 @@ export default function ServiceStep() {
                     className={
                       data.serviceType === service.value
                         ? 'text-vm-cyan'
-                        : 'text-gray-400'
+                        : 'text-vm-muted'
                     }
                   >
                     {service.icon}

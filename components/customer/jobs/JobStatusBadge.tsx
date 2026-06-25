@@ -1,50 +1,35 @@
 import { Clock, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { JOB_STATUS_STYLE, type JobStatus } from '@/lib/brand/status';
 
 interface JobStatusBadgeProps {
   status: string;
 }
 
+// Icon-per-status stays local — icons are not part of the shared DS status map.
+const STATUS_ICON: Record<JobStatus, typeof Clock> = {
+  pending: Clock,
+  scheduled: Clock,
+  assigned: User,
+  in_progress: Clock,
+  completed: CheckCircle,
+  cancelled: XCircle,
+  reschedule_requested: AlertCircle,
+  cancel_requested: XCircle,
+};
+
 export default function JobStatusBadge({ status }: JobStatusBadgeProps) {
-  const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
-    pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending' },
-    scheduled: { color: 'bg-vm-cyan/15 text-vm-navy', icon: Clock, label: 'Scheduled' },
-    assigned: { color: 'bg-vm-cyan/15 text-vm-navy', icon: User, label: 'Assigned' },
-    in_progress: { color: 'bg-purple-100 text-purple-800', icon: Clock, label: 'In Progress' },
-    completed: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Completed' },
-    cancelled: { color: 'bg-red-100 text-red-800', icon: XCircle, label: 'Cancelled' },
-    reschedule_requested: { color: 'bg-orange-100 text-orange-800', icon: AlertCircle, label: 'Reschedule Requested' },
-    cancel_requested: { color: 'bg-red-100 text-red-800', icon: XCircle, label: 'Cancel Requested' },
-  };
+  const key = status.toLowerCase() as JobStatus;
+  const style = JOB_STATUS_STYLE[key];
+  const Icon = STATUS_ICON[key] ?? AlertCircle;
 
-  const config = statusConfig[status.toLowerCase()] || {
-    color: 'bg-vm-surface text-vm-text',
-    icon: AlertCircle,
-    label: status,
-  };
-
-  const Icon = config.icon;
+  const bg = style?.bg ?? 'bg-vm-surface';
+  const fg = style?.fg ?? 'text-vm-text';
+  const label = style?.label ?? status;
 
   return (
-    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-body font-medium ${config.color}`}>
+    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-body font-medium ${bg} ${fg}`}>
       <Icon className="w-4 h-4" />
-      {config.label}
+      {label}
     </span>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

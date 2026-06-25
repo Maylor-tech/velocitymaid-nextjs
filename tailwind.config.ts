@@ -9,26 +9,37 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // VelocityMaid approved brand palette — values verified byte-exact
-        // against velocitymaid-brand-guidelines.docx (Color System table).
-        // Canonical TS source + contrast notes: lib/brand/colors.ts.
-        // Do not change these hex values without updating the approved
-        // brand guidelines first. See Brand Audit Report §1 for history —
-        // these previously held incorrect hex values (e.g. vm-navy was
-        // #061B44, vm-cyan was #22D3EE) that did not match the approved
-        // guidelines; corrected as part of the brand implementation audit.
-        "vm-navy": "#0F1C2E",
-        "vm-cyan": "#00C2CB",
-        "vm-cyan-dark": "#00A8B0",
-        "vm-surface": "#F4F6F9",
-        "vm-text": "#1A1A2E",
-        "vm-muted": "#6B7280",
-        "vm-white": "#FFFFFF",
-        // Not part of the approved 7-color palette — utility-only hairline
-        // border neutral. Flagged in Brand Audit Report §1 as a non-standard
-        // addition; kept as-is to avoid an unreviewed visual change to every
-        // bordered component that depends on it.
-        "vm-border": "#E0E4EA",
+        // VelocityMaid approved brand palette — Phase 0: now sourced from the
+        // design-system CSS custom properties defined in app/globals.css
+        // (from migration/phase-0-1 globals.tokens.css). Values are identical
+        // to the approved palette (lib/brand/colors.ts / brand guidelines), so
+        // this is a non-visual change. Update the values in globals.tokens.css,
+        // not here.
+        "vm-navy": "var(--vm-navy)", // #0F1C2E
+        "vm-cyan": "var(--vm-cyan)", // #00C2CB
+        "vm-cyan-dark": "var(--vm-cyan-dark)", // #00A8B0
+        "vm-surface": "var(--vm-surface)", // #F4F6F9
+        "vm-text": "var(--vm-text)", // #1A1A2E
+        "vm-muted": "var(--vm-muted)", // #6B7280
+        "vm-white": "var(--vm-white)", // #FFFFFF
+        // Utility-only hairline border neutral (not in the approved 7-color
+        // palette). Now sourced from --vm-border. NOTE: the DS token value is
+        // #E2E8F0; the repo previously hardcoded #E0E4EA (see globals.tokens.css).
+        "vm-border": "var(--vm-border)", // #E2E8F0
+        // Semantic status tints (Phase 3.0 prerequisite). Additive only —
+        // sourced from --vm-* custom properties in app/globals.css. Calm,
+        // never neon. Consumed by the DS status map (lib/brand/status.ts).
+        "vm-cyan-tint": "var(--vm-cyan-tint)",
+        "vm-success": "var(--vm-success)",
+        "vm-success-bg": "var(--vm-success-bg)",
+        "vm-warning": "var(--vm-warning)",
+        "vm-warning-bg": "var(--vm-warning-bg)",
+        "vm-danger": "var(--vm-danger)",
+        "vm-danger-bg": "var(--vm-danger-bg)",
+        "vm-info": "var(--vm-info)",
+        "vm-info-bg": "var(--vm-info-bg)",
+        "vm-progress": "var(--vm-progress)",
+        "vm-progress-bg": "var(--vm-progress-bg)",
         /**
          * @deprecated LEGACY — "UX/DS v2.0.0" palette. NOT part of the
          * approved VelocityMaid brand guidelines (which specify Navy/Cyan/
@@ -91,17 +102,29 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        // Visual Alignment PR: DS radii sourced from globals.css --radius-*.
+        // Intentionally overrides the prior shadcn var(--radius) mapping —
+        // affects rounded-sm/md/lg/xl repo-wide.
+        sm: "var(--radius-sm)", // 6px
+        md: "var(--radius-md)", // 8px
+        lg: "var(--radius-lg)", // 12px
+        xl: "var(--radius-xl)", // 16px
+      },
+      boxShadow: {
+        // Visual Alignment PR: navy-tinted DS elevations (globals.css).
+        // Overrides Tailwind's default shadow-sm / shadow-lg.
+        sm: "var(--shadow-sm)",
+        lg: "var(--shadow-lg)",
       },
       fontFamily: {
         // Approved brand typefaces (velocitymaid-brand-guidelines.docx:
         // "Display: Space Grotesk Bold. Body: Inter Regular/SemiBold. No
         // alternate fonts."). Use font-heading for all headlines/wordmark/
         // buttons and font-body for all body copy/forms/tables.
-        heading: ["var(--font-space-grotesk)", "sans-serif"],
-        body: ["var(--font-inter)", "sans-serif"],
+        // next/font CSS variables stay first (avoids a font-loading regression);
+        // named families added only as fallbacks (Visual Alignment PR).
+        heading: ["var(--font-space-grotesk)", "Space Grotesk", "sans-serif"],
+        body: ["var(--font-inter)", "Inter", "sans-serif"],
         /**
          * @deprecated LEGACY — Plus Jakarta Sans / Playfair Display are not
          * in the approved brand guidelines ("no alternate fonts"). These
@@ -125,7 +148,7 @@ const config: Config = {
         ],
       },
       maxWidth: {
-        marketing: "80rem",
+        marketing: "var(--container-marketing)", // 1200px (was 80rem / 1280px)
         portal: "90rem",
       },
     },

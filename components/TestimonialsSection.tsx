@@ -44,8 +44,8 @@ export default function TestimonialsSection({ testimonials = defaultTestimonials
             <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
             <span className="text-primary-700 font-bold text-lg">100+ 5-Star Reviews</span>
           </div>
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">What Our Customers Say</h2>
-          <p className="text-xl text-gray-600">Real feedback from satisfied customers across New Jersey</p>
+          <h2 className="text-4xl font-bold text-vm-text mb-4">What Our Customers Say</h2>
+          <p className="text-xl text-vm-muted">Real feedback from satisfied customers across New Jersey</p>
         </div>
 
         {/* Testimonials Grid */}
@@ -53,7 +53,7 @@ export default function TestimonialsSection({ testimonials = defaultTestimonials
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-xl transition-shadow"
+              className="bg-white rounded-2xl shadow-lg p-8 border border-vm-border hover:shadow-xl transition-shadow"
             >
               {/* Star Rating */}
               <div className="flex items-center gap-1 mb-4">
@@ -66,14 +66,14 @@ export default function TestimonialsSection({ testimonials = defaultTestimonials
               </div>
 
               {/* Testimonial Text */}
-              <p className="text-gray-700 mb-6 leading-relaxed">
+              <p className="text-vm-text mb-6 leading-relaxed">
                 "{testimonial.text}"
               </p>
 
               {/* Customer Info */}
-              <div className="border-t border-gray-100 pt-4">
-                <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                <p className="text-sm text-gray-600">{testimonial.location}</p>
+              <div className="border-t border-vm-border pt-4">
+                <p className="font-semibold text-vm-text">{testimonial.name}</p>
+                <p className="text-sm text-vm-muted">{testimonial.location}</p>
               </div>
             </div>
           ))}

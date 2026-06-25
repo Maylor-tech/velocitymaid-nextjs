@@ -46,7 +46,7 @@ export default function WhatsAppWidget({
     <div className={`fixed ${position}-6 bottom-6 z-50 ${className}`}>
       {/* Chat Widget */}
       {isOpen && (
-        <div className="absolute bottom-full mb-4 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 animate-slideInUp">
+        <div className="absolute bottom-full mb-4 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-vm-border animate-slideInUp">
           {/* Header */}
           <div className="bg-green-500 text-white p-4 rounded-t-2xl">
             <div className="flex items-center justify-between">
@@ -70,8 +70,8 @@ export default function WhatsAppWidget({
 
           {/* Chat Body */}
           <div className="p-4">
-            <div className="bg-gray-100 rounded-lg p-3 mb-4">
-              <p className="text-gray-700 text-sm whitespace-pre-line">{greeting}</p>
+            <div className="bg-vm-surface rounded-lg p-3 mb-4">
+              <p className="text-vm-text text-sm whitespace-pre-line">{greeting}</p>
             </div>
 
             {showBusinessHours && (

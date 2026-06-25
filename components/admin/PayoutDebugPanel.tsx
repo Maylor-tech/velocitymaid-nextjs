@@ -37,11 +37,11 @@ export function PayoutDebugPanel({ debug }: PayoutDebugPanelProps) {
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900 mb-1">
+                <div className="text-sm font-medium text-vm-text mb-1">
                   Job ID: <span className="font-mono">{item.jobId}</span>
                 </div>
                 {item.jobDetails && (
-                  <div className="text-xs text-gray-500 mb-2 space-y-0.5">
+                  <div className="text-xs text-vm-muted mb-2 space-y-0.5">
                     {item.jobDetails.status && (
                       <div>Status: {item.jobDetails.status}</div>
                     )}
@@ -62,10 +62,10 @@ export function PayoutDebugPanel({ debug }: PayoutDebugPanelProps) {
             </div>
 
             <div className="mt-2">
-              <div className="text-xs font-medium text-gray-700 mb-1">
+              <div className="text-xs font-medium text-vm-text mb-1">
                 Skip Reasons:
               </div>
-              <ul className="list-disc list-inside text-sm text-gray-700 space-y-0.5">
+              <ul className="list-disc list-inside text-sm text-vm-text space-y-0.5">
                 {item.reasons.map((reason, idx) => (
                   <li key={idx} className="text-red-700">
                     {reason}

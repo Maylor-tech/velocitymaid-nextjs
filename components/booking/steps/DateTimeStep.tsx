@@ -24,12 +24,12 @@ export default function DateTimeStep() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Schedule Your Service</h2>
-        <p className="text-gray-600">Select your preferred date and time</p>
+        <h2 className="text-2xl font-bold text-vm-text mb-2">Schedule Your Service</h2>
+        <p className="text-vm-muted">Select your preferred date and time</p>
       </div>
 
       <div>
-        <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="date" className="block text-sm font-medium text-vm-text mb-2">
           Preferred Date *
         </label>
         <input
@@ -47,7 +47,7 @@ export default function DateTimeStep() {
       </div>
 
       <div>
-        <label htmlFor="timeSlot" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="timeSlot" className="block text-sm font-medium text-vm-text mb-2">
           Time Slot {data.schedule.flexibility === 'EXACT_TIME' ? '*' : '(Optional)'}
         </label>
         <select
@@ -72,7 +72,7 @@ export default function DateTimeStep() {
           ))}
         </select>
         {data.schedule.flexibility !== 'EXACT_TIME' && (
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-vm-muted">
             {data.schedule.flexibility === 'FLEXIBLE' 
               ? 'Time slot is optional when flexibility is set to "Flexible"'
               : 'You can select a time slot or leave it for us to schedule'}
@@ -81,7 +81,7 @@ export default function DateTimeStep() {
       </div>
 
       <div>
-        <label htmlFor="flexibility" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="flexibility" className="block text-sm font-medium text-vm-text mb-2">
           Flexibility
         </label>
         <select
@@ -103,7 +103,7 @@ export default function DateTimeStep() {
             </option>
           ))}
         </select>
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-vm-muted">
           Let us know how flexible you are with the timing
         </p>
       </div>

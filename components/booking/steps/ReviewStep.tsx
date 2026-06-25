@@ -219,15 +219,15 @@ export default function ReviewStep() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Review Your Booking</h2>
-        <p className="text-gray-600">Please review all details before confirming</p>
+        <h2 className="text-2xl font-bold text-vm-text mb-2">Review Your Booking</h2>
+        <p className="text-vm-muted">Please review all details before confirming</p>
       </div>
 
       <div className="space-y-4">
         {/* Service & Location */}
-        <div className="border border-gray-200 rounded-lg p-4">
-          <h3 className="font-semibold text-gray-900 mb-2">Service & Location</h3>
-          <div className="space-y-1 text-sm text-gray-600">
+        <div className="border border-vm-border rounded-lg p-4">
+          <h3 className="font-semibold text-vm-text mb-2">Service & Location</h3>
+          <div className="space-y-1 text-sm text-vm-muted">
             <p>
               <span className="font-medium">Service:</span>{' '}
               {data.serviceType ? serviceTypeLabels[data.serviceType] : 'Not selected'}
@@ -240,9 +240,9 @@ export default function ReviewStep() {
         </div>
 
         {/* Home Details */}
-        <div className="border border-gray-200 rounded-lg p-4">
-          <h3 className="font-semibold text-gray-900 mb-2">Home Details</h3>
-          <div className="space-y-1 text-sm text-gray-600">
+        <div className="border border-vm-border rounded-lg p-4">
+          <h3 className="font-semibold text-vm-text mb-2">Home Details</h3>
+          <div className="space-y-1 text-sm text-vm-muted">
             <p>
               <span className="font-medium">Bedrooms:</span> {data.home.bedrooms}
             </p>
@@ -261,9 +261,9 @@ export default function ReviewStep() {
         </div>
 
         {/* Schedule */}
-        <div className="border border-gray-200 rounded-lg p-4">
-          <h3 className="font-semibold text-gray-900 mb-2">Schedule</h3>
-          <div className="space-y-1 text-sm text-gray-600">
+        <div className="border border-vm-border rounded-lg p-4">
+          <h3 className="font-semibold text-vm-text mb-2">Schedule</h3>
+          <div className="space-y-1 text-sm text-vm-muted">
             <p>
               <span className="font-medium">Date:</span> {formatDate(data.schedule.date)}
             </p>
@@ -279,11 +279,11 @@ export default function ReviewStep() {
 
         {/* Extras */}
         {selectedExtras.length > 0 && (
-          <div className="border border-gray-200 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 mb-2">Additional Services</h3>
+          <div className="border border-vm-border rounded-lg p-4">
+            <h3 className="font-semibold text-vm-text mb-2">Additional Services</h3>
             <ul className="space-y-1">
               {selectedExtras.map((extra, index) => (
-                <li key={index} className="flex items-center gap-2 text-sm text-gray-600">
+                <li key={index} className="flex items-center gap-2 text-sm text-vm-muted">
                   <Check className="w-4 h-4 text-green-600" />
                   {extra}
                 </li>
@@ -294,17 +294,17 @@ export default function ReviewStep() {
 
         {/* Special Instructions */}
         {data.extras.notes && (
-          <div className="border border-gray-200 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 mb-2">Special Instructions</h3>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap">{data.extras.notes}</p>
+          <div className="border border-vm-border rounded-lg p-4">
+            <h3 className="font-semibold text-vm-text mb-2">Special Instructions</h3>
+            <p className="text-sm text-vm-muted whitespace-pre-wrap">{data.extras.notes}</p>
           </div>
         )}
       </div>
 
       {/* What Happens Next */}
       <div className="mt-6 border-2 border-blue-100 bg-blue-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">What happens next</h3>
-        <ul className="space-y-2 text-sm text-gray-700">
+        <h3 className="text-lg font-semibold text-vm-text mb-3">What happens next</h3>
+        <ul className="space-y-2 text-sm text-vm-text">
           <li className="flex items-start gap-2">
             <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
             <span>You'll complete secure payment</span>
@@ -330,14 +330,14 @@ export default function ReviewStep() {
           <div className="border-2 border-blue-200 bg-blue-50 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">Get Price Estimate</h3>
-                <p className="text-sm text-gray-600">Click below to see your estimated total</p>
+                <h3 className="text-lg font-semibold text-vm-text mb-1">Get Price Estimate</h3>
+                <p className="text-sm text-vm-muted">Click below to see your estimated total</p>
               </div>
             </div>
             <button
               onClick={handleGetQuote}
               disabled={loading}
-              className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full md:w-auto px-6 py-3 bg-vm-navy text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -366,7 +366,7 @@ export default function ReviewStep() {
 
         {quote && (
           <div className="border-2 border-green-200 bg-green-50 rounded-lg p-6 mt-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Price Estimate</h3>
+            <h3 className="text-lg font-semibold text-vm-text mb-4">Price Estimate</h3>
 
             {/* Line Items Summary */}
             {quote.lineItems.length > 0 && (
@@ -376,14 +376,14 @@ export default function ReviewStep() {
                   .slice(0, 5)
                   .map((item) => (
                     <div key={item.key} className="flex justify-between text-sm">
-                      <span className="text-gray-600">{item.label}</span>
-                      <span className="text-gray-900 font-medium">
+                      <span className="text-vm-muted">{item.label}</span>
+                      <span className="text-vm-text font-medium">
                         {formatCurrency(item.amount, quote.currency)}
                       </span>
                     </div>
                   ))}
                 {quote.lineItems.length > 5 && (
-                  <p className="text-xs text-gray-500 pt-2">
+                  <p className="text-xs text-vm-muted pt-2">
                     + {quote.lineItems.length - 5} more items
                   </p>
                 )}
@@ -393,7 +393,7 @@ export default function ReviewStep() {
             {/* Discounts */}
             {quote.discounts > 0 && (
               <div className="mb-2 flex justify-between text-sm">
-                <span className="text-gray-600">Discounts</span>
+                <span className="text-vm-muted">Discounts</span>
                 <span className="text-green-600 font-medium">
                   -{formatCurrency(quote.discounts, quote.currency)}
                 </span>
@@ -402,8 +402,8 @@ export default function ReviewStep() {
 
             {/* Subtotal */}
             <div className="mb-2 pt-3 border-t border-gray-300 flex justify-between text-sm">
-              <span className="text-gray-600">Subtotal</span>
-              <span className="text-gray-900 font-medium">
+              <span className="text-vm-muted">Subtotal</span>
+              <span className="text-vm-text font-medium">
                 {formatCurrency(quote.subtotal, quote.currency)}
               </span>
             </div>
@@ -411,8 +411,8 @@ export default function ReviewStep() {
             {/* Tax */}
             {quote.tax > 0 && (
               <div className="mb-2 flex justify-between text-sm">
-                <span className="text-gray-600">Tax</span>
-                <span className="text-gray-900 font-medium">
+                <span className="text-vm-muted">Tax</span>
+                <span className="text-vm-text font-medium">
                   {formatCurrency(quote.tax, quote.currency)}
                 </span>
               </div>
@@ -420,8 +420,8 @@ export default function ReviewStep() {
 
             {/* Total */}
             <div className="mt-4 pt-4 border-t-2 border-gray-400 flex justify-between items-center">
-              <span className="text-lg font-semibold text-gray-900">Estimated Total</span>
-              <span className="text-2xl font-bold text-gray-900">
+              <span className="text-lg font-semibold text-vm-text">Estimated Total</span>
+              <span className="text-2xl font-bold text-vm-text">
                 {formatCurrency(quote.total, quote.currency)}
               </span>
             </div>
@@ -438,26 +438,26 @@ export default function ReviewStep() {
             )}
 
             {/* Time & Cleaners */}
-            <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4 text-sm">
+            <div className="mt-4 pt-4 border-t border-vm-border grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Estimated Time:</span>
-                <span className="ml-2 font-medium text-gray-900">
+                <span className="text-vm-muted">Estimated Time:</span>
+                <span className="ml-2 font-medium text-vm-text">
                   {quote.estimatedHours} {quote.estimatedHours === 1 ? 'hour' : 'hours'}
                 </span>
               </div>
               <div>
-                <span className="text-gray-600">Recommended Cleaners:</span>
-                <span className="ml-2 font-medium text-gray-900">{quote.recommendedCleaners}</span>
+                <span className="text-vm-muted">Recommended Cleaners:</span>
+                <span className="ml-2 font-medium text-vm-text">{quote.recommendedCleaners}</span>
               </div>
             </div>
 
             {/* Warnings */}
             {quote.warnings.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-xs font-medium text-gray-700 mb-2">Note:</p>
+              <div className="mt-4 pt-4 border-t border-vm-border">
+                <p className="text-xs font-medium text-vm-text mb-2">Note:</p>
                 <ul className="space-y-1">
                   {quote.warnings.map((warning, index) => (
-                    <li key={index} className="text-xs text-gray-600 flex items-start gap-2">
+                    <li key={index} className="text-xs text-vm-muted flex items-start gap-2">
                       <AlertCircle className="w-3 h-3 text-yellow-600 flex-shrink-0 mt-0.5" />
                       {warning}
                     </li>
@@ -467,13 +467,13 @@ export default function ReviewStep() {
             )}
 
             {/* Action Buttons */}
-            <div className="mt-6 pt-4 border-t border-gray-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-6 pt-4 border-t border-vm-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
                   onClick={handleSendEstimate}
                   disabled={sendLoading || !quote}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-vm-text shadow-sm hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                 >
                   {sendLoading ? (
                     <>

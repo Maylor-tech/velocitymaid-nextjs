@@ -16,7 +16,7 @@ export function PayoutProgress({
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-between text-sm text-gray-600">
+      <div className="flex justify-between text-sm text-vm-muted">
         <span>
           Jobs completed: {completedJobs} / {minimumJobs}
         </span>

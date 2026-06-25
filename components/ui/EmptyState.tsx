@@ -15,10 +15,10 @@ export default function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+      <h2 className="text-xl font-semibold text-vm-text">{title}</h2>
 
       {subtitle && (
-        <p className="mt-2 max-w-md text-sm text-gray-600">
+        <p className="mt-2 max-w-md text-sm text-vm-muted">
           {subtitle}
         </p>
       )}
@@ -26,7 +26,7 @@ export default function EmptyState({
       {actionLabel && onAction && (
         <button
           onClick={onAction}
-          className="mt-6 rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="mt-6 rounded-md bg-vm-navy px-5 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           {actionLabel}
         </button>

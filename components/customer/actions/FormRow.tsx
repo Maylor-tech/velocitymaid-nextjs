@@ -11,7 +11,7 @@ interface FormRowProps {
 export default function FormRow({ label, required, children, error, helpText }: FormRowProps) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-vm-text mb-2">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -20,7 +20,7 @@ export default function FormRow({ label, required, children, error, helpText }: 
         <p className="mt-1 text-sm text-red-600">{error}</p>
       )}
       {helpText && !error && (
-        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
+        <p className="mt-1 text-xs text-vm-muted">{helpText}</p>
       )}
     </div>
   );

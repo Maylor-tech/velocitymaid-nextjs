@@ -133,7 +133,7 @@ export function StripePayoutSetup() {
   } else {
     statusBadge = {
       label: "Not Set Up",
-      className: "bg-gray-100 text-gray-700",
+      className: "bg-vm-surface text-vm-text",
     };
   }
 
@@ -177,7 +177,7 @@ export function StripePayoutSetup() {
         </div>
       ) : !status.hasAccount ? (
         <div className="space-y-3">
-          <div className="rounded-md bg-gray-50 p-3 text-gray-700 text-sm">
+          <div className="rounded-md bg-vm-surface p-3 text-vm-text text-sm">
             Complete payout setup to receive your earnings. This takes just a
             few minutes.
           </div>
