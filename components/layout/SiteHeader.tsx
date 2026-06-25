@@ -9,7 +9,9 @@ import { cn } from "@/lib/utils";
 
 const LOCATIONS = [
   { href: "/locations/new-jersey", label: "New Jersey" },
-  { href: "/vermont", label: "Vermont" },
+  { href: "/vermont", label: "Vermont (Overview)" },
+  { href: "/vermont/okemo", label: "Okemo Valley" },
+  { href: "/vermont/middlebury", label: "Middlebury" },
 ];
 
 export interface SiteHeaderProps {
@@ -21,7 +23,10 @@ export interface SiteHeaderProps {
 function isNavActive(href: string, pathname: string): boolean {
   if (href.startsWith("/#")) return false;
   if (href === pathname) return true;
-  if (href !== "/" && pathname.startsWith(href)) return true;
+  if (href !== "/" && pathname.startsWith(href)) {
+    if (href === "/vermont") return pathname === "/vermont";
+    return true;
+  }
   return false;
 }
 
@@ -98,7 +103,7 @@ export default function SiteHeader({
                 Locations
                 <ChevronDown className="w-4 h-4" />
               </button>
-              <div className="absolute top-full left-0 mt-2 w-48 bg-vm-navy rounded-lg shadow-lg border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className="absolute top-full left-0 mt-2 w-56 bg-vm-navy rounded-lg shadow-lg border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                 <div className="py-2">
                   {LOCATIONS.map((loc) => (
                     <Link

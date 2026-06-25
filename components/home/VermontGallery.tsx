@@ -27,7 +27,19 @@ function PhotoFallback() {
   );
 }
 
-export default function VermontGallery() {
+export interface VermontGalleryProps {
+  regionLabel?: string;
+  headline?: string;
+  subheadline?: string;
+  trustLine?: string;
+}
+
+export default function VermontGallery({
+  regionLabel = "Middlebury, Vermont",
+  headline = VERMONT_GALLERY_HEADLINE,
+  subheadline = VERMONT_GALLERY_SUBHEADLINE,
+  trustLine = VERMONT_GALLERY_TRUST_LINE,
+}: VermontGalleryProps = {}) {
   const [active, setActive] = useState(0);
   const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
 
@@ -47,13 +59,13 @@ export default function VermontGallery() {
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
           <p className="text-xs font-semibold font-body text-vm-cyan uppercase tracking-widest mb-2">
-            {VERMONT_GALLERY_TRUST_LINE}
+            {trustLine}
           </p>
           <h2 className="text-3xl font-bold font-heading text-vm-navy mb-3">
-            {VERMONT_GALLERY_HEADLINE}
+            {headline}
           </h2>
           <p className="font-body text-vm-muted text-sm max-w-2xl leading-relaxed">
-            {VERMONT_GALLERY_SUBHEADLINE}
+            {subheadline}
           </p>
         </div>
 
@@ -85,7 +97,7 @@ export default function VermontGallery() {
               {current.label}
             </span>
             <span className="text-white/55 font-body text-xs ml-2">
-              Middlebury, Vermont
+              {regionLabel}
             </span>
           </div>
         </div>
