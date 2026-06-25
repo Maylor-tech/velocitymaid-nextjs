@@ -56,8 +56,8 @@ export function JobChecklistSection({
 
   if (loadState === "loading") {
     return (
-      <div className="card-brand flex items-center gap-3 text-brand-slate/70">
-        <Loader2 className="w-5 h-5 animate-spin text-brand-forest" />
+      <div className="card-brand flex items-center gap-3 text-vm-text/70">
+        <Loader2 className="w-5 h-5 animate-spin text-vm-navy" />
         <span className="text-sm font-sans">Loading hospitality standards…</span>
       </div>
     );
@@ -66,11 +66,11 @@ export function JobChecklistSection({
   if (loadState === "error") {
     return (
       <div className="calm-alert">
-        <p className="text-sm font-sans text-brand-slate">{error}</p>
+        <p className="text-sm font-sans text-vm-text">{error}</p>
         <button
           type="button"
           onClick={fetchChecklist}
-          className="mt-2 text-xs font-sans font-bold uppercase tracking-wider text-brand-forest hover:text-brand-gold"
+          className="mt-2 text-xs font-sans font-bold uppercase tracking-wider text-vm-navy hover:text-vm-cyan"
         >
           Retry
         </button>

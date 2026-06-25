@@ -153,8 +153,8 @@ export default function CleanerProfileDrawer({
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; label: string }> = {
-      PASSED: { color: 'bg-green-100 text-green-800', label: 'Passed' },
-      IN_PROGRESS: { color: 'bg-yellow-100 text-yellow-800', label: 'In Progress' },
+      PASSED: { color: 'bg-vm-success-bg text-green-800', label: 'Passed' },
+      IN_PROGRESS: { color: 'bg-vm-warning-bg text-yellow-800', label: 'In Progress' },
       NOT_STARTED: { color: 'bg-vm-surface text-vm-text', label: 'Not Started' },
     };
 
@@ -168,10 +168,10 @@ export default function CleanerProfileDrawer({
 
   const getJobStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; label: string }> = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
-      assigned: { color: 'bg-blue-100 text-blue-800', label: 'Assigned' },
+      pending: { color: 'bg-vm-warning-bg text-yellow-800', label: 'Pending' },
+      assigned: { color: 'bg-vm-cyan-tint text-blue-800', label: 'Assigned' },
       in_progress: { color: 'bg-purple-100 text-purple-800', label: 'In Progress' },
-      completed: { color: 'bg-green-100 text-green-800', label: 'Completed' },
+      completed: { color: 'bg-vm-success-bg text-green-800', label: 'Completed' },
     };
 
     const config = statusConfig[status] || { color: 'bg-vm-surface text-vm-text', label: status };
@@ -197,12 +197,12 @@ export default function CleanerProfileDrawer({
             <div className="flex items-center gap-3 mb-2">
               <h2 className="text-xl font-semibold text-vm-text">{data.cleaner.name}</h2>
               {data.cleaner.isActive ? (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-green-800">
                   <CheckCircle className="w-3 h-3 mr-1" />
                   Active
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-vm-danger-bg text-red-800">
                   <XCircle className="w-3 h-3 mr-1" />
                   Inactive
                 </span>
@@ -364,7 +364,7 @@ export default function CleanerProfileDrawer({
                                   className={`w-4 h-4 ${
                                     star <= rating.rating
                                       ? 'text-yellow-500 fill-yellow-500'
-                                      : 'text-gray-300'
+                                      : 'text-vm-muted'
                                   }`}
                                 />
                               ))}
@@ -505,9 +505,9 @@ export default function CleanerProfileDrawer({
                             <span
                               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
                                 payout.status === 'PAID'
-                                  ? 'bg-green-100 text-green-800'
+                                  ? 'bg-vm-success-bg text-green-800'
                                   : payout.status === 'PENDING'
-                                    ? 'bg-yellow-100 text-yellow-800'
+                                    ? 'bg-vm-warning-bg text-yellow-800'
                                     : 'bg-vm-surface text-vm-text'
                               }`}
                             >

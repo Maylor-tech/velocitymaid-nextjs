@@ -118,17 +118,17 @@ export function StripePayoutSetup() {
   if (status.readyForPayouts) {
     statusBadge = {
       label: "Ready for Payouts",
-      className: "bg-green-100 text-green-700",
+      className: "bg-vm-success-bg text-green-700",
     };
   } else if (status.hasAccount && status.currentlyDue && status.currentlyDue.length > 0) {
     statusBadge = {
       label: "Action Required",
-      className: "bg-yellow-100 text-yellow-700",
+      className: "bg-vm-warning-bg text-yellow-700",
     };
   } else if (status.hasAccount) {
     statusBadge = {
       label: "Setup In Progress",
-      className: "bg-blue-100 text-blue-700",
+      className: "bg-vm-cyan-tint text-blue-700",
     };
   } else {
     statusBadge = {

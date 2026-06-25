@@ -337,7 +337,7 @@ export default function ReviewStep() {
             <button
               onClick={handleGetQuote}
               disabled={loading}
-              className="w-full md:w-auto px-6 py-3 bg-vm-navy text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full md:w-auto px-6 py-3 bg-vm-navy text-white rounded-lg font-semibold hover:bg-vm-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -496,7 +496,7 @@ export default function ReviewStep() {
                   type="button"
                   onClick={handleGetQuote}
                   disabled={loading}
-                  className="inline-flex items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-vm-cyan-tint transition-colors disabled:opacity-50"
                 >
                   Refresh Estimate
                 </button>

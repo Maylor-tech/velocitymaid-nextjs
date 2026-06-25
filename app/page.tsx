@@ -428,8 +428,8 @@ export default function Home() {
                   {image.badge && (
                     <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-bold ${
                       image.badge === 'Before' 
-                        ? 'bg-red-500 text-white' 
-                        : 'bg-green-500 text-white'
+                        ? 'bg-vm-danger text-white' 
+                        : 'bg-vm-success text-white'
                     }`}>
                       {image.badge}
                     </div>
@@ -675,7 +675,7 @@ export default function Home() {
               href={`https://wa.me/${whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-green-500 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-green-600 transition inline-flex items-center justify-center"
+              className="bg-vm-success text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-vm-success transition inline-flex items-center justify-center"
               onClick={() => {
                 sendGAEvent('event', 'whatsapp_clicked', {
                   location: 'cta_section'
@@ -800,7 +800,7 @@ export default function Home() {
               href={`https://wa.me/${whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition cursor-pointer group"
+              className="bg-vm-success text-white p-4 rounded-full shadow-lg hover:bg-vm-success transition cursor-pointer group"
               onClick={() => {
                 sendGAEvent('event', 'whatsapp_clicked', {
                   location: 'floating_button'
@@ -821,7 +821,7 @@ export default function Home() {
           onClick={() => setSelectedImage(null)}
         >
           <button
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition z-[101]"
+            className="absolute top-4 right-4 text-white hover:text-vm-muted transition z-[101]"
             onClick={() => setSelectedImage(null)}
             aria-label="Close image"
           >

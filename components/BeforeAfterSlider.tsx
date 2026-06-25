@@ -129,10 +129,10 @@ export default function BeforeAfterSlider({
       </div>
 
       {/* Labels */}
-      <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+      <div className="absolute top-4 left-4 bg-vm-danger text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
         Before
       </div>
-      <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+      <div className="absolute top-4 right-4 bg-vm-success text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
         After
       </div>
     </div>

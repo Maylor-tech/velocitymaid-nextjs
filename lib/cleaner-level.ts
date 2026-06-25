@@ -136,11 +136,11 @@ export function getLevelBadgeColor(level: number): string {
     case 4:
       return 'bg-purple-100 text-purple-800';
     case 3:
-      return 'bg-blue-100 text-blue-800';
+      return 'bg-vm-cyan-tint text-blue-800';
     case 2:
-      return 'bg-green-100 text-green-800';
+      return 'bg-vm-success-bg text-green-800';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-gray-100 text-vm-text';
   }
 }
 

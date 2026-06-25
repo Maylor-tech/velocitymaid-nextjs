@@ -105,7 +105,7 @@ export default function QuickAssignCleaner({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-md bg-vm-navy px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+        className="rounded-md bg-vm-navy px-3 py-1.5 text-xs font-medium text-white hover:bg-vm-navy"
       >
         Assign Cleaner
       </button>
@@ -117,7 +117,7 @@ export default function QuickAssignCleaner({
               <h3 className="text-sm font-semibold text-vm-text">Assign Cleaner</h3>
               <button
                 onClick={() => setOpen(false)}
-                className="text-sm text-vm-muted hover:text-gray-700"
+                className="text-sm text-vm-muted hover:text-vm-text"
               >
                 ✕
               </button>
@@ -184,7 +184,7 @@ export default function QuickAssignCleaner({
               <button
                 disabled={saving}
                 onClick={assign}
-                className="rounded-md bg-vm-navy px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+                className="rounded-md bg-vm-navy px-3 py-2 text-xs font-medium text-white hover:bg-vm-navy disabled:opacity-60"
               >
                 {saving ? 'Assigning…' : 'Confirm Assign'}
               </button>

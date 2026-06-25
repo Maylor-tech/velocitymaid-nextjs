@@ -23,8 +23,8 @@ export default function ConfirmDialog({
 }: ConfirmDialogProps) {
   const confirmButtonClass =
     variant === 'danger'
-      ? 'bg-red-600 hover:bg-red-700 text-white'
-      : 'bg-vm-navy hover:bg-blue-700 text-white';
+      ? 'bg-vm-danger hover:bg-vm-danger text-white'
+      : 'bg-vm-navy hover:bg-vm-navy text-white';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -34,7 +34,7 @@ export default function ConfirmDialog({
           <button
             onClick={onCancel}
             disabled={loading}
-            className="text-vm-muted hover:text-gray-600 disabled:opacity-50"
+            className="text-vm-muted hover:text-vm-muted disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>

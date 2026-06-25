@@ -121,8 +121,8 @@ export default function ConfirmationStep() {
         onClick={submitBooking}
         className={`w-full px-6 py-3 rounded-lg font-semibold text-white transition-colors flex items-center justify-center ${
           loading
-            ? "bg-blue-400 cursor-not-allowed"
-            : "bg-vm-navy hover:bg-blue-700"
+            ? "bg-vm-navy cursor-not-allowed"
+            : "bg-vm-navy hover:bg-vm-navy"
         }`}
       >
         {loading ? (

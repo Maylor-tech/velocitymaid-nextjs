@@ -145,11 +145,11 @@ export default function JobDetailDrawer({
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; label: string }> = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
-      assigned: { color: 'bg-blue-100 text-blue-800', label: 'Assigned' },
+      pending: { color: 'bg-vm-warning-bg text-yellow-800', label: 'Pending' },
+      assigned: { color: 'bg-vm-cyan-tint text-blue-800', label: 'Assigned' },
       in_progress: { color: 'bg-purple-100 text-purple-800', label: 'In Progress' },
-      completed: { color: 'bg-green-100 text-green-800', label: 'Completed' },
-      cancelled: { color: 'bg-red-100 text-red-800', label: 'Cancelled' },
+      completed: { color: 'bg-vm-success-bg text-green-800', label: 'Completed' },
+      cancelled: { color: 'bg-vm-danger-bg text-red-800', label: 'Cancelled' },
     };
 
     const config = statusConfig[status] || { color: 'bg-vm-surface text-vm-text', label: status };
@@ -256,7 +256,7 @@ export default function JobDetailDrawer({
                 <button
                   onClick={handleAutoAssign}
                   disabled={autoAssigning}
-                  className="w-full px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium flex items-center justify-center gap-2"
                 >
                   {autoAssigning ? (
                     <>

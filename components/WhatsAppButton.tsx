@@ -56,13 +56,13 @@ export default function WhatsAppButton({
         onClick={handleClick}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
+        className="bg-vm-success hover:bg-vm-success text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
         aria-label="Chat on WhatsApp"
       >
         <MessageCircle className="w-6 h-6" />
         
         {/* Pulse animation */}
-        <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-20"></div>
+        <div className="absolute inset-0 rounded-full bg-vm-success animate-ping opacity-20"></div>
       </button>
     </div>
   );

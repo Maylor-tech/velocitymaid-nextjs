@@ -69,7 +69,7 @@ export default function PaymentMethodBanner({
           </p>
           <Link
             href={paymentMethodPageUrl}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-vm-warning text-white rounded-lg hover:bg-vm-warning transition-colors font-medium text-sm"
           >
             Add Payment Method
           </Link>

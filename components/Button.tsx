@@ -35,8 +35,8 @@ export default function Button({
   const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-full transition-all duration-300 hover:scale-105';
   
   const variants = {
-    primary: 'bg-vm-navy text-white hover:bg-primary-700 hover:shadow-xl',
-    secondary: 'bg-white text-primary-600 border-2 border-primary-600 hover:bg-primary-50 hover:shadow-xl',
+    primary: 'bg-vm-navy text-white hover:bg-vm-navy hover:shadow-xl',
+    secondary: 'bg-white text-vm-cyan-dark border-2 border-vm-navy hover:bg-vm-surface hover:shadow-xl',
     outline: 'bg-transparent text-vm-text border-2 border-gray-300 hover:border-gray-400 hover:shadow-lg',
     ghost: 'bg-transparent text-vm-text hover:bg-gray-100',
   };

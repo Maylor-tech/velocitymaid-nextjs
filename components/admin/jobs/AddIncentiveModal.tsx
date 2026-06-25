@@ -111,7 +111,7 @@ export default function AddIncentiveModal({
             <select
               value={type}
               onChange={(e) => setType(e.target.value as IncentiveType)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
             >
               {INCENTIVE_TYPES.map((it) => (
                 <option key={it.value} value={it.value}>
@@ -130,7 +130,7 @@ export default function AddIncentiveModal({
                 min="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                 required
               />
             </div>
@@ -139,7 +139,7 @@ export default function AddIncentiveModal({
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
               >
                 <option value="USD">USD</option>
                 <option value="JMD">JMD</option>
@@ -153,7 +153,7 @@ export default function AddIncentiveModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
               placeholder="Optional description..."
             />
           </div>
@@ -163,7 +163,7 @@ export default function AddIncentiveModal({
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as 'PENDING' | 'EARNED')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
             >
               <option value="PENDING">Pending</option>
               <option value="EARNED">Earned</option>
@@ -181,7 +181,7 @@ export default function AddIncentiveModal({
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               {saving ? (
                 <>

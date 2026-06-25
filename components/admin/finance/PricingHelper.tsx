@@ -67,7 +67,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                   setIsOpen(false);
                   setBreakdown(null);
                 }}
-                className="text-vm-muted hover:text-gray-600 transition-colors"
+                className="text-vm-muted hover:text-vm-muted transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -84,7 +84,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                     type="number"
                     value={baseRate}
                     onChange={(e) => setBaseRate(parseFloat(e.target.value) || 0)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                     min="0"
                     step="0.01"
                   />
@@ -97,7 +97,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                     type="number"
                     value={bedrooms}
                     onChange={(e) => setBedrooms(parseInt(e.target.value) || 0)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                     min="0"
                   />
                 </div>
@@ -109,7 +109,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                     type="number"
                     value={bathrooms}
                     onChange={(e) => setBathrooms(parseInt(e.target.value) || 0)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                     min="0"
                   />
                 </div>
@@ -121,7 +121,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                     type="number"
                     value={squareFeet}
                     onChange={(e) => setSquareFeet(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                     min="0"
                     placeholder="Leave empty to use bedrooms/bathrooms"
                   />
@@ -134,7 +134,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                     type="number"
                     value={travelDistanceKm}
                     onChange={(e) => setTravelDistanceKm(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                     min="0"
                     step="0.1"
                     placeholder="Optional"
@@ -152,7 +152,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                       setIsDeepClean(e.target.checked);
                       if (e.target.checked) setIsMoveOut(false);
                     }}
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    className="w-4 h-4 text-vm-cyan-dark border-gray-300 rounded focus:ring-vm-cyan"
                   />
                   <span className="text-sm text-vm-text">Deep Clean</span>
                 </label>
@@ -164,7 +164,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                       setIsMoveOut(e.target.checked);
                       if (e.target.checked) setIsDeepClean(false);
                     }}
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    className="w-4 h-4 text-vm-cyan-dark border-gray-300 rounded focus:ring-vm-cyan"
                   />
                   <span className="text-sm text-vm-text">Move-out Clean</span>
                 </label>
@@ -173,7 +173,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
               {/* Calculate Button */}
               <button
                 onClick={handleCalculate}
-                className="w-full px-4 py-3 bg-vm-navy text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
+                className="w-full px-4 py-3 bg-vm-navy text-white font-medium rounded-lg hover:bg-vm-navy transition-colors"
               >
                 Calculate Price
               </button>
@@ -213,7 +213,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                     )}
                     <div className="flex justify-between pt-2 border-t border-gray-300">
                       <span className="font-semibold text-vm-text">Total:</span>
-                      <span className="font-bold text-lg text-primary-600">{formatCurrency(breakdown.total)}</span>
+                      <span className="font-bold text-lg text-vm-cyan-dark">{formatCurrency(breakdown.total)}</span>
                     </div>
                   </div>
                 </div>

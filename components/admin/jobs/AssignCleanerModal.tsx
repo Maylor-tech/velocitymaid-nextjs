@@ -139,7 +139,7 @@ export default function AssignCleanerModal({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search cleaners by name, email, city, or specialty..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
             />
           </div>
         </div>
@@ -193,7 +193,7 @@ export default function AssignCleanerModal({
                             className="w-12 h-12 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-full bg-vm-surface flex items-center justify-center">
                             <User className="w-6 h-6 text-vm-cyan-dark" />
                           </div>
                         )}
@@ -204,7 +204,7 @@ export default function AssignCleanerModal({
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold text-vm-text">{cleaner.name}</h3>
                           {cleaner.isRecommended && (
-                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                            <span className="px-2 py-0.5 bg-vm-success-bg text-green-700 text-xs font-semibold rounded-full">
                               Recommended
                             </span>
                           )}
@@ -235,7 +235,7 @@ export default function AssignCleanerModal({
                           {/* Phase 4 Part B: Show V3 assignment score */}
                           {cleaner.assignmentScore ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-xs px-2 py-0.5 bg-primary-50 text-primary-700 rounded-full font-medium">
+                              <span className="text-xs px-2 py-0.5 bg-vm-surface text-vm-cyan-dark rounded-full font-medium">
                                 Score {cleaner.assignmentScore.total}/100
                               </span>
                               {cleaner.level && (
@@ -255,7 +255,7 @@ export default function AssignCleanerModal({
                             {cleaner.specialties.map((specialty, idx) => (
                               <span
                                 key={idx}
-                                className="px-2 py-0.5 bg-primary-50 text-primary-700 text-xs rounded-full"
+                                className="px-2 py-0.5 bg-vm-surface text-vm-cyan-dark text-xs rounded-full"
                               >
                                 {specialty}
                               </span>
@@ -310,14 +310,14 @@ export default function AssignCleanerModal({
                     <div className="flex items-center gap-2 ml-4">
                       <button
                         onClick={() => onOpenProfile(cleaner)}
-                        className="text-sm text-primary-600 hover:text-primary-800 font-medium px-3 py-1.5 hover:bg-primary-50 rounded-lg transition-colors"
+                        className="text-sm text-vm-cyan-dark hover:text-vm-navy font-medium px-3 py-1.5 hover:bg-vm-surface rounded-lg transition-colors"
                       >
                         View Profile
                       </button>
                       <button
                         onClick={() => onSelectCleaner(cleaner)}
                         disabled={cleaner.availability === false}
-                        className="inline-flex items-center rounded-full bg-vm-navy px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="inline-flex items-center rounded-full bg-vm-navy px-3 py-1.5 text-sm font-semibold text-white hover:bg-vm-navy disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         Assign
                       </button>

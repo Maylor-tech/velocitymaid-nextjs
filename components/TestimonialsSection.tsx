@@ -40,9 +40,9 @@ export default function TestimonialsSection({ testimonials = defaultTestimonials
       <div className="max-w-7xl mx-auto">
         {/* Header with Badge */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-primary-50 border border-primary-200 rounded-full px-6 py-2 mb-6">
+          <div className="inline-flex items-center gap-2 bg-vm-surface border border-vm-border rounded-full px-6 py-2 mb-6">
             <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-            <span className="text-primary-700 font-bold text-lg">100+ 5-Star Reviews</span>
+            <span className="text-vm-cyan-dark font-bold text-lg">100+ 5-Star Reviews</span>
           </div>
           <h2 className="text-4xl font-bold text-vm-text mb-4">What Our Customers Say</h2>
           <p className="text-xl text-vm-muted">Real feedback from satisfied customers across New Jersey</p>

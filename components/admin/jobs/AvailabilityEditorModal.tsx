@@ -201,7 +201,7 @@ export default function AvailabilityEditorModal({
         <div className="p-6 space-y-6">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-vm-navy mx-auto" />
               <p className="mt-2 text-sm text-vm-muted">Loading availability...</p>
             </div>
           ) : (
@@ -276,7 +276,7 @@ export default function AvailabilityEditorModal({
                             type="time"
                             value={range.start}
                             onChange={(e) => handleTimeRangeChange(index, 'start', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                           />
                         </div>
                         <div>
@@ -285,7 +285,7 @@ export default function AvailabilityEditorModal({
                             type="time"
                             value={range.end}
                             onChange={(e) => handleTimeRangeChange(index, 'end', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                           />
                         </div>
                       </div>
@@ -301,7 +301,7 @@ export default function AvailabilityEditorModal({
                   ))}
                   <button
                     onClick={addTimeRange}
-                    className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-vm-muted hover:border-primary-500 hover:text-primary-600 transition-colors flex items-center justify-center gap-2"
+                    className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-vm-muted hover:border-vm-border hover:text-vm-cyan-dark transition-colors flex items-center justify-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
                     Add Time Range
@@ -323,7 +323,7 @@ export default function AvailabilityEditorModal({
                       maxDailyJobs: parseInt(e.target.value) || 1,
                     }))
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                 />
               </div>
 
@@ -335,11 +335,11 @@ export default function AvailabilityEditorModal({
                     type="date"
                     value={newBlackoutDate}
                     onChange={(e) => setNewBlackoutDate(e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                   />
                   <button
                     onClick={addBlackoutDate}
-                    className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-primary-700 transition-colors"
+                    className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors"
                   >
                     Add
                   </button>
@@ -380,7 +380,7 @@ export default function AvailabilityEditorModal({
           <button
             onClick={handleSave}
             disabled={saving || loading}
-            className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             {saving ? (
               <>

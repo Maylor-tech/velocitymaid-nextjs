@@ -71,7 +71,7 @@ export default function RequestChangeModal({
           <button
             onClick={onClose}
             disabled={loading}
-            className="text-vm-muted hover:text-gray-600 disabled:opacity-50"
+            className="text-vm-muted hover:text-vm-muted disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
@@ -152,7 +152,7 @@ export default function RequestChangeModal({
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

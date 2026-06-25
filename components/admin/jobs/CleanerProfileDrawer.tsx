@@ -360,9 +360,9 @@ export default function CleanerProfileDrawer({
 
   const getTrainingStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; label: string }> = {
-      PENDING: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
-      IN_REVIEW: { color: 'bg-blue-100 text-blue-800', label: 'In Review' },
-      PASSED: { color: 'bg-green-100 text-green-800', label: 'Passed' },
+      PENDING: { color: 'bg-vm-warning-bg text-yellow-800', label: 'Pending' },
+      IN_REVIEW: { color: 'bg-vm-cyan-tint text-blue-800', label: 'In Review' },
+      PASSED: { color: 'bg-vm-success-bg text-green-800', label: 'Passed' },
       ACTIVE: { color: 'bg-purple-100 text-purple-800', label: 'Active' },
       NOT_STARTED: { color: 'bg-vm-surface text-vm-text', label: 'Not Started' },
     };
@@ -405,8 +405,8 @@ export default function CleanerProfileDrawer({
                 className="w-16 h-16 rounded-full object-cover"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center">
-                <span className="text-2xl font-semibold text-primary-600">
+              <div className="w-16 h-16 rounded-full bg-vm-surface flex items-center justify-center">
+                <span className="text-2xl font-semibold text-vm-cyan-dark">
                   {cleaner.name.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -494,20 +494,20 @@ export default function CleanerProfileDrawer({
                       </div>
                       <div className="flex items-center gap-2">
                         {cleanerCompliance.complianceStatus === 'COMPLIANT' ? (
-                          <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                          <span className="px-3 py-1 bg-vm-success-bg text-green-800 text-xs font-semibold rounded-full">
                             Compliant
                           </span>
                         ) : cleanerCompliance.complianceStatus === 'AT_RISK' ? (
-                          <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+                          <span className="px-3 py-1 bg-vm-warning-bg text-yellow-800 text-xs font-semibold rounded-full">
                             At Risk
                           </span>
                         ) : (
-                          <span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+                          <span className="px-3 py-1 bg-vm-danger-bg text-red-800 text-xs font-semibold rounded-full">
                             Non-Compliant
                           </span>
                         )}
                         {cleanerCompliance.isSuspended && (
-                          <span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+                          <span className="px-3 py-1 bg-vm-danger-bg text-red-800 text-xs font-semibold rounded-full">
                             Suspended
                           </span>
                         )}
@@ -537,10 +537,10 @@ export default function CleanerProfileDrawer({
                               <span
                                 className={`px-2 py-0.5 rounded text-[10px] font-medium ${
                                   issue.severity >= 4
-                                    ? 'bg-red-100 text-red-800'
+                                    ? 'bg-vm-danger-bg text-red-800'
                                     : issue.severity === 3
                                     ? 'bg-orange-100 text-orange-800'
-                                    : 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-vm-warning-bg text-yellow-800'
                                 }`}
                               >
                                 {issue.severity}
@@ -592,8 +592,8 @@ export default function CleanerProfileDrawer({
                         disabled={updatingCompliance}
                         className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                           cleanerCompliance.isSuspended
-                            ? 'bg-green-600 text-white hover:bg-green-700'
-                            : 'bg-red-600 text-white hover:bg-red-700'
+                            ? 'bg-vm-success text-white hover:bg-vm-success'
+                            : 'bg-vm-danger text-white hover:bg-vm-danger'
                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         {updatingCompliance ? (
@@ -664,13 +664,13 @@ export default function CleanerProfileDrawer({
                           const getStatusBadge = (status: string) => {
                             if (status === 'APPROVED')
                               return (
-                                <span className="px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-medium rounded">
+                                <span className="px-2 py-0.5 bg-vm-success-bg text-green-800 text-[10px] font-medium rounded">
                                   Approved
                                 </span>
                               );
                             if (status === 'SUBMITTED')
                               return (
-                                <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-medium rounded">
+                                <span className="px-2 py-0.5 bg-vm-cyan-tint text-blue-800 text-[10px] font-medium rounded">
                                   Submitted
                                 </span>
                               );
@@ -697,7 +697,7 @@ export default function CleanerProfileDrawer({
                                     href={docData.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-xs text-primary-600 hover:text-primary-800"
+                                    className="text-xs text-vm-cyan-dark hover:text-vm-navy"
                                   >
                                     View
                                   </a>
@@ -721,7 +721,7 @@ export default function CleanerProfileDrawer({
                   {availability && (
                     <button
                       onClick={() => setIsAvailabilityModalOpen(true)}
-                      className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      className="p-1.5 text-vm-cyan-dark hover:bg-vm-surface rounded-lg transition-colors"
                       title="Edit availability"
                     >
                       <Edit className="w-4 h-4" />
@@ -738,7 +738,7 @@ export default function CleanerProfileDrawer({
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
                           availability.isActive
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-vm-success-bg text-green-800'
                             : 'bg-vm-surface text-vm-text'
                         }`}
                       >
@@ -751,7 +751,7 @@ export default function CleanerProfileDrawer({
                         {availability.workingDays.map((day) => (
                           <span
                             key={day}
-                            className="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded"
+                            className="px-2 py-0.5 bg-vm-surface text-vm-cyan-dark text-xs rounded"
                           >
                             {day.charAt(0).toUpperCase() + day.slice(1, 3)}
                           </span>
@@ -794,7 +794,7 @@ export default function CleanerProfileDrawer({
                     <p className="text-sm text-vm-muted">No availability settings</p>
                     <button
                       onClick={() => setIsAvailabilityModalOpen(true)}
-                      className="mt-2 text-xs text-primary-600 hover:text-primary-800"
+                      className="mt-2 text-xs text-vm-cyan-dark hover:text-vm-navy"
                     >
                       Set Availability
                     </button>
@@ -814,7 +814,7 @@ export default function CleanerProfileDrawer({
                       <span
                         className={`text-xs font-semibold px-2 py-1 rounded-full ${
                           certification.status === 'CERTIFIED'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-vm-success-bg text-green-800'
                             : certification.status === 'IN_PROGRESS'
                             ? 'bg-amber-100 text-amber-800'
                             : 'bg-vm-surface text-vm-text'
@@ -854,7 +854,7 @@ export default function CleanerProfileDrawer({
                         handleUpdateTrainingStatus(nextStatus);
                       }}
                       disabled={updatingTraining}
-                      className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
+                      className="p-1.5 text-vm-cyan-dark hover:bg-vm-surface rounded-lg transition-colors disabled:opacity-50"
                       title="Update training status"
                     >
                       {updatingTraining ? (
@@ -944,8 +944,8 @@ export default function CleanerProfileDrawer({
                           <span
                             className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
                               isRevoked
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-green-100 text-green-700'
+                                ? 'bg-vm-danger-bg text-red-700'
+                                : 'bg-vm-success-bg text-green-700'
                             }`}
                           >
                             {isRevoked ? 'Revoked' : 'Active'}
@@ -958,8 +958,8 @@ export default function CleanerProfileDrawer({
                             disabled={certActionLoadingId === cert.id}
                             className={`text-xs font-semibold px-3 py-1 rounded transition-colors ${
                               isRevoked
-                                ? 'bg-vm-navy text-white hover:bg-blue-700'
-                                : 'bg-red-600 text-white hover:bg-red-700'
+                                ? 'bg-vm-navy text-white hover:bg-vm-navy'
+                                : 'bg-vm-danger text-white hover:bg-vm-danger'
                             } disabled:opacity-60 disabled:cursor-not-allowed`}
                           >
                             {certActionLoadingId === cert.id
@@ -1125,7 +1125,7 @@ export default function CleanerProfileDrawer({
                                 className={`h-3.5 w-3.5 ${
                                   i < r.rating
                                     ? 'text-yellow-400 fill-yellow-400'
-                                    : 'text-gray-200'
+                                    : 'text-vm-muted'
                                 }`}
                               />
                             ))}
@@ -1157,7 +1157,7 @@ export default function CleanerProfileDrawer({
                   {cleaner && (
                     <button
                       onClick={() => setIsAddIncentiveModalOpen(true)}
-                      className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      className="p-1.5 text-vm-cyan-dark hover:bg-vm-surface rounded-lg transition-colors"
                       title="Add incentive"
                     >
                       <Plus className="w-4 h-4" />
@@ -1174,18 +1174,18 @@ export default function CleanerProfileDrawer({
                       const getStatusBadge = (status: string) => {
                         if (status === 'EARNED')
                           return (
-                            <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-vm-success-bg text-green-800 text-xs font-medium rounded">
                               Earned
                             </span>
                           );
                         if (status === 'REVOKED')
                           return (
-                            <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-vm-danger-bg text-red-800 text-xs font-medium rounded">
                               Revoked
                             </span>
                           );
                         return (
-                          <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                          <span className="px-2 py-0.5 bg-vm-warning-bg text-yellow-800 text-xs font-medium rounded">
                             Pending
                           </span>
                         );
@@ -1231,7 +1231,7 @@ export default function CleanerProfileDrawer({
                   {cleaner && (
                     <button
                       onClick={() => setIsAddIncentiveModalOpen(true)}
-                      className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      className="p-1.5 text-vm-cyan-dark hover:bg-vm-surface rounded-lg transition-colors"
                       title="Add incentive"
                     >
                       <Plus className="w-4 h-4" />
@@ -1248,18 +1248,18 @@ export default function CleanerProfileDrawer({
                       const getStatusBadge = (status: string) => {
                         if (status === 'EARNED')
                           return (
-                            <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-vm-success-bg text-green-800 text-xs font-medium rounded">
                               Earned
                             </span>
                           );
                         if (status === 'REVOKED')
                           return (
-                            <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-vm-danger-bg text-red-800 text-xs font-medium rounded">
                               Revoked
                             </span>
                           );
                         return (
-                          <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                          <span className="px-2 py-0.5 bg-vm-warning-bg text-yellow-800 text-xs font-medium rounded">
                             Pending
                           </span>
                         );
@@ -1443,7 +1443,7 @@ export default function CleanerProfileDrawer({
                 router.push(`/admin/cleaners/${cleaner.id}`);
               }
             }}
-            className="w-full px-4 py-2 text-primary-600 border border-primary-600 rounded-lg font-medium hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
+            className="w-full px-4 py-2 text-vm-cyan-dark border border-vm-navy rounded-lg font-medium hover:bg-vm-surface transition-colors flex items-center justify-center gap-2"
           >
             <ExternalLink className="w-4 h-4" />
             View Full Scorecard
@@ -1451,7 +1451,7 @@ export default function CleanerProfileDrawer({
           <button
             disabled={!cleaner}
             onClick={() => cleaner && onAssign(cleaner)}
-            className="w-full px-4 py-3 bg-vm-navy text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 bg-vm-navy text-white rounded-lg font-semibold hover:bg-vm-navy transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <CheckCircle2 className="w-5 h-5" />
             Assign This Cleaner

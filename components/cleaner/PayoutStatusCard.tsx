@@ -69,8 +69,8 @@ export function PayoutStatusCard() {
         <span
           className={`px-3 py-1 rounded-full text-sm font-medium ${
             data.eligible
-              ? "bg-green-100 text-green-700"
-              : "bg-yellow-100 text-yellow-700"
+              ? "bg-vm-success-bg text-green-700"
+              : "bg-vm-warning-bg text-yellow-700"
           }`}
         >
           {data.eligible ? "Eligible" : "Not Eligible"}

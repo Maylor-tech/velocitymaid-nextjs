@@ -19,29 +19,29 @@ export const brand = {
 
 export const brandClasses = {
   /** Global page shell */
-  bgPage: "bg-brand-ivory min-h-screen",
+  bgPage: "bg-vm-surface min-h-screen",
   /** Primary CTA */
   btnPrimary:
-    "bg-brand-forest text-brand-ivory font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md hover:bg-brand-forest/90 btn-tactile",
+    "bg-vm-navy text-vm-white font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md hover:bg-vm-navy/90 btn-tactile",
   /** Secondary / accent CTA */
   btnSecondary:
-    "bg-brand-gold hover:bg-brand-gold-hover text-brand-forest font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md btn-tactile",
+    "bg-vm-cyan hover:bg-vm-cyan-dark text-vm-navy font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md btn-tactile",
   /** Outline */
   btnOutline:
-    "border border-brand-forest/20 hover:border-brand-forest text-brand-forest font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded bg-transparent btn-tactile",
-  link: "text-brand-forest hover:underline",
+    "border border-vm-navy/20 hover:border-vm-navy text-vm-navy font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded bg-transparent btn-tactile",
+  link: "text-vm-navy hover:underline",
   input:
-    "w-full bg-white border border-border rounded px-3 py-2 text-sm text-brand-slate focus:outline-none focus:border-brand-forest transition-colors placeholder:text-muted-foreground/50",
+    "w-full bg-white border border-border rounded px-3 py-2 text-sm text-vm-text focus:outline-none focus:border-vm-navy transition-colors placeholder:text-muted-foreground/50",
   card: "bg-white rounded-lg shadow-xl border border-border/50 p-6 lg:p-8",
   calmAlert:
-    "flex items-start gap-3 bg-brand-forest/5 p-4 rounded border border-brand-forest/10",
+    "flex items-start gap-3 bg-vm-navy/5 p-4 rounded border border-vm-navy/10",
   trustBadge:
-    "flex items-center gap-2.5 px-3 py-1.5 bg-brand-forest/5 rounded-full border border-brand-forest/10 w-fit",
+    "flex items-center gap-2.5 px-3 py-1.5 bg-vm-navy/5 rounded-full border border-vm-navy/10 w-fit",
   heroTitle:
-    "text-4xl sm:text-5xl lg:text-6xl font-serif font-semibold tracking-tight text-brand-forest",
+    "text-4xl sm:text-5xl lg:text-6xl font-serif font-semibold tracking-tight text-vm-navy",
   sectionTitle:
-    "text-3xl sm:text-4xl font-serif font-bold tracking-tight text-brand-forest",
-  body: "text-sm sm:text-base font-sans font-medium text-brand-slate/80 leading-relaxed",
+    "text-3xl sm:text-4xl font-serif font-bold tracking-tight text-vm-navy",
+  body: "text-sm sm:text-base font-sans font-medium text-vm-text/80 leading-relaxed",
   label:
-    "text-xs font-sans font-bold uppercase tracking-wider text-brand-slate",
+    "text-xs font-sans font-bold uppercase tracking-wider text-vm-text",
 } as const;

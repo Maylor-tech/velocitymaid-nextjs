@@ -14,11 +14,11 @@ export default function StatusBarChart({ data }: StatusBarChartProps) {
   const maxCount = Math.max(...data.map((d) => d.count));
 
   const statusColors: Record<string, string> = {
-    pending: 'bg-yellow-500',
+    pending: 'bg-vm-warning',
     assigned: 'bg-vm-navy',
     in_progress: 'bg-purple-500',
-    completed: 'bg-green-500',
-    cancelled: 'bg-red-500',
+    completed: 'bg-vm-success',
+    cancelled: 'bg-vm-danger',
   };
 
   const formatStatus = (status: string): string => {

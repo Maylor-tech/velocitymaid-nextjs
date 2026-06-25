@@ -48,7 +48,7 @@ export default function WhatsAppWidget({
       {isOpen && (
         <div className="absolute bottom-full mb-4 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-vm-border animate-slideInUp">
           {/* Header */}
-          <div className="bg-green-500 text-white p-4 rounded-t-2xl">
+          <div className="bg-vm-success text-white p-4 rounded-t-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
@@ -61,7 +61,7 @@ export default function WhatsAppWidget({
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-white hover:text-gray-200 transition"
+                className="text-white hover:text-vm-muted transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -95,7 +95,7 @@ export default function WhatsAppWidget({
               
               <button
                 onClick={handleSendMessage}
-                className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                className="w-full bg-vm-success hover:bg-vm-success text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>Send on WhatsApp</span>
@@ -108,13 +108,13 @@ export default function WhatsAppWidget({
       {/* WhatsApp Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
+        className="bg-vm-success hover:bg-vm-success text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
         aria-label="Open WhatsApp chat"
       >
         <MessageCircle className="w-6 h-6" />
         
         {/* Pulse animation */}
-        <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-20"></div>
+        <div className="absolute inset-0 rounded-full bg-vm-success animate-ping opacity-20"></div>
       </button>
     </div>
   );
