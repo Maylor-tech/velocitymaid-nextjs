@@ -1,0 +1,20 @@
+{
+  "//": "VelocityMaid — CI lint guard (Phase 5 enforcement, added now to prevent regressions). Merge rules into the app's eslint/oxlint config. Flags legacy palette + deprecated button variants in className/JSX. Phase 0-1 itself introduces NONE of these; this guards future PRs.",
+  "rules": {
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/\\b(brand-forest|brand-gold|brand-ivory|brand-slate)\\b/]",
+        "message": "Legacy forest/gold palette is deprecated. Use vm-navy / vm-cyan / vm-* tokens (see design-system)."
+      },
+      {
+        "selector": "Literal[value=/\\b(primary-[0-9]{2,3}|bg-(blue|green|red|yellow)-[0-9]{3}|text-gray-[0-9]{3})\\b/]",
+        "message": "Raw Tailwind palette literal. Use the vm-* semantic tokens or the shared status map."
+      },
+      {
+        "selector": "JSXAttribute[name.name='variant'][value.value=/^(brand|brandGold|brandOutline)$/]",
+        "message": "Deprecated Button variant removed in v1.0. Use navy | cyan | navyOutline."
+      }
+    ]
+  }
+}
