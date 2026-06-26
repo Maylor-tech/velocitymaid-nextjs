@@ -29,16 +29,16 @@ export const ADMIN_NAV: AdminNavItem[] = [
     match: (p) => p.startsWith('/admin/jobs'),
   },
   {
-    href: '/admin/cleaners/applications',
+    href: '/admin/cleaners',
     label: 'Cleaners',
     icon: Users,
     match: (p) => p.startsWith('/admin/cleaners'),
   },
   {
-    href: '/admin/jobs',
+    href: '/admin/branches',
     label: 'Branches',
     icon: MapPin,
-    match: () => false,
+    match: (p) => p.startsWith('/admin/branches'),
   },
   {
     href: '/admin/invoices',

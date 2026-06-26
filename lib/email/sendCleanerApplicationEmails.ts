@@ -58,7 +58,7 @@ export async function sendCleanerApplicationConfirmationEmail(params: {
   await resend.emails.send({
     from: getResendFromEmail(),
     to: params.toEmail,
-    subject: 'Your VelocityMaid application has been received',
+    subject: 'VelocityMaid Cleaner Application Received',
     html,
   });
 
@@ -102,7 +102,7 @@ export async function sendCleanerApplicationInternalNotification(params: {
   await resend.emails.send({
     from: getResendFromEmail(),
     to: opsEmail,
-    subject: `New cleaner application — ${params.applicantName}`,
+    subject: `New VelocityMaid Cleaner Application — ${params.applicantName}`,
     html,
   });
 

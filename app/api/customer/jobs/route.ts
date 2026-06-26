@@ -6,6 +6,13 @@ import { getCustomerSession } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
 import { JobStatus, PaymentStatus } from '@prisma/client';
 import { requireRole } from '@/lib/auth/requireRole';
+import { loadJobTeamBatch } from '@/lib/cleaners/internalCleanerService';
+import {
+  guestServiceTeamLine,
+  mergePrimaryWithTeam,
+  memberDisplayName,
+  type TeamMemberDisplay,
+} from '@/lib/cleaners/teamDisplay';
 
 /**
  * GET /api/customer/jobs
@@ -95,6 +102,9 @@ export async function GET(request: NextRequest) {
               id: true,
               name: true,
               email: true,
+              CleanerProfile: {
+                select: { publicDisplayName: true },
+              },
             },
           },
           CleanerRating: {
@@ -115,6 +125,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Format response
+    const jobIds = jobs.map((j) => j.id);
+    const teamMap = await loadJobTeamBatch(jobIds);
+
     const formattedJobs = jobs.map((job) => {
       // 🔐 PAYMENT TRUTH: Use actual paymentStatus from database (Stripe → webhook → DB)
       // Do NOT infer from job status - payment truth comes from Stripe
@@ -135,6 +148,15 @@ export async function GET(request: NextRequest) {
       // Format: VM-XXXXXX (last 6 chars of job ID for now)
       // TODO: Add jobNumber field to Job model for better UX
       const jobNumber = job.id ? `VM-${job.id.slice(-6).toUpperCase()}` : undefined;
+
+      const primaryMember: TeamMemberDisplay | null = job.User
+        ? {
+            id: job.User.id,
+            name: job.User.name,
+            publicDisplayName: job.User.CleanerProfile?.publicDisplayName ?? null,
+          }
+        : null;
+      const team = mergePrimaryWithTeam(primaryMember, teamMap.get(job.id) ?? []);
 
       return {
         id: job.id,
@@ -157,10 +179,15 @@ export async function GET(request: NextRequest) {
         cleaner: job.User
           ? {
               id: job.User.id,
-              name: job.User.name || 'Unknown',
-              avatarUrl: undefined, // TODO: Add avatar URL if available
+              name: memberDisplayName({
+                id: job.User.id,
+                name: job.User.name,
+                publicDisplayName: job.User.CleanerProfile?.publicDisplayName,
+              }),
+              avatarUrl: undefined,
             }
           : null,
+        serviceTeamLine: guestServiceTeamLine(team),
         paymentStatus, // Now reflects actual database payment status
         rating: job.CleanerRating
           ? {

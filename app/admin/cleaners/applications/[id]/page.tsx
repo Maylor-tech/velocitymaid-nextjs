@@ -145,6 +145,12 @@ export default function CleanerApplicationDetailPage() {
   };
 
   const [statusUpdating, setStatusUpdating] = useState(false);
+  const [adminNotes, setAdminNotes] = useState('');
+  const [notesSaving, setNotesSaving] = useState(false);
+
+  useEffect(() => {
+    if (application?.notes) setAdminNotes(application.notes);
+  }, [application?.notes]);
 
   const handleStatusChange = async (newStatus: string) => {
     try {
@@ -167,6 +173,29 @@ export default function CleanerApplicationDetailPage() {
       setShowToast(true);
     } finally {
       setStatusUpdating(false);
+    }
+  };
+
+  const saveAdminNotes = async () => {
+    try {
+      setNotesSaving(true);
+      const response = await fetch(`/api/admin/cleaners/applications/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminNotes }),
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Failed to save notes');
+      setApplication(data.application);
+      setToastMessage('Notes saved');
+      setToastType('success');
+      setShowToast(true);
+    } catch (err: unknown) {
+      setToastMessage(err instanceof Error ? err.message : 'Failed to save notes');
+      setToastType('error');
+      setShowToast(true);
+    } finally {
+      setNotesSaving(false);
     }
   };
 
@@ -273,7 +302,23 @@ export default function CleanerApplicationDetailPage() {
 
         {/* Action Buttons */}
         {isOpenCleanerApplication(application.status) && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex gap-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => handleStatusChange('REVIEWING')}
+              disabled={processing || statusUpdating}
+              className="rounded-lg border border-vm-border px-4 py-2 font-body text-sm text-vm-navy"
+            >
+              Mark reviewing
+            </button>
+            <button
+              type="button"
+              onClick={() => handleStatusChange('TRAINING_INVITED')}
+              disabled={processing || statusUpdating}
+              className="rounded-lg border border-vm-cyan bg-vm-cyan-tint px-4 py-2 font-body text-sm text-vm-navy"
+            >
+              Invite to training
+            </button>
             <button
               onClick={handleApprove}
               disabled={processing}
@@ -294,7 +339,7 @@ export default function CleanerApplicationDetailPage() {
             <button
               onClick={handleReject}
               disabled={processing}
-              className="flex-1 px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 min-w-[140px] px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {processing ? (
                 <>
@@ -411,6 +456,25 @@ export default function CleanerApplicationDetailPage() {
           {parseTalentApplicationData(application.applicationData) && (
             <TalentApplicationView data={parseTalentApplicationData(application.applicationData)!} />
           )}
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-vm-text mb-4">Admin notes</h2>
+            <textarea
+              rows={4}
+              value={adminNotes}
+              onChange={(e) => setAdminNotes(e.target.value)}
+              className="w-full rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy"
+              placeholder="Internal notes for Brian and Caryll…"
+            />
+            <button
+              type="button"
+              disabled={notesSaving}
+              onClick={saveAdminNotes}
+              className="mt-3 rounded-lg bg-vm-navy px-4 py-2 font-body text-sm text-white disabled:opacity-60"
+            >
+              {notesSaving ? 'Saving…' : 'Save notes'}
+            </button>
+          </div>
 
           {/* Documents */}
           {(application.idUploadUrl || application.referencesUploadUrl) && (

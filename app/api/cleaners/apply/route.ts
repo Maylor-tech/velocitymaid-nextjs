@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleTalentPortalSubmit(application: TalentApplicationPayload) {
-  const validationError = validateTalentApplication(application);
+async function handleTalentPortalSubmit(payload: TalentApplicationPayload) {
+  const validationError = validateTalentApplication(payload);
   if (validationError) {
     return NextResponse.json({ success: false, error: validationError }, { status: 400 });
   }
@@ -49,7 +49,7 @@ async function handleTalentPortalSubmit(application: TalentApplicationPayload) {
     select: { id: true, slug: true, country: true, name: true },
   });
 
-  const branchId = resolveBranchIdFromServiceAreas(application.serviceAreas.areas, branches);
+  const branchId = resolveBranchIdFromServiceAreas(payload.serviceAreas.areas, branches);
   if (!branchId) {
     return NextResponse.json(
       { success: false, error: 'Unable to match your service area to an active branch. Please contact us.' },
@@ -58,7 +58,7 @@ async function handleTalentPortalSubmit(application: TalentApplicationPayload) {
   }
 
   const branch = branches.find((b) => b.id === branchId)!;
-  const { personal } = application;
+  const { personal } = payload;
   const fullName = `${personal.firstName.trim()} ${personal.lastName.trim()}`.trim();
   const areaOfResidence = `${personal.city.trim()}, ${personal.state.trim()} ${personal.zipCode.trim()}`.trim();
 
@@ -71,21 +71,21 @@ async function handleTalentPortalSubmit(application: TalentApplicationPayload) {
       phone: personal.phone.trim(),
       whatsappNumber: personal.phone.trim(),
       branchId,
-      experienceLevel: application.experience.yearsExperience,
+      experienceLevel: payload.experience.yearsExperience,
       areaOfResidence,
-      daysAvailable: application.availability.daysAvailable,
-      weekendAbility: application.availability.weekendTurnovers,
-      canTravelToVillas: application.serviceAreas.areas.some((a) =>
+      daysAvailable: payload.availability.daysAvailable,
+      weekendAbility: payload.availability.weekendTurnovers,
+      canTravelToVillas: payload.serviceAreas.areas.some((a) =>
         ['Ludlow', 'Okemo', 'Killington', 'Woodstock'].includes(a)
       ),
-      notes: buildTalentNotesSummary(application),
-      applicationData: application as object,
+      notes: buildTalentNotesSummary(payload),
+      applicationData: payload as object,
       status: 'NEW',
       updatedAt: new Date(),
     },
   });
 
-  await Promise.allSettled([
+  const emailResults = await Promise.allSettled([
     sendCleanerApplicationConfirmationEmail({
       toEmail: record.email,
       applicantName: personal.preferredName.trim() || personal.firstName.trim(),
@@ -95,9 +95,17 @@ async function handleTalentPortalSubmit(application: TalentApplicationPayload) {
       applicantEmail: record.email,
       branchName: branch.name,
       applicationId: record.id,
-      serviceAreas: application.serviceAreas.areas,
+      serviceAreas: payload.serviceAreas.areas,
     }),
   ]);
+
+  for (const result of emailResults) {
+    if (result.status === 'rejected') {
+      console.error('[TALENT_APPLY] Email notification failed:', result.reason);
+    } else if (!result.value.sent) {
+      console.warn('[TALENT_APPLY] Email skipped:', result.value.skippedReason);
+    }
+  }
 
   return NextResponse.json({
     success: true,

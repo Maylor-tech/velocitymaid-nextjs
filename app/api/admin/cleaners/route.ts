@@ -17,6 +17,7 @@ import { getCleanerAverageJQS } from '@/utils/jobQualityScore';
 import { computeAssignmentScore, CleanerForScoring } from '@/lib/assignment-scoring';
 import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level';
 import { ACTIVE_JOB_STATUS_EXCLUDE } from '@/lib/jobStatus';
+import { APPROVED_CLEANER_APPLICATION_STATUSES } from '@/lib/cleaners/applicationStatus';
 
 function startOfToday(): Date {
   const d = new Date();
@@ -104,9 +105,20 @@ export async function GET(request: NextRequest) {
     const cleanerApps = await prisma.cleanerApplication.findMany({
       where: {
         branchId,
-        status: 'APPROVED',
+        status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
       },
     });
+
+    const internalCleaners = await prisma.user.findMany({
+      where: {
+        role: 'CLEANER',
+        primaryBranchId: branchId,
+        CleanerProfile: { isInternalTeam: true },
+      },
+      select: { email: true },
+    });
+
+    const internalEmails = new Set(internalCleaners.map((c) => c.email.toLowerCase()));
 
     const cleaners = [];
 

@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
       activeCleaners,
       onboardingCleaners,
       unassignedJobs,
+      newCleanerApplications,
       ratings,
       ratingsBeforeWeek,
     ] = await Promise.all([
@@ -138,6 +139,12 @@ export async function GET(request: NextRequest) {
           preferredDate: { gte: now },
         },
       }),
+      prisma.cleanerApplication.count({
+        where: {
+          ...(auth.branchId ? { branchId: auth.branchId } : {}),
+          status: 'NEW',
+        },
+      }),
       prisma.cleanerRating.findMany({
         where: auth.branchId
           ? { Cleaner: { primaryBranchId: auth.branchId } }
@@ -183,6 +190,7 @@ export async function GET(request: NextRequest) {
         revenueWeekDelta: formatDelta(revenueThisWeek, revenueLastWeek),
         activeCleaners,
         onboardingCleaners,
+        newCleanerApplications,
         avgRating: avgRating != null ? Math.round(avgRating * 10) / 10 : null,
         ratingDelta: formatRatingDelta(avgRating, prevAvgRating),
       },

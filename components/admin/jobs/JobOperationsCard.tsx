@@ -44,6 +44,14 @@ export interface AdminJobListItem extends JobOperationsInput {
     name: string;
     slug: string;
   } | null;
+  assignedTeam?: Array<{
+    id: string;
+    name: string | null;
+    publicDisplayName?: string | null;
+    isCertified?: boolean;
+  }>;
+  assignedTeamLabel?: string | null;
+  assignedTeamSubtitle?: string | null;
   cleanerCertified?: boolean;
 }
 
@@ -146,10 +154,29 @@ export function JobOperationsCard({
             />
           </div>
 
-          {/* Cleaner */}
+          {/* Cleaner / team */}
           <div className="flex flex-wrap items-center gap-2">
             <User className="h-4 w-4 text-vm-muted" />
-            {job.assignedCleaner ? (
+            {job.assignedTeamLabel ? (
+              <div>
+                <p className="font-body text-sm font-medium text-vm-navy">
+                  Assigned Team: {job.assignedTeamLabel}
+                </p>
+                {job.assignedTeamSubtitle && (
+                  <p className="font-body text-xs text-vm-muted">{job.assignedTeamSubtitle}</p>
+                )}
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {(job.assignedTeam ?? []).map((m) => (
+                    <span key={m.id} className="inline-flex items-center gap-1 rounded-full bg-vm-surface px-2 py-0.5 font-body text-xs text-vm-navy">
+                      {m.publicDisplayName || m.name}
+                      {m.isCertified && (
+                        <CheckCircle2 className="h-3 w-3 text-vm-success" aria-label="Certified" />
+                      )}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : job.assignedCleaner ? (
               <>
                 <span className="font-body text-sm font-medium text-vm-navy">
                   {job.assignedCleaner.name || job.assignedCleaner.email}

@@ -55,18 +55,26 @@ export async function PATCH(
   try {
     await requireRole(request, 'ADMIN');
     const body = await request.json();
-    const { status } = body as { status?: string };
+    const { status, adminNotes } = body as { status?: string; adminNotes?: string };
 
-    if (!status || !ALLOWED_STATUSES.includes(status as CleanerApplicationStatus)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid status value' },
-        { status: 400 }
-      );
+    if (!status && adminNotes === undefined) {
+      return NextResponse.json({ success: false, error: 'No updates provided' }, { status: 400 });
+    }
+
+    const data: Record<string, unknown> = { updatedAt: new Date() };
+    if (status) {
+      if (!ALLOWED_STATUSES.includes(status as CleanerApplicationStatus)) {
+        return NextResponse.json({ success: false, error: 'Invalid status value' }, { status: 400 });
+      }
+      data.status = status;
+    }
+    if (adminNotes !== undefined) {
+      data.notes = adminNotes;
     }
 
     const application = await prisma.cleanerApplication.update({
       where: { id: params.id },
-      data: { status: status as CleanerApplicationStatus, updatedAt: new Date() },
+      data,
       include: {
         Branch: {
           select: { id: true, name: true, slug: true, city: true, state: true, country: true },

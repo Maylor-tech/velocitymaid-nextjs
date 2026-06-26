@@ -410,6 +410,7 @@ model Job {
   ComplianceIssue          ComplianceIssue[]
   CustomerJobChangeRequest CustomerJobChangeRequest[]
   JobChecklistItem         JobChecklistItem[]
+  JobTeamMember            JobTeamMember[]
   User                     User?                      @relation(fields: [assignedCleanerId], references: [id])
   ApprovedBy               User?                      @relation("JobApprovedBy", fields: [approvedById], references: [id])
   Branch                   Branch                     @relation(fields: [branchId], references: [id])
@@ -439,6 +440,39 @@ model CleanPhoto {
 
   @@index([jobId])
   @@map("clean_photos")
+}
+
+model CleanerProfile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  firstName           String?
+  lastName            String?
+  publicDisplayName   String?
+  jobTitle            String?
+  serviceAreas        Json?
+  memberStatus        String   @default("ACTIVE")
+  certificationLabel  String   @default("PENDING")
+  internalNotes       String?
+  isInternalTeam      Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([memberStatus])
+  @@index([isInternalTeam])
+}
+
+model JobTeamMember {
+  id        String @id @default(cuid())
+  jobId     String
+  cleanerId String
+  sortOrder Int    @default(0)
+  Job       Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  User      User   @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, cleanerId])
+  @@index([jobId])
+  @@index([cleanerId])
 }
 
 model ReviewRequest {
@@ -905,6 +939,8 @@ model User {
   TrainingCertificate                 TrainingCertificate?   @relation("TrainingCertificate_cleaner")
   TrainingQuizAttempt                 TrainingQuizAttempt[]
   TrainingStatus                      TrainingStatus?        @relation("TrainingStatus_cleaner")
+  CleanerProfile                      CleanerProfile?
+  JobTeamMember                       JobTeamMember[]
   TransactionLedger                   TransactionLedger[]
   Branch_User_primaryBranchIdToBranch Branch?                @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
   UserBranch                          UserBranch[]

@@ -31,6 +31,7 @@ interface OperationsKpis {
   revenueWeekDelta?: KpiDelta;
   activeCleaners: number;
   onboardingCleaners: number;
+  newCleanerApplications: number;
   avgRating: number | null;
   ratingDelta?: KpiDelta;
 }
@@ -301,6 +302,21 @@ export default function OperationsDashboardPage() {
                 icon={<Star className="h-5 w-5 fill-vm-cyan-dark text-vm-cyan-dark" />}
               />
             </div>
+
+            {(kpis?.newCleanerApplications ?? 0) > 0 && (
+              <Link
+                href="/admin/cleaners/applications"
+                className="mb-6 flex items-center justify-between rounded-xl border border-vm-cyan/40 bg-vm-cyan-tint px-5 py-4 transition-colors hover:bg-vm-cyan/10"
+              >
+                <div>
+                  <p className="font-heading text-sm font-semibold text-vm-navy">Cleaner applications</p>
+                  <p className="font-body text-xs text-vm-muted">New talent portal submissions need review</p>
+                </div>
+                <span className="rounded-full bg-vm-navy px-3 py-1 font-heading text-sm font-bold text-white">
+                  {kpis?.newCleanerApplications} New
+                </span>
+              </Link>
+            )}
 
             <div className="overflow-hidden rounded-xl border border-vm-border bg-vm-white shadow-sm">
               <div className="px-5 pt-5">

@@ -1,229 +1,222 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, Loader2, Eye, Filter } from 'lucide-react';
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import {
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Eye,
+  GraduationCap,
+  ArrowLeft,
+  UserPlus,
+} from "lucide-react";
 import {
   CLEANER_APPLICATION_STATUS_LABELS,
   isOpenCleanerApplication,
-} from '@/lib/cleaners/applicationStatus';
-
-interface CleanerApplication {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  experienceLevel: string | null;
-  daysAvailable: any;
-  notes: string | null;
-  status: string;
-  createdAt: string;
-  Branch: {
-    id: string;
-    name: string;
-    slug: string;
-    city: string;
-    state: string;
-  };
-}
+} from "@/lib/cleaners/applicationStatus";
+import {
+  formatAvailabilitySummary,
+  formatExperienceSummary,
+  formatServiceArea,
+  formatTransportSummary,
+  hasBackgroundConsent,
+  hasReferences,
+  safeBranchLocation,
+  safeBranchName,
+  type ApplicationListRow,
+} from "@/lib/cleaners/formatApplicationSummary";
 
 export default function CleanerApplicationsPage() {
-  const router = useRouter();
-  const [applications, setApplications] = useState<CleanerApplication[]>([]);
+  const [applications, setApplications] = useState<ApplicationListRow[]>([]);
+  const [newCount, setNewCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [branchFilter, setBranchFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [branchFilter, setBranchFilter] = useState<string>("all");
   const [branches, setBranches] = useState<Array<{ id: string; name: string }>>([]);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  useEffect(() => {
-    fetchBranches();
-    fetchApplications();
-  }, [statusFilter, branchFilter]);
-
-  const fetchBranches = async () => {
-    try {
-      const response = await fetch('/api/admin/branches');
-      const data = await response.json();
-      if (data.success) {
-        setBranches(data.branches.map((b: any) => ({ id: b.id, name: b.name })));
-      }
-    } catch (err) {
-      console.error('Error fetching branches:', err);
-    }
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
   };
 
-  const fetchApplications = async () => {
+  const fetchBranches = useCallback(async () => {
+    try {
+      const response = await fetch("/api/admin/branches");
+      const data = await response.json();
+      if (data.success && Array.isArray(data.branches)) {
+        setBranches(data.branches.map((b: { id: string; name: string }) => ({ id: b.id, name: b.name })));
+      }
+    } catch (err) {
+      console.error("Error fetching branches:", err);
+    }
+  }, []);
+
+  const fetchApplications = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const params = new URLSearchParams();
-      if (statusFilter !== 'all') {
-        params.append('status', statusFilter);
-      }
-      if (branchFilter !== 'all') {
-        params.append('branchId', branchFilter);
-      }
+      if (statusFilter !== "all") params.append("status", statusFilter);
+      if (branchFilter !== "all") params.append("branchId", branchFilter);
 
       const response = await fetch(`/api/admin/cleaners/applications?${params.toString()}`);
       const data = await response.json();
 
       if (data.success) {
-        setApplications(data.applications);
+        setApplications(Array.isArray(data.applications) ? data.applications : []);
+        setNewCount(data.newCount ?? 0);
       } else {
-        throw new Error(data.error || 'Failed to fetch applications');
+        throw new Error(data.error || "Failed to fetch applications");
       }
-    } catch (err: any) {
-      console.error('Error fetching applications:', err);
-      setError(err.message || 'Failed to load applications');
+    } catch (err: unknown) {
+      console.error("Error fetching applications:", err);
+      setError(err instanceof Error ? err.message : "Failed to load applications");
+      setApplications([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, branchFilter]);
+
+  useEffect(() => {
+    fetchBranches();
+  }, [fetchBranches]);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
 
   const handleApprove = async (id: string) => {
-    if (!confirm('Approve this application and create a user account?')) {
-      return;
-    }
-
+    if (!confirm("Accept and convert this applicant into a cleaner profile?")) return;
     try {
-      const response = await fetch(`/api/admin/cleaners/applications/${id}/approve`, {
-        method: 'POST',
-      });
+      const response = await fetch(`/api/admin/cleaners/applications/${id}/approve`, { method: "POST" });
       const data = await response.json();
-
-      if (data.success) {
-        setToastMessage('Application approved and user account created');
-        setToastType('success');
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-        fetchApplications();
-      } else {
-        throw new Error(data.error || 'Failed to approve application');
-      }
-    } catch (err: any) {
-      setToastMessage(err.message || 'Failed to approve application');
-      setToastType('error');
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      if (!data.success) throw new Error(data.error || "Failed to approve");
+      showToast("Application accepted — cleaner profile created");
+      fetchApplications();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Failed to approve", "error");
     }
   };
 
   const handleReject = async (id: string) => {
-    if (!confirm('Reject this application?')) {
-      return;
-    }
-
+    if (!confirm("Reject this application?")) return;
     try {
-      const response = await fetch(`/api/admin/cleaners/applications/${id}/reject`, {
-        method: 'POST',
+      const response = await fetch(`/api/admin/cleaners/applications/${id}/reject`, { method: "POST" });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || "Failed to reject");
+      showToast("Application rejected");
+      fetchApplications();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Failed to reject", "error");
+    }
+  };
+
+  const handleInviteTraining = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/cleaners/applications/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "TRAINING_INVITED" }),
       });
       const data = await response.json();
-
-      if (data.success) {
-        setToastMessage('Application rejected');
-        setToastType('success');
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-        fetchApplications();
-      } else {
-        throw new Error(data.error || 'Failed to reject application');
-      }
-    } catch (err: any) {
-      setToastMessage(err.message || 'Failed to reject application');
-      setToastType('error');
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      if (!data.success) throw new Error(data.error || "Failed to update");
+      showToast("Training invitation recorded");
+      fetchApplications();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Failed to invite", "error");
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ACCEPTED':
-      case 'APPROVED':
-        return 'bg-vm-success-bg text-vm-success';
-      case 'REJECTED':
-        return 'bg-vm-danger-bg text-red-800';
-      case 'REVIEWING':
-      case 'TRAINING_INVITED':
-        return 'bg-vm-cyan-tint text-vm-navy';
+      case "ACCEPTED":
+      case "APPROVED":
+        return "bg-vm-success-bg text-vm-success";
+      case "REJECTED":
+        return "bg-vm-danger-bg text-vm-danger";
+      case "REVIEWING":
+      case "TRAINING_INVITED":
+        return "bg-vm-cyan-tint text-vm-navy";
       default:
-        return 'bg-vm-warning-bg text-yellow-800';
+        return "bg-vm-warning-bg text-vm-warning";
     }
   };
 
-  const statusLabel = (status: string) =>
-    CLEANER_APPLICATION_STATUS_LABELS[status] || status;
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
-  };
-
-  if (loading && applications.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="text-center py-12">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
-          <p className="mt-4 text-vm-muted">Loading applications...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-vm-text mb-2">Cleaner Applications</h1>
-          <p className="text-vm-muted">Review and manage cleaner applications</p>
+    <div className="p-7 pb-24">
+      <div className="mx-auto max-w-7xl">
+        <Link
+          href="/admin/cleaners"
+          className="mb-4 inline-flex items-center gap-1 font-body text-sm text-vm-cyan-dark hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" /> Cleaners
+        </Link>
+
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="font-heading text-2xl font-bold text-vm-navy">Cleaner Applications</h1>
+            <p className="mt-1 font-body text-sm text-vm-muted">
+              Review talent portal submissions and move candidates through certification.
+            </p>
+            {newCount > 0 && (
+              <p className="mt-2 inline-flex rounded-full bg-vm-warning-bg px-3 py-1 font-body text-xs font-semibold text-vm-warning">
+                {newCount} new application{newCount === 1 ? "" : "s"}
+              </p>
+            )}
+          </div>
+          <Link
+            href="/admin/cleaners/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-vm-navy px-4 py-2.5 font-heading text-sm font-bold text-white hover:opacity-90"
+          >
+            <UserPlus className="h-4 w-4" /> Add team member
+          </Link>
         </div>
 
-        {/* Toast Notification */}
-        {showToast && (
+        {toast && (
           <div
-            className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-              toastType === 'success' ? 'bg-vm-success text-white' : 'bg-vm-danger text-white'
+            className={`fixed right-4 top-4 z-50 rounded-lg px-5 py-3 font-body text-sm text-white shadow-lg ${
+              toast.type === "success" ? "bg-vm-navy" : "bg-vm-danger"
             }`}
           >
-            {toastMessage}
+            {toast.message}
           </div>
         )}
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex gap-4">
+        <div className="mb-6 flex flex-wrap gap-4 rounded-xl border border-vm-border bg-vm-white p-4">
           <div>
-            <label className="block text-sm font-medium text-vm-text mb-1">Status</label>
+            <label className="mb-1 block font-body text-xs font-semibold uppercase text-vm-muted">Status</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              className="rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy"
             >
               <option value="all">All</option>
               <option value="NEW">New</option>
               <option value="REVIEWING">Reviewing</option>
               <option value="TRAINING_INVITED">Training invited</option>
               <option value="ACCEPTED">Accepted</option>
-              <option value="APPROVED">Approved (legacy)</option>
-              <option value="PENDING">Pending (legacy)</option>
               <option value="REJECTED">Rejected</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-vm-text mb-1">Branch</label>
+            <label className="mb-1 block font-body text-xs font-semibold uppercase text-vm-muted">Branch</label>
             <select
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              className="rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy"
             >
-              <option value="all">All Branches</option>
-              {branches.map(branch => (
+              <option value="all">All branches</option>
+              {branches.map((branch) => (
                 <option key={branch.id} value={branch.id}>{branch.name}</option>
               ))}
             </select>
@@ -231,97 +224,86 @@ export default function CleanerApplicationsPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-600">{error}</p>
+          <div className="mb-6 rounded-lg border border-vm-danger/30 bg-vm-danger-bg p-4 font-body text-sm text-vm-danger">
+            {error}
           </div>
         )}
 
-        {/* Applications Table */}
-        {applications.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-md p-12 text-center">
-            <p className="text-vm-muted">No applications found</p>
+        {loading ? (
+          <div className="py-20 text-center">
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-vm-cyan" />
+          </div>
+        ) : applications.length === 0 ? (
+          <div className="rounded-xl border border-vm-border bg-vm-white py-16 text-center">
+            <p className="font-heading text-lg text-vm-navy">No cleaner applications yet.</p>
+            <p className="mt-2 font-body text-sm text-vm-muted">
+              When candidates apply at /cleaners/apply, they will appear here for review.
+            </p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
-                    Applicant
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
-                    Branch
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
-                    Experience
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
-                    Applied
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {applications.map((app) => (
-                  <tr key={app.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-vm-text">{app.name}</div>
-                      <div className="text-sm text-vm-muted">{app.email}</div>
-                      <div className="text-sm text-vm-muted">{app.phone}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-vm-text">{app.Branch.name}</div>
-                      <div className="text-sm text-vm-muted">{app.Branch.city}, {app.Branch.state}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
-                      {app.experienceLevel || 'Not specified'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
-                        {statusLabel(app.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
-                      {formatDate(app.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/admin/cleaners/applications/${app.id}`}
-                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="w-5 h-5" />
-                        </Link>
-                        {isOpenCleanerApplication(app.status) && (
-                          <>
-                            <button
-                              onClick={() => handleApprove(app.id)}
-                              className="p-2 text-vm-success hover:text-vm-success hover:bg-vm-success-bg rounded transition-colors"
-                              title="Approve"
-                            >
-                              <CheckCircle className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={() => handleReject(app.id)}
-                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                              title="Reject"
-                            >
-                              <XCircle className="w-5 h-5" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-4">
+            {applications.map((app) => (
+              <div
+                key={app.id}
+                className="rounded-xl border border-vm-border bg-vm-white p-5 shadow-sm"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="font-heading text-lg font-semibold text-vm-navy">{app.name || "Applicant"}</h2>
+                    <p className="font-body text-sm text-vm-muted">{app.email}</p>
+                    <p className="font-body text-sm text-vm-muted">{app.phone || "—"}</p>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(app.status)}`}>
+                    {CLEANER_APPLICATION_STATUS_LABELS[app.status] || app.status}
+                  </span>
+                </div>
+
+                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                  <Cell label="Location / area" value={formatServiceArea(app)} />
+                  <Cell label="Branch" value={`${safeBranchName(app)} · ${safeBranchLocation(app)}`} />
+                  <Cell label="Applied" value={formatDate(app.createdAt)} />
+                  <Cell label="Experience" value={formatExperienceSummary(app)} />
+                  <Cell label="Availability" value={formatAvailabilitySummary(app)} />
+                  <Cell label="Transport" value={formatTransportSummary(app)} />
+                  <Cell label="Background consent" value={hasBackgroundConsent(app) ? "Yes" : "—"} />
+                  <Cell label="References" value={hasReferences(app) ? "Provided" : "—"} />
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Link
+                    href={`/admin/cleaners/applications/${app.id}`}
+                    className="inline-flex items-center gap-1 rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy hover:bg-vm-surface"
+                  >
+                    <Eye className="h-4 w-4" /> View full application
+                  </Link>
+                  {isOpenCleanerApplication(app.status) && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleInviteTraining(app.id)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-vm-cyan bg-vm-cyan-tint px-3 py-2 font-body text-sm text-vm-navy"
+                      >
+                        <GraduationCap className="h-4 w-4" /> Invite to training
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApprove(app.id)}
+                        className="inline-flex items-center gap-1 rounded-lg bg-vm-success px-3 py-2 font-body text-sm text-white"
+                      >
+                        <CheckCircle className="h-4 w-4" /> Convert to cleaner
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleReject(app.id)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-vm-danger/30 px-3 py-2 font-body text-sm text-vm-danger"
+                      >
+                        <XCircle className="h-4 w-4" /> Reject
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -329,3 +311,11 @@ export default function CleanerApplicationsPage() {
   );
 }
 
+function Cell({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="font-body text-xs text-vm-muted">{label}</p>
+      <p className="font-body text-sm font-medium text-vm-navy">{value}</p>
+    </div>
+  );
+}

@@ -12,6 +12,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import { computeOperationsSummary } from '@/lib/admin/jobsOperations';
+import { loadJobTeamBatch } from '@/lib/cleaners/internalCleanerService';
+import {
+  mergePrimaryWithTeam,
+  memberDisplayName,
+  teamSubtitle,
+  type TeamMemberDisplay,
+} from '@/lib/cleaners/teamDisplay';
 
 const COMM_ACTIONS = [
   'SCHEDULE_CONFIRMED',
@@ -169,6 +176,13 @@ export async function GET(request: NextRequest) {
             TrainingStatus: {
               select: { overallStatus: true },
             },
+            CleanerProfile: {
+              select: {
+                publicDisplayName: true,
+                jobTitle: true,
+                certificationLabel: true,
+              },
+            },
           },
         },
         _count: {
@@ -281,18 +295,48 @@ export async function GET(request: NextRequest) {
       auditActions: auditByJob.get(job.id) ?? [],
     }));
 
+    const teamMap = await loadJobTeamBatch(jobIds);
+
+    const jobsWithTeam = formattedJobs.map((job) => {
+      const rawJob = jobs.find((j) => j.id === job.id);
+      const primaryMember: TeamMemberDisplay | null = rawJob?.User
+        ? {
+            id: rawJob.User.id,
+            name: rawJob.User.name,
+            publicDisplayName: rawJob.User.CleanerProfile?.publicDisplayName ?? null,
+            jobTitle: rawJob.User.CleanerProfile?.jobTitle ?? null,
+            certificationLabel: rawJob.User.CleanerProfile?.certificationLabel ?? null,
+            isCertified:
+              rawJob.User.TrainingStatus?.overallStatus === 'PASSED' ||
+              (rawJob.User.CleanerProfile?.certificationLabel || '')
+                .toLowerCase()
+                .includes('certified'),
+          }
+        : null;
+
+      const team = mergePrimaryWithTeam(primaryMember, teamMap.get(job.id) ?? []);
+      const names = team.map(memberDisplayName).filter(Boolean);
+
+      return {
+        ...job,
+        assignedTeam: team,
+        assignedTeamLabel: names.length > 0 ? names.join(' + ') : null,
+        assignedTeamSubtitle: teamSubtitle(team),
+      };
+    });
+
     const invoiceOutstanding = Number(invoiceAgg._sum.balanceDue ?? 0);
     const invoiceAwaitingCount = invoiceAgg._count;
 
     const summary = computeOperationsSummary(
-      formattedJobs,
+      jobsWithTeam,
       invoiceOutstanding,
       invoiceAwaitingCount
     );
 
     return NextResponse.json({
       success: true,
-      jobs: formattedJobs,
+      jobs: jobsWithTeam,
       summary,
     });
   } catch (err: unknown) {
