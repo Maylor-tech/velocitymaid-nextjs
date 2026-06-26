@@ -40,7 +40,7 @@ export default function ReviewList({ reviews }: ReviewListProps) {
                     if (complaint) {
                       if (complaint.status === 'resolved' || complaint.status === 'closed') {
                         return (
-                          <span className="px-2 py-1 bg-vm-success-bg text-green-800 rounded-full text-xs font-medium">
+                          <span className="px-2 py-1 bg-vm-success-bg text-vm-success rounded-full text-xs font-medium">
                             Complaint Resolved
                           </span>
                         );

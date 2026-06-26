@@ -236,9 +236,9 @@ function JobDetailsContent() {
       )}
 
       {balancePaymentSuccess && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-4 flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
-          <p className="text-green-800">
+        <div className="rounded-lg border border-vm-success/30 bg-vm-success-bg p-4 flex items-center gap-2">
+          <CheckCircle className="w-5 h-5 text-vm-success shrink-0" />
+          <p className="text-vm-success">
             Thank you — your remaining balance is paid in full. We appreciate your trust in
             VelocityMaid.
           </p>
@@ -246,16 +246,16 @@ function JobDetailsContent() {
       )}
 
       {success && !balancePaymentSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-green-600" />
-          <p className="text-green-800">{success}</p>
+        <div className="bg-vm-success-bg border border-vm-success/30 rounded-lg p-4 flex items-center gap-2">
+          <CheckCircle className="w-5 h-5 text-vm-success" />
+          <p className="text-vm-success">{success}</p>
         </div>
       )}
 
       {isFullyPaid && !balancePaymentSuccess && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-4 flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
-          <p className="text-sm text-green-800">This job is fully paid. Thank you.</p>
+        <div className="rounded-lg border border-vm-success/30 bg-vm-success-bg p-4 flex items-center gap-2">
+          <CheckCircle className="w-5 h-5 text-vm-success shrink-0" />
+          <p className="text-sm text-vm-success">This job is fully paid. Thank you.</p>
         </div>
       )}
 

@@ -153,7 +153,7 @@ export default function CleanerProfileDrawer({
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; label: string }> = {
-      PASSED: { color: 'bg-vm-success-bg text-green-800', label: 'Passed' },
+      PASSED: { color: 'bg-vm-success-bg text-vm-success', label: 'Passed' },
       IN_PROGRESS: { color: 'bg-vm-warning-bg text-yellow-800', label: 'In Progress' },
       NOT_STARTED: { color: 'bg-vm-surface text-vm-text', label: 'Not Started' },
     };
@@ -171,7 +171,7 @@ export default function CleanerProfileDrawer({
       pending: { color: 'bg-vm-warning-bg text-yellow-800', label: 'Pending' },
       assigned: { color: 'bg-vm-cyan-tint text-blue-800', label: 'Assigned' },
       in_progress: { color: 'bg-purple-100 text-purple-800', label: 'In Progress' },
-      completed: { color: 'bg-vm-success-bg text-green-800', label: 'Completed' },
+      completed: { color: 'bg-vm-success-bg text-vm-success', label: 'Completed' },
     };
 
     const config = statusConfig[status] || { color: 'bg-vm-surface text-vm-text', label: status };
@@ -197,7 +197,7 @@ export default function CleanerProfileDrawer({
             <div className="flex items-center gap-3 mb-2">
               <h2 className="text-xl font-semibold text-vm-text">{data.cleaner.name}</h2>
               {data.cleaner.isActive ? (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-green-800">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-vm-success">
                   <CheckCircle className="w-3 h-3 mr-1" />
                   Active
                 </span>
@@ -252,7 +252,7 @@ export default function CleanerProfileDrawer({
                 <div className="space-y-3 text-sm">
                   <div>
                     <span className="text-vm-muted">Status:</span>{' '}
-                    <span className={data.cleaner.availability.isActive ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                    <span className={data.cleaner.availability.isActive ? 'text-vm-success font-medium' : 'text-red-600 font-medium'}>
                       {data.cleaner.availability.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
@@ -465,7 +465,7 @@ export default function CleanerProfileDrawer({
               <div className="rounded-lg border border-vm-border p-4 bg-vm-surface">
                 <div className="mb-4">
                   <div className="flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-green-600" />
+                    <DollarSign className="w-5 h-5 text-vm-success" />
                     <span className="text-sm text-vm-muted">Total Paid:</span>
                     <span className="text-lg font-semibold text-vm-text">
                       {data.payouts.totalPaid > 0
@@ -505,7 +505,7 @@ export default function CleanerProfileDrawer({
                             <span
                               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
                                 payout.status === 'PAID'
-                                  ? 'bg-vm-success-bg text-green-800'
+                                  ? 'bg-vm-success-bg text-vm-success'
                                   : payout.status === 'PENDING'
                                     ? 'bg-vm-warning-bg text-yellow-800'
                                     : 'bg-vm-surface text-vm-text'
@@ -535,8 +535,8 @@ export default function CleanerProfileDrawer({
                 <div className="flex items-center gap-2 mb-3">
                   {data.compliance.status === 'COMPLIANT' ? (
                     <>
-                      <Shield className="w-5 h-5 text-green-600" />
-                      <span className="text-sm font-semibold text-green-600">Compliant</span>
+                      <Shield className="w-5 h-5 text-vm-success" />
+                      <span className="text-sm font-semibold text-vm-success">Compliant</span>
                     </>
                   ) : (
                     <>

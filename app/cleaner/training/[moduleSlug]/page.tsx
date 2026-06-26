@@ -114,7 +114,7 @@ export default function CleanerTrainingModulePage() {
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           {completed ? (
-            <div className="flex items-center gap-2 text-green-700">
+            <div className="flex items-center gap-2 text-vm-success">
               <CheckCircle2 className="h-5 w-5" />
               <span className="font-medium">Completed</span>
             </div>
@@ -170,7 +170,7 @@ function CertificationCompleteView({ loading }: { loading: boolean }) {
         <CleanerPortalNav />
         {certified ? (
           <>
-            <CheckCircle2 className="mx-auto h-16 w-16 text-green-600" />
+            <CheckCircle2 className="mx-auto h-16 w-16 text-vm-success" />
             <h1 className="mt-4 text-2xl font-semibold">Certification Complete</h1>
             <p className="mt-2 text-vm-muted">
               You are certified to accept VelocityMaid live jobs.

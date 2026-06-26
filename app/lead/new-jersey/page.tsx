@@ -58,7 +58,7 @@ export default function LeadCapturePage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white text-[#0A3D2F] rounded-2xl shadow-2xl p-8 text-center">
-          <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <CheckCircle2 className="w-16 h-16 text-vm-success mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
             Thank You!
           </h2>

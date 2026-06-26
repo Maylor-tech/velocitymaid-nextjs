@@ -237,15 +237,15 @@ export default function CityMarketingPage({ params }: PageProps) {
               <p className="text-vm-muted mb-4">Perfect for regular maintenance</p>
               <ul className="space-y-2 text-vm-text">
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-vm-success" />
                   Kitchen & Bathrooms
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-vm-success" />
                   Dusting & Vacuuming
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-vm-success" />
                   Floor Mopping
                 </li>
               </ul>
@@ -255,15 +255,15 @@ export default function CityMarketingPage({ params }: PageProps) {
               <p className="text-vm-muted mb-4">Thorough top-to-bottom service</p>
               <ul className="space-y-2 text-vm-text">
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-vm-success" />
                   Everything in Basic
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-vm-success" />
                   Inside Appliances
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-vm-success" />
                   Baseboards & Windows
                 </li>
               </ul>
@@ -273,15 +273,15 @@ export default function CityMarketingPage({ params }: PageProps) {
               <p className="text-vm-muted mb-4">Complete property cleaning</p>
               <ul className="space-y-2 text-vm-text">
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-vm-success" />
                   Everything in Deep Clean
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-vm-success" />
                   Inside Cabinets
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-vm-success" />
                   Full Sanitization
                 </li>
               </ul>

@@ -15,6 +15,7 @@ import { BrandLogo } from "@/components/brand";
 
 interface Job {
   id: string;
+  customerId: string | null;
   customerName: string | null;
   address: string | null;
   preferredDate: string | null;
@@ -418,7 +419,7 @@ function getPrimaryAction(job: Job): {
 function getStatusBadge(status: string): { label: string; cls: string } {
   switch (status) {
     case "COMPLETED":
-      return { label: "Completed", cls: "bg-vm-success-bg text-green-700" };
+      return { label: "Completed", cls: "bg-vm-success-bg text-vm-success" };
     case "CONFIRMED":
       return { label: "Confirmed", cls: "bg-vm-cyan-tint text-blue-700" };
     case "ASSIGNED":
@@ -440,7 +441,7 @@ function getStatusBadge(status: string): { label: string; cls: string } {
 function getPaymentBadge(status: string): { label: string; cls: string } {
   switch (status) {
     case "PAID":
-      return { label: "Paid", cls: "bg-vm-success-bg text-green-700" };
+      return { label: "Paid", cls: "bg-vm-success-bg text-vm-success" };
     case "DEPOSIT_PAID":
       return { label: "Deposit Paid", cls: "bg-vm-cyan-tint text-blue-700" };
     case "PENDING":

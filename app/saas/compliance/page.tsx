@@ -78,7 +78,7 @@ export default function CompliancePage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'verified':
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
+        return <CheckCircle className="w-5 h-5 text-vm-success" />;
       case 'pending':
         return <Clock className="w-5 h-5 text-yellow-600" />;
       case 'expired':
@@ -92,7 +92,7 @@ export default function CompliancePage() {
     switch (status) {
       case 'verified':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-vm-success-bg text-green-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-vm-success-bg text-vm-success">
             Verified
           </span>
         );
@@ -170,7 +170,7 @@ export default function CompliancePage() {
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
-              <CheckCircle className="w-8 h-8 text-green-600 mr-3" />
+              <CheckCircle className="w-8 h-8 text-vm-success mr-3" />
               <div>
                 <p className="text-sm text-vm-muted">Verified</p>
                 <p className="text-2xl font-bold text-vm-text">{metrics.verified}</p>

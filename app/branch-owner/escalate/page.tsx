@@ -76,7 +76,7 @@ export default function BranchOwnerEscalatePage() {
         <Card className="max-w-md w-full">
           <CardContent className="pt-6">
             <div className="text-center">
-              <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
+              <CheckCircle2 className="w-16 h-16 text-vm-success mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-vm-text mb-2">
                 Issue Escalated Successfully
               </h2>

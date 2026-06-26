@@ -204,7 +204,7 @@ export default function AssignCleanerModal({
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold text-vm-text">{cleaner.name}</h3>
                           {cleaner.isRecommended && (
-                            <span className="px-2 py-0.5 bg-vm-success-bg text-green-700 text-xs font-semibold rounded-full">
+                            <span className="px-2 py-0.5 bg-vm-success-bg text-vm-success text-xs font-semibold rounded-full">
                               Recommended
                             </span>
                           )}
@@ -226,7 +226,7 @@ export default function AssignCleanerModal({
                           )}
                           {cleaner.completedJobs !== undefined && (
                             <div className="flex items-center gap-1">
-                              <CheckCircle className="w-4 h-4 text-green-500" />
+                              <CheckCircle className="w-4 h-4 text-vm-success" />
                               <span className="text-sm text-vm-muted">
                                 {cleaner.completedJobs} jobs
                               </span>

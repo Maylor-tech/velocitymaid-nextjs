@@ -12,7 +12,7 @@ function VillaSignSuccessContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F3F1EB] to-white flex items-center justify-center p-6">
       <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-6" />
+        <CheckCircle className="w-16 h-16 text-vm-success mx-auto mb-6" />
         <h1 className="text-4xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
           Partnership Agreement Signed!
         </h1>

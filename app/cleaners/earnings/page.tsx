@@ -127,7 +127,7 @@ export default function CleanerEarningsPage() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-medium text-vm-muted">This Week's Earnings</h3>
-              <DollarSign className="w-5 h-5 text-green-600" />
+              <DollarSign className="w-5 h-5 text-vm-success" />
             </div>
             <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.currentWeek.earnings, 'JMD')}

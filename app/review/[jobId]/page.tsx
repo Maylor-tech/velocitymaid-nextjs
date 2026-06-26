@@ -144,8 +144,8 @@ export default function ReviewPage() {
           <p className="text-vm-muted mb-6">
             Your review has been submitted. We appreciate your feedback!
           </p>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-sm text-green-800">
+          <div className="bg-vm-success-bg border border-vm-success/30 rounded-lg p-4">
+            <p className="text-sm text-vm-success">
               {requestReclean
                 ? 'We have received your request for a follow-up cleaning. Our team will contact you shortly.'
                 : 'Your feedback helps us improve our service.'}

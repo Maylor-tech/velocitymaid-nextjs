@@ -133,7 +133,7 @@ export default function PayoutDetailModal({
               </div>
               <div>
                 <p className="text-sm text-vm-muted mb-1">Bonus Earnings</p>
-                <p className="text-xl font-bold text-green-600">${payout.bonusEarnings.toFixed(2)}</p>
+                <p className="text-xl font-bold text-vm-success">${payout.bonusEarnings.toFixed(2)}</p>
               </div>
               <div>
                 <p className="text-sm text-vm-muted mb-1">Net Payout</p>

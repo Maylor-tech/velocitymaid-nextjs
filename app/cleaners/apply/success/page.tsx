@@ -20,7 +20,7 @@ export default function CleanerApplySuccess() {
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-8">
         <div className="max-w-2xl w-full bg-white rounded-2xl shadow-lg p-8 sm:p-12 text-center">
           <div className="mb-6">
-            <CheckCircle className="w-20 h-20 text-green-500 mx-auto" />
+            <CheckCircle className="w-20 h-20 text-vm-success mx-auto" />
           </div>
           
           <h1 className="text-4xl font-bold text-vm-text mb-4">

@@ -80,6 +80,7 @@ function MetricCard({
   href,
   icon: Icon,
   color,
+  iconColor = "text-white",
 }: {
   title: string;
   count: number;
@@ -87,6 +88,7 @@ function MetricCard({
   href: string;
   icon: any;
   color: string;
+  iconColor?: string;
 }) {
   return (
     <Link
@@ -96,7 +98,7 @@ function MetricCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className={`p-3 rounded-lg ${color}`}>
-            <Icon className="w-6 h-6 text-white" />
+            <Icon className={`w-6 h-6 ${iconColor}`} />
           </div>
           <div>
             <p className="text-sm font-medium text-vm-muted">{title}</p>
@@ -360,7 +362,8 @@ export default function AdminCommandCenter() {
             status="All time"
             href="/admin/jobs"
             icon={CheckCircle2}
-            color="bg-vm-success"
+            color="bg-vm-success-bg"
+            iconColor="text-vm-success"
           />
           <MetricCard
             title="Archived"
@@ -412,7 +415,8 @@ export default function AdminCommandCenter() {
             status="Response sent"
             href="/admin/inbox?status=REPLIED"
             icon={CheckCircle2}
-            color="bg-vm-success"
+            color="bg-vm-success-bg"
+            iconColor="text-vm-success"
           />
           <MetricCard
             title="Archived"

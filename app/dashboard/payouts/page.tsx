@@ -154,14 +154,14 @@ export default function PayoutsDashboardPage() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-600 to-green-800 text-white py-6 px-6 rounded-xl shadow-lg mb-6 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-vm-navy to-vm-navy text-white py-6 px-6 rounded-xl shadow-lg mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">Cleaner Payouts — Weekly Earnings & Approvals</h1>
-            <p className="text-green-100 text-sm">Manage and approve cleaner payouts</p>
+            <p className="text-vm-white/70 text-sm">Manage and approve cleaner payouts</p>
           </div>
           <button
             onClick={handleExportCSV}
-            className="px-4 py-2 bg-white text-green-600 rounded-lg font-semibold hover:bg-green-50 transition-colors"
+            className="px-4 py-2 bg-white text-vm-success rounded-lg font-semibold hover:bg-vm-success-bg transition-colors"
           >
             Export CSV
           </button>

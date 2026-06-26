@@ -17,7 +17,7 @@ export default function ComplaintStats({ stats }: ComplaintStatsProps) {
         <p className="text-sm font-medium text-vm-muted mb-1">Open (NJ)</p>
         <p className="text-3xl font-bold text-vm-text">{stats.openByRegion.new_jersey}</p>
       </div>
-      <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+      <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-vm-success">
         <p className="text-sm font-medium text-vm-muted mb-1">Open (VT)</p>
         <p className="text-3xl font-bold text-vm-text">{stats.openByRegion.vermont}</p>
       </div>

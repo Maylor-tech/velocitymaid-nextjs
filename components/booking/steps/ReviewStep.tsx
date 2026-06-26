@@ -284,7 +284,7 @@ export default function ReviewStep() {
             <ul className="space-y-1">
               {selectedExtras.map((extra, index) => (
                 <li key={index} className="flex items-center gap-2 text-sm text-vm-muted">
-                  <Check className="w-4 h-4 text-green-600" />
+                  <Check className="w-4 h-4 text-vm-success" />
                   {extra}
                 </li>
               ))}
@@ -306,19 +306,19 @@ export default function ReviewStep() {
         <h3 className="text-lg font-semibold text-vm-text mb-3">What happens next</h3>
         <ul className="space-y-2 text-sm text-vm-text">
           <li className="flex items-start gap-2">
-            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <Check className="w-5 h-5 text-vm-success flex-shrink-0 mt-0.5" />
             <span>You'll complete secure payment</span>
           </li>
           <li className="flex items-start gap-2">
-            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <Check className="w-5 h-5 text-vm-success flex-shrink-0 mt-0.5" />
             <span>We'll confirm your booking</span>
           </li>
           <li className="flex items-start gap-2">
-            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <Check className="w-5 h-5 text-vm-success flex-shrink-0 mt-0.5" />
             <span>A vetted cleaner will be assigned</span>
           </li>
           <li className="flex items-start gap-2">
-            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <Check className="w-5 h-5 text-vm-success flex-shrink-0 mt-0.5" />
             <span>You'll receive updates by email or SMS</span>
           </li>
         </ul>
@@ -365,7 +365,7 @@ export default function ReviewStep() {
         )}
 
         {quote && (
-          <div className="border-2 border-green-200 bg-green-50 rounded-lg p-6 mt-4">
+          <div className="border-2 border-vm-success/30 bg-vm-success-bg rounded-lg p-6 mt-4">
             <h3 className="text-lg font-semibold text-vm-text mb-4">Price Estimate</h3>
 
             {/* Line Items Summary */}
@@ -394,7 +394,7 @@ export default function ReviewStep() {
             {quote.discounts > 0 && (
               <div className="mb-2 flex justify-between text-sm">
                 <span className="text-vm-muted">Discounts</span>
-                <span className="text-green-600 font-medium">
+                <span className="text-vm-success font-medium">
                   -{formatCurrency(quote.discounts, quote.currency)}
                 </span>
               </div>
@@ -482,7 +482,7 @@ export default function ReviewStep() {
                     </>
                   ) : sentOnce ? (
                     <>
-                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <CheckCircle className="w-4 h-4 text-vm-success" />
                       Estimate Sent ✓
                     </>
                   ) : (
@@ -511,9 +511,9 @@ export default function ReviewStep() {
             )}
 
             {sentOnce && !sendError && (
-              <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-green-800 font-medium">
+              <div className="mt-3 bg-vm-success-bg border border-vm-success/30 rounded-lg p-3 flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-vm-success flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-vm-success font-medium">
                   Estimate emailed successfully. Please check your inbox.
                 </p>
               </div>

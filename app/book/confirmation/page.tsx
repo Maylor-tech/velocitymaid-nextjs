@@ -287,7 +287,7 @@ function BookingConfirmationContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 text-center">
-        <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+        <CheckCircle className="w-16 h-16 text-vm-success mx-auto mb-4" />
         <h1 className="text-3xl font-bold text-vm-text mb-2">
           You're all set 🎉
         </h1>
@@ -343,12 +343,12 @@ function BookingConfirmationContent() {
             )}
           </div>
         ) : (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-800">
+          <div className="mb-6 p-4 bg-vm-success-bg border border-vm-success/30 rounded-lg">
+            <p className="text-sm text-vm-success">
               ✅ Login link sent! Check your email and click the link to access your dashboard.
             </p>
             {process.env.NODE_ENV === 'development' && (
-              <p className="text-xs text-green-600 mt-2">
+              <p className="text-xs text-vm-success mt-2">
                 (Check console for development link)
               </p>
             )}

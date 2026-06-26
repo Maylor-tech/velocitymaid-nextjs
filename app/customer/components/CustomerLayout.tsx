@@ -231,7 +231,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
               href="https://wa.me/19732809190"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-green-700 hover:text-green-900 font-body font-medium"
+              className="flex items-center gap-2 text-sm text-vm-success hover:text-vm-success font-body font-medium"
             >
               <MessageSquare className="w-4 h-4" />
               WhatsApp

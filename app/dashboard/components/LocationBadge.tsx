@@ -12,7 +12,7 @@ export default function LocationBadge({ location }: LocationBadgeProps) {
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
         isNewJersey
           ? 'bg-vm-cyan-tint text-blue-800'
-          : 'bg-vm-success-bg text-green-800'
+          : 'bg-vm-success-bg text-vm-success'
       }`}
     >
       {isNewJersey ? 'New Jersey' : 'Vermont'}

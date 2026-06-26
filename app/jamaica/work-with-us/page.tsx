@@ -211,7 +211,7 @@ export default function WorkWithUsPage() {
             </div>
             {/* Daily/Weekly Examples */}
             <div className="mt-6 grid md:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-xl shadow-md border-2 border-green-200">
+              <div className="bg-white p-6 rounded-xl shadow-md border-2 border-vm-success/30">
                 <h4 className="text-lg font-bold text-vm-text mb-3">Daily Earnings Example</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between text-vm-text">
@@ -223,7 +223,7 @@ export default function WorkWithUsPage() {
                     <span className="font-semibold">JMD $12,000</span>
                   </div>
                   <div className="border-t border-gray-200 pt-2 mt-2">
-                    <div className="flex justify-between text-lg font-bold text-green-600">
+                    <div className="flex justify-between text-lg font-bold text-vm-success">
                       <span>Daily Total</span>
                       <span>JMD $27,000</span>
                     </div>

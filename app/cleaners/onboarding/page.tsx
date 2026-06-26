@@ -314,7 +314,7 @@ export default function CleanerOnboardingPage() {
                   <label htmlFor="idFront" className="cursor-pointer">
                     {formData.idFront ? (
                       <div className="space-y-2">
-                        <CheckCircle className="w-8 h-8 text-green-500 mx-auto" />
+                        <CheckCircle className="w-8 h-8 text-vm-success mx-auto" />
                         <p className="text-sm text-vm-muted">{formData.idFront.name}</p>
                       </div>
                     ) : (
@@ -343,7 +343,7 @@ export default function CleanerOnboardingPage() {
                   <label htmlFor="idBack" className="cursor-pointer">
                     {formData.idBack ? (
                       <div className="space-y-2">
-                        <CheckCircle className="w-8 h-8 text-green-500 mx-auto" />
+                        <CheckCircle className="w-8 h-8 text-vm-success mx-auto" />
                         <p className="text-sm text-vm-muted">{formData.idBack.name}</p>
                       </div>
                     ) : (

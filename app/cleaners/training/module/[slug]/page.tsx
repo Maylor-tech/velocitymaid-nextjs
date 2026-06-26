@@ -139,10 +139,10 @@ export default function ModulePage() {
 
         {/* Completion Message */}
         {allCompleted && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="mt-6 p-4 bg-vm-success-bg border border-vm-success/30 rounded-lg">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-              <p className="text-green-800 font-medium">
+              <CheckCircle2 className="w-5 h-5 text-vm-success" />
+              <p className="text-vm-success font-medium">
                 Congratulations! You've completed all lessons in this module.
               </p>
             </div>

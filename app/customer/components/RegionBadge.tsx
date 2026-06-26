@@ -20,7 +20,7 @@ export default function RegionBadge({ location, size = 'md' }: RegionBadgeProps)
       className={`inline-flex items-center font-medium rounded-full ${sizeClasses[size]} ${
         isNJ
           ? 'bg-vm-cyan-tint text-blue-800'
-          : 'bg-vm-success-bg text-green-800'
+          : 'bg-vm-success-bg text-vm-success'
       }`}
     >
       {isNJ ? 'New Jersey' : 'Vermont'}

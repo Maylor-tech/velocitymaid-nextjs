@@ -25,7 +25,7 @@ const statusConfig: Record<JobStatus, { label: string; className: string }> = {
   },
   completed: {
     label: 'Completed',
-    className: 'bg-vm-success-bg text-green-800',
+    className: 'bg-vm-success-bg text-vm-success',
   },
   cancelled: {
     label: 'Cancelled',

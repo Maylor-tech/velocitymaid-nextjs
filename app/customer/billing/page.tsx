@@ -106,7 +106,7 @@ export default function CustomerBillingPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
-        return 'bg-vm-success-bg text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'open':
         return 'bg-vm-warning-bg text-yellow-800';
       case 'draft':

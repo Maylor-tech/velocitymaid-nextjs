@@ -27,7 +27,7 @@ export default function ComplaintsTable({ complaints, onViewComplaint }: Complai
       case 'in_progress':
         return 'bg-vm-cyan-tint text-blue-800';
       case 'resolved':
-        return 'bg-vm-success-bg text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'closed':
         return 'bg-gray-100 text-vm-text';
       default:

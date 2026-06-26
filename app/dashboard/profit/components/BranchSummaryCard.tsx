@@ -21,7 +21,7 @@ export default function BranchSummaryCard({
   const branchName = isNewJersey ? 'New Jersey' : 'Vermont';
   const badgeColor = isNewJersey
     ? 'bg-vm-cyan-tint text-blue-800'
-    : 'bg-vm-success-bg text-green-800';
+    : 'bg-vm-success-bg text-vm-success';
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
@@ -47,7 +47,7 @@ export default function BranchSummaryCard({
         </div>
         <div>
           <p className="text-sm text-vm-muted mb-1">Profit Margin</p>
-          <p className={`text-2xl font-bold ${margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <p className={`text-2xl font-bold ${margin >= 0 ? 'text-vm-success' : 'text-red-600'}`}>
             {margin.toFixed(1)}%
           </p>
         </div>
@@ -56,7 +56,7 @@ export default function BranchSummaryCard({
       <div className="mt-4 pt-4 border-t border-gray-200">
         <div className="flex justify-between items-center">
           <span className="text-sm text-vm-muted">Profit</span>
-          <span className={`text-lg font-semibold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <span className={`text-lg font-semibold ${profit >= 0 ? 'text-vm-success' : 'text-red-600'}`}>
             ${profit >= 0 ? '+' : ''}{profit.toFixed(2)}
           </span>
         </div>

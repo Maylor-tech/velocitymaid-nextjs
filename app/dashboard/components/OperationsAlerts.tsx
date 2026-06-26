@@ -51,7 +51,7 @@ export default function OperationsAlerts({
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-bold text-vm-text mb-4">Operations Alerts</h2>
         <div className="text-center py-4">
-          <p className="text-green-600 font-medium">✓ All systems operational</p>
+          <p className="text-vm-success font-medium">✓ All systems operational</p>
           <p className="text-vm-muted text-sm mt-1">No alerts at this time</p>
         </div>
       </div>

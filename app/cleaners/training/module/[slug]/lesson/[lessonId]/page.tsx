@@ -177,25 +177,25 @@ export default function LessonPage() {
                 <div
                   className={`p-6 rounded-lg mb-4 ${
                     quizResult.passed
-                      ? 'bg-green-50 border border-green-200'
+                      ? 'bg-vm-success-bg border border-vm-success/30'
                       : 'bg-red-50 border border-red-200'
                   }`}
                 >
                   <div className="flex items-center gap-3 mb-2">
                     {quizResult.passed ? (
-                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                      <CheckCircle2 className="w-6 h-6 text-vm-success" />
                     ) : (
                       <XCircle className="w-6 h-6 text-red-600" />
                     )}
                     <h3
                       className={`text-xl font-semibold ${
-                        quizResult.passed ? 'text-green-900' : 'text-red-900'
+                        quizResult.passed ? 'text-vm-success' : 'text-red-900'
                       }`}
                     >
                       {quizResult.passed ? 'Congratulations!' : 'Not Quite There'}
                     </h3>
                   </div>
-                  <p className={quizResult.passed ? 'text-green-800' : 'text-red-800'}>
+                  <p className={quizResult.passed ? 'text-vm-success' : 'text-red-800'}>
                     You scored {quizResult.score}% ({quizResult.correct} out of {quizResult.total}{' '}
                     correct)
                   </p>

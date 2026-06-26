@@ -279,7 +279,7 @@ export default function ReferralsPage() {
                   </div>
                   <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                     friend.status === 'COMPLETED' 
-                      ? 'bg-vm-success-bg text-green-800' 
+                      ? 'bg-vm-success-bg text-vm-success' 
                       : 'bg-vm-warning-bg text-yellow-800'
                   }`}>
                     {friend.status}

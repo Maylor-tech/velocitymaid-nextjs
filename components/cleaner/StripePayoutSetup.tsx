@@ -118,7 +118,7 @@ export function StripePayoutSetup() {
   if (status.readyForPayouts) {
     statusBadge = {
       label: "Ready for Payouts",
-      className: "bg-vm-success-bg text-green-700",
+      className: "bg-vm-success-bg text-vm-success",
     };
   } else if (status.hasAccount && status.currentlyDue && status.currentlyDue.length > 0) {
     statusBadge = {
@@ -140,7 +140,7 @@ export function StripePayoutSetup() {
   return (
     <div className="rounded-xl border bg-white p-6 space-y-4">
       {successMessage && (
-        <div className="rounded-md bg-green-50 p-3 text-green-800 text-sm">
+        <div className="rounded-md bg-vm-success-bg p-3 text-vm-success text-sm">
           {successMessage}
         </div>
       )}
@@ -157,7 +157,7 @@ export function StripePayoutSetup() {
       </div>
 
       {status.readyForPayouts ? (
-        <div className="rounded-md bg-green-50 p-3 text-green-700 text-sm">
+        <div className="rounded-md bg-vm-success-bg p-3 text-vm-success text-sm">
           ✅ Your payout account is set up and verified. You're ready to receive
           payments!
         </div>

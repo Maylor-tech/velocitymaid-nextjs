@@ -1156,7 +1156,7 @@ function BookingPageContent() {
               )}
               {referralDiscount > 0 && referralCode && (
                 <div className="border-t border-gray-200 pt-4">
-                  <div className="flex justify-between items-center text-green-600 mb-2">
+                  <div className="flex justify-between items-center text-vm-success mb-2">
                     <span className="text-sm font-semibold">Referral Discount</span>
                     <span className="text-lg font-bold">-${referralDiscount}</span>
                   </div>

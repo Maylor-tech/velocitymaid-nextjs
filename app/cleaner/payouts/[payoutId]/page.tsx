@@ -92,7 +92,7 @@ export default function CleanerPayoutReceiptPage() {
       READY: "bg-vm-warning-bg text-yellow-800",
       APPROVED: "bg-vm-cyan-tint text-blue-800",
       SENT: "bg-purple-100 text-purple-800",
-      PAID: "bg-vm-success-bg text-green-800",
+      PAID: "bg-vm-success-bg text-vm-success",
       FAILED: "bg-vm-danger-bg text-red-800",
       REJECTED: "bg-vm-danger-bg text-red-800",
     };
@@ -291,7 +291,7 @@ export default function CleanerPayoutReceiptPage() {
           {/* Paid Date */}
           {payout.paidAt && (
             <div className="border-t border-gray-200 pt-6">
-              <div className="flex items-center gap-2 text-green-700">
+              <div className="flex items-center gap-2 text-vm-success">
                 <CheckCircle className="w-5 h-5" />
                 <div>
                   <p className="font-medium">Confirmed Paid</p>

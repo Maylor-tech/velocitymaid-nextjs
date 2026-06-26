@@ -50,7 +50,7 @@ const BLOCKER_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, { bg: string; text: string; icon: any }> = {
   READY: {
     bg: "bg-vm-success-bg",
-    text: "text-green-800",
+    text: "text-vm-success",
     icon: CheckCircle,
   },
   AT_RISK: {
@@ -337,7 +337,7 @@ export default function AnalyticsPage() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-4">
               {data.trends.readinessImproving ? (
-                <TrendingUp className="w-8 h-8 text-green-600" />
+                <TrendingUp className="w-8 h-8 text-vm-success" />
               ) : (
                 <TrendingDown className="w-8 h-8 text-red-600" />
               )}

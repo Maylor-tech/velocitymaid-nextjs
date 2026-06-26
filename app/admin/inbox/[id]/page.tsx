@@ -187,7 +187,7 @@ export default function AdminInboxDetailPage() {
   function statusColor(status: string) {
     if (status === "NEW") return "bg-vm-cyan-tint text-blue-800";
     if (status === "REVIEWED") return "bg-vm-warning-bg text-yellow-800";
-    if (status === "REPLIED") return "bg-vm-success-bg text-green-800";
+    if (status === "REPLIED") return "bg-vm-success-bg text-vm-success";
     if (status === "ARCHIVED") return "bg-gray-100 text-vm-text";
     return "bg-gray-100 text-vm-text";
   }
@@ -356,7 +356,7 @@ export default function AdminInboxDetailPage() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    <CheckCircle2 className="w-4 h-4 text-vm-success" />
                     <span className="text-xs font-medium text-vm-text">Admin</span>
                     {reply.sentViaEmail && (
                       <span className="text-xs text-vm-muted">• Sent via email</span>

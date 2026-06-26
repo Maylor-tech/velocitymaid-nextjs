@@ -140,7 +140,7 @@ export default function CleanerApplicationsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return 'bg-vm-success-bg text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'REJECTED':
         return 'bg-vm-danger-bg text-red-800';
       default:
@@ -288,7 +288,7 @@ export default function CleanerApplicationsPage() {
                           <>
                             <button
                               onClick={() => handleApprove(app.id)}
-                              className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                              className="p-2 text-vm-success hover:text-vm-success hover:bg-vm-success-bg rounded transition-colors"
                               title="Approve"
                             >
                               <CheckCircle className="w-5 h-5" />

@@ -25,7 +25,7 @@ export default function PayoutKpis({
         <p className="text-sm font-medium text-vm-muted mb-1">NJ Total</p>
         <p className="text-3xl font-bold text-vm-text">${njTotal.toFixed(2)}</p>
       </div>
-      <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+      <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-vm-success">
         <p className="text-sm font-medium text-vm-muted mb-1">VT Total</p>
         <p className="text-3xl font-bold text-vm-text">${vtTotal.toFixed(2)}</p>
       </div>

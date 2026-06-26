@@ -137,7 +137,7 @@ export default function CleanerApplicationDetailPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return 'bg-vm-success-bg text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'REJECTED':
         return 'bg-vm-danger-bg text-red-800';
       default:

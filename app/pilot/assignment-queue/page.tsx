@@ -97,7 +97,7 @@ export default function AssignmentQueuePage() {
       case "violated":
         return <XCircle className="w-4 h-4 text-red-600" />;
       case "met":
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
+        return <CheckCircle className="w-4 h-4 text-vm-success" />;
       case "pending":
         return <Clock className="w-4 h-4 text-yellow-600" />;
       default:

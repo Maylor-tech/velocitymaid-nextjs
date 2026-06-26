@@ -39,7 +39,7 @@ export default function TrainingModuleCard({ module }: TrainingModuleCardProps) 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+        return <CheckCircle2 className="w-5 h-5 text-vm-success" />;
       case 'IN_PROGRESS':
         return <PlayCircle className="w-5 h-5 text-blue-600" />;
       default:
@@ -51,7 +51,7 @@ export default function TrainingModuleCard({ module }: TrainingModuleCardProps) 
     switch (status) {
       case 'COMPLETED':
         return (
-          <span className="px-3 py-1 bg-vm-success-bg text-green-800 rounded-full text-sm font-medium">
+          <span className="px-3 py-1 bg-vm-success-bg text-vm-success rounded-full text-sm font-medium">
             Completed
           </span>
         );

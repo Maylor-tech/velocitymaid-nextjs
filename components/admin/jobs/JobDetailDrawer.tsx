@@ -148,7 +148,7 @@ export default function JobDetailDrawer({
       pending: { color: 'bg-vm-warning-bg text-yellow-800', label: 'Pending' },
       assigned: { color: 'bg-vm-cyan-tint text-blue-800', label: 'Assigned' },
       in_progress: { color: 'bg-purple-100 text-purple-800', label: 'In Progress' },
-      completed: { color: 'bg-vm-success-bg text-green-800', label: 'Completed' },
+      completed: { color: 'bg-vm-success-bg text-vm-success', label: 'Completed' },
       cancelled: { color: 'bg-vm-danger-bg text-red-800', label: 'Cancelled' },
     };
 
@@ -213,7 +213,7 @@ export default function JobDetailDrawer({
                   {job.User ? (
                 <>
                   <div className="flex items-center gap-2 mb-2">
-                    <UserCheck className="w-4 h-4 text-green-600" />
+                    <UserCheck className="w-4 h-4 text-vm-success" />
                     <span className="text-sm font-medium text-vm-text">Assigned</span>
                   </div>
                   <div className="mb-2">

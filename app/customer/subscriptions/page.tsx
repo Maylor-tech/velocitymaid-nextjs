@@ -153,8 +153,8 @@ export default function SubscriptionsPage() {
       </div>
 
       {status === 'success' && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-          <p className="text-green-600 font-medium">Subscription created successfully!</p>
+        <div className="bg-vm-success-bg border border-vm-success/30 rounded-xl p-4 mb-6">
+          <p className="text-vm-success font-medium">Subscription created successfully!</p>
         </div>
       )}
 
@@ -177,7 +177,7 @@ export default function SubscriptionsPage() {
                   <RegionBadge location={subscription.serviceLocation} size="sm" />
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                     subscription.status === 'active' 
-                      ? 'bg-vm-success-bg text-green-800'
+                      ? 'bg-vm-success-bg text-vm-success'
                       : subscription.status === 'canceled'
                       ? 'bg-gray-100 text-vm-text'
                       : 'bg-vm-warning-bg text-yellow-800'

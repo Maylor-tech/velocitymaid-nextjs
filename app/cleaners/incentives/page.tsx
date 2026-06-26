@@ -136,7 +136,7 @@ export default function CleanerIncentivesPage() {
               </div>
               <div className="text-right">
                 <p className="text-sm text-vm-muted mb-2">This Week's Bonus</p>
-                <p className="text-4xl font-bold text-green-600">
+                <p className="text-4xl font-bold text-vm-success">
                   ${latestIncentive.bonusAmount.toFixed(2)}
                 </p>
               </div>
@@ -225,7 +225,7 @@ export default function CleanerIncentivesPage() {
                         {formatDate(incentive.periodStart)} - {formatDate(incentive.periodEnd)}
                       </span>
                     </div>
-                    <span className="text-lg font-bold text-green-600">
+                    <span className="text-lg font-bold text-vm-success">
                       ${incentive.bonusAmount.toFixed(2)}
                     </span>
                   </div>

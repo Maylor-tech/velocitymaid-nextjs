@@ -31,7 +31,7 @@ export default function ProfitKpiCard({
   const valueColor = isProfit
     ? isNegative
       ? 'text-red-600'
-      : 'text-green-600'
+      : 'text-vm-success'
     : 'text-vm-text';
 
   return (

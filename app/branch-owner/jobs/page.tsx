@@ -189,7 +189,7 @@ export default function BranchOwnerJobsPage() {
       assigned: "bg-purple-100 text-purple-800",
       confirmed: "bg-vm-cyan-tint text-blue-800",
       in_progress: "bg-orange-100 text-orange-800",
-      completed: "bg-vm-success-bg text-green-800",
+      completed: "bg-vm-success-bg text-vm-success",
       cancelled: "bg-vm-danger-bg text-red-800",
     };
     return colors[status.toLowerCase()] || "bg-gray-100 text-vm-text";

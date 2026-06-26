@@ -30,7 +30,7 @@ export default function BookingStatusBadge({ status, size = 'md' }: BookingStatu
       case 'on_the_way':
         return 'bg-purple-100 text-purple-800';
       case 'completed':
-        return 'bg-vm-success-bg text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'cancelled':
       case 'cancelled_by_customer':
         return 'bg-gray-100 text-vm-text';

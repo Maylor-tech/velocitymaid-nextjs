@@ -32,7 +32,7 @@ export default function PayoutsTable({
       case 'approved':
         return 'bg-vm-cyan-tint text-blue-800';
       case 'paid':
-        return 'bg-vm-success-bg text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       default:
         return 'bg-gray-100 text-vm-text';
     }
@@ -108,7 +108,7 @@ export default function PayoutsTable({
               <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 ${payout.baseEarnings.toFixed(2)}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-green-600">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-success">
                 ${payout.bonusEarnings.toFixed(2)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm text-red-600">
@@ -133,7 +133,7 @@ export default function PayoutsTable({
                   {payout.status === 'pending' && (
                     <button
                       onClick={() => onApprove(payout.id)}
-                      className="text-green-600 hover:text-green-800 font-medium"
+                      className="text-vm-success hover:text-vm-success font-medium"
                     >
                       Approve
                     </button>

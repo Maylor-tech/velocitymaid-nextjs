@@ -142,7 +142,7 @@ export default function JamaicaRevenueDashboard() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-medium text-vm-muted">Total Revenue (JMD)</h3>
-              <DollarSign className="w-5 h-5 text-green-600" />
+              <DollarSign className="w-5 h-5 text-vm-success" />
             </div>
             <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.totalRevenueJMD, 'JMD')}
@@ -189,7 +189,7 @@ export default function JamaicaRevenueDashboard() {
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-vm-text mb-4">Repeat Customer Rate</h3>
-            <p className="text-3xl font-bold text-green-600">
+            <p className="text-3xl font-bold text-vm-success">
               {data.repeatCustomerRate.toFixed(1)}%
             </p>
           </div>

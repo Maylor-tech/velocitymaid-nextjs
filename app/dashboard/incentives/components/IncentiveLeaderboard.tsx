@@ -107,7 +107,7 @@ export default function IncentiveLeaderboard({
               <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 {incentive.onTimeRate.toFixed(1)}%
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-green-600">
+              <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-vm-success">
                 ${incentive.bonusAmount.toFixed(2)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm">

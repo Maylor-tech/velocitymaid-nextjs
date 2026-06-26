@@ -150,10 +150,10 @@ export default function TipsPage() {
       </div>
 
       {status === 'success' && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+        <div className="bg-vm-success-bg border border-vm-success/30 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <p className="text-green-600 font-medium">Tip payment successful! Thank you for your generosity.</p>
+            <CheckCircle className="w-5 h-5 text-vm-success" />
+            <p className="text-vm-success font-medium">Tip payment successful! Thank you for your generosity.</p>
           </div>
         </div>
       )}
@@ -188,7 +188,7 @@ export default function TipsPage() {
                       {formatServiceType(job.serviceType)}
                     </h3>
                     {job.alreadyTipped && (
-                      <span className="px-2 py-1 bg-vm-success-bg text-green-800 rounded-full text-xs font-medium flex items-center gap-1">
+                      <span className="px-2 py-1 bg-vm-success-bg text-vm-success rounded-full text-xs font-medium flex items-center gap-1">
                         <CheckCircle className="w-3 h-3" />
                         Tipped ${job.tipAmount?.toFixed(2)}
                       </span>

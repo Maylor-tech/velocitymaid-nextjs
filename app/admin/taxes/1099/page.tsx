@@ -249,7 +249,7 @@ export default function Admin1099Page() {
   const getStatusBadge = (status: string | null, verified: boolean) => {
     if (verified) {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-green-800">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-vm-success">
           <CheckCircle className="w-3 h-3" />
           Verified
         </span>
@@ -569,7 +569,7 @@ export default function Admin1099Page() {
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center gap-3">
-                <DollarSign className="w-8 h-8 text-green-600" />
+                <DollarSign className="w-8 h-8 text-vm-success" />
                 <div>
                   <p className="text-sm text-vm-muted">Total Amount</p>
                   <p className="text-2xl font-bold text-vm-text">
@@ -584,7 +584,7 @@ export default function Admin1099Page() {
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center gap-3">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+                <CheckCircle className="w-8 h-8 text-vm-success" />
                 <div>
                   <p className="text-sm text-vm-muted">Verified</p>
                   <p className="text-2xl font-bold text-vm-text">

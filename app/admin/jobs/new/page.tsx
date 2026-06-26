@@ -175,9 +175,9 @@ export default function NewManualJobPage() {
     return (
       <div className="min-h-screen bg-vm-surface p-6">
         <div className="mx-auto max-w-2xl">
-          <div className="rounded-xl border border-green-200 bg-green-50 p-6">
+          <div className="rounded-xl border border-vm-success/30 bg-vm-success-bg p-6">
             <div className="flex items-start gap-3">
-              <CheckCircle className="mt-0.5 h-6 w-6 flex-shrink-0 text-green-600" />
+              <CheckCircle className="mt-0.5 h-6 w-6 flex-shrink-0 text-vm-success" />
               <h2 className="font-heading text-lg font-semibold text-vm-navy">
                 Job saved successfully.
               </h2>

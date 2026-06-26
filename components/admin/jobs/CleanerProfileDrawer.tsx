@@ -362,7 +362,7 @@ export default function CleanerProfileDrawer({
     const statusConfig: Record<string, { color: string; label: string }> = {
       PENDING: { color: 'bg-vm-warning-bg text-yellow-800', label: 'Pending' },
       IN_REVIEW: { color: 'bg-vm-cyan-tint text-blue-800', label: 'In Review' },
-      PASSED: { color: 'bg-vm-success-bg text-green-800', label: 'Passed' },
+      PASSED: { color: 'bg-vm-success-bg text-vm-success', label: 'Passed' },
       ACTIVE: { color: 'bg-purple-100 text-purple-800', label: 'Active' },
       NOT_STARTED: { color: 'bg-vm-surface text-vm-text', label: 'Not Started' },
     };
@@ -494,7 +494,7 @@ export default function CleanerProfileDrawer({
                       </div>
                       <div className="flex items-center gap-2">
                         {cleanerCompliance.complianceStatus === 'COMPLIANT' ? (
-                          <span className="px-3 py-1 bg-vm-success-bg text-green-800 text-xs font-semibold rounded-full">
+                          <span className="px-3 py-1 bg-vm-success-bg text-vm-success text-xs font-semibold rounded-full">
                             Compliant
                           </span>
                         ) : cleanerCompliance.complianceStatus === 'AT_RISK' ? (
@@ -619,8 +619,8 @@ export default function CleanerProfileDrawer({
                     <div className="flex items-center gap-2">
                       {compliance.status === 'COMPLIANT' ? (
                         <>
-                          <Shield className="h-5 w-5 text-emerald-600" />
-                          <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-sm font-semibold rounded-full">
+                          <Shield className="h-5 w-5 text-vm-success" />
+                          <span className="px-3 py-1 bg-vm-success-bg text-vm-success text-sm font-semibold rounded-full">
                             Compliant
                           </span>
                         </>
@@ -664,7 +664,7 @@ export default function CleanerProfileDrawer({
                           const getStatusBadge = (status: string) => {
                             if (status === 'APPROVED')
                               return (
-                                <span className="px-2 py-0.5 bg-vm-success-bg text-green-800 text-[10px] font-medium rounded">
+                                <span className="px-2 py-0.5 bg-vm-success-bg text-vm-success text-[10px] font-medium rounded">
                                   Approved
                                 </span>
                               );
@@ -738,7 +738,7 @@ export default function CleanerProfileDrawer({
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
                           availability.isActive
-                            ? 'bg-vm-success-bg text-green-800'
+                            ? 'bg-vm-success-bg text-vm-success'
                             : 'bg-vm-surface text-vm-text'
                         }`}
                       >
@@ -814,7 +814,7 @@ export default function CleanerProfileDrawer({
                       <span
                         className={`text-xs font-semibold px-2 py-1 rounded-full ${
                           certification.status === 'CERTIFIED'
-                            ? 'bg-vm-success-bg text-green-800'
+                            ? 'bg-vm-success-bg text-vm-success'
                             : certification.status === 'IN_PROGRESS'
                             ? 'bg-amber-100 text-amber-800'
                             : 'bg-vm-surface text-vm-text'
@@ -945,7 +945,7 @@ export default function CleanerProfileDrawer({
                             className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
                               isRevoked
                                 ? 'bg-vm-danger-bg text-red-700'
-                                : 'bg-vm-success-bg text-green-700'
+                                : 'bg-vm-success-bg text-vm-success'
                             }`}
                           >
                             {isRevoked ? 'Revoked' : 'Active'}
@@ -1005,7 +1005,7 @@ export default function CleanerProfileDrawer({
                       <ul className="space-y-1">
                         {level.requirements.map((req, idx) => (
                           <li key={idx} className="text-xs text-vm-muted flex items-start gap-2">
-                            <CheckCircle2 className="w-3 h-3 text-green-600 mt-0.5 flex-shrink-0" />
+                            <CheckCircle2 className="w-3 h-3 text-vm-success mt-0.5 flex-shrink-0" />
                             <span>{req}</span>
                           </li>
                         ))}
@@ -1062,7 +1062,7 @@ export default function CleanerProfileDrawer({
                     <div className="bg-vm-surface rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-emerald-600" />
+                          <TrendingUp className="h-4 w-4 text-vm-success" />
                           <span className="text-sm font-semibold text-vm-text">
                             Productivity Score
                           </span>
@@ -1174,7 +1174,7 @@ export default function CleanerProfileDrawer({
                       const getStatusBadge = (status: string) => {
                         if (status === 'EARNED')
                           return (
-                            <span className="px-2 py-0.5 bg-vm-success-bg text-green-800 text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-vm-success-bg text-vm-success text-xs font-medium rounded">
                               Earned
                             </span>
                           );
@@ -1248,7 +1248,7 @@ export default function CleanerProfileDrawer({
                       const getStatusBadge = (status: string) => {
                         if (status === 'EARNED')
                           return (
-                            <span className="px-2 py-0.5 bg-vm-success-bg text-green-800 text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-vm-success-bg text-vm-success text-xs font-medium rounded">
                               Earned
                             </span>
                           );
@@ -1330,7 +1330,7 @@ export default function CleanerProfileDrawer({
                     {/* Bonus Total */}
                     <div className="rounded-lg border border-vm-border p-3">
                       <p className="text-xs text-vm-muted mb-1">Bonus Total</p>
-                      <p className="text-sm font-semibold text-green-600">
+                      <p className="text-sm font-semibold text-vm-success">
                         +{new Intl.NumberFormat('en-US', {
                           style: 'currency',
                           currency: 'USD',
@@ -1392,7 +1392,7 @@ export default function CleanerProfileDrawer({
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
                                   p.status === 'PAID'
-                                    ? 'bg-emerald-50 text-emerald-700'
+                                    ? 'bg-vm-success-bg text-vm-success'
                                     : p.status === 'PENDING'
                                     ? 'bg-amber-50 text-amber-700'
                                     : 'bg-vm-surface text-vm-muted'

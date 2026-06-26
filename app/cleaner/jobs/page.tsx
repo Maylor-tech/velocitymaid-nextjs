@@ -114,7 +114,7 @@ export default function CleanerJobsPage() {
       ASSIGNED: "bg-purple-100 text-purple-800",
       ON_THE_WAY: "bg-vm-cyan-tint text-blue-800",
       IN_PROGRESS: "bg-vm-warning-bg text-yellow-800",
-      COMPLETED: "bg-vm-success-bg text-green-800",
+      COMPLETED: "bg-vm-success-bg text-vm-success",
       CANCELLED: "bg-vm-danger-bg text-red-800",
     };
     return colors[status] || "bg-gray-100 text-vm-text";

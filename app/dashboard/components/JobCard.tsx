@@ -29,7 +29,7 @@ const statusColors = {
   scheduled: 'bg-gray-100 text-vm-text',
   confirmed: 'bg-vm-cyan-tint text-blue-800',
   assigned: 'bg-vm-warning-bg text-yellow-800',
-  completed: 'bg-vm-success-bg text-green-800',
+  completed: 'bg-vm-success-bg text-vm-success',
   cancelled: 'bg-vm-danger-bg text-red-800',
 };
 

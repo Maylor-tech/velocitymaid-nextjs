@@ -137,7 +137,7 @@ export default function InvestorRequestsPage() {
                     Requested: {new Date(request.createdAt).toLocaleString()}
                   </div>
                   {request.status === "APPROVED" && request.approvedAt && (
-                    <div className="text-xs text-green-600 mt-1">
+                    <div className="text-xs text-vm-success mt-1">
                       Approved: {new Date(request.approvedAt).toLocaleString()}
                     </div>
                   )}
@@ -151,7 +151,7 @@ export default function InvestorRequestsPage() {
                       Approve & Send
                     </button>
                   ) : (
-                    <span className="inline-block text-sm text-green-700 font-medium">
+                    <span className="inline-block text-sm text-vm-success font-medium">
                       ✓ Approved and sent
                     </span>
                   )}

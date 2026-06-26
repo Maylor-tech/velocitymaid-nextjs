@@ -137,13 +137,13 @@ export default function AdminPayoutBatchDetailPage() {
       case "PROCESSING":
         return "bg-vm-warning-bg text-yellow-800";
       case "COMPLETED":
-        return "bg-vm-success-bg text-green-800";
+        return "bg-vm-success-bg text-vm-success";
       case "FAILED":
         return "bg-vm-danger-bg text-red-800";
       case "PENDING":
         return "bg-gray-100 text-vm-text";
       case "PAID":
-        return "bg-vm-success-bg text-green-800";
+        return "bg-vm-success-bg text-vm-success";
       default:
         return "bg-gray-100 text-vm-text";
     }
@@ -434,7 +434,7 @@ export default function AdminPayoutBatchDetailPage() {
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center gap-3">
-                <FileText className="w-8 h-8 text-green-600" />
+                <FileText className="w-8 h-8 text-vm-success" />
                 <div>
                   <p className="text-sm text-vm-muted">Total Transfers</p>
                   <p className="text-2xl font-bold text-vm-text">

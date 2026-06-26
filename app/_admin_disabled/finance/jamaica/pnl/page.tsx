@@ -139,7 +139,7 @@ export default function JamaicaPnLPage() {
             </div>
             <div>
               <p className="text-sm text-vm-muted">Combined Revenue</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-vm-success">
                 {formatCurrency(data.revenue.combined, 'JMD')}
               </p>
             </div>
@@ -182,7 +182,7 @@ export default function JamaicaPnLPage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-vm-text">Net Margin</h2>
             {data.netMargin >= 0 ? (
-              <TrendingUp className="w-6 h-6 text-green-600" />
+              <TrendingUp className="w-6 h-6 text-vm-success" />
             ) : (
               <TrendingDown className="w-6 h-6 text-red-600" />
             )}
@@ -192,7 +192,7 @@ export default function JamaicaPnLPage() {
               <p className="text-sm text-vm-muted">Net Profit/Loss</p>
               <p
                 className={`text-3xl font-bold ${
-                  data.netMargin >= 0 ? 'text-green-600' : 'text-red-600'
+                  data.netMargin >= 0 ? 'text-vm-success' : 'text-red-600'
                 }`}
               >
                 {formatCurrency(data.netMargin, 'JMD')}
@@ -202,7 +202,7 @@ export default function JamaicaPnLPage() {
               <p className="text-sm text-vm-muted">Margin Percentage</p>
               <p
                 className={`text-3xl font-bold ${
-                  data.marginPercentage >= 0 ? 'text-green-600' : 'text-red-600'
+                  data.marginPercentage >= 0 ? 'text-vm-success' : 'text-red-600'
                 }`}
               >
                 {data.marginPercentage.toFixed(1)}%

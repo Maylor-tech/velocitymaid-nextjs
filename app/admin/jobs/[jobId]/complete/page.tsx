@@ -281,9 +281,9 @@ export default function MarkCleanCompletePage() {
     return (
       <div className="min-h-screen bg-vm-surface p-6">
         <div className="mx-auto max-w-3xl">
-          <div className="rounded-xl border border-green-200 bg-green-50 p-6">
+          <div className="rounded-xl border border-vm-success/30 bg-vm-success-bg p-6">
             <div className="flex items-start gap-3">
-              <CheckCircle className="mt-0.5 h-6 w-6 flex-shrink-0 text-green-600" />
+              <CheckCircle className="mt-0.5 h-6 w-6 flex-shrink-0 text-vm-success" />
               <div>
                 <h2 className="font-heading text-lg font-semibold text-vm-navy">
                   Clean marked complete.
@@ -382,7 +382,7 @@ export default function MarkCleanCompletePage() {
             >
               {linkCopied ? (
                 <>
-                  <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                  <CheckCircle className="h-3.5 w-3.5 text-vm-success" />
                   Link copied!
                 </>
               ) : (

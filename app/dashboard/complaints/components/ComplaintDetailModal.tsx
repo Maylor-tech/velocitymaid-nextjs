@@ -179,7 +179,7 @@ export default function ComplaintDetailModal({
               {complaint.resolvedAt && (
                 <div className="flex items-center gap-2">
                   <span className="text-vm-muted">Resolved:</span>
-                  <span className="text-green-600 font-medium">{formatDate(complaint.resolvedAt)}</span>
+                  <span className="text-vm-success font-medium">{formatDate(complaint.resolvedAt)}</span>
                 </div>
               )}
             </div>

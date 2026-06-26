@@ -117,10 +117,10 @@ export default function BillingPage() {
         </div>
 
         {hasActiveSubscription && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
+          <div className="bg-vm-success-bg border border-vm-success/30 rounded-lg p-4 mb-8">
             <div className="flex items-center">
-              <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-              <p className="text-green-800">
+              <CheckCircle className="w-5 h-5 text-vm-success mr-2" />
+              <p className="text-vm-success">
                 You have an active subscription. Your plan will renew automatically.
               </p>
             </div>

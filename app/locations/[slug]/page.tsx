@@ -338,15 +338,15 @@ export default async function BranchLandingPage({ params }: PageProps) {
                     <p className="text-vm-muted mb-6">Perfect for regular maintenance cleaning</p>
                     <ul className="space-y-2 mb-6">
                       <li className="flex items-center text-vm-text">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Kitchen & Bathrooms
                       </li>
                       <li className="flex items-center text-vm-text">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Dusting & Vacuuming
                       </li>
                       <li className="flex items-center text-vm-text">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Floor Mopping
                       </li>
                     </ul>
@@ -368,15 +368,15 @@ export default async function BranchLandingPage({ params }: PageProps) {
                     <p className="text-vm-muted mb-6">Thorough top-to-bottom cleaning service</p>
                     <ul className="space-y-2 mb-6">
                       <li className="flex items-center text-vm-text">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Everything in Standard
                       </li>
                       <li className="flex items-center text-vm-text">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Inside Appliances
                       </li>
                       <li className="flex items-center text-vm-text">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Baseboards & Windows
                       </li>
                     </ul>
@@ -393,15 +393,15 @@ export default async function BranchLandingPage({ params }: PageProps) {
                     <p className="text-vm-muted mb-6">Complete property cleaning for transitions</p>
                     <ul className="space-y-2 mb-6">
                       <li className="flex items-center text-vm-text">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Everything in Deep Clean
                       </li>
                       <li className="flex items-center text-vm-text">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Inside Cabinets & Closets
                       </li>
                       <li className="flex items-center text-vm-text">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Full Sanitization
                       </li>
                     </ul>

@@ -72,14 +72,14 @@ export default async function VerifyCertificatePage({ params }: PageProps) {
           {/* Status */}
           <div className={`mb-8 p-6 rounded-lg ${
             isValid 
-              ? 'bg-green-50 border-2 border-green-200' 
+              ? 'bg-vm-success-bg border-2 border-vm-success/30' 
               : 'bg-red-50 border-2 border-red-200'
           }`}>
             <div className="flex items-center justify-center gap-3 mb-4">
               {isValid ? (
                 <>
-                  <CheckCircle2 className="w-12 h-12 text-green-600" />
-                  <h2 className="text-2xl font-bold text-green-900">Valid Certificate</h2>
+                  <CheckCircle2 className="w-12 h-12 text-vm-success" />
+                  <h2 className="text-2xl font-bold text-vm-success">Valid Certificate</h2>
                 </>
               ) : (
                 <>

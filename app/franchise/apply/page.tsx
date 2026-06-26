@@ -536,7 +536,7 @@ export default function FranchiseApplicationPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-vm-surface to-white flex items-center justify-center p-6">
         <div className="max-w-2xl w-full bg-white rounded-xl shadow-xl p-8 text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <CheckCircle className="w-16 h-16 text-vm-success mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-vm-text mb-4">Application Submitted!</h1>
           <p className="text-vm-muted mb-6">
             Thank you for your interest in franchising with VelocityMaid. We'll review your application and get back to you within 2-3 business days.

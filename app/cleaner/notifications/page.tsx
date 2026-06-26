@@ -83,7 +83,7 @@ export default function CleanerNotificationsPage() {
       case "PAYOUT_SENT":
         return <Send className="w-5 h-5 text-purple-600" />;
       case "PAYOUT_PAID":
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
+        return <CheckCircle className="w-5 h-5 text-vm-success" />;
       case "PAYOUT_FAILED":
         return <AlertCircle className="w-5 h-5 text-red-600" />;
       default:
@@ -96,7 +96,7 @@ export default function CleanerNotificationsPage() {
       case "PAYOUT_SENT":
         return "border-purple-200 bg-purple-50";
       case "PAYOUT_PAID":
-        return "border-green-200 bg-green-50";
+        return "border-vm-success/30 bg-vm-success-bg";
       case "PAYOUT_FAILED":
         return "border-red-200 bg-red-50";
       default:

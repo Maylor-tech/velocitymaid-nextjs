@@ -64,7 +64,7 @@ export default function BranchBreakdownTable({ newJersey, vermont }: BranchBreak
                   className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     branch.branch === 'new_jersey'
                       ? 'bg-vm-cyan-tint text-blue-800'
-                      : 'bg-vm-success-bg text-green-800'
+                      : 'bg-vm-success-bg text-vm-success'
                   }`}
                 >
                   {branch.branch === 'new_jersey' ? 'New Jersey' : 'Vermont'}
@@ -81,14 +81,14 @@ export default function BranchBreakdownTable({ newJersey, vermont }: BranchBreak
               </td>
               <td
                 className={`px-4 py-3 whitespace-nowrap text-sm font-medium ${
-                  branch.profit >= 0 ? 'text-green-600' : 'text-red-600'
+                  branch.profit >= 0 ? 'text-vm-success' : 'text-red-600'
                 }`}
               >
                 ${branch.profit >= 0 ? '+' : ''}{branch.profit.toFixed(2)}
               </td>
               <td
                 className={`px-4 py-3 whitespace-nowrap text-sm font-medium ${
-                  branch.margin >= 0 ? 'text-green-600' : 'text-red-600'
+                  branch.margin >= 0 ? 'text-vm-success' : 'text-red-600'
                 }`}
               >
                 {branch.margin.toFixed(1)}%
@@ -106,14 +106,14 @@ export default function BranchBreakdownTable({ newJersey, vermont }: BranchBreak
             </td>
             <td
               className={`px-4 py-3 whitespace-nowrap text-sm ${
-                total.profit >= 0 ? 'text-green-600' : 'text-red-600'
+                total.profit >= 0 ? 'text-vm-success' : 'text-red-600'
               }`}
             >
               ${total.profit >= 0 ? '+' : ''}{total.profit.toFixed(2)}
             </td>
             <td
               className={`px-4 py-3 whitespace-nowrap text-sm ${
-                total.margin >= 0 ? 'text-green-600' : 'text-red-600'
+                total.margin >= 0 ? 'text-vm-success' : 'text-red-600'
               }`}
             >
               {total.margin.toFixed(1)}%

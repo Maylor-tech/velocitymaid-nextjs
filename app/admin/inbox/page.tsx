@@ -30,7 +30,7 @@ interface ContactMessage {
 function statusColor(status: string) {
   if (status === "NEW") return "bg-vm-cyan-tint text-blue-800";
   if (status === "REVIEWED") return "bg-vm-warning-bg text-yellow-800";
-  if (status === "REPLIED") return "bg-vm-success-bg text-green-800";
+  if (status === "REPLIED") return "bg-vm-success-bg text-vm-success";
   if (status === "ARCHIVED") return "bg-gray-100 text-vm-text";
   return "bg-gray-100 text-vm-text";
 }

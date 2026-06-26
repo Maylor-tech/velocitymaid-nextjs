@@ -42,7 +42,7 @@ function SuccessContent() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-12 text-center">
           <div className="mb-6">
-            <CheckCircle className="w-20 h-20 text-green-500 mx-auto" />
+            <CheckCircle className="w-20 h-20 text-vm-success mx-auto" />
           </div>
           <h1 className="text-4xl font-bold text-vm-text mb-4">Booking Confirmed! ✅</h1>
           <p className="text-xl text-vm-muted mb-6">

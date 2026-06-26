@@ -62,7 +62,7 @@ export default function TransactionsPage() {
 
   const getTransactionTypeColor = (type: string) => {
     const colorMap: Record<string, string> = {
-      PAYMENT_RECEIVED: 'bg-vm-success-bg text-green-800',
+      PAYMENT_RECEIVED: 'bg-vm-success-bg text-vm-success',
       PAYOUT_PAID: 'bg-vm-danger-bg text-red-800',
       BONUS_ISSUED: 'bg-vm-warning-bg text-yellow-800',
       REFUND: 'bg-orange-100 text-orange-800',
@@ -175,7 +175,7 @@ export default function TransactionsPage() {
                           className={`font-semibold ${
                             transaction.transactionType === 'PAYMENT_RECEIVED' ||
                             transaction.transactionType === 'CASH_RECEIPT'
-                              ? 'text-green-600'
+                              ? 'text-vm-success'
                               : 'text-red-600'
                           }`}
                         >

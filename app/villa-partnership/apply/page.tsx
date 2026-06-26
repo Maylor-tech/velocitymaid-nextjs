@@ -85,11 +85,11 @@ export default function VillaPartnershipApplyPage() {
 
         {/* Success Message */}
         {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-            <CheckCircle className="w-6 h-6 text-green-600" />
+          <div className="mb-6 bg-vm-success-bg border border-vm-success/30 rounded-lg p-4 flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-vm-success" />
             <div>
-              <p className="font-semibold text-green-900">Application submitted successfully!</p>
-              <p className="text-sm text-green-700">Redirecting to confirmation page...</p>
+              <p className="font-semibold text-vm-success">Application submitted successfully!</p>
+              <p className="text-sm text-vm-success">Redirecting to confirmation page...</p>
             </div>
           </div>
         )}

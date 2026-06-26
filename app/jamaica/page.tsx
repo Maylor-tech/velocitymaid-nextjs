@@ -189,7 +189,7 @@ export default function JamaicaLandingPage() {
                     <div>
                       <h3 className="text-xl font-bold text-vm-text">{area.name}</h3>
                       {area.status === 'active' ? (
-                        <p className="text-green-600 font-semibold mt-1">✓ Currently Serving</p>
+                        <p className="text-vm-success font-semibold mt-1">✓ Currently Serving</p>
                       ) : (
                         <p className="text-vm-muted mt-1">Coming Soon</p>
                       )}

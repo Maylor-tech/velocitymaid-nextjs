@@ -37,7 +37,7 @@ export default function KpiCard({ title, value, subtitle, icon, trend }: KpiCard
         )}
       </div>
       {trend && (
-        <div className={`mt-2 text-xs ${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-vm-muted'}`}>
+        <div className={`mt-2 text-xs ${trend === 'up' ? 'text-vm-success' : trend === 'down' ? 'text-red-600' : 'text-vm-muted'}`}>
           {trend === 'up' && '↑'} {trend === 'down' && '↓'} {trend === 'neutral' && '→'}
         </div>
       )}

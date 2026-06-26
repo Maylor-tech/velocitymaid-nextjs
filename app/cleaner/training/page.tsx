@@ -87,8 +87,8 @@ export default function CleanerTrainingPage() {
         </div>
 
         {data.status === 'CERTIFIED' && (
-          <div className="mb-6 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-900">
-            <Award className="h-6 w-6 text-green-600" />
+          <div className="mb-6 flex items-center gap-3 rounded-lg border border-vm-success/30 bg-vm-success-bg px-4 py-3 text-vm-success">
+            <Award className="h-6 w-6 text-vm-success" />
             <div>
               <p className="font-medium">Certified</p>
               {data.certifiedAt && (
@@ -114,7 +114,7 @@ export default function CleanerTrainingPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex gap-3">
                   {mod.completed ? (
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-vm-success" />
                   ) : (
                     <Circle className="mt-0.5 h-5 w-5 shrink-0 text-vm-muted" />
                   )}
@@ -125,7 +125,7 @@ export default function CleanerTrainingPage() {
                     <h2 className="text-lg font-semibold text-vm-text">{mod.title}</h2>
                     <p className="mt-1 text-sm text-vm-muted">{mod.description}</p>
                     {mod.quizScore != null && (
-                      <p className="mt-1 text-xs text-green-700">Quiz score: {mod.quizScore}%</p>
+                      <p className="mt-1 text-xs text-vm-success">Quiz score: {mod.quizScore}%</p>
                     )}
                   </div>
                 </div>

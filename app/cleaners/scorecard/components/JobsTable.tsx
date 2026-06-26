@@ -71,7 +71,7 @@ export default function JobsTable({ jobs }: JobsTableProps) {
                 {job.onTime === undefined ? (
                   <span className="text-vm-muted">N/A</span>
                 ) : job.onTime ? (
-                  <span className="text-green-600 font-medium">✓ Yes</span>
+                  <span className="text-vm-success font-medium">✓ Yes</span>
                 ) : (
                   <span className="text-red-600 font-medium">✗ No</span>
                 )}

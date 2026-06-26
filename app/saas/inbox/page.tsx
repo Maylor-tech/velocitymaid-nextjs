@@ -84,7 +84,7 @@ export default function InboxPage() {
         );
       case 'REPLIED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-vm-success-bg text-green-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-vm-success-bg text-vm-success">
             Replied
           </span>
         );
@@ -168,7 +168,7 @@ export default function InboxPage() {
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
-              <CheckCircle className="w-8 h-8 text-green-600 mr-3" />
+              <CheckCircle className="w-8 h-8 text-vm-success mr-3" />
               <div>
                 <p className="text-sm text-vm-muted">Replied</p>
                 <p className="text-2xl font-bold text-vm-text">{repliedCount}</p>

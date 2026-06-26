@@ -22,7 +22,7 @@ export default function LocationBadge({ location, branchName, branchSlug }: Loca
     badgeClass = 'bg-vm-cyan-tint text-blue-800';
   } else if (location === 'vermont') {
     displayText = 'Vermont';
-    badgeClass = 'bg-vm-success-bg text-green-800';
+    badgeClass = 'bg-vm-success-bg text-vm-success';
   } else {
     displayText = 'Unknown';
     badgeClass = 'bg-gray-100 text-vm-text';

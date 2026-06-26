@@ -95,7 +95,7 @@ export default function CertificationQuizPage() {
           <div
             className={`mt-6 rounded-xl border p-6 ${
               result.passed
-                ? 'border-green-200 bg-green-50 text-green-900'
+                ? 'border-vm-success/30 bg-vm-success-bg text-vm-success'
                 : 'border-red-200 bg-red-50 text-red-900'
             }`}
           >

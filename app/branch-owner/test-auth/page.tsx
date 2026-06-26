@@ -100,7 +100,7 @@ export default function TestAuthPage() {
           {status && (
             <div className={`p-3 rounded-lg ${
               status.includes("✅") 
-                ? "bg-green-50 text-green-800" 
+                ? "bg-vm-success-bg text-vm-success" 
                 : "bg-red-50 text-red-800"
             }`}>
               {status}

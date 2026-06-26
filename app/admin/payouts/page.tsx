@@ -87,7 +87,7 @@ export default function AdminPayoutsPage() {
       case "PROCESSING":
         return "bg-vm-warning-bg text-yellow-800";
       case "COMPLETED":
-        return "bg-vm-success-bg text-green-800";
+        return "bg-vm-success-bg text-vm-success";
       case "FAILED":
         return "bg-vm-danger-bg text-red-800";
       default:
@@ -320,7 +320,7 @@ export default function AdminPayoutsPage() {
 
         {/* Error / Success Messages */}
         {createSuccess && (
-          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6">
+          <div className="bg-vm-success-bg border border-vm-success/30 text-vm-success px-4 py-3 rounded-lg mb-6">
             {createSuccess}
           </div>
         )}
@@ -407,7 +407,7 @@ export default function AdminPayoutsPage() {
                               <button
                                 onClick={() => handleApprove(batch.id)}
                                 disabled={processingBatchId === batch.id}
-                                className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors disabled:opacity-50"
+                                className="p-2 text-vm-success hover:text-vm-success hover:bg-vm-success-bg rounded transition-colors disabled:opacity-50"
                                 title="Approve"
                               >
                                 <CheckCircle className="w-5 h-5" />

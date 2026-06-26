@@ -47,13 +47,13 @@ export default function RefundPolicy() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-vm-text mb-4 flex items-center">
-              <CheckCircle className="w-6 h-6 mr-2 text-green-600" />
+              <CheckCircle className="w-6 h-6 mr-2 text-vm-success" />
               Satisfaction Guarantee
             </h2>
             <p className="text-vm-text leading-relaxed mb-4">
               We stand behind our work with a 100% satisfaction guarantee. If you are not completely satisfied with our cleaning service, we will return to address any concerns at no additional cost.
             </p>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+            <div className="bg-vm-success-bg border border-vm-success/30 rounded-lg p-4 mb-4">
               <p className="text-vm-text">
                 <strong>To request a re-cleaning:</strong> Contact us within 24 hours of service completion at <a href="mailto:hello@velocitymaid.com" className="text-vm-cyan-dark hover:underline">hello@velocitymaid.com</a> or <a href="tel:+18027335348" className="text-vm-cyan-dark hover:underline">(802) 733-5348</a>. We will schedule a return visit to address any areas of concern.
               </p>

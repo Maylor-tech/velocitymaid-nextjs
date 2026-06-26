@@ -514,7 +514,7 @@ export default function AdminJobDetailPage() {
 
   const getStatusColor = (status: string) => {
     const statusLower = status.toLowerCase();
-    if (statusLower.includes('completed')) return 'bg-vm-success-bg text-green-800';
+    if (statusLower.includes('completed')) return 'bg-vm-success-bg text-vm-success';
     if (statusLower.includes('cancelled')) return 'bg-vm-danger-bg text-red-800';
     if (statusLower.includes('assigned')) return 'bg-vm-cyan-tint text-blue-800';
     if (statusLower.includes('in_progress') || statusLower.includes('on_the_way')) return 'bg-purple-100 text-purple-800';
@@ -525,7 +525,7 @@ export default function AdminJobDetailPage() {
   const getPayoutStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
       case 'PAID':
-        return 'bg-vm-success-bg text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'READY':
         return 'bg-vm-cyan-tint text-blue-800';
       case 'FAILED':
@@ -547,7 +547,7 @@ export default function AdminJobDetailPage() {
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
       case 'PAID':
-        return 'bg-vm-success-bg text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'DEPOSIT_PAID':
         return 'bg-vm-cyan-tint text-blue-800';
       case 'BALANCE_DUE':
@@ -566,7 +566,7 @@ export default function AdminJobDetailPage() {
   const getReviewStatusColor = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return 'bg-vm-success-bg text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'REJECTED':
         return 'bg-vm-danger-bg text-red-800';
       case 'PENDING':
@@ -715,7 +715,7 @@ export default function AdminJobDetailPage() {
                   key={step.id}
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
                     step.done
-                      ? 'bg-vm-success-bg text-green-800'
+                      ? 'bg-vm-success-bg text-vm-success'
                       : step.current
                         ? 'bg-indigo-100 text-indigo-900 ring-2 ring-indigo-300'
                         : 'bg-gray-100 text-vm-muted'
@@ -751,7 +751,7 @@ export default function AdminJobDetailPage() {
                   href={loopProgress.customerJobUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                  className="inline-flex items-center rounded-lg bg-vm-success px-4 py-2 text-sm font-medium text-white hover:bg-vm-success/90"
                 >
                   Open Customer Job →
                 </Link>
@@ -796,7 +796,7 @@ export default function AdminJobDetailPage() {
             </div>
             <div className="rounded-lg bg-gray-50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">Paid to Date</p>
-              <p className="mt-1 text-lg font-semibold text-green-800">
+              <p className="mt-1 text-lg font-semibold text-vm-success">
                 {formatCurrency(job.amountPaid, job.currency)}
               </p>
             </div>
@@ -838,7 +838,7 @@ export default function AdminJobDetailPage() {
                   </button>
                 </div>
               ) : (
-                <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                <div className="rounded-lg border border-vm-success/30 bg-vm-success-bg p-4">
                   <h3 className="mb-3 text-sm font-semibold text-vm-text">Record a payment</h3>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <div>
@@ -852,7 +852,7 @@ export default function AdminJobDetailPage() {
                         value={markPaidAmount}
                         onChange={(e) => setMarkPaidAmount(e.target.value)}
                         placeholder="0.00"
-                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-vm-cyan focus:ring-2 focus:ring-vm-cyan/30"
                       />
                     </div>
                     <div>
@@ -862,7 +862,7 @@ export default function AdminJobDetailPage() {
                       <select
                         value={markPaidMethod}
                         onChange={(e) => setMarkPaidMethod(e.target.value)}
-                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-vm-cyan focus:ring-2 focus:ring-vm-cyan/30"
                       >
                         <option value="PayPal">PayPal</option>
                         <option value="Cash">Cash</option>
@@ -879,7 +879,7 @@ export default function AdminJobDetailPage() {
                         value={markPaidReference}
                         onChange={(e) => setMarkPaidReference(e.target.value)}
                         placeholder="e.g. PayPal txn ID"
-                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-vm-cyan focus:ring-2 focus:ring-vm-cyan/30"
                       />
                     </div>
                   </div>
@@ -915,9 +915,9 @@ export default function AdminJobDetailPage() {
 
           {job.paymentStatus === 'PAID' && (job.paymentMethod || job.paidAt) && (
             <div className="mt-6 border-t border-gray-100 pt-6">
-              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4">
-                <CheckCircle className="h-5 w-5 shrink-0 text-green-600" />
-                <p className="text-sm text-green-900">
+              <div className="flex items-center gap-2 rounded-lg border border-vm-success/30 bg-vm-success-bg p-4">
+                <CheckCircle className="h-5 w-5 shrink-0 text-vm-success" />
+                <p className="text-sm text-vm-success">
                   {formatCurrency(job.amountPaid, job.currency)} received
                   {job.paymentMethod ? ` via ${job.paymentMethod}` : ''}
                   {job.paidAt ? ` on ${formatDate(job.paidAt)}` : ''}
@@ -1020,7 +1020,7 @@ export default function AdminJobDetailPage() {
                         type="button"
                         onClick={handleMarkPayoutPaid}
                         disabled={markingPayoutPaid}
-                        className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                        className="inline-flex w-full items-center justify-center rounded-lg bg-vm-success px-4 py-2 text-sm font-semibold text-white hover:bg-vm-success/90 disabled:opacity-60"
                       >
                         {markingPayoutPaid ? 'Marking paid…' : 'Mark Cleaner Paid'}
                       </button>
@@ -1041,7 +1041,7 @@ export default function AdminJobDetailPage() {
               {job.payoutEligibility && (
                 <p
                   className={`mt-2 text-xs font-medium ${
-                    job.payoutEligibility.eligible ? 'text-green-700' : 'text-vm-muted'
+                    job.payoutEligibility.eligible ? 'text-vm-success' : 'text-vm-muted'
                   }`}
                 >
                   Eligibility:{' '}
@@ -1077,7 +1077,7 @@ export default function AdminJobDetailPage() {
                       </>
                     ) : inviteSent ? (
                       <>
-                        <CheckCircle className="h-3 w-3 text-green-600" />
+                        <CheckCircle className="h-3 w-3 text-vm-success" />
                         Invite sent
                       </>
                     ) : (

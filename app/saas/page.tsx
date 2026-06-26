@@ -153,15 +153,15 @@ export default function SaaSLandingPage() {
               </div>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-vm-success mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-vm-text">Up to 25 contractors</span>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-vm-success mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-vm-text">Core Features</span>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-vm-success mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-vm-text">Email Support</span>
                 </li>
               </ul>
@@ -193,19 +193,19 @@ export default function SaaSLandingPage() {
               </div>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-vm-success mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-vm-text">Up to 100 contractors</span>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-vm-success mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-vm-text">Core Features</span>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-vm-success mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-vm-text">Priority Support</span>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-vm-success mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-vm-text">Document Uploads</span>
                 </li>
               </ul>
@@ -232,19 +232,19 @@ export default function SaaSLandingPage() {
               </div>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-vm-success mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-vm-text">Unlimited contractors</span>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-vm-success mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-vm-text">Core Features</span>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-vm-success mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-vm-text">Dedicated Support</span>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-vm-success mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-vm-text">Advanced Reporting</span>
                 </li>
               </ul>

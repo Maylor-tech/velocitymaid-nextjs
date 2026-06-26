@@ -191,7 +191,7 @@ export default function BranchOwnerCleanersPage() {
                             {cleaner.name || "Unnamed Cleaner"}
                           </h3>
                           {cleaner.isActive ? (
-                            <Badge className="bg-vm-success-bg text-green-800">Active</Badge>
+                            <Badge className="bg-vm-success-bg text-vm-success">Active</Badge>
                           ) : (
                             <Badge className="bg-vm-danger-bg text-red-800">Inactive</Badge>
                           )}
@@ -229,7 +229,7 @@ export default function BranchOwnerCleanersPage() {
                         <div>
                           <p className="text-xs text-vm-muted">Payment Method</p>
                           {cleaner.stats.paymentMethodStatus.verified ? (
-                            <CheckCircle2 className="w-5 h-5 text-green-600 mt-1" />
+                            <CheckCircle2 className="w-5 h-5 text-vm-success mt-1" />
                           ) : (
                             <XCircle className="w-5 h-5 text-yellow-600 mt-1" />
                           )}
@@ -239,7 +239,7 @@ export default function BranchOwnerCleanersPage() {
                       {/* Status Indicators */}
                       <div className="flex flex-wrap gap-2 ml-8">
                         {cleaner.stats.paymentMethodStatus.status === "verified" && (
-                          <Badge className="bg-vm-success-bg text-green-800">
+                          <Badge className="bg-vm-success-bg text-vm-success">
                             Payment Verified
                           </Badge>
                         )}

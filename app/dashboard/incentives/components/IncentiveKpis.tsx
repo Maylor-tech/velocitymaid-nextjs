@@ -32,7 +32,7 @@ export default function IncentiveKpis({
         <p className="text-sm font-medium text-vm-muted mb-1">NJ Bonus</p>
         <p className="text-3xl font-bold text-vm-text">${njBonus.toFixed(2)}</p>
       </div>
-      <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+      <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-vm-success">
         <p className="text-sm font-medium text-vm-muted mb-1">VT Bonus</p>
         <p className="text-3xl font-bold text-vm-text">${vtBonus.toFixed(2)}</p>
       </div>

@@ -81,7 +81,7 @@ export default function CleanerIncentiveDetailModal({
             <>
               {/* Current Performance */}
               {latestIncentive && (
-                <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6 border-2 border-blue-200">
+                <div className="bg-gradient-to-r from-blue-50 to-vm-success-bg rounded-lg p-6 border-2 border-blue-200">
                   <h3 className="text-lg font-semibold text-vm-text mb-4">Current Performance</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
@@ -100,7 +100,7 @@ export default function CleanerIncentiveDetailModal({
                     </div>
                     <div>
                       <p className="text-sm text-vm-muted mb-1">Bonus</p>
-                      <p className="text-2xl font-bold text-green-600">
+                      <p className="text-2xl font-bold text-vm-success">
                         ${latestIncentive.bonusAmount.toFixed(2)}
                       </p>
                     </div>
@@ -124,7 +124,7 @@ export default function CleanerIncentiveDetailModal({
                             {formatDate(incentive.periodStart)} - {formatDate(incentive.periodEnd)}
                           </span>
                         </div>
-                        <span className="text-lg font-bold text-green-600">
+                        <span className="text-lg font-bold text-vm-success">
                           ${incentive.bonusAmount.toFixed(2)}
                         </span>
                       </div>

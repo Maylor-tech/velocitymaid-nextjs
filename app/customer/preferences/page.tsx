@@ -129,8 +129,8 @@ export default function CustomerPreferencesPage() {
       </div>
 
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-          <p className="text-green-600">Preferences updated successfully!</p>
+        <div className="bg-vm-success-bg border border-vm-success/30 rounded-xl p-4 mb-6">
+          <p className="text-vm-success">Preferences updated successfully!</p>
         </div>
       )}
 

@@ -218,15 +218,15 @@ export default function VillaPartnershipPage() {
                 <p className="text-vm-muted mb-6">Per turnover</p>
                 <ul className="space-y-2 text-vm-text">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Full villa clean</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Bathroom reset</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Kitchen reset</span>
                   </li>
                 </ul>
@@ -240,15 +240,15 @@ export default function VillaPartnershipPage() {
                 <p className="text-vm-muted mb-6">Per turnover</p>
                 <ul className="space-y-2 text-vm-text">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Everything in Standard</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Bed makeover & linen reset</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Photo documentation</span>
                   </li>
                 </ul>
@@ -259,15 +259,15 @@ export default function VillaPartnershipPage() {
                 <p className="text-vm-muted mb-6">Per turnover</p>
                 <ul className="space-y-2 text-vm-text">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Everything in Turnover + Linen</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Inventory check & report</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Damage reporting</span>
                   </li>
                 </ul>

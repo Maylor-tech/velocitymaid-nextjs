@@ -93,7 +93,7 @@ export default function CleanerCompliancePage() {
     switch (status) {
       case "ALL_SET":
         return (
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-vm-success-bg text-green-800">
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-vm-success-bg text-vm-success">
             <CheckCircle className="w-4 h-4" />
             All Set
           </span>
@@ -118,7 +118,7 @@ export default function CleanerCompliancePage() {
   const getItemIcon = (status: ComplianceChecklistItem["status"]) => {
     switch (status) {
       case "complete":
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
+        return <CheckCircle className="w-5 h-5 text-vm-success" />;
       case "incomplete":
         return <XCircle className="w-5 h-5 text-red-600" />;
       case "pending":
@@ -133,7 +133,7 @@ export default function CleanerCompliancePage() {
       case "stripe-connect":
         return <CreditCard className="w-6 h-6 text-blue-600" />;
       case "tax-profile":
-        return <FileText className="w-6 h-6 text-green-600" />;
+        return <FileText className="w-6 h-6 text-vm-success" />;
       case "statements":
         return <Receipt className="w-6 h-6 text-purple-600" />;
       default:
@@ -198,7 +198,7 @@ export default function CleanerCompliancePage() {
 
           <div className="grid grid-cols-3 gap-4 mt-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-vm-success">
                 {data.summary.completedItems}
               </div>
               <div className="text-sm text-vm-muted">Complete</div>
@@ -277,7 +277,7 @@ export default function CleanerCompliancePage() {
                   <h3 className="text-lg font-semibold text-vm-text">{section.title}</h3>
                 </div>
                 {section.allComplete && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-green-800">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-vm-success">
                     <CheckCircle className="w-3 h-3" />
                     Complete
                   </span>

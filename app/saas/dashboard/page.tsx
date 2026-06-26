@@ -117,7 +117,7 @@ export default function DashboardPage() {
               <h2 className="text-xl font-semibold text-vm-text mb-2">Subscription Status</h2>
               {hasActiveSubscription ? (
                 <div>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-vm-success-bg text-green-800">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-vm-success-bg text-vm-success">
                     Active
                   </span>
                   {periodEnd && (

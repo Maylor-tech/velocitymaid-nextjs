@@ -147,7 +147,7 @@ export default function BookingHistoryPage() {
                       <div className="mt-3 pt-3 border-t border-gray-200">
                         <div className="flex items-center gap-2 text-sm">
                           {complaint.status === 'resolved' || complaint.status === 'closed' ? (
-                            <span className="px-2 py-1 bg-vm-success-bg text-green-800 rounded-full text-xs font-medium">
+                            <span className="px-2 py-1 bg-vm-success-bg text-vm-success rounded-full text-xs font-medium">
                               <CheckCircle className="w-3 h-3 inline mr-1" />
                               Complaint Resolved
                             </span>

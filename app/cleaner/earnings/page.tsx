@@ -102,7 +102,7 @@ export default function CleanerEarningsPage() {
     switch (status) {
       case 'PAID':
         return (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-green-800">
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-vm-success">
             Paid
           </span>
         );
@@ -191,9 +191,9 @@ export default function CleanerEarningsPage() {
                 Awaiting admin manual payout
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-vm-success/30 p-6">
               <h3 className="text-sm font-medium text-vm-muted mb-1">Paid Out</h3>
-              <p className="text-2xl font-bold text-green-700">
+              <p className="text-2xl font-bold text-vm-success">
                 {formatCurrency(data.payouts.paidTotal)}
               </p>
               <p className="text-xs text-vm-muted mt-1">Marked PAID by admin</p>
@@ -220,7 +220,7 @@ export default function CleanerEarningsPage() {
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-2">
-              <Calendar className="w-6 h-6 text-green-600" />
+              <Calendar className="w-6 h-6 text-vm-success" />
               <h3 className="text-sm font-medium text-vm-muted">This Month</h3>
             </div>
             <p className="text-2xl font-bold text-vm-text">

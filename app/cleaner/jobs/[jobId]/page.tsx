@@ -232,7 +232,7 @@ export default function CleanerJobDetailPage() {
       ASSIGNED: "bg-purple-100 text-purple-800",
       ON_THE_WAY: "bg-vm-cyan-tint text-blue-800",
       IN_PROGRESS: "bg-vm-warning-bg text-yellow-800",
-      COMPLETED: "bg-vm-success-bg text-green-800",
+      COMPLETED: "bg-vm-success-bg text-vm-success",
       CANCELLED: "bg-vm-danger-bg text-red-800",
     };
     return colors[status] || "bg-gray-100 text-vm-text";
@@ -352,7 +352,7 @@ export default function CleanerJobDetailPage() {
                   className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
                     processing
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-emerald-600 hover:bg-emerald-700"
+                      : "bg-vm-success hover:bg-vm-success/90"
                   }`}
                 >
                   <CheckCircle className="w-5 h-5" />

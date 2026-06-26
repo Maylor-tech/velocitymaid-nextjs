@@ -28,12 +28,12 @@ export default function LeadStats({ stats }: LeadStatsProps) {
           <p className="text-2xl font-bold text-vm-text">{stats.leadsThisWeek}</p>
         </div>
 
-        <div className="bg-green-50 rounded-lg p-4">
+        <div className="bg-vm-success-bg rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <TrendingUp className="w-6 h-6 text-green-600" />
+            <TrendingUp className="w-6 h-6 text-vm-success" />
           </div>
           <p className="text-sm text-vm-muted mb-1">Tier A</p>
-          <p className="text-2xl font-bold text-green-600">{stats.tierA}</p>
+          <p className="text-2xl font-bold text-vm-success">{stats.tierA}</p>
         </div>
 
         <div className="bg-yellow-50 rounded-lg p-4">

@@ -160,7 +160,7 @@ export default function BranchOwnerDashboardPage() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <p className="text-3xl font-bold text-vm-text">{metrics.jobsThisWeek}</p>
-                <Calendar className="w-8 h-8 text-green-600" />
+                <Calendar className="w-8 h-8 text-vm-success" />
               </div>
             </CardContent>
           </Card>

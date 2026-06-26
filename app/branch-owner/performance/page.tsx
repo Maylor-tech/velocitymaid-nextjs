@@ -132,7 +132,7 @@ export default function BranchOwnerPerformancePage() {
               {performance.cancellationRate.flagged ? (
                 <AlertTriangle className="w-5 h-5 text-yellow-600" />
               ) : (
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <CheckCircle2 className="w-5 h-5 text-vm-success" />
               )}
               Cancellation Rate
             </CardTitle>
@@ -148,7 +148,7 @@ export default function BranchOwnerPerformancePage() {
                     Above Threshold ({performance.cancellationRate.threshold}%)
                   </Badge>
                 ) : (
-                  <Badge className="bg-vm-success-bg text-green-800">Within Normal Range</Badge>
+                  <Badge className="bg-vm-success-bg text-vm-success">Within Normal Range</Badge>
                 )}
               </div>
               <p className="text-sm text-vm-muted">
@@ -170,7 +170,7 @@ export default function BranchOwnerPerformancePage() {
               {performance.cleanerIssues.flagged ? (
                 <AlertTriangle className="w-5 h-5 text-orange-600" />
               ) : (
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <CheckCircle2 className="w-5 h-5 text-vm-success" />
               )}
               Cleaner Issues
             </CardTitle>
@@ -204,7 +204,7 @@ export default function BranchOwnerPerformancePage() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <CheckCircle2 className="w-5 h-5 text-vm-success" />
                 <p className="text-sm text-vm-muted">No cleaners with repeated issues</p>
               </div>
             )}
@@ -237,7 +237,7 @@ export default function BranchOwnerPerformancePage() {
                 {performance.responseTime.flagged ? (
                   <Badge className="bg-vm-danger-bg text-red-800">Slow Response</Badge>
                 ) : (
-                  <Badge className="bg-vm-success-bg text-green-800">Good Response</Badge>
+                  <Badge className="bg-vm-success-bg text-vm-success">Good Response</Badge>
                 )}
               </div>
               {performance.responseTime.slowResponseCount > 0 && (

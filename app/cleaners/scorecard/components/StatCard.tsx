@@ -19,7 +19,7 @@ export default function StatCard({
 }: StatCardProps) {
   const colorClasses = {
     blue: 'border-blue-500 bg-blue-50',
-    green: 'border-green-500 bg-green-50',
+    green: 'border-vm-success bg-vm-success-bg',
     yellow: 'border-yellow-500 bg-yellow-50',
     red: 'border-red-500 bg-red-50',
     purple: 'border-purple-500 bg-purple-50',
@@ -56,7 +56,7 @@ export default function StatCard({
         )}
       </div>
       {trend && (
-        <div className={`mt-2 text-xs ${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-vm-muted'}`}>
+        <div className={`mt-2 text-xs ${trend === 'up' ? 'text-vm-success' : trend === 'down' ? 'text-red-600' : 'text-vm-muted'}`}>
           {trend === 'up' && '↑'} {trend === 'down' && '↓'} {trend === 'neutral' && '→'}
         </div>
       )}

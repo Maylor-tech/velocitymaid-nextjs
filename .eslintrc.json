@@ -16,6 +16,18 @@
           "message": "Raw Tailwind palette literal. Use the vm-* semantic tokens or the shared status map."
         },
         {
+          "selector": "Literal[value=/\\btext-green-[0-9]{3}\\b/]",
+          "message": "Raw green text literal. Use text-vm-success (see design-system §3)."
+        },
+        {
+          "selector": "Literal[value=/\\b(bg|text|border)-emerald-[0-9]{2,3}\\b/]",
+          "message": "Raw emerald palette literal. Use vm-success tokens (text-vm-success, bg-vm-success-bg, border-vm-success)."
+        },
+        {
+          "selector": "Literal[value=/\\b(bg|border)-green-(50|200)\\b/]",
+          "message": "Raw green surface/border literal. Use bg-vm-success-bg or border-vm-success/30."
+        },
+        {
           "selector": "JSXAttribute[name.name='variant'][value.value=/^(brand|brandGold|brandOutline)$/]",
           "message": "Deprecated Button variant removed in v1.0. Use navy | cyan | navyOutline."
         }

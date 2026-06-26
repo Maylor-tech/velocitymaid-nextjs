@@ -137,7 +137,7 @@ export default function CustomerJobsPage() {
       assigned: { color: 'bg-vm-cyan/15 text-vm-navy', icon: User, label: 'Cleaner assigned' },
       pending: { color: 'bg-vm-warning-bg text-yellow-800', icon: Clock, label: 'Pending confirmation' },
       in_progress: { color: 'bg-purple-100 text-purple-800', icon: Clock, label: 'In Progress' },
-      completed: { color: 'bg-vm-success-bg text-green-800', icon: CheckCircle, label: 'Completed' },
+      completed: { color: 'bg-vm-success-bg text-vm-success', icon: CheckCircle, label: 'Completed' },
       cancelled: { color: 'bg-vm-danger-bg text-red-800', icon: XCircle, label: 'Cancelled' },
       reschedule_requested: { color: 'bg-orange-100 text-orange-800', icon: AlertCircle, label: 'Reschedule Requested' },
       cancel_requested: { color: 'bg-vm-danger-bg text-red-800', icon: XCircle, label: 'Cancel Requested' },
@@ -163,7 +163,7 @@ export default function CustomerJobsPage() {
 
     const config: Record<string, { color: string; label: string }> = {
       UNPAID: { color: 'bg-vm-danger-bg text-red-800', label: 'Unpaid' },
-      PAID: { color: 'bg-vm-success-bg text-green-800', label: 'Paid' },
+      PAID: { color: 'bg-vm-success-bg text-vm-success', label: 'Paid' },
       DEPOSIT_PAID: { color: 'bg-vm-cyan/15 text-vm-navy', label: 'Deposit Paid' },
       BALANCE_DUE: { color: 'bg-orange-100 text-orange-800', label: 'Balance Due' },
       REFUNDED: { color: 'bg-vm-surface text-vm-text', label: 'Refunded' },
