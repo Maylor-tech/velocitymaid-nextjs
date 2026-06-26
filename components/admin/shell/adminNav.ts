@@ -41,10 +41,13 @@ export const ADMIN_NAV: AdminNavItem[] = [
     match: () => false,
   },
   {
-    href: '/admin/payouts',
-    label: 'Finance',
+    href: '/admin/invoices',
+    label: 'Invoices',
     icon: DollarSign,
-    match: (p) => p.startsWith('/admin/payouts') || p.startsWith('/admin/taxes'),
+    match: (p) =>
+      p.startsWith('/admin/payouts') ||
+      p.startsWith('/admin/taxes') ||
+      p.startsWith('/admin/invoices'),
   },
   {
     href: '/admin/contact',

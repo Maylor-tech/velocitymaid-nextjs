@@ -1368,6 +1368,25 @@ enum ContactMessageStatus {
   ARCHIVED
 }
 
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum InvoicePaymentMethod {
+  CASH
+  CHECK
+  STRIPE
+  ZELLE
+  VENMO
+  BANK_TRANSFER
+  OTHER
+}
+
 enum JobStatus {
   RECEIVED
   CONFIRMED
@@ -1409,4 +1428,65 @@ model Tip {
   updatedAt             DateTime @updatedAt
 
   @@map("tips")
+}
+
+model Invoice {
+  id              String         @id @default(cuid())
+  invoiceNumber   String         @unique
+  publicToken     String         @unique @default(cuid())
+  clientName      String
+  clientEmail     String?
+  clientPhone     String?
+  propertyAddress String
+  serviceType     String
+  jobDate         DateTime?
+  dueDate         DateTime?
+  subtotal        Decimal        @db.Decimal(10, 2)
+  tax             Decimal        @default(0) @db.Decimal(10, 2)
+  discount        Decimal        @default(0) @db.Decimal(10, 2)
+  total           Decimal        @db.Decimal(10, 2)
+  amountPaid      Decimal        @default(0) @db.Decimal(10, 2)
+  balanceDue      Decimal        @db.Decimal(10, 2)
+  status          InvoiceStatus  @default(DRAFT)
+  notes           String?
+  sentAt          DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  items           InvoiceItem[]
+  payments        InvoicePayment[]
+
+  @@index([status])
+  @@index([clientName])
+  @@index([clientEmail])
+  @@index([invoiceNumber])
+  @@index([dueDate])
+  @@index([publicToken])
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Decimal @default(1) @db.Decimal(10, 2)
+  unitPrice   Decimal @db.Decimal(10, 2)
+  lineTotal   Decimal @db.Decimal(10, 2)
+  sortOrder   Int     @default(0)
+  Invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+model InvoicePayment {
+  id                   String               @id @default(cuid())
+  invoiceId            String
+  amount               Decimal              @db.Decimal(10, 2)
+  paymentMethod        InvoicePaymentMethod
+  paymentDate          DateTime             @default(now())
+  transactionReference String?
+  notes                String?
+  stripeSessionId      String?
+  createdAt            DateTime             @default(now())
+  Invoice              Invoice              @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
 }

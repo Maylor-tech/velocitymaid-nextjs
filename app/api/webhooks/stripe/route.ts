@@ -63,6 +63,37 @@ async function verifyWebhookSignature(
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const metadata = session.metadata || {};
 
+  if (metadata.paymentType === 'billing_invoice' && metadata.invoiceId) {
+    const amount = (session.amount_total ?? 0) / 100;
+    const { recordInvoicePayment } = await import('@/lib/invoices/invoiceService');
+    const { serializeInvoice } = await import('@/lib/invoices/serializeInvoice');
+    const { sendInvoiceReceiptEmail } = await import('@/lib/email/invoiceEmails');
+    const { prisma } = await import('@/lib/prisma');
+
+    const existing = await prisma.invoicePayment.findFirst({
+      where: { stripeSessionId: session.id },
+    });
+    if (!existing && amount > 0) {
+      await recordInvoicePayment({
+        invoiceId: metadata.invoiceId,
+        amount,
+        paymentMethod: 'STRIPE',
+        transactionReference: typeof session.payment_intent === 'string'
+          ? session.payment_intent
+          : session.payment_intent?.id,
+        stripeSessionId: session.id,
+      });
+      const invoice = await prisma.invoice.findUnique({
+        where: { id: metadata.invoiceId },
+        include: { items: true, payments: true },
+      });
+      if (invoice) {
+        await sendInvoiceReceiptEmail(serializeInvoice(invoice), amount);
+      }
+    }
+    return { success: true, message: 'Billing invoice payment recorded' };
+  }
+
   if (metadata.paymentType === 'balance' && metadata.jobId) {
     const paymentFields = computeJobPaymentFromSession(session, metadata);
     const paymentIntentId =
@@ -522,16 +553,23 @@ export async function POST(request: NextRequest) {
 
     // Handle invoice.payment_succeeded event (subscription renewals)
     if (event.type === 'invoice.payment_succeeded') {
-      const invoice = event.data.object as Stripe.Invoice;
-      
-      log.push(`Processing invoice payment: ${invoice.id}`);
-      log.push(`Subscription: ${invoice.subscription}`);
+      const stripeInvoice = event.data.object as unknown as Stripe.Invoice;
+      const stripeInvoiceRaw = event.data.object as unknown as Record<string, unknown>;
+      const subscriptionId =
+        typeof stripeInvoiceRaw.subscription === 'string'
+          ? stripeInvoiceRaw.subscription
+          : stripeInvoiceRaw.subscription &&
+              typeof stripeInvoiceRaw.subscription === 'object' &&
+              'id' in stripeInvoiceRaw.subscription
+            ? String((stripeInvoiceRaw.subscription as { id: string }).id)
+            : null;
 
-      if (invoice.subscription) {
+      log.push(`Processing invoice payment: ${stripeInvoice.id}`);
+      log.push(`Subscription: ${subscriptionId ?? 'none'}`);
+
+      if (subscriptionId) {
         try {
-          const subscription = await stripe.subscriptions.retrieve(
-            invoice.subscription as string
-          );
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
           // Update subscription record
           await prisma.subscription.update({
@@ -555,7 +593,7 @@ export async function POST(request: NextRequest) {
 
       // Send invoice receipt once per payment (audit guard prevents duplicates)
       try {
-        const customerEmail = invoice.customer_email ?? null;
+        const customerEmail = stripeInvoice.customer_email ?? null;
         let customerPhone: string | null = null;
         if (customerEmail) {
           const customer = await prisma.customer.findUnique({
@@ -565,12 +603,12 @@ export async function POST(request: NextRequest) {
           customerPhone = customer?.phone ?? null;
         }
         const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'https://velocitymaid.com').replace(/\/$/, '');
-        const receiptLink = invoice.hosted_invoice_url || invoice.invoice_pdf || `${baseUrl}/customer/billing`;
+        const receiptLink = stripeInvoice.hosted_invoice_url || stripeInvoice.invoice_pdf || `${baseUrl}/customer/billing`;
         const sent = await sendInvoiceReceiptForPayment({
-          paymentId: invoice.id,
-          invoiceNumber: invoice.number || invoice.id,
-          amount: (invoice.amount_paid ?? 0) / 100,
-          date: new Date((invoice.created ?? 0) * 1000),
+          paymentId: stripeInvoice.id,
+          invoiceNumber: stripeInvoice.number || stripeInvoice.id,
+          amount: (stripeInvoice.amount_paid ?? 0) / 100,
+          date: new Date((stripeInvoice.created ?? 0) * 1000),
           receiptLink,
           customerPhone,
         });
