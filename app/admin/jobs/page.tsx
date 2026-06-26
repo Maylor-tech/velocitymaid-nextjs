@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Calendar,
   DollarSign,
@@ -11,7 +12,6 @@ import {
   Plus,
   Loader2,
 } from "lucide-react";
-import { BrandLogo } from "@/components/brand";
 
 interface Job {
   id: string;
@@ -51,6 +51,7 @@ const navyButton =
   "inline-flex items-center justify-center rounded-lg bg-vm-navy px-4 py-2 font-heading text-sm text-white transition-opacity hover:opacity-90";
 
 export default function AdminJobsPage() {
+  const searchParams = useSearchParams();
   const [allJobs, setAllJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -59,6 +60,14 @@ export default function AdminJobsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [showArchived, setShowArchived] = useState(false);
+  const [unassignedOnly, setUnassignedOnly] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("needsAssignment") === "1") {
+      setUnassignedOnly(true);
+      setStatusFilter("all");
+    }
+  }, [searchParams]);
 
   const [confirmingArchiveId, setConfirmingArchiveId] = useState<string | null>(
     null
@@ -192,14 +201,23 @@ export default function AdminJobsPage() {
       if (statusFilter !== "all" && job.status !== statusFilter) return false;
       if (paymentFilter !== "all" && job.paymentStatus !== paymentFilter)
         return false;
+      if (
+        unassignedOnly &&
+        (job.assignedCleanerId ||
+          job.status === "COMPLETED" ||
+          job.status === "CANCELLED" ||
+          job.status === "CANCELLED_EMERGENCY")
+      ) {
+        return false;
+      }
       return true;
     });
-  }, [allJobs, marketTab, statusFilter, paymentFilter]);
+  }, [allJobs, marketTab, statusFilter, paymentFilter, unassignedOnly]);
 
   const monthName = new Date().toLocaleDateString("en-US", { month: "long" });
 
   return (
-    <div className="min-h-screen bg-vm-surface p-6 pb-28">
+    <div className="p-7 pb-28">
       <div className="mx-auto max-w-7xl">
         {toast && (
           <div className="fixed right-4 top-4 z-50 rounded-lg bg-vm-navy px-5 py-3 font-body text-sm text-white shadow-lg">
@@ -208,11 +226,11 @@ export default function AdminJobsPage() {
         )}
 
         {/* HEADER */}
-        <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="mb-6 flex items-start justify-between gap-4 border-b border-vm-border pb-4">
           <div>
-            <BrandLogo variant="forest" size="lg" />
-            <p className="mt-2 font-body text-sm text-vm-muted">
-              Operations Dashboard
+            <h1 className="font-heading text-xl font-bold text-vm-navy">Jobs</h1>
+            <p className="mt-1 font-body text-sm text-vm-muted">
+              Manage bookings, assignments, and payments across markets.
             </p>
           </div>
           <Link href="/admin/jobs/new" className={navyButton}>
@@ -327,6 +345,15 @@ export default function AdminJobsPage() {
                 <option value="FAILED">Failed</option>
               </select>
               <label className="ml-auto flex cursor-pointer items-center gap-2 font-body text-sm text-vm-muted">
+                <input
+                  type="checkbox"
+                  checked={unassignedOnly}
+                  onChange={(e) => setUnassignedOnly(e.target.checked)}
+                  className="h-4 w-4 rounded border-vm-border"
+                />
+                Unassigned only
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 font-body text-sm text-vm-muted">
                 <input
                   type="checkbox"
                   checked={showArchived}

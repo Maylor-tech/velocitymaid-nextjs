@@ -4,6 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2, ArrowLeft, Mail, Phone, MapPin, Calendar, FileText, User } from 'lucide-react';
 import Link from 'next/link';
+import {
+  TalentApplicationView,
+  parseTalentApplicationData,
+} from '@/components/admin/cleaners/TalentApplicationView';
+import {
+  CLEANER_APPLICATION_STATUS_LABELS,
+  isOpenCleanerApplication,
+} from '@/lib/cleaners/applicationStatus';
 
 interface CleanerApplication {
   id: string;
@@ -14,7 +22,9 @@ interface CleanerApplication {
   experienceLevel: string | null;
   daysAvailable: any;
   notes: string | null;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: string;
+  preferredName?: string | null;
+  applicationData?: unknown;
   createdAt: string;
   updatedAt: string;
   applicantFitScore: number | null;
@@ -134,12 +144,42 @@ export default function CleanerApplicationDetailPage() {
     }
   };
 
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      setStatusUpdating(true);
+      const response = await fetch(`/api/admin/cleaners/applications/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Failed to update status');
+      setApplication(data.application);
+      setToastMessage('Status updated');
+      setToastType('success');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (err: unknown) {
+      setToastMessage(err instanceof Error ? err.message : 'Failed to update status');
+      setToastType('error');
+      setShowToast(true);
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'ACCEPTED':
       case 'APPROVED':
         return 'bg-vm-success-bg text-vm-success';
       case 'REJECTED':
         return 'bg-vm-danger-bg text-red-800';
+      case 'REVIEWING':
+      case 'TRAINING_INVITED':
+        return 'bg-vm-cyan-tint text-vm-navy';
       default:
         return 'bg-vm-warning-bg text-yellow-800';
     }
@@ -213,14 +253,26 @@ export default function CleanerApplicationDetailPage() {
               <h1 className="text-3xl font-bold text-vm-text mb-2">{application.name}</h1>
               <p className="text-vm-muted">Application Details</p>
             </div>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(application.status)}`}>
-              {application.status}
-            </span>
+            <div className="flex flex-col items-end gap-2">
+              <span className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(application.status)}`}>
+                {CLEANER_APPLICATION_STATUS_LABELS[application.status] || application.status}
+              </span>
+              <select
+                value={application.status}
+                disabled={statusUpdating}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className="rounded-lg border border-vm-border px-3 py-1.5 font-body text-sm text-vm-navy"
+              >
+                {Object.entries(CLEANER_APPLICATION_STATUS_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        {application.status === 'PENDING' && (
+        {isOpenCleanerApplication(application.status) && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex gap-4">
             <button
               onClick={handleApprove}
@@ -355,6 +407,10 @@ export default function CleanerApplicationDetailPage() {
               )}
             </div>
           </div>
+
+          {parseTalentApplicationData(application.applicationData) && (
+            <TalentApplicationView data={parseTalentApplicationData(application.applicationData)!} />
+          )}
 
           {/* Documents */}
           {(application.idUploadUrl || application.referencesUploadUrl) && (

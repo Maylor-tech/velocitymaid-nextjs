@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import { sendTrainingWelcomeNotification } from '@/app/services/trainingNotifications';
+import { isOpenCleanerApplication } from '@/lib/cleaners/applicationStatus';
 
 export async function POST(
   request: NextRequest,
@@ -26,7 +27,7 @@ export async function POST(
       );
     }
 
-    if (application.status !== 'PENDING') {
+    if (!isOpenCleanerApplication(application.status)) {
       return NextResponse.json(
         { success: false, error: 'Application has already been processed' },
         { status: 400 }
@@ -81,7 +82,7 @@ export async function POST(
     // Update application status
     await prisma.cleanerApplication.update({
       where: { id },
-      data: { status: 'APPROVED' },
+      data: { status: 'ACCEPTED', updatedAt: new Date() },
     });
 
     // Send WhatsApp welcome message with training link for Jamaica branch (non-blocking)

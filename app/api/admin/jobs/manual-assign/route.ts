@@ -17,6 +17,7 @@ import { isJobAssignable } from '@/lib/booking/jobPayment';
 import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
 import { logAuditEntry } from '@/lib/audit';
 import { logAdminEvent } from '@/lib/auditLog';
+import { APPROVED_CLEANER_APPLICATION_STATUSES } from '@/lib/cleaners/applicationStatus';
 
 export async function POST(request: NextRequest) {
   try {
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
     const approvedApplication = await prisma.cleanerApplication.findFirst({
       where: {
         email: cleaner.email,
-        status: 'APPROVED',
+        status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
       },
     });
 
@@ -302,7 +303,7 @@ export async function POST(request: NextRequest) {
           const cleanerApp = await prisma.cleanerApplication.findFirst({
             where: {
               email: cleaner.email,
-              status: 'APPROVED',
+              status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
             },
             select: {
               phone: true,

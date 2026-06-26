@@ -192,7 +192,7 @@ model CleanerApplication {
   experienceLevel     String?
   daysAvailable       Json?
   notes               String?
-  status              CleanerApplicationStatus @default(PENDING)
+  status              CleanerApplicationStatus @default(NEW)
   createdAt           DateTime                 @default(now())
   updatedAt           DateTime
   applicantFitScore   Int?
@@ -202,6 +202,8 @@ model CleanerApplication {
   referencesUploadUrl String?
   weekendAbility      Boolean                  @default(false)
   whatsappNumber      String?
+  preferredName       String?
+  applicationData     Json?
   Branch              Branch                   @relation(fields: [branchId], references: [id])
 
   @@index([applicantFitScore])
@@ -1234,9 +1236,13 @@ enum BranchStatus {
 }
 
 enum CleanerApplicationStatus {
+  NEW
+  REVIEWING
+  ACCEPTED
+  REJECTED
+  TRAINING_INVITED
   PENDING
   APPROVED
-  REJECTED
 }
 
 enum FranchiseApplicationStatus {

@@ -1,47 +1,30 @@
-import { Suspense } from "react";
-import type { Metadata } from "next";
-import { Loader2 } from "lucide-react";
-import { BrandLogo } from "@/components/brand";
-import CleanerApplyForm from "@/components/cleaners/CleanerApplyForm";
-import {
-  APPLY_MARKET_CONFIG,
-  parseApplyMarket,
-} from "@/lib/cleaners/applyMarket";
+import { Suspense } from 'react';
+import type { Metadata } from 'next';
+import { Loader2 } from 'lucide-react';
+import { BrandLogo } from '@/components/brand';
+import TalentApplyPortal from '@/components/cleaners/talent/TalentApplyPortal';
 
-type PageProps = {
-  searchParams?: { market?: string; branch?: string };
+export const metadata: Metadata = {
+  title: 'Become a Certified VelocityMaid Cleaning Professional',
+  description:
+    'Apply to join VelocityMaid as a certified cleaning professional. Premium residential cleaning, vacation rental turnovers, and five-star property care in Vermont and New Jersey.',
 };
-
-export function generateMetadata({ searchParams }: PageProps): Metadata {
-  const market = parseApplyMarket(
-    searchParams?.market,
-    searchParams?.branch
-  );
-  const config = APPLY_MARKET_CONFIG[market];
-
-  return {
-    title: config.title,
-    description: config.description,
-  };
-}
 
 export default function CleanerApplyPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-vm-surface flex flex-col">
-          <header className="w-full bg-vm-navy py-5 px-6">
-            <div className="max-w-xl mx-auto">
-              <BrandLogo theme="dark" size="header" showTagline={false} />
-            </div>
+        <div className="flex min-h-screen flex-col bg-vm-surface">
+          <header className="w-full bg-vm-navy px-6 py-5">
+            <BrandLogo theme="dark" size="header" showTagline={false} />
           </header>
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
+          <div className="flex flex-1 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-vm-cyan" />
           </div>
         </div>
       }
     >
-      <CleanerApplyForm />
+      <TalentApplyPortal />
     </Suspense>
   );
 }

@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedCleaner } from '@/lib/cleanerAuth';
 import { prisma } from '@/lib/prisma';
+import { APPROVED_CLEANER_APPLICATION_STATUSES } from '@/lib/cleaners/applicationStatus';
 
 /**
  * Get Current Cleaner Info
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
     const approvedApplication = await prisma.cleanerApplication.findFirst({
       where: {
         email: cleaner.email,
-        status: 'APPROVED',
+        status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
       },
     });
 

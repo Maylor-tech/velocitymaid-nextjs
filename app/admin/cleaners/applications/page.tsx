@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2, Eye, Filter } from 'lucide-react';
-import Link from 'next/link';
+import {
+  CLEANER_APPLICATION_STATUS_LABELS,
+  isOpenCleanerApplication,
+} from '@/lib/cleaners/applicationStatus';
 
 interface CleanerApplication {
   id: string;
@@ -13,7 +16,7 @@ interface CleanerApplication {
   experienceLevel: string | null;
   daysAvailable: any;
   notes: string | null;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: string;
   createdAt: string;
   Branch: {
     id: string;
@@ -139,14 +142,21 @@ export default function CleanerApplicationsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'ACCEPTED':
       case 'APPROVED':
         return 'bg-vm-success-bg text-vm-success';
       case 'REJECTED':
         return 'bg-vm-danger-bg text-red-800';
+      case 'REVIEWING':
+      case 'TRAINING_INVITED':
+        return 'bg-vm-cyan-tint text-vm-navy';
       default:
         return 'bg-vm-warning-bg text-yellow-800';
     }
   };
+
+  const statusLabel = (status: string) =>
+    CLEANER_APPLICATION_STATUS_LABELS[status] || status;
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -196,8 +206,12 @@ export default function CleanerApplicationsPage() {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             >
               <option value="all">All</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
+              <option value="NEW">New</option>
+              <option value="REVIEWING">Reviewing</option>
+              <option value="TRAINING_INVITED">Training invited</option>
+              <option value="ACCEPTED">Accepted</option>
+              <option value="APPROVED">Approved (legacy)</option>
+              <option value="PENDING">Pending (legacy)</option>
               <option value="REJECTED">Rejected</option>
             </select>
           </div>
@@ -269,7 +283,7 @@ export default function CleanerApplicationsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
-                        {app.status}
+                        {statusLabel(app.status)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
@@ -284,7 +298,7 @@ export default function CleanerApplicationsPage() {
                         >
                           <Eye className="w-5 h-5" />
                         </Link>
-                        {app.status === 'PENDING' && (
+                        {isOpenCleanerApplication(app.status) && (
                           <>
                             <button
                               onClick={() => handleApprove(app.id)}

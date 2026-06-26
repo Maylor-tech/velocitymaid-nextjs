@@ -5,6 +5,7 @@ import { sendCleanerAssignment } from './sendCleanerAssignment';
 import { getCleanerAverageJQS } from '../utils/jobQualityScore';
 import { isCleanerTrainingEligible } from '../utils/trainingEligibility';
 import { resolveCityFromZip } from '../utils/cityRouting';
+import { APPROVED_CLEANER_APPLICATION_STATUSES } from './cleaners/applicationStatus';
 
 export interface AssignmentResult {
   success: boolean;
@@ -243,7 +244,7 @@ async function selectBestCleanerForJob(job: {
     const approvedCleaners = await prisma.cleanerApplication.findMany({
       where: {
         branchId,
-        status: 'APPROVED',
+        status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
       },
     });
 
@@ -436,7 +437,7 @@ export async function findBestCleaner(
     const approvedCleaners = await prisma.cleanerApplication.findMany({
       where: {
         branchId,
-        status: 'APPROVED',
+        status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
       },
       include: {
         // Get the User record for this cleaner
@@ -773,7 +774,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
           const cleanerApp = await prisma.cleanerApplication.findFirst({
             where: {
               email: cleaner.email,
-              status: 'APPROVED',
+              status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
             },
           });
 
