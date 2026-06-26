@@ -1,58 +1,29 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Archive, Loader2, Plus } from "lucide-react";
 import {
-  Calendar,
-  DollarSign,
-  AlertTriangle,
-  CheckCircle2,
-  Archive,
-  Plus,
-  Loader2,
-} from "lucide-react";
-
-interface Job {
-  id: string;
-  customerId: string | null;
-  customerName: string | null;
-  address: string | null;
-  preferredDate: string | null;
-  preferredTime: string | null;
-  serviceType: string | null;
-  status: string;
-  totalPrice: number | null;
-  currency: string | null;
-  paymentStatus: string;
-  reviewStatus?: string;
-  quotedTotal?: number | null;
-  amountPaid?: number | null;
-  balanceDue?: number | null;
-  completedAt?: string | null;
-  notifiedAt?: string | null;
-  archivedAt?: string | null;
-  assignedCleanerId: string | null;
-  assignedCleaner: {
-    id: string;
-    name: string | null;
-    email: string;
-  } | null;
-  branch: {
-    id: string;
-    name: string;
-    slug: string;
-  };
-}
+  JobsOperationsKpis,
+  OperationsHealthScore,
+} from "@/components/admin/jobs/JobsOperationsKpis";
+import {
+  JobOperationsCard,
+  type AdminJobListItem,
+} from "@/components/admin/jobs/JobOperationsCard";
+import type { OperationsSummary } from "@/lib/admin/jobsOperations";
+import { getJobPriority } from "@/lib/admin/jobsOperations";
 
 type MarketTab = "all" | "vermont" | "new-jersey";
 
 const navyButton =
   "inline-flex items-center justify-center rounded-lg bg-vm-navy px-4 py-2 font-heading text-sm text-white transition-opacity hover:opacity-90";
 
-export default function AdminJobsPage() {
+function AdminJobsPageContent() {
   const searchParams = useSearchParams();
-  const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const [allJobs, setAllJobs] = useState<AdminJobListItem[]>([]);
+  const [summary, setSummary] = useState<OperationsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
 
@@ -86,16 +57,17 @@ export default function AdminJobsPage() {
       const data = await res.json();
 
       if (!data.success) {
-        console.error("Jobs API warning:", data);
         setAllJobs([]);
+        setSummary(null);
         setLoadFailed(true);
         return;
       }
       setAllJobs(data.jobs ?? []);
-    } catch (err) {
-      console.error("Jobs fetch failed:", err);
+      setSummary(data.summary ?? null);
+    } catch {
       setLoadFailed(true);
       setAllJobs([]);
+      setSummary(null);
     } finally {
       setLoading(false);
     }
@@ -145,45 +117,10 @@ export default function AdminJobsPage() {
     }
   };
 
-  // Stats and tab counts are always based on non-archived jobs.
   const activeJobs = useMemo(
     () => allJobs.filter((j) => !j.archivedAt),
     [allJobs]
   );
-
-  const isActionable = (job: Job) => getPrimaryAction(job).actionable;
-
-  const stats = useMemo(() => {
-    const now = new Date();
-    const isSameDay = (iso: string | null | undefined) => {
-      if (!iso) return false;
-      const d = new Date(iso);
-      return (
-        d.getFullYear() === now.getFullYear() &&
-        d.getMonth() === now.getMonth() &&
-        d.getDate() === now.getDate()
-      );
-    };
-    const isThisMonth = (iso: string | null | undefined) => {
-      if (!iso) return false;
-      const d = new Date(iso);
-      return (
-        d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
-      );
-    };
-
-    return {
-      today: activeJobs.filter((j) => isSameDay(j.preferredDate)).length,
-      awaitingPayment: activeJobs.filter((j) => j.paymentStatus === "PENDING")
-        .length,
-      needsAttention: activeJobs.filter(isActionable).length,
-      completedThisMonth: activeJobs.filter(
-        (j) =>
-          j.status === "COMPLETED" &&
-          isThisMonth(j.completedAt ?? j.preferredDate)
-      ).length,
-    };
-  }, [activeJobs]);
 
   const marketCounts = useMemo(
     () => ({
@@ -196,7 +133,7 @@ export default function AdminJobsPage() {
   );
 
   const displayedJobs = useMemo(() => {
-    return allJobs.filter((job) => {
+    const filtered = allJobs.filter((job) => {
       if (marketTab !== "all" && job.branch?.slug !== marketTab) return false;
       if (statusFilter !== "all" && job.status !== statusFilter) return false;
       if (paymentFilter !== "all" && job.paymentStatus !== paymentFilter)
@@ -212,9 +149,17 @@ export default function AdminJobsPage() {
       }
       return true;
     });
-  }, [allJobs, marketTab, statusFilter, paymentFilter, unassignedOnly]);
 
-  const monthName = new Date().toLocaleDateString("en-US", { month: "long" });
+    const priorityOrder = { urgent: 0, high: 1, medium: 2, normal: 3 };
+    return [...filtered].sort((a, b) => {
+      const pa = priorityOrder[getJobPriority(a)];
+      const pb = priorityOrder[getJobPriority(b)];
+      if (pa !== pb) return pa - pb;
+      const da = a.preferredDate ? new Date(a.preferredDate).getTime() : Infinity;
+      const db = b.preferredDate ? new Date(b.preferredDate).getTime() : Infinity;
+      return da - db;
+    });
+  }, [allJobs, marketTab, statusFilter, paymentFilter, unassignedOnly]);
 
   return (
     <div className="p-7 pb-28">
@@ -225,12 +170,13 @@ export default function AdminJobsPage() {
           </div>
         )}
 
-        {/* HEADER */}
         <div className="mb-6 flex items-start justify-between gap-4 border-b border-vm-border pb-4">
           <div>
-            <h1 className="font-heading text-xl font-bold text-vm-navy">Jobs</h1>
+            <h1 className="font-heading text-xl font-bold text-vm-navy">
+              Jobs Operations
+            </h1>
             <p className="mt-1 font-body text-sm text-vm-muted">
-              Manage bookings, assignments, and payments across markets.
+              Daily schedule, payments, assignments, photos, and host communication.
             </p>
           </div>
           <Link href="/admin/jobs/new" className={navyButton}>
@@ -249,53 +195,19 @@ export default function AdminJobsPage() {
             <p className="font-heading text-lg text-vm-navy">
               Jobs temporarily unavailable
             </p>
-            <button
-              type="button"
-              onClick={fetchJobs}
-              className={`mt-4 ${navyButton}`}
-            >
+            <button type="button" onClick={fetchJobs} className={`mt-4 ${navyButton}`}>
               Retry
             </button>
           </div>
         ) : (
           <>
-            {/* STATS ROW */}
-            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                icon={<Calendar className="h-5 w-5 text-vm-muted" />}
-                label="Scheduled Today"
-                value={stats.today}
-                valueClass="text-vm-navy"
-              />
-              <StatCard
-                icon={<DollarSign className="h-5 w-5 text-vm-muted" />}
-                label="Awaiting Payment"
-                value={stats.awaitingPayment}
-                valueClass={
-                  stats.awaitingPayment > 0
-                    ? "text-amber-600 font-bold"
-                    : "text-vm-navy"
-                }
-              />
-              <StatCard
-                icon={<AlertTriangle className="h-5 w-5 text-vm-muted" />}
-                label="Needs Attention"
-                value={stats.needsAttention}
-                valueClass={
-                  stats.needsAttention > 0
-                    ? "text-red-500 font-bold"
-                    : "text-vm-navy"
-                }
-              />
-              <StatCard
-                icon={<CheckCircle2 className="h-5 w-5 text-vm-muted" />}
-                label={`Completed — ${monthName}`}
-                value={stats.completedThisMonth}
-                valueClass="text-vm-cyan font-bold"
-              />
-            </div>
+            {summary && (
+              <>
+                <JobsOperationsKpis summary={summary} />
+                <OperationsHealthScore summary={summary} />
+              </>
+            )}
 
-            {/* MARKET TABS */}
             <div className="mb-4 flex items-center gap-6 border-b border-vm-border">
               <MarketTabButton
                 label="All Jobs"
@@ -317,7 +229,6 @@ export default function AdminJobsPage() {
               />
             </div>
 
-            {/* SECONDARY FILTERS */}
             <div className="mb-6 flex flex-wrap items-center gap-3">
               <select
                 value={statusFilter}
@@ -360,26 +271,26 @@ export default function AdminJobsPage() {
                   onChange={(e) => setShowArchived(e.target.checked)}
                   className="h-4 w-4 rounded border-vm-border"
                 />
-                Show archived jobs
+                <Archive className="h-3.5 w-3.5" />
+                Show archived
               </label>
             </div>
 
-            {/* JOBS LIST */}
             {displayedJobs.length === 0 ? (
               <div className="rounded-xl border border-vm-border bg-vm-white py-16 text-center">
                 <p className="font-heading text-lg text-vm-navy">No jobs found</p>
                 <p className="mt-1 font-body text-sm text-vm-muted">
                   Try adjusting your filters or add a job manually.
                 </p>
-                <Link href="/admin/jobs/new" className={`mt-5 ${navyButton}`}>
+                <Link href="/admin/jobs/new" className={`mt-5 inline-flex ${navyButton}`}>
                   <Plus className="mr-1 h-4 w-4" />
                   Add Job Manually
                 </Link>
               </div>
             ) : (
-              <ul className="divide-y divide-vm-border overflow-hidden rounded-xl border border-vm-border bg-vm-white">
+              <ul className="overflow-hidden rounded-xl border border-vm-border bg-vm-white shadow-sm">
                 {displayedJobs.map((job) => (
-                  <JobRow
+                  <JobOperationsCard
                     key={job.id}
                     job={job}
                     confirming={confirmingArchiveId === job.id}
@@ -399,132 +310,17 @@ export default function AdminJobsPage() {
   );
 }
 
-/* ----------------------------- helpers ----------------------------- */
-
-function getPrimaryAction(job: Job): {
-  label: string;
-  href: string;
-  actionable: boolean;
-} {
-  if (job.status === "COMPLETED") {
-    if (!job.notifiedAt) {
-      return {
-        label: "Upload photos",
-        href: `/admin/jobs/${job.id}/complete`,
-        actionable: true,
-      };
-    }
-    if (job.paymentStatus !== "PAID") {
-      return {
-        label: "Chase payment",
-        href: `/admin/jobs/${job.id}`,
-        actionable: true,
-      };
-    }
-    return { label: "View job →", href: `/admin/jobs/${job.id}`, actionable: false };
-  }
-  if (job.paymentStatus === "DEPOSIT_PAID" && job.reviewStatus === "PENDING") {
-    return {
-      label: "Approve booking",
-      href: `/admin/jobs/${job.id}`,
-      actionable: true,
-    };
-  }
-  if (
-    (job.status === "CONFIRMED" || job.status === "RECEIVED") &&
-    !job.assignedCleanerId
-  ) {
-    return {
-      label: "Assign cleaner",
-      href: `/admin/jobs/${job.id}`,
-      actionable: true,
-    };
-  }
-  return { label: "View job →", href: `/admin/jobs/${job.id}`, actionable: false };
-}
-
-function getStatusBadge(status: string): { label: string; cls: string } {
-  switch (status) {
-    case "COMPLETED":
-      return { label: "Completed", cls: "bg-vm-success-bg text-vm-success" };
-    case "CONFIRMED":
-      return { label: "Confirmed", cls: "bg-vm-cyan-tint text-blue-700" };
-    case "ASSIGNED":
-      return { label: "Scheduled", cls: "bg-purple-100 text-purple-700" };
-    case "ON_THE_WAY":
-      return { label: "On the way", cls: "bg-purple-100 text-purple-700" };
-    case "IN_PROGRESS":
-      return { label: "In progress", cls: "bg-purple-100 text-purple-700" };
-    case "RECEIVED":
-      return { label: "Received", cls: "bg-gray-100 text-vm-muted" };
-    case "CANCELLED":
-    case "CANCELLED_EMERGENCY":
-      return { label: "Cancelled", cls: "bg-vm-danger-bg text-red-700" };
-    default:
-      return { label: status, cls: "bg-gray-100 text-vm-muted" };
-  }
-}
-
-function getPaymentBadge(status: string): { label: string; cls: string } {
-  switch (status) {
-    case "PAID":
-      return { label: "Paid", cls: "bg-vm-success-bg text-vm-success" };
-    case "DEPOSIT_PAID":
-      return { label: "Deposit Paid", cls: "bg-vm-cyan-tint text-blue-700" };
-    case "PENDING":
-      return { label: "Pending", cls: "bg-amber-100 text-amber-700" };
-    case "BALANCE_DUE":
-      return { label: "Balance Due", cls: "bg-amber-100 text-amber-700" };
-    case "REFUNDED":
-      return { label: "Refunded", cls: "bg-gray-100 text-vm-muted" };
-    case "FAILED":
-      return { label: "Failed", cls: "bg-vm-danger-bg text-red-700" };
-    default:
-      return { label: status, cls: "bg-gray-100 text-vm-muted" };
-  }
-}
-
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return "Not scheduled";
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatCurrency(amount: number | null, currency: string | null) {
-  if (amount == null) return "—";
-  const curr = currency || "USD";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: curr,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-/* ----------------------------- components ----------------------------- */
-
-function StatCard({
-  icon,
-  label,
-  value,
-  valueClass,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  valueClass: string;
-}) {
+export default function AdminJobsPage() {
   return (
-    <div className="rounded-xl border border-vm-border bg-vm-white p-5">
-      <div className="flex items-center justify-between">
-        <span className="font-body text-sm text-vm-muted">{label}</span>
-        {icon}
-      </div>
-      <div className={`mt-2 font-heading text-3xl ${valueClass}`}>{value}</div>
-    </div>
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-vm-cyan" />
+        </div>
+      }
+    >
+      <AdminJobsPageContent />
+    </Suspense>
   );
 }
 
@@ -558,166 +354,5 @@ function MarketTabButton({
         {count}
       </span>
     </button>
-  );
-}
-
-function JobRow({
-  job,
-  confirming,
-  busy,
-  onRequestArchive,
-  onCancelArchive,
-  onConfirmArchive,
-  onUnarchive,
-}: {
-  job: Job;
-  confirming: boolean;
-  busy: boolean;
-  onRequestArchive: () => void;
-  onCancelArchive: () => void;
-  onConfirmArchive: () => void;
-  onUnarchive: () => void;
-}) {
-  const action = getPrimaryAction(job);
-  const statusBadge = getStatusBadge(job.status);
-  const paymentBadge = getPaymentBadge(job.paymentStatus);
-  const isVermont = job.branch?.slug === "vermont";
-  const archived = !!job.archivedAt;
-  const paidDisplay = job.amountPaid ?? job.totalPrice ?? null;
-
-  return (
-    <li
-      className={`px-5 py-4 transition-colors hover:bg-vm-surface/50 ${
-        archived ? "italic opacity-50" : ""
-      }`}
-    >
-      <div className="flex items-center gap-4">
-        {/* LEFT */}
-        <div className="min-w-0 flex-1">
-          <div className="truncate font-heading font-semibold text-vm-navy">
-            {job.customerName || "N/A"}
-          </div>
-          {job.address && (
-            <div className="truncate font-body text-sm text-vm-muted">
-              {job.address}
-            </div>
-          )}
-          <span
-            className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs ${
-              isVermont
-                ? "bg-vm-navy/10 text-vm-navy"
-                : "bg-blue-50 text-blue-700"
-            }`}
-          >
-            {isVermont ? "Vermont" : job.branch?.name || "New Jersey"}
-          </span>
-        </div>
-
-        {/* CENTER-LEFT: service + price */}
-        <div className="hidden w-40 shrink-0 md:block">
-          <div className="font-body text-sm font-medium text-vm-navy">
-            {job.serviceType || "—"}
-          </div>
-          <div className="font-body text-sm text-vm-muted">
-            {formatCurrency(job.totalPrice, job.currency)}
-          </div>
-        </div>
-
-        {/* CENTER: date + time */}
-        <div className="hidden w-40 shrink-0 lg:block">
-          <div className="font-body text-sm font-medium text-vm-navy">
-            {formatDate(job.preferredDate)}
-          </div>
-          {job.preferredTime && (
-            <div className="font-body text-xs text-vm-muted">
-              {job.preferredTime}
-            </div>
-          )}
-        </div>
-
-        {/* CENTER-RIGHT: payment */}
-        <div className="hidden w-36 shrink-0 sm:block">
-          <span
-            className={`inline-block rounded-full px-2 py-1 text-xs font-medium ${paymentBadge.cls}`}
-          >
-            {paymentBadge.label}
-          </span>
-          {paidDisplay != null && (
-            <div className="mt-1 font-body text-xs text-vm-muted">
-              {formatCurrency(paidDisplay, job.currency)}
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT: status + cleaner */}
-        <div className="hidden w-32 shrink-0 sm:block">
-          <span
-            className={`inline-block rounded-full px-2 py-1 text-xs font-medium ${statusBadge.cls}`}
-          >
-            {statusBadge.label}
-          </span>
-          {job.assignedCleaner && (
-            <div className="mt-1 truncate font-body text-xs text-vm-muted">
-              {job.assignedCleaner.name || job.assignedCleaner.email}
-            </div>
-          )}
-        </div>
-
-        {/* FAR RIGHT: archive + action (inline so nothing sits in the
-            bottom-right corner under the floating chat widget) */}
-        <div className="flex w-52 shrink-0 items-center justify-end gap-2">
-          {archived ? (
-            <button
-              type="button"
-              onClick={onUnarchive}
-              disabled={busy}
-              className="inline-flex items-center justify-center rounded-lg border border-vm-border bg-vm-white px-4 py-2 font-heading text-sm not-italic text-vm-navy transition-colors hover:bg-vm-surface disabled:opacity-60"
-            >
-              {busy ? "Working…" : "Unarchive"}
-            </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={onRequestArchive}
-                title="Archive job"
-                aria-label="Archive job"
-                className="shrink-0 rounded-lg p-2 text-vm-muted/50 transition-colors hover:bg-red-50 hover:text-red-500"
-              >
-                <Archive className="h-4 w-4" />
-              </button>
-              <Link href={action.href} className={navyButton}>
-                {action.label}
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-
-      {confirming && !archived && (
-        <div className="mt-3 flex flex-wrap items-center justify-end gap-3 rounded-lg bg-vm-surface px-4 py-2">
-          <span className="font-body text-sm not-italic text-vm-navy">
-            Archive this job? It won&apos;t be deleted, just hidden.
-          </span>
-          <button
-            type="button"
-            onClick={onConfirmArchive}
-            disabled={busy}
-            className="inline-flex items-center gap-1 rounded-lg bg-vm-danger px-3 py-1.5 font-heading text-sm text-white transition-colors hover:bg-vm-danger disabled:opacity-60"
-          >
-            {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-            Yes, archive
-          </button>
-          <button
-            type="button"
-            onClick={onCancelArchive}
-            disabled={busy}
-            className="rounded-lg bg-vm-border px-3 py-1.5 font-heading text-sm text-vm-navy transition-colors hover:opacity-80"
-          >
-            Cancel
-          </button>
-        </div>
-      )}
-    </li>
   );
 }
