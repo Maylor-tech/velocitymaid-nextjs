@@ -74,7 +74,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       where: { stripeSessionId: session.id },
     });
     if (!existing && amount > 0) {
-      await recordInvoicePayment({
+      const payment = await recordInvoicePayment({
         invoiceId: metadata.invoiceId,
         amount,
         paymentMethod: 'STRIPE',
@@ -89,6 +89,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       });
       if (invoice) {
         await sendInvoiceReceiptEmail(serializeInvoice(invoice), amount);
+        const { finalizeInvoicePayment } = await import('@/lib/invoices/invoiceService');
+        await finalizeInvoicePayment(metadata.invoiceId, payment.id, amount);
       }
     }
     return { success: true, message: 'Billing invoice payment recorded' };

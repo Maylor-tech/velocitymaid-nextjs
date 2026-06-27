@@ -7,6 +7,7 @@ import {
   Calendar,
   DollarSign,
   Download,
+  FileText,
   Loader2,
   Plus,
   Star,
@@ -34,6 +35,11 @@ interface OperationsKpis {
   newCleanerApplications: number;
   avgRating: number | null;
   ratingDelta?: KpiDelta;
+  outstandingInvoices?: number;
+  outstandingBalanceFormatted?: string;
+  paymentsThisMonthFormatted?: string;
+  completionReportsPending?: number;
+  reviewsRequested?: number;
 }
 
 interface DashboardJob {
@@ -300,6 +306,30 @@ export default function OperationsDashboardPage() {
                 value={kpis?.avgRating != null ? kpis.avgRating.toFixed(1) : '—'}
                 delta={kpis?.ratingDelta}
                 icon={<Star className="h-5 w-5 fill-vm-cyan-dark text-vm-cyan-dark" />}
+              />
+            </div>
+
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <KpiCard
+                label="Outstanding invoices"
+                value={kpis?.outstandingInvoices ?? 0}
+                subtitle={kpis?.outstandingBalanceFormatted}
+                icon={<DollarSign className="h-5 w-5" />}
+              />
+              <KpiCard
+                label="Payments this month"
+                value={kpis?.paymentsThisMonthFormatted ?? '$0'}
+                icon={<DollarSign className="h-5 w-5" />}
+              />
+              <KpiCard
+                label="Reports pending"
+                value={kpis?.completionReportsPending ?? 0}
+                icon={<FileText className="h-5 w-5" />}
+              />
+              <KpiCard
+                label="Reviews requested"
+                value={kpis?.reviewsRequested ?? 0}
+                icon={<Star className="h-5 w-5" />}
               />
             </div>
 

@@ -14,6 +14,8 @@ import {
   endOfWeek,
   addDays,
 } from '@/lib/admin/dateRanges';
+import { getBillingDashboardKpis } from '@/lib/billing/jobCompletionWorkflow';
+import { formatUsd } from '@/lib/invoices/invoiceUtils';
 
 function jobRevenueUsd(totalPrice: unknown, currency: string | null): number {
   if (totalPrice == null) return 0;
@@ -181,6 +183,8 @@ export async function GET(request: NextRequest) {
           ratingsBeforeWeek.length
         : null;
 
+    const billing = await getBillingDashboardKpis(auth.branchId);
+
     return NextResponse.json({
       success: true,
       kpis: {
@@ -193,6 +197,13 @@ export async function GET(request: NextRequest) {
         newCleanerApplications,
         avgRating: avgRating != null ? Math.round(avgRating * 10) / 10 : null,
         ratingDelta: formatRatingDelta(avgRating, prevAvgRating),
+        outstandingInvoices: billing.outstandingInvoices.count,
+        outstandingBalance: billing.outstandingInvoices.total,
+        outstandingBalanceFormatted: formatUsd(billing.outstandingInvoices.total),
+        paymentsThisMonth: billing.paymentsThisMonth,
+        paymentsThisMonthFormatted: formatUsd(billing.paymentsThisMonth),
+        completionReportsPending: billing.completionReportsPending,
+        reviewsRequested: billing.reviewsRequested,
       },
       unassignedJobs,
     });

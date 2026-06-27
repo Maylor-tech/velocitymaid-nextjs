@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
-import { recordInvoicePayment } from '@/lib/invoices/invoiceService';
+import { recordInvoicePayment, finalizeInvoicePayment } from '@/lib/invoices/invoiceService';
 import { decimalToNumber } from '@/lib/invoices/invoiceUtils';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
 import { sendInvoiceReceiptEmail } from '@/lib/email/invoiceEmails';
@@ -28,7 +28,7 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Invoice is already paid' }, { status: 400 });
     }
 
-    await recordInvoicePayment({
+    const payment = await recordInvoicePayment({
       invoiceId: params.id,
       amount: balance,
       paymentMethod: 'OTHER',
@@ -41,6 +41,7 @@ export async function POST(
     });
     const serialized = serializeInvoice(updated!);
     await sendInvoiceReceiptEmail(serialized, balance);
+    await finalizeInvoicePayment(params.id, payment.id, balance);
 
     return NextResponse.json({ success: true, invoice: serialized });
   } catch (error: unknown) {

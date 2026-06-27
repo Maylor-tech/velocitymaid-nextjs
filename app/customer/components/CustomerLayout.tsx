@@ -9,7 +9,12 @@ import {
   Settings, 
   LogOut,
   Phone,
-  MessageSquare
+  MessageSquare,
+  FileText,
+  Receipt,
+  CreditCard,
+  History,
+  Briefcase,
 } from 'lucide-react';
 
 interface CustomerLayoutProps {
@@ -116,7 +121,12 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
   }
 
   const navItems = [
+    { href: '/customer/services', label: 'My Services', icon: Briefcase },
     { href: '/customer/jobs', label: 'My Jobs', icon: Calendar },
+    { href: '/customer/reports', label: 'My Reports', icon: FileText },
+    { href: '/customer/invoices', label: 'My Invoices', icon: CreditCard },
+    { href: '/customer/receipts', label: 'My Receipts', icon: Receipt },
+    { href: '/customer/payment-history', label: 'Payment History', icon: History },
     { href: '/customer/profile', label: 'Profile', icon: Settings },
   ];
 

@@ -289,6 +289,8 @@ model Customer {
   ReferralEvent_ReferralEvent_referredCustomerIdToCustomer ReferralEvent[]            @relation("ReferralEvent_referredCustomerIdToCustomer")
   ReferralEvent_ReferralEvent_referrerIdToCustomer         ReferralEvent[]            @relation("ReferralEvent_referrerIdToCustomer")
   ReferralLink                                             ReferralLink[]
+  Invoice                                                  Invoice[]
+  Receipt                                                  Receipt[]
 
   @@index([branchId])
   @@index([email])
@@ -411,6 +413,9 @@ model Job {
   CustomerJobChangeRequest CustomerJobChangeRequest[]
   JobChecklistItem         JobChecklistItem[]
   JobTeamMember            JobTeamMember[]
+  CompletionReport         CompletionReport?
+  Invoice                  Invoice?
+  Receipts                 Receipt[]
   User                     User?                      @relation(fields: [assignedCleanerId], references: [id])
   ApprovedBy               User?                      @relation("JobApprovedBy", fields: [approvedById], references: [id])
   Branch                   Branch                     @relation(fields: [branchId], references: [id])
@@ -1470,6 +1475,8 @@ model Invoice {
   id              String         @id @default(cuid())
   invoiceNumber   String         @unique
   publicToken     String         @unique @default(cuid())
+  jobId           String?        @unique
+  customerId      String?
   clientName      String
   clientEmail     String?
   clientPhone     String?
@@ -1490,6 +1497,9 @@ model Invoice {
   updatedAt       DateTime       @updatedAt
   items           InvoiceItem[]
   payments        InvoicePayment[]
+  Job             Job?           @relation(fields: [jobId], references: [id])
+  Customer        Customer?      @relation(fields: [customerId], references: [id])
+  Receipts        Receipt[]
 
   @@index([status])
   @@index([clientName])
@@ -1497,6 +1507,8 @@ model Invoice {
   @@index([invoiceNumber])
   @@index([dueDate])
   @@index([publicToken])
+  @@index([jobId])
+  @@index([customerId])
 }
 
 model InvoiceItem {
@@ -1523,6 +1535,74 @@ model InvoicePayment {
   stripeSessionId      String?
   createdAt            DateTime             @default(now())
   Invoice              Invoice              @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  Receipt              Receipt?
 
   @@index([invoiceId])
+}
+
+enum CompletionReportStatus {
+  DRAFT
+  GENERATED
+  SENT
+}
+
+enum ReceiptStatus {
+  GENERATED
+  SENT
+}
+
+model CompletionReport {
+  id              String                 @id @default(cuid())
+  jobId           String                 @unique
+  reportNumber    String                 @unique
+  publicToken     String                 @unique @default(cuid())
+  propertyAddress String
+  serviceDate     DateTime
+  serviceType     String?
+  teamSummary     String?
+  notes           String?
+  issuesFound     String?
+  supplyRequests  String?
+  beforePhotos    Json?
+  afterPhotos     Json?
+  status          CompletionReportStatus @default(GENERATED)
+  sentAt          DateTime?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  Job             Job                    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([publicToken])
+  @@map("completion_reports")
+}
+
+model Receipt {
+  id               String               @id @default(cuid())
+  receiptNumber    String               @unique
+  publicToken      String               @unique @default(cuid())
+  invoiceId        String?
+  jobId            String?
+  invoicePaymentId String?              @unique
+  customerId       String?
+  clientName       String
+  clientEmail      String?
+  amount           Decimal              @db.Decimal(10, 2)
+  paymentMethod    InvoicePaymentMethod
+  paymentDate      DateTime
+  propertyAddress  String?
+  serviceType      String?
+  invoiceNumber    String?
+  status           ReceiptStatus        @default(GENERATED)
+  sentAt           DateTime?
+  createdAt        DateTime             @default(now())
+  Invoice          Invoice?             @relation(fields: [invoiceId], references: [id])
+  Job              Job?                 @relation(fields: [jobId], references: [id])
+  InvoicePayment   InvoicePayment?      @relation(fields: [invoicePaymentId], references: [id])
+  Customer         Customer?            @relation(fields: [customerId], references: [id])
+
+  @@index([jobId])
+  @@index([invoiceId])
+  @@index([customerId])
+  @@index([publicToken])
+  @@map("receipts")
 }

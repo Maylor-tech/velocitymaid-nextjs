@@ -76,6 +76,8 @@ export default function MarkCleanCompletePage() {
   const [completedBy, setCompletedBy] = useState("");
   const [durationMins, setDurationMins] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
+  const [issuesFound, setIssuesFound] = useState("");
+  const [supplyRequests, setSupplyRequests] = useState("");
   const [sendNotification, setSendNotification] = useState(true);
 
   const [submitting, setSubmitting] = useState(false);
@@ -206,6 +208,8 @@ export default function MarkCleanCompletePage() {
           completedBy: completedBy.trim(),
           cleanDurationMins: durationMins ? Number(durationMins) : undefined,
           internalNotes: internalNotes.trim() || undefined,
+          issuesFound: issuesFound.trim() || undefined,
+          supplyRequests: supplyRequests.trim() || undefined,
           sendNotification,
         }),
       });
@@ -568,6 +572,34 @@ export default function MarkCleanCompletePage() {
                 onChange={(e) => setInternalNotes(e.target.value)}
                 rows={3}
                 placeholder="Notes for VelocityMaid only — not sent to client"
+                className="w-full rounded-lg border border-vm-border px-3 py-2 font-body text-vm-text outline-none focus:border-vm-cyan focus:ring-2 focus:ring-vm-cyan/30"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="issuesFound" className="mb-1 block font-body text-sm font-medium text-vm-text">
+                Issues found (included in completion report)
+              </label>
+              <textarea
+                id="issuesFound"
+                value={issuesFound}
+                onChange={(e) => setIssuesFound(e.target.value)}
+                rows={2}
+                placeholder="Any damage, maintenance, or guest issues noticed"
+                className="w-full rounded-lg border border-vm-border px-3 py-2 font-body text-vm-text outline-none focus:border-vm-cyan focus:ring-2 focus:ring-vm-cyan/30"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="supplyRequests" className="mb-1 block font-body text-sm font-medium text-vm-text">
+                Supply requests
+              </label>
+              <textarea
+                id="supplyRequests"
+                value={supplyRequests}
+                onChange={(e) => setSupplyRequests(e.target.value)}
+                rows={2}
+                placeholder="Items to restock or replace for the host"
                 className="w-full rounded-lg border border-vm-border px-3 py-2 font-body text-vm-text outline-none focus:border-vm-cyan focus:ring-2 focus:ring-vm-cyan/30"
               />
             </div>

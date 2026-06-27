@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, User, Calendar, MapPin, DollarSign, CheckCircle, XCircle, AlertCircle, Clock, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
+import { JobBillingWorkflowPanel } from '@/components/admin/jobs/JobBillingWorkflowPanel';
 import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
 import { getJobLoopProgress } from '@/lib/booking/jobLoopProgress';
 
@@ -17,6 +18,7 @@ interface Job {
   serviceType: string | null;
   serviceLocation: string | null;
   status: string;
+  completedAt?: string | null;
   totalPrice: number | null;
   currency: string | null;
   paymentStatus: string;
@@ -777,6 +779,13 @@ export default function AdminJobDetailPage() {
             )}
           </div>
         )}
+
+        <div className="mb-6">
+          <JobBillingWorkflowPanel
+            jobId={jobId}
+            jobCompleted={job.status === 'COMPLETED' || Boolean(job.completedAt)}
+          />
+        </div>
 
         {/* Payment Summary */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">

@@ -27,6 +27,8 @@ export function serializeInvoice(invoice: InvoiceWithRelations) {
     id: invoice.id,
     invoiceNumber: invoice.invoiceNumber,
     publicToken: invoice.publicToken,
+    jobId: invoice.jobId,
+    customerId: invoice.customerId,
     clientName: invoice.clientName,
     clientEmail: invoice.clientEmail,
     clientPhone: invoice.clientPhone,

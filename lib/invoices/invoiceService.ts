@@ -88,6 +88,22 @@ export async function recordInvoicePayment(params: {
   return payment;
 }
 
+/** After payment is recorded, create receipt + optional emails/review. */
+export async function finalizeInvoicePayment(
+  invoiceId: string,
+  paymentId: string,
+  amount: number,
+  options?: { sendEmails?: boolean }
+) {
+  const { onInvoicePaymentRecorded } = await import('@/lib/billing/jobCompletionWorkflow');
+  return onInvoicePaymentRecorded({
+    invoiceId,
+    paymentId,
+    amount,
+    sendEmails: options?.sendEmails,
+  });
+}
+
 export function buildInvoiceAmounts(
   items: InvoiceLineInput[],
   tax: number,

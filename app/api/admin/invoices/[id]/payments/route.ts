@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import type { InvoicePaymentMethod } from '@prisma/client';
-import { recordInvoicePayment } from '@/lib/invoices/invoiceService';
+import { recordInvoicePayment, finalizeInvoicePayment } from '@/lib/invoices/invoiceService';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
 import { sendInvoiceReceiptEmail } from '@/lib/email/invoiceEmails';
 
@@ -29,7 +29,7 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Invalid payment method' }, { status: 400 });
     }
 
-    await recordInvoicePayment({
+    const payment = await recordInvoicePayment({
       invoiceId: params.id,
       amount,
       paymentMethod,
@@ -44,6 +44,7 @@ export async function POST(
     });
     const serialized = serializeInvoice(invoice!);
     await sendInvoiceReceiptEmail(serialized, amount);
+    await finalizeInvoicePayment(params.id, payment.id, amount);
 
     return NextResponse.json({ success: true, invoice: serialized });
   } catch (error: unknown) {
