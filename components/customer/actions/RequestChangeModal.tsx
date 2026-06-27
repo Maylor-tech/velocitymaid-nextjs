@@ -67,11 +67,11 @@ export default function RequestChangeModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Request Change</h2>
+          <h2 className="text-xl font-bold text-vm-text">Request Change</h2>
           <button
             onClick={onClose}
             disabled={loading}
-            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+            className="text-vm-muted hover:text-vm-muted disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
@@ -145,14 +145,14 @@ export default function RequestChangeModal({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

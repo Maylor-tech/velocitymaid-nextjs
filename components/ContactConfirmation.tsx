@@ -25,17 +25,17 @@ export default function ContactConfirmation() {
   }
 
   return (
-    <div className="mt-10 max-w-xl rounded-md border border-gray-200 bg-gray-50 p-6">
-      <h4 className="font-medium text-gray-900">
+    <div className="mt-8 max-w-xl rounded-md border border-vm-border bg-vm-surface p-6">
+      <h4 className="font-medium text-vm-text">
         Message received
       </h4>
 
-      <p className="mt-2 text-gray-600">
+      <p className="mt-2 text-vm-muted">
         Thank you for reaching out. Messages are reviewed thoughtfully to ensure
         context and alignment.
       </p>
 
-      <p className="mt-2 text-sm text-gray-500">
+      <p className="mt-2 text-sm text-vm-muted">
         You'll hear back shortly if there's a fit.
       </p>
     </div>

@@ -18,15 +18,15 @@ export default function ReviewList({ reviews }: ReviewListProps) {
   if (reviews.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Reviews</h2>
-        <p className="text-gray-500 text-center py-8">No reviews yet</p>
+        <h2 className="text-xl font-bold text-vm-text mb-4">Recent Reviews</h2>
+        <p className="text-vm-muted text-center py-8">No reviews yet</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Reviews</h2>
+      <h2 className="text-xl font-bold text-vm-text mb-4">Recent Reviews</h2>
       <div className="space-y-4">
         {reviews.map((review) => (
           <div key={review.id} className="border border-gray-200 rounded-lg p-4">
@@ -40,13 +40,13 @@ export default function ReviewList({ reviews }: ReviewListProps) {
                     if (complaint) {
                       if (complaint.status === 'resolved' || complaint.status === 'closed') {
                         return (
-                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                          <span className="px-2 py-1 bg-vm-success-bg text-vm-success rounded-full text-xs font-medium">
                             Complaint Resolved
                           </span>
                         );
                       } else {
                         return (
-                          <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                          <span className="px-2 py-1 bg-vm-danger-bg text-red-800 rounded-full text-xs font-medium">
                             Complaint Open
                           </span>
                         );
@@ -55,7 +55,7 @@ export default function ReviewList({ reviews }: ReviewListProps) {
                     return null;
                   })()}
                 </div>
-                <p className="text-xs text-gray-500">{formatDate(review.createdAt)}</p>
+                <p className="text-xs text-vm-muted">{formatDate(review.createdAt)}</p>
               </div>
               {review.requestReclean && (
                 <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
@@ -64,7 +64,7 @@ export default function ReviewList({ reviews }: ReviewListProps) {
               )}
             </div>
             {review.comment && (
-              <p className="text-sm text-gray-700 mt-2">{review.comment}</p>
+              <p className="text-sm text-vm-text mt-2">{review.comment}</p>
             )}
           </div>
         ))}

@@ -22,6 +22,12 @@ export interface BrandLogoProps {
    * Navy/Cyan/White colors — this is a token swap, not a redesign.
    */
   variant?: "forest" | "ivory";
+  /**
+   * Preferred API. "light" = light background (navy house mark + cyan
+   * sparkle); "dark" = dark/navy background (cyan house mark + white
+   * sparkle). When set, takes precedence over the legacy `variant`.
+   */
+  theme?: "light" | "dark";
   /** @deprecated Prefer semantic sizes: header, auth, portal, mobile */
   size?: BrandLogoSize;
   iconOnly?: boolean;
@@ -57,15 +63,21 @@ const SIZE_MAP: Record<
 const SPARKLE_MIN_PX = 32;
 
 export default function BrandLogo({
-  variant = "forest",
+  variant,
+  theme,
   size = "header",
   iconOnly = false,
   showTagline = true,
   className = "",
 }: BrandLogoProps) {
-  // "forest" -> approved Navy treatment (light backgrounds): navy house mark, cyan sparkle.
-  // "ivory" -> approved White treatment (dark/navy backgrounds): cyan house mark, white sparkle.
-  const isNavyTreatment = variant === "forest";
+  // Resolve the treatment: the preferred `theme` prop wins; otherwise fall
+  // back to the legacy `variant` (forest -> light, ivory -> dark). Neither
+  // set defaults to "light" (the prior `variant="forest"` default), so all
+  // existing call sites render an identical mark.
+  const resolvedTheme = theme ?? (variant === "ivory" ? "dark" : "light");
+  // light background -> approved Navy treatment: navy house mark, cyan sparkle.
+  // dark/navy background -> approved White treatment: cyan house mark, white sparkle.
+  const isNavyTreatment = resolvedTheme === "light";
   const logoColor = isNavyTreatment ? "text-vm-navy" : "text-vm-white";
   const sizeClasses = SIZE_MAP[size];
   const showSparkle = sizeClasses.px > SPARKLE_MIN_PX;

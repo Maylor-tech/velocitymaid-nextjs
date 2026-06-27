@@ -102,25 +102,25 @@ export default function CleanerEarningsPage() {
     switch (status) {
       case 'PAID':
         return (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-vm-success-bg text-vm-success">
             Paid
           </span>
         );
       case 'PENDING':
         return (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-vm-warning-bg text-yellow-800">
             Pending
           </span>
         );
       case 'FAILED':
         return (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-vm-danger-bg text-red-800">
           Failed
         </span>
       );
       default:
         return (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-vm-text">
             {status}
           </span>
         );
@@ -133,7 +133,7 @@ export default function CleanerEarningsPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
-            <p className="mt-4 text-gray-600">Loading earnings...</p>
+            <p className="mt-4 text-vm-muted">Loading earnings...</p>
           </div>
         </div>
       </div>
@@ -148,7 +148,7 @@ export default function CleanerEarningsPage() {
             <p className="text-red-600">{error}</p>
             <button
               onClick={fetchEarnings}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              className="mt-4 px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger"
             >
               Try Again
             </button>
@@ -163,7 +163,7 @@ export default function CleanerEarningsPage() {
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-6xl mx-auto">
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-            <p className="text-gray-600">No earnings data available.</p>
+            <p className="text-vm-muted">No earnings data available.</p>
           </div>
         </div>
       </div>
@@ -175,28 +175,28 @@ export default function CleanerEarningsPage() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Earnings</h1>
-          <p className="text-gray-600">View your completed jobs and earnings</p>
+          <h1 className="text-3xl font-bold text-vm-text mb-2">Earnings</h1>
+          <p className="text-vm-muted">View your completed jobs and earnings</p>
         </div>
 
         {/* Payout summary from JobPayout records */}
         {data.payouts && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-white rounded-xl shadow-sm border border-blue-200 p-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-1">Ready to Pay</h3>
+              <h3 className="text-sm font-medium text-vm-muted mb-1">Ready to Pay</h3>
               <p className="text-2xl font-bold text-blue-700">
                 {formatCurrency(data.payouts.readyTotal)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-vm-muted mt-1">
                 Awaiting admin manual payout
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-1">Paid Out</h3>
-              <p className="text-2xl font-bold text-green-700">
+            <div className="bg-white rounded-xl shadow-sm border border-vm-success/30 p-6">
+              <h3 className="text-sm font-medium text-vm-muted mb-1">Paid Out</h3>
+              <p className="text-2xl font-bold text-vm-success">
                 {formatCurrency(data.payouts.paidTotal)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">Marked PAID by admin</p>
+              <p className="text-xs text-vm-muted mt-1">Marked PAID by admin</p>
             </div>
           </div>
         )}
@@ -211,19 +211,19 @@ export default function CleanerEarningsPage() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-2">
               <DollarSign className="w-6 h-6 text-blue-600" />
-              <h3 className="text-sm font-medium text-gray-500">Lifetime Total</h3>
+              <h3 className="text-sm font-medium text-vm-muted">Lifetime Total</h3>
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.totals.lifetimeTotal)}
             </p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-2">
-              <Calendar className="w-6 h-6 text-green-600" />
-              <h3 className="text-sm font-medium text-gray-500">This Month</h3>
+              <Calendar className="w-6 h-6 text-vm-success" />
+              <h3 className="text-sm font-medium text-vm-muted">This Month</h3>
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.totals.monthTotal)}
             </p>
           </div>
@@ -231,9 +231,9 @@ export default function CleanerEarningsPage() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-2">
               <Clock className="w-6 h-6 text-purple-600" />
-              <h3 className="text-sm font-medium text-gray-500">Last 7 Days</h3>
+              <h3 className="text-sm font-medium text-vm-muted">Last 7 Days</h3>
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.totals.weekTotal)}
             </p>
           </div>
@@ -242,17 +242,17 @@ export default function CleanerEarningsPage() {
         {/* Jobs Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Completed Jobs</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 className="text-lg font-semibold text-vm-text">Completed Jobs</h2>
+            <p className="text-sm text-vm-muted mt-1">
               {data.jobs.length} {data.jobs.length === 1 ? 'job' : 'jobs'} completed
             </p>
           </div>
 
           {data.jobs.length === 0 ? (
             <div className="p-12 text-center">
-              <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No completed jobs yet</p>
-              <p className="text-sm text-gray-400 mt-2">
+              <CheckCircle className="w-12 h-12 text-vm-muted mx-auto mb-4" />
+              <p className="text-vm-muted">No completed jobs yet</p>
+              <p className="text-sm text-vm-muted mt-2">
                 Completed jobs will appear here once you finish assignments
               </p>
             </div>
@@ -261,19 +261,19 @@ export default function CleanerEarningsPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Service Type
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Amount
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Payout
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Payment Status
                     </th>
                   </tr>
@@ -281,27 +281,27 @@ export default function CleanerEarningsPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {data.jobs.map((job) => (
                     <tr key={job.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-text">
                         {formatDate(job.createdAt)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-text">
                         {job.serviceType || 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-vm-text">
                         {formatCurrency(job.totalPrice, job.currency)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-text">
                         {job.payoutStatus ? (
                           <span className="inline-flex flex-col gap-0.5">
                             <span>{job.payoutStatus}</span>
                             {job.payoutAmount != null && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-vm-muted">
                                 {formatCurrency(job.payoutAmount, job.currency)}
                               </span>
                             )}
                           </span>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-vm-muted">—</span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

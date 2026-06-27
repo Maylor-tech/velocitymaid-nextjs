@@ -84,7 +84,7 @@ export function JobChecklistPanel({ jobId, active = true }: JobChecklistPanelPro
 
   if (panelState === "loading") {
     return (
-      <div className="mt-4 flex items-center gap-2 text-brand-slate/70">
+      <div className="mt-4 flex items-center gap-2 text-vm-text/70">
         <Loader2 className="w-4 h-4 animate-spin" />
         <span className="text-xs font-sans">Loading checklist…</span>
       </div>
@@ -98,7 +98,7 @@ export function JobChecklistPanel({ jobId, active = true }: JobChecklistPanelPro
         <button
           type="button"
           onClick={fetchChecklist}
-          className="mt-2 text-xs font-bold uppercase tracking-wider text-brand-forest"
+          className="mt-2 text-xs font-bold uppercase tracking-wider text-vm-navy"
         >
           Retry
         </button>
@@ -110,13 +110,13 @@ export function JobChecklistPanel({ jobId, active = true }: JobChecklistPanelPro
     <div className="mt-4">
       <div className="flex items-center justify-between gap-2 mb-2 min-h-[20px]">
         {panelState === "saving" && (
-          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-brand-slate/50 flex items-center gap-1">
+          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-vm-text/50 flex items-center gap-1">
             <Loader2 className="w-3 h-3 animate-spin" />
             Saving…
           </span>
         )}
         {savedHint && panelState === "ready" && (
-          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-brand-gold flex items-center gap-1 ml-auto">
+          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-vm-cyan flex items-center gap-1 ml-auto">
             <Check className="w-3 h-3" />
             Saved
           </span>

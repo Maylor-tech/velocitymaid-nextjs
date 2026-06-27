@@ -31,9 +31,17 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
+    const newCount = await prisma.cleanerApplication.count({
+      where: {
+        ...(branchId ? { branchId } : {}),
+        status: 'NEW',
+      },
+    });
+
     return NextResponse.json({
       success: true,
       applications,
+      newCount,
     });
   } catch (error: any) {
     if (error instanceof NextResponse) return error;

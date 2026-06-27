@@ -43,9 +43,9 @@ export default function MetricBadge({ value, type, threshold }: MetricBadgeProps
 
   const color = getColor();
   const colorClasses = {
-    green: 'bg-green-100 text-green-800',
-    yellow: 'bg-yellow-100 text-yellow-800',
-    red: 'bg-red-100 text-red-800',
+    green: 'bg-vm-success-bg text-vm-success',
+    yellow: 'bg-vm-warning-bg text-yellow-800',
+    red: 'bg-vm-danger-bg text-red-800',
   };
 
   return (

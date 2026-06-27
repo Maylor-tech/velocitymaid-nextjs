@@ -131,21 +131,21 @@ export default function AdminPayoutBatchDetailPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "DRAFT":
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-vm-text";
       case "APPROVED":
-        return "bg-blue-100 text-blue-800";
+        return "bg-vm-cyan-tint text-blue-800";
       case "PROCESSING":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-vm-warning-bg text-yellow-800";
       case "COMPLETED":
-        return "bg-green-100 text-green-800";
+        return "bg-vm-success-bg text-vm-success";
       case "FAILED":
-        return "bg-red-100 text-red-800";
+        return "bg-vm-danger-bg text-red-800";
       case "PENDING":
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-vm-text";
       case "PAID":
-        return "bg-green-100 text-green-800";
+        return "bg-vm-success-bg text-vm-success";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-vm-text";
     }
   };
 
@@ -286,7 +286,7 @@ export default function AdminPayoutBatchDetailPage() {
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="text-center py-12">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading batch details...</p>
+          <p className="mt-4 text-vm-muted">Loading batch details...</p>
         </div>
       </div>
     );
@@ -325,8 +325,8 @@ export default function AdminPayoutBatchDetailPage() {
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Payout Batch Details</h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <h1 className="text-3xl font-bold text-vm-text">Payout Batch Details</h1>
+              <p className="mt-1 text-sm text-vm-muted">
                 {formatDate(batch.periodStart)} - {formatDate(batch.periodEnd)}
               </p>
             </div>
@@ -347,7 +347,7 @@ export default function AdminPayoutBatchDetailPage() {
               <button
                 onClick={handleApprove}
                 disabled={processing}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-vm-success text-white rounded-lg hover:bg-vm-success disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {processing ? (
                   <>
@@ -364,7 +364,7 @@ export default function AdminPayoutBatchDetailPage() {
               <button
                 onClick={handleCancel}
                 disabled={processing}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {processing ? (
                   <>
@@ -385,7 +385,7 @@ export default function AdminPayoutBatchDetailPage() {
               <button
                 onClick={handleProcess}
                 disabled={processing}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {processing ? (
                   <>
@@ -402,7 +402,7 @@ export default function AdminPayoutBatchDetailPage() {
               <button
                 onClick={handleRetry}
                 disabled={processing}
-                className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-vm-warning text-white rounded-lg hover:bg-vm-warning disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {processing ? (
                   <>
@@ -427,17 +427,17 @@ export default function AdminPayoutBatchDetailPage() {
               <div className="flex items-center gap-3">
                 <DollarSign className="w-8 h-8 text-blue-600" />
                 <div>
-                  <p className="text-sm text-gray-500">Total Amount</p>
-                  <p className="text-2xl font-bold text-gray-900">{batch.totalAmountDollars}</p>
+                  <p className="text-sm text-vm-muted">Total Amount</p>
+                  <p className="text-2xl font-bold text-vm-text">{batch.totalAmountDollars}</p>
                 </div>
               </div>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center gap-3">
-                <FileText className="w-8 h-8 text-green-600" />
+                <FileText className="w-8 h-8 text-vm-success" />
                 <div>
-                  <p className="text-sm text-gray-500">Total Transfers</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-vm-muted">Total Transfers</p>
+                  <p className="text-2xl font-bold text-vm-text">
                     {aggregates.totalTransfers}
                   </p>
                 </div>
@@ -447,8 +447,8 @@ export default function AdminPayoutBatchDetailPage() {
               <div className="flex items-center gap-3">
                 <Users className="w-8 h-8 text-purple-600" />
                 <div>
-                  <p className="text-sm text-gray-500">Unique Cleaners</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-vm-muted">Unique Cleaners</p>
+                  <p className="text-2xl font-bold text-vm-text">
                     {aggregates.uniqueCleaners}
                   </p>
                 </div>
@@ -458,8 +458,8 @@ export default function AdminPayoutBatchDetailPage() {
               <div className="flex items-center gap-3">
                 <Calendar className="w-8 h-8 text-orange-600" />
                 <div>
-                  <p className="text-sm text-gray-500">Created</p>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm text-vm-muted">Created</p>
+                  <p className="text-sm font-medium text-vm-text">
                     {formatDateTime(batch.createdAt)}
                   </p>
                 </div>
@@ -471,13 +471,13 @@ export default function AdminPayoutBatchDetailPage() {
         {/* Status Breakdown */}
         {aggregates && aggregates.statusBreakdown.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Status Breakdown</h2>
+            <h2 className="text-lg font-semibold text-vm-text mb-4">Status Breakdown</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {aggregates.statusBreakdown.map((status) => (
                 <div key={status.status} className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">{status.count}</p>
-                  <p className="text-sm text-gray-500">{status.status}</p>
-                  <p className="text-sm font-medium text-gray-700">{status.amountDollars}</p>
+                  <p className="text-2xl font-bold text-vm-text">{status.count}</p>
+                  <p className="text-sm text-vm-muted">{status.status}</p>
+                  <p className="text-sm font-medium text-vm-text">{status.amountDollars}</p>
                 </div>
               ))}
             </div>
@@ -487,31 +487,31 @@ export default function AdminPayoutBatchDetailPage() {
         {/* Transfers Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Transfers</h2>
+            <h2 className="text-lg font-semibold text-vm-text">Transfers</h2>
           </div>
           {transfers.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">No transfers found</div>
+            <div className="p-12 text-center text-vm-muted">No transfers found</div>
           ) : (
             <>
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Cleaner
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Amount
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Locked Entries
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Stripe Payout ID
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Failure Reason
                     </th>
                   </tr>
@@ -521,14 +521,14 @@ export default function AdminPayoutBatchDetailPage() {
                     <tr key={transfer.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-vm-text">
                             {transfer.cleaner.name || "N/A"}
                           </div>
-                          <div className="text-sm text-gray-500">{transfer.cleaner.email}</div>
+                          <div className="text-sm text-vm-muted">{transfer.cleaner.email}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-vm-text">
                           {transfer.amountDollars}
                         </div>
                       </td>
@@ -539,23 +539,23 @@ export default function AdminPayoutBatchDetailPage() {
                           {transfer.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
                         {transfer.lockedEntriesCount} ({transfer.lockedAmountDollars})
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-muted">
                         {transfer.stripePayoutId ? (
                           <code className="text-xs bg-gray-100 px-2 py-1 rounded">
                             {transfer.stripePayoutId.substring(0, 20)}...
                           </code>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-vm-muted">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
+                      <td className="px-6 py-4 text-sm text-vm-muted">
                         {transfer.failureReason ? (
                           <span className="text-red-600">{transfer.failureReason}</span>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-vm-muted">—</span>
                         )}
                       </td>
                     </tr>
@@ -569,17 +569,17 @@ export default function AdminPayoutBatchDetailPage() {
                   <button
                     onClick={() => setTransfersPage((p) => Math.max(1, p - 1))}
                     disabled={transfersPage === 1}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-vm-text bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-vm-text">
                     Page {transfersPage} of {transfersTotalPages}
                   </span>
                   <button
                     onClick={() => setTransfersPage((p) => Math.min(transfersTotalPages, p + 1))}
                     disabled={transfersPage === transfersTotalPages}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-vm-text bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                   </button>

@@ -51,7 +51,7 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-vm-text bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
       >
         <Calculator className="w-4 h-4" />
         Pricing Helper
@@ -60,14 +60,14 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Job Pricing Calculator</h2>
+            <div className="sticky top-0 bg-white border-b border-vm-border px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-vm-text">Job Pricing Calculator</h2>
               <button
                 onClick={() => {
                   setIsOpen(false);
                   setBreakdown(null);
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-vm-muted hover:text-vm-muted transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -77,64 +77,64 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
               {/* Input Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Base Rate ($)
                   </label>
                   <input
                     type="number"
                     value={baseRate}
                     onChange={(e) => setBaseRate(parseFloat(e.target.value) || 0)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                     min="0"
                     step="0.01"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Bedrooms
                   </label>
                   <input
                     type="number"
                     value={bedrooms}
                     onChange={(e) => setBedrooms(parseInt(e.target.value) || 0)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                     min="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Bathrooms
                   </label>
                   <input
                     type="number"
                     value={bathrooms}
                     onChange={(e) => setBathrooms(parseInt(e.target.value) || 0)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                     min="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Square Feet (optional)
                   </label>
                   <input
                     type="number"
                     value={squareFeet}
                     onChange={(e) => setSquareFeet(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                     min="0"
                     placeholder="Leave empty to use bedrooms/bathrooms"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Travel Distance (km)
                   </label>
                   <input
                     type="number"
                     value={travelDistanceKm}
                     onChange={(e) => setTravelDistanceKm(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                     min="0"
                     step="0.1"
                     placeholder="Optional"
@@ -152,9 +152,9 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                       setIsDeepClean(e.target.checked);
                       if (e.target.checked) setIsMoveOut(false);
                     }}
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    className="w-4 h-4 text-vm-cyan-dark border-gray-300 rounded focus:ring-vm-cyan"
                   />
-                  <span className="text-sm text-gray-700">Deep Clean</span>
+                  <span className="text-sm text-vm-text">Deep Clean</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -164,56 +164,56 @@ export default function PricingHelper({ serviceType, onPriceCalculated }: Pricin
                       setIsMoveOut(e.target.checked);
                       if (e.target.checked) setIsDeepClean(false);
                     }}
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    className="w-4 h-4 text-vm-cyan-dark border-gray-300 rounded focus:ring-vm-cyan"
                   />
-                  <span className="text-sm text-gray-700">Move-out Clean</span>
+                  <span className="text-sm text-vm-text">Move-out Clean</span>
                 </label>
               </div>
 
               {/* Calculate Button */}
               <button
                 onClick={handleCalculate}
-                className="w-full px-4 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
+                className="w-full px-4 py-3 bg-vm-navy text-white font-medium rounded-lg hover:bg-vm-navy transition-colors"
               >
                 Calculate Price
               </button>
 
               {/* Breakdown */}
               {breakdown && (
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Price Breakdown</h3>
+                <div className="bg-vm-surface rounded-lg p-4 space-y-2">
+                  <h3 className="text-sm font-semibold text-vm-text mb-3">Price Breakdown</h3>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Base:</span>
-                      <span className="text-gray-900">{formatCurrency(breakdown.base)}</span>
+                      <span className="text-vm-muted">Base:</span>
+                      <span className="text-vm-text">{formatCurrency(breakdown.base)}</span>
                     </div>
                     {breakdown.sizeAdjustment > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Size Adjustment:</span>
-                        <span className="text-gray-900">+{formatCurrency(breakdown.sizeAdjustment)}</span>
+                        <span className="text-vm-muted">Size Adjustment:</span>
+                        <span className="text-vm-text">+{formatCurrency(breakdown.sizeAdjustment)}</span>
                       </div>
                     )}
                     {breakdown.typeAdjustment > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Type Adjustment:</span>
-                        <span className="text-gray-900">+{formatCurrency(breakdown.typeAdjustment)}</span>
+                        <span className="text-vm-muted">Type Adjustment:</span>
+                        <span className="text-vm-text">+{formatCurrency(breakdown.typeAdjustment)}</span>
                       </div>
                     )}
                     {breakdown.travelFee > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Travel Fee:</span>
-                        <span className="text-gray-900">+{formatCurrency(breakdown.travelFee)}</span>
+                        <span className="text-vm-muted">Travel Fee:</span>
+                        <span className="text-vm-text">+{formatCurrency(breakdown.travelFee)}</span>
                       </div>
                     )}
                     {breakdown.discount > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Discount:</span>
+                        <span className="text-vm-muted">Discount:</span>
                         <span className="text-red-600">-{formatCurrency(breakdown.discount)}</span>
                       </div>
                     )}
                     <div className="flex justify-between pt-2 border-t border-gray-300">
-                      <span className="font-semibold text-gray-900">Total:</span>
-                      <span className="font-bold text-lg text-primary-600">{formatCurrency(breakdown.total)}</span>
+                      <span className="font-semibold text-vm-text">Total:</span>
+                      <span className="font-bold text-lg text-vm-cyan-dark">{formatCurrency(breakdown.total)}</span>
                     </div>
                   </div>
                 </div>

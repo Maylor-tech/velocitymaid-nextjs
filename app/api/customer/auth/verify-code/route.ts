@@ -5,6 +5,10 @@ import {
   COOKIE_MAX_AGE_SECONDS,
   createCustomerSessionToken,
 } from '@/lib/customerSession';
+import {
+  isCustomerPortalEmailBlocked,
+  customerPortalBlockedMessage,
+} from '@/lib/customer/portalAccess';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -35,6 +39,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Customer not found for this email' },
         { status: 404 },
+      );
+    }
+
+    if (
+      customer.isBlocked ||
+      isCustomerPortalEmailBlocked(normalizedEmail)
+    ) {
+      return NextResponse.json(
+        { error: customerPortalBlockedMessage(), cleanerPortalUrl: '/cleaners/login' },
+        { status: 403 },
       );
     }
 
@@ -74,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       success: true,
-      redirectTo: '/customer/jobs',
+      redirectTo: '/customer',
     });
 
     res.cookies.set(COOKIE_NAME, sessionToken, {

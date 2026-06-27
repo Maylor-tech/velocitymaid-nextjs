@@ -29,32 +29,32 @@ export const APPLY_MARKET_CONFIG: Record<
   }
 > = {
   'new-jersey': {
-    badge: 'New Jersey branch',
+    badge: 'Now hiring',
     subtitle:
-      'Join the VelocityMaid NJ team and help us bring clean homes to New Jersey families.',
+      'Join the VelocityMaid team and help us deliver professional cleaning and property care across Vermont and New Jersey.',
     branchSlug: 'new-jersey',
     country: 'USA',
     whatsappLabel: 'WhatsApp Number',
-    whatsappPlaceholder: '1-973-xxx-xxxx',
-    whatsappHelper: 'US number with country code',
-    areaPlaceholder: 'e.g., Newark, Jersey City',
-    title: 'Apply to Join | VelocityMaid New Jersey',
+    whatsappPlaceholder: '+1-xxx-xxx-xxxx',
+    whatsappHelper: 'Include country code (e.g. +1 for US numbers)',
+    areaPlaceholder: 'e.g., Ludlow, Middlebury, Newark, Jersey City',
+    title: 'Apply to be a Cleaner | VelocityMaid',
     description:
-      'Apply to become a cleaner with VelocityMaid in New Jersey. Flexible hours, competitive pay, weekly payouts via Stripe.',
+      'Apply to become a cleaner with VelocityMaid in Vermont and New Jersey. Flexible hours, competitive pay, and professional team support.',
   },
   vermont: {
     badge: 'Vermont — Okemo Valley',
     subtitle:
-      'Join the VelocityMaid Vermont team and help us bring clean properties to Okemo Valley hosts and homeowners.',
+      'Join the VelocityMaid team and help us deliver professional cleaning and property care across Vermont and New Jersey.',
     branchSlug: 'vermont',
     country: 'USA',
     whatsappLabel: 'WhatsApp Number',
-    whatsappPlaceholder: '1-802-xxx-xxxx',
-    whatsappHelper: 'US number with country code',
-    areaPlaceholder: 'e.g., Ludlow, Okemo Valley',
-    title: 'Apply to Join | VelocityMaid Vermont',
+    whatsappPlaceholder: '+1-xxx-xxx-xxxx',
+    whatsappHelper: 'Include country code (e.g. +1 for US numbers)',
+    areaPlaceholder: 'e.g., Ludlow, Okemo Valley, Middlebury',
+    title: 'Apply to be a Cleaner | VelocityMaid Vermont',
     description:
-      'Apply to become a cleaner with VelocityMaid in Vermont. Serve Okemo Valley short-term rentals and second homes.',
+      'Apply to become a cleaner with VelocityMaid in Vermont. Serve Okemo Valley, Middlebury, and surrounding communities.',
   },
   jamaica: {
     badge: 'Jamaica — Port Antonio',

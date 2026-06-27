@@ -39,7 +39,7 @@ export default function BookingLayout({ children }: BookingLayoutProps) {
                         ? 'bg-vm-cyan text-white'
                         : index === step
                           ? 'bg-vm-navy text-white'
-                          : 'bg-gray-200 text-gray-600'
+                          : 'bg-gray-200 text-vm-muted'
                     }`}
                   >
                     {index < step ? (
@@ -52,7 +52,7 @@ export default function BookingLayout({ children }: BookingLayoutProps) {
                     className={`text-xs mt-2 text-center font-body ${
                       index === step
                         ? 'text-vm-navy font-heading font-medium'
-                        : 'text-gray-500'
+                        : 'text-vm-muted'
                     }`}
                   >
                     {label}
@@ -89,8 +89,8 @@ export default function BookingLayout({ children }: BookingLayoutProps) {
             disabled={!canGoPrev}
             className={`flex items-center gap-2 px-6 py-3 rounded-lg font-heading font-medium transition-colors ${
               canGoPrev
-                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-gray-200 text-vm-text hover:bg-gray-300'
+                : 'bg-vm-surface text-vm-muted cursor-not-allowed'
             }`}
           >
             <ChevronLeft className="w-5 h-5" />

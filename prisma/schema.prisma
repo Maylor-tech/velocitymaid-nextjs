@@ -192,7 +192,7 @@ model CleanerApplication {
   experienceLevel     String?
   daysAvailable       Json?
   notes               String?
-  status              CleanerApplicationStatus @default(PENDING)
+  status              CleanerApplicationStatus @default(NEW)
   createdAt           DateTime                 @default(now())
   updatedAt           DateTime
   applicantFitScore   Int?
@@ -202,6 +202,8 @@ model CleanerApplication {
   referencesUploadUrl String?
   weekendAbility      Boolean                  @default(false)
   whatsappNumber      String?
+  preferredName       String?
+  applicationData     Json?
   Branch              Branch                   @relation(fields: [branchId], references: [id])
 
   @@index([applicantFitScore])
@@ -287,6 +289,8 @@ model Customer {
   ReferralEvent_ReferralEvent_referredCustomerIdToCustomer ReferralEvent[]            @relation("ReferralEvent_referredCustomerIdToCustomer")
   ReferralEvent_ReferralEvent_referrerIdToCustomer         ReferralEvent[]            @relation("ReferralEvent_referrerIdToCustomer")
   ReferralLink                                             ReferralLink[]
+  Invoice                                                  Invoice[]
+  Receipt                                                  Receipt[]
 
   @@index([branchId])
   @@index([email])
@@ -408,6 +412,10 @@ model Job {
   ComplianceIssue          ComplianceIssue[]
   CustomerJobChangeRequest CustomerJobChangeRequest[]
   JobChecklistItem         JobChecklistItem[]
+  JobTeamMember            JobTeamMember[]
+  CompletionReport         CompletionReport?
+  Invoice                  Invoice?
+  Receipts                 Receipt[]
   User                     User?                      @relation(fields: [assignedCleanerId], references: [id])
   ApprovedBy               User?                      @relation("JobApprovedBy", fields: [approvedById], references: [id])
   Branch                   Branch                     @relation(fields: [branchId], references: [id])
@@ -437,6 +445,39 @@ model CleanPhoto {
 
   @@index([jobId])
   @@map("clean_photos")
+}
+
+model CleanerProfile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  firstName           String?
+  lastName            String?
+  publicDisplayName   String?
+  jobTitle            String?
+  serviceAreas        Json?
+  memberStatus        String   @default("ACTIVE")
+  certificationLabel  String   @default("PENDING")
+  internalNotes       String?
+  isInternalTeam      Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([memberStatus])
+  @@index([isInternalTeam])
+}
+
+model JobTeamMember {
+  id        String @id @default(cuid())
+  jobId     String
+  cleanerId String
+  sortOrder Int    @default(0)
+  Job       Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  User      User   @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, cleanerId])
+  @@index([jobId])
+  @@index([cleanerId])
 }
 
 model ReviewRequest {
@@ -903,6 +944,8 @@ model User {
   TrainingCertificate                 TrainingCertificate?   @relation("TrainingCertificate_cleaner")
   TrainingQuizAttempt                 TrainingQuizAttempt[]
   TrainingStatus                      TrainingStatus?        @relation("TrainingStatus_cleaner")
+  CleanerProfile                      CleanerProfile?
+  JobTeamMember                       JobTeamMember[]
   TransactionLedger                   TransactionLedger[]
   Branch_User_primaryBranchIdToBranch Branch?                @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
   UserBranch                          UserBranch[]
@@ -1234,9 +1277,13 @@ enum BranchStatus {
 }
 
 enum CleanerApplicationStatus {
+  NEW
+  REVIEWING
+  ACCEPTED
+  REJECTED
+  TRAINING_INVITED
   PENDING
   APPROVED
-  REJECTED
 }
 
 enum FranchiseApplicationStatus {
@@ -1362,6 +1409,25 @@ enum ContactMessageStatus {
   ARCHIVED
 }
 
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum InvoicePaymentMethod {
+  CASH
+  CHECK
+  STRIPE
+  ZELLE
+  VENMO
+  BANK_TRANSFER
+  OTHER
+}
+
 enum JobStatus {
   RECEIVED
   CONFIRMED
@@ -1403,4 +1469,140 @@ model Tip {
   updatedAt             DateTime @updatedAt
 
   @@map("tips")
+}
+
+model Invoice {
+  id              String         @id @default(cuid())
+  invoiceNumber   String         @unique
+  publicToken     String         @unique @default(cuid())
+  jobId           String?        @unique
+  customerId      String?
+  clientName      String
+  clientEmail     String?
+  clientPhone     String?
+  propertyAddress String
+  serviceType     String
+  jobDate         DateTime?
+  dueDate         DateTime?
+  subtotal        Decimal        @db.Decimal(10, 2)
+  tax             Decimal        @default(0) @db.Decimal(10, 2)
+  discount        Decimal        @default(0) @db.Decimal(10, 2)
+  total           Decimal        @db.Decimal(10, 2)
+  amountPaid      Decimal        @default(0) @db.Decimal(10, 2)
+  balanceDue      Decimal        @db.Decimal(10, 2)
+  status          InvoiceStatus  @default(DRAFT)
+  notes           String?
+  sentAt          DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  items           InvoiceItem[]
+  payments        InvoicePayment[]
+  Job             Job?           @relation(fields: [jobId], references: [id])
+  Customer        Customer?      @relation(fields: [customerId], references: [id])
+  Receipts        Receipt[]
+
+  @@index([status])
+  @@index([clientName])
+  @@index([clientEmail])
+  @@index([invoiceNumber])
+  @@index([dueDate])
+  @@index([publicToken])
+  @@index([jobId])
+  @@index([customerId])
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Decimal @default(1) @db.Decimal(10, 2)
+  unitPrice   Decimal @db.Decimal(10, 2)
+  lineTotal   Decimal @db.Decimal(10, 2)
+  sortOrder   Int     @default(0)
+  Invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+model InvoicePayment {
+  id                   String               @id @default(cuid())
+  invoiceId            String
+  amount               Decimal              @db.Decimal(10, 2)
+  paymentMethod        InvoicePaymentMethod
+  paymentDate          DateTime             @default(now())
+  transactionReference String?
+  notes                String?
+  stripeSessionId      String?
+  createdAt            DateTime             @default(now())
+  Invoice              Invoice              @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  Receipt              Receipt?
+
+  @@index([invoiceId])
+}
+
+enum CompletionReportStatus {
+  DRAFT
+  GENERATED
+  SENT
+}
+
+enum ReceiptStatus {
+  GENERATED
+  SENT
+}
+
+model CompletionReport {
+  id              String                 @id @default(cuid())
+  jobId           String                 @unique
+  reportNumber    String                 @unique
+  publicToken     String                 @unique @default(cuid())
+  propertyAddress String
+  serviceDate     DateTime
+  serviceType     String?
+  teamSummary     String?
+  notes           String?
+  issuesFound     String?
+  supplyRequests  String?
+  beforePhotos    Json?
+  afterPhotos     Json?
+  status          CompletionReportStatus @default(GENERATED)
+  sentAt          DateTime?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  Job             Job                    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([publicToken])
+  @@map("completion_reports")
+}
+
+model Receipt {
+  id               String               @id @default(cuid())
+  receiptNumber    String               @unique
+  publicToken      String               @unique @default(cuid())
+  invoiceId        String?
+  jobId            String?
+  invoicePaymentId String?              @unique
+  customerId       String?
+  clientName       String
+  clientEmail      String?
+  amount           Decimal              @db.Decimal(10, 2)
+  paymentMethod    InvoicePaymentMethod
+  paymentDate      DateTime
+  propertyAddress  String?
+  serviceType      String?
+  invoiceNumber    String?
+  status           ReceiptStatus        @default(GENERATED)
+  sentAt           DateTime?
+  createdAt        DateTime             @default(now())
+  Invoice          Invoice?             @relation(fields: [invoiceId], references: [id])
+  Job              Job?                 @relation(fields: [jobId], references: [id])
+  InvoicePayment   InvoicePayment?      @relation(fields: [invoicePaymentId], references: [id])
+  Customer         Customer?            @relation(fields: [customerId], references: [id])
+
+  @@index([jobId])
+  @@index([invoiceId])
+  @@index([customerId])
+  @@index([publicToken])
+  @@map("receipts")
 }

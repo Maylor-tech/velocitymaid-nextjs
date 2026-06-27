@@ -40,7 +40,7 @@ export default function CleanerTrainingModulePage() {
   if (!moduleDef) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
-        <p className="text-gray-600">Module not found.</p>
+        <p className="text-vm-muted">Module not found.</p>
         <Link href="/cleaner/training" className="mt-2 text-blue-600 underline">
           Back to training
         </Link>
@@ -84,19 +84,19 @@ export default function CleanerTrainingModulePage() {
         <CleanerPortalNav />
         <Link
           href="/cleaner/training"
-          className="mb-4 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+          className="mb-4 inline-flex items-center gap-1 text-sm text-vm-muted hover:text-vm-text"
         >
           <ArrowLeft className="h-4 w-4" /> All modules
         </Link>
 
-        <h1 className="text-2xl font-semibold text-gray-900">{moduleDef.title}</h1>
-        <p className="mt-1 text-gray-600">{moduleDef.description}</p>
+        <h1 className="text-2xl font-semibold text-vm-text">{moduleDef.title}</h1>
+        <p className="mt-1 text-vm-muted">{moduleDef.description}</p>
 
         <div className="mt-6 space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           {moduleDef.sections?.map((section) => (
             <section key={section.heading}>
-              <h2 className="text-lg font-medium text-gray-900">{section.heading}</h2>
-              <p className="mt-2 text-gray-700 leading-relaxed">{section.body}</p>
+              <h2 className="text-lg font-medium text-vm-text">{section.heading}</h2>
+              <p className="mt-2 text-vm-text leading-relaxed">{section.body}</p>
             </section>
           ))}
 
@@ -114,7 +114,7 @@ export default function CleanerTrainingModulePage() {
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           {completed ? (
-            <div className="flex items-center gap-2 text-green-700">
+            <div className="flex items-center gap-2 text-vm-success">
               <CheckCircle2 className="h-5 w-5" />
               <span className="font-medium">Completed</span>
             </div>
@@ -123,19 +123,19 @@ export default function CleanerTrainingModulePage() {
               type="button"
               onClick={handleComplete}
               disabled={submitting}
-              className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-lg bg-vm-navy px-6 py-3 font-medium text-white hover:bg-vm-navy disabled:opacity-50"
             >
               {submitting ? 'Saving…' : 'Mark Module Complete'}
             </button>
           )}
           <Link
             href="/cleaner/training"
-            className="text-center text-sm text-gray-600 underline sm:ml-auto"
+            className="text-center text-sm text-vm-muted underline sm:ml-auto"
           >
             Back to all modules
           </Link>
         </div>
-        {message && <p className="mt-3 text-sm text-gray-600">{message}</p>}
+        {message && <p className="mt-3 text-sm text-vm-muted">{message}</p>}
       </div>
     </div>
   );
@@ -170,22 +170,22 @@ function CertificationCompleteView({ loading }: { loading: boolean }) {
         <CleanerPortalNav />
         {certified ? (
           <>
-            <CheckCircle2 className="mx-auto h-16 w-16 text-green-600" />
+            <CheckCircle2 className="mx-auto h-16 w-16 text-vm-success" />
             <h1 className="mt-4 text-2xl font-semibold">Certification Complete</h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-vm-muted">
               You are certified to accept VelocityMaid live jobs.
             </p>
             {quizScore != null && (
-              <p className="mt-1 text-sm text-gray-500">Quiz score: {quizScore}%</p>
+              <p className="mt-1 text-sm text-vm-muted">Quiz score: {quizScore}%</p>
             )}
             {certifiedAt && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-vm-muted">
                 Certified on {new Date(certifiedAt).toLocaleDateString()}
               </p>
             )}
             <Link
               href="/cleaner/jobs"
-              className="mt-6 inline-block rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
+              className="mt-6 inline-block rounded-lg bg-vm-navy px-6 py-3 font-medium text-white hover:bg-vm-navy"
             >
               View My Jobs
             </Link>
@@ -193,7 +193,7 @@ function CertificationCompleteView({ loading }: { loading: boolean }) {
         ) : (
           <>
             <h1 className="text-2xl font-semibold">Certification pending</h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-vm-muted">
               Complete all modules and pass the quiz to unlock this page.
             </p>
             <Link href="/cleaner/training" className="mt-4 text-blue-600 underline">

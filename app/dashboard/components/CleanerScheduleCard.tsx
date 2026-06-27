@@ -18,16 +18,16 @@ export default function CleanerScheduleCard({ schedule, region }: CleanerSchedul
     <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="font-semibold text-gray-900">
+          <h3 className="font-semibold text-vm-text">
             {schedule.cleanerName || 'Unknown Cleaner'}
           </h3>
-          <p className="text-sm text-gray-600">{schedule.cleanerPhone}</p>
+          <p className="text-sm text-vm-muted">{schedule.cleanerPhone}</p>
         </div>
         <LocationBadge location={region} />
       </div>
 
       <div className="mb-2">
-        <span className="text-sm font-medium text-gray-700">
+        <span className="text-sm font-medium text-vm-text">
           {schedule.jobs.length} job{schedule.jobs.length !== 1 ? 's' : ''} assigned
         </span>
       </div>
@@ -41,9 +41,9 @@ export default function CleanerScheduleCard({ schedule, region }: CleanerSchedul
             >
               <div className="flex justify-between">
                 <span className="font-medium">{job.customerName}</span>
-                <span className="text-gray-600">{formatDate(job.preferredDate)}</span>
+                <span className="text-vm-muted">{formatDate(job.preferredDate)}</span>
               </div>
-              <div className="text-gray-600 text-xs mt-1">
+              <div className="text-vm-muted text-xs mt-1">
                 {job.preferredTime} • {job.serviceType}
               </div>
             </div>

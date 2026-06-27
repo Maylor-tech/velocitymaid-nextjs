@@ -91,27 +91,27 @@ export default function LessonPage() {
       .split('\n')
       .map((line, index) => {
         if (line.startsWith('# ')) {
-          return `<h1 class="text-3xl font-bold text-gray-900 mb-4 mt-6 first:mt-0">${line.substring(2)}</h1>`;
+          return `<h1 class="text-3xl font-bold text-vm-text mb-4 mt-6 first:mt-0">${line.substring(2)}</h1>`;
         }
         if (line.startsWith('## ')) {
-          return `<h2 class="text-2xl font-semibold text-gray-900 mb-3 mt-5">${line.substring(3)}</h2>`;
+          return `<h2 class="text-2xl font-semibold text-vm-text mb-3 mt-5">${line.substring(3)}</h2>`;
         }
         if (line.startsWith('### ')) {
-          return `<h3 class="text-xl font-semibold text-gray-900 mb-2 mt-4">${line.substring(4)}</h3>`;
+          return `<h3 class="text-xl font-semibold text-vm-text mb-2 mt-4">${line.substring(4)}</h3>`;
         }
         if (line.startsWith('- **')) {
           const match = line.match(/- \*\*(.+?)\*\*: (.+)/);
           if (match) {
-            return `<p class="mb-2"><strong class="text-gray-900">${match[1]}</strong>: <span class="text-gray-700">${match[2]}</span></p>`;
+            return `<p class="mb-2"><strong class="text-vm-text">${match[1]}</strong>: <span class="text-vm-text">${match[2]}</span></p>`;
           }
         }
         if (line.startsWith('- ')) {
-          return `<p class="mb-2 text-gray-700">${line.substring(2)}</p>`;
+          return `<p class="mb-2 text-vm-text">${line.substring(2)}</p>`;
         }
         if (line.trim() === '') {
           return '<br />';
         }
-        return `<p class="mb-3 text-gray-700">${line}</p>`;
+        return `<p class="mb-3 text-vm-text">${line}</p>`;
       })
       .join('');
   };
@@ -121,7 +121,7 @@ export default function LessonPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading lesson...</p>
+          <p className="mt-4 text-vm-muted">Loading lesson...</p>
         </div>
       </div>
     );
@@ -134,7 +134,7 @@ export default function LessonPage() {
           <p className="text-red-600 mb-4">{error || 'Lesson not found'}</p>
           <button
             onClick={() => router.push(`/cleaners/training/module/${slug}`)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy"
           >
             Back to Module
           </button>
@@ -155,7 +155,7 @@ export default function LessonPage() {
             <ArrowLeft className="w-4 h-4" />
             Back to {lesson.module.title}
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{lesson.title}</h1>
+          <h1 className="text-3xl font-bold text-vm-text mb-2">{lesson.title}</h1>
         </div>
 
         {/* Lesson Content */}
@@ -171,31 +171,31 @@ export default function LessonPage() {
         {/* Quiz Section */}
         {lesson.quizJson && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Quiz</h2>
+            <h2 className="text-2xl font-bold text-vm-text mb-6">Quiz</h2>
             {quizSubmitted && quizResult ? (
               <div className="mb-6">
                 <div
                   className={`p-6 rounded-lg mb-4 ${
                     quizResult.passed
-                      ? 'bg-green-50 border border-green-200'
+                      ? 'bg-vm-success-bg border border-vm-success/30'
                       : 'bg-red-50 border border-red-200'
                   }`}
                 >
                   <div className="flex items-center gap-3 mb-2">
                     {quizResult.passed ? (
-                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                      <CheckCircle2 className="w-6 h-6 text-vm-success" />
                     ) : (
                       <XCircle className="w-6 h-6 text-red-600" />
                     )}
                     <h3
                       className={`text-xl font-semibold ${
-                        quizResult.passed ? 'text-green-900' : 'text-red-900'
+                        quizResult.passed ? 'text-vm-success' : 'text-red-900'
                       }`}
                     >
                       {quizResult.passed ? 'Congratulations!' : 'Not Quite There'}
                     </h3>
                   </div>
-                  <p className={quizResult.passed ? 'text-green-800' : 'text-red-800'}>
+                  <p className={quizResult.passed ? 'text-vm-success' : 'text-red-800'}>
                     You scored {quizResult.score}% ({quizResult.correct} out of {quizResult.total}{' '}
                     correct)
                   </p>
@@ -209,13 +209,13 @@ export default function LessonPage() {
                   <div className="flex gap-4 flex-wrap">
                     <Link
                       href={`/cleaners/training/module/${slug}`}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      className="px-6 py-3 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-medium"
                     >
                       Continue to Next Lesson
                     </Link>
                     <Link
                       href="/cleaners/training"
-                      className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                      className="px-6 py-3 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors font-medium"
                     >
                       Back to Training
                     </Link>
@@ -237,7 +237,7 @@ export default function LessonPage() {
           <div className="mt-6">
             <Link
               href={`/cleaners/training/module/${slug}`}
-              className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium inline-block"
+              className="px-6 py-3 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors font-medium inline-block"
             >
               Back to Module
             </Link>

@@ -31,15 +31,15 @@ export default function ProfitKpiCard({
   const valueColor = isProfit
     ? isNegative
       ? 'text-red-600'
-      : 'text-green-600'
-    : 'text-gray-900';
+      : 'text-vm-success'
+    : 'text-vm-text';
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
-      <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+      <p className="text-sm font-medium text-vm-muted mb-1">{title}</p>
       <p className={`text-3xl font-bold ${valueColor}`}>{formatValue(value)}</p>
       {subtitle && (
-        <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+        <p className="text-xs text-vm-muted mt-1">{subtitle}</p>
       )}
     </div>
   );

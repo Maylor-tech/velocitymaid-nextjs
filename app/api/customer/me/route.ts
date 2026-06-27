@@ -1,16 +1,19 @@
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCustomerSession } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
+import { resolveMarketSupportForCustomer } from '@/lib/customer/marketSupport';
+import {
+  isCustomerPortalEmailBlocked,
+  customerPortalBlockedMessage,
+} from '@/lib/customer/portalAccess';
 
 /**
  * Get Current Customer API
- * 
+ *
  * GET /api/customer/me
- * 
- * Returns current logged-in customer info
  */
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +26,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch customer from database
     const customer = await prisma.customer.findUnique({
       where: { id: session.customerId },
       select: {
@@ -34,6 +36,21 @@ export async function GET(request: NextRequest) {
         phone: true,
         homeZipCode: true,
         branchId: true,
+        isBlocked: true,
+        defaultAddress: true,
+        addressLine1: true,
+        city: true,
+        state: true,
+        Branch: {
+          select: {
+            slug: true,
+            state: true,
+            name: true,
+            regionLabel: true,
+            primaryPhone: true,
+            whatsappNumber: true,
+          },
+        },
       },
     });
 
@@ -44,9 +61,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (
+      customer.isBlocked ||
+      isCustomerPortalEmailBlocked(customer.email)
+    ) {
+      return NextResponse.json(
+        { success: false, error: customerPortalBlockedMessage(), blocked: true },
+        { status: 403 }
+      );
+    }
+
+    const support = resolveMarketSupportForCustomer(customer);
+    const addressLine =
+      customer.defaultAddress ||
+      [customer.addressLine1, customer.city, customer.state].filter(Boolean).join(', ') ||
+      null;
+
     return NextResponse.json({
       success: true,
-      authenticated: true, // ✅ Add this for CustomerLayout compatibility
+      authenticated: true,
       customer: {
         id: customer.id,
         firstName: customer.firstName,
@@ -55,14 +88,14 @@ export async function GET(request: NextRequest) {
         phone: customer.phone,
         homeZipCode: customer.homeZipCode,
         branchId: customer.branchId,
+        address: addressLine,
+        marketLabel: support.marketLabel,
       },
+      support,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch customer';
     console.error('Get customer error:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch customer' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
-

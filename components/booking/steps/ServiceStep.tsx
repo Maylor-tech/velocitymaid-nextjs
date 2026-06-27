@@ -15,6 +15,14 @@ interface Branch {
   status: string;
 }
 
+/** Online bookable markets — slug doubles as branch slug (Option A). */
+const markets = [
+  { code: 'new-jersey', label: 'New Jersey' },
+  { code: 'vermont', label: 'Vermont' },
+] as const;
+
+const BOOKABLE_SLUGS = new Set<string>(markets.map((m) => m.code));
+
 const selectedCardClass =
   'border-2 border-vm-cyan bg-[#E6FAFB] shadow-md';
 const unselectedCardClass =
@@ -46,11 +54,6 @@ export default function ServiceStep() {
     },
   ];
 
-  const countries = [
-    { code: 'Jamaica', label: 'Jamaica' },
-    { code: 'USA', label: 'United States' },
-  ];
-
   useEffect(() => {
     const fetchBranches = async () => {
       setLoadingBranches(true);
@@ -58,7 +61,9 @@ export default function ServiceStep() {
         const response = await fetch('/api/branches');
         const result = await response.json();
         if (result.success) {
-          setBranches(result.branches);
+          setBranches(
+            result.branches.filter((b: Branch) => BOOKABLE_SLUGS.has(b.slug)),
+          );
         }
       } catch (err) {
         console.error('Error fetching branches:', err);
@@ -69,77 +74,57 @@ export default function ServiceStep() {
     fetchBranches();
   }, []);
 
-  const availableBranches = data.country
-    ? branches.filter((b) => {
-        const branchCountry = b.country || '';
-        if (data.country === 'Jamaica') {
-          return branchCountry === 'Jamaica' || branchCountry === 'JM';
-        }
-        if (data.country === 'USA') {
-          return (
-            branchCountry === 'USA' ||
-            branchCountry === 'US' ||
-            branchCountry === 'United States'
-          );
-        }
-        return false;
-      })
+  const availableBranches = data.market
+    ? branches.filter((b) => b.slug === data.market)
     : [];
 
+  const selectedMarketLabel =
+    markets.find((m) => m.code === data.market)?.label ?? data.market;
+
   useEffect(() => {
-    if (data.country && data.branchSlug) {
+    if (data.market && data.branchSlug) {
       const selectedBranch = branches.find((b) => b.slug === data.branchSlug);
-      if (selectedBranch) {
-        const branchCountry = selectedBranch.country || '';
-        const countryMatch =
-          (data.country === 'Jamaica' &&
-            (branchCountry === 'Jamaica' || branchCountry === 'JM')) ||
-          (data.country === 'USA' &&
-            (branchCountry === 'USA' ||
-              branchCountry === 'US' ||
-              branchCountry === 'United States'));
-        if (!countryMatch) {
-          update({ branchSlug: null });
-        }
+      if (selectedBranch && selectedBranch.slug !== data.market) {
+        update({ branchSlug: null });
       }
     }
-  }, [data.country, branches, data.branchSlug, update]);
+  }, [data.market, branches, data.branchSlug, update]);
 
   return (
     <div className="space-y-8">
       <div>
         <h2 className="font-heading font-semibold text-vm-navy text-2xl mb-2">
-          Select Your Country
+          Select Your Market
         </h2>
         <p className="font-body text-vm-muted">
-          Choose the country where you need cleaning services
+          Choose the market where you need cleaning services
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {countries.map((country) => (
+        {markets.map((market) => (
           <button
-            key={country.code}
+            key={market.code}
             type="button"
             onClick={() => {
-              update({ country: country.code, branchSlug: null });
+              update({ market: market.code, branchSlug: null });
             }}
             className={`p-6 rounded-lg transition-all text-left ${
-              data.country === country.code ? selectedCardClass : unselectedCardClass
+              data.market === market.code ? selectedCardClass : unselectedCardClass
             }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Globe
                   className={`w-6 h-6 ${
-                    data.country === country.code ? 'text-vm-cyan' : 'text-gray-400'
+                    data.market === market.code ? 'text-vm-cyan' : 'text-vm-muted'
                   }`}
                 />
                 <h3 className="font-heading font-medium text-vm-text text-lg">
-                  {country.label}
+                  {market.label}
                 </h3>
               </div>
-              {data.country === country.code && (
+              {data.market === market.code && (
                 <div className="w-6 h-6 rounded-full bg-vm-cyan flex items-center justify-center">
                   <svg
                     className="w-4 h-4 text-white"
@@ -161,15 +146,15 @@ export default function ServiceStep() {
         ))}
       </div>
 
-      {!data.country && (
+      {!data.market && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="font-body text-sm text-yellow-800">
-            <strong>Please select a country</strong> to continue with your booking.
+            <strong>Please select a market</strong> to continue with your booking.
           </p>
         </div>
       )}
 
-      {data.country && (
+      {data.market && (
         <div className="border-t border-vm-border pt-8">
           <div>
             <h2 className="font-heading font-semibold text-vm-navy text-2xl mb-2">
@@ -187,8 +172,8 @@ export default function ServiceStep() {
           ) : availableBranches.length === 0 ? (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
               <p className="font-body text-sm text-yellow-800">
-                No locations available for {data.country}. Please select a different
-                country.
+                No locations available for {selectedMarketLabel}. Please select a
+                different market.
               </p>
             </div>
           ) : (
@@ -249,7 +234,7 @@ export default function ServiceStep() {
         </div>
       )}
 
-      {data.country && data.branchSlug && (
+      {data.market && data.branchSlug && (
         <div className="border-t border-vm-border pt-8">
           <div>
             <h3 className="font-heading font-semibold text-vm-navy text-xl mb-2">
@@ -277,7 +262,7 @@ export default function ServiceStep() {
                     className={
                       data.serviceType === service.value
                         ? 'text-vm-cyan'
-                        : 'text-gray-400'
+                        : 'text-vm-muted'
                     }
                   >
                     {service.icon}

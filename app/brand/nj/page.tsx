@@ -39,7 +39,7 @@ export default function BrandKitPage() {
             ].map((logo) => (
               <div key={logo.type} className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#F8C548]">
                 <h3 className="text-xl font-bold text-[#0A3D2F] mb-3">{logo.name}</h3>
-                <p className="text-gray-600 mb-4">{logo.desc}</p>
+                <p className="text-vm-muted mb-4">{logo.desc}</p>
                 <div className="bg-[#F3F1EB] p-4 rounded-lg mb-4 flex items-center justify-center min-h-[120px]">
                   <img 
                     src={`/api/brand/nj/logos?type=${logo.type}`}
@@ -79,7 +79,7 @@ export default function BrandKitPage() {
             ].map((template) => (
               <div key={template.type} className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#2B70C9]">
                 <h3 className="text-xl font-bold text-[#0A3D2F] mb-3">{template.name}</h3>
-                <p className="text-gray-600 mb-4">1080x1080 (Square)</p>
+                <p className="text-vm-muted mb-4">1080x1080 (Square)</p>
                 <div className="flex gap-2">
                   <a
                     href={`/api/brand/nj/social?type=${template.type}&format=square`}
@@ -111,7 +111,7 @@ export default function BrandKitPage() {
             ].map((item) => (
               <div key={item.type} className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#F8C548]">
                 <h3 className="text-xl font-bold text-[#0A3D2F] mb-3">{item.name}</h3>
-                <p className="text-gray-600 mb-4">{item.desc}</p>
+                <p className="text-vm-muted mb-4">{item.desc}</p>
                 <a
                   href={`/api/brand/nj/flyers?type=${item.type}`}
                   target="_blank"
@@ -158,7 +158,7 @@ export default function BrandKitPage() {
             How to Use These Assets
           </h2>
           <div className="bg-[#F3F1EB] rounded-xl p-8">
-            <ol className="space-y-4 text-gray-700 list-decimal list-inside">
+            <ol className="space-y-4 text-vm-text list-decimal list-inside">
               <li className="text-lg">
                 <strong>Logos:</strong> Download SVG files for scalable use. Convert to PNG for specific sizes as needed.
               </li>
@@ -173,7 +173,7 @@ export default function BrandKitPage() {
               </li>
             </ol>
             <div className="mt-8 p-4 bg-white rounded-lg border-2 border-[#F8C548]">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-vm-text">
                 <strong>Note:</strong> All assets are generated dynamically. For production use, consider saving optimized versions 
                 to your asset management system. SVG logos can be converted to PNG using any image editor.
               </p>

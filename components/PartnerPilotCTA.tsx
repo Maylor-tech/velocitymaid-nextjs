@@ -7,18 +7,18 @@
 
 export default function PartnerPilotCTA() {
   return (
-    <div className="rounded-md border border-gray-200 bg-gray-50 p-8">
-      <h3 className="text-lg font-medium text-gray-900">
+    <div className="rounded-md border border-vm-border bg-vm-surface p-8">
+      <h3 className="text-lg font-medium text-vm-text">
         Start with a Pilot
       </h3>
 
-      <p className="mt-3 max-w-2xl text-gray-600">
+      <p className="mt-3 max-w-2xl text-vm-muted">
         Partners typically begin with a limited compliance pilot—running in
         parallel with existing operations and without changes to payroll or
         payment systems.
       </p>
 
-      <ul className="mt-4 list-disc space-y-2 pl-5 text-gray-600">
+      <ul className="mt-4 list-disc space-y-2 pl-5 text-vm-muted">
         <li>30–60 day pilot period</li>
         <li>Small contractor group (5–15 recommended)</li>
         <li>No long-term commitment</li>

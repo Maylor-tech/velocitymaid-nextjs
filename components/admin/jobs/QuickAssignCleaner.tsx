@@ -105,7 +105,7 @@ export default function QuickAssignCleaner({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+        className="rounded-md bg-vm-navy px-3 py-1.5 text-xs font-medium text-white hover:bg-vm-navy"
       >
         Assign Cleaner
       </button>
@@ -114,21 +114,21 @@ export default function QuickAssignCleaner({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-lg">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-900">Assign Cleaner</h3>
+              <h3 className="text-sm font-semibold text-vm-text">Assign Cleaner</h3>
               <button
                 onClick={() => setOpen(false)}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-vm-muted hover:text-vm-text"
               >
                 ✕
               </button>
             </div>
 
-            <p className="mt-2 text-xs text-gray-600">
+            <p className="mt-2 text-xs text-vm-muted">
               Choose a verified cleaner to assign this job.
             </p>
 
             {loadingCleaners ? (
-              <p className="mt-3 text-sm text-gray-500">Loading cleaners…</p>
+              <p className="mt-3 text-sm text-vm-muted">Loading cleaners…</p>
             ) : (
               <>
                 <select
@@ -150,10 +150,10 @@ export default function QuickAssignCleaner({
                   ))}
                 </select>
 
-                <p className="mt-2 text-xs text-gray-500">
+                <p className="mt-2 text-xs text-vm-muted">
                   🟢 Available &nbsp; 🟡 Already booked today &nbsp; 🔴 Time conflict
                 </p>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-vm-muted">
                   Suggested based on availability. You can change this anytime.
                 </p>
 
@@ -177,14 +177,14 @@ export default function QuickAssignCleaner({
             <div className="mt-4 flex justify-end gap-2">
               <button
                 onClick={() => setOpen(false)}
-                className="rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200"
+                className="rounded-md bg-vm-surface px-3 py-2 text-xs font-medium text-vm-text hover:bg-gray-200"
               >
                 Cancel
               </button>
               <button
                 disabled={saving}
                 onClick={assign}
-                className="rounded-md bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+                className="rounded-md bg-vm-navy px-3 py-2 text-xs font-medium text-white hover:bg-vm-navy disabled:opacity-60"
               >
                 {saving ? 'Assigning…' : 'Confirm Assign'}
               </button>

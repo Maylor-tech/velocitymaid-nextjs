@@ -84,7 +84,7 @@ export default function CleanerIncentivesPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-vm-muted">Loading...</p>
         </div>
       </div>
     );
@@ -99,7 +99,7 @@ export default function CleanerIncentivesPage() {
             <p className="text-red-500 text-sm">{error}</p>
             <button
               onClick={() => router.push('/cleaners/dashboard')}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="mt-4 px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger transition-colors"
             >
               Back to Dashboard
             </button>
@@ -115,12 +115,12 @@ export default function CleanerIncentivesPage() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Incentives</h1>
-            <p className="text-gray-600">Performance bonuses and tier tracking</p>
+            <h1 className="text-3xl font-bold text-vm-text mb-2">My Incentives</h1>
+            <p className="text-vm-muted">Performance bonuses and tier tracking</p>
           </div>
           <button
             onClick={() => router.push('/cleaners/dashboard')}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            className="px-4 py-2 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors"
           >
             Back to Dashboard
           </button>
@@ -131,36 +131,36 @@ export default function CleanerIncentivesPage() {
           <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl shadow-md p-6 mb-6 border-2 border-yellow-200">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm text-gray-600 mb-2">Current Tier</p>
+                <p className="text-sm text-vm-muted mb-2">Current Tier</p>
                 <TierBadge tier={latestIncentive.tier} size="lg" />
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-600 mb-2">This Week's Bonus</p>
-                <p className="text-4xl font-bold text-green-600">
+                <p className="text-sm text-vm-muted mb-2">This Week's Bonus</p>
+                <p className="text-4xl font-bold text-vm-success">
                   ${latestIncentive.bonusAmount.toFixed(2)}
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-yellow-200">
               <div>
-                <p className="text-xs text-gray-600 mb-1">Jobs Completed</p>
-                <p className="text-xl font-bold text-gray-900">{latestIncentive.totalJobs}</p>
+                <p className="text-xs text-vm-muted mb-1">Jobs Completed</p>
+                <p className="text-xl font-bold text-vm-text">{latestIncentive.totalJobs}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-600 mb-1">Avg Rating</p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xs text-vm-muted mb-1">Avg Rating</p>
+                <p className="text-xl font-bold text-vm-text">
                   {latestIncentive.avgRating.toFixed(1)}/5
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-600 mb-1">On-Time Rate</p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xs text-vm-muted mb-1">On-Time Rate</p>
+                <p className="text-xl font-bold text-vm-text">
                   {latestIncentive.onTimeRate.toFixed(1)}%
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-600 mb-1">Complaint Rate</p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xs text-vm-muted mb-1">Complaint Rate</p>
+                <p className="text-xl font-bold text-vm-text">
                   {latestIncentive.complaintRate.toFixed(1)}%
                 </p>
               </div>
@@ -168,8 +168,8 @@ export default function CleanerIncentivesPage() {
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-md p-6 mb-6 text-center">
-            <p className="text-gray-500">No incentive data available yet</p>
-            <p className="text-sm text-gray-400 mt-2">
+            <p className="text-vm-muted">No incentive data available yet</p>
+            <p className="text-sm text-vm-muted mt-2">
               Complete jobs to start earning bonuses!
             </p>
           </div>
@@ -178,27 +178,27 @@ export default function CleanerIncentivesPage() {
         {/* Next Tier Requirements */}
         {nextTierInfo && nextTierInfo.nextTier && nextTierInfo.requirements && (
           <div className="bg-white rounded-xl shadow-md p-6 mb-6 border-l-4 border-blue-500">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">
+            <h2 className="text-lg font-semibold text-vm-text mb-3">
               Next Tier: {nextTierInfo.nextTier}
             </h2>
             <div className="space-y-2 text-sm">
               {nextTierInfo.requirements.jobsNeeded > 0 && (
-                <p className="text-gray-700">
+                <p className="text-vm-text">
                   • <span className="font-medium">{nextTierInfo.requirements.jobsNeeded}</span> more job{nextTierInfo.requirements.jobsNeeded !== 1 ? 's' : ''} needed
                 </p>
               )}
               {nextTierInfo.requirements.ratingNeeded > 0 && (
-                <p className="text-gray-700">
+                <p className="text-vm-text">
                   • <span className="font-medium">{nextTierInfo.requirements.ratingNeeded.toFixed(1)}</span> higher average rating needed
                 </p>
               )}
               {nextTierInfo.requirements.onTimeNeeded > 0 && (
-                <p className="text-gray-700">
+                <p className="text-vm-text">
                   • <span className="font-medium">{nextTierInfo.requirements.onTimeNeeded.toFixed(1)}%</span> higher on-time rate needed
                 </p>
               )}
               {nextTierInfo.requirements.complaintReduction > 0 && (
-                <p className="text-gray-700">
+                <p className="text-vm-text">
                   • <span className="font-medium">{nextTierInfo.requirements.complaintReduction.toFixed(1)}%</span> lower complaint rate needed
                 </p>
               )}
@@ -208,9 +208,9 @@ export default function CleanerIncentivesPage() {
 
         {/* Last 8 Weeks Trend */}
         <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Last 8 Weeks Trend</h2>
+          <h2 className="text-xl font-bold text-vm-text mb-4">Last 8 Weeks Trend</h2>
           {incentiveHistory.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No history available</p>
+            <p className="text-vm-muted text-center py-8">No history available</p>
           ) : (
             <div className="space-y-3">
               {incentiveHistory.map((incentive) => (
@@ -221,29 +221,29 @@ export default function CleanerIncentivesPage() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <TierBadge tier={incentive.tier} size="sm" />
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-vm-muted">
                         {formatDate(incentive.periodStart)} - {formatDate(incentive.periodEnd)}
                       </span>
                     </div>
-                    <span className="text-lg font-bold text-green-600">
+                    <span className="text-lg font-bold text-vm-success">
                       ${incentive.bonusAmount.toFixed(2)}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-600">Jobs: </span>
+                      <span className="text-vm-muted">Jobs: </span>
                       <span className="font-medium">{incentive.totalJobs}</span>
                     </div>
                     <div>
-                      <span className="text-gray-600">Rating: </span>
+                      <span className="text-vm-muted">Rating: </span>
                       <span className="font-medium">{incentive.avgRating.toFixed(1)}/5</span>
                     </div>
                     <div>
-                      <span className="text-gray-600">On-Time: </span>
+                      <span className="text-vm-muted">On-Time: </span>
                       <span className="font-medium">{incentive.onTimeRate.toFixed(1)}%</span>
                     </div>
                     <div>
-                      <span className="text-gray-600">Complaints: </span>
+                      <span className="text-vm-muted">Complaints: </span>
                       <span className="font-medium">{incentive.complaintRate.toFixed(1)}%</span>
                     </div>
                   </div>

@@ -28,9 +28,9 @@ export const spacing = {
    */
   logoClearSpace: "p-6",
 
-  // Section-level (marketing pages)
-  sectionY: "py-16 sm:py-20 lg:py-24",
-  sectionYCompact: "py-12",
+  // Section-level (marketing pages) — DS §10: 80px vertical rhythm (--space-20 / py-20)
+  sectionY: "py-20",
+  sectionYCompact: "py-16",
 
   // Layout containers (see tailwind.config.ts maxWidth.marketing/portal)
   containerMarketing: "mx-auto max-w-marketing px-4 sm:px-6 lg:px-8",

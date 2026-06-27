@@ -74,7 +74,7 @@ export default function ModulePage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading module...</p>
+          <p className="mt-4 text-vm-muted">Loading module...</p>
         </div>
       </div>
     );
@@ -87,7 +87,7 @@ export default function ModulePage() {
           <p className="text-red-600 mb-4">{error || 'Module not found'}</p>
           <button
             onClick={() => router.push('/cleaners/training')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy"
           >
             Back to Training
           </button>
@@ -111,15 +111,15 @@ export default function ModulePage() {
             <ArrowLeft className="w-4 h-4" />
             Back to Training
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{module.title}</h1>
-          <p className="text-gray-600">{module.description}</p>
+          <h1 className="text-3xl font-bold text-vm-text mb-2">{module.title}</h1>
+          <p className="text-vm-muted">{module.description}</p>
         </div>
 
         {/* Progress Summary */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Progress</h2>
-            <span className="text-sm text-gray-600">
+            <h2 className="text-lg font-semibold text-vm-text">Progress</h2>
+            <span className="text-sm text-vm-muted">
               {module.progress.completed} of {module.progress.total} lessons completed
             </span>
           </div>
@@ -131,7 +131,7 @@ export default function ModulePage() {
 
         {/* Lessons List */}
         <div className="space-y-3">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Lessons</h2>
+          <h2 className="text-xl font-semibold text-vm-text mb-4">Lessons</h2>
           {module.lessons.map((lesson) => (
             <LessonCard key={lesson.id} lesson={lesson} moduleSlug={module.slug} />
           ))}
@@ -139,10 +139,10 @@ export default function ModulePage() {
 
         {/* Completion Message */}
         {allCompleted && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="mt-6 p-4 bg-vm-success-bg border border-vm-success/30 rounded-lg">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-              <p className="text-green-800 font-medium">
+              <CheckCircle2 className="w-5 h-5 text-vm-success" />
+              <p className="text-vm-success font-medium">
                 Congratulations! You've completed all lessons in this module.
               </p>
             </div>
@@ -154,7 +154,7 @@ export default function ModulePage() {
           <div className="mt-6">
             <Link
               href={`/cleaners/training/module/${module.slug}/lesson/${nextLesson.id}`}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-medium"
             >
               {nextLesson.status === 'NOT_STARTED' ? (
                 <>

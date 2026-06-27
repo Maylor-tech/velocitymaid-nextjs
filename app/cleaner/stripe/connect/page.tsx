@@ -15,13 +15,13 @@ function ConnectContent() {
           >
             ← Back to dashboard
           </Link>
-          <span className="text-sm font-semibold text-gray-900">VelocityMaid</span>
+          <span className="text-sm font-semibold text-vm-text">VelocityMaid</span>
         </div>
       </header>
 
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Stripe payout setup</h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <h1 className="text-2xl font-semibold text-vm-text">Stripe payout setup</h1>
+        <p className="mt-2 text-sm text-vm-muted">
           Connect your bank account to receive earnings. Setup is handled securely by
           Stripe.
         </p>
@@ -38,7 +38,7 @@ export default function StripeConnectPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <p className="text-gray-600">Loading payout setup…</p>
+          <p className="text-vm-muted">Loading payout setup…</p>
         </div>
       }
     >

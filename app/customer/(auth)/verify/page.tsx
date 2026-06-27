@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { BrandLogo } from '@/components/brand';
-import { brandClasses } from '@/lib/brand/tokens';
+import { brandClasses } from '@/lib/brand/colors';
 
 export default function CustomerVerifyPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const emailFromQuery = searchParams.get('email') || '';
-  const redirectUrl = searchParams.get('redirect') || '/customer/jobs';
+  const redirectUrl = searchParams.get('redirect') || '/customer';
 
   const [code, setCode] = useState('');
   const [email, setEmail] = useState(emailFromQuery);
@@ -51,7 +51,7 @@ export default function CustomerVerifyPage() {
         throw new Error(data.error || 'Invalid or expired code.');
       }
 
-      router.push(redirectUrl || '/customer/jobs');
+      router.push(redirectUrl || '/customer');
     } catch (err: unknown) {
       console.error(err);
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
@@ -62,17 +62,17 @@ export default function CustomerVerifyPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-brand-ivory px-4 pt-10 pb-8 sm:pt-14 sm:pb-12">
+    <div className="min-h-[100dvh] bg-vm-surface px-4 pt-8 pb-8 sm:pt-14 sm:pb-12">
       <div className="w-full max-w-sm mx-auto">
-        <div className="bg-white rounded-xl shadow-lg border border-brand-forest/10 p-6 sm:p-7 modal-enter">
+        <div className="bg-white rounded-xl shadow-lg border border-vm-navy/10 p-6 sm:p-7 modal-enter">
           <div className="text-center mb-6 flex flex-col items-center gap-2">
-            <BrandLogo size="auth" showTagline={false} />
-            <h1 className="text-lg font-serif font-bold tracking-tight text-brand-forest">
+            <BrandLogo theme="light" size="auth" showTagline={false} />
+            <h1 className="text-lg font-serif font-bold tracking-tight text-vm-navy">
               Enter Your Code
             </h1>
-            <p className="text-xs font-sans text-brand-slate/70">
+            <p className="text-xs font-sans text-vm-text/70">
               We sent a 6-digit login code to{' '}
-              <span className="font-semibold text-brand-forest">{email || 'your email'}</span>
+              <span className="font-semibold text-vm-navy">{email || 'your email'}</span>
             </p>
           </div>
 
@@ -102,7 +102,7 @@ export default function CustomerVerifyPage() {
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               required
             />
-            <p className="text-xs font-sans text-brand-slate/60">
+            <p className="text-xs font-sans text-vm-text/60">
               The code expires after 10 minutes.
             </p>
           </div>
@@ -122,7 +122,7 @@ export default function CustomerVerifyPage() {
           </button>
         </form>
 
-        <div className="mt-4 text-center text-xs font-sans text-brand-slate/60">
+        <div className="mt-4 text-center text-xs font-sans text-vm-text/60">
           Entered the wrong email?{' '}
           <a href="/customer/login" className={brandClasses.link}>
             Go back

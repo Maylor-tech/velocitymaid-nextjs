@@ -243,7 +243,8 @@ export default function Home() {
 
               <p className="font-body text-white/55 text-sm leading-relaxed mb-8 flex-1">
                 Turnover cleaning for ski rentals, Airbnbs, and second homes in the Okemo
-                Valley. Locally operated from Ludlow, VT.
+                Valley. Locally operated in Vermont&apos;s Okemo Valley, serving Ludlow,
+                Middlebury, and surrounding towns.
               </p>
 
               <ul className="space-y-2 mb-8">
@@ -310,7 +311,7 @@ export default function Home() {
       {/* ── END HERO ── */}
 
       {/* Trust Bullets */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-vm-white border-t border-vm-navy/5">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-vm-white border-t border-vm-navy/5">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8">
             <div className="flex flex-col items-center text-center p-6 rounded-xl border border-vm-navy/10 bg-vm-surface hover:shadow-sm transition">
@@ -339,7 +340,7 @@ export default function Home() {
       </section>
 
       {/* Reassurance Strip */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-vm-surface border-y border-vm-navy/5">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-vm-surface border-y border-vm-navy/5">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-xl text-vm-navy mb-3 font-heading font-semibold">
             Your home is in good hands.
@@ -428,8 +429,8 @@ export default function Home() {
                   {image.badge && (
                     <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-bold ${
                       image.badge === 'Before' 
-                        ? 'bg-red-500 text-white' 
-                        : 'bg-green-500 text-white'
+                        ? 'bg-vm-danger text-white' 
+                        : 'bg-vm-success text-white'
                     }`}>
                       {image.badge}
                     </div>
@@ -657,7 +658,7 @@ export default function Home() {
             Book your cleaning service today and experience the VelocityMaid difference
           </p>
           
-          <div className="bg-vm-white/10 border border-vm-white/20 p-6 rounded-xl text-center max-w-[600px] my-10 mx-auto">
+          <div className="bg-vm-white/10 border border-vm-white/20 p-6 rounded-xl text-center max-w-[600px] my-8 mx-auto">
             <h3 className="text-xl font-heading font-bold text-vm-white mb-2">Safe & Secure Booking</h3>
             <p className="text-vm-white/80 font-body text-sm">
               Your payment information is protected by bank-level encryption. We use Stripe — your card details are never stored on our servers.
@@ -675,7 +676,7 @@ export default function Home() {
               href={`https://wa.me/${whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-green-500 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-green-600 transition inline-flex items-center justify-center"
+              className="bg-vm-success text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-vm-success transition inline-flex items-center justify-center"
               onClick={() => {
                 sendGAEvent('event', 'whatsapp_clicked', {
                   location: 'cta_section'
@@ -738,7 +739,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-vm-navy text-vm-white py-12 px-4 sm:px-6 lg:px-8">
+      <footer className="bg-vm-navy text-vm-white py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
@@ -800,7 +801,7 @@ export default function Home() {
               href={`https://wa.me/${whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition cursor-pointer group"
+              className="bg-vm-success text-white p-4 rounded-full shadow-lg hover:bg-vm-success transition cursor-pointer group"
               onClick={() => {
                 sendGAEvent('event', 'whatsapp_clicked', {
                   location: 'floating_button'
@@ -821,7 +822,7 @@ export default function Home() {
           onClick={() => setSelectedImage(null)}
         >
           <button
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition z-[101]"
+            className="absolute top-4 right-4 text-white hover:text-vm-muted transition z-[101]"
             onClick={() => setSelectedImage(null)}
             aria-label="Close image"
           >

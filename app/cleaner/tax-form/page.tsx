@@ -239,7 +239,7 @@ export default function CleanerTaxFormPage() {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-vm-cyan-dark" />
         </div>
       </div>
     );
@@ -252,7 +252,7 @@ export default function CleanerTaxFormPage() {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <FileText className="w-8 h-8 text-primary-600" />
+        <FileText className="w-8 h-8 text-vm-cyan-dark" />
         <h1 className="text-3xl font-bold">W-9 Tax Form</h1>
       </div>
 
@@ -261,7 +261,7 @@ export default function CleanerTaxFormPage() {
         <div
           className={`rounded-lg p-4 border-2 ${
             profile.status === "VERIFIED"
-              ? "bg-green-50 border-green-200"
+              ? "bg-vm-success-bg border-vm-success/30"
               : profile.status === "SUBMITTED"
               ? "bg-blue-50 border-blue-200"
               : profile.status === "REJECTED"
@@ -271,7 +271,7 @@ export default function CleanerTaxFormPage() {
         >
           <div className="flex items-center gap-2">
             {profile.status === "VERIFIED" ? (
-              <CheckCircle className="w-5 h-5 text-green-600" />
+              <CheckCircle className="w-5 h-5 text-vm-success" />
             ) : profile.status === "REJECTED" ? (
               <XCircle className="w-5 h-5 text-red-600" />
             ) : profile.status === "SUBMITTED" ? (
@@ -282,7 +282,7 @@ export default function CleanerTaxFormPage() {
                 Status: {profile.status.charAt(0) + profile.status.slice(1).toLowerCase()}
               </p>
               {profile.submittedAt && (
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-vm-muted">
                   Submitted: {new Date(profile.submittedAt).toLocaleDateString()}
                 </p>
               )}
@@ -303,8 +303,8 @@ export default function CleanerTaxFormPage() {
       )}
 
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-sm text-green-800">{success}</p>
+        <div className="bg-vm-success-bg border border-vm-success/30 rounded-lg p-4">
+          <p className="text-sm text-vm-success">{success}</p>
         </div>
       )}
 
@@ -323,7 +323,7 @@ export default function CleanerTaxFormPage() {
           <h2 className="text-xl font-semibold">Tax Identification Number (TIN)</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               TIN Type <span className="text-red-500">*</span>
             </label>
             <select
@@ -340,7 +340,7 @@ export default function CleanerTaxFormPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               {tinType === "SSN" ? "SSN" : tinType === "EIN" ? "EIN" : "TIN"}{" "}
               <span className="text-red-500">*</span>
             </label>
@@ -359,7 +359,7 @@ export default function CleanerTaxFormPage() {
               maxLength={11}
             />
             {profile?.tinLast4 && (
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-vm-muted mt-1">
                 Current: {profile.tinLast4}
               </p>
             )}
@@ -371,7 +371,7 @@ export default function CleanerTaxFormPage() {
           <h2 className="text-xl font-semibold">Business Information</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               Business Name (if applicable)
             </label>
             <input
@@ -384,7 +384,7 @@ export default function CleanerTaxFormPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               Tax Classification
             </label>
             <select
@@ -412,7 +412,7 @@ export default function CleanerTaxFormPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-vm-text mb-2">
                 First Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -426,7 +426,7 @@ export default function CleanerTaxFormPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-vm-text mb-2">
                 Last Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -446,7 +446,7 @@ export default function CleanerTaxFormPage() {
           <h2 className="text-xl font-semibold">Address</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               Address Line 1 <span className="text-red-500">*</span>
             </label>
             <input
@@ -460,7 +460,7 @@ export default function CleanerTaxFormPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               Address Line 2
             </label>
             <input
@@ -474,7 +474,7 @@ export default function CleanerTaxFormPage() {
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-vm-text mb-2">
                 City <span className="text-red-500">*</span>
               </label>
               <input
@@ -488,7 +488,7 @@ export default function CleanerTaxFormPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-vm-text mb-2">
                 State <span className="text-red-500">*</span>
               </label>
               <input
@@ -502,7 +502,7 @@ export default function CleanerTaxFormPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-vm-text mb-2">
                 ZIP Code <span className="text-red-500">*</span>
               </label>
               <input
@@ -523,7 +523,7 @@ export default function CleanerTaxFormPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-vm-text mb-2">
                 Exempt Payee Code
               </label>
               <input
@@ -536,7 +536,7 @@ export default function CleanerTaxFormPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-vm-text mb-2">
                 Exempt FATCA Code
               </label>
               <input
@@ -555,7 +555,7 @@ export default function CleanerTaxFormPage() {
           <h2 className="text-xl font-semibold">Signature</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               Signature Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -567,7 +567,7 @@ export default function CleanerTaxFormPage() {
               disabled={!canEdit}
               required={canEdit}
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-vm-muted mt-1">
               By typing your name, you certify that the information provided is correct.
             </p>
           </div>
@@ -595,7 +595,7 @@ export default function CleanerTaxFormPage() {
             <button
               type="submit"
               disabled={saving || submitting}
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+              className="px-6 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy disabled:opacity-50"
             >
               {submitting ? (
                 <>

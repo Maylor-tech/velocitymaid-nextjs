@@ -534,11 +534,11 @@ function BookingPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-vm-surface to-white">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/" className="flex items-center space-x-2 text-primary-600 hover:text-primary-700">
+          <Link href="/" className="flex items-center space-x-2 text-vm-cyan-dark hover:text-vm-cyan-dark">
             <Sparkles className="w-6 h-6" />
             <span className="text-xl font-bold">VelocityMaid</span>
           </Link>
@@ -548,11 +548,11 @@ function BookingPageContent() {
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-8">
-          <Calendar className="w-16 h-16 text-primary-600 mx-auto mb-4" />
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Book Your Cleaning Service</h1>
-          <p className="text-xl text-gray-600 mb-4">Quick & easy booking in 60 seconds</p>
-          <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 max-w-2xl mx-auto">
-            <p className="text-sm text-gray-700">
+          <Calendar className="w-16 h-16 text-vm-cyan-dark mx-auto mb-4" />
+          <h1 className="text-4xl font-bold text-vm-text mb-2">Book Your Cleaning Service</h1>
+          <p className="text-xl text-vm-muted mb-4">Quick & easy booking in 60 seconds</p>
+          <div className="bg-vm-surface border border-vm-border rounded-lg p-4 max-w-2xl mx-auto">
+            <p className="text-sm text-vm-text">
               <strong>Service Area:</strong> {selectedBranch === 'port-antonio'
                 ? 'We serve Port Antonio and surrounding Portland Parish areas. Select your area code below.'
                 : formData.serviceLocation === 'vermont' 
@@ -567,7 +567,7 @@ function BookingPageContent() {
                   <br />
                 </>
               )}
-              <strong>Policy:</strong> By booking, you agree to our <a href="/terms" className="text-primary-600 hover:underline">Terms of Service</a> and <a href="/refunds" className="text-primary-600 hover:underline">Refund Policy</a>.
+              <strong>Policy:</strong> By booking, you agree to our <a href="/terms" className="text-vm-cyan-dark hover:underline">Terms of Service</a> and <a href="/refunds" className="text-vm-cyan-dark hover:underline">Refund Policy</a>.
             </p>
           </div>
         </div>
@@ -578,11 +578,11 @@ function BookingPageContent() {
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 space-y-6">
               {/* Service Location Section */}
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-3 flex items-center">
-                  <MapPin className="w-6 h-6 mr-2 text-primary-600" />
+                <h2 className="text-2xl font-bold text-vm-text mb-3 flex items-center">
+                  <MapPin className="w-6 h-6 mr-2 text-vm-cyan-dark" />
                   Service Location
                 </h2>
-                <p className="text-sm text-gray-600 mb-3">
+                <p className="text-sm text-vm-muted mb-3">
                   Choose where this cleaning will take place.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-4">
@@ -593,11 +593,11 @@ function BookingPageContent() {
                       value="new_jersey"
                       checked={formData.serviceLocation === 'new_jersey'}
                       onChange={() => handleFieldChange('serviceLocation', 'new_jersey')}
-                      className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300"
+                      className="w-5 h-5 text-vm-cyan-dark focus:ring-vm-cyan border-gray-300"
                     />
                     <div>
-                      <p className="font-semibold text-gray-900">New Jersey</p>
-                      <p className="text-xs text-gray-600">
+                      <p className="font-semibold text-vm-text">New Jersey</p>
+                      <p className="text-xs text-vm-muted">
                         Newark, East Orange, Irvington, Bloomfield, Jersey City, Elizabeth, Union, Montclair and nearby areas.
                       </p>
                     </div>
@@ -610,11 +610,11 @@ function BookingPageContent() {
                       value="vermont"
                       checked={formData.serviceLocation === 'vermont'}
                       onChange={() => handleFieldChange('serviceLocation', 'vermont')}
-                      className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300"
+                      className="w-5 h-5 text-vm-cyan-dark focus:ring-vm-cyan border-gray-300"
                     />
                     <div>
-                      <p className="font-semibold text-gray-900">Vermont</p>
-                      <p className="text-xs text-gray-600">
+                      <p className="font-semibold text-vm-text">Vermont</p>
+                      <p className="text-xs text-vm-muted">
                         Ludlow, Okemo Valley, Proctorsville, Cavendish and nearby ski communities.
                       </p>
                     </div>
@@ -627,11 +627,11 @@ function BookingPageContent() {
                       value="miami"
                       checked={formData.serviceLocation === 'miami'}
                       onChange={() => handleFieldChange('serviceLocation', 'miami')}
-                      className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300"
+                      className="w-5 h-5 text-vm-cyan-dark focus:ring-vm-cyan border-gray-300"
                     />
                     <div>
-                      <p className="font-semibold text-gray-900">Miami</p>
-                      <p className="text-xs text-gray-600">
+                      <p className="font-semibold text-vm-text">Miami</p>
+                      <p className="text-xs text-vm-muted">
                         Miami-Dade County and surrounding areas. We serve Miami Beach, Coral Gables, Aventura, and nearby communities.
                       </p>
                     </div>
@@ -641,14 +641,14 @@ function BookingPageContent() {
 
               {/* Contact Info Section */}
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                  <Home className="w-6 h-6 mr-2 text-primary-600" />
+                <h2 className="text-2xl font-bold text-vm-text mb-4 flex items-center">
+                  <Home className="w-6 h-6 mr-2 text-vm-cyan-dark" />
                   Contact Info
                 </h2>
                 <div className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="firstName" className="block text-sm font-medium text-vm-text mb-1">
                         First Name *
                       </label>
                       <input
@@ -657,7 +657,7 @@ function BookingPageContent() {
                         value={formData.firstName}
                         onChange={(e) => handleFieldChange('firstName', e.target.value)}
                         onBlur={() => handleBlur('firstName')}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-vm-border ${
                           errors.firstName ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="John"
@@ -667,7 +667,7 @@ function BookingPageContent() {
                       {errors.firstName && <p id="firstName-error" className="text-red-500 text-sm mt-1" role="alert">{errors.firstName}</p>}
                     </div>
                     <div>
-                      <label htmlFor="lastInitial" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="lastInitial" className="block text-sm font-medium text-vm-text mb-1">
                         Last Initial *
                       </label>
                       <input
@@ -680,7 +680,7 @@ function BookingPageContent() {
                         }}
                         onBlur={() => handleBlur('lastInitial')}
                         maxLength={1}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center text-2xl font-bold ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-vm-border text-center text-2xl font-bold ${
                           errors.lastInitial ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="M"
@@ -691,7 +691,7 @@ function BookingPageContent() {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="phone" className="block text-sm font-medium text-vm-text mb-1">
                       Phone Number *
                     </label>
                     <input
@@ -701,7 +701,7 @@ function BookingPageContent() {
                       onChange={handlePhoneChange}
                       onBlur={() => handleBlur('phone')}
                       maxLength={14}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-vm-border ${
                         errors.phone ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="(802) 555-1234"
@@ -711,7 +711,7 @@ function BookingPageContent() {
                     {errors.phone && <p id="phone-error" className="text-red-500 text-sm mt-1" role="alert">{errors.phone}</p>}
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="email" className="block text-sm font-medium text-vm-text mb-1">
                       Email *
                     </label>
                     <input
@@ -720,7 +720,7 @@ function BookingPageContent() {
                       value={formData.email}
                       onChange={(e) => handleFieldChange('email', e.target.value)}
                       onBlur={() => handleBlur('email')}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-vm-border ${
                         errors.email ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="john@example.com"
@@ -730,7 +730,7 @@ function BookingPageContent() {
                     {errors.email && <p id="email-error" className="text-red-500 text-sm mt-1" role="alert">{errors.email}</p>}
                   </div>
                   <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="address" className="block text-sm font-medium text-vm-text mb-1">
                       Address *
                     </label>
                     <input
@@ -739,7 +739,7 @@ function BookingPageContent() {
                       value={formData.address}
                       onChange={(e) => handleFieldChange('address', e.target.value)}
                       onBlur={() => handleBlur('address')}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-vm-border ${
                         errors.address ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder={
@@ -757,7 +757,7 @@ function BookingPageContent() {
                   {selectedBranch === 'port-antonio' && (
                     <>
                       <div>
-                        <label htmlFor="routingCode" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="routingCode" className="block text-sm font-medium text-vm-text mb-1">
                           Area Code *
                         </label>
                         <select
@@ -767,7 +767,7 @@ function BookingPageContent() {
                             setSelectedRoutingCode(e.target.value);
                             setExtractedZipCode(e.target.value);
                           }}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-vm-border"
                           required
                         >
                           <option value="">Select your area</option>
@@ -777,14 +777,14 @@ function BookingPageContent() {
                             </option>
                           ))}
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-vm-muted mt-1">
                           Select the area code for your location in Portland, Jamaica
                         </p>
                       </div>
                       {/* Currency Toggle for Port Antonio */}
                       {multiCurrencyPricing?.supportsMultiCurrency && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-vm-text mb-2">
                             Pricing Currency *
                           </label>
                           <div className="grid sm:grid-cols-2 gap-3">
@@ -802,8 +802,8 @@ function BookingPageContent() {
                                 className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
                               />
                               <div>
-                                <p className="font-semibold text-gray-900">Local Customer (JMD)</p>
-                                <p className="text-xs text-gray-600">Pay in Jamaican Dollars</p>
+                                <p className="font-semibold text-vm-text">Local Customer (JMD)</p>
+                                <p className="text-xs text-vm-muted">Pay in Jamaican Dollars</p>
                               </div>
                             </label>
                             <label className={`flex items-center space-x-3 cursor-pointer p-4 rounded-lg border-2 transition-colors ${
@@ -820,8 +820,8 @@ function BookingPageContent() {
                                 className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
                               />
                               <div>
-                                <p className="font-semibold text-gray-900">Visitor / USD Pricing</p>
-                                <p className="text-xs text-gray-600">Pay online with card</p>
+                                <p className="font-semibold text-vm-text">Visitor / USD Pricing</p>
+                                <p className="text-xs text-vm-muted">Pay online with card</p>
                               </div>
                             </label>
                           </div>
@@ -834,13 +834,13 @@ function BookingPageContent() {
 
               {/* Service Selection Section */}
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                  <Sparkles className="w-6 h-6 mr-2 text-primary-600" />
+                <h2 className="text-2xl font-bold text-vm-text mb-4 flex items-center">
+                  <Sparkles className="w-6 h-6 mr-2 text-vm-cyan-dark" />
                   Service Selection
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-medium text-vm-text mb-3">
                       Service Type *
                     </label>
                     <div className="space-y-3">
@@ -852,12 +852,12 @@ function BookingPageContent() {
                           checked={formData.serviceType === 'basic'}
                           onChange={(e) => handleFieldChange('serviceType', e.target.value)}
                           onBlur={() => handleBlur('serviceType')}
-                          className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          className="w-5 h-5 text-vm-cyan-dark focus:ring-vm-cyan border-gray-300"
                           {...(errors.serviceType && { 'aria-invalid': 'true' })}
                         />
                         <div className="flex-1">
-                          <span className="font-semibold text-gray-900">Basic Clean</span>
-                          <span className="text-primary-600 font-bold ml-2">
+                          <span className="font-semibold text-vm-text">Basic Clean</span>
+                          <span className="text-vm-cyan-dark font-bold ml-2">
                             {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
                               selectedCurrency === 'JMD' 
                                 ? `J$${(multiCurrencyPricing.packages.find(p => p.code === 'STANDARD_CLEAN')?.jmdPrice || 0).toLocaleString()}`
@@ -876,12 +876,12 @@ function BookingPageContent() {
                           checked={formData.serviceType === 'deep'}
                           onChange={(e) => handleFieldChange('serviceType', e.target.value)}
                           onBlur={() => handleBlur('serviceType')}
-                          className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          className="w-5 h-5 text-vm-cyan-dark focus:ring-vm-cyan border-gray-300"
                           {...(errors.serviceType && { 'aria-invalid': 'true' })}
                         />
                         <div className="flex-1">
-                          <span className="font-semibold text-gray-900">Deep Clean</span>
-                          <span className="text-primary-600 font-bold ml-2">
+                          <span className="font-semibold text-vm-text">Deep Clean</span>
+                          <span className="text-vm-cyan-dark font-bold ml-2">
                             {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
                               selectedCurrency === 'JMD' 
                                 ? `J$${(multiCurrencyPricing.packages.find(p => p.code === 'DEEP_CLEAN')?.jmdPrice || 0).toLocaleString()}`
@@ -900,12 +900,12 @@ function BookingPageContent() {
                           checked={formData.serviceType === 'moveInOut'}
                           onChange={(e) => handleFieldChange('serviceType', e.target.value)}
                           onBlur={() => handleBlur('serviceType')}
-                          className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          className="w-5 h-5 text-vm-cyan-dark focus:ring-vm-cyan border-gray-300"
                           {...(errors.serviceType && { 'aria-invalid': 'true' })}
                         />
                         <div className="flex-1">
-                          <span className="font-semibold text-gray-900">Move In/Out</span>
-                          <span className="text-primary-600 font-bold ml-2">
+                          <span className="font-semibold text-vm-text">Move In/Out</span>
+                          <span className="text-vm-cyan-dark font-bold ml-2">
                             {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
                               selectedCurrency === 'JMD' 
                                 ? `J$${(multiCurrencyPricing.packages.find(p => p.code === 'MOVE_IN_OUT')?.jmdPrice || 0).toLocaleString()}`
@@ -921,7 +921,7 @@ function BookingPageContent() {
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="preferredDate" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="preferredDate" className="block text-sm font-medium text-vm-text mb-1">
                         Preferred Date *
                       </label>
                       <input
@@ -932,7 +932,7 @@ function BookingPageContent() {
                         onBlur={() => handleBlur('preferredDate')}
                         min={getMinDate()}
                         max={getMaxDate()}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-vm-border ${
                           errors.preferredDate ? 'border-red-500' : 'border-gray-300'
                         }`}
                         {...(errors.preferredDate && { 'aria-invalid': 'true' })}
@@ -941,7 +941,7 @@ function BookingPageContent() {
                       {errors.preferredDate && <p id="preferredDate-error" className="text-red-500 text-sm mt-1" role="alert">{errors.preferredDate}</p>}
                     </div>
                     <div>
-                      <label htmlFor="preferredTime" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="preferredTime" className="block text-sm font-medium text-vm-text mb-1">
                         Preferred Time *
                       </label>
                       <select
@@ -949,7 +949,7 @@ function BookingPageContent() {
                         value={formData.preferredTime}
                         onChange={(e) => handleFieldChange('preferredTime', e.target.value)}
                         onBlur={() => handleBlur('preferredTime')}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-vm-border ${
                           errors.preferredTime ? 'border-red-500' : 'border-gray-300'
                         }`}
                         {...(errors.preferredTime && { 'aria-invalid': 'true' })}
@@ -968,7 +968,7 @@ function BookingPageContent() {
 
               {/* Add-ons Section */}
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Add-ons (Optional)</h2>
+                <h2 className="text-2xl font-bold text-vm-text mb-4">Add-ons (Optional)</h2>
                 <div className="space-y-3">
                   <label className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-gray-50 border border-gray-200">
                     <input
@@ -978,9 +978,9 @@ function BookingPageContent() {
                         ...formData,
                         addOns: { ...formData.addOns, laundry: e.target.checked }
                       })}
-                      className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      className="w-5 h-5 text-vm-cyan-dark focus:ring-vm-cyan border-gray-300 rounded"
                     />
-                    <span className="flex-1 text-gray-700">
+                    <span className="flex-1 text-vm-text">
                       Laundry {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
                         selectedCurrency === 'JMD' 
                           ? `(J$${multiCurrencyPricing.addons.laundry.toLocaleString()}/load)`
@@ -998,9 +998,9 @@ function BookingPageContent() {
                         ...formData,
                         addOns: { ...formData.addOns, windows: e.target.checked }
                       })}
-                      className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      className="w-5 h-5 text-vm-cyan-dark focus:ring-vm-cyan border-gray-300 rounded"
                     />
-                    <span className="flex-1 text-gray-700">
+                    <span className="flex-1 text-vm-text">
                       Interior Windows {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
                         selectedCurrency === 'JMD' 
                           ? `(J$${multiCurrencyPricing.addons.windows_per_room.toLocaleString()}/room)`
@@ -1018,9 +1018,9 @@ function BookingPageContent() {
                         ...formData,
                         addOns: { ...formData.addOns, oven: e.target.checked }
                       })}
-                      className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      className="w-5 h-5 text-vm-cyan-dark focus:ring-vm-cyan border-gray-300 rounded"
                     />
-                    <span className="flex-1 text-gray-700">
+                    <span className="flex-1 text-vm-text">
                       Inside Oven {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
                         selectedCurrency === 'JMD' 
                           ? `(J$${multiCurrencyPricing.addons.oven.toLocaleString()})`
@@ -1038,9 +1038,9 @@ function BookingPageContent() {
                         ...formData,
                         addOns: { ...formData.addOns, refrigerator: e.target.checked }
                       })}
-                      className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      className="w-5 h-5 text-vm-cyan-dark focus:ring-vm-cyan border-gray-300 rounded"
                     />
-                    <span className="flex-1 text-gray-700">
+                    <span className="flex-1 text-vm-text">
                       Inside Refrigerator {selectedBranch === 'port-antonio' && multiCurrencyPricing ? (
                         selectedCurrency === 'JMD' 
                           ? `(J$${multiCurrencyPricing.addons.fridge.toLocaleString()})`
@@ -1055,7 +1055,7 @@ function BookingPageContent() {
 
               {/* Special Instructions */}
               <div>
-                <label htmlFor="specialInstructions" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="specialInstructions" className="block text-sm font-medium text-vm-text mb-1">
                   Special Instructions (Optional)
                 </label>
                 <textarea
@@ -1064,17 +1064,17 @@ function BookingPageContent() {
                   onChange={(e) => setFormData({ ...formData, specialInstructions: e.target.value.slice(0, 200) })}
                   rows={3}
                   maxLength={200}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-vm-border"
                   placeholder="Any special requests or notes..."
                 />
-                <p className="text-sm text-gray-500 mt-1">{formData.specialInstructions.length}/200 characters</p>
+                <p className="text-sm text-vm-muted mt-1">{formData.specialInstructions.length}/200 characters</p>
               </div>
 
               {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-4 px-6 rounded-lg transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-vm-navy hover:bg-vm-navy text-white font-semibold py-4 px-6 rounded-lg transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>
@@ -1094,18 +1094,18 @@ function BookingPageContent() {
           {/* Price Summary Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h3>
+              <h3 className="text-xl font-bold text-vm-text mb-4">Order Summary</h3>
               {formData.serviceLocation && (
                 <div className="flex justify-between items-center mb-3 text-sm">
-                  <span className="text-gray-600">Service Location</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="text-vm-muted">Service Location</span>
+                  <span className="font-semibold text-vm-text">
                     {formData.serviceLocation === 'new_jersey' ? 'New Jersey' : formData.serviceLocation === 'miami' ? 'Miami' : 'Vermont'}
                   </span>
                 </div>
               )}
               <div className="space-y-3 mb-4">
                 {formData.serviceType && (
-                  <div className="flex justify-between text-gray-700">
+                  <div className="flex justify-between text-vm-text">
                     <span>
                       {formData.serviceType === 'basic' && 'Basic Clean'}
                       {formData.serviceType === 'deep' && 'Deep Clean'}
@@ -1121,25 +1121,25 @@ function BookingPageContent() {
                   </div>
                 )}
                 {formData.addOns.laundry && (
-                  <div className="flex justify-between text-gray-700 text-sm">
+                  <div className="flex justify-between text-vm-text text-sm">
                     <span>Laundry</span>
                     <span>${branchPricing ? (typeof branchPricing.prices.addOns === 'object' && branchPricing.prices.addOns?.laundry ? branchPricing.prices.addOns.laundry : DEFAULT_ADDON_PRICES.laundry) : DEFAULT_ADDON_PRICES.laundry}</span>
                   </div>
                 )}
                 {formData.addOns.windows && (
-                  <div className="flex justify-between text-gray-700 text-sm">
+                  <div className="flex justify-between text-vm-text text-sm">
                     <span>Interior Windows</span>
                     <span>${branchPricing ? (typeof branchPricing.prices.addOns === 'object' && branchPricing.prices.addOns?.windows ? branchPricing.prices.addOns.windows : DEFAULT_ADDON_PRICES.windows) : DEFAULT_ADDON_PRICES.windows}</span>
                   </div>
                 )}
                 {formData.addOns.oven && (
-                  <div className="flex justify-between text-gray-700 text-sm">
+                  <div className="flex justify-between text-vm-text text-sm">
                     <span>Inside Oven</span>
                     <span>${branchPricing ? (typeof branchPricing.prices.addOns === 'object' && branchPricing.prices.addOns?.oven ? branchPricing.prices.addOns.oven : DEFAULT_ADDON_PRICES.oven) : DEFAULT_ADDON_PRICES.oven}</span>
                   </div>
                 )}
                 {formData.addOns.refrigerator && (
-                  <div className="flex justify-between text-gray-700 text-sm">
+                  <div className="flex justify-between text-vm-text text-sm">
                     <span>Inside Refrigerator</span>
                     <span>${branchPricing ? (typeof branchPricing.prices.addOns === 'object' && branchPricing.prices.addOns?.refrigerator ? branchPricing.prices.addOns.refrigerator : DEFAULT_ADDON_PRICES.refrigerator) : DEFAULT_ADDON_PRICES.refrigerator}</span>
                   </div>
@@ -1151,22 +1151,22 @@ function BookingPageContent() {
                     <span className="text-sm font-semibold">{promoData.title}</span>
                     <span className="text-lg font-bold">-${promoDiscount.toFixed(2)}</span>
                   </div>
-                  <p className="text-xs text-gray-500">Promo: {promoCode}</p>
+                  <p className="text-xs text-vm-muted">Promo: {promoCode}</p>
                 </div>
               )}
               {referralDiscount > 0 && referralCode && (
                 <div className="border-t border-gray-200 pt-4">
-                  <div className="flex justify-between items-center text-green-600 mb-2">
+                  <div className="flex justify-between items-center text-vm-success mb-2">
                     <span className="text-sm font-semibold">Referral Discount</span>
                     <span className="text-lg font-bold">-${referralDiscount}</span>
                   </div>
-                  <p className="text-xs text-gray-500">Applied from referral code: {referralCode}</p>
+                  <p className="text-xs text-vm-muted">Applied from referral code: {referralCode}</p>
                 </div>
               )}
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-gray-900">Total</span>
-                  <span className="text-2xl font-bold text-primary-600">
+                  <span className="text-lg font-bold text-vm-text">Total</span>
+                  <span className="text-2xl font-bold text-vm-cyan-dark">
                     {selectedBranch === 'port-antonio' && selectedCurrency === 'JMD' 
                       ? `J$${(totalPrice || 0).toLocaleString()}`
                       : `$${totalPrice || 0}`
@@ -1174,13 +1174,13 @@ function BookingPageContent() {
                   </span>
                 </div>
                 {selectedBranch === 'port-antonio' && selectedCurrency === 'JMD' && (
-                  <p className="text-sm text-gray-500 mt-2 text-center">
+                  <p className="text-sm text-vm-muted mt-2 text-center">
                     All Jamaica bookings are paid in JMD. Payment options: cash, bank transfer, or approved digital wallet.
                   </p>
                 )}
               </div>
               {totalPrice === 0 && (
-                <p className="text-sm text-gray-500 mt-2 text-center">Select a service to see total</p>
+                <p className="text-sm text-vm-muted mt-2 text-center">Select a service to see total</p>
               )}
             </div>
           </div>
@@ -1193,10 +1193,10 @@ function BookingPageContent() {
 export default function BookingPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-vm-surface to-white flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading booking form...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-vm-cyan-dark mx-auto mb-4" />
+          <p className="text-vm-muted">Loading booking form...</p>
         </div>
       </div>
     }>

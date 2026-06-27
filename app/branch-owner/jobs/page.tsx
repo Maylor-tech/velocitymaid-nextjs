@@ -51,8 +51,8 @@ export default function BranchOwnerJobsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
-          <p className="text-gray-600">Page not found</p>
+          <h1 className="text-2xl font-bold text-vm-text mb-2">404</h1>
+          <p className="text-vm-muted">Page not found</p>
         </div>
       </div>
     );
@@ -185,14 +185,14 @@ export default function BranchOwnerJobsPage() {
 
   const getStatusBadgeColor = (status: string) => {
     const colors: Record<string, string> = {
-      pending: "bg-yellow-100 text-yellow-800",
+      pending: "bg-vm-warning-bg text-yellow-800",
       assigned: "bg-purple-100 text-purple-800",
-      confirmed: "bg-blue-100 text-blue-800",
+      confirmed: "bg-vm-cyan-tint text-blue-800",
       in_progress: "bg-orange-100 text-orange-800",
-      completed: "bg-green-100 text-green-800",
-      cancelled: "bg-red-100 text-red-800",
+      completed: "bg-vm-success-bg text-vm-success",
+      cancelled: "bg-vm-danger-bg text-red-800",
     };
-    return colors[status.toLowerCase()] || "bg-gray-100 text-gray-800";
+    return colors[status.toLowerCase()] || "bg-gray-100 text-vm-text";
   };
 
   if (loading) {
@@ -200,7 +200,7 @@ export default function BranchOwnerJobsPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading jobs...</p>
+          <p className="mt-4 text-vm-muted">Loading jobs...</p>
         </div>
       </div>
     );
@@ -212,8 +212,8 @@ export default function BranchOwnerJobsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Job Management</h1>
-            <p className="text-gray-600 mt-2">
+            <h1 className="text-3xl font-bold text-vm-text">Job Management</h1>
+            <p className="text-vm-muted mt-2">
               Manage jobs in your branch
             </p>
           </div>
@@ -227,7 +227,7 @@ export default function BranchOwnerJobsPage() {
           <CardContent className="pt-6">
             <div className="flex gap-4">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-vm-text mb-2">
                   Status Filter
                 </label>
                 <select
@@ -245,7 +245,7 @@ export default function BranchOwnerJobsPage() {
                 </select>
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-vm-text mb-2">
                   Quick Filter
                 </label>
                 <select
@@ -273,8 +273,8 @@ export default function BranchOwnerJobsPage() {
         {jobs.length === 0 ? (
           <Card>
             <CardContent className="pt-6 text-center py-12">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No jobs found</p>
+              <Calendar className="w-12 h-12 text-vm-muted mx-auto mb-4" />
+              <p className="text-vm-muted">No jobs found</p>
             </CardContent>
           </Card>
         ) : (
@@ -286,7 +286,7 @@ export default function BranchOwnerJobsPage() {
                     <div className="flex-1 space-y-3">
                       {/* Job Header */}
                       <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-vm-text">
                           {job.customerName || `${job.Customer?.firstName} ${job.Customer?.lastName}` || "Unknown Customer"}
                         </h3>
                         <Badge className={getStatusBadgeColor(job.status)}>
@@ -295,7 +295,7 @@ export default function BranchOwnerJobsPage() {
                       </div>
 
                       {/* Job Details */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-vm-muted">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
                           <span>{formatDate(job.preferredDate)} at {job.preferredTime || "TBD"}</span>
@@ -317,22 +317,22 @@ export default function BranchOwnerJobsPage() {
                         {/* Phase L: Read-only pricing display */}
                         {job.totalPrice && (
                           <div className="flex items-center gap-2">
-                            <DollarSign className="w-4 h-4 text-gray-400" />
-                            <span className="font-medium text-gray-900">
+                            <DollarSign className="w-4 h-4 text-vm-muted" />
+                            <span className="font-medium text-vm-text">
                               {new Intl.NumberFormat('en-US', {
                                 style: 'currency',
                                 currency: job.currency || 'USD',
                               }).format(Number(job.totalPrice))}
                             </span>
                             {job.priceLockedAt && (
-                              <Lock className="w-3 h-3 text-gray-400" title="Pricing locked" />
+                              <Lock className="w-3 h-3 text-vm-muted" title="Pricing locked" />
                             )}
                           </div>
                         )}
                       </div>
                       {/* Phase L: Pricing managed by admin notice */}
                       {job.totalPrice && (
-                        <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                        <div className="mt-2 text-xs text-vm-muted flex items-center gap-1">
                           <AlertCircle className="w-3 h-3" />
                           <span>Pricing managed by admin</span>
                         </div>
@@ -400,7 +400,7 @@ export default function BranchOwnerJobsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-vm-text mb-2">
                     Select Cleaner
                   </label>
                   <select
@@ -445,7 +445,7 @@ export default function BranchOwnerJobsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-vm-text mb-2">
                     Reason <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -458,7 +458,7 @@ export default function BranchOwnerJobsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-vm-text mb-2">
                     Additional Notes (Optional)
                   </label>
                   <textarea
@@ -484,7 +484,7 @@ export default function BranchOwnerJobsPage() {
                   <Button
                     onClick={() => performAction("cancel", selectedJob)}
                     disabled={!actionReason || actionLoading === selectedJob}
-                    className="flex-1 bg-red-600 hover:bg-red-700"
+                    className="flex-1 bg-vm-danger hover:bg-vm-danger"
                   >
                     {actionLoading === selectedJob ? "Cancelling..." : "Cancel Job"}
                   </Button>
@@ -503,7 +503,7 @@ export default function BranchOwnerJobsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-vm-text mb-2">
                     Reason <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -516,7 +516,7 @@ export default function BranchOwnerJobsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-vm-text mb-2">
                     Additional Notes (Optional)
                   </label>
                   <textarea

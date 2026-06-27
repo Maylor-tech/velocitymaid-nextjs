@@ -65,7 +65,7 @@ export default function VillaPartnershipApplyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-vm-surface to-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -75,21 +75,21 @@ export default function VillaPartnershipApplyPage() {
           >
             ← Back to Villa Partnership
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold text-vm-text mb-2">
             Apply for Villa Partnership
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-vm-muted">
             Join our partnership program and get professional turnover cleaning for your villa
           </p>
         </div>
 
         {/* Success Message */}
         {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-            <CheckCircle className="w-6 h-6 text-green-600" />
+          <div className="mb-6 bg-vm-success-bg border border-vm-success/30 rounded-lg p-4 flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-vm-success" />
             <div>
-              <p className="font-semibold text-green-900">Application submitted successfully!</p>
-              <p className="text-sm text-green-700">Redirecting to confirmation page...</p>
+              <p className="font-semibold text-vm-success">Application submitted successfully!</p>
+              <p className="text-sm text-vm-success">Redirecting to confirmation page...</p>
             </div>
           </div>
         )}
@@ -104,7 +104,7 @@ export default function VillaPartnershipApplyPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
           <div>
-            <label htmlFor="propertyName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="propertyName" className="block text-sm font-medium text-vm-text mb-1">
               <Home className="w-4 h-4 inline mr-1" />
               Property Name *
             </label>
@@ -120,7 +120,7 @@ export default function VillaPartnershipApplyPage() {
           </div>
 
           <div>
-            <label htmlFor="managerName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="managerName" className="block text-sm font-medium text-vm-text mb-1">
               <User className="w-4 h-4 inline mr-1" />
               Manager/Owner Name *
             </label>
@@ -135,7 +135,7 @@ export default function VillaPartnershipApplyPage() {
           </div>
 
           <div>
-            <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="whatsapp" className="block text-sm font-medium text-vm-text mb-1">
               <MessageCircle className="w-4 h-4 inline mr-1" />
               WhatsApp Number (876-xxx-xxxx) *
             </label>
@@ -148,12 +148,12 @@ export default function VillaPartnershipApplyPage() {
               placeholder="876-123-4567"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">Include country code (876) for Jamaica</p>
+            <p className="text-xs text-vm-muted mt-1">Include country code (876) for Jamaica</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="bedrooms" className="block text-sm font-medium text-vm-text mb-1">
                 <Bed className="w-4 h-4 inline mr-1" />
                 Number of Bedrooms *
               </label>
@@ -169,7 +169,7 @@ export default function VillaPartnershipApplyPage() {
             </div>
 
             <div>
-              <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="bathrooms" className="block text-sm font-medium text-vm-text mb-1">
                 <Bath className="w-4 h-4 inline mr-1" />
                 Number of Bathrooms *
               </label>
@@ -186,7 +186,7 @@ export default function VillaPartnershipApplyPage() {
           </div>
 
           <div>
-            <label htmlFor="turnoverFrequency" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="turnoverFrequency" className="block text-sm font-medium text-vm-text mb-1">
               <Calendar className="w-4 h-4 inline mr-1" />
               Turnover Frequency *
             </label>
@@ -205,7 +205,7 @@ export default function VillaPartnershipApplyPage() {
           </div>
 
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               Additional Services
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -215,8 +215,8 @@ export default function VillaPartnershipApplyPage() {
                 onChange={(e) => setFormData({ ...formData, needsInventory: e.target.checked })}
                 className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <Package className="w-4 h-4 text-gray-600" />
-              <span className="text-gray-700">I need inventory check and reporting</span>
+              <Package className="w-4 h-4 text-vm-muted" />
+              <span className="text-vm-text">I need inventory check and reporting</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -225,13 +225,13 @@ export default function VillaPartnershipApplyPage() {
                 onChange={(e) => setFormData({ ...formData, needsLinenService: e.target.checked })}
                 className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <Bed className="w-4 h-4 text-gray-600" />
-              <span className="text-gray-700">I need linen reset service</span>
+              <Bed className="w-4 h-4 text-vm-muted" />
+              <span className="text-vm-text">I need linen reset service</span>
             </label>
           </div>
 
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="notes" className="block text-sm font-medium text-vm-text mb-1">
               <FileText className="w-4 h-4 inline mr-1" />
               Additional Notes
             </label>

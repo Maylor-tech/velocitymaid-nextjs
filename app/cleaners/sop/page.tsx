@@ -176,13 +176,13 @@ export default function SOPLibraryPage() {
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Standard Operating Procedures</h1>
-              <p className="text-gray-600">Jamaica Cleaner Handbook</p>
+              <h1 className="text-3xl font-bold text-vm-text mb-2">Standard Operating Procedures</h1>
+              <p className="text-vm-muted">Jamaica Cleaner Handbook</p>
             </div>
             <button
               onClick={handleDownloadPDF}
               disabled={downloading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {downloading ? (
                 <>
@@ -214,12 +214,12 @@ export default function SOPLibraryPage() {
                 >
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-blue-600" />
-                    <h2 className="text-xl font-semibold text-gray-900">{section.title}</h2>
+                    <h2 className="text-xl font-semibold text-vm-text">{section.title}</h2>
                   </div>
                   {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-gray-500" />
+                    <ChevronUp className="w-5 h-5 text-vm-muted" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                    <ChevronDown className="w-5 h-5 text-vm-muted" />
                   )}
                 </button>
 
@@ -227,7 +227,7 @@ export default function SOPLibraryPage() {
                   <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
                     <ol className="space-y-2 list-decimal list-inside">
                       {section.content.map((item, index) => (
-                        <li key={index} className="text-gray-700 leading-relaxed">
+                        <li key={index} className="text-vm-text leading-relaxed">
                           {item}
                         </li>
                       ))}

@@ -12,10 +12,10 @@ export function DemoModeBanner() {
       className="rounded-none border-x-0 border-t-0 justify-center text-center"
       icon={<span aria-hidden>◇</span>}
     >
-      <span className="font-sans font-bold uppercase tracking-wider text-xs text-brand-forest">
+      <span className="font-sans font-bold uppercase tracking-wider text-xs text-vm-navy">
         Demo mode
       </span>
-      <span className="mx-2 text-brand-slate/40">·</span>
+      <span className="mx-2 text-vm-text/40">·</span>
       No real payments are being processed
     </CalmAlert>
   );

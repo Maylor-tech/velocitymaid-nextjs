@@ -2,6 +2,18 @@ const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      { source: '/admin/dashboard', destination: '/admin', permanent: false },
+      { source: '/admin/dashboard/:path*', destination: '/admin', permanent: false },
+      { source: '/franchise', destination: '/', permanent: true },
+      { source: '/franchise/:path*', destination: '/', permanent: true },
+      { source: '/jamaica', destination: '/', permanent: true },
+      { source: '/jamaica/:path*', destination: '/', permanent: true },
+      { source: '/locations/port-antonio', destination: '/', permanent: true },
+      { source: '/cities/port-antonio', destination: '/', permanent: true },
+    ];
+  },
   images: {
     domains: ['images.unsplash.com'],
     unoptimized: false,

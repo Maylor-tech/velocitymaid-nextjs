@@ -68,13 +68,13 @@ export default function PrintPackPage() {
       </section>
 
       {/* Instructions */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="bg-[#F3F1EB] rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
               How to Use
             </h2>
-            <ol className="space-y-3 text-gray-700 list-decimal list-inside">
+            <ol className="space-y-3 text-vm-text list-decimal list-inside">
               <li>Click on any print material below to view it</li>
               <li>Open in browser (HTML format)</li>
               <li>Press Ctrl+P (or Cmd+P on Mac)</li>
@@ -83,7 +83,7 @@ export default function PrintPackPage() {
               <li>For PNG: Use browser screenshot or print to image</li>
             </ol>
             <div className="mt-6 p-4 bg-white rounded-lg border-2 border-[#F8C548]">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-vm-text">
                 <strong>Print Tips:</strong> All materials are sized for standard print dimensions. For best results, 
                 use "Actual Size" when printing. Door hangers should be printed on cardstock (4.25" x 11"). 
                 Referral cards can be printed on business card stock (3.5" x 2").
@@ -104,12 +104,12 @@ export default function PrintPackPage() {
               <div key={index} className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#F8C548]">
                 <div className="flex items-center justify-between mb-4">
                   <FileText className="w-8 h-8 text-[#0A3D2F]" />
-                  <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{material.size}</span>
+                  <span className="text-sm text-vm-muted bg-gray-100 px-2 py-1 rounded">{material.size}</span>
                 </div>
                 <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   {material.name}
                 </h3>
-                <p className="text-gray-600 mb-4 text-sm">{material.description}</p>
+                <p className="text-vm-muted mb-4 text-sm">{material.description}</p>
                 <a
                   href={material.route}
                   target="_blank"
@@ -132,17 +132,17 @@ export default function PrintPackPage() {
             QR Code
           </h2>
           <div className="bg-[#F3F1EB] rounded-xl p-8 text-center">
-            <p className="text-gray-700 mb-4">
+            <p className="text-vm-text mb-4">
               QR codes are included as placeholders in the print materials. To generate actual QR codes:
             </p>
-            <ol className="text-left space-y-2 text-gray-700 mb-6">
+            <ol className="text-left space-y-2 text-vm-text mb-6">
               <li>1. Visit a QR code generator (qr-code-generator.com, qrcode.tec-it.com)</li>
               <li>2. Enter URL: <code className="bg-white px-2 py-1 rounded">https://velocitymaid.com/new-jersey</code></li>
               <li>3. Download QR code image</li>
               <li>4. Replace placeholder in print material</li>
             </ol>
             <div className="bg-white p-4 rounded-lg border-2 border-[#F8C548] inline-block">
-              <p className="text-sm text-gray-700 mb-2"><strong>Target URL:</strong></p>
+              <p className="text-sm text-vm-text mb-2"><strong>Target URL:</strong></p>
               <code className="text-[#0A3D2F] font-semibold">velocitymaid.com/new-jersey</code>
             </div>
           </div>

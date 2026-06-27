@@ -115,7 +115,7 @@ export default function CustomerPreferencesPage() {
       <CustomerLayout>
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-vm-muted">Loading...</p>
         </div>
       </CustomerLayout>
     );
@@ -124,13 +124,13 @@ export default function CustomerPreferencesPage() {
   return (
     <CustomerLayout>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Preferences</h1>
-        <p className="text-gray-600">Manage your cleaning preferences and communication settings</p>
+        <h1 className="text-3xl font-bold text-vm-text mb-2">Preferences</h1>
+        <p className="text-vm-muted">Manage your cleaning preferences and communication settings</p>
       </div>
 
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-          <p className="text-green-600">Preferences updated successfully!</p>
+        <div className="bg-vm-success-bg border border-vm-success/30 rounded-xl p-4 mb-6">
+          <p className="text-vm-success">Preferences updated successfully!</p>
         </div>
       )}
 
@@ -143,7 +143,7 @@ export default function CustomerPreferencesPage() {
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md p-6 space-y-6">
         {/* Preferred Time Window */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-sm font-medium text-vm-text mb-3">
             Preferred Time Window
           </label>
           <div className="flex gap-3">
@@ -156,22 +156,22 @@ export default function CustomerPreferencesPage() {
                 )}
                 className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${
                   preferredTimeWindow === time
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-vm-navy text-white shadow-md'
+                    : 'bg-gray-200 text-vm-text hover:bg-gray-300'
                 }`}
               >
                 {time.charAt(0).toUpperCase() + time.slice(1)}
               </button>
             ))}
           </div>
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-vm-muted">
             Morning: 8 AM - 12 PM | Afternoon: 12 PM - 4 PM | Evening: 4 PM - 8 PM
           </p>
         </div>
 
         {/* Preferred Day of Week */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-vm-text mb-2">
             Preferred Day of Week
           </label>
           <select
@@ -189,10 +189,10 @@ export default function CustomerPreferencesPage() {
 
         {/* Notes for Cleaner */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-vm-text mb-2">
             General Notes for Cleaner
           </label>
-          <p className="text-xs text-gray-500 mb-2">
+          <p className="text-xs text-vm-muted mb-2">
             Anything you want us to remember for every clean
           </p>
           <textarea
@@ -206,7 +206,7 @@ export default function CustomerPreferencesPage() {
 
         {/* Communication Preferences */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-sm font-medium text-vm-text mb-3">
             Communication Preferences
           </label>
           <div className="space-y-3">
@@ -217,7 +217,7 @@ export default function CustomerPreferencesPage() {
                 onChange={(e) => setAllowEmail(e.target.checked)}
                 className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <span className="text-gray-700">Email updates</span>
+              <span className="text-vm-text">Email updates</span>
             </label>
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -226,7 +226,7 @@ export default function CustomerPreferencesPage() {
                 onChange={(e) => setAllowWhatsApp(e.target.checked)}
                 className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <span className="text-gray-700">WhatsApp updates</span>
+              <span className="text-vm-text">WhatsApp updates</span>
             </label>
           </div>
         </div>
@@ -236,7 +236,7 @@ export default function CustomerPreferencesPage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+            className="w-full bg-vm-navy text-white py-3 rounded-lg font-semibold hover:bg-vm-navy transition-colors disabled:bg-gray-400"
           >
             {saving ? 'Saving...' : 'Save Preferences'}
           </button>

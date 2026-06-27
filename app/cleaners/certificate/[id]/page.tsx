@@ -80,7 +80,7 @@ export default function CertificatePage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading certificate...</p>
+          <p className="mt-4 text-vm-muted">Loading certificate...</p>
         </div>
       </div>
     );
@@ -93,7 +93,7 @@ export default function CertificatePage() {
           <p className="text-red-600 mb-4">{error || 'Certificate not found'}</p>
           <Link
             href="/cleaners/dashboard"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy"
           >
             Back to Dashboard
           </Link>
@@ -127,47 +127,47 @@ export default function CertificatePage() {
           <div className="text-center">
             {/* Logo/Header */}
             <div className="mb-8">
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">VelocityMaid</h1>
-              <p className="text-xl text-gray-600">Jamaica Branch</p>
+              <h1 className="text-4xl font-bold text-vm-text mb-2">VelocityMaid</h1>
+              <p className="text-xl text-vm-muted">Jamaica Branch</p>
             </div>
 
             {/* Certificate Title */}
             <div className="mb-8">
               <Award className="w-20 h-20 text-yellow-500 mx-auto mb-4" />
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Certificate of Completion</h2>
-              <p className="text-lg text-gray-600">Professional Cleaning Training Program</p>
+              <h2 className="text-3xl font-bold text-vm-text mb-2">Certificate of Completion</h2>
+              <p className="text-lg text-vm-muted">Professional Cleaning Training Program</p>
             </div>
 
             {/* Recipient Name */}
             <div className="mb-8 py-6 border-t-2 border-b-2 border-gray-300">
-              <p className="text-sm text-gray-600 mb-2">This is to certify that</p>
+              <p className="text-sm text-vm-muted mb-2">This is to certify that</p>
               <p className="text-4xl font-bold text-blue-900 mb-2">{certificate.cleanerName}</p>
-              <p className="text-sm text-gray-600">has successfully completed</p>
-              <p className="text-xl font-semibold text-gray-800 mt-2">
+              <p className="text-sm text-vm-muted">has successfully completed</p>
+              <p className="text-xl font-semibold text-vm-text mt-2">
                 All Required Training Modules
               </p>
-              <p className="text-sm text-gray-600 mt-1">for VelocityMaid Jamaica Operations</p>
+              <p className="text-sm text-vm-muted mt-1">for VelocityMaid Jamaica Operations</p>
             </div>
 
             {/* Details */}
             <div className="mb-8 grid grid-cols-2 gap-6 text-left max-w-md mx-auto">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Branch</p>
-                <p className="font-semibold text-gray-900">{certificate.branchName}</p>
+                <p className="text-sm text-vm-muted mb-1">Branch</p>
+                <p className="font-semibold text-vm-text">{certificate.branchName}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Date Issued</p>
-                <p className="font-semibold text-gray-900">{issuedDate}</p>
+                <p className="text-sm text-vm-muted mb-1">Date Issued</p>
+                <p className="font-semibold text-vm-text">{issuedDate}</p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm text-gray-600 mb-1">Certificate ID</p>
-                <p className="font-mono font-semibold text-gray-900">{certificate.certificateId}</p>
+                <p className="text-sm text-vm-muted mb-1">Certificate ID</p>
+                <p className="font-mono font-semibold text-vm-text">{certificate.certificateId}</p>
               </div>
             </div>
 
             {/* Verification QR Code Placeholder */}
             <div className="mb-6 p-4 bg-gray-50 rounded-lg inline-block">
-              <p className="text-xs text-gray-600 mb-2">Verify at:</p>
+              <p className="text-xs text-vm-muted mb-2">Verify at:</p>
               <p className="text-xs font-mono text-blue-600 break-all">
                 {certificate.verificationUrl}
               </p>
@@ -178,11 +178,11 @@ export default function CertificatePage() {
               <div className="flex justify-between items-end max-w-md mx-auto">
                 <div className="text-center">
                   <div className="h-16 border-b-2 border-gray-400 mb-2"></div>
-                  <p className="text-sm text-gray-600">Training Manager</p>
+                  <p className="text-sm text-vm-muted">Training Manager</p>
                 </div>
                 <div className="text-center">
                   <div className="h-16 border-b-2 border-gray-400 mb-2"></div>
-                  <p className="text-sm text-gray-600">Date</p>
+                  <p className="text-sm text-vm-muted">Date</p>
                 </div>
               </div>
             </div>
@@ -194,7 +194,7 @@ export default function CertificatePage() {
           <button
             onClick={handleDownloadPDF}
             disabled={downloading}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
+            className="px-6 py-3 bg-vm-navy text-white rounded-lg hover:bg-vm-navy disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
           >
             {downloading ? (
               <>
@@ -211,7 +211,7 @@ export default function CertificatePage() {
           <Link
             href={certificate.verificationUrl}
             target="_blank"
-            className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 flex items-center gap-2 font-medium"
+            className="px-6 py-3 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 flex items-center gap-2 font-medium"
           >
             <CheckCircle2 className="w-5 h-5" />
             Verify Certificate

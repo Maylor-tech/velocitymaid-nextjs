@@ -196,7 +196,7 @@ export default function CorporateQuoteForm() {
         )}
       </button>
 
-      <p className="text-sm text-gray-600 text-center mt-4">
+      <p className="text-sm text-vm-muted text-center mt-4">
         By submitting this form, you agree to be contacted by VelocityMaid regarding corporate cleaning services.
       </p>
     </form>

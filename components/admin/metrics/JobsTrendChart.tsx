@@ -5,7 +5,7 @@ interface JobsTrendChartProps {
 export default function JobsTrendChart({ data }: JobsTrendChartProps) {
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="flex items-center justify-center h-64 text-vm-muted">
         No data available
       </div>
     );
@@ -78,7 +78,7 @@ export default function JobsTrendChart({ data }: JobsTrendChartProps) {
       </div>
 
       {/* X-axis labels */}
-      <div className="flex justify-between text-xs text-gray-500 mt-2">
+      <div className="flex justify-between text-xs text-vm-muted mt-2">
         {data.map((d, i) => (
           <span key={i} className="text-center" style={{ width: `${barWidth}%` }}>
             {formatDate(d.date)}

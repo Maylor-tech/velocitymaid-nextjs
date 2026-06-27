@@ -1,119 +1,109 @@
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
+import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import { sendTrainingWelcomeNotification } from '@/app/services/trainingNotifications';
+import { isOpenCleanerApplication } from '@/lib/cleaners/applicationStatus';
+import { createInternalCleaner } from '@/lib/cleaners/internalCleanerService';
+import { parseTalentApplicationData } from '@/components/admin/cleaners/TalentApplicationView';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireRole(request, "ADMIN");
+    await requireRole(request, 'ADMIN');
     const { id } = params;
 
     const application = await prisma.cleanerApplication.findUnique({
       where: { id },
-      include: { branch: true },
+      include: { Branch: true },
     });
 
     if (!application) {
-      return NextResponse.json(
-        { success: false, error: 'Application not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Application not found' }, { status: 404 });
     }
 
-    if (application.status !== 'PENDING') {
+    if (!isOpenCleanerApplication(application.status)) {
       return NextResponse.json(
         { success: false, error: 'Application has already been processed' },
         { status: 400 }
       );
     }
 
-    // Create user account
-    const user = await prisma.user.create({
-      data: {
-        email: application.email,
-        name: application.name,
-        role: 'CLEANER',
-        primaryBranchId: application.branchId,
-      },
+    const talent = parseTalentApplicationData(application.applicationData);
+    const nameParts = application.name.trim().split(/\s+/);
+    const firstName = talent?.personal.firstName || nameParts[0] || application.name;
+    const lastName = talent?.personal.lastName || nameParts.slice(1).join(' ') || '';
+
+    const { userId } = await createInternalCleaner({
+      firstName,
+      lastName,
+      email: application.email,
+      phone: application.phone,
+      publicDisplayName: application.preferredName || talent?.personal.preferredName || null,
+      jobTitle: 'Certified Cleaning Professional',
+      branchId: application.branchId,
+      serviceAreas: talent?.serviceAreas.areas,
+      memberStatus: 'TRAINING',
+      certificationLabel: 'In certification',
+      internalNotes: application.notes,
+      isInternalTeam: false,
+      trainingPassed: false,
     });
 
-    // Create UserBranch relationship
-    await prisma.userBranch.create({
-      data: {
-        userId: user.id,
-        branchId: application.branchId,
-      },
-    });
-
-    // Create default CleanerAvailability template
-    // Use daysAvailable from application if available, otherwise default to weekdays
+    const now = new Date();
     const defaultWorkingDays = application.daysAvailable
       ? (application.daysAvailable as string[])
       : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
-    await prisma.cleanerAvailability.create({
-      data: {
-        cleanerId: user.id,
+    await prisma.cleanerAvailability.upsert({
+      where: { cleanerId: userId },
+      create: {
+        id: randomUUID(),
+        cleanerId: userId,
         workingDays: defaultWorkingDays,
         timeRanges: [{ start: '09:00', end: '17:00' }],
         maxDailyJobs: 3,
         blackoutDates: [],
         isActive: true,
-        updatedAt: new Date(),
+        updatedAt: now,
       },
+      update: { workingDays: defaultWorkingDays, updatedAt: now },
     });
 
-    // Create training status for ALL branches (Phase 3 requirement)
-    await prisma.trainingStatus.create({
-      data: {
-        cleanerId: user.id,
-        overallStatus: 'PENDING', // Phase 3: Start with PENDING status
-        updatedAt: new Date(),
-      },
-    });
-
-    // Update application status
     await prisma.cleanerApplication.update({
       where: { id },
-      data: { status: 'APPROVED' },
+      data: { status: 'ACCEPTED', updatedAt: now },
     });
 
-    // Send WhatsApp welcome message with training link for Jamaica branch (non-blocking)
+    const branch = application.Branch;
     if (
-      application.branch.country === 'Jamaica' ||
-      application.branch.country === 'JM' ||
-      application.branch.slug === 'port-antonio'
+      branch &&
+      (branch.country === 'Jamaica' ||
+        branch.country === 'JM' ||
+        branch.slug === 'port-antonio')
     ) {
       try {
         const whatsappPhone = application.whatsappNumber || application.phone;
-        await sendTrainingWelcomeNotification(user.id, whatsappPhone);
+        await sendTrainingWelcomeNotification(userId, whatsappPhone);
       } catch (whatsappError) {
         console.error('Failed to send training welcome notification:', whatsappError);
-        // Don't fail the approval if WhatsApp fails
       }
     }
 
-    // TODO: Send welcome email with login credentials
-    // TODO: Generate temporary password or send invite link
-
     return NextResponse.json({
       success: true,
-      user,
-      message: 'Application approved and user account created',
+      userId,
+      message: 'Application accepted and cleaner profile created',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     console.error('Approve cleaner application error:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Failed to approve application' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Failed to approve application';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
-

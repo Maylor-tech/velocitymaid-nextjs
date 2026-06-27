@@ -4,6 +4,10 @@ import CustomerLayout from './components/CustomerLayout';
 import DatabaseErrorPage from './components/DatabaseErrorPage';
 import { verifyCustomerSessionToken, COOKIE_NAME } from '../../lib/customerSession';
 import { prisma } from '../../lib/prisma';
+import {
+  isCustomerPortalEmailBlocked,
+  customerPortalBlockedMessage,
+} from '@/lib/customer/portalAccess';
 
 /**
  * Customer Portal Layout
@@ -56,6 +60,10 @@ export default async function CustomerPortalLayout({
 
   if (!customer) {
     redirect('/customer/login');
+  }
+
+  if (customer.isBlocked || isCustomerPortalEmailBlocked(customer.email)) {
+    redirect('/customer/login?blocked=1');
   }
 
   return <CustomerLayout>{children}</CustomerLayout>;

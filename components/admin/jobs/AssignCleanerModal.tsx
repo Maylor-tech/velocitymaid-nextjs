@@ -110,13 +110,13 @@ export default function AssignCleanerModal({
       {/* Modal */}
       <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col z-50">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-vm-border">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-vm-text">
               Assign Cleaner
             </h2>
             {job && (
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-vm-muted mt-1">
                 Job: {job.customerName} - {job.address}
               </p>
             )}
@@ -126,20 +126,20 @@ export default function AssignCleanerModal({
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             aria-label="Close"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-vm-muted" />
           </button>
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-vm-border">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-vm-muted" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search cleaners by name, email, city, or specialty..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
             />
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function AssignCleanerModal({
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className="h-24 bg-gray-100 rounded-lg animate-pulse"
+                  className="h-24 bg-vm-surface rounded-lg animate-pulse"
                 />
               ))}
             </div>
@@ -169,7 +169,7 @@ export default function AssignCleanerModal({
           {/* Cleaners List */}
           {!isLoading && !error && filteredCleaners.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-500">
+              <p className="text-vm-muted">
                 {search ? 'No cleaners match your search' : 'No cleaners available'}
               </p>
             </div>
@@ -180,7 +180,7 @@ export default function AssignCleanerModal({
               {filteredCleaners.map((cleaner) => (
                 <div
                   key={cleaner.id}
-                  className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors border border-gray-200"
+                  className="bg-vm-surface rounded-lg p-4 hover:bg-gray-100 transition-colors border border-vm-border"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
@@ -193,8 +193,8 @@ export default function AssignCleanerModal({
                             className="w-12 h-12 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
-                            <User className="w-6 h-6 text-primary-600" />
+                          <div className="w-12 h-12 rounded-full bg-vm-surface flex items-center justify-center">
+                            <User className="w-6 h-6 text-vm-cyan-dark" />
                           </div>
                         )}
                       </div>
@@ -202,32 +202,32 @@ export default function AssignCleanerModal({
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-gray-900">{cleaner.name}</h3>
+                          <h3 className="font-semibold text-vm-text">{cleaner.name}</h3>
                           {cleaner.isRecommended && (
-                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                            <span className="px-2 py-0.5 bg-vm-success-bg text-vm-success text-xs font-semibold rounded-full">
                               Recommended
                             </span>
                           )}
                         </div>
                         {cleaner.email && (
-                          <p className="text-sm text-gray-600 truncate">{cleaner.email}</p>
+                          <p className="text-sm text-vm-muted truncate">{cleaner.email}</p>
                         )}
                         {cleaner.city && (
-                          <p className="text-xs text-gray-500">{cleaner.city}</p>
+                          <p className="text-xs text-vm-muted">{cleaner.city}</p>
                         )}
                         <div className="flex items-center gap-4 mt-2">
                           {cleaner.rating && (
                             <div className="flex items-center gap-1">
                               <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                              <span className="text-sm font-medium text-gray-700">
+                              <span className="text-sm font-medium text-vm-text">
                                 {cleaner.rating.toFixed(1)}
                               </span>
                             </div>
                           )}
                           {cleaner.completedJobs !== undefined && (
                             <div className="flex items-center gap-1">
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                              <span className="text-sm text-gray-600">
+                              <CheckCircle className="w-4 h-4 text-vm-success" />
+                              <span className="text-sm text-vm-muted">
                                 {cleaner.completedJobs} jobs
                               </span>
                             </div>
@@ -235,7 +235,7 @@ export default function AssignCleanerModal({
                           {/* Phase 4 Part B: Show V3 assignment score */}
                           {cleaner.assignmentScore ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-xs px-2 py-0.5 bg-primary-50 text-primary-700 rounded-full font-medium">
+                              <span className="text-xs px-2 py-0.5 bg-vm-surface text-vm-cyan-dark rounded-full font-medium">
                                 Score {cleaner.assignmentScore.total}/100
                               </span>
                               {cleaner.level && (
@@ -255,7 +255,7 @@ export default function AssignCleanerModal({
                             {cleaner.specialties.map((specialty, idx) => (
                               <span
                                 key={idx}
-                                className="px-2 py-0.5 bg-primary-50 text-primary-700 text-xs rounded-full"
+                                className="px-2 py-0.5 bg-vm-surface text-vm-cyan-dark text-xs rounded-full"
                               >
                                 {specialty}
                               </span>
@@ -275,29 +275,29 @@ export default function AssignCleanerModal({
                         )}
                         {/* Phase 4 Part B: Show score breakdown */}
                         {cleaner.assignmentScore && (
-                          <div className="mt-2 p-2 bg-white rounded border border-gray-200">
-                            <p className="text-xs font-semibold text-gray-700 mb-1">
+                          <div className="mt-2 p-2 bg-white rounded border border-vm-border">
+                            <p className="text-xs font-semibold text-vm-text mb-1">
                               Assignment Score Breakdown
                             </p>
                             <div className="grid grid-cols-2 gap-1 text-xs">
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Availability:</span>
+                                <span className="text-vm-muted">Availability:</span>
                                 <span className="font-medium">{cleaner.assignmentScore.breakdown.availability}/30</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Distance:</span>
+                                <span className="text-vm-muted">Distance:</span>
                                 <span className="font-medium">{cleaner.assignmentScore.breakdown.distance}/20</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Level:</span>
+                                <span className="text-vm-muted">Level:</span>
                                 <span className="font-medium">{cleaner.assignmentScore.breakdown.level}/20</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Performance:</span>
+                                <span className="text-vm-muted">Performance:</span>
                                 <span className="font-medium">{cleaner.assignmentScore.breakdown.performance}/20</span>
                               </div>
                               <div className="flex justify-between col-span-2">
-                                <span className="text-gray-600">Compliance:</span>
+                                <span className="text-vm-muted">Compliance:</span>
                                 <span className="font-medium">{cleaner.assignmentScore.breakdown.compliance}/10</span>
                               </div>
                             </div>
@@ -310,14 +310,14 @@ export default function AssignCleanerModal({
                     <div className="flex items-center gap-2 ml-4">
                       <button
                         onClick={() => onOpenProfile(cleaner)}
-                        className="text-sm text-primary-600 hover:text-primary-800 font-medium px-3 py-1.5 hover:bg-primary-50 rounded-lg transition-colors"
+                        className="text-sm text-vm-cyan-dark hover:text-vm-navy font-medium px-3 py-1.5 hover:bg-vm-surface rounded-lg transition-colors"
                       >
                         View Profile
                       </button>
                       <button
                         onClick={() => onSelectCleaner(cleaner)}
                         disabled={cleaner.availability === false}
-                        className="inline-flex items-center rounded-full bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="inline-flex items-center rounded-full bg-vm-navy px-3 py-1.5 text-sm font-semibold text-white hover:bg-vm-navy disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         Assign
                       </button>
@@ -330,10 +330,10 @@ export default function AssignCleanerModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 flex justify-end">
+        <div className="p-4 border-t border-vm-border flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="px-4 py-2 text-vm-text hover:bg-gray-100 rounded-lg transition-colors"
           >
             Cancel
           </button>

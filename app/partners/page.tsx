@@ -22,10 +22,10 @@ export default function PartnersPage() {
     <MarketingShell>
       <PartnerHero />
       <Section>
-        <h2 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight text-brand-forest">
+        <h2 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight text-vm-navy">
           Built for Responsible Partnerships
         </h2>
-        <p className="mt-4 max-w-3xl text-sm sm:text-base font-sans font-medium text-brand-slate/80 leading-relaxed">
+        <p className="mt-4 max-w-3xl text-sm sm:text-base font-sans font-medium text-vm-text/80 leading-relaxed">
           VelocityMaid supports partners who value clarity, accountability, and
           deliberate growth.
         </p>

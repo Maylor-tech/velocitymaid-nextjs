@@ -9,13 +9,13 @@ export default function ContactInfoStep() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Contact Information</h2>
-        <p className="text-gray-600">We'll use this to confirm your booking and send updates</p>
+        <h2 className="text-2xl font-bold text-vm-text mb-2">Contact Information</h2>
+        <p className="text-vm-muted">We'll use this to confirm your booking and send updates</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="firstName" className="block text-sm font-medium text-vm-text mb-2">
             First Name *
           </label>
           <input
@@ -34,7 +34,7 @@ export default function ContactInfoStep() {
         </div>
 
         <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="lastName" className="block text-sm font-medium text-vm-text mb-2">
             Last Name *
           </label>
           <input
@@ -54,7 +54,7 @@ export default function ContactInfoStep() {
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="email" className="block text-sm font-medium text-vm-text mb-2">
           Email Address *
         </label>
         <input
@@ -73,7 +73,7 @@ export default function ContactInfoStep() {
       </div>
 
       <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="phone" className="block text-sm font-medium text-vm-text mb-2">
           Phone Number *
         </label>
         <input
@@ -92,13 +92,13 @@ export default function ContactInfoStep() {
       </div>
 
       <div className="border-t pt-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Address (Optional)</h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <h3 className="text-lg font-semibold text-vm-text mb-4">Service Address (Optional)</h3>
+        <p className="text-sm text-vm-muted mb-4">
           If different from your contact address, provide the service location
         </p>
 
         <div>
-          <label htmlFor="streetAddress" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="streetAddress" className="block text-sm font-medium text-vm-text mb-2">
             Street Address
           </label>
           <input
@@ -117,7 +117,7 @@ export default function ContactInfoStep() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <div>
-            <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="city" className="block text-sm font-medium text-vm-text mb-2">
               City
             </label>
             <input
@@ -135,7 +135,7 @@ export default function ContactInfoStep() {
           </div>
 
           <div>
-            <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="state" className="block text-sm font-medium text-vm-text mb-2">
               State
             </label>
             <input
@@ -153,7 +153,7 @@ export default function ContactInfoStep() {
           </div>
 
           <div>
-            <label htmlFor="zip" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="zip" className="block text-sm font-medium text-vm-text mb-2">
               ZIP Code
             </label>
             <input

@@ -118,7 +118,7 @@ export default function ReviewPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-vm-muted">Loading...</p>
         </div>
       </div>
     );
@@ -129,7 +129,7 @@ export default function ReviewPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
           <p className="text-red-600 font-medium mb-4">Error</p>
-          <p className="text-gray-600">{error}</p>
+          <p className="text-vm-muted">{error}</p>
         </div>
       </div>
     );
@@ -140,12 +140,12 @@ export default function ReviewPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
           <div className="text-6xl mb-4">✓</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h1>
-          <p className="text-gray-600 mb-6">
+          <h1 className="text-2xl font-bold text-vm-text mb-2">Thank You!</h1>
+          <p className="text-vm-muted mb-6">
             Your review has been submitted. We appreciate your feedback!
           </p>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-sm text-green-800">
+          <div className="bg-vm-success-bg border border-vm-success/30 rounded-lg p-4">
+            <p className="text-sm text-vm-success">
               {requestReclean
                 ? 'We have received your request for a follow-up cleaning. Our team will contact you shortly.'
                 : 'Your feedback helps us improve our service.'}
@@ -165,28 +165,28 @@ export default function ReviewPage() {
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Rate Your Service</h1>
-            <p className="text-gray-600">Help us improve by sharing your experience</p>
+            <h1 className="text-3xl font-bold text-vm-text mb-2">Rate Your Service</h1>
+            <p className="text-vm-muted">Help us improve by sharing your experience</p>
           </div>
 
           {/* Job Details */}
           <div className="bg-gray-50 rounded-lg p-6 mb-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Service Details</h2>
+            <h2 className="text-lg font-semibold text-vm-text mb-4">Service Details</h2>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-gray-600">Cleaner:</span>
-                <span className="font-medium text-gray-900">{jobDetails.cleanerName}</span>
+                <span className="text-vm-muted">Cleaner:</span>
+                <span className="font-medium text-vm-text">{jobDetails.cleanerName}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-600">Service Date:</span>
-                <span className="font-medium text-gray-900">{formatDate(jobDetails.serviceDate)}</span>
+                <span className="text-vm-muted">Service Date:</span>
+                <span className="font-medium text-vm-text">{formatDate(jobDetails.serviceDate)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-600">Service Type:</span>
-                <span className="font-medium text-gray-900">{jobDetails.serviceType}</span>
+                <span className="text-vm-muted">Service Type:</span>
+                <span className="font-medium text-vm-text">{jobDetails.serviceType}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-600">Location:</span>
+                <span className="text-vm-muted">Location:</span>
                 <LocationBadge location={jobDetails.serviceLocation} />
               </div>
             </div>
@@ -209,7 +209,7 @@ export default function ReviewPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Rating */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-vm-text mb-3">
                 How would you rate your cleaning service? *
               </label>
               <div className="flex gap-2 justify-center">
@@ -219,7 +219,7 @@ export default function ReviewPage() {
                     type="button"
                     onClick={() => setRating(star)}
                     className={`text-5xl transition-transform hover:scale-110 ${
-                      rating >= star ? 'text-yellow-400' : 'text-gray-300'
+                      rating >= star ? 'text-yellow-400' : 'text-vm-muted'
                     }`}
                   >
                     ★
@@ -227,7 +227,7 @@ export default function ReviewPage() {
                 ))}
               </div>
               {rating > 0 && (
-                <p className="text-center text-sm text-gray-600 mt-2">
+                <p className="text-center text-sm text-vm-muted mt-2">
                   {rating === 5 && 'Excellent!'}
                   {rating === 4 && 'Great!'}
                   {rating === 3 && 'Good'}
@@ -239,7 +239,7 @@ export default function ReviewPage() {
 
             {/* Comment */}
             <div>
-              <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="comment" className="block text-sm font-medium text-vm-text mb-2">
                 Additional Comments (Optional)
               </label>
               <textarea
@@ -261,9 +261,9 @@ export default function ReviewPage() {
                 onChange={(e) => setRequestReclean(e.target.checked)}
                 className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="requestReclean" className="ml-3 text-sm text-gray-700">
+              <label htmlFor="requestReclean" className="ml-3 text-sm text-vm-text">
                 Request a follow-up cleaning
-                <span className="block text-xs text-gray-500 mt-1">
+                <span className="block text-xs text-vm-muted mt-1">
                   Check this if you'd like us to send someone back to address any issues
                 </span>
               </label>
@@ -273,7 +273,7 @@ export default function ReviewPage() {
             <button
               type="submit"
               disabled={submitting || rating === 0 || hasReview}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full bg-vm-navy text-white py-3 rounded-lg font-semibold hover:bg-vm-navy transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {submitting ? 'Submitting...' : hasReview ? 'Already Submitted' : 'Submit Review'}
             </button>

@@ -15,8 +15,8 @@ export default function BranchOwnerEscalatePage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
-          <p className="text-gray-600">Page not found</p>
+          <h1 className="text-2xl font-bold text-vm-text mb-2">404</h1>
+          <p className="text-vm-muted">Page not found</p>
         </div>
       </div>
     );
@@ -76,14 +76,14 @@ export default function BranchOwnerEscalatePage() {
         <Card className="max-w-md w-full">
           <CardContent className="pt-6">
             <div className="text-center">
-              <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <CheckCircle2 className="w-16 h-16 text-vm-success mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-vm-text mb-2">
                 Issue Escalated Successfully
               </h2>
-              <p className="text-gray-600 mb-4">
+              <p className="text-vm-muted mb-4">
                 An administrator will review your escalation shortly.
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-vm-muted">
                 Redirecting to dashboard...
               </p>
             </div>
@@ -97,8 +97,8 @@ export default function BranchOwnerEscalatePage() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Escalate Issue</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-vm-text">Escalate Issue</h1>
+          <p className="text-vm-muted mt-2">
             Escalate an issue to administrators for review
           </p>
         </div>
@@ -122,7 +122,7 @@ export default function BranchOwnerEscalatePage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Issue Type */}
               <div>
-                <label htmlFor="issueType" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="issueType" className="block text-sm font-medium text-vm-text mb-2">
                   Issue Type <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -142,7 +142,7 @@ export default function BranchOwnerEscalatePage() {
 
               {/* Reason */}
               <div>
-                <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="reason" className="block text-sm font-medium text-vm-text mb-2">
                   Reason <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -190,7 +190,7 @@ export default function BranchOwnerEscalatePage() {
               {/* Optional Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="relatedJobId" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="relatedJobId" className="block text-sm font-medium text-vm-text mb-2">
                     Related Job ID (Optional)
                   </label>
                   <input
@@ -204,7 +204,7 @@ export default function BranchOwnerEscalatePage() {
                 </div>
 
                 <div>
-                  <label htmlFor="relatedCleanerId" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="relatedCleanerId" className="block text-sm font-medium text-vm-text mb-2">
                     Related Cleaner ID (Optional)
                   </label>
                   <input
@@ -220,7 +220,7 @@ export default function BranchOwnerEscalatePage() {
 
               {/* Notes */}
               <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="notes" className="block text-sm font-medium text-vm-text mb-2">
                   Additional Notes (Optional)
                 </label>
                 <textarea
@@ -238,7 +238,7 @@ export default function BranchOwnerEscalatePage() {
                 <Button
                   type="submit"
                   disabled={loading || !issueType || !reason}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 bg-vm-navy hover:bg-vm-navy"
                 >
                   {loading ? "Escalating..." : "Escalate to Admin"}
                 </Button>

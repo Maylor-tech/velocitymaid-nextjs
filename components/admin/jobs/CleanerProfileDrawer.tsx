@@ -360,14 +360,14 @@ export default function CleanerProfileDrawer({
 
   const getTrainingStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; label: string }> = {
-      PENDING: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
-      IN_REVIEW: { color: 'bg-blue-100 text-blue-800', label: 'In Review' },
-      PASSED: { color: 'bg-green-100 text-green-800', label: 'Passed' },
+      PENDING: { color: 'bg-vm-warning-bg text-yellow-800', label: 'Pending' },
+      IN_REVIEW: { color: 'bg-vm-cyan-tint text-blue-800', label: 'In Review' },
+      PASSED: { color: 'bg-vm-success-bg text-vm-success', label: 'Passed' },
       ACTIVE: { color: 'bg-purple-100 text-purple-800', label: 'Active' },
-      NOT_STARTED: { color: 'bg-gray-100 text-gray-800', label: 'Not Started' },
+      NOT_STARTED: { color: 'bg-vm-surface text-vm-text', label: 'Not Started' },
     };
 
-    const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', label: status };
+    const config = statusConfig[status] || { color: 'bg-vm-surface text-vm-text', label: status };
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${config.color}`}>
         {config.label}
@@ -393,9 +393,9 @@ export default function CleanerProfileDrawer({
       />
 
       {/* Drawer */}
-      <aside className="relative w-full max-w-md bg-white shadow-xl border-l border-gray-200 flex flex-col">
+      <aside className="relative w-full max-w-md bg-white shadow-xl border-l border-vm-border flex flex-col">
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-gray-200">
+        <div className="flex items-start justify-between p-6 border-b border-vm-border">
           <div className="flex items-center gap-4">
             {/* Avatar */}
             {cleaner.avatarUrl ? (
@@ -405,32 +405,32 @@ export default function CleanerProfileDrawer({
                 className="w-16 h-16 rounded-full object-cover"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center">
-                <span className="text-2xl font-semibold text-primary-600">
+              <div className="w-16 h-16 rounded-full bg-vm-surface flex items-center justify-center">
+                <span className="text-2xl font-semibold text-vm-cyan-dark">
                   {cleaner.name.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
 
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{cleaner.name}</h2>
+              <h2 className="text-xl font-semibold text-vm-text">{cleaner.name}</h2>
               <div className="flex items-center gap-1 mt-1">
                 {ratings?.averageRating ? (
                   <>
                     <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-vm-text">
                       {ratings.averageRating.toFixed(1)}
                     </span>
-                    <span className="text-sm text-gray-500 ml-2">
+                    <span className="text-sm text-vm-muted ml-2">
                       ({ratings.totalRatings} reviews)
                     </span>
                   </>
                 ) : (
-                  <span className="text-sm text-gray-500">Not yet rated</span>
+                  <span className="text-sm text-vm-muted">Not yet rated</span>
                 )}
               </div>
               {cleaner.completedJobs !== undefined && (
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-vm-muted mt-1">
                   {cleaner.completedJobs} completed jobs
                 </p>
               )}
@@ -454,7 +454,7 @@ export default function CleanerProfileDrawer({
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             aria-label="Close"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-vm-muted" />
           </button>
         </div>
 
@@ -464,7 +464,7 @@ export default function CleanerProfileDrawer({
           {isLoading && (
             <div className="space-y-4">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+                <div key={i} className="h-24 bg-vm-surface rounded-lg animate-pulse" />
               ))}
             </div>
           )}
@@ -483,64 +483,64 @@ export default function CleanerProfileDrawer({
               {/* Cleaner Compliance Status - Phase 5 Step 3 */}
               {cleanerCompliance && (
                 <section>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-3">
                     Compliance Status
                   </h3>
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div className="bg-vm-surface rounded-lg p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-primary-600" />
-                        <span className="text-sm font-semibold text-gray-700">Status</span>
+                        <Shield className="h-5 w-5 text-vm-cyan-dark" />
+                        <span className="text-sm font-semibold text-vm-text">Status</span>
                       </div>
                       <div className="flex items-center gap-2">
                         {cleanerCompliance.complianceStatus === 'COMPLIANT' ? (
-                          <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                          <span className="px-3 py-1 bg-vm-success-bg text-vm-success text-xs font-semibold rounded-full">
                             Compliant
                           </span>
                         ) : cleanerCompliance.complianceStatus === 'AT_RISK' ? (
-                          <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+                          <span className="px-3 py-1 bg-vm-warning-bg text-yellow-800 text-xs font-semibold rounded-full">
                             At Risk
                           </span>
                         ) : (
-                          <span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+                          <span className="px-3 py-1 bg-vm-danger-bg text-red-800 text-xs font-semibold rounded-full">
                             Non-Compliant
                           </span>
                         )}
                         {cleanerCompliance.isSuspended && (
-                          <span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+                          <span className="px-3 py-1 bg-vm-danger-bg text-red-800 text-xs font-semibold rounded-full">
                             Suspended
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                      <span className="text-xs text-gray-500">Warning Count</span>
-                      <span className="text-sm font-semibold text-gray-900">
+                    <div className="flex items-center justify-between pt-2 border-t border-vm-border">
+                      <span className="text-xs text-vm-muted">Warning Count</span>
+                      <span className="text-sm font-semibold text-vm-text">
                         {cleanerCompliance.warningCount}
                       </span>
                     </div>
                     {cleanerCompliance.issues.length > 0 && (
-                      <div className="pt-2 border-t border-gray-200">
-                        <p className="text-xs font-semibold text-gray-700 mb-2">Recent Issues</p>
+                      <div className="pt-2 border-t border-vm-border">
+                        <p className="text-xs font-semibold text-vm-text mb-2">Recent Issues</p>
                         <div className="space-y-2">
                           {cleanerCompliance.issues.slice(0, 5).map((issue) => (
                             <div
                               key={issue.id}
-                              className="flex items-start justify-between p-2 bg-white rounded border border-gray-200"
+                              className="flex items-start justify-between p-2 bg-white rounded border border-vm-border"
                             >
                               <div className="flex-1">
-                                <p className="text-xs font-medium text-gray-900">{issue.summary}</p>
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs font-medium text-vm-text">{issue.summary}</p>
+                                <p className="text-xs text-vm-muted mt-1">
                                   {new Date(issue.createdAt).toLocaleDateString()}
                                 </p>
                               </div>
                               <span
                                 className={`px-2 py-0.5 rounded text-[10px] font-medium ${
                                   issue.severity >= 4
-                                    ? 'bg-red-100 text-red-800'
+                                    ? 'bg-vm-danger-bg text-red-800'
                                     : issue.severity === 3
                                     ? 'bg-orange-100 text-orange-800'
-                                    : 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-vm-warning-bg text-yellow-800'
                                 }`}
                               >
                                 {issue.severity}
@@ -550,7 +550,7 @@ export default function CleanerProfileDrawer({
                         </div>
                       </div>
                     )}
-                    <div className="pt-2 border-t border-gray-200">
+                    <div className="pt-2 border-t border-vm-border">
                       <button
                         onClick={async () => {
                           if (!cleaner) return;
@@ -592,8 +592,8 @@ export default function CleanerProfileDrawer({
                         disabled={updatingCompliance}
                         className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                           cleanerCompliance.isSuspended
-                            ? 'bg-green-600 text-white hover:bg-green-700'
-                            : 'bg-red-600 text-white hover:bg-red-700'
+                            ? 'bg-vm-success text-white hover:bg-vm-success'
+                            : 'bg-vm-danger text-white hover:bg-vm-danger'
                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         {updatingCompliance ? (
@@ -612,15 +612,15 @@ export default function CleanerProfileDrawer({
               {/* Compliance & Documents Section - Phase 3 Part D */}
               {compliance && (
                 <section>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-3">
                     Compliance & Documents
                   </h3>
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div className="bg-vm-surface rounded-lg p-4 space-y-3">
                     <div className="flex items-center gap-2">
                       {compliance.status === 'COMPLIANT' ? (
                         <>
-                          <Shield className="h-5 w-5 text-emerald-600" />
-                          <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-sm font-semibold rounded-full">
+                          <Shield className="h-5 w-5 text-vm-success" />
+                          <span className="px-3 py-1 bg-vm-success-bg text-vm-success text-sm font-semibold rounded-full">
                             Compliant
                           </span>
                         </>
@@ -640,7 +640,7 @@ export default function CleanerProfileDrawer({
                         {compliance.issues.map((issue, idx) => (
                           <li
                             key={idx}
-                            className="flex items-start gap-2 text-xs text-gray-700"
+                            className="flex items-start gap-2 text-xs text-vm-text"
                           >
                             <FileWarning className="mt-0.5 h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
                             <span>{issue}</span>
@@ -651,8 +651,8 @@ export default function CleanerProfileDrawer({
 
                     {/* Documents List */}
                     {documents && (
-                      <div className="pt-3 border-t border-gray-200 space-y-2">
-                        <p className="text-xs font-semibold text-gray-700 mb-2">Documents</p>
+                      <div className="pt-3 border-t border-vm-border space-y-2">
+                        <p className="text-xs font-semibold text-vm-text mb-2">Documents</p>
                         {[
                           { key: 'id', label: 'ID Document' },
                           { key: 'references', label: 'References' },
@@ -664,18 +664,18 @@ export default function CleanerProfileDrawer({
                           const getStatusBadge = (status: string) => {
                             if (status === 'APPROVED')
                               return (
-                                <span className="px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-medium rounded">
+                                <span className="px-2 py-0.5 bg-vm-success-bg text-vm-success text-[10px] font-medium rounded">
                                   Approved
                                 </span>
                               );
                             if (status === 'SUBMITTED')
                               return (
-                                <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-medium rounded">
+                                <span className="px-2 py-0.5 bg-vm-cyan-tint text-blue-800 text-[10px] font-medium rounded">
                                   Submitted
                                 </span>
                               );
                             return (
-                              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-medium rounded">
+                              <span className="px-2 py-0.5 bg-vm-surface text-vm-muted text-[10px] font-medium rounded">
                                 Missing
                               </span>
                             );
@@ -684,11 +684,11 @@ export default function CleanerProfileDrawer({
                           return (
                             <div
                               key={doc.key}
-                              className="flex items-center justify-between p-2 bg-white rounded border border-gray-200"
+                              className="flex items-center justify-between p-2 bg-white rounded border border-vm-border"
                             >
                               <div className="flex items-center gap-2">
-                                <FileWarning className="w-3.5 h-3.5 text-gray-400" />
-                                <span className="text-xs text-gray-700">{doc.label}</span>
+                                <FileWarning className="w-3.5 h-3.5 text-vm-muted" />
+                                <span className="text-xs text-vm-text">{doc.label}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 {getStatusBadge(docData.status)}
@@ -697,7 +697,7 @@ export default function CleanerProfileDrawer({
                                     href={docData.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-xs text-primary-600 hover:text-primary-800"
+                                    className="text-xs text-vm-cyan-dark hover:text-vm-navy"
                                   >
                                     View
                                   </a>
@@ -715,13 +715,13 @@ export default function CleanerProfileDrawer({
               {/* Availability Section - Phase 3 Part C */}
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted">
                     Availability
                   </h3>
                   {availability && (
                     <button
                       onClick={() => setIsAvailabilityModalOpen(true)}
-                      className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      className="p-1.5 text-vm-cyan-dark hover:bg-vm-surface rounded-lg transition-colors"
                       title="Edit availability"
                     >
                       <Edit className="w-4 h-4" />
@@ -729,29 +729,29 @@ export default function CleanerProfileDrawer({
                   )}
                 </div>
                 {availability ? (
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div className="bg-vm-surface rounded-lg p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-primary-600" />
-                        <span className="text-sm font-semibold text-gray-700">Status</span>
+                        <Calendar className="h-4 w-4 text-vm-cyan-dark" />
+                        <span className="text-sm font-semibold text-vm-text">Status</span>
                       </div>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
                           availability.isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-vm-success-bg text-vm-success'
+                            : 'bg-vm-surface text-vm-text'
                         }`}
                       >
                         {availability.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Working Days</p>
+                      <p className="text-xs text-vm-muted mb-1">Working Days</p>
                       <div className="flex flex-wrap gap-1">
                         {availability.workingDays.map((day) => (
                           <span
                             key={day}
-                            className="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded"
+                            className="px-2 py-0.5 bg-vm-surface text-vm-cyan-dark text-xs rounded"
                           >
                             {day.charAt(0).toUpperCase() + day.slice(1, 3)}
                           </span>
@@ -759,27 +759,27 @@ export default function CleanerProfileDrawer({
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Time Ranges</p>
+                      <p className="text-xs text-vm-muted mb-1">Time Ranges</p>
                       <div className="space-y-1">
                         {availability.timeRanges.map((range, idx) => (
-                          <p key={idx} className="text-xs text-gray-700">
+                          <p key={idx} className="text-xs text-vm-text">
                             {range.start} - {range.end}
                           </p>
                         ))}
                       </div>
                     </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                      <span className="text-xs text-gray-500">Max Daily Jobs</span>
-                      <span className="text-sm font-semibold text-gray-900">
+                    <div className="flex items-center justify-between pt-2 border-t border-vm-border">
+                      <span className="text-xs text-vm-muted">Max Daily Jobs</span>
+                      <span className="text-sm font-semibold text-vm-text">
                         {availability.maxDailyJobs}
                       </span>
                     </div>
                     {availability.blackoutDates.length > 0 && (
                       <div>
-                        <p className="text-xs text-gray-500 mb-1">
+                        <p className="text-xs text-vm-muted mb-1">
                           Blackout Dates ({availability.blackoutDates.length})
                         </p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-vm-muted">
                           {availability.blackoutDates
                             .slice(0, 3)
                             .map((d) => new Date(d).toLocaleDateString())
@@ -790,11 +790,11 @@ export default function CleanerProfileDrawer({
                     )}
                   </div>
                 ) : (
-                  <div className="bg-gray-50 rounded-lg p-4 text-center">
-                    <p className="text-sm text-gray-500">No availability settings</p>
+                  <div className="bg-vm-surface rounded-lg p-4 text-center">
+                    <p className="text-sm text-vm-muted">No availability settings</p>
                     <button
                       onClick={() => setIsAvailabilityModalOpen(true)}
-                      className="mt-2 text-xs text-primary-600 hover:text-primary-800"
+                      className="mt-2 text-xs text-vm-cyan-dark hover:text-vm-navy"
                     >
                       Set Availability
                     </button>
@@ -805,32 +805,32 @@ export default function CleanerProfileDrawer({
               {/* VelocityMaid certification (MVP) */}
               {certification && (
                 <section>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-3">
                     VelocityMaid Certification
                   </h3>
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="bg-vm-surface rounded-lg p-4 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">Status</span>
+                      <span className="text-sm font-medium text-vm-text">Status</span>
                       <span
                         className={`text-xs font-semibold px-2 py-1 rounded-full ${
                           certification.status === 'CERTIFIED'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-vm-success-bg text-vm-success'
                             : certification.status === 'IN_PROGRESS'
                             ? 'bg-amber-100 text-amber-800'
-                            : 'bg-gray-100 text-gray-700'
+                            : 'bg-vm-surface text-vm-text'
                         }`}
                       >
                         {certification.status.replace(/_/g, ' ')}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-vm-muted">
                       Modules: {certification.modulesCompleted} / {certification.modulesTotal}
                     </p>
                     {certification.quizScore != null && (
-                      <p className="text-xs text-gray-600">Quiz score: {certification.quizScore}%</p>
+                      <p className="text-xs text-vm-muted">Quiz score: {certification.quizScore}%</p>
                     )}
                     {certification.certifiedAt && (
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-vm-muted">
                         Certified: {new Date(certification.certifiedAt).toLocaleDateString()}
                       </p>
                     )}
@@ -841,7 +841,7 @@ export default function CleanerProfileDrawer({
               {/* Training Status Section - Phase 3 Part B */}
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted">
                     Training Status
                   </h3>
                   {trainingStatus && (
@@ -854,7 +854,7 @@ export default function CleanerProfileDrawer({
                         handleUpdateTrainingStatus(nextStatus);
                       }}
                       disabled={updatingTraining}
-                      className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
+                      className="p-1.5 text-vm-cyan-dark hover:bg-vm-surface rounded-lg transition-colors disabled:opacity-50"
                       title="Update training status"
                     >
                       {updatingTraining ? (
@@ -866,24 +866,24 @@ export default function CleanerProfileDrawer({
                   )}
                 </div>
                 {trainingStatus ? (
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-vm-surface rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <GraduationCap className="h-4 w-4 text-primary-600" />
-                        <span className="text-sm font-semibold text-gray-700">Status</span>
+                        <GraduationCap className="h-4 w-4 text-vm-cyan-dark" />
+                        <span className="text-sm font-semibold text-vm-text">Status</span>
                       </div>
                       {getTrainingStatusBadge(trainingStatus.overallStatus)}
                     </div>
                     {trainingStatus.lastModuleSlug && (
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-vm-muted mt-2">
                         Last module: {trainingStatus.lastModuleSlug}
                       </p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-vm-muted mt-1">
                       Updated: {new Date(trainingStatus.updatedAt).toLocaleDateString()}
                     </p>
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <p className="text-xs text-gray-600 mb-2">Quick Update:</p>
+                    <div className="mt-3 pt-3 border-t border-vm-border">
+                      <p className="text-xs text-vm-muted mb-2">Quick Update:</p>
                       <div className="flex flex-wrap gap-2">
                         {['PENDING', 'IN_REVIEW', 'PASSED', 'ACTIVE'].map((status) => (
                           <button
@@ -892,8 +892,8 @@ export default function CleanerProfileDrawer({
                             disabled={updatingTraining || trainingStatus.overallStatus === status}
                             className={`px-2 py-1 text-xs rounded-lg transition-colors ${
                               trainingStatus.overallStatus === status
-                                ? 'bg-primary-600 text-white'
-                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                ? 'bg-vm-navy text-white'
+                                : 'bg-white text-vm-text hover:bg-gray-100 border border-gray-300'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                           >
                             {status}
@@ -903,8 +903,8 @@ export default function CleanerProfileDrawer({
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 rounded-lg p-4 text-center">
-                    <p className="text-sm text-gray-500">No training status recorded</p>
+                  <div className="bg-vm-surface rounded-lg p-4 text-center">
+                    <p className="text-sm text-vm-muted">No training status recorded</p>
                   </div>
                 )}
               </section>
@@ -914,7 +914,7 @@ export default function CleanerProfileDrawer({
                 <h3 className="text-md font-semibold mb-2">Training Certificates</h3>
 
                 {certificates.length === 0 && (
-                  <p className="text-sm text-gray-500">No certificates issued.</p>
+                  <p className="text-sm text-vm-muted">No certificates issued.</p>
                 )}
 
                 <div className="space-y-2">
@@ -923,16 +923,16 @@ export default function CleanerProfileDrawer({
                     return (
                       <div
                         key={cert.id}
-                        className="flex flex-col md:flex-row md:items-center md:justify-between rounded border p-3 bg-gray-50"
+                        className="flex flex-col md:flex-row md:items-center md:justify-between rounded border p-3 bg-vm-surface"
                       >
                         <div>
                           <p className="font-medium">
                             Certificate: {cert.certificateId}
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-vm-muted">
                             Training Status: {cert.trainingStatus?.overallStatus ?? 'N/A'}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-vm-muted">
                             Issued: {new Date(cert.issuedAt).toLocaleString()}
                             {cert.revokedAt && (
                               <> · Revoked: {new Date(cert.revokedAt).toLocaleString()}</>
@@ -944,8 +944,8 @@ export default function CleanerProfileDrawer({
                           <span
                             className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
                               isRevoked
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-green-100 text-green-700'
+                                ? 'bg-vm-danger-bg text-red-700'
+                                : 'bg-vm-success-bg text-vm-success'
                             }`}
                           >
                             {isRevoked ? 'Revoked' : 'Active'}
@@ -958,8 +958,8 @@ export default function CleanerProfileDrawer({
                             disabled={certActionLoadingId === cert.id}
                             className={`text-xs font-semibold px-3 py-1 rounded transition-colors ${
                               isRevoked
-                                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                : 'bg-red-600 text-white hover:bg-red-700'
+                                ? 'bg-vm-navy text-white hover:bg-vm-navy'
+                                : 'bg-vm-danger text-white hover:bg-vm-danger'
                             } disabled:opacity-60 disabled:cursor-not-allowed`}
                           >
                             {certActionLoadingId === cert.id
@@ -978,18 +978,18 @@ export default function CleanerProfileDrawer({
               {/* Cleaner Level Section - Phase 3 Part E */}
               {level && (
                 <section>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-3">
                     Cleaner Level
                   </h3>
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div className="bg-vm-surface rounded-lg p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Award className="h-5 w-5 text-primary-600" />
+                        <Award className="h-5 w-5 text-vm-cyan-dark" />
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">
+                          <p className="text-sm font-semibold text-vm-text">
                             Level {level.level} - {level.label}
                           </p>
-                          <p className="text-xs text-gray-500">{level.description}</p>
+                          <p className="text-xs text-vm-muted">{level.description}</p>
                         </div>
                       </div>
                       <span
@@ -1000,22 +1000,22 @@ export default function CleanerProfileDrawer({
                         {level.label}
                       </span>
                     </div>
-                    <div className="pt-3 border-t border-gray-200">
-                      <p className="text-xs font-semibold text-gray-700 mb-2">Requirements</p>
+                    <div className="pt-3 border-t border-vm-border">
+                      <p className="text-xs font-semibold text-vm-text mb-2">Requirements</p>
                       <ul className="space-y-1">
                         {level.requirements.map((req, idx) => (
-                          <li key={idx} className="text-xs text-gray-600 flex items-start gap-2">
-                            <CheckCircle2 className="w-3 h-3 text-green-600 mt-0.5 flex-shrink-0" />
+                          <li key={idx} className="text-xs text-vm-muted flex items-start gap-2">
+                            <CheckCircle2 className="w-3 h-3 text-vm-success mt-0.5 flex-shrink-0" />
                             <span>{req}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
-                    <div className="pt-3 border-t border-gray-200">
-                      <p className="text-xs font-semibold text-gray-700 mb-2">Benefits</p>
+                    <div className="pt-3 border-t border-vm-border">
+                      <p className="text-xs font-semibold text-vm-text mb-2">Benefits</p>
                       <ul className="space-y-1">
                         {level.benefits.map((benefit, idx) => (
-                          <li key={idx} className="text-xs text-gray-600 flex items-start gap-2">
+                          <li key={idx} className="text-xs text-vm-muted flex items-start gap-2">
                             <Star className="w-3 h-3 text-yellow-500 mt-0.5 flex-shrink-0" />
                             <span>{benefit}</span>
                           </li>
@@ -1029,20 +1029,20 @@ export default function CleanerProfileDrawer({
               {/* Scorecard Section */}
               {stats && (
                 <section>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-3">
                     Performance Scorecard
                   </h3>
                   <div className="grid grid-cols-1 gap-3">
                     {/* Completion Rate */}
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="bg-vm-surface rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-primary-600" />
-                          <span className="text-sm font-semibold text-gray-700">
+                          <Shield className="h-4 w-4 text-vm-cyan-dark" />
+                          <span className="text-sm font-semibold text-vm-text">
                             Completion Rate
                           </span>
                         </div>
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-sm font-semibold text-vm-text">
                           {stats.completionRate !== null
                             ? `${stats.completionRate.toFixed(0)}%`
                             : '--'}
@@ -1051,7 +1051,7 @@ export default function CleanerProfileDrawer({
                       {stats.completionRate !== null && (
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
-                            className="bg-primary-600 h-2 rounded-full"
+                            className="bg-vm-navy h-2 rounded-full"
                             style={{ width: `${stats.completionRate}%` }}
                           />
                         </div>
@@ -1059,15 +1059,15 @@ export default function CleanerProfileDrawer({
                     </div>
 
                     {/* Productivity Score */}
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="bg-vm-surface rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-emerald-600" />
-                          <span className="text-sm font-semibold text-gray-700">
+                          <TrendingUp className="h-4 w-4 text-vm-success" />
+                          <span className="text-sm font-semibold text-vm-text">
                             Productivity Score
                           </span>
                         </div>
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-sm font-semibold text-vm-text">
                           {stats.productivityScore !== null
                             ? `${stats.productivityScore.toFixed(0)}/100`
                             : '--'}
@@ -1076,7 +1076,7 @@ export default function CleanerProfileDrawer({
                       {stats.productivityScore !== null && (
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
-                            className="bg-primary-600 h-2 rounded-full"
+                            className="bg-vm-navy h-2 rounded-full"
                             style={{ width: `${stats.productivityScore}%` }}
                           />
                         </div>
@@ -1085,21 +1085,21 @@ export default function CleanerProfileDrawer({
 
                     {/* Customer Rating */}
                     {ratings && (
-                      <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="bg-vm-surface rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <Star className="h-4 w-4 text-yellow-400" />
-                            <span className="text-sm font-semibold text-gray-700">
+                            <span className="text-sm font-semibold text-vm-text">
                               Customer Rating
                             </span>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="text-sm font-semibold text-vm-text">
                             {ratings.averageRating !== null
                               ? ratings.averageRating.toFixed(1)
                               : '--'}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-vm-muted">
                           {ratings.totalRatings} reviews
                         </p>
                       </div>
@@ -1111,12 +1111,12 @@ export default function CleanerProfileDrawer({
               {/* Ratings List */}
               {ratings && ratings.recentRatings.length > 0 && (
                 <section>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-3">
                     Recent Ratings
                   </h3>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {ratings.recentRatings.slice(0, 3).map((r, idx) => (
-                      <div key={idx} className="rounded-lg border border-gray-100 p-3">
+                      <div key={idx} className="rounded-lg border border-vm-border p-3">
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-1">
                             {[...Array(5)].map((_, i) => (
@@ -1125,22 +1125,22 @@ export default function CleanerProfileDrawer({
                                 className={`h-3.5 w-3.5 ${
                                   i < r.rating
                                     ? 'text-yellow-400 fill-yellow-400'
-                                    : 'text-gray-200'
+                                    : 'text-vm-muted'
                                 }`}
                               />
                             ))}
                           </div>
-                          <span className="text-[11px] text-gray-500">
+                          <span className="text-[11px] text-vm-muted">
                             {new Date(r.createdAt).toLocaleDateString()}
                           </span>
                         </div>
                         {r.customerName && (
-                          <p className="text-xs font-semibold text-gray-800">
+                          <p className="text-xs font-semibold text-vm-text">
                             {r.customerName}
                           </p>
                         )}
                         {r.comment && (
-                          <p className="mt-1 text-xs text-gray-600">"{r.comment}"</p>
+                          <p className="mt-1 text-xs text-vm-muted">"{r.comment}"</p>
                         )}
                       </div>
                     ))}
@@ -1151,13 +1151,13 @@ export default function CleanerProfileDrawer({
               {/* Incentives Section - Phase 4 Part C */}
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted">
                     Incentives
                   </h3>
                   {cleaner && (
                     <button
                       onClick={() => setIsAddIncentiveModalOpen(true)}
-                      className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      className="p-1.5 text-vm-cyan-dark hover:bg-vm-surface rounded-lg transition-colors"
                       title="Add incentive"
                     >
                       <Plus className="w-4 h-4" />
@@ -1165,8 +1165,8 @@ export default function CleanerProfileDrawer({
                   )}
                 </div>
                 {incentives.length === 0 ? (
-                  <div className="bg-gray-50 rounded-lg p-4 text-center">
-                    <p className="text-sm text-gray-500">No incentives recorded</p>
+                  <div className="bg-vm-surface rounded-lg p-4 text-center">
+                    <p className="text-sm text-vm-muted">No incentives recorded</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1174,18 +1174,18 @@ export default function CleanerProfileDrawer({
                       const getStatusBadge = (status: string) => {
                         if (status === 'EARNED')
                           return (
-                            <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-vm-success-bg text-vm-success text-xs font-medium rounded">
                               Earned
                             </span>
                           );
                         if (status === 'REVOKED')
                           return (
-                            <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-vm-danger-bg text-red-800 text-xs font-medium rounded">
                               Revoked
                             </span>
                           );
                         return (
-                          <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                          <span className="px-2 py-0.5 bg-vm-warning-bg text-yellow-800 text-xs font-medium rounded">
                             Pending
                           </span>
                         );
@@ -1194,19 +1194,19 @@ export default function CleanerProfileDrawer({
                       return (
                         <div
                           key={inc.id}
-                          className="bg-gray-50 rounded-lg p-3 flex items-center justify-between"
+                          className="bg-vm-surface rounded-lg p-3 flex items-center justify-between"
                         >
                           <div className="flex items-center gap-3">
-                            <Gift className="w-4 h-4 text-primary-600" />
+                            <Gift className="w-4 h-4 text-vm-cyan-dark" />
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{inc.description}</p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-sm font-medium text-vm-text">{inc.description}</p>
+                              <p className="text-xs text-vm-muted">
                                 {new Date(inc.createdAt).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="text-sm font-semibold text-gray-900">
+                            <span className="text-sm font-semibold text-vm-text">
                               {new Intl.NumberFormat('en-US', {
                                 style: 'currency',
                                 currency: inc.currency,
@@ -1225,13 +1225,13 @@ export default function CleanerProfileDrawer({
               {/* Incentives Section - Phase 4 Part C */}
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted">
                     Incentives
                   </h3>
                   {cleaner && (
                     <button
                       onClick={() => setIsAddIncentiveModalOpen(true)}
-                      className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      className="p-1.5 text-vm-cyan-dark hover:bg-vm-surface rounded-lg transition-colors"
                       title="Add incentive"
                     >
                       <Plus className="w-4 h-4" />
@@ -1239,8 +1239,8 @@ export default function CleanerProfileDrawer({
                   )}
                 </div>
                 {incentives.length === 0 ? (
-                  <div className="bg-gray-50 rounded-lg p-4 text-center">
-                    <p className="text-sm text-gray-500">No incentives recorded</p>
+                  <div className="bg-vm-surface rounded-lg p-4 text-center">
+                    <p className="text-sm text-vm-muted">No incentives recorded</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1248,18 +1248,18 @@ export default function CleanerProfileDrawer({
                       const getStatusBadge = (status: string) => {
                         if (status === 'EARNED')
                           return (
-                            <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-vm-success-bg text-vm-success text-xs font-medium rounded">
                               Earned
                             </span>
                           );
                         if (status === 'REVOKED')
                           return (
-                            <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-vm-danger-bg text-red-800 text-xs font-medium rounded">
                               Revoked
                             </span>
                           );
                         return (
-                          <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                          <span className="px-2 py-0.5 bg-vm-warning-bg text-yellow-800 text-xs font-medium rounded">
                             Pending
                           </span>
                         );
@@ -1268,19 +1268,19 @@ export default function CleanerProfileDrawer({
                       return (
                         <div
                           key={inc.id}
-                          className="bg-gray-50 rounded-lg p-3 flex items-center justify-between"
+                          className="bg-vm-surface rounded-lg p-3 flex items-center justify-between"
                         >
                           <div className="flex items-center gap-3">
-                            <Gift className="w-4 h-4 text-primary-600" />
+                            <Gift className="w-4 h-4 text-vm-cyan-dark" />
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{inc.description}</p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-sm font-medium text-vm-text">{inc.description}</p>
+                              <p className="text-xs text-vm-muted">
                                 {new Date(inc.createdAt).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="text-sm font-semibold text-gray-900">
+                            <span className="text-sm font-semibold text-vm-text">
                               {new Intl.NumberFormat('en-US', {
                                 style: 'currency',
                                 currency: inc.currency,
@@ -1299,14 +1299,14 @@ export default function CleanerProfileDrawer({
               {/* Payout Summary - Phase 4 Part E */}
               {payouts && (
                 <section>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-3">
                     Payout Summary
                   </h3>
                   <div className="space-y-3">
                     {/* Last 30 Days Earned */}
-                    <div className="rounded-lg border border-gray-100 p-3">
-                      <p className="text-xs text-gray-500 mb-1">Last 30 Days Earned</p>
-                      <p className="text-lg font-semibold text-gray-900">
+                    <div className="rounded-lg border border-vm-border p-3">
+                      <p className="text-xs text-vm-muted mb-1">Last 30 Days Earned</p>
+                      <p className="text-lg font-semibold text-vm-text">
                         {new Intl.NumberFormat('en-US', {
                           style: 'currency',
                           currency: 'USD',
@@ -1316,8 +1316,8 @@ export default function CleanerProfileDrawer({
                     </div>
 
                     {/* Pending Payout */}
-                    <div className="rounded-lg border border-gray-100 p-3">
-                      <p className="text-xs text-gray-500 mb-1">Pending Payout</p>
+                    <div className="rounded-lg border border-vm-border p-3">
+                      <p className="text-xs text-vm-muted mb-1">Pending Payout</p>
                       <p className="text-lg font-semibold text-amber-600">
                         {new Intl.NumberFormat('en-US', {
                           style: 'currency',
@@ -1328,9 +1328,9 @@ export default function CleanerProfileDrawer({
                     </div>
 
                     {/* Bonus Total */}
-                    <div className="rounded-lg border border-gray-100 p-3">
-                      <p className="text-xs text-gray-500 mb-1">Bonus Total</p>
-                      <p className="text-sm font-semibold text-green-600">
+                    <div className="rounded-lg border border-vm-border p-3">
+                      <p className="text-xs text-vm-muted mb-1">Bonus Total</p>
+                      <p className="text-sm font-semibold text-vm-success">
                         +{new Intl.NumberFormat('en-US', {
                           style: 'currency',
                           currency: 'USD',
@@ -1340,8 +1340,8 @@ export default function CleanerProfileDrawer({
                     </div>
 
                     {/* Deductions */}
-                    <div className="rounded-lg border border-gray-100 p-3">
-                      <p className="text-xs text-gray-500 mb-1">Deductions</p>
+                    <div className="rounded-lg border border-vm-border p-3">
+                      <p className="text-xs text-vm-muted mb-1">Deductions</p>
                       <p className="text-sm font-semibold text-red-600">
                         -{new Intl.NumberFormat('en-US', {
                           style: 'currency',
@@ -1352,12 +1352,12 @@ export default function CleanerProfileDrawer({
                     </div>
 
                     {/* Total Paid (All Time) */}
-                    <div className="rounded-lg border border-gray-100 p-3 flex items-center justify-between">
+                    <div className="rounded-lg border border-vm-border p-3 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <WalletCards className="h-5 w-5 text-primary-600" />
+                        <WalletCards className="h-5 w-5 text-vm-cyan-dark" />
                         <div>
-                          <p className="text-xs text-gray-500">Total Paid (All Time)</p>
-                          <p className="text-sm font-semibold text-gray-900">
+                          <p className="text-xs text-vm-muted">Total Paid (All Time)</p>
+                          <p className="text-sm font-semibold text-vm-text">
                             {new Intl.NumberFormat('en-US', {
                               style: 'currency',
                               currency: 'USD',
@@ -1369,33 +1369,33 @@ export default function CleanerProfileDrawer({
                     </div>
 
                     {payouts.recentPayouts.length > 0 && (
-                      <div className="rounded-lg border border-gray-100 p-3">
-                        <p className="text-xs font-semibold text-gray-700 mb-2">
+                      <div className="rounded-lg border border-vm-border p-3">
+                        <p className="text-xs font-semibold text-vm-text mb-2">
                           Recent Payouts
                         </p>
                         <ul className="space-y-2 max-h-28 overflow-y-auto">
                           {payouts.recentPayouts.slice(0, 3).map((p) => (
                             <li
                               key={p.id}
-                              className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2"
+                              className="flex items-center justify-between text-xs bg-vm-surface rounded-lg px-3 py-2"
                             >
                               <div>
-                                <p className="font-medium text-gray-900">
+                                <p className="font-medium text-vm-text">
                                   {new Intl.NumberFormat('en-US', {
                                     style: 'currency',
                                     currency: p.currency,
                                     maximumFractionDigits: 0,
                                   }).format(p.amount)}
                                 </p>
-                                <p className="text-gray-500">{p.period}</p>
+                                <p className="text-vm-muted">{p.period}</p>
                               </div>
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
                                   p.status === 'PAID'
-                                    ? 'bg-emerald-50 text-emerald-700'
+                                    ? 'bg-vm-success-bg text-vm-success'
                                     : p.status === 'PENDING'
                                     ? 'bg-amber-50 text-amber-700'
-                                    : 'bg-gray-100 text-gray-600'
+                                    : 'bg-vm-surface text-vm-muted'
                                 }`}
                               >
                                 {p.status}
@@ -1435,7 +1435,7 @@ export default function CleanerProfileDrawer({
         )}
 
         {/* Footer CTA */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50 space-y-3">
+        <div className="p-6 border-t border-vm-border bg-vm-surface space-y-3">
           <button
             onClick={() => {
               if (cleaner) {
@@ -1443,7 +1443,7 @@ export default function CleanerProfileDrawer({
                 router.push(`/admin/cleaners/${cleaner.id}`);
               }
             }}
-            className="w-full px-4 py-2 text-primary-600 border border-primary-600 rounded-lg font-medium hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
+            className="w-full px-4 py-2 text-vm-cyan-dark border border-vm-navy rounded-lg font-medium hover:bg-vm-surface transition-colors flex items-center justify-center gap-2"
           >
             <ExternalLink className="w-4 h-4" />
             View Full Scorecard
@@ -1451,7 +1451,7 @@ export default function CleanerProfileDrawer({
           <button
             disabled={!cleaner}
             onClick={() => cleaner && onAssign(cleaner)}
-            className="w-full px-4 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 bg-vm-navy text-white rounded-lg font-semibold hover:bg-vm-navy transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <CheckCircle2 className="w-5 h-5" />
             Assign This Cleaner

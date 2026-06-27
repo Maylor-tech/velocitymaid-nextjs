@@ -77,13 +77,13 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50">
+    <div className="min-h-screen bg-gradient-to-br from-vm-surface via-white to-vm-surface">
       {/* Navigation */}
       <nav className="bg-white/95 backdrop-blur-sm shadow-sm py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link href="/saas" className="flex items-center space-x-2">
-            <Sparkles className="w-7 h-7 text-primary-600" />
-            <span className="text-xl font-bold text-gray-900">VelocityMaid</span>
+            <Sparkles className="w-7 h-7 text-vm-cyan-dark" />
+            <span className="text-xl font-bold text-vm-text">VelocityMaid</span>
           </Link>
         </div>
       </nav>
@@ -91,15 +91,15 @@ export default function SignUpPage() {
       {/* Sign Up Form */}
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Your Account</h1>
-          <p className="text-gray-600 mb-8">
+          <h1 className="text-3xl font-bold text-vm-text mb-2">Create Your Account</h1>
+          <p className="text-vm-muted mb-8">
             Start your 14-day free trial. No credit card required.
           </p>
 
           {plan && (
-            <div className="mb-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
-              <p className="text-sm text-gray-600 mb-1">Selected Plan:</p>
-              <p className="text-lg font-semibold text-primary-600">{planNames[plan] || 'Starter'}</p>
+            <div className="mb-6 p-4 bg-vm-surface rounded-lg border border-vm-border">
+              <p className="text-sm text-vm-muted mb-1">Selected Plan:</p>
+              <p className="text-lg font-semibold text-vm-cyan-dark">{planNames[plan] || 'Starter'}</p>
             </div>
           )}
 
@@ -111,7 +111,7 @@ export default function SignUpPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-vm-text mb-2">
                 Full Name
               </label>
               <input
@@ -120,13 +120,13 @@ export default function SignUpPage() {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                 placeholder="John Doe"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-vm-text mb-2">
                 Email Address
               </label>
               <input
@@ -135,13 +135,13 @@ export default function SignUpPage() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                 placeholder="john@company.com"
               />
             </div>
 
             <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="companyName" className="block text-sm font-medium text-vm-text mb-2">
                 Company Name
               </label>
               <input
@@ -150,13 +150,13 @@ export default function SignUpPage() {
                 required
                 value={formData.companyName}
                 onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                 placeholder="ABC Cleaning Services"
               />
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="phone" className="block text-sm font-medium text-vm-text mb-2">
                 Phone Number
               </label>
               <input
@@ -164,13 +164,13 @@ export default function SignUpPage() {
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                 placeholder="(555) 123-4567"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-vm-text mb-2">
                 Password
               </label>
               <input
@@ -179,17 +179,17 @@ export default function SignUpPage() {
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                 placeholder="At least 8 characters"
                 minLength={8}
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-vm-muted">
                 Must be at least 8 characters with letters and numbers
               </p>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-vm-text mb-2">
                 Confirm Password
               </label>
               <input
@@ -198,7 +198,7 @@ export default function SignUpPage() {
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                 placeholder="Re-enter your password"
               />
             </div>
@@ -206,7 +206,7 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-primary-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-vm-navy text-white py-3 px-6 rounded-lg font-semibold hover:bg-vm-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isSubmitting ? (
                 'Creating Account...'
@@ -219,14 +219,14 @@ export default function SignUpPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-sm text-gray-600 text-center">
+          <p className="mt-6 text-sm text-vm-muted text-center">
             Already have an account?{' '}
-            <Link href="/saas/login" className="text-primary-600 hover:underline font-medium">
+            <Link href="/saas/login" className="text-vm-cyan-dark hover:underline font-medium">
               Sign in
             </Link>
           </p>
 
-          <p className="mt-4 text-xs text-gray-500 text-center">
+          <p className="mt-4 text-xs text-vm-muted text-center">
             By signing up, you agree to our Terms of Service and Privacy Policy.
           </p>
         </div>

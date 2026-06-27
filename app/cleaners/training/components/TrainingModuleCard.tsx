@@ -39,11 +39,11 @@ export default function TrainingModuleCard({ module }: TrainingModuleCardProps) 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+        return <CheckCircle2 className="w-5 h-5 text-vm-success" />;
       case 'IN_PROGRESS':
         return <PlayCircle className="w-5 h-5 text-blue-600" />;
       default:
-        return <Circle className="w-5 h-5 text-gray-400" />;
+        return <Circle className="w-5 h-5 text-vm-muted" />;
     }
   };
 
@@ -51,19 +51,19 @@ export default function TrainingModuleCard({ module }: TrainingModuleCardProps) 
     switch (status) {
       case 'COMPLETED':
         return (
-          <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+          <span className="px-3 py-1 bg-vm-success-bg text-vm-success rounded-full text-sm font-medium">
             Completed
           </span>
         );
       case 'IN_PROGRESS':
         return (
-          <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+          <span className="px-3 py-1 bg-vm-cyan-tint text-blue-800 rounded-full text-sm font-medium">
             In Progress
           </span>
         );
       default:
         return (
-          <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
+          <span className="px-3 py-1 bg-gray-100 text-vm-text rounded-full text-sm font-medium">
             Not Started
           </span>
         );
@@ -101,11 +101,11 @@ export default function TrainingModuleCard({ module }: TrainingModuleCardProps) 
         <div className="flex items-start gap-4 flex-1">
           <div className="mt-1">{getStatusIcon(module.status)}</div>
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">{module.title}</h2>
-            <p className="text-gray-600 mb-3">{module.description}</p>
+            <h2 className="text-xl font-semibold text-vm-text mb-2">{module.title}</h2>
+            <p className="text-vm-muted mb-3">{module.description}</p>
             <div className="flex items-center gap-4 flex-wrap">
               {getStatusBadge(module.status)}
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-vm-muted">
                 {module.progress.completed} of {module.progress.total} lessons completed
               </span>
             </div>
@@ -121,7 +121,7 @@ export default function TrainingModuleCard({ module }: TrainingModuleCardProps) 
 
       <Link
         href={`/cleaners/training/module/${module.slug}`}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        className="inline-flex items-center gap-2 px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-medium"
       >
         {getActionButton()}
       </Link>

@@ -17,6 +17,7 @@ import { isJobAssignable } from '@/lib/booking/jobPayment';
 import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
 import { logAuditEntry } from '@/lib/audit';
 import { logAdminEvent } from '@/lib/auditLog';
+import { APPROVED_CLEANER_APPLICATION_STATUSES } from '@/lib/cleaners/applicationStatus';
 
 export async function POST(request: NextRequest) {
   try {
@@ -146,6 +147,9 @@ export async function POST(request: NextRequest) {
             overallStatus: true,
           },
         },
+        CleanerProfile: {
+          select: { isInternalTeam: true, publicDisplayName: true },
+        },
       },
     });
 
@@ -173,15 +177,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Phase 1: Check cleaner has APPROVED application
+    const isInternalTeam = cleaner.CleanerProfile?.isInternalTeam === true;
+
+    // Phase 1: Check cleaner has APPROVED application (internal team exempt)
     const approvedApplication = await prisma.cleanerApplication.findFirst({
       where: {
         email: cleaner.email,
-        status: 'APPROVED',
+        status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
       },
     });
 
-    if (!approvedApplication) {
+    if (!isInternalTeam && !approvedApplication) {
       return NextResponse.json(
         {
           success: false,
@@ -257,6 +263,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    await prisma.jobTeamMember.deleteMany({ where: { jobId } });
+    await prisma.jobTeamMember.create({
+      data: { jobId, cleanerId, sortOrder: 0 },
+    });
+
     // Phase 5 Step 5: Log audit entry (existing system)
     await logAuditEntry({
       actorId: adminAuth.userId,
@@ -302,7 +313,7 @@ export async function POST(request: NextRequest) {
           const cleanerApp = await prisma.cleanerApplication.findFirst({
             where: {
               email: cleaner.email,
-              status: 'APPROVED',
+              status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
             },
             select: {
               phone: true,

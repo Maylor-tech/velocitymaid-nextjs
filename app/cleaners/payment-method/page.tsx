@@ -105,7 +105,7 @@ export default function CleanerPaymentMethodPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-700 mb-4">{error}</p>
+          <p className="text-vm-text mb-4">{error}</p>
           <Link
             href="/cleaners/login?redirect=/cleaners/payment-method"
             className="text-[#0A3D2F] font-semibold hover:underline"
@@ -124,16 +124,16 @@ export default function CleanerPaymentMethodPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link
             href="/cleaners/dashboard"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+            className="inline-flex items-center gap-2 text-vm-muted hover:text-vm-text mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-vm-text flex items-center gap-3">
             <CreditCard className="w-6 h-6 text-[#0A3D2F]" />
             Payment Method
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-vm-muted mt-1">
             Update your banking details for payouts
           </p>
         </div>
@@ -144,9 +144,9 @@ export default function CleanerPaymentMethodPage() {
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md p-8">
           {/* Success Message */}
           {success && (
-            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <p className="text-green-800 font-medium">Payment method updated successfully!</p>
+            <div className="mb-6 bg-vm-success-bg border border-vm-success/30 rounded-lg p-4 flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-vm-success" />
+              <p className="text-vm-success font-medium">Payment method updated successfully!</p>
             </div>
           )}
 
@@ -161,7 +161,7 @@ export default function CleanerPaymentMethodPage() {
           <div className="space-y-6">
             {/* Bank Name */}
             <div>
-              <label htmlFor="bankName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="bankName" className="block text-sm font-medium text-vm-text mb-2">
                 Bank Name
               </label>
               <input
@@ -176,7 +176,7 @@ export default function CleanerPaymentMethodPage() {
 
             {/* Account Number */}
             <div>
-              <label htmlFor="accountNumber" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="accountNumber" className="block text-sm font-medium text-vm-text mb-2">
                 Account Number
               </label>
               <input
@@ -191,7 +191,7 @@ export default function CleanerPaymentMethodPage() {
 
             {/* Account Type */}
             <div>
-              <label htmlFor="accountType" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="accountType" className="block text-sm font-medium text-vm-text mb-2">
                 Account Type
               </label>
               <select
@@ -208,7 +208,7 @@ export default function CleanerPaymentMethodPage() {
 
             {/* WhatsApp Number */}
             <div>
-              <label htmlFor="whatsappNumber" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="whatsappNumber" className="block text-sm font-medium text-vm-text mb-2">
                 WhatsApp Number
               </label>
               <input
@@ -219,7 +219,7 @@ export default function CleanerPaymentMethodPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 placeholder="+18765551985"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-vm-muted mt-1">
                 Include country code (e.g., +1876 for Jamaica)
               </p>
             </div>

@@ -15,7 +15,7 @@ export const VERMONT_GALLERY_ENABLED = true;
 
 const TRUST = [
   "Photo report after every clean",
-  "Locally operated from Middlebury, VT",
+  "Locally operated in Vermont's Okemo Valley, serving Ludlow, Middlebury, and surrounding towns.",
   "Turnover-ready in time for check-in",
 ];
 
@@ -27,7 +27,19 @@ function PhotoFallback() {
   );
 }
 
-export default function VermontGallery() {
+export interface VermontGalleryProps {
+  regionLabel?: string;
+  headline?: string;
+  subheadline?: string;
+  trustLine?: string;
+}
+
+export default function VermontGallery({
+  regionLabel = "Middlebury, Vermont",
+  headline = VERMONT_GALLERY_HEADLINE,
+  subheadline = VERMONT_GALLERY_SUBHEADLINE,
+  trustLine = VERMONT_GALLERY_TRUST_LINE,
+}: VermontGalleryProps = {}) {
   const [active, setActive] = useState(0);
   const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
 
@@ -43,17 +55,17 @@ export default function VermontGallery() {
   const current = photos[active];
 
   return (
-    <section className="py-16 px-6 bg-white border-t border-vm-border">
+    <section className="py-20 px-6 bg-white border-t border-vm-border">
       <div className="max-w-5xl mx-auto">
-        <div className="mb-10">
+        <div className="mb-8">
           <p className="text-xs font-semibold font-body text-vm-cyan uppercase tracking-widest mb-2">
-            {VERMONT_GALLERY_TRUST_LINE}
+            {trustLine}
           </p>
           <h2 className="text-3xl font-bold font-heading text-vm-navy mb-3">
-            {VERMONT_GALLERY_HEADLINE}
+            {headline}
           </h2>
           <p className="font-body text-vm-muted text-sm max-w-2xl leading-relaxed">
-            {VERMONT_GALLERY_SUBHEADLINE}
+            {subheadline}
           </p>
         </div>
 
@@ -85,13 +97,13 @@ export default function VermontGallery() {
               {current.label}
             </span>
             <span className="text-white/55 font-body text-xs ml-2">
-              Middlebury, Vermont
+              {regionLabel}
             </span>
           </div>
         </div>
 
         <div
-          className={`grid gap-2 mb-10 grid-cols-3 sm:grid-cols-6`}
+          className={`grid gap-2 mb-8 grid-cols-3 sm:grid-cols-6`}
         >
           {photos.map((photo, i) => (
             <button

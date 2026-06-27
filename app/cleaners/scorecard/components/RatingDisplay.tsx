@@ -25,11 +25,11 @@ export default function RatingDisplay({ rating, size = 'md', showNumber = true }
         ))}
         {hasHalfStar && <span className="text-yellow-400">☆</span>}
         {Array.from({ length: emptyStars }).map((_, i) => (
-          <span key={`empty-${i}`} className="text-gray-300">☆</span>
+          <span key={`empty-${i}`} className="text-vm-muted">☆</span>
         ))}
       </div>
       {showNumber && (
-        <span className="text-sm font-medium text-gray-700 ml-2">
+        <span className="text-sm font-medium text-vm-text ml-2">
           {rating.toFixed(1)}/5
         </span>
       )}

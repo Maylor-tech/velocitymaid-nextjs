@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { brandClasses } from "@/lib/brand/tokens";
+import { brandClasses } from "@/lib/brand/colors";
 
 export default function ContactForm() {
   const [submitted, setSubmitted] = useState(false);

@@ -106,13 +106,13 @@ export default function CustomerBillingPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
-        return 'bg-green-100 text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'open':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-vm-warning-bg text-yellow-800';
       case 'draft':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-vm-text';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-vm-text';
     }
   };
 
@@ -121,7 +121,7 @@ export default function CustomerBillingPage() {
       <CustomerLayout>
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-vm-muted">Loading...</p>
         </div>
       </CustomerLayout>
     );
@@ -130,42 +130,42 @@ export default function CustomerBillingPage() {
   return (
     <CustomerLayout>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Billing</h1>
-        <p className="text-gray-600">Manage your payment information and invoices</p>
+        <h1 className="text-3xl font-bold text-vm-text mb-2">Billing</h1>
+        <p className="text-vm-muted">Manage your payment information and invoices</p>
       </div>
 
       {/* Billing Summary */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Billing Summary</h2>
+        <h2 className="text-xl font-bold text-vm-text mb-4">Billing Summary</h2>
         
         <div className="space-y-4">
           <div className="flex items-start gap-3">
-            <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
+            <Mail className="w-5 h-5 text-vm-muted mt-0.5" />
             <div>
-              <p className="text-sm text-gray-600 mb-1">Email on File</p>
-              <p className="font-medium text-gray-900">{customer?.email || 'N/A'}</p>
+              <p className="text-sm text-vm-muted mb-1">Email on File</p>
+              <p className="font-medium text-vm-text">{customer?.email || 'N/A'}</p>
             </div>
           </div>
 
           {paymentMethod ? (
             <div className="flex items-start gap-3">
-              <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
+              <CreditCard className="w-5 h-5 text-vm-muted mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Primary Payment Method</p>
-                <p className="font-medium text-gray-900">
+                <p className="text-sm text-vm-muted mb-1">Primary Payment Method</p>
+                <p className="font-medium text-vm-text">
                   {formatCardBrand(paymentMethod.brand)} •••• {paymentMethod.last4}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-vm-muted mt-1">
                   Expires {paymentMethod.expMonth}/{paymentMethod.expYear}
                 </p>
               </div>
             </div>
           ) : (
             <div className="flex items-start gap-3">
-              <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
+              <CreditCard className="w-5 h-5 text-vm-muted mt-0.5" />
               <div>
-                <p className="text-sm text-gray-600 mb-1">Primary Payment Method</p>
-                <p className="text-sm text-gray-500">No payment method on file</p>
+                <p className="text-sm text-vm-muted mb-1">Primary Payment Method</p>
+                <p className="text-sm text-vm-muted">No payment method on file</p>
               </div>
             </div>
           )}
@@ -175,7 +175,7 @@ export default function CustomerBillingPage() {
           <button
             onClick={handleOpenBillingPortal}
             disabled={openingPortal}
-            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:bg-gray-400 flex items-center justify-center gap-2"
+            className="w-full px-6 py-3 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-semibold disabled:bg-gray-400 flex items-center justify-center gap-2"
           >
             {openingPortal ? (
               <>
@@ -194,28 +194,28 @@ export default function CustomerBillingPage() {
 
       {/* Recent Invoices */}
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Invoices</h2>
+        <h2 className="text-xl font-bold text-vm-text mb-4">Recent Invoices</h2>
         
         {invoices.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No invoices found</p>
+          <p className="text-vm-muted text-center py-8">No invoices found</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Description
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -223,13 +223,13 @@ export default function CustomerBillingPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {invoices.map((invoice) => (
                   <tr key={invoice.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-muted">
                       {formatDate(invoice.created)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
+                    <td className="px-4 py-3 text-sm text-vm-text">
                       {invoice.description}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-vm-text">
                       ${invoice.amountPaid.toFixed(2)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">

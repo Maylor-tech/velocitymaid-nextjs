@@ -139,7 +139,7 @@ export default function SubscriptionsPage() {
       <CustomerLayout>
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-vm-muted">Loading...</p>
         </div>
       </CustomerLayout>
     );
@@ -148,13 +148,13 @@ export default function SubscriptionsPage() {
   return (
     <CustomerLayout>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Subscriptions</h1>
-        <p className="text-gray-600">Manage your recurring cleaning plans</p>
+        <h1 className="text-3xl font-bold text-vm-text mb-2">Subscriptions</h1>
+        <p className="text-vm-muted">Manage your recurring cleaning plans</p>
       </div>
 
       {status === 'success' && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-          <p className="text-green-600 font-medium">Subscription created successfully!</p>
+        <div className="bg-vm-success-bg border border-vm-success/30 rounded-xl p-4 mb-6">
+          <p className="text-vm-success font-medium">Subscription created successfully!</p>
         </div>
       )}
 
@@ -170,17 +170,17 @@ export default function SubscriptionsPage() {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">
+                <h2 className="text-xl font-bold text-vm-text mb-2">
                   {formatPlanType(subscription.planType)}
                 </h2>
                 <div className="flex items-center gap-3">
                   <RegionBadge location={subscription.serviceLocation} size="sm" />
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                     subscription.status === 'active' 
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-vm-success-bg text-vm-success'
                       : subscription.status === 'canceled'
-                      ? 'bg-gray-100 text-gray-800'
-                      : 'bg-yellow-100 text-yellow-800'
+                      ? 'bg-gray-100 text-vm-text'
+                      : 'bg-vm-warning-bg text-yellow-800'
                   }`}>
                     {subscription.status}
                   </span>
@@ -190,28 +190,28 @@ export default function SubscriptionsPage() {
 
             <div className="space-y-3 mb-6">
               <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-gray-400" />
+                <Calendar className="w-5 h-5 text-vm-muted" />
                 <div>
-                  <p className="text-sm text-gray-600">Next Billing Date</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-vm-muted">Next Billing Date</p>
+                  <p className="font-medium text-vm-text">
                     {formatDate(subscription.nextBillingDate || subscription.currentPeriodEnd || null)}
                   </p>
                 </div>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600 mb-1">Default Service</p>
-                <p className="font-medium text-gray-900 capitalize">{subscription.defaultServiceType}</p>
+                <p className="text-sm text-vm-muted mb-1">Default Service</p>
+                <p className="font-medium text-vm-text capitalize">{subscription.defaultServiceType}</p>
               </div>
 
               {subscription.defaultAddOns.length > 0 && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Default Add-ons</p>
+                  <p className="text-sm text-vm-muted mb-1">Default Add-ons</p>
                   <div className="flex flex-wrap gap-2">
                     {subscription.defaultAddOns.map((addon, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm"
+                        className="px-2 py-1 bg-vm-cyan-tint text-blue-800 rounded text-sm"
                       >
                         {addon}
                       </span>
@@ -238,7 +238,7 @@ export default function SubscriptionsPage() {
             <div className="flex gap-3 pt-4 border-t border-gray-200">
               <button
                 onClick={() => router.push('/customer/billing')}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                className="px-4 py-2 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors font-medium"
               >
                 Manage Billing
               </button>
@@ -246,7 +246,7 @@ export default function SubscriptionsPage() {
                 <button
                   onClick={handleCancel}
                   disabled={canceling}
-                  className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium disabled:bg-gray-200"
+                  className="px-4 py-2 bg-vm-danger-bg text-red-700 rounded-lg hover:bg-vm-danger-bg transition-colors font-medium disabled:bg-gray-200"
                 >
                   {canceling ? 'Cancelling...' : 'Cancel Subscription'}
                 </button>
@@ -256,23 +256,23 @@ export default function SubscriptionsPage() {
         </div>
       ) : (
         <div>
-          <p className="text-gray-600 mb-6">Choose a recurring cleaning plan that works for you:</p>
+          <p className="text-vm-muted mb-6">Choose a recurring cleaning plan that works for you:</p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Weekly Plan */}
             <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Weekly Clean Plan</h3>
-              <p className="text-gray-600 text-sm mb-4">
+              <h3 className="text-xl font-bold text-vm-text mb-2">Weekly Clean Plan</h3>
+              <p className="text-vm-muted text-sm mb-4">
                 Get your space cleaned every week. Perfect for busy households.
               </p>
               <div className="mb-4">
-                <span className="text-3xl font-bold text-gray-900">$80</span>
-                <span className="text-gray-600">/week</span>
+                <span className="text-3xl font-bold text-vm-text">$80</span>
+                <span className="text-vm-muted">/week</span>
               </div>
               <button
                 onClick={() => handleStartPlan('weekly')}
                 disabled={creating}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:bg-gray-400"
+                className="w-full px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-semibold disabled:bg-gray-400"
               >
                 {creating ? 'Starting...' : 'Start Plan'}
               </button>
@@ -281,20 +281,20 @@ export default function SubscriptionsPage() {
             {/* Bi-weekly Plan */}
             <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow border-2 border-blue-200">
               <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-xl font-bold text-gray-900">Bi-weekly Refresh</h3>
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">Popular</span>
+                <h3 className="text-xl font-bold text-vm-text">Bi-weekly Refresh</h3>
+                <span className="px-2 py-1 bg-vm-cyan-tint text-blue-800 rounded text-xs font-medium">Popular</span>
               </div>
-              <p className="text-gray-600 text-sm mb-4">
+              <p className="text-vm-muted text-sm mb-4">
                 Cleanings every two weeks. Great balance of freshness and value.
               </p>
               <div className="mb-4">
-                <span className="text-3xl font-bold text-gray-900">$120</span>
-                <span className="text-gray-600">/2 weeks</span>
+                <span className="text-3xl font-bold text-vm-text">$120</span>
+                <span className="text-vm-muted">/2 weeks</span>
               </div>
               <button
                 onClick={() => handleStartPlan('biweekly')}
                 disabled={creating}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:bg-gray-400"
+                className="w-full px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-semibold disabled:bg-gray-400"
               >
                 {creating ? 'Starting...' : 'Start Plan'}
               </button>
@@ -302,18 +302,18 @@ export default function SubscriptionsPage() {
 
             {/* Monthly Plan */}
             <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Monthly Deep Care</h3>
-              <p className="text-gray-600 text-sm mb-4">
+              <h3 className="text-xl font-bold text-vm-text mb-2">Monthly Deep Care</h3>
+              <p className="text-vm-muted text-sm mb-4">
                 Monthly deep clean to keep everything spotless.
               </p>
               <div className="mb-4">
-                <span className="text-3xl font-bold text-gray-900">$200</span>
-                <span className="text-gray-600">/month</span>
+                <span className="text-3xl font-bold text-vm-text">$200</span>
+                <span className="text-vm-muted">/month</span>
               </div>
               <button
                 onClick={() => handleStartPlan('monthly')}
                 disabled={creating}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:bg-gray-400"
+                className="w-full px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-semibold disabled:bg-gray-400"
               >
                 {creating ? 'Starting...' : 'Start Plan'}
               </button>

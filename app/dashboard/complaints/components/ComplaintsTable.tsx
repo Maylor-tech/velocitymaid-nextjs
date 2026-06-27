@@ -23,15 +23,15 @@ export default function ComplaintsTable({ complaints, onViewComplaint }: Complai
   const getStatusColor = (status: Complaint['status']) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-vm-warning-bg text-yellow-800';
       case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-vm-cyan-tint text-blue-800';
       case 'resolved':
-        return 'bg-green-100 text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'closed':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-vm-text';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-vm-text';
     }
   };
 
@@ -39,11 +39,11 @@ export default function ComplaintsTable({ complaints, onViewComplaint }: Complai
     return (
       <div className="flex items-center gap-1">
         {Array.from({ length: 5 }).map((_, i) => (
-          <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>
+          <span key={i} className={i < rating ? 'text-yellow-400' : 'text-vm-muted'}>
             ★
           </span>
         ))}
-        <span className="ml-1 text-sm text-gray-600">{rating}/5</span>
+        <span className="ml-1 text-sm text-vm-muted">{rating}/5</span>
       </div>
     );
   };
@@ -51,46 +51,46 @@ export default function ComplaintsTable({ complaints, onViewComplaint }: Complai
   if (complaints.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Active Complaints</h2>
-        <p className="text-gray-500 text-center py-8">No complaints found</p>
+        <h2 className="text-xl font-bold text-vm-text mb-4">Active Complaints</h2>
+        <p className="text-vm-muted text-center py-8">No complaints found</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 overflow-x-auto">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Active Complaints</h2>
+      <h2 className="text-xl font-bold text-vm-text mb-4">Active Complaints</h2>
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Created
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Job ID
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Customer
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Cleaner
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Rating
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Location
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Status
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Resolution
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Last Updated
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Action
             </th>
           </tr>
@@ -103,16 +103,16 @@ export default function ComplaintsTable({ complaints, onViewComplaint }: Complai
                 complaint.status === 'pending' ? 'bg-yellow-50' : ''
               }`}
             >
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-muted">
                 {formatDate(complaint.createdAt)}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text font-mono">
                 {complaint.jobId.substring(0, 12)}...
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-vm-text">
                 {complaint.customerName}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-muted">
                 {complaint.cleanerId ? complaint.cleanerId.substring(0, 12) + '...' : 'N/A'}
               </td>
               <td className="px-4 py-3 whitespace-nowrap">
@@ -126,14 +126,14 @@ export default function ComplaintsTable({ complaints, onViewComplaint }: Complai
                   {complaint.status.replace('_', ' ')}
                 </span>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-muted">
                 {complaint.resolutionType ? (
                   <span className="capitalize">{complaint.resolutionType.replace('_', ' ')}</span>
                 ) : (
-                  <span className="text-gray-400">—</span>
+                  <span className="text-vm-muted">—</span>
                 )}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-muted">
                 {formatDateTime(complaint.updatedAt)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm">

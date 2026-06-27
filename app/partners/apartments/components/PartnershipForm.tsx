@@ -120,7 +120,7 @@ export default function PartnershipForm() {
           )}
         </button>
 
-        <p className="text-sm text-gray-600 text-center">
+        <p className="text-sm text-vm-muted text-center">
           By submitting this form, you agree to be contacted by VelocityMaid regarding partnership opportunities.
         </p>
       </div>

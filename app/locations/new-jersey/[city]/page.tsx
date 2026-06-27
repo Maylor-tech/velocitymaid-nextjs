@@ -191,7 +191,7 @@ export default async function CityLandingPage({ params }: PageProps) {
         </nav>
 
         {/* Hero Section */}
-        <section className="bg-vm-navy text-vm-white py-20 md:py-32">
+        <section className="bg-vm-navy text-vm-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <MapPin className="w-16 h-16 text-vm-cyan mx-auto mb-6" />

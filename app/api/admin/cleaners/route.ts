@@ -17,6 +17,7 @@ import { getCleanerAverageJQS } from '@/utils/jobQualityScore';
 import { computeAssignmentScore, CleanerForScoring } from '@/lib/assignment-scoring';
 import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level';
 import { ACTIVE_JOB_STATUS_EXCLUDE } from '@/lib/jobStatus';
+import { APPROVED_CLEANER_APPLICATION_STATUSES } from '@/lib/cleaners/applicationStatus';
 
 function startOfToday(): Date {
   const d = new Date();
@@ -104,16 +105,36 @@ export async function GET(request: NextRequest) {
     const cleanerApps = await prisma.cleanerApplication.findMany({
       where: {
         branchId,
-        status: 'APPROVED',
+        status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
       },
     });
 
-    const cleaners = [];
+    const internalCleaners = await prisma.user.findMany({
+      where: {
+        role: 'CLEANER',
+        CleanerProfile: { isInternalTeam: true },
+        OR: [
+          { primaryBranchId: branchId },
+          { UserBranch: { some: { branchId } } },
+        ],
+      },
+      select: { email: true },
+    });
 
-    for (const cleanerApp of cleanerApps) {
+    const internalEmails = new Set(internalCleaners.map((c) => c.email.toLowerCase()));
+
+    const cleaners = [];
+    const emailsToProcess = [
+      ...new Set([
+        ...cleanerApps.map((a) => a.email.toLowerCase()),
+        ...internalEmails,
+      ]),
+    ];
+
+    for (const email of emailsToProcess) {
       const user = await prisma.user.findUnique({
         where: {
-          email: cleanerApp.email,
+          email,
           role: 'CLEANER',
         },
         include: {
@@ -386,6 +407,8 @@ export async function GET(request: NextRequest) {
 
       // Calculate cleaner level (Phase 4 Part B)
       let cleanerLevel = null;
+      let avgRating: number | null = null;
+      let completionRate = 0;
       try {
         const allJobsForLevel = await prisma.job.findMany({
           where: { assignedCleanerId: user.id },
@@ -401,12 +424,12 @@ export async function GET(request: NextRequest) {
 
         const totalAssigned = allJobsForLevel.length;
         const completedCount = allJobsForLevel.filter((j) => j.status === JobStatus.COMPLETED).length;
-        const completionRate = totalAssigned > 0 ? (completedCount / totalAssigned) * 100 : 0;
+        completionRate = totalAssigned > 0 ? (completedCount / totalAssigned) * 100 : 0;
 
         const ratings = await prisma.cleanerRating.findMany({
           where: { cleanerId: user.id },
         });
-        const avgRating =
+        avgRating =
           ratings.length > 0
             ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
             : null;

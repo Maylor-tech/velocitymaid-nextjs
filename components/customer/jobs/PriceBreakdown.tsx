@@ -55,7 +55,7 @@ export default function PriceBreakdown({
             {amountPaid != null && (
               <div className="flex justify-between text-vm-muted">
                 <span>Paid to date</span>
-                <span className="text-green-700">{formatCurrency(amountPaid)}</span>
+                <span className="text-vm-success">{formatCurrency(amountPaid)}</span>
               </div>
             )}
             {balanceDue != null && balanceDue > 0 && paymentStatus === 'BALANCE_DUE' && (

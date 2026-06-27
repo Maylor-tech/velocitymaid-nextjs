@@ -76,7 +76,7 @@ export default function JamaicaRevenueDashboard() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading revenue data...</p>
+          <p className="mt-4 text-vm-muted">Loading revenue data...</p>
         </div>
       </div>
     );
@@ -99,8 +99,8 @@ export default function JamaicaRevenueDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Jamaica Revenue Dashboard</h1>
-          <p className="text-gray-600">Port Antonio Branch Financial Overview</p>
+          <h1 className="text-3xl font-bold text-vm-text mb-2">Jamaica Revenue Dashboard</h1>
+          <p className="text-vm-muted">Port Antonio Branch Financial Overview</p>
           
           {/* Date Range Filter */}
           <div className="mt-4 flex gap-2">
@@ -108,8 +108,8 @@ export default function JamaicaRevenueDashboard() {
               onClick={() => setDateRange('all')}
               className={`px-4 py-2 rounded-lg transition-colors ${
                 dateRange === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-vm-navy text-white'
+                  : 'bg-white text-vm-text hover:bg-gray-100'
               }`}
             >
               All Time
@@ -118,8 +118,8 @@ export default function JamaicaRevenueDashboard() {
               onClick={() => setDateRange('month')}
               className={`px-4 py-2 rounded-lg transition-colors ${
                 dateRange === 'month'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-vm-navy text-white'
+                  : 'bg-white text-vm-text hover:bg-gray-100'
               }`}
             >
               Last Month
@@ -128,8 +128,8 @@ export default function JamaicaRevenueDashboard() {
               onClick={() => setDateRange('week')}
               className={`px-4 py-2 rounded-lg transition-colors ${
                 dateRange === 'week'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-vm-navy text-white'
+                  : 'bg-white text-vm-text hover:bg-gray-100'
               }`}
             >
               Last Week
@@ -141,55 +141,55 @@ export default function JamaicaRevenueDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Total Revenue (JMD)</h3>
-              <DollarSign className="w-5 h-5 text-green-600" />
+              <h3 className="text-sm font-medium text-vm-muted">Total Revenue (JMD)</h3>
+              <DollarSign className="w-5 h-5 text-vm-success" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.totalRevenueJMD, 'JMD')}
             </p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Total Revenue (USD)</h3>
+              <h3 className="text-sm font-medium text-vm-muted">Total Revenue (USD)</h3>
               <DollarSign className="w-5 h-5 text-blue-600" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.totalRevenueUSD, 'USD')}
             </p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Combined Revenue</h3>
+              <h3 className="text-sm font-medium text-vm-muted">Combined Revenue</h3>
               <TrendingUp className="w-5 h-5 text-purple-600" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.totalRevenueCombined, 'JMD')}
             </p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Completed Jobs</h3>
+              <h3 className="text-sm font-medium text-vm-muted">Completed Jobs</h3>
               <Calendar className="w-5 h-5 text-orange-600" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">{data.jobCount}</p>
+            <p className="text-2xl font-bold text-vm-text">{data.jobCount}</p>
           </div>
         </div>
 
         {/* Additional Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Average Ticket Size</h3>
+            <h3 className="text-lg font-semibold text-vm-text mb-4">Average Ticket Size</h3>
             <p className="text-3xl font-bold text-blue-600">
               {formatCurrency(data.averageTicketSize, 'JMD')}
             </p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Repeat Customer Rate</h3>
-            <p className="text-3xl font-bold text-green-600">
+            <h3 className="text-lg font-semibold text-vm-text mb-4">Repeat Customer Rate</h3>
+            <p className="text-3xl font-bold text-vm-success">
               {data.repeatCustomerRate.toFixed(1)}%
             </p>
           </div>
@@ -197,13 +197,13 @@ export default function JamaicaRevenueDashboard() {
 
         {/* Service Mix */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Mix Distribution</h3>
+          <h3 className="text-lg font-semibold text-vm-text mb-4">Service Mix Distribution</h3>
           <div className="space-y-3">
             {data.serviceMixDistribution.map((service, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">{service.serviceType}</p>
-                  <p className="text-sm text-gray-600">{service.count} jobs</p>
+                  <p className="font-medium text-vm-text">{service.serviceType}</p>
+                  <p className="text-sm text-vm-muted">{service.count} jobs</p>
                 </div>
                 <p className="text-lg font-bold text-blue-600">
                   {formatCurrency(service.revenue, 'JMD')}
@@ -217,12 +217,12 @@ export default function JamaicaRevenueDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Weekly Revenue */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue by Week (Last 12 Weeks)</h3>
+            <h3 className="text-lg font-semibold text-vm-text mb-4">Revenue by Week (Last 12 Weeks)</h3>
             <div className="space-y-2">
               {data.revenueByWeek.slice(-12).map((week, index) => (
                 <div key={index} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                  <span className="text-sm text-gray-600">{week.week}</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="text-sm text-vm-muted">{week.week}</span>
+                  <span className="font-semibold text-vm-text">
                     {formatCurrency(week.revenueCombined, 'JMD')}
                   </span>
                 </div>
@@ -232,12 +232,12 @@ export default function JamaicaRevenueDashboard() {
 
           {/* Monthly Revenue */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue by Month (Last 12 Months)</h3>
+            <h3 className="text-lg font-semibold text-vm-text mb-4">Revenue by Month (Last 12 Months)</h3>
             <div className="space-y-2">
               {data.revenueByMonth.slice(-12).map((month, index) => (
                 <div key={index} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                  <span className="text-sm text-gray-600">{month.month}</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="text-sm text-vm-muted">{month.month}</span>
+                  <span className="font-semibold text-vm-text">
                     {formatCurrency(month.revenueCombined, 'JMD')}
                   </span>
                 </div>

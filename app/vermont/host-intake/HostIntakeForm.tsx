@@ -194,7 +194,7 @@ export default function HostIntakeForm() {
         </header>
 
         <main className="px-4 sm:px-6 py-12 sm:py-16">
-          <div className="max-w-[560px] mx-auto bg-white border border-vm-border rounded-xl p-8 sm:p-10 text-center">
+          <div className="max-w-[560px] mx-auto bg-white border border-vm-border rounded-xl p-8 sm:p-8 text-center">
             <h1 className="font-heading font-semibold text-vm-navy text-2xl mb-4">
               You&apos;re all set, {firstName}!
             </h1>
@@ -230,7 +230,7 @@ export default function HostIntakeForm() {
         </div>
       </header>
 
-      <main className="px-4 sm:px-6 py-10 sm:py-16">
+      <main className="px-4 sm:px-6 py-8 sm:py-16">
         <div className="max-w-[560px] mx-auto mb-8 text-center">
           <h1 className="font-heading font-bold text-vm-navy text-2xl sm:text-3xl mb-2">
             Host intake form

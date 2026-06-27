@@ -188,16 +188,16 @@ export default async function BranchLandingPage({ params }: PageProps) {
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex items-center space-x-2">
                   <Sparkles className="w-8 h-8 text-blue-600" />
-                  <span className="text-2xl font-bold text-gray-900">VelocityMaid</span>
+                  <span className="text-2xl font-bold text-vm-text">VelocityMaid</span>
                 </div>
               </div>
             </header>
 
             {/* Hero Section */}
-            <section className="py-20 px-8 bg-blue-600 text-white">
+            <section className="py-20 px-8 bg-vm-navy text-white">
               <div className="max-w-4xl mx-auto text-center">
                 <div className="mb-4">
-                  <span className="inline-block px-4 py-2 bg-blue-500 text-white rounded-full text-sm font-semibold mb-4">
+                  <span className="inline-block px-4 py-2 bg-vm-navy text-white rounded-full text-sm font-semibold mb-4">
                     COMING SOON
                   </span>
                 </div>
@@ -232,7 +232,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
                   </a>
                   <a
                     href="/contact"
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-blue-500 text-white border-2 border-white rounded-lg font-semibold text-lg hover:bg-blue-400 transition-colors shadow-lg"
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-vm-navy text-white border-2 border-white rounded-lg font-semibold text-lg hover:bg-vm-navy transition-colors shadow-lg"
                   >
                     Request Villa Partnership
                     <ArrowRight className="w-5 h-5" />
@@ -242,68 +242,68 @@ export default async function BranchLandingPage({ params }: PageProps) {
             </section>
 
             {/* Villa-Specific Section */}
-            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-50 to-orange-50">
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-yellow-50 to-orange-50">
               <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-12">
-                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                  <h2 className="text-3xl md:text-4xl font-bold text-vm-text mb-4">
                     Perfect for Villas, Airbnbs, and Guest Houses
                   </h2>
-                  <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                  <p className="text-lg text-vm-muted max-w-3xl mx-auto">
                     Specialized cleaning services designed for short-term rental properties and vacation homes
                   </p>
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                   <div className="bg-white p-6 rounded-xl shadow-md">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                       <Check className="w-6 h-6 text-blue-600" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Professional Turnover Cleaning</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-xl font-bold text-vm-text mb-2">Professional Turnover Cleaning</h3>
+                    <p className="text-vm-muted">
                       Fast, thorough cleaning between guests to ensure your property is always guest-ready
                     </p>
                   </div>
                   <div className="bg-white p-6 rounded-xl shadow-md">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                       <Check className="w-6 h-6 text-blue-600" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Bed Makeover & Linen Reset</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-xl font-bold text-vm-text mb-2">Bed Makeover & Linen Reset</h3>
+                    <p className="text-vm-muted">
                       Fresh linens, perfectly made beds, and hotel-quality presentation every time
                     </p>
                   </div>
                   <div className="bg-white p-6 rounded-xl shadow-md">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                       <Check className="w-6 h-6 text-blue-600" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Inventory Check</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-xl font-bold text-vm-text mb-2">Inventory Check</h3>
+                    <p className="text-vm-muted">
                       Verify all amenities, supplies, and equipment are present and in working order
                     </p>
                   </div>
                   <div className="bg-white p-6 rounded-xl shadow-md">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                       <Check className="w-6 h-6 text-blue-600" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Damage Reporting</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-xl font-bold text-vm-text mb-2">Damage Reporting</h3>
+                    <p className="text-vm-muted">
                       Document any issues or damages found during cleaning for your records
                     </p>
                   </div>
                   <div className="bg-white p-6 rounded-xl shadow-md">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                       <Check className="w-6 h-6 text-blue-600" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Restock Recommendations</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-xl font-bold text-vm-text mb-2">Restock Recommendations</h3>
+                    <p className="text-vm-muted">
                       Get notified when supplies are running low so you can restock before guests arrive
                     </p>
                   </div>
                   <div className="bg-white p-6 rounded-xl shadow-md md:col-span-2 lg:col-span-1">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                       <Check className="w-6 h-6 text-blue-600" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Flexible Scheduling</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-xl font-bold text-vm-text mb-2">Flexible Scheduling</h3>
+                    <p className="text-vm-muted">
                       Book cleanings around your guest check-in/check-out times for seamless turnovers
                     </p>
                   </div>
@@ -311,7 +311,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
                 <div className="text-center">
                   <a
                     href="/booking?branch=port-antonio"
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors shadow-lg"
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-vm-navy text-white rounded-lg font-semibold text-lg hover:bg-vm-navy transition-colors shadow-lg"
                   >
                     Book Villa Cleaning
                     <ArrowRight className="w-5 h-5" />
@@ -321,100 +321,100 @@ export default async function BranchLandingPage({ params }: PageProps) {
             </section>
 
             {/* Pricing Overview (JMD) */}
-            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
               <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-12">
-                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                  <h2 className="text-3xl md:text-4xl font-bold text-vm-text mb-4">
                     Pricing Overview (JMD)
                   </h2>
-                  <p className="text-lg text-gray-600">
+                  <p className="text-lg text-vm-muted">
                     Transparent pricing in Jamaican Dollars. All Jamaica bookings are paid in JMD on arrival or online.
                   </p>
                 </div>
                 <div className="grid md:grid-cols-3 gap-6">
                   <div className="bg-gray-50 p-8 rounded-xl border-2 border-gray-200">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Standard Clean</h3>
+                    <h3 className="text-2xl font-bold text-vm-text mb-2">Standard Clean</h3>
                     <p className="text-4xl font-bold text-blue-600 mb-4">JMD $7,500</p>
-                    <p className="text-gray-600 mb-6">Perfect for regular maintenance cleaning</p>
+                    <p className="text-vm-muted mb-6">Perfect for regular maintenance cleaning</p>
                     <ul className="space-y-2 mb-6">
-                      <li className="flex items-center text-gray-700">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                      <li className="flex items-center text-vm-text">
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Kitchen & Bathrooms
                       </li>
-                      <li className="flex items-center text-gray-700">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                      <li className="flex items-center text-vm-text">
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Dusting & Vacuuming
                       </li>
-                      <li className="flex items-center text-gray-700">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                      <li className="flex items-center text-vm-text">
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Floor Mopping
                       </li>
                     </ul>
                     <a
                       href="/booking?branch=port-antonio"
-                      className="block w-full text-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                      className="block w-full text-center px-6 py-3 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-semibold"
                     >
                       Book Now
                     </a>
                   </div>
                   <div className="bg-blue-50 p-8 rounded-xl border-2 border-blue-600 relative">
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                      <span className="bg-vm-navy text-white px-4 py-1 rounded-full text-sm font-semibold">
                         MOST POPULAR
                       </span>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Deep Clean</h3>
+                    <h3 className="text-2xl font-bold text-vm-text mb-2">Deep Clean</h3>
                     <p className="text-4xl font-bold text-blue-600 mb-4">JMD $12,000</p>
-                    <p className="text-gray-600 mb-6">Thorough top-to-bottom cleaning service</p>
+                    <p className="text-vm-muted mb-6">Thorough top-to-bottom cleaning service</p>
                     <ul className="space-y-2 mb-6">
-                      <li className="flex items-center text-gray-700">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                      <li className="flex items-center text-vm-text">
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Everything in Standard
                       </li>
-                      <li className="flex items-center text-gray-700">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                      <li className="flex items-center text-vm-text">
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Inside Appliances
                       </li>
-                      <li className="flex items-center text-gray-700">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                      <li className="flex items-center text-vm-text">
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Baseboards & Windows
                       </li>
                     </ul>
                     <a
                       href="/booking?branch=port-antonio"
-                      className="block w-full text-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                      className="block w-full text-center px-6 py-3 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-semibold"
                     >
                       Book Now
                     </a>
                   </div>
                   <div className="bg-gray-50 p-8 rounded-xl border-2 border-gray-200">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Move In/Out</h3>
+                    <h3 className="text-2xl font-bold text-vm-text mb-2">Move In/Out</h3>
                     <p className="text-4xl font-bold text-blue-600 mb-4">JMD $20,000</p>
-                    <p className="text-gray-600 mb-6">Complete property cleaning for transitions</p>
+                    <p className="text-vm-muted mb-6">Complete property cleaning for transitions</p>
                     <ul className="space-y-2 mb-6">
-                      <li className="flex items-center text-gray-700">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                      <li className="flex items-center text-vm-text">
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Everything in Deep Clean
                       </li>
-                      <li className="flex items-center text-gray-700">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                      <li className="flex items-center text-vm-text">
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Inside Cabinets & Closets
                       </li>
-                      <li className="flex items-center text-gray-700">
-                        <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                      <li className="flex items-center text-vm-text">
+                        <Check className="w-5 h-5 text-vm-success mr-2 flex-shrink-0" />
                         Full Sanitization
                       </li>
                     </ul>
                     <a
                       href="/booking?branch=port-antonio"
-                      className="block w-full text-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                      className="block w-full text-center px-6 py-3 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-semibold"
                     >
                       Book Now
                     </a>
                   </div>
                 </div>
                 <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
-                  <p className="text-gray-700">
+                  <p className="text-vm-text">
                     <strong>Note:</strong> All Jamaica bookings are paid in JMD on arrival or online. Prices may vary based on property size and condition.
                   </p>
                 </div>
@@ -423,26 +423,26 @@ export default async function BranchLandingPage({ params }: PageProps) {
 
           {/* Services Section */}
           {servicePackages.length > 0 && (
-            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
               <div className="max-w-6xl mx-auto">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">
+                <h2 className="text-3xl font-bold text-vm-text mb-4 text-center">
                   Our Cleaning Services
                 </h2>
-                <p className="text-lg text-gray-600 mb-12 text-center max-w-3xl mx-auto">
+                <p className="text-lg text-vm-muted mb-12 text-center max-w-3xl mx-auto">
                   From standard house cleaning to deep cleans and move-in/out services, we provide comprehensive cleaning solutions for homes, villas, and short-term rentals across Port Antonio and Portland.
                 </p>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {servicePackages.map((pkg) => (
                     <div key={pkg.id} className="bg-gray-50 p-6 rounded-xl">
-                      <h3 className="text-xl font-bold text-gray-900 mb-3">{pkg.name}</h3>
+                      <h3 className="text-xl font-bold text-vm-text mb-3">{pkg.name}</h3>
                       {pkg.description && (
-                        <p className="text-gray-600 mb-4">{pkg.description}</p>
+                        <p className="text-vm-muted mb-4">{pkg.description}</p>
                       )}
                       <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-bold text-blue-600">
                           ${pkg.basePrice.toFixed(2)}
                         </span>
-                        <span className="text-gray-600">
+                        <span className="text-vm-muted">
                           / {pkg.defaultDurationHours} {pkg.defaultDurationHours === 1 ? 'hour' : 'hours'}
                         </span>
                       </div>
@@ -454,66 +454,66 @@ export default async function BranchLandingPage({ params }: PageProps) {
           )}
 
           {/* Why Choose Us Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
             <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">
+              <h2 className="text-3xl font-bold text-vm-text mb-4 text-center">
                 Why Choose VelocityMaid in Jamaica?
               </h2>
-              <p className="text-lg text-gray-600 mb-12 text-center max-w-3xl mx-auto">
+              <p className="text-lg text-vm-muted mb-12 text-center max-w-3xl mx-auto">
                 We're bringing international cleaning standards to Port Antonio, combining professional training with local expertise to deliver exceptional service.
               </p>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-xl">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                     <Check className="w-6 h-6 text-blue-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Internationally Trained Team</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-bold text-vm-text mb-3">Internationally Trained Team</h3>
+                  <p className="text-vm-muted">
                     Our cleaners receive world-class training in professional cleaning techniques, ensuring consistent, high-quality results.
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                     <Check className="w-6 h-6 text-blue-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Villa & Airbnb Specialists</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-bold text-vm-text mb-3">Villa & Airbnb Specialists</h3>
+                  <p className="text-vm-muted">
                     Specialized in short-term rental turnovers, ensuring your property is guest-ready with attention to every detail.
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                     <Check className="w-6 h-6 text-blue-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Eco-Friendly Products</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-bold text-vm-text mb-3">Eco-Friendly Products</h3>
+                  <p className="text-vm-muted">
                     We use safe, environmentally responsible cleaning products that protect your family, pets, and the beautiful Jamaican environment.
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                     <Check className="w-6 h-6 text-blue-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Flexible Scheduling</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-bold text-vm-text mb-3">Flexible Scheduling</h3>
+                  <p className="text-vm-muted">
                     We work around your schedule, whether you need regular maintenance or one-time deep cleans for special occasions.
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                     <Check className="w-6 h-6 text-blue-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Local Community Focus</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-bold text-vm-text mb-3">Local Community Focus</h3>
+                  <p className="text-vm-muted">
                     We're building a team of local professionals, creating employment opportunities while serving the Port Antonio community.
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                     <Check className="w-6 h-6 text-blue-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Satisfaction Guaranteed</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-bold text-vm-text mb-3">Satisfaction Guaranteed</h3>
+                  <p className="text-vm-muted">
                     Your satisfaction is our priority. We stand behind our work and will return to address any concerns at no extra charge.
                   </p>
                 </div>
@@ -523,12 +523,12 @@ export default async function BranchLandingPage({ params }: PageProps) {
 
           {/* Testimonials Section */}
           {testimonials.length > 0 && (
-            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
               <div className="max-w-6xl mx-auto">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">
+                <h2 className="text-3xl font-bold text-vm-text mb-4 text-center">
                   What Our Customers Say
                 </h2>
-                <p className="text-lg text-gray-600 mb-12 text-center">
+                <p className="text-lg text-vm-muted mb-12 text-center">
                   Trusted by homeowners, villa owners, and property managers across Port Antonio
                 </p>
                 <div className="grid md:grid-cols-3 gap-6">
@@ -539,11 +539,11 @@ export default async function BranchLandingPage({ params }: PageProps) {
                           <span key={i} className="text-yellow-400">★</span>
                         ))}
                       </div>
-                      <p className="text-gray-700 mb-4 italic">
+                      <p className="text-vm-text mb-4 italic">
                         "{testimonial.comment || testimonial.text}"
                       </p>
-                      <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                      <p className="text-sm text-gray-500">{testimonial.location || 'Port Antonio'}</p>
+                      <p className="font-semibold text-vm-text">{testimonial.name}</p>
+                      <p className="text-sm text-vm-muted">{testimonial.location || 'Port Antonio'}</p>
                     </div>
                   ))}
                 </div>
@@ -552,12 +552,12 @@ export default async function BranchLandingPage({ params }: PageProps) {
           )}
 
           {/* Service Areas Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
             <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">
+              <h2 className="text-3xl font-bold text-vm-text mb-4 text-center">
                 Areas We Serve in Portland
               </h2>
-              <p className="text-lg text-gray-600 mb-8 text-center">
+              <p className="text-lg text-vm-muted mb-8 text-center">
                 We provide professional cleaning services throughout Portland Parish, Jamaica
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
@@ -575,39 +575,39 @@ export default async function BranchLandingPage({ params }: PageProps) {
           </section>
 
           {/* Why Join Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
             <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
+              <h2 className="text-3xl font-bold text-vm-text mb-12 text-center">
                 Why Join VelocityMaid?
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-gray-50 p-6 rounded-xl">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Competitive Pay</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-bold text-vm-text mb-3">Competitive Pay</h3>
+                  <p className="text-vm-muted">
                     Earn competitive rates with performance bonuses and incentive programs.
                   </p>
                 </div>
                 <div className="bg-gray-50 p-6 rounded-xl">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Flexible Schedule</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-bold text-vm-text mb-3">Flexible Schedule</h3>
+                  <p className="text-vm-muted">
                     Work on your terms—choose your own hours and availability.
                   </p>
                 </div>
                 <div className="bg-gray-50 p-6 rounded-xl">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Professional Training</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-bold text-vm-text mb-3">Professional Training</h3>
+                  <p className="text-vm-muted">
                     We train you to deliver world-class cleaning with confidence and excellence.
                   </p>
                 </div>
                 <div className="bg-gray-50 p-6 rounded-xl">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Growth Opportunities</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-bold text-vm-text mb-3">Growth Opportunities</h3>
+                  <p className="text-vm-muted">
                     Build your skills and access future opportunities within other VelocityMaid branches.
                   </p>
                 </div>
                 <div className="bg-gray-50 p-6 rounded-xl md:col-span-2 lg:col-span-1">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Community Impact</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-xl font-bold text-vm-text mb-3">Community Impact</h3>
+                  <p className="text-vm-muted">
                     Serve your community and help launch a new industry standard in Jamaica.
                   </p>
                 </div>
@@ -616,45 +616,45 @@ export default async function BranchLandingPage({ params }: PageProps) {
           </section>
 
           {/* How It Works Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
+              <h2 className="text-3xl font-bold text-vm-text mb-12 text-center">
                 How It Works
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-xl text-center">
-                  <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                  <div className="w-12 h-12 bg-vm-navy text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                     1
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Submit Your Application</h3>
-                  <p className="text-gray-600 text-sm">
+                  <h3 className="text-lg font-semibold text-vm-text mb-2">Submit Your Application</h3>
+                  <p className="text-vm-muted text-sm">
                     Fill out our simple application form with your basic information.
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl text-center">
-                  <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                  <div className="w-12 h-12 bg-vm-navy text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                     2
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Attend a Short Interview</h3>
-                  <p className="text-gray-600 text-sm">
+                  <h3 className="text-lg font-semibold text-vm-text mb-2">Attend a Short Interview</h3>
+                  <p className="text-vm-muted text-sm">
                     We'll schedule a brief conversation to learn more about you.
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl text-center">
-                  <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                  <div className="w-12 h-12 bg-vm-navy text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                     3
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Complete Training</h3>
-                  <p className="text-gray-600 text-sm">
+                  <h3 className="text-lg font-semibold text-vm-text mb-2">Complete Training</h3>
+                  <p className="text-vm-muted text-sm">
                     Receive comprehensive training on our cleaning standards and methods.
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl text-center">
-                  <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                  <div className="w-12 h-12 bg-vm-navy text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                     4
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Start Earning</h3>
-                  <p className="text-gray-600 text-sm">
+                  <h3 className="text-lg font-semibold text-vm-text mb-2">Start Earning</h3>
+                  <p className="text-vm-muted text-sm">
                     Begin working with clients and earning competitive pay.
                   </p>
                 </div>
@@ -663,17 +663,17 @@ export default async function BranchLandingPage({ params }: PageProps) {
           </section>
 
           {/* CTA Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
             <div className="max-w-2xl mx-auto text-center">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-3xl font-bold text-vm-text mb-4">
                 Ready to Join Our Team?
               </h2>
-              <p className="text-gray-600 mb-8">
+              <p className="text-vm-muted mb-8">
                 Start your application today and be part of launching professional cleaning services in Port Antonio.
               </p>
               <a
                 href="/cleaners/apply?market=jamaica"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors shadow-lg"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-vm-navy text-white rounded-lg font-semibold text-lg hover:bg-vm-navy transition-colors shadow-lg"
               >
                 {ctaLabel}
                 <ArrowRight className="w-5 h-5" />
@@ -682,10 +682,10 @@ export default async function BranchLandingPage({ params }: PageProps) {
           </section>
 
           {/* Contact Section */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Questions?</h2>
-              <p className="text-gray-600 mb-6">
+              <h2 className="text-3xl font-bold text-vm-text mb-4">Questions?</h2>
+              <p className="text-vm-muted mb-6">
                 Have questions about working with VelocityMaid? We're here to help!
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -700,7 +700,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
                   href="https://wa.me/18765551985?text=Hi%20VelocityMaid,%20I'd%20like%20to%20book%20a%20cleaning%20in%20Port%20Antonio."
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-md"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-vm-success text-white rounded-lg font-semibold hover:bg-vm-success transition-colors shadow-md"
                 >
                   <MessageCircle className="w-5 h-5" />
                   WhatsApp Us
@@ -715,7 +715,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
               href="https://wa.me/18765551985?text=Hi%20VelocityMaid,%20I'd%20like%20to%20book%20a%20cleaning%20in%20Port%20Antonio."
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition cursor-pointer group"
+              className="bg-vm-success text-white p-4 rounded-full shadow-lg hover:bg-vm-success transition cursor-pointer group"
             >
               <MessageCircle className="w-6 h-6" />
               <div className="absolute bottom-full right-0 mb-2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
@@ -732,10 +732,10 @@ export default async function BranchLandingPage({ params }: PageProps) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-6">
         <div className="max-w-2xl w-full bg-white rounded-xl shadow-xl p-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-vm-text mb-4">
             Coming Soon to {branch.city}!
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-vm-muted mb-8">
             VelocityMaid is expanding to {branch.city}, {branch.state}. Join our waitlist to be notified when we launch.
           </p>
           
@@ -752,7 +752,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
             />
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="w-full bg-vm-navy text-white py-3 rounded-lg font-semibold hover:bg-vm-navy transition-colors"
             >
               Join Waitlist
             </button>
@@ -833,7 +833,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
               href={`https://wa.me/${branch.whatsappNumber.replace(/[^0-9]/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-lg"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-vm-success text-white rounded-lg font-semibold hover:bg-vm-success transition-colors shadow-lg"
             >
               <MessageCircle className="w-5 h-5" />
               WhatsApp Us
@@ -845,18 +845,18 @@ export default async function BranchLandingPage({ params }: PageProps) {
       {/* Service Areas */}
       {serviceAreas.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Areas We Serve</h2>
+          <h2 className="text-2xl font-bold text-vm-text mb-6">Areas We Serve</h2>
           <div className="flex flex-wrap gap-3">
             {serviceAreas.slice(0, 10).map((area) => (
               <span
                 key={area.id}
-                className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                className="px-4 py-2 bg-vm-cyan-tint text-blue-800 rounded-full text-sm font-medium"
               >
                 {area.city || area.zipCode}
               </span>
             ))}
             {serviceAreas.length > 10 && (
-              <span className="px-4 py-2 bg-gray-100 text-gray-600 rounded-full text-sm">
+              <span className="px-4 py-2 bg-gray-100 text-vm-muted rounded-full text-sm">
                 +{serviceAreas.length - 10} more
               </span>
             )}
@@ -868,27 +868,27 @@ export default async function BranchLandingPage({ params }: PageProps) {
       {servicePackages.length > 0 && (
         <div className="bg-gray-50 py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+            <h2 className="text-2xl font-bold text-vm-text mb-8 text-center">
               Our Services
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {servicePackages.map((pkg) => (
                 <div key={pkg.id} className="bg-white rounded-xl shadow-md p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{pkg.name}</h3>
+                  <h3 className="text-xl font-bold text-vm-text mb-2">{pkg.name}</h3>
                   {pkg.description && (
-                    <p className="text-gray-600 mb-4">{pkg.description}</p>
+                    <p className="text-vm-muted mb-4">{pkg.description}</p>
                   )}
                   <div className="mb-4">
                     <span className="text-3xl font-bold text-blue-600">
                       ${pkg.basePrice.toFixed(2)}
                     </span>
-                    <span className="text-gray-600 ml-2">
+                    <span className="text-vm-muted ml-2">
                       / {pkg.defaultDurationHours} hours
                     </span>
                   </div>
                   <a
                     href={`/book?branch=${branch.slug}&package=${pkg.code}`}
-                    className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                    className="block w-full text-center px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-semibold"
                   >
                     Book Now
                   </a>
@@ -902,7 +902,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
       {/* Testimonials */}
       {landingContent?.testimonials && Array.isArray(landingContent.testimonials) && landingContent.testimonials.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+          <h2 className="text-2xl font-bold text-vm-text mb-8 text-center">
             What Our Customers Say
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -913,9 +913,9 @@ export default async function BranchLandingPage({ params }: PageProps) {
                     <span key={i} className="text-yellow-400">★</span>
                   ))}
                 </div>
-                <p className="text-gray-700 mb-4 italic">"{testimonial.comment || testimonial.text}"</p>
-                <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                <p className="text-sm text-gray-500">{testimonial.location || branch.city}</p>
+                <p className="text-vm-text mb-4 italic">"{testimonial.comment || testimonial.text}"</p>
+                <p className="font-semibold text-vm-text">{testimonial.name}</p>
+                <p className="text-sm text-vm-muted">{testimonial.location || branch.city}</p>
               </div>
             ))}
           </div>
@@ -926,14 +926,14 @@ export default async function BranchLandingPage({ params }: PageProps) {
       {landingContent?.faqEntries && Array.isArray(landingContent.faqEntries) && landingContent.faqEntries.length > 0 && (
         <div className="bg-gray-50 py-12">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+            <h2 className="text-2xl font-bold text-vm-text mb-8 text-center">
               Frequently Asked Questions
             </h2>
             <div className="space-y-4">
               {landingContent.faqEntries.map((faq: any, index: number) => (
                 <div key={index} className="bg-white rounded-xl shadow-md p-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">{faq.question}</h3>
-                  <p className="text-gray-600">{faq.answer}</p>
+                  <h3 className="font-semibold text-vm-text mb-2">{faq.question}</h3>
+                  <p className="text-vm-muted">{faq.answer}</p>
                 </div>
               ))}
             </div>

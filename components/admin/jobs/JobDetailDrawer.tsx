@@ -145,14 +145,14 @@ export default function JobDetailDrawer({
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; label: string }> = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
-      assigned: { color: 'bg-blue-100 text-blue-800', label: 'Assigned' },
+      pending: { color: 'bg-vm-warning-bg text-yellow-800', label: 'Pending' },
+      assigned: { color: 'bg-vm-cyan-tint text-blue-800', label: 'Assigned' },
       in_progress: { color: 'bg-purple-100 text-purple-800', label: 'In Progress' },
-      completed: { color: 'bg-green-100 text-green-800', label: 'Completed' },
-      cancelled: { color: 'bg-red-100 text-red-800', label: 'Cancelled' },
+      completed: { color: 'bg-vm-success-bg text-vm-success', label: 'Completed' },
+      cancelled: { color: 'bg-vm-danger-bg text-red-800', label: 'Cancelled' },
     };
 
-    const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', label: status };
+    const config = statusConfig[status] || { color: 'bg-vm-surface text-vm-text', label: status };
     return (
       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
         {config.label}
@@ -164,7 +164,7 @@ export default function JobDetailDrawer({
     <Drawer open={open} onClose={onClose} title="Job Details">
       {loading && (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin h-8 w-8 text-gray-500" />
+          <Loader2 className="animate-spin h-8 w-8 text-vm-muted" />
         </div>
       )}
 
@@ -173,12 +173,12 @@ export default function JobDetailDrawer({
           {/* HEADER */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-vm-text">
                 Job #{job.id.slice(0, 8).toUpperCase()}
               </h2>
               {getStatusBadge(job.status)}
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-vm-muted mt-1">
               Created: {new Date(job.createdAt).toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -191,10 +191,10 @@ export default function JobDetailDrawer({
 
           {/* CUSTOMER */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-vm-text mb-3 uppercase tracking-wide">
               Customer Details
             </h3>
-            <div className="rounded-lg border border-gray-200 p-4 space-y-2 bg-gray-50">
+            <div className="rounded-lg border border-vm-border p-4 space-y-2 bg-vm-surface">
               <JobInfoRow
                 label="Name"
                 value={job.Customer ? `${job.Customer.firstName} ${job.Customer.lastName}` : job.id}
@@ -206,19 +206,19 @@ export default function JobDetailDrawer({
 
           {/* CLEANER ASSIGNMENT */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-vm-text mb-3 uppercase tracking-wide">
               Cleaner Assignment
             </h3>
-            <div className="rounded-lg border border-gray-200 p-4 space-y-3 bg-gray-50">
+            <div className="rounded-lg border border-vm-border p-4 space-y-3 bg-vm-surface">
                   {job.User ? (
                 <>
                   <div className="flex items-center gap-2 mb-2">
-                    <UserCheck className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-900">Assigned</span>
+                    <UserCheck className="w-4 h-4 text-vm-success" />
+                    <span className="text-sm font-medium text-vm-text">Assigned</span>
                   </div>
                   <div className="mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500">Name:</span>
+                      <span className="text-sm text-vm-muted">Name:</span>
                       <button
                         onClick={() => setCleanerProfileId(job.User!.id)}
                         className="text-sm font-medium text-blue-600 hover:text-blue-800 underline"
@@ -252,11 +252,11 @@ export default function JobDetailDrawer({
                 </div>
               )}
 
-              <div className="pt-2 border-t border-gray-200 space-y-2">
+              <div className="pt-2 border-t border-vm-border space-y-2">
                 <button
                   onClick={handleAutoAssign}
                   disabled={autoAssigning}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium flex items-center justify-center gap-2"
                 >
                   {autoAssigning ? (
                     <>
@@ -272,7 +272,7 @@ export default function JobDetailDrawer({
                 </button>
                 <button
                   onClick={() => setAssignModalOpen(true)}
-                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2 bg-vm-surface text-vm-text rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-center gap-2"
                 >
                   <UserPlus className="w-4 h-4" />
                   Assign Manually
@@ -283,10 +283,10 @@ export default function JobDetailDrawer({
 
           {/* JOB DETAILS */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-vm-text mb-3 uppercase tracking-wide">
               Job Details
             </h3>
-            <div className="rounded-lg border border-gray-200 p-4 space-y-2 bg-gray-50">
+            <div className="rounded-lg border border-vm-border p-4 space-y-2 bg-vm-surface">
               <JobInfoRow
                 label="Date"
                 value={
@@ -310,10 +310,10 @@ export default function JobDetailDrawer({
 
           {/* PAYMENT & PRICING */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-vm-text mb-3 uppercase tracking-wide">
               Payment & Pricing
             </h3>
-            <div className="rounded-lg border border-gray-200 p-4 space-y-2 bg-gray-50">
+            <div className="rounded-lg border border-vm-border p-4 space-y-2 bg-vm-surface">
               <JobInfoRow label="Payment Method" value={job.paymentMethod ?? '—'} />
               <JobInfoRow label="Currency" value={job.currency ?? '—'} />
               <JobInfoRow
@@ -335,23 +335,23 @@ export default function JobDetailDrawer({
 
           {/* ASSIGNMENT REASONING */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-vm-text mb-3 uppercase tracking-wide">
               Assignment Reasoning
             </h3>
-            <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
+            <div className="rounded-lg border border-vm-border p-4 bg-vm-surface">
               {loadingLogs ? (
                 <div className="flex justify-center py-4">
-                  <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                  <Loader2 className="w-4 h-4 animate-spin text-vm-muted" />
                 </div>
               ) : assignmentLogs.length === 0 ? (
-                <p className="text-xs text-gray-500">No assignment history yet.</p>
+                <p className="text-xs text-vm-muted">No assignment history yet.</p>
               ) : (
                 <ul className="space-y-2 text-xs">
                   {assignmentLogs.map((log) => (
                     <li key={log.id} className="border rounded p-2 bg-white">
-                      <div className="font-semibold text-gray-900 capitalize">{log.outcome}</div>
-                      <div className="text-gray-600 mt-1">{log.reason}</div>
-                      <div className="mt-1 text-gray-500">
+                      <div className="font-semibold text-vm-text capitalize">{log.outcome}</div>
+                      <div className="text-vm-muted mt-1">{log.reason}</div>
+                      <div className="mt-1 text-vm-muted">
                         {new Date(log.createdAt).toLocaleString('en-US', {
                           month: 'short',
                           day: 'numeric',
@@ -369,10 +369,10 @@ export default function JobDetailDrawer({
 
           {/* JOB TIMELINE */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-vm-text mb-3 uppercase tracking-wide">
               Job Timeline
             </h3>
-            <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
+            <div className="rounded-lg border border-vm-border p-4 bg-vm-surface">
               <ol className="relative border-l-2 border-gray-300 text-xs space-y-4">
                 {[
                   { label: 'Created', at: job.createdAt },
@@ -383,11 +383,11 @@ export default function JobDetailDrawer({
                   <li key={step.label} className="ml-4 relative">
                     <div
                       className={`absolute w-3 h-3 rounded-full -left-[17px] top-0.5 ${
-                        step.at ? 'bg-blue-500' : 'bg-gray-300'
+                        step.at ? 'bg-vm-navy' : 'bg-gray-300'
                       }`}
                     />
-                    <p className="font-semibold text-gray-900">{step.label}</p>
-                    <p className="text-gray-500 mt-0.5">
+                    <p className="font-semibold text-vm-text">{step.label}</p>
+                    <p className="text-vm-muted mt-0.5">
                       {step.at
                         ? new Date(step.at).toLocaleString('en-US', {
                             month: 'short',
@@ -408,7 +408,7 @@ export default function JobDetailDrawer({
 
       {!loading && !job && (
         <div className="flex items-center justify-center py-20">
-          <p className="text-gray-500">Job not found</p>
+          <p className="text-vm-muted">Job not found</p>
         </div>
       )}
 

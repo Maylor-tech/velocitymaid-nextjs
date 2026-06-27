@@ -12,6 +12,8 @@
  *  - Cyan  = "Accent — ... CTAs, highlights"
  *  - Cyan Dark = "Hover/pressed states for cyan elements"
  */
+export { colorClasses, brandClasses, colors } from "./colors";
+
 export const buttonTokens = {
   /** Primary CTA — Navy fill, White text */
   primary:

@@ -1,0 +1,47 @@
+/* VelocityMaid — Base resets & shared utility classes
+ * Picks up tokens declared in tokens/*.css. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: var(--leading-normal);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-heading);
+  font-weight: var(--fw-bold);
+  line-height: var(--leading-tight);
+  margin: 0;
+}
+
+a { color: var(--text-link); text-decoration: none; }
+
+/* Uppercase eyebrow / label — recurring across nav, footer, badges */
+.vm-eyebrow {
+  font-family: var(--font-heading);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* Tactile CTA press feedback (btn-tactile in product code) */
+.btn-tactile { transition: transform var(--duration-fast) var(--ease-standard),
+  background-color var(--duration-fast) var(--ease-standard),
+  border-color var(--duration-fast) var(--ease-standard); }
+.btn-tactile:active { transform: translateY(1px) scale(0.99); }
+
+/* Card lift on hover (card-hover in product code) */
+.card-hover { transition: box-shadow var(--duration-base) var(--ease-standard),
+  transform var(--duration-base) var(--ease-standard); }
+.card-hover:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }

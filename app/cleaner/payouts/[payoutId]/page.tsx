@@ -88,33 +88,33 @@ export default function CleanerPayoutReceiptPage() {
 
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
-      PENDING: "bg-yellow-100 text-yellow-800",
-      READY: "bg-yellow-100 text-yellow-800",
-      APPROVED: "bg-blue-100 text-blue-800",
+      PENDING: "bg-vm-warning-bg text-yellow-800",
+      READY: "bg-vm-warning-bg text-yellow-800",
+      APPROVED: "bg-vm-cyan-tint text-blue-800",
       SENT: "bg-purple-100 text-purple-800",
-      PAID: "bg-green-100 text-green-800",
-      FAILED: "bg-red-100 text-red-800",
-      REJECTED: "bg-red-100 text-red-800",
+      PAID: "bg-vm-success-bg text-vm-success",
+      FAILED: "bg-vm-danger-bg text-red-800",
+      REJECTED: "bg-vm-danger-bg text-red-800",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return colors[status] || "bg-gray-100 text-vm-text";
   };
 
   const renderPaymentMethod = (snapshot: any) => {
-    if (!snapshot) return <span className="text-gray-400">—</span>;
+    if (!snapshot) return <span className="text-vm-muted">—</span>;
 
     if (snapshot.methodType === "BANK") {
       return (
         <div className="space-y-2">
           <div>
-            <span className="text-sm font-medium text-gray-700">Bank Name:</span>{" "}
+            <span className="text-sm font-medium text-vm-text">Bank Name:</span>{" "}
             <span className="text-sm">{snapshot.bankName || "—"}</span>
           </div>
           <div>
-            <span className="text-sm font-medium text-gray-700">Account Number:</span>{" "}
+            <span className="text-sm font-medium text-vm-text">Account Number:</span>{" "}
             <span className="text-sm font-mono">{snapshot.accountNumber || "—"}</span>
           </div>
           <div>
-            <span className="text-sm font-medium text-gray-700">Routing Number:</span>{" "}
+            <span className="text-sm font-medium text-vm-text">Routing Number:</span>{" "}
             <span className="text-sm font-mono">{snapshot.routingNumber || "—"}</span>
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function CleanerPayoutReceiptPage() {
       const handle = snapshot.handle || snapshot.email || snapshot.phone || "";
       return (
         <div>
-          <span className="text-sm font-medium text-gray-700 capitalize">
+          <span className="text-sm font-medium text-vm-text capitalize">
             {snapshot.methodType?.toLowerCase() || "Payment"}:
           </span>{" "}
           <span className="text-sm font-mono">{handle || "—"}</span>
@@ -172,7 +172,7 @@ export default function CleanerPayoutReceiptPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold mb-2">Payout Receipt</h1>
-              <p className="text-gray-600 text-sm font-mono">Payout ID: {payout.id}</p>
+              <p className="text-vm-muted text-sm font-mono">Payout ID: {payout.id}</p>
             </div>
             <span
               className={`px-3 py-1 rounded text-sm font-medium ${getStatusBadge(
@@ -189,12 +189,12 @@ export default function CleanerPayoutReceiptPage() {
           {/* Amount Section */}
           <div className="border-b border-gray-200 pb-6 mb-6">
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">Payout Amount</p>
-              <p className="text-4xl font-bold text-gray-900">
+              <p className="text-sm text-vm-muted mb-2">Payout Amount</p>
+              <p className="text-4xl font-bold text-vm-text">
                 {formatPrice(payout.cleanerAmount, payout.currency)}
               </p>
               {payout.grossAmount !== payout.cleanerAmount && (
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-vm-muted mt-2">
                   Gross: {formatPrice(payout.grossAmount, payout.currency)} • Platform Fee:{" "}
                   {formatPrice(payout.platformFee, payout.currency)}
                 </p>
@@ -205,27 +205,27 @@ export default function CleanerPayoutReceiptPage() {
           {/* Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Job Information</h3>
+              <h3 className="text-sm font-medium text-vm-text mb-3">Job Information</h3>
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-gray-600">Job ID:</span>{" "}
+                  <span className="text-vm-muted">Job ID:</span>{" "}
                   <span className="font-mono">{payout.jobId}</span>
                 </div>
                 {payout.Job?.customerName && (
                   <div>
-                    <span className="text-gray-600">Customer:</span>{" "}
+                    <span className="text-vm-muted">Customer:</span>{" "}
                     <span>{payout.Job.customerName}</span>
                   </div>
                 )}
                 {payout.Job?.serviceType && (
                   <div>
-                    <span className="text-gray-600">Service:</span>{" "}
+                    <span className="text-vm-muted">Service:</span>{" "}
                     <span className="capitalize">{payout.Job.serviceType}</span>
                   </div>
                 )}
                 {payout.Job?.completedAt && (
                   <div>
-                    <span className="text-gray-600">Completed:</span>{" "}
+                    <span className="text-vm-muted">Completed:</span>{" "}
                     <span>{formatDate(payout.Job.completedAt)}</span>
                   </div>
                 )}
@@ -233,16 +233,16 @@ export default function CleanerPayoutReceiptPage() {
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Branch Information</h3>
+              <h3 className="text-sm font-medium text-vm-text mb-3">Branch Information</h3>
               <div className="space-y-2 text-sm">
                 {payout.Branch?.name && (
                   <div>
-                    <span className="text-gray-600">Branch:</span>{" "}
+                    <span className="text-vm-muted">Branch:</span>{" "}
                     <span>{payout.Branch.name}</span>
                   </div>
                 )}
                 <div>
-                  <span className="text-gray-600">Created:</span>{" "}
+                  <span className="text-vm-muted">Created:</span>{" "}
                   <span>{formatDate(payout.createdAt)}</span>
                 </div>
               </div>
@@ -251,7 +251,7 @@ export default function CleanerPayoutReceiptPage() {
 
           {/* Payment Method Section */}
           <div className="border-t border-gray-200 pt-6 mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Payment Method</h3>
+            <h3 className="text-sm font-medium text-vm-text mb-3">Payment Method</h3>
             <div className="bg-gray-50 rounded-lg p-4">
               {renderPaymentMethod(payout.paymentMethodSnapshot)}
             </div>
@@ -260,27 +260,27 @@ export default function CleanerPayoutReceiptPage() {
           {/* Execution Details */}
           {payout.executedAt && (
             <div className="border-t border-gray-200 pt-6 mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Execution Details</h3>
+              <h3 className="text-sm font-medium text-vm-text mb-3">Execution Details</h3>
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-gray-600">Executed:</span>{" "}
+                  <span className="text-vm-muted">Executed:</span>{" "}
                   <span>{formatDate(payout.executedAt)}</span>
                 </div>
                 {payout.executionMethod && (
                   <div>
-                    <span className="text-gray-600">Method:</span>{" "}
+                    <span className="text-vm-muted">Method:</span>{" "}
                     <span className="capitalize">{payout.executionMethod.toLowerCase()}</span>
                   </div>
                 )}
                 {payout.externalReferenceId && (
                   <div>
-                    <span className="text-gray-600">Reference ID:</span>{" "}
+                    <span className="text-vm-muted">Reference ID:</span>{" "}
                     <span className="font-mono">{payout.externalReferenceId}</span>
                   </div>
                 )}
                 {payout.executionNote && (
                   <div>
-                    <span className="text-gray-600">Note:</span>{" "}
+                    <span className="text-vm-muted">Note:</span>{" "}
                     <span>{payout.executionNote}</span>
                   </div>
                 )}
@@ -291,7 +291,7 @@ export default function CleanerPayoutReceiptPage() {
           {/* Paid Date */}
           {payout.paidAt && (
             <div className="border-t border-gray-200 pt-6">
-              <div className="flex items-center gap-2 text-green-700">
+              <div className="flex items-center gap-2 text-vm-success">
                 <CheckCircle className="w-5 h-5" />
                 <div>
                   <p className="font-medium">Confirmed Paid</p>

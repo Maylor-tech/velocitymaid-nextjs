@@ -55,28 +55,28 @@ export function CareChecklist({
         aria-expanded={expanded}
       >
         <div>
-          <h3 className="text-xl font-serif font-bold tracking-tight text-brand-forest">
+          <h3 className="text-xl font-serif font-bold tracking-tight text-vm-navy">
             {title}
           </h3>
-          <p className="text-xs font-sans font-bold uppercase tracking-wider text-brand-slate/60 mt-1">
+          <p className="text-xs font-sans font-bold uppercase tracking-wider text-vm-text/60 mt-1">
             {progress.completed} of {CARE_CHECKLIST_TOTAL} certified
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <span className="trust-badge text-[10px] font-sans font-bold uppercase tracking-wider text-brand-gold">
+          <span className="trust-badge text-[10px] font-sans font-bold uppercase tracking-wider text-vm-cyan">
             {progress.percent}%
           </span>
           {expanded ? (
-            <ChevronUp className="w-5 h-5 text-brand-slate/50" />
+            <ChevronUp className="w-5 h-5 text-vm-text/50" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-brand-slate/50" />
+            <ChevronDown className="w-5 h-5 text-vm-text/50" />
           )}
         </div>
       </button>
 
-      <div className="mt-3 h-1.5 rounded-full bg-brand-forest/10 overflow-hidden">
+      <div className="mt-3 h-1.5 rounded-full bg-vm-navy/10 overflow-hidden">
         <div
-          className="h-full bg-brand-gold transition-all duration-300"
+          className="h-full bg-vm-cyan transition-all duration-300"
           style={{ width: `${progress.percent}%` }}
         />
       </div>
@@ -89,7 +89,7 @@ export function CareChecklist({
             );
             return (
               <section key={category.id}>
-                <h4 className="text-xs font-sans font-bold uppercase tracking-wider text-brand-forest mb-3">
+                <h4 className="text-xs font-sans font-bold uppercase tracking-wider text-vm-navy mb-3">
                   {category.title}
                 </h4>
                 <ul className="space-y-2">
@@ -101,24 +101,24 @@ export function CareChecklist({
                       return (
                         <li
                           key={item.id}
-                          className="flex items-start justify-between gap-3 py-2 border-b border-brand-forest/5 last:border-0"
+                          className="flex items-start justify-between gap-3 py-2 border-b border-vm-navy/5 last:border-0"
                         >
                           <div className="flex items-start gap-2.5 min-w-0">
                             {done ? (
-                              <Check className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
+                              <Check className="w-4 h-4 text-vm-cyan shrink-0 mt-0.5" />
                             ) : (
-                              <Circle className="w-4 h-4 text-brand-slate/30 shrink-0 mt-0.5" />
+                              <Circle className="w-4 h-4 text-vm-text/30 shrink-0 mt-0.5" />
                             )}
                             <span
                               className={`text-sm font-sans font-medium ${
-                                done ? "text-brand-slate" : "text-brand-slate/50"
+                                done ? "text-vm-text" : "text-vm-text/50"
                               }`}
                             >
                               {item.label}
                             </span>
                           </div>
                           {audit && (
-                            <span className="text-[10px] font-sans text-brand-slate/50 shrink-0 text-right">
+                            <span className="text-[10px] font-sans text-vm-text/50 shrink-0 text-right">
                               {new Date(audit.completedAt).toLocaleString()}
                               {audit.completedBy && (
                                 <span className="block">{audit.completedBy}</span>
@@ -132,16 +132,16 @@ export function CareChecklist({
                     if (mode === "interactive") {
                       return (
                         <li key={item.id}>
-                          <label className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-brand-forest/10 bg-white hover:border-brand-forest/20 cursor-pointer min-h-[44px]">
+                          <label className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-vm-navy/10 bg-white hover:border-vm-navy/20 cursor-pointer min-h-[44px]">
                             <input
                               type="checkbox"
                               checked={done}
                               onChange={(e) =>
                                 onToggle?.(item.id, e.target.checked)
                               }
-                              className="h-5 w-5 rounded border-brand-forest/30 text-brand-forest focus:ring-brand-gold"
+                              className="h-5 w-5 rounded border-vm-navy/30 text-vm-navy focus:ring-vm-cyan"
                             />
-                            <span className="text-sm font-sans font-medium text-brand-slate">
+                            <span className="text-sm font-sans font-medium text-vm-text">
                               {item.label}
                             </span>
                           </label>
@@ -156,13 +156,13 @@ export function CareChecklist({
                         className="flex items-start gap-2.5 py-1.5"
                       >
                         {done ? (
-                          <Check className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-vm-cyan shrink-0 mt-0.5" />
                         ) : (
-                          <Circle className="w-4 h-4 text-brand-slate/25 shrink-0 mt-0.5" />
+                          <Circle className="w-4 h-4 text-vm-text/25 shrink-0 mt-0.5" />
                         )}
                         <span
                           className={`text-sm font-sans font-medium ${
-                            done ? "text-brand-slate" : "text-brand-slate/40"
+                            done ? "text-vm-text" : "text-vm-text/40"
                           }`}
                         >
                           {item.label}

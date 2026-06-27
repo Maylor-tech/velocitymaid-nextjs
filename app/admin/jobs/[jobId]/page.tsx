@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, User, Calendar, MapPin, DollarSign, CheckCircle, XCircle, AlertCircle, Clock, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
+import { JobBillingWorkflowPanel } from '@/components/admin/jobs/JobBillingWorkflowPanel';
 import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
 import { getJobLoopProgress } from '@/lib/booking/jobLoopProgress';
 
@@ -17,6 +18,7 @@ interface Job {
   serviceType: string | null;
   serviceLocation: string | null;
   status: string;
+  completedAt?: string | null;
   totalPrice: number | null;
   currency: string | null;
   paymentStatus: string;
@@ -514,24 +516,24 @@ export default function AdminJobDetailPage() {
 
   const getStatusColor = (status: string) => {
     const statusLower = status.toLowerCase();
-    if (statusLower.includes('completed')) return 'bg-green-100 text-green-800';
-    if (statusLower.includes('cancelled')) return 'bg-red-100 text-red-800';
-    if (statusLower.includes('assigned')) return 'bg-blue-100 text-blue-800';
+    if (statusLower.includes('completed')) return 'bg-vm-success-bg text-vm-success';
+    if (statusLower.includes('cancelled')) return 'bg-vm-danger-bg text-red-800';
+    if (statusLower.includes('assigned')) return 'bg-vm-cyan-tint text-blue-800';
     if (statusLower.includes('in_progress') || statusLower.includes('on_the_way')) return 'bg-purple-100 text-purple-800';
-    if (statusLower.includes('confirmed')) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-gray-100 text-gray-800';
+    if (statusLower.includes('confirmed')) return 'bg-vm-warning-bg text-yellow-800';
+    return 'bg-gray-100 text-vm-text';
   };
 
   const getPayoutStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
       case 'PAID':
-        return 'bg-green-100 text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'READY':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-vm-cyan-tint text-blue-800';
       case 'FAILED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-vm-danger-bg text-red-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-vm-text';
     }
   };
 
@@ -547,32 +549,32 @@ export default function AdminJobDetailPage() {
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
       case 'PAID':
-        return 'bg-green-100 text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'DEPOSIT_PAID':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-vm-cyan-tint text-blue-800';
       case 'BALANCE_DUE':
         return 'bg-orange-100 text-orange-800';
       case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-vm-warning-bg text-yellow-800';
       case 'FAILED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-vm-danger-bg text-red-800';
       case 'REFUNDED':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-vm-text';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-vm-text';
     }
   };
 
   const getReviewStatusColor = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'REJECTED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-vm-danger-bg text-red-800';
       case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-vm-warning-bg text-yellow-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-vm-text';
     }
   };
 
@@ -636,7 +638,7 @@ export default function AdminJobDetailPage() {
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="text-center py-12">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading job...</p>
+          <p className="mt-4 text-vm-muted">Loading job...</p>
         </div>
       </div>
     );
@@ -668,7 +670,7 @@ export default function AdminJobDetailPage() {
         {showToast && (
           <div
             className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-              toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+              toastType === 'success' ? 'bg-vm-success text-white' : 'bg-vm-danger text-white'
             }`}
           >
             {toastMessage}
@@ -686,8 +688,8 @@ export default function AdminJobDetailPage() {
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Details</h1>
-              <p className="text-gray-600">Job ID: {job.id}</p>
+              <h1 className="text-3xl font-bold text-vm-text mb-2">Job Details</h1>
+              <p className="text-vm-muted">Job ID: {job.id}</p>
             </div>
             <div className="flex flex-wrap gap-2 justify-end">
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(job.status)}`}>
@@ -707,7 +709,7 @@ export default function AdminJobDetailPage() {
 
         {loopProgress && (
           <div className="bg-white rounded-xl shadow-sm border border-indigo-200 p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-1">Operational Progress</h2>
+            <h2 className="text-xl font-semibold text-vm-text mb-1">Operational Progress</h2>
             <p className="text-sm text-indigo-800 font-medium mb-4">{loopProgress.label}</p>
             <div className="flex flex-wrap gap-2 mb-4">
               {loopProgress.steps.map((step) => (
@@ -715,10 +717,10 @@ export default function AdminJobDetailPage() {
                   key={step.id}
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
                     step.done
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-vm-success-bg text-vm-success'
                       : step.current
                         ? 'bg-indigo-100 text-indigo-900 ring-2 ring-indigo-300'
-                        : 'bg-gray-100 text-gray-500'
+                        : 'bg-gray-100 text-vm-muted'
                   }`}
                 >
                   {step.done ? '✓ ' : step.current ? '→ ' : ''}
@@ -726,7 +728,7 @@ export default function AdminJobDetailPage() {
                 </span>
               ))}
             </div>
-            <p className="text-sm text-gray-700 mb-4">{loopProgress.nextAction}</p>
+            <p className="text-sm text-vm-text mb-4">{loopProgress.nextAction}</p>
             <div className="flex flex-wrap gap-3">
               {loopProgress.cleanerJobUrl && (
                 <Link
@@ -751,7 +753,7 @@ export default function AdminJobDetailPage() {
                   href={loopProgress.customerJobUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                  className="inline-flex items-center rounded-lg bg-vm-success px-4 py-2 text-sm font-medium text-white hover:bg-vm-success/90"
                 >
                   Open Customer Job →
                 </Link>
@@ -770,7 +772,7 @@ export default function AdminJobDetailPage() {
                 )}
             </div>
             {job.assignedCleaner && loopProgress.step === 'ASSIGNED' && (
-              <p className="mt-3 text-xs text-gray-500">
+              <p className="mt-3 text-xs text-vm-muted">
                 Log in as <strong>{job.assignedCleaner.email}</strong> at /cleaners/login, then
                 open the cleaner job link above → Accept → Start → Complete.
               </p>
@@ -778,36 +780,43 @@ export default function AdminJobDetailPage() {
           </div>
         )}
 
+        <div className="mb-6">
+          <JobBillingWorkflowPanel
+            jobId={jobId}
+            jobCompleted={job.status === 'COMPLETED' || Boolean(job.completedAt)}
+          />
+        </div>
+
         {/* Payment Summary */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment Summary</h2>
+          <h2 className="text-xl font-semibold text-vm-text mb-4">Payment Summary</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <div className="rounded-lg bg-gray-50 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Quoted Total</p>
-              <p className="mt-1 text-lg font-semibold text-gray-900">
+              <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">Quoted Total</p>
+              <p className="mt-1 text-lg font-semibold text-vm-text">
                 {formatCurrency(job.quotedTotal ?? job.totalPrice, job.currency)}
               </p>
             </div>
             <div className="rounded-lg bg-gray-50 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Deposit Paid</p>
-              <p className="mt-1 text-lg font-semibold text-gray-900">
+              <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">Deposit Paid</p>
+              <p className="mt-1 text-lg font-semibold text-vm-text">
                 {formatCurrency(job.depositAmount ?? job.amountPaid, job.currency)}
               </p>
             </div>
             <div className="rounded-lg bg-gray-50 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Paid to Date</p>
-              <p className="mt-1 text-lg font-semibold text-green-800">
+              <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">Paid to Date</p>
+              <p className="mt-1 text-lg font-semibold text-vm-success">
                 {formatCurrency(job.amountPaid, job.currency)}
               </p>
             </div>
             <div className="rounded-lg bg-gray-50 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Balance Due</p>
-              <p className={`mt-1 text-lg font-semibold ${(job.balanceDue ?? 0) > 0 ? 'text-orange-700' : 'text-gray-900'}`}>
+              <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">Balance Due</p>
+              <p className={`mt-1 text-lg font-semibold ${(job.balanceDue ?? 0) > 0 ? 'text-orange-700' : 'text-vm-text'}`}>
                 {formatCurrency(job.balanceDue ?? 0, job.currency)}
               </p>
             </div>
             <div className="rounded-lg bg-gray-50 p-4 col-span-2 md:col-span-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Status</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">Status</p>
               <div className="mt-2 flex flex-col gap-2">
                 <span className={`inline-flex w-fit px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(job.paymentStatus)}`}>
                   {job.paymentStatus}
@@ -825,24 +834,24 @@ export default function AdminJobDetailPage() {
             <div className="mt-6 border-t border-gray-100 pt-6">
               {!showMarkPaid ? (
                 <div className="flex items-center justify-between gap-4">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-vm-muted">
                     Collected payment outside Stripe (PayPal, cash, etc.)? Record it here.
                   </p>
                   <button
                     type="button"
                     onClick={openMarkPaid}
-                    className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                    className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-vm-success px-4 py-2 text-sm font-semibold text-white hover:bg-vm-success"
                   >
                     <DollarSign className="w-4 h-4" />
                     Mark as Paid
                   </button>
                 </div>
               ) : (
-                <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                  <h3 className="mb-3 text-sm font-semibold text-gray-900">Record a payment</h3>
+                <div className="rounded-lg border border-vm-success/30 bg-vm-success-bg p-4">
+                  <h3 className="mb-3 text-sm font-semibold text-vm-text">Record a payment</h3>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-700">
+                      <label className="mb-1 block text-xs font-medium text-vm-text">
                         Amount received ($)
                       </label>
                       <input
@@ -852,17 +861,17 @@ export default function AdminJobDetailPage() {
                         value={markPaidAmount}
                         onChange={(e) => setMarkPaidAmount(e.target.value)}
                         placeholder="0.00"
-                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-vm-cyan focus:ring-2 focus:ring-vm-cyan/30"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-700">
+                      <label className="mb-1 block text-xs font-medium text-vm-text">
                         Payment method
                       </label>
                       <select
                         value={markPaidMethod}
                         onChange={(e) => setMarkPaidMethod(e.target.value)}
-                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-vm-cyan focus:ring-2 focus:ring-vm-cyan/30"
                       >
                         <option value="PayPal">PayPal</option>
                         <option value="Cash">Cash</option>
@@ -871,7 +880,7 @@ export default function AdminJobDetailPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-700">
+                      <label className="mb-1 block text-xs font-medium text-vm-text">
                         Reference / note (optional)
                       </label>
                       <input
@@ -879,7 +888,7 @@ export default function AdminJobDetailPage() {
                         value={markPaidReference}
                         onChange={(e) => setMarkPaidReference(e.target.value)}
                         placeholder="e.g. PayPal txn ID"
-                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-vm-cyan focus:ring-2 focus:ring-vm-cyan/30"
                       />
                     </div>
                   </div>
@@ -888,7 +897,7 @@ export default function AdminJobDetailPage() {
                       type="button"
                       onClick={handleMarkPaid}
                       disabled={markingPaid}
-                      className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-lg bg-vm-success px-4 py-2 text-sm font-semibold text-white hover:bg-vm-success disabled:opacity-60"
                     >
                       {markingPaid ? (
                         <>
@@ -903,7 +912,7 @@ export default function AdminJobDetailPage() {
                       type="button"
                       onClick={() => setShowMarkPaid(false)}
                       disabled={markingPaid}
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-vm-text hover:bg-gray-50 disabled:opacity-60"
                     >
                       Cancel
                     </button>
@@ -915,9 +924,9 @@ export default function AdminJobDetailPage() {
 
           {job.paymentStatus === 'PAID' && (job.paymentMethod || job.paidAt) && (
             <div className="mt-6 border-t border-gray-100 pt-6">
-              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4">
-                <CheckCircle className="h-5 w-5 shrink-0 text-green-600" />
-                <p className="text-sm text-green-900">
+              <div className="flex items-center gap-2 rounded-lg border border-vm-success/30 bg-vm-success-bg p-4">
+                <CheckCircle className="h-5 w-5 shrink-0 text-vm-success" />
+                <p className="text-sm text-vm-success">
                   {formatCurrency(job.amountPaid, job.currency)} received
                   {job.paymentMethod ? ` via ${job.paymentMethod}` : ''}
                   {job.paidAt ? ` on ${formatDate(job.paidAt)}` : ''}
@@ -929,11 +938,11 @@ export default function AdminJobDetailPage() {
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-100 pt-6">
             <div className="rounded-lg border border-gray-200 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-vm-muted mb-2">
                 Refund Status
               </p>
               {job.paymentStatus === 'REFUNDED' ? (
-                <p className="text-sm font-medium text-gray-800">
+                <p className="text-sm font-medium text-vm-text">
                   Deposit refunded to customer
                 </p>
               ) : job.reviewStatus === 'REJECTED' ? (
@@ -941,15 +950,15 @@ export default function AdminJobDetailPage() {
                   Booking rejected — check audit log if deposit refund is pending
                 </p>
               ) : (
-                <p className="text-sm text-gray-600">No deposit refund issued</p>
+                <p className="text-sm text-vm-muted">No deposit refund issued</p>
               )}
             </div>
             <div className="rounded-lg border border-gray-200 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-vm-muted mb-2">
                 Cleaner Payout
               </p>
               {jobPayout ? (
-                <div className="text-sm text-gray-900 space-y-2">
+                <div className="text-sm text-vm-text space-y-2">
                   <span
                     className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getPayoutStatusColor(jobPayout.status)}`}
                   >
@@ -958,7 +967,7 @@ export default function AdminJobDetailPage() {
                   <p>
                     {formatCurrency(jobPayout.cleanerAmount, job.currency)} to cleaner
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-vm-muted">
                     Gross {formatCurrency(jobPayout.grossAmount, job.currency)}
                     {jobPayout.platformFee != null
                       ? ` · platform ${formatCurrency(jobPayout.platformFee, job.currency)}`
@@ -966,17 +975,17 @@ export default function AdminJobDetailPage() {
                     {jobPayout.rulesVersion ? ` · rules ${jobPayout.rulesVersion}` : ''}
                   </p>
                   {jobPayout.paidAt && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-vm-muted">
                       Paid at {new Date(jobPayout.paidAt).toLocaleString()}
                     </p>
                   )}
                   {(jobPayout.executionMethod || payoutSettlement?.methodType) && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-vm-muted">
                       Method: {jobPayout.executionMethod || payoutSettlement?.methodType}
                     </p>
                   )}
                   {(payoutSettlement?.label || payoutSettlement?.reference || jobPayout.externalReferenceId) && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-vm-muted">
                       {payoutSettlement?.label ? `Note: ${payoutSettlement.label}` : null}
                       {payoutSettlement?.label && (payoutSettlement?.reference || jobPayout.externalReferenceId) ? ' · ' : null}
                       {(payoutSettlement?.reference || jobPayout.externalReferenceId)
@@ -986,7 +995,7 @@ export default function AdminJobDetailPage() {
                   )}
                   {jobPayout.status === 'READY' && (
                     <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
-                      <p className="text-xs font-medium text-gray-700">
+                      <p className="text-xs font-medium text-vm-text">
                         Pay cleaner manually, then mark paid here
                       </p>
                       <select
@@ -1020,7 +1029,7 @@ export default function AdminJobDetailPage() {
                         type="button"
                         onClick={handleMarkPayoutPaid}
                         disabled={markingPayoutPaid}
-                        className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                        className="inline-flex w-full items-center justify-center rounded-lg bg-vm-success px-4 py-2 text-sm font-semibold text-white hover:bg-vm-success/90 disabled:opacity-60"
                       >
                         {markingPayoutPaid ? 'Marking paid…' : 'Mark Cleaner Paid'}
                       </button>
@@ -1033,15 +1042,15 @@ export default function AdminJobDetailPage() {
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-gray-700">No payout created yet</p>
+                <p className="text-sm text-vm-text">No payout created yet</p>
               )}
               {!jobPayout && job.payoutEligibility?.reason && (
-                <p className="mt-1 text-xs text-gray-500">{job.payoutEligibility.reason}</p>
+                <p className="mt-1 text-xs text-vm-muted">{job.payoutEligibility.reason}</p>
               )}
               {job.payoutEligibility && (
                 <p
                   className={`mt-2 text-xs font-medium ${
-                    job.payoutEligibility.eligible ? 'text-green-700' : 'text-gray-500'
+                    job.payoutEligibility.eligible ? 'text-vm-success' : 'text-vm-muted'
                   }`}
                 >
                   Eligibility:{' '}
@@ -1054,16 +1063,16 @@ export default function AdminJobDetailPage() {
 
         {/* Job Information */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Job Information</h2>
+          <h2 className="text-xl font-semibold text-vm-text mb-4">Job Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-500">Customer</p>
-              <p className="text-gray-900 font-medium">
+              <p className="text-sm text-vm-muted">Customer</p>
+              <p className="text-vm-text font-medium">
                 {job.customerName || (job.customer ? `${job.customer.firstName} ${job.customer.lastName}` : 'N/A')}
               </p>
               {job.customer?.email && (
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <p className="text-sm text-gray-500">{job.customer.email}</p>
+                  <p className="text-sm text-vm-muted">{job.customer.email}</p>
                   <button
                     type="button"
                     onClick={handleSendInvite}
@@ -1077,7 +1086,7 @@ export default function AdminJobDetailPage() {
                       </>
                     ) : inviteSent ? (
                       <>
-                        <CheckCircle className="h-3 w-3 text-green-600" />
+                        <CheckCircle className="h-3 w-3 text-vm-success" />
                         Invite sent
                       </>
                     ) : (
@@ -1087,45 +1096,45 @@ export default function AdminJobDetailPage() {
                 </div>
               )}
               {job.customer?.phone && (
-                <p className="text-sm text-gray-500">{job.customer.phone}</p>
+                <p className="text-sm text-vm-muted">{job.customer.phone}</p>
               )}
             </div>
             <div>
-              <p className="text-sm text-gray-500">Service Type</p>
-              <p className="text-gray-900">{job.serviceType || 'N/A'}</p>
+              <p className="text-sm text-vm-muted">Service Type</p>
+              <p className="text-vm-text">{job.serviceType || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Date & Time</p>
-              <p className="text-gray-900">{formatDate(job.preferredDate)}</p>
+              <p className="text-sm text-vm-muted">Date & Time</p>
+              <p className="text-vm-text">{formatDate(job.preferredDate)}</p>
               {job.preferredTime && (
-                <p className="text-sm text-gray-500">{job.preferredTime}</p>
+                <p className="text-sm text-vm-muted">{job.preferredTime}</p>
               )}
             </div>
             <div>
-              <p className="text-sm text-gray-500">Branch</p>
-              <p className="text-gray-900">{job.branch.name}</p>
+              <p className="text-sm text-vm-muted">Branch</p>
+              <p className="text-vm-text">{job.branch.name}</p>
             </div>
             <div className="md:col-span-2">
-              <p className="text-sm text-gray-500">Address</p>
-              <p className="text-gray-900">{job.address || 'N/A'}</p>
+              <p className="text-sm text-vm-muted">Address</p>
+              <p className="text-vm-text">{job.address || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Quoted Total</p>
-              <p className="text-gray-900 font-semibold">
+              <p className="text-sm text-vm-muted">Quoted Total</p>
+              <p className="text-vm-text font-semibold">
                 {formatCurrency(job.quotedTotal ?? job.totalPrice, job.currency)}
               </p>
             </div>
             {(job.depositAmount != null || job.amountPaid != null) && (
               <>
                 <div>
-                  <p className="text-sm text-gray-500">Deposit / Paid</p>
-                  <p className="text-gray-900">
+                  <p className="text-sm text-vm-muted">Deposit / Paid</p>
+                  <p className="text-vm-text">
                     {formatCurrency(job.amountPaid ?? job.depositAmount, job.currency)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Balance Due</p>
-                  <p className="text-gray-900">
+                  <p className="text-sm text-vm-muted">Balance Due</p>
+                  <p className="text-vm-text">
                     {formatCurrency(job.balanceDue ?? 0, job.currency)}
                   </p>
                 </div>
@@ -1133,15 +1142,15 @@ export default function AdminJobDetailPage() {
             )}
             {job.reviewStatus && (
               <div>
-                <p className="text-sm text-gray-500">Review Status</p>
-                <p className="text-gray-900">{job.reviewStatus}</p>
+                <p className="text-sm text-vm-muted">Review Status</p>
+                <p className="text-vm-text">{job.reviewStatus}</p>
               </div>
             )}
             {job.assignedCleaner && (
               <div>
-                <p className="text-sm text-gray-500">Assigned Cleaner</p>
-                <p className="text-gray-900 font-medium">{job.assignedCleaner.name || 'N/A'}</p>
-                <p className="text-sm text-gray-500">{job.assignedCleaner.email}</p>
+                <p className="text-sm text-vm-muted">Assigned Cleaner</p>
+                <p className="text-vm-text font-medium">{job.assignedCleaner.name || 'N/A'}</p>
+                <p className="text-sm text-vm-muted">{job.assignedCleaner.email}</p>
               </div>
             )}
           </div>
@@ -1149,8 +1158,8 @@ export default function AdminJobDetailPage() {
 
         {needsReview && (
           <div className="bg-white rounded-xl shadow-sm border border-blue-200 p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Booking Review</h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <h2 className="text-xl font-semibold text-vm-text mb-2">Booking Review</h2>
+            <p className="text-sm text-vm-muted mb-4">
               $25 deposit received. Approve this booking to allow cleaner assignment.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -1158,7 +1167,7 @@ export default function AdminJobDetailPage() {
                 type="button"
                 disabled={reviewLoading}
                 onClick={() => handleReview('approve')}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60"
+                className="px-4 py-2 bg-vm-success text-white rounded-lg hover:bg-vm-success disabled:opacity-60"
               >
                 Approve Booking
               </button>
@@ -1166,7 +1175,7 @@ export default function AdminJobDetailPage() {
                 type="button"
                 disabled={reviewLoading}
                 onClick={() => handleReview('reject')}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-60"
+                className="px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger disabled:opacity-60"
               >
                 Reject
               </button>
@@ -1178,7 +1187,7 @@ export default function AdminJobDetailPage() {
         {/* Phase 2A: Payment Gating - Show assignment UI only if payment is PAID */}
         {isPaymentBlocked ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Assign Cleaner</h2>
+            <h2 className="text-xl font-semibold text-vm-text mb-4">Assign Cleaner</h2>
             
             {/* Phase 2A: Payment Gating - Warning message for unpaid jobs */}
             {/* Why unpaid jobs are blocked: Ensures cleaners are only assigned to jobs with guaranteed payment */}
@@ -1201,7 +1210,7 @@ export default function AdminJobDetailPage() {
             {/* Phase 2A: Disable assignment controls for unpaid jobs */}
             <div className="space-y-4 opacity-50 pointer-events-none">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-vm-text mb-2">
                   Select Cleaner
                 </label>
                 <select
@@ -1224,16 +1233,16 @@ export default function AdminJobDetailPage() {
           </div>
         ) : canAssign ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Assign Cleaner</h2>
+            <h2 className="text-xl font-semibold text-vm-text mb-4">Assign Cleaner</h2>
 
             {cleaners.length === 0 ? (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                <p className="text-gray-600">No approved cleaners available for this branch</p>
+                <p className="text-vm-muted">No approved cleaners available for this branch</p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-vm-text mb-2">
                     Select Cleaner
                   </label>
                   <select
@@ -1253,7 +1262,7 @@ export default function AdminJobDetailPage() {
                 <button
                   onClick={() => handleAssign()}
                   disabled={assigning || !selectedCleanerId}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {assigning ? (
                     <>
@@ -1272,7 +1281,7 @@ export default function AdminJobDetailPage() {
           </div>
         ) : (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-            <p className="text-gray-600">
+            <p className="text-vm-muted">
               {job.assignedCleaner 
                 ? 'This job is already assigned to a cleaner'
                 : 'This job cannot be assigned in its current status'}
@@ -1287,7 +1296,7 @@ export default function AdminJobDetailPage() {
             apiBase="admin"
             title="50-Point Hospitality Audit"
           />
-          <p className="mt-2 text-[10px] font-sans text-gray-500">
+          <p className="mt-2 text-[10px] font-sans text-vm-muted">
             {CARE_CHECKLIST_TOTAL} certified standards · timestamps from specialist
             checklist submissions
           </p>
@@ -1298,12 +1307,12 @@ export default function AdminJobDetailPage() {
         {/* Scope: Phase 2B is read-only - no editing or deletion */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
           <div className="flex items-center gap-2 mb-4">
-            <FileText className="w-5 h-5 text-gray-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Audit Log</h2>
+            <FileText className="w-5 h-5 text-vm-muted" />
+            <h2 className="text-xl font-semibold text-vm-text">Audit Log</h2>
           </div>
           
           {auditLogs.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-vm-muted">
               <p>No audit log entries found for this job</p>
             </div>
           ) : (
@@ -1315,25 +1324,25 @@ export default function AdminJobDetailPage() {
                   className="flex gap-4 pb-4 border-b border-gray-100 last:border-0"
                 >
                   <div className="flex-shrink-0">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
+                    <div className="w-2 h-2 rounded-full bg-vm-navy mt-2"></div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4 mb-1">
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">{log.eventType}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="font-medium text-vm-text">{log.eventType}</p>
+                        <p className="text-sm text-vm-muted">
                           Admin: {log.adminEmail}
                         </p>
                         {log.cleanerId && (
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-vm-muted">
                             Cleaner: {log.cleanerName || log.cleanerId}
                           </p>
                         )}
                         {log.notes && (
-                          <p className="text-sm text-gray-600 mt-1 italic">{log.notes}</p>
+                          <p className="text-sm text-vm-muted mt-1 italic">{log.notes}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-400 flex-shrink-0">
+                      <div className="flex items-center gap-1 text-xs text-vm-muted flex-shrink-0">
                         <Clock className="w-3 h-3" />
                         {formatTimestamp(log.timestamp)}
                       </div>

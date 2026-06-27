@@ -42,43 +42,43 @@ export default function IncentiveLeaderboard({
   if (latestIncentives.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Cleaner Tier Leaderboard</h2>
-        <p className="text-gray-500 text-center py-8">No incentives data available</p>
+        <h2 className="text-xl font-bold text-vm-text mb-4">Cleaner Tier Leaderboard</h2>
+        <p className="text-vm-muted text-center py-8">No incentives data available</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 overflow-x-auto">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Cleaner Tier Leaderboard</h2>
+      <h2 className="text-xl font-bold text-vm-text mb-4">Cleaner Tier Leaderboard</h2>
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Rank
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Cleaner
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Branch
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Tier
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Jobs
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Avg Rating
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               On-Time %
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Bonus
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Action
             </th>
           </tr>
@@ -86,10 +86,10 @@ export default function IncentiveLeaderboard({
         <tbody className="bg-white divide-y divide-gray-200">
           {latestIncentives.map((incentive, index) => (
             <tr key={incentive.id} className="hover:bg-gray-50">
-              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-vm-text">
                 #{index + 1}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 {incentive.cleanerId.substring(0, 12)}...
               </td>
               <td className="px-4 py-3 whitespace-nowrap">
@@ -98,16 +98,16 @@ export default function IncentiveLeaderboard({
               <td className="px-4 py-3 whitespace-nowrap">
                 <TierBadge tier={incentive.tier} size="sm" />
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 {incentive.totalJobs}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 {incentive.avgRating.toFixed(1)}/5
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 {incentive.onTimeRate.toFixed(1)}%
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-green-600">
+              <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-vm-success">
                 ${incentive.bonusAmount.toFixed(2)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm">

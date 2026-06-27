@@ -15,11 +15,14 @@ import { JobStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
 import { sendCleanCompleteEmail } from "@/lib/email/sendCleanCompleteEmail";
+import { runJobCompletionBillingWorkflow } from "@/lib/billing/jobCompletionWorkflow";
 
 interface CompleteBody {
   completedBy?: string;
   cleanDurationMins?: number;
   internalNotes?: string;
+  issuesFound?: string;
+  supplyRequests?: string;
   sendNotification?: boolean;
 }
 
@@ -115,11 +118,30 @@ export async function POST(
       },
     });
 
-    let notifiedAt: Date | null = null;
+    let billingWorkflow: Awaited<ReturnType<typeof runJobCompletionBillingWorkflow>> | null =
+      null;
+    try {
+      billingWorkflow = await runJobCompletionBillingWorkflow({
+        jobId,
+        completedAt,
+        completedBy,
+        cleanDurationMins,
+        internalNotes: body.internalNotes,
+        issuesFound: body.issuesFound,
+        supplyRequests: body.supplyRequests,
+        sendEmails: sendNotification,
+      });
+    } catch (workflowErr) {
+      console.error('[job complete] billing workflow failed:', workflowErr);
+    }
+
+    let notifiedAt: Date | null = billingWorkflow?.emailResults?.completionReport?.sent
+      ? new Date()
+      : null;
     let emailResult: { sent: boolean; error?: string; skippedReason?: string } | null =
       null;
 
-    if (sendNotification) {
+    if (sendNotification && !billingWorkflow?.emailResults?.completionReport?.sent) {
       const toEmail = job.Customer?.email || "";
       const toName =
         job.customerName ||
@@ -155,7 +177,7 @@ export async function POST(
           invoiceAmount,
           paypalEmail,
           market,
-          jobId: job.id,
+          jobId: undefined,
         });
 
         if (emailResult.sent) {
@@ -172,6 +194,13 @@ export async function POST(
       success: true,
       notifiedAt: notifiedAt ? notifiedAt.toISOString() : null,
       email: emailResult,
+      billing: billingWorkflow
+        ? {
+            reportNumber: billingWorkflow.report.reportNumber,
+            invoiceNumber: billingWorkflow.invoice.invoiceNumber,
+            emailResults: billingWorkflow.emailResults,
+          }
+        : null,
     });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;

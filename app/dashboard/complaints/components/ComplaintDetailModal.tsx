@@ -42,7 +42,7 @@ export default function ComplaintDetailModal({
     return (
       <div className="flex items-center gap-1">
         {Array.from({ length: 5 }).map((_, i) => (
-          <span key={i} className={`text-2xl ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}>
+          <span key={i} className={`text-2xl ${i < rating ? 'text-yellow-400' : 'text-vm-muted'}`}>
             ★
           </span>
         ))}
@@ -90,10 +90,10 @@ export default function ComplaintDetailModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Complaint Details</h2>
+          <h2 className="text-2xl font-bold text-vm-text">Complaint Details</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
+            className="text-vm-muted hover:text-vm-muted text-2xl"
           >
             ×
           </button>
@@ -103,61 +103,61 @@ export default function ComplaintDetailModal({
           {/* Complaint Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Complaint ID</p>
-              <p className="font-mono text-sm text-gray-900">{complaint.id}</p>
+              <p className="text-sm text-vm-muted mb-1">Complaint ID</p>
+              <p className="font-mono text-sm text-vm-text">{complaint.id}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-1">Status</p>
-              <p className="font-medium text-gray-900 capitalize">{complaint.status.replace('_', ' ')}</p>
+              <p className="text-sm text-vm-muted mb-1">Status</p>
+              <p className="font-medium text-vm-text capitalize">{complaint.status.replace('_', ' ')}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-1">Job ID</p>
-              <p className="font-mono text-sm text-gray-900">{complaint.jobId}</p>
+              <p className="text-sm text-vm-muted mb-1">Job ID</p>
+              <p className="font-mono text-sm text-vm-text">{complaint.jobId}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-1">Location</p>
+              <p className="text-sm text-vm-muted mb-1">Location</p>
               <LocationBadge location={complaint.serviceLocation} />
             </div>
           </div>
 
           {/* Customer Info */}
           <div className="border-t border-gray-200 pt-4">
-            <h3 className="font-semibold text-gray-900 mb-3">Customer Information</h3>
+            <h3 className="font-semibold text-vm-text mb-3">Customer Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Name</p>
-                <p className="font-medium text-gray-900">{complaint.customerName}</p>
+                <p className="text-sm text-vm-muted mb-1">Name</p>
+                <p className="font-medium text-vm-text">{complaint.customerName}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Phone</p>
-                <p className="text-gray-900">{complaint.customerPhone}</p>
+                <p className="text-sm text-vm-muted mb-1">Phone</p>
+                <p className="text-vm-text">{complaint.customerPhone}</p>
               </div>
             </div>
           </div>
 
           {/* Review Info */}
           <div className="border-t border-gray-200 pt-4">
-            <h3 className="font-semibold text-gray-900 mb-3">Review Information</h3>
+            <h3 className="font-semibold text-vm-text mb-3">Review Information</h3>
             <div className="space-y-3">
               <div>
-                <p className="text-sm text-gray-600 mb-2">Rating</p>
+                <p className="text-sm text-vm-muted mb-2">Rating</p>
                 {renderStars(complaint.rating)}
               </div>
               {complaint.comment && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Comment</p>
-                  <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{complaint.comment}</p>
+                  <p className="text-sm text-vm-muted mb-1">Comment</p>
+                  <p className="text-vm-text bg-gray-50 p-3 rounded-lg">{complaint.comment}</p>
                 </div>
               )}
               <div>
-                <p className="text-sm text-gray-600 mb-1">Re-clean Requested</p>
-                <p className="text-gray-900">
+                <p className="text-sm text-vm-muted mb-1">Re-clean Requested</p>
+                <p className="text-vm-text">
                   {complaint.requestReclean ? (
                     <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
                       Yes
                     </span>
                   ) : (
-                    <span className="text-gray-400">No</span>
+                    <span className="text-vm-muted">No</span>
                   )}
                 </p>
               </div>
@@ -166,20 +166,20 @@ export default function ComplaintDetailModal({
 
           {/* Timeline */}
           <div className="border-t border-gray-200 pt-4">
-            <h3 className="font-semibold text-gray-900 mb-3">Timeline</h3>
+            <h3 className="font-semibold text-vm-text mb-3">Timeline</h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-gray-600">Complaint Created:</span>
-                <span className="text-gray-900">{formatDate(complaint.createdAt)}</span>
+                <span className="text-vm-muted">Complaint Created:</span>
+                <span className="text-vm-text">{formatDate(complaint.createdAt)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-600">Last Updated:</span>
-                <span className="text-gray-900">{formatDate(complaint.updatedAt)}</span>
+                <span className="text-vm-muted">Last Updated:</span>
+                <span className="text-vm-text">{formatDate(complaint.updatedAt)}</span>
               </div>
               {complaint.resolvedAt && (
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-600">Resolved:</span>
-                  <span className="text-green-600 font-medium">{formatDate(complaint.resolvedAt)}</span>
+                  <span className="text-vm-muted">Resolved:</span>
+                  <span className="text-vm-success font-medium">{formatDate(complaint.resolvedAt)}</span>
                 </div>
               )}
             </div>
@@ -187,11 +187,11 @@ export default function ComplaintDetailModal({
 
           {/* Update Form */}
           <div className="border-t border-gray-200 pt-4">
-            <h3 className="font-semibold text-gray-900 mb-4">Update Complaint</h3>
+            <h3 className="font-semibold text-vm-text mb-4">Update Complaint</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <label className="block text-sm font-medium text-vm-text mb-2">Status</label>
                 <select
                   value={status || complaint.status}
                   onChange={(e) => setStatus(e.target.value as ComplaintStatus)}
@@ -205,7 +205,7 @@ export default function ComplaintDetailModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Resolution Type</label>
+                <label className="block text-sm font-medium text-vm-text mb-2">Resolution Type</label>
                 <select
                   value={resolutionType !== '' ? resolutionType || '' : complaint.resolutionType || ''}
                   onChange={(e) => setResolutionType((e.target.value || null) as ResolutionType | null)}
@@ -221,7 +221,7 @@ export default function ComplaintDetailModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Admin Notes</label>
+                <label className="block text-sm font-medium text-vm-text mb-2">Admin Notes</label>
                 <textarea
                   value={adminNotes || complaint.adminNotes || ''}
                   onChange={(e) => setAdminNotes(e.target.value)}
@@ -238,13 +238,13 @@ export default function ComplaintDetailModal({
             <button
               onClick={handleUpdate}
               disabled={updating}
-              className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+              className="flex-1 bg-vm-navy text-white py-3 rounded-lg font-semibold hover:bg-vm-navy transition-colors disabled:bg-gray-400"
             >
               {updating ? 'Updating...' : 'Save Changes'}
             </button>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+              className="px-6 py-3 bg-gray-200 text-vm-text rounded-lg font-semibold hover:bg-gray-300 transition-colors"
             >
               Cancel
             </button>

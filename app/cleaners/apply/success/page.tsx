@@ -1,66 +1,45 @@
 'use client';
 
-import { CheckCircle, Home, Sparkles, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Home } from 'lucide-react';
 import Link from 'next/link';
+import { BrandLogo } from '@/components/brand';
 
 export default function CleanerApplySuccess() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/" className="flex items-center space-x-2 text-primary-600 hover:text-primary-700">
-            <Sparkles className="w-6 h-6" />
-            <span className="text-xl font-bold">VelocityMaid</span>
-          </Link>
-        </div>
+    <div className="min-h-screen bg-vm-surface">
+      <header className="bg-vm-navy px-6 py-5">
+        <Link href="/">
+          <BrandLogo theme="dark" size="header" showTagline={false} />
+        </Link>
       </header>
 
-      {/* Success Content */}
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-8">
-        <div className="max-w-2xl w-full bg-white rounded-2xl shadow-lg p-8 sm:p-12 text-center">
-          <div className="mb-6">
-            <CheckCircle className="w-20 h-20 text-green-500 mx-auto" />
-          </div>
-          
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Application Submitted!
+      <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center p-8">
+        <div className="w-full max-w-xl rounded-2xl border border-vm-border bg-vm-white p-8 text-center shadow-sm sm:p-12">
+          <CheckCircle2 className="mx-auto h-16 w-16 text-vm-success" />
+          <h1 className="mt-6 font-heading text-2xl font-bold text-vm-navy sm:text-3xl">
+            Thank you for applying to VelocityMaid
           </h1>
-
-          <p className="text-lg text-gray-700 mb-6 max-w-xl mx-auto">
-            Thank you for applying to join VelocityMaid. Our team will review your application and contact you soon.
+          <p className="mx-auto mt-4 max-w-md font-body text-base leading-relaxed text-vm-muted">
+            Your application has been received. If selected, the next step will be the{' '}
+            <strong className="text-vm-navy">VelocityMaid Certification Program</strong>.
           </p>
-
-          <div className="bg-primary-50 border border-primary-200 rounded-lg p-6 mb-8 text-left">
-            <h3 className="font-semibold text-primary-900 mb-2">What's Next?</h3>
-            <ul className="text-sm text-primary-800 space-y-1">
-              <li>• We'll review your application within 2-3 business days</li>
-              <li>• If selected, we'll contact you to schedule an interview</li>
-              <li>• You'll receive comprehensive training before starting</li>
+          <div className="mt-8 rounded-xl border border-vm-border bg-vm-surface p-5 text-left">
+            <h2 className="font-heading text-sm font-semibold text-vm-navy">What happens next</h2>
+            <ul className="mt-2 space-y-1.5 font-body text-sm text-vm-muted">
+              <li>• Our talent team reviews every application within 2–3 business days</li>
+              <li>• Strong candidates are invited to certification training</li>
+              <li>• You&apos;ll receive email updates at the address you provided</li>
             </ul>
           </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
-            >
-              <Home className="w-5 h-5" />
-              Return to Homepage
-            </Link>
-            <Link
-              href="/locations/port-antonio"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-primary-600 border-2 border-primary-600 rounded-lg font-semibold hover:bg-primary-50 transition-colors"
-            >
-              Learn More
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
+          <Link
+            href="/"
+            className="btn-tactile mt-8 inline-flex items-center gap-2 rounded-lg bg-vm-navy px-6 py-3 font-heading text-sm font-bold uppercase tracking-wider text-vm-white hover:bg-vm-navy/90"
+          >
+            <Home className="h-4 w-4" />
+            Return home
+          </Link>
         </div>
       </div>
     </div>
   );
 }
-
-
-

@@ -53,7 +53,7 @@ export default function CorporateNJPage() {
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center space-x-2">
                 <Sparkles className="w-8 h-8 text-[#0A3D2F]" />
-                <span className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+                <span className="text-2xl font-bold text-vm-text" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   VelocityMaid
                 </span>
               </Link>
@@ -68,14 +68,14 @@ export default function CorporateNJPage() {
         </nav>
 
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white py-20 md:py-32">
+        <section className="bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <Building2 className="w-20 h-20 text-[#F8C548] mx-auto mb-6" />
               <h1 className="text-5xl md:text-6xl font-bold mb-6" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                 Corporate Cleaning Services
               </h1>
-              <p className="text-xl md:text-2xl text-gray-200 mb-8">
+              <p className="text-xl md:text-2xl text-vm-muted mb-8">
                 Professional commercial cleaning for New Jersey businesses
               </p>
               <Link
@@ -100,10 +100,10 @@ export default function CorporateNJPage() {
                 <h3 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   Office Cleaning
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-vm-muted mb-6">
                   Comprehensive office cleaning including workstations, restrooms, break rooms, and common areas.
                 </p>
-                <ul className="text-left text-gray-700 space-y-2 mb-6">
+                <ul className="text-left text-vm-text space-y-2 mb-6">
                   <li>✓ Desk and workstation cleaning</li>
                   <li>✓ Restroom sanitization</li>
                   <li>✓ Floor vacuuming and mopping</li>
@@ -124,10 +124,10 @@ export default function CorporateNJPage() {
                 <h3 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   Salon & Barbershop
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-vm-muted mb-6">
                   Specialized cleaning for salons and barbershops with focus on sanitization and hair removal.
                 </p>
-                <ul className="text-left text-gray-700 space-y-2 mb-6">
+                <ul className="text-left text-vm-text space-y-2 mb-6">
                   <li>✓ Station sanitization</li>
                   <li>✓ Tool cleaning areas</li>
                   <li>✓ Floor hair removal</li>
@@ -148,10 +148,10 @@ export default function CorporateNJPage() {
                 <h3 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   Restaurant Nightly
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-vm-muted mb-6">
                   After-hours deep cleaning for restaurants, ensuring compliance with health regulations.
                 </p>
-                <ul className="text-left text-gray-700 space-y-2 mb-6">
+                <ul className="text-left text-vm-text space-y-2 mb-6">
                   <li>✓ Kitchen deep cleaning</li>
                   <li>✓ Dining area cleaning</li>
                   <li>✓ Floor scrubbing</li>
@@ -313,21 +313,21 @@ export default function CorporateNJPage() {
                 <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   Insured & Bonded
                 </h3>
-                <p className="text-gray-600">Fully insured and bonded for your protection</p>
+                <p className="text-vm-muted">Fully insured and bonded for your protection</p>
               </div>
               <div className="text-center">
                 <Star className="w-12 h-12 text-[#0A3D2F] mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   Quality Guaranteed
                 </h3>
-                <p className="text-gray-600">100% satisfaction guarantee on all services</p>
+                <p className="text-vm-muted">100% satisfaction guarantee on all services</p>
               </div>
               <div className="text-center">
                 <Clock className="w-12 h-12 text-[#0A3D2F] mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   Flexible Scheduling
                 </h3>
-                <p className="text-gray-600">Customized schedules to fit your business needs</p>
+                <p className="text-vm-muted">Customized schedules to fit your business needs</p>
               </div>
             </div>
           </div>
@@ -370,7 +370,7 @@ export default function CorporateNJPage() {
                   <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                     {doc.name}
                   </h3>
-                  <p className="text-gray-600 text-sm">Download PDF</p>
+                  <p className="text-vm-muted text-sm">Download PDF</p>
                 </a>
               ))}
             </div>

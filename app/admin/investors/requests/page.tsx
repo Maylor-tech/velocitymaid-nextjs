@@ -88,7 +88,7 @@ export default function InvestorRequestsPage() {
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-vm-muted" />
         </div>
       </div>
     );
@@ -106,17 +106,17 @@ export default function InvestorRequestsPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
-      <h1 className="text-2xl font-semibold text-gray-900">
+      <h1 className="text-2xl font-semibold text-vm-text">
         Investor Access Requests
       </h1>
 
-      <p className="mt-2 text-gray-600">
+      <p className="mt-2 text-vm-muted">
         Requests for access to confidential investor materials.
       </p>
 
       <div className="mt-8 divide-y border border-gray-200 rounded-md">
         {requests.length === 0 ? (
-          <div className="p-6 text-sm text-gray-500 text-center">
+          <div className="p-6 text-sm text-vm-muted text-center">
             No requests yet.
           </div>
         ) : (
@@ -124,20 +124,20 @@ export default function InvestorRequestsPage() {
             <div key={request.id} className="p-4 hover:bg-gray-50">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">{request.name}</div>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="font-medium text-vm-text">{request.name}</div>
+                  <div className="text-sm text-vm-muted mt-1">
                     {request.email} {request.organization ? `· ${request.organization}` : ""}
                   </div>
                   {request.interest && (
-                    <div className="text-sm text-gray-500 mt-1">
+                    <div className="text-sm text-vm-muted mt-1">
                       Interest: {request.interest}
                     </div>
                   )}
-                  <div className="text-xs text-gray-400 mt-2">
+                  <div className="text-xs text-vm-muted mt-2">
                     Requested: {new Date(request.createdAt).toLocaleString()}
                   </div>
                   {request.status === "APPROVED" && request.approvedAt && (
-                    <div className="text-xs text-green-600 mt-1">
+                    <div className="text-xs text-vm-success mt-1">
                       Approved: {new Date(request.approvedAt).toLocaleString()}
                     </div>
                   )}
@@ -151,7 +151,7 @@ export default function InvestorRequestsPage() {
                       Approve & Send
                     </button>
                   ) : (
-                    <span className="inline-block text-sm text-green-700 font-medium">
+                    <span className="inline-block text-sm text-vm-success font-medium">
                       ✓ Approved and sent
                     </span>
                   )}

@@ -80,7 +80,7 @@ export default function CleanerScorecardPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading scorecard...</p>
+          <p className="mt-4 text-vm-muted">Loading scorecard...</p>
         </div>
       </div>
     );
@@ -95,7 +95,7 @@ export default function CleanerScorecardPage() {
             <p className="text-red-500 text-sm mt-2">{error || 'Unknown error'}</p>
             <button
               onClick={() => router.push('/cleaners/dashboard')}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="mt-4 px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger transition-colors"
             >
               Back to Dashboard
             </button>
@@ -208,9 +208,9 @@ export default function CleanerScorecardPage() {
           <div className="mb-6">
             <div className="bg-white rounded-xl shadow-md p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Customer Rating</h2>
+                <h2 className="text-xl font-bold text-vm-text">Customer Rating</h2>
                 {stats.averageRating < 4.0 && (
-                  <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                  <span className="px-3 py-1 bg-vm-danger-bg text-red-800 rounded-full text-sm font-medium">
                     ⚠️ Needs Improvement
                   </span>
                 )}
@@ -218,7 +218,7 @@ export default function CleanerScorecardPage() {
               <div className="flex items-center gap-6 mb-4">
                 <RatingDisplay rating={stats.averageRating} size="lg" />
                 <div>
-                  <p className="text-sm text-gray-600">Based on {stats.totalReviews} review{stats.totalReviews !== 1 ? 's' : ''}</p>
+                  <p className="text-sm text-vm-muted">Based on {stats.totalReviews} review{stats.totalReviews !== 1 ? 's' : ''}</p>
                   {stats.recleanRequestRate > 0 && (
                     <p className="text-sm text-orange-600 mt-1">
                       {stats.recleanRequestRate.toFixed(1)}% requested re-clean
@@ -249,25 +249,25 @@ export default function CleanerScorecardPage() {
           <div className="mb-6">
             <div className="bg-white rounded-xl shadow-md p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Service Recovery</h2>
+                <h2 className="text-xl font-bold text-vm-text">Service Recovery</h2>
                 <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
                   {stats.complaintCount} Complaint{stats.complaintCount !== 1 ? 's' : ''}
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Complaint Rate</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.complaintRate.toFixed(1)}%</p>
-                  <p className="text-xs text-gray-500 mt-1">of jobs have complaints</p>
+                  <p className="text-sm text-vm-muted mb-1">Complaint Rate</p>
+                  <p className="text-2xl font-bold text-vm-text">{stats.complaintRate.toFixed(1)}%</p>
+                  <p className="text-xs text-vm-muted mt-1">of jobs have complaints</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Jobs with Complaints</p>
-                  <p className="text-2xl font-bold text-gray-900">{Math.round((stats.complaintRate / 100) * stats.totalJobs)}</p>
-                  <p className="text-xs text-gray-500 mt-1">out of {stats.totalJobs} total</p>
+                  <p className="text-sm text-vm-muted mb-1">Jobs with Complaints</p>
+                  <p className="text-2xl font-bold text-vm-text">{Math.round((stats.complaintRate / 100) * stats.totalJobs)}</p>
+                  <p className="text-xs text-vm-muted mt-1">out of {stats.totalJobs} total</p>
                 </div>
                 {stats.latestComplaintRatings.length > 0 && (
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Latest Complaint Ratings</p>
+                    <p className="text-sm text-vm-muted mb-1">Latest Complaint Ratings</p>
                     <div className="flex gap-1">
                       {stats.latestComplaintRatings.map((rating, i) => (
                         <span key={i} className="text-lg">
@@ -284,10 +284,10 @@ export default function CleanerScorecardPage() {
 
         {/* Additional Stats */}
         <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Performance Summary</h2>
+          <h2 className="text-xl font-bold text-vm-text mb-4">Performance Summary</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600 mb-2">On-Time Arrival Rate</p>
+              <p className="text-sm text-vm-muted mb-2">On-Time Arrival Rate</p>
               <MetricBadge
                 value={stats.onTimeRate}
                 type="percentage"
@@ -295,7 +295,7 @@ export default function CleanerScorecardPage() {
               />
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-2">Completion Rate</p>
+              <p className="text-sm text-vm-muted mb-2">Completion Rate</p>
               <MetricBadge
                 value={stats.completionRate}
                 type="percentage"
@@ -303,11 +303,11 @@ export default function CleanerScorecardPage() {
               />
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-2">Average Handling Time</p>
+              <p className="text-sm text-vm-muted mb-2">Average Handling Time</p>
               <MetricBadge value={stats.averageHandlingTime} type="time" />
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-2">Customer Satisfaction</p>
+              <p className="text-sm text-vm-muted mb-2">Customer Satisfaction</p>
               <MetricBadge
                 value={stats.customerScore}
                 type="score"

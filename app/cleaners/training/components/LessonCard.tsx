@@ -25,11 +25,11 @@ export default function LessonCard({ lesson, moduleSlug }: LessonCardProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+        return <CheckCircle2 className="w-5 h-5 text-vm-success" />;
       case 'IN_PROGRESS':
         return <PlayCircle className="w-5 h-5 text-blue-600" />;
       default:
-        return <Circle className="w-5 h-5 text-gray-400" />;
+        return <Circle className="w-5 h-5 text-vm-muted" />;
     }
   };
 
@@ -37,19 +37,19 @@ export default function LessonCard({ lesson, moduleSlug }: LessonCardProps) {
     switch (status) {
       case 'COMPLETED':
         return (
-          <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+          <span className="px-2 py-1 bg-vm-success-bg text-vm-success rounded text-xs font-medium">
             Completed
           </span>
         );
       case 'IN_PROGRESS':
         return (
-          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+          <span className="px-2 py-1 bg-vm-cyan-tint text-blue-800 rounded text-xs font-medium">
             In Progress
           </span>
         );
       default:
         return (
-          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-medium">
+          <span className="px-2 py-1 bg-gray-100 text-vm-text rounded text-xs font-medium">
             Not Started
           </span>
         );
@@ -66,15 +66,15 @@ export default function LessonCard({ lesson, moduleSlug }: LessonCardProps) {
           <div>{getStatusIcon(lesson.status)}</div>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
-              <h3 className="text-lg font-medium text-gray-900">{lesson.title}</h3>
+              <h3 className="text-lg font-medium text-vm-text">{lesson.title}</h3>
               {getStatusBadge(lesson.status)}
             </div>
             {lesson.status === 'COMPLETED' && lesson.score !== null && (
-              <p className="text-sm text-gray-600">Score: {lesson.score}%</p>
+              <p className="text-sm text-vm-muted">Score: {lesson.score}%</p>
             )}
           </div>
         </div>
-        <ArrowLeft className="w-5 h-5 text-gray-400 rotate-180" />
+        <ArrowLeft className="w-5 h-5 text-vm-muted rotate-180" />
       </div>
     </Link>
   );

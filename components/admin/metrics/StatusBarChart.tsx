@@ -5,7 +5,7 @@ interface StatusBarChartProps {
 export default function StatusBarChart({ data }: StatusBarChartProps) {
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="flex items-center justify-center h-64 text-vm-muted">
         No data available
       </div>
     );
@@ -14,11 +14,11 @@ export default function StatusBarChart({ data }: StatusBarChartProps) {
   const maxCount = Math.max(...data.map((d) => d.count));
 
   const statusColors: Record<string, string> = {
-    pending: 'bg-yellow-500',
-    assigned: 'bg-blue-500',
+    pending: 'bg-vm-warning',
+    assigned: 'bg-vm-navy',
     in_progress: 'bg-purple-500',
-    completed: 'bg-green-500',
-    cancelled: 'bg-red-500',
+    completed: 'bg-vm-success',
+    cancelled: 'bg-vm-danger',
   };
 
   const formatStatus = (status: string): string => {
@@ -37,10 +37,10 @@ export default function StatusBarChart({ data }: StatusBarChartProps) {
         return (
           <div key={item.status} className="space-y-1">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-gray-700">
+              <span className="font-medium text-vm-text">
                 {formatStatus(item.status)}
               </span>
-              <span className="text-gray-600 font-semibold">{item.count}</span>
+              <span className="text-vm-muted font-semibold">{item.count}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
               <div

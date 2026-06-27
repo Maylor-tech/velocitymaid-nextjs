@@ -76,7 +76,7 @@ export default function UpcomingBookingsPage() {
       <CustomerLayout>
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-vm-muted">Loading...</p>
         </div>
       </CustomerLayout>
     );
@@ -85,8 +85,8 @@ export default function UpcomingBookingsPage() {
   return (
     <CustomerLayout>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Upcoming Bookings</h1>
-        <p className="text-gray-600">Manage your scheduled appointments</p>
+        <h1 className="text-3xl font-bold text-vm-text mb-2">Upcoming Bookings</h1>
+        <p className="text-vm-muted">Manage your scheduled appointments</p>
       </div>
 
       {/* Rescheduling Notice */}

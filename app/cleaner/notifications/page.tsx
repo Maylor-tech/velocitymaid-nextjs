@@ -83,7 +83,7 @@ export default function CleanerNotificationsPage() {
       case "PAYOUT_SENT":
         return <Send className="w-5 h-5 text-purple-600" />;
       case "PAYOUT_PAID":
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
+        return <CheckCircle className="w-5 h-5 text-vm-success" />;
       case "PAYOUT_FAILED":
         return <AlertCircle className="w-5 h-5 text-red-600" />;
       default:
@@ -96,7 +96,7 @@ export default function CleanerNotificationsPage() {
       case "PAYOUT_SENT":
         return "border-purple-200 bg-purple-50";
       case "PAYOUT_PAID":
-        return "border-green-200 bg-green-50";
+        return "border-vm-success/30 bg-vm-success-bg";
       case "PAYOUT_FAILED":
         return "border-red-200 bg-red-50";
       default:
@@ -132,7 +132,7 @@ export default function CleanerNotificationsPage() {
             <div>
               <h1 className="text-2xl font-semibold mb-2">Notifications</h1>
               {unreadCount > 0 && (
-                <p className="text-gray-600 text-sm">
+                <p className="text-vm-muted text-sm">
                   {unreadCount} unread notification{unreadCount !== 1 ? "s" : ""}
                 </p>
               )}
@@ -152,9 +152,9 @@ export default function CleanerNotificationsPage() {
           </div>
         ) : notifications.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
-            <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No notifications</p>
-            <p className="text-sm text-gray-400 mt-2">
+            <Bell className="w-12 h-12 text-vm-muted mx-auto mb-4" />
+            <p className="text-vm-muted">No notifications</p>
+            <p className="text-sm text-vm-muted mt-2">
               You'll be notified about important updates here
             </p>
           </div>
@@ -180,14 +180,14 @@ export default function CleanerNotificationsPage() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 mb-1">
+                          <h3 className="font-semibold text-vm-text mb-1">
                             {notification.title}
                           </h3>
-                          <p className="text-gray-700 mb-3">{notification.message}</p>
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <p className="text-vm-text mb-3">{notification.message}</p>
+                          <div className="flex items-center gap-4 text-xs text-vm-muted">
                             <span>{formatDate(notification.createdAt)}</span>
                             {isUnread && (
-                              <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded">
+                              <span className="px-2 py-0.5 bg-vm-cyan-tint text-blue-800 rounded">
                                 New
                               </span>
                             )}
@@ -197,7 +197,7 @@ export default function CleanerNotificationsPage() {
                           {payoutId && (
                             <Link
                               href={`/cleaner/payouts/${payoutId}`}
-                              className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700"
+                              className="px-3 py-1.5 bg-vm-navy text-white text-xs font-medium rounded hover:bg-vm-navy"
                             >
                               View Receipt
                             </Link>
@@ -206,7 +206,7 @@ export default function CleanerNotificationsPage() {
                             <button
                               onClick={() => handleMarkRead(notification.id)}
                               disabled={markingRead === notification.id}
-                              className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-medium rounded hover:bg-gray-300 disabled:opacity-50"
+                              className="px-3 py-1.5 bg-gray-200 text-vm-text text-xs font-medium rounded hover:bg-gray-300 disabled:opacity-50"
                             >
                               {markingRead === notification.id ? (
                                 <Loader2 className="w-3 h-3 animate-spin" />

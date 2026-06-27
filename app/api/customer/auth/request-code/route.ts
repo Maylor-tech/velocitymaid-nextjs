@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { nanoid } from 'nanoid';
 import { sendCustomerLoginCodeEmail } from '@/lib/email/sendCustomerLoginCode';
+import {
+  isCustomerPortalEmailBlocked,
+  customerPortalBlockedMessage,
+} from '@/lib/customer/portalAccess';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,6 +24,13 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+
+    if (isCustomerPortalEmailBlocked(normalizedEmail)) {
+      return NextResponse.json(
+        { error: customerPortalBlockedMessage(), cleanerPortalUrl: '/cleaners/login' },
+        { status: 403 }
+      );
+    }
 
     let customer = await prisma.customer.findUnique({
       where: { email: normalizedEmail },

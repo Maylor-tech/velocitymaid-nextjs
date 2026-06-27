@@ -1,0 +1,8 @@
+/* VelocityMaid — Webfonts
+ * Headings: Space Grotesk · Body: Inter
+ * Loaded from Google Fonts (open-source, exact brand families — no substitution).
+ * NOTE: binaries are not vendored locally; if you need offline/self-hosted
+ * builds, drop the .woff2 files in assets/fonts/ and replace these @font-face
+ * imports with local src: url(...) rules. Families/weights must not change. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');

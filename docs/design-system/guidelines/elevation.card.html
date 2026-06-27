@@ -1,0 +1,20 @@
+<!-- @dsCard group="Spacing" viewport="700x160" name="Elevation" subtitle="Minimal, soft navy-tinted shadows" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="../styles.css"/>
+<style>
+  body{margin:0;background:var(--vm-surface);padding:26px 24px;font-family:var(--font-body)}
+  .row{display:flex;gap:22px;align-items:center}
+  .item{text-align:center}
+  .box{width:96px;height:64px;background:var(--vm-white);border-radius:var(--radius-lg);border:1px solid var(--border-default)}
+  .name{font-family:var(--font-heading);font-weight:700;font-size:12px;color:var(--vm-navy);margin-top:10px}
+  .tok{font-size:10px;color:var(--vm-muted);margin-top:2px}
+</style></head>
+<body>
+  <div class="row">
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-xs)"></div><div class="name">xs</div><div class="tok">hairline lift</div></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-sm)"></div><div class="name">sm</div><div class="tok">default card</div></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-md)"></div><div class="name">md</div><div class="tok">CTA · raised</div></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-lg)"></div><div class="name">lg</div><div class="tok">hover · modal</div></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-cyan)"></div><div class="name">cyan</div><div class="tok">accent glow</div></div>
+  </div>
+</body></html>

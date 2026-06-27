@@ -13,11 +13,11 @@ export default function EmptyState({ type, message, actionLabel, onAction }: Emp
   const getIcon = () => {
     switch (type) {
       case 'upcoming':
-        return <Calendar className="w-12 h-12 text-gray-400" />;
+        return <Calendar className="w-12 h-12 text-vm-muted" />;
       case 'history':
-        return <History className="w-12 h-12 text-gray-400" />;
+        return <History className="w-12 h-12 text-vm-muted" />;
       default:
-        return <Inbox className="w-12 h-12 text-gray-400" />;
+        return <Inbox className="w-12 h-12 text-vm-muted" />;
     }
   };
 
@@ -35,11 +35,11 @@ export default function EmptyState({ type, message, actionLabel, onAction }: Emp
   return (
     <div className="bg-white rounded-xl shadow-md p-12 text-center">
       {getIcon()}
-      <p className="mt-4 text-gray-600 font-medium">{message || getDefaultMessage()}</p>
+      <p className="mt-4 text-vm-muted font-medium">{message || getDefaultMessage()}</p>
       {actionLabel && onAction && (
         <button
           onClick={onAction}
-          className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          className="mt-6 px-6 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors font-medium"
         >
           {actionLabel}
         </button>

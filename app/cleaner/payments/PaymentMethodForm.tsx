@@ -101,7 +101,7 @@ export default function PaymentMethodForm({
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-vm-text mb-2">
           Payment Method Type
         </label>
         <select
@@ -111,7 +111,7 @@ export default function PaymentMethodForm({
             setDetails({}); // Reset details when method type changes
             setError(null);
           }}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
           disabled={loading}
         >
           <option value="BANK">Bank Transfer</option>
@@ -126,7 +126,7 @@ export default function PaymentMethodForm({
       {methodType === "BANK" && (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               Bank Name
             </label>
             <input
@@ -136,13 +136,13 @@ export default function PaymentMethodForm({
               onChange={(e) =>
                 setDetails({ ...details, bankName: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
               disabled={loading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               Routing Number
             </label>
             <input
@@ -152,14 +152,14 @@ export default function PaymentMethodForm({
               onChange={(e) =>
                 setDetails({ ...details, routingNumber: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
               disabled={loading}
               maxLength={9}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-vm-text mb-2">
               Account Number
             </label>
             <input
@@ -169,7 +169,7 @@ export default function PaymentMethodForm({
               onChange={(e) =>
                 setDetails({ ...details, accountNumber: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
               disabled={loading}
             />
           </div>
@@ -178,7 +178,7 @@ export default function PaymentMethodForm({
 
       {methodType === "ZELLE" && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-vm-text mb-2">
             Zelle Email or Phone
           </label>
           <input
@@ -196,7 +196,7 @@ export default function PaymentMethodForm({
                 setDetails({ ...details, handle: value });
               }
             }}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
             disabled={loading}
           />
         </div>
@@ -204,7 +204,7 @@ export default function PaymentMethodForm({
 
       {methodType === "CASH_APP" && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-vm-text mb-2">
             Cash App Handle
           </label>
           <input
@@ -212,7 +212,7 @@ export default function PaymentMethodForm({
             placeholder="$yourhandle"
             value={details.handle || ""}
             onChange={(e) => setDetails({ ...details, handle: e.target.value })}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
             disabled={loading}
           />
         </div>
@@ -220,7 +220,7 @@ export default function PaymentMethodForm({
 
       {methodType === "PAYPAL" && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-vm-text mb-2">
             PayPal Email
           </label>
           <input
@@ -231,7 +231,7 @@ export default function PaymentMethodForm({
               const value = e.target.value;
               setDetails({ ...details, handle: value, email: value });
             }}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
             disabled={loading}
           />
         </div>
@@ -239,7 +239,7 @@ export default function PaymentMethodForm({
 
       {methodType === "VENMO" && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-vm-text mb-2">
             Venmo Username or Phone
           </label>
           <input
@@ -256,7 +256,7 @@ export default function PaymentMethodForm({
                 setDetails({ ...details, handle: value });
               }
             }}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
             disabled={loading}
           />
         </div>

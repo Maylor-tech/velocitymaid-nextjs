@@ -57,8 +57,8 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vm-navy mx-auto mb-4"></div>
+          <p className="text-vm-muted">Loading...</p>
         </div>
       </div>
     );
@@ -69,7 +69,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error || 'Failed to load dashboard'}</p>
-          <Link href="/saas/login" className="text-primary-600 hover:underline">
+          <Link href="/saas/login" className="text-vm-cyan-dark hover:underline">
             Go to Login
           </Link>
         </div>
@@ -89,12 +89,12 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link href="/saas" className="flex items-center space-x-2">
-              <Sparkles className="w-7 h-7 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900">VelocityMaid</span>
+              <Sparkles className="w-7 h-7 text-vm-cyan-dark" />
+              <span className="text-xl font-bold text-vm-text">VelocityMaid</span>
             </Link>
             <button
               onClick={handleLogout}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+              className="flex items-center space-x-2 text-vm-muted hover:text-vm-text"
             >
               <LogOut className="w-5 h-5" />
               <span>Logout</span>
@@ -106,32 +106,32 @@ export default function DashboardPage() {
       {/* Dashboard Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome back, {tenant.name}</p>
+          <h1 className="text-3xl font-bold text-vm-text">Dashboard</h1>
+          <p className="text-vm-muted mt-2">Welcome back, {tenant.name}</p>
         </div>
 
         {/* Subscription Status Card */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Subscription Status</h2>
+              <h2 className="text-xl font-semibold text-vm-text mb-2">Subscription Status</h2>
               {hasActiveSubscription ? (
                 <div>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-vm-success-bg text-vm-success">
                     Active
                   </span>
                   {periodEnd && (
-                    <p className="text-sm text-gray-600 mt-2">
+                    <p className="text-sm text-vm-muted mt-2">
                       Current period ends: {periodEnd.toLocaleDateString()}
                     </p>
                   )}
                 </div>
               ) : (
                 <div>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-vm-warning-bg text-yellow-800">
                     Trial Period
                   </span>
-                  <p className="text-sm text-gray-600 mt-2">
+                  <p className="text-sm text-vm-muted mt-2">
                     You're on a 14-day free trial. Subscribe to continue.
                   </p>
                 </div>
@@ -139,7 +139,7 @@ export default function DashboardPage() {
             </div>
             <Link
               href="/saas/billing"
-              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition"
+              className="inline-flex items-center px-4 py-2 bg-vm-navy text-white rounded-lg font-semibold hover:bg-vm-navy transition"
             >
               <CreditCard className="w-5 h-5 mr-2" />
               Manage Billing
@@ -150,48 +150,48 @@ export default function DashboardPage() {
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-              <Users className="w-6 h-6 text-primary-600" />
+            <div className="w-12 h-12 bg-vm-surface rounded-lg flex items-center justify-center mb-4">
+              <Users className="w-6 h-6 text-vm-cyan-dark" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Contractor Management</h3>
-            <p className="text-gray-600 text-sm mb-4">
+            <h3 className="text-lg font-semibold text-vm-text mb-2">Contractor Management</h3>
+            <p className="text-vm-muted text-sm mb-4">
               Manage all your independent contractors in one place.
             </p>
             <Link
               href="/saas/contractors"
-              className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+              className="text-vm-cyan-dark hover:text-vm-cyan-dark text-sm font-medium"
             >
               View Contractors →
             </Link>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-              <Shield className="w-6 h-6 text-primary-600" />
+            <div className="w-12 h-12 bg-vm-surface rounded-lg flex items-center justify-center mb-4">
+              <Shield className="w-6 h-6 text-vm-cyan-dark" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Compliance Tracking</h3>
-            <p className="text-gray-600 text-sm mb-4">
+            <h3 className="text-lg font-semibold text-vm-text mb-2">Compliance Tracking</h3>
+            <p className="text-vm-muted text-sm mb-4">
               Stay audit-ready with automatic compliance document tracking.
             </p>
             <Link
               href="/saas/compliance"
-              className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+              className="text-vm-cyan-dark hover:text-vm-cyan-dark text-sm font-medium"
             >
               View Compliance →
             </Link>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-              <Inbox className="w-6 h-6 text-primary-600" />
+            <div className="w-12 h-12 bg-vm-surface rounded-lg flex items-center justify-center mb-4">
+              <Inbox className="w-6 h-6 text-vm-cyan-dark" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Unified Inbox</h3>
-            <p className="text-gray-600 text-sm mb-4">
+            <h3 className="text-lg font-semibold text-vm-text mb-2">Unified Inbox</h3>
+            <p className="text-vm-muted text-sm mb-4">
               All communication logged in a single, auditable inbox.
             </p>
             <Link
               href="/saas/inbox"
-              className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+              className="text-vm-cyan-dark hover:text-vm-cyan-dark text-sm font-medium"
             >
               View Inbox →
             </Link>

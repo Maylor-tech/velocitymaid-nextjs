@@ -13,11 +13,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/gallery`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/locations/new-jersey`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/vermont`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/jamaica`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
-    { url: `${baseUrl}/jamaica/work-with-us`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },
+    { url: `${baseUrl}/vermont/okemo`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
+    { url: `${baseUrl}/vermont/middlebury`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${baseUrl}/partners`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/corporate/nj`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${baseUrl}/franchise/apply`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${baseUrl}/cleaners/apply`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${baseUrl}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
@@ -30,12 +29,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { status: 'ACTIVE' },
       select: { slug: true, updatedAt: true },
     });
-    branchRoutes = branches.map((b) => ({
-      url: `${baseUrl}/locations/${b.slug}`,
-      lastModified: b.updatedAt,
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    }));
+    const HIDDEN_BRANCH_SLUGS = new Set(['port-antonio']);
+    branchRoutes = branches
+      .filter((b) => !HIDDEN_BRANCH_SLUGS.has(b.slug))
+      .map((b) => ({
+        url: `${baseUrl}/locations/${b.slug}`,
+        lastModified: b.updatedAt,
+        changeFrequency: 'monthly' as const,
+        priority: 0.8,
+      }));
   } catch (e) {
     console.error('[sitemap] Could not load branches:', e);
   }

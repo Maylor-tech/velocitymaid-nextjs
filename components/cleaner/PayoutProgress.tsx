@@ -16,7 +16,7 @@ export function PayoutProgress({
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-between text-sm text-gray-600">
+      <div className="flex justify-between text-sm text-vm-muted">
         <span>
           Jobs completed: {completedJobs} / {minimumJobs}
         </span>
@@ -28,7 +28,7 @@ export function PayoutProgress({
 
       <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
         <div
-          className="h-full bg-green-600 transition-all"
+          className="h-full bg-vm-success transition-all"
           style={{ width: `${progress}%` }}
         />
       </div>

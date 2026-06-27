@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { APPROVED_CLEANER_APPLICATION_STATUSES } from '@/lib/cleaners/applicationStatus';
 
 // Helper to get start of day
 function startOfDay(date: Date): Date {
@@ -119,7 +120,7 @@ export async function GET(
     const activeCleaners = await prisma.cleanerApplication.count({
       where: {
         branchId,
-        status: 'APPROVED',
+        status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
       },
     });
 

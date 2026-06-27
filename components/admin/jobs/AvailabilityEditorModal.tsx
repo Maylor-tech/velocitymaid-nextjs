@@ -187,13 +187,13 @@ export default function AvailabilityEditorModal({
       {/* Modal */}
       <div className="relative bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Edit Availability</h2>
+        <div className="sticky top-0 bg-white border-b border-vm-border px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-vm-text">Edit Availability</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-vm-muted" />
           </button>
         </div>
 
@@ -201,8 +201,8 @@ export default function AvailabilityEditorModal({
         <div className="p-6 space-y-6">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto" />
-              <p className="mt-2 text-sm text-gray-500">Loading availability...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-vm-navy mx-auto" />
+              <p className="mt-2 text-sm text-vm-muted">Loading availability...</p>
             </div>
           ) : (
             <>
@@ -214,17 +214,17 @@ export default function AvailabilityEditorModal({
               )}
 
               {/* Active Toggle */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-vm-surface rounded-lg">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Availability Active</p>
-                  <p className="text-xs text-gray-500">Toggle to enable/disable availability</p>
+                  <p className="text-sm font-medium text-vm-text">Availability Active</p>
+                  <p className="text-xs text-vm-muted">Toggle to enable/disable availability</p>
                 </div>
                 <button
                   onClick={() =>
                     setAvailability((prev) => ({ ...prev, isActive: !prev.isActive }))
                   }
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    availability.isActive ? 'bg-primary-600' : 'bg-gray-300'
+                    availability.isActive ? 'bg-vm-navy' : 'bg-gray-300'
                   }`}
                 >
                   <span
@@ -237,7 +237,7 @@ export default function AvailabilityEditorModal({
 
               {/* Working Days */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-vm-text mb-3 flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   Working Days
                 </h3>
@@ -248,8 +248,8 @@ export default function AvailabilityEditorModal({
                       onClick={() => handleWorkingDayToggle(day.value)}
                       className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                         availability.workingDays.includes(day.value)
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-vm-navy text-white'
+                          : 'bg-vm-surface text-vm-text hover:bg-gray-200'
                       }`}
                     >
                       {day.label.slice(0, 3)}
@@ -260,32 +260,32 @@ export default function AvailabilityEditorModal({
 
               {/* Time Ranges */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-vm-text mb-3 flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   Working Hours
                 </h3>
                 <div className="space-y-3">
                   {availability.timeRanges.map((range, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div key={index} className="flex items-center gap-3 p-3 bg-vm-surface rounded-lg">
                       <div className="flex-1 grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                          <label className="block text-xs font-medium text-vm-text mb-1">
                             Start
                           </label>
                           <input
                             type="time"
                             value={range.start}
                             onChange={(e) => handleTimeRangeChange(index, 'start', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">End</label>
+                          <label className="block text-xs font-medium text-vm-text mb-1">End</label>
                           <input
                             type="time"
                             value={range.end}
                             onChange={(e) => handleTimeRangeChange(index, 'end', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                           />
                         </div>
                       </div>
@@ -301,7 +301,7 @@ export default function AvailabilityEditorModal({
                   ))}
                   <button
                     onClick={addTimeRange}
-                    className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-primary-500 hover:text-primary-600 transition-colors flex items-center justify-center gap-2"
+                    className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-vm-muted hover:border-vm-border hover:text-vm-cyan-dark transition-colors flex items-center justify-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
                     Add Time Range
@@ -311,7 +311,7 @@ export default function AvailabilityEditorModal({
 
               {/* Max Daily Jobs */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Max Daily Jobs</h3>
+                <h3 className="text-sm font-semibold text-vm-text mb-3">Max Daily Jobs</h3>
                 <input
                   type="number"
                   min="1"
@@ -323,23 +323,23 @@ export default function AvailabilityEditorModal({
                       maxDailyJobs: parseInt(e.target.value) || 1,
                     }))
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                 />
               </div>
 
               {/* Blackout Dates */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Blackout Dates</h3>
+                <h3 className="text-sm font-semibold text-vm-text mb-3">Blackout Dates</h3>
                 <div className="flex gap-2 mb-3">
                   <input
                     type="date"
                     value={newBlackoutDate}
                     onChange={(e) => setNewBlackoutDate(e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent"
                   />
                   <button
                     onClick={addBlackoutDate}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                    className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors"
                   >
                     Add
                   </button>
@@ -349,9 +349,9 @@ export default function AvailabilityEditorModal({
                     {availability.blackoutDates.map((date) => (
                       <div
                         key={date}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between p-2 bg-vm-surface rounded-lg"
                       >
-                        <span className="text-sm text-gray-700">
+                        <span className="text-sm text-vm-text">
                           {new Date(date).toLocaleDateString()}
                         </span>
                         <button
@@ -370,17 +370,17 @@ export default function AvailabilityEditorModal({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
+        <div className="sticky bottom-0 bg-white border-t border-vm-border px-6 py-4 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-4 py-2 text-vm-text bg-vm-surface rounded-lg hover:bg-gray-200 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving || loading}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             {saving ? (
               <>

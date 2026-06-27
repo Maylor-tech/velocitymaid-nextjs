@@ -72,10 +72,14 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
     if (isAdminLoggedIn && isLoginRoute) {
-      const jobsUrl = req.nextUrl.clone();
-      jobsUrl.pathname = '/admin/jobs';
-      return NextResponse.redirect(jobsUrl);
+      const dashUrl = req.nextUrl.clone();
+      dashUrl.pathname = '/admin';
+      return NextResponse.redirect(dashUrl);
     }
+
+    const response = NextResponse.next();
+    response.headers.set('x-invoke-path', pathname);
+    return response;
   }
 
   // 🚫 OPTIONAL: block other private sections in production

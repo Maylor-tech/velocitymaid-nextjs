@@ -12,7 +12,7 @@ export default function CleanerPortalNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="mb-6 flex gap-2 border-b border-gray-200 pb-3">
+    <nav className="mb-6 flex gap-2 border-b border-vm-border pb-3">
       {links.map((link) => {
         const active =
           pathname === link.href || pathname.startsWith(`${link.href}/`);
@@ -22,8 +22,8 @@ export default function CleanerPortalNav() {
             href={link.href}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               active
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                ? 'bg-vm-navy text-white'
+                : 'bg-white text-vm-text hover:bg-gray-100 border border-vm-border'
             }`}
           >
             {link.label}

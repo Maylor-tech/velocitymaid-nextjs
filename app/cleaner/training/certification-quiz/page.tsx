@@ -81,13 +81,13 @@ export default function CertificationQuizPage() {
         <CleanerPortalNav />
         <Link
           href="/cleaner/training"
-          className="mb-4 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+          className="mb-4 inline-flex items-center gap-1 text-sm text-vm-muted hover:text-vm-text"
         >
           <ArrowLeft className="h-4 w-4" /> All modules
         </Link>
 
         <h1 className="text-2xl font-semibold">Certification Quiz</h1>
-        <p className="mt-1 text-gray-600">
+        <p className="mt-1 text-vm-muted">
           Passing score: {TRAINING_PASSING_SCORE}% ({questions.length} questions)
         </p>
 
@@ -95,7 +95,7 @@ export default function CertificationQuizPage() {
           <div
             className={`mt-6 rounded-xl border p-6 ${
               result.passed
-                ? 'border-green-200 bg-green-50 text-green-900'
+                ? 'border-vm-success/30 bg-vm-success-bg text-vm-success'
                 : 'border-red-200 bg-red-50 text-red-900'
             }`}
           >
@@ -108,7 +108,7 @@ export default function CertificationQuizPage() {
             {result.passed ? (
               <Link
                 href="/cleaner/training/certification-complete"
-                className="mt-4 inline-block rounded-lg bg-green-700 px-4 py-2 text-white hover:bg-green-800"
+                className="mt-4 inline-block rounded-lg bg-vm-success px-4 py-2 text-white hover:bg-vm-success"
               >
                 View certification →
               </Link>
@@ -119,7 +119,7 @@ export default function CertificationQuizPage() {
                   setResult(null);
                   setAnswers({});
                 }}
-                className="mt-4 rounded-lg bg-red-700 px-4 py-2 text-white hover:bg-red-800"
+                className="mt-4 rounded-lg bg-vm-danger px-4 py-2 text-white hover:bg-vm-danger"
               >
                 Retake quiz
               </button>
@@ -132,7 +132,7 @@ export default function CertificationQuizPage() {
                 key={q.id}
                 className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
               >
-                <legend className="font-medium text-gray-900">
+                <legend className="font-medium text-vm-text">
                   {idx + 1}. {q.question}
                 </legend>
                 <div className="mt-3 space-y-2">
@@ -150,7 +150,7 @@ export default function CertificationQuizPage() {
                         }
                         className="text-blue-600"
                       />
-                      <span className="text-sm text-gray-800">{opt}</span>
+                      <span className="text-sm text-vm-text">{opt}</span>
                     </label>
                   ))}
                 </div>
@@ -159,7 +159,7 @@ export default function CertificationQuizPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="w-full rounded-lg bg-vm-navy py-3 font-medium text-white hover:bg-vm-navy disabled:opacity-50"
             >
               {submitting ? 'Submitting…' : 'Submit Quiz'}
             </button>

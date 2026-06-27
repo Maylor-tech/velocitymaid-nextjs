@@ -1,40 +1,108 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Calendar,
-  Clock,
-  MapPin,
-  DollarSign,
-  User,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Loader2,
-} from 'lucide-react';
 import Link from 'next/link';
+import {
+  Home,
+  Plus,
+  RefreshCw,
+  Star,
+  Headphones,
+  MessageCircle,
+  Loader2,
+  AlertCircle,
+} from 'lucide-react';
 
 interface CustomerJob {
   id: string;
-  number?: string;
   status: string;
+  rawStatus?: string;
   serviceType?: string;
   scheduledDate?: string;
   timeWindow?: string;
   address: string;
   price: number | null;
-  branchName?: string;
-  cleaner?: {
-    id: string;
-    name: string;
-    avatarUrl?: string;
-  } | null;
-  paymentStatus?: 'UNPAID' | 'PAID' | 'DEPOSIT_PAID' | 'BALANCE_DUE' | 'REFUNDED' | 'PARTIAL';
-  rating?: {
-    score: number;
-    comment?: string;
-  } | null;
+  balanceDue?: number | null;
+  cleaner?: { id: string; name: string } | null;
+  serviceTeamLine?: string;
+  paymentStatus?: string;
+}
+
+interface CustomerProfile {
+  firstName: string;
+  address?: string | null;
+  marketLabel?: string;
+}
+
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function formatShortDateTime(dateStr?: string, timeWindow?: string): string {
+  if (!dateStr) return timeWindow || 'Date TBD';
+  const date = new Date(dateStr);
+  const datePart = date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+  return timeWindow ? `${datePart} · ${timeWindow}` : datePart;
+}
+
+function countdownLabel(dateStr?: string): string | null {
+  if (!dateStr) return null;
+  const target = new Date(dateStr);
+  target.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((target.getTime() - today.getTime()) / 86400000);
+  if (diff < 0) return null;
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  return `In ${diff} days`;
+}
+
+function statusBadgeLabel(status: string): string {
+  const map: Record<string, string> = {
+    assigned: 'Assigned',
+    pending: 'Scheduled',
+    in_progress: 'In progress',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+  };
+  return map[status.toLowerCase()] || status.replace(/_/g, ' ');
+}
+
+function formatMoney(amount: number | null | undefined): string {
+  if (amount == null) return '—';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function paymentLine(status?: string, balanceDue?: number | null): {
+  text: string;
+  className: string;
+} {
+  if (status === 'PAID') {
+    return { text: 'Paid', className: 'text-vm-success text-xs font-body' };
+  }
+  if (status === 'BALANCE_DUE' || (balanceDue != null && balanceDue > 0)) {
+    return { text: 'Balance due', className: 'text-amber-600 text-xs font-body' };
+  }
+  if (status === 'DEPOSIT_PAID') {
+    return { text: 'Deposit paid', className: 'text-vm-muted text-xs font-body' };
+  }
+  return { text: 'Pending', className: 'text-vm-muted text-xs font-body' };
 }
 
 export default function CustomerJobsPage() {
@@ -42,357 +110,267 @@ export default function CustomerJobsPage() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [upcomingJobs, setUpcomingJobs] = useState<CustomerJob[]>([]);
   const [pastJobs, setPastJobs] = useState<CustomerJob[]>([]);
+  const [profile, setProfile] = useState<CustomerProfile | null>(null);
+  const [supportWhatsApp, setSupportWhatsApp] = useState('https://wa.me/19732809190');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [customerName, setCustomerName] = useState<string | null>(null);
 
-  // 🚨 SAFETY FIX: Verify authentication before loading jobs
   useEffect(() => {
-    const checkAuth = async () => {
+    async function load() {
       try {
-        const response = await fetch('/api/customer/me');
-        const data = await response.json();
-        
-        if (!data.authenticated) {
-          // Not authenticated - redirect to login
+        setLoading(true);
+        setError(null);
+
+        const meRes = await fetch('/api/customer/me');
+        const meData = await meRes.json();
+        if (!meData.authenticated) {
           router.replace('/customer/login?redirect=/customer/jobs');
           return;
         }
-        
-        // Store customer name for welcome message
-        if (data.customer?.firstName) {
-          setCustomerName(data.customer.firstName);
-        }
-        
-        setAuthChecked(true);
+        setProfile({
+          firstName: meData.customer?.firstName || 'there',
+          address: meData.customer?.address,
+          marketLabel: meData.customer?.marketLabel || meData.support?.marketLabel,
+        });
+        if (meData.support?.whatsappUrl) setSupportWhatsApp(meData.support.whatsappUrl);
+
+        const [upcomingRes, pastRes] = await Promise.all([
+          fetch('/api/customer/jobs?type=upcoming'),
+          fetch('/api/customer/jobs?type=past'),
+        ]);
+        const upcomingData = await upcomingRes.json();
+        const pastData = await pastRes.json();
+        if (upcomingData.success) setUpcomingJobs(upcomingData.jobs || []);
+        if (pastData.success) setPastJobs(pastData.jobs || []);
       } catch (err) {
-        console.error('Auth check failed:', err);
-        // On error, redirect to login
-        router.replace('/customer/login?redirect=/customer/jobs');
+        setError(err instanceof Error ? err.message : 'Failed to load');
+      } finally {
+        setLoading(false);
       }
-    };
-    
-    checkAuth();
+    }
+    load();
   }, [router]);
 
-  useEffect(() => {
-    // Only fetch jobs if auth is verified
-    if (authChecked) {
-      fetchJobs();
-    }
-  }, [activeTab, authChecked]);
+  const nextJob = useMemo(() => {
+    if (upcomingJobs.length === 0) return null;
+    return [...upcomingJobs].sort((a, b) => {
+      const da = a.scheduledDate ? new Date(a.scheduledDate).getTime() : Infinity;
+      const db = b.scheduledDate ? new Date(b.scheduledDate).getTime() : Infinity;
+      return da - db;
+    })[0];
+  }, [upcomingJobs]);
 
-  const fetchJobs = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const [upcomingRes, pastRes] = await Promise.all([
-        fetch('/api/customer/jobs?type=upcoming'),
-        fetch('/api/customer/jobs?type=past'),
-      ]);
-
-      const upcomingData = await upcomingRes.json();
-      const pastData = await pastRes.json();
-
-      if (upcomingData.success) {
-        setUpcomingJobs(upcomingData.jobs || []);
-      }
-
-      if (pastData.success) {
-        setPastJobs(pastData.jobs || []);
-      }
-    } catch (err: any) {
-      console.error('Error fetching jobs:', err);
-      setError(err.message || 'Failed to load jobs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'TBD';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const formatCurrency = (amount: number | null) => {
-    if (amount === null) return 'TBD';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
-      assigned: { color: 'bg-vm-cyan/15 text-vm-navy', icon: User, label: 'Cleaner assigned' },
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending confirmation' },
-      in_progress: { color: 'bg-purple-100 text-purple-800', icon: Clock, label: 'In Progress' },
-      completed: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Completed' },
-      cancelled: { color: 'bg-red-100 text-red-800', icon: XCircle, label: 'Cancelled' },
-      reschedule_requested: { color: 'bg-orange-100 text-orange-800', icon: AlertCircle, label: 'Reschedule Requested' },
-      cancel_requested: { color: 'bg-red-100 text-red-800', icon: XCircle, label: 'Cancel Requested' },
-    };
-
-    const config = statusConfig[status.toLowerCase()] || {
-      color: 'bg-vm-surface text-vm-text',
-      icon: AlertCircle,
-      label: status,
-    };
-    const Icon = config.icon;
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-        <Icon className="w-3 h-3" />
-        {config.label}
-      </span>
-    );
-  };
-
-  const getPaymentStatusBadge = (status?: string) => {
-    if (!status) return null;
-
-    const config: Record<string, { color: string; label: string }> = {
-      UNPAID: { color: 'bg-red-100 text-red-800', label: 'Unpaid' },
-      PAID: { color: 'bg-green-100 text-green-800', label: 'Paid' },
-      DEPOSIT_PAID: { color: 'bg-vm-cyan/15 text-vm-navy', label: 'Deposit Paid' },
-      BALANCE_DUE: { color: 'bg-orange-100 text-orange-800', label: 'Balance Due' },
-      REFUNDED: { color: 'bg-vm-surface text-vm-text', label: 'Refunded' },
-      PARTIAL: { color: 'bg-yellow-100 text-yellow-800', label: 'Partial' },
-    };
-
-    const paymentConfig = config[status] || { color: 'bg-vm-surface text-vm-text', label: status };
-
-    return (
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${paymentConfig.color}`}>
-        {paymentConfig.label}
-      </span>
-    );
-  };
-
+  const lastJob = pastJobs[0] ?? upcomingJobs[upcomingJobs.length - 1] ?? null;
   const jobs = activeTab === 'upcoming' ? upcomingJobs : pastJobs;
+  const countdown = countdownLabel(nextJob?.scheduledDate);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-heading font-bold text-vm-navy mb-1">
-            {customerName ? `Welcome back, ${customerName}` : 'My Jobs'}
-          </h1>
-          <p className="text-vm-muted font-body">
-            {activeTab === 'upcoming' 
-              ? "Here's a quick view of your upcoming cleanings."
-              : "View your past cleaning appointments."}
-          </p>
+    <div className="mx-auto max-w-3xl space-y-6">
+      {error && (
+        <div className="rounded-xl border border-vm-danger/20 bg-vm-danger-bg p-4 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-vm-danger shrink-0" />
+          <p className="text-sm font-body text-vm-danger">{error}</p>
         </div>
-        {activeTab === 'upcoming' && (
+      )}
+
+      {/* Welcome row */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-vm-navy">
+            Welcome back, {profile?.firstName ?? 'there'}
+          </h1>
+          {(profile?.address || profile?.marketLabel) && (
+            <p className="text-vm-muted text-sm mt-1 font-body">
+              {[profile?.address, profile?.marketLabel].filter(Boolean).join(' · ')}
+            </p>
+          )}
+        </div>
+        <Link
+          href="/book"
+          className="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg bg-vm-cyan px-5 py-2.5 font-heading font-semibold text-vm-navy hover:bg-vm-cyan/90 transition-colors"
+        >
+          New Booking +
+        </Link>
+      </div>
+
+      {/* Next clean card */}
+      {nextJob ? (
+        <div className="rounded-2xl bg-vm-navy p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <span className="font-heading text-xs font-bold tracking-widest text-vm-cyan">
+              NEXT CLEAN
+            </span>
+            {countdown && (
+              <span className="rounded-full bg-vm-cyan/20 px-3 py-1 text-xs font-semibold text-vm-cyan font-body">
+                {countdown}
+              </span>
+            )}
+          </div>
+          <h2 className="mt-2 font-heading text-xl font-bold text-vm-white">
+            {nextJob.serviceType || 'Professional cleaning'}
+          </h2>
+          <p className="mt-1 text-sm text-vm-white/60 font-body">
+            {formatShortDateTime(nextJob.scheduledDate, nextJob.timeWindow)}
+          </p>
+          {nextJob.cleaner && (
+            <div className="mt-5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-vm-cyan/20 text-xs font-heading font-bold text-vm-cyan">
+                  {initials(nextJob.cleaner.name)}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-vm-white font-body truncate">
+                    {nextJob.cleaner.name}
+                  </p>
+                  <p className="text-xs text-vm-white/50 font-body">Your specialist</p>
+                </div>
+              </div>
+              <a
+                href={supportWhatsApp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-vm-cyan text-vm-navy"
+                aria-label="Contact support"
+              >
+                <MessageCircle className="h-4 w-4" />
+              </a>
+            </div>
+          )}
+          <Link
+            href={`/customer/jobs/${nextJob.id}`}
+            className="mt-4 inline-block text-sm font-body font-medium text-vm-cyan hover:underline"
+          >
+            View details →
+          </Link>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-vm-border bg-vm-white p-6 text-center shadow-sm">
+          <p className="font-heading font-semibold text-vm-navy">No upcoming cleans scheduled</p>
+          <p className="mt-1 text-sm text-vm-muted font-body">Book your next service in minutes.</p>
           <Link
             href="/book"
-            className="hidden md:flex items-center gap-2 px-4 py-2 border-2 border-vm-cyan text-vm-cyan rounded-lg font-heading font-semibold hover:bg-vm-surface transition-colors text-sm"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-vm-navy px-5 py-2.5 text-sm font-heading font-semibold text-vm-white"
           >
-            Book a new cleaning
+            Book a clean
           </Link>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-6 border-b border-vm-border">
+        <button
+          type="button"
+          onClick={() => setActiveTab('upcoming')}
+          className={`pb-3 text-sm font-body font-semibold border-b-2 transition-colors ${
+            activeTab === 'upcoming'
+              ? 'border-vm-cyan text-vm-navy'
+              : 'border-transparent text-vm-muted hover:text-vm-navy'
+          }`}
+        >
+          Upcoming ({upcomingJobs.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('past')}
+          className={`pb-3 text-sm font-body font-semibold border-b-2 transition-colors ${
+            activeTab === 'past'
+              ? 'border-vm-cyan text-vm-navy'
+              : 'border-transparent text-vm-muted hover:text-vm-navy'
+          }`}
+        >
+          Past ({pastJobs.length})
+        </button>
+      </div>
+
+      {/* Job list */}
+      <div className="space-y-3">
+        {jobs.length === 0 ? (
+          <p className="py-8 text-center text-sm text-vm-muted font-body">
+            {activeTab === 'upcoming'
+              ? 'No upcoming bookings yet.'
+              : 'No past bookings yet.'}
+          </p>
+        ) : (
+          jobs.map((job) => {
+            const pay = paymentLine(job.paymentStatus, job.balanceDue);
+            return (
+              <Link
+                key={job.id}
+                href={`/customer/jobs/${job.id}`}
+                className="flex items-center justify-between gap-4 rounded-xl border border-vm-border bg-vm-white p-4 hover:shadow-sm transition-shadow"
+              >
+                <div className="flex items-start gap-3 min-w-0">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-vm-cyan/10">
+                    <Home className="h-4 w-4 text-vm-cyan" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-heading font-semibold text-vm-navy text-sm">
+                        {job.serviceType || 'Cleaning service'}
+                      </p>
+                      <span className="rounded-full bg-vm-cyan/10 px-2 py-0.5 text-[10px] font-body font-semibold text-vm-cyan-dark">
+                        {statusBadgeLabel(job.status)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-vm-muted font-body truncate">
+                      {formatShortDateTime(job.scheduledDate, job.timeWindow)}
+                      {job.cleaner ? ` · ${job.cleaner.name}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="font-heading font-bold text-vm-navy text-sm">
+                    {formatMoney(job.price)}
+                  </p>
+                  <p className={pay.className}>{pay.text}</p>
+                </div>
+              </Link>
+            );
+          })
         )}
       </div>
 
-        {/* Tabs */}
-        <div className="border-b border-vm-navy/10">
-          <nav className="flex gap-4">
-            <button
-              onClick={() => setActiveTab('upcoming')}
-              className={`px-4 py-2 font-body font-medium border-b-2 transition-colors ${
-                activeTab === 'upcoming'
-                  ? 'border-vm-cyan text-vm-cyan'
-                  : 'border-transparent text-vm-muted hover:text-vm-navy'
-              }`}
-            >
-              Upcoming ({upcomingJobs.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('past')}
-              className={`px-4 py-2 font-body font-medium border-b-2 transition-colors ${
-                activeTab === 'past'
-                  ? 'border-vm-cyan text-vm-cyan'
-                  : 'border-transparent text-vm-muted hover:text-vm-navy'
-              }`}
-            >
-              Past Jobs ({pastJobs.length})
-            </button>
-          </nav>
-        </div>
-
-        {/* Loading State */}
-        {(!authChecked || loading) && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
-            <span className="ml-3 text-vm-muted font-body">
-              {!authChecked ? 'Verifying access...' : 'Loading jobs...'}
-            </span>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && !loading && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-red-600" />
-              <p className="text-red-800">{error}</p>
-            </div>
-          </div>
-        )}
-
-        {/* What's happening now? Helper */}
-        {!loading && !error && activeTab === 'upcoming' && upcomingJobs.length > 0 && (
-          <div className="bg-vm-cyan/10 border border-vm-cyan/20 rounded-lg p-4">
-            <p className="text-sm text-vm-navy font-body">
-              <strong>What's happening now?</strong> We're confirming details and assigning a vetted cleaner. You'll get updates by email or SMS.
-            </p>
-          </div>
-        )}
-
-        {/* Jobs List */}
-        {!loading && !error && (
-          <>
-            {jobs.length === 0 ? (
-              <div className="bg-vm-white rounded-xl shadow-sm border border-vm-navy/10 p-12 text-center">
-                <Calendar className="w-12 h-12 text-vm-muted mx-auto mb-4" />
-                <h2 className="text-xl font-heading font-semibold text-vm-navy mb-2">
-                  {activeTab === 'upcoming' 
-                    ? "No upcoming cleanings yet" 
-                    : "No past cleanings yet"}
-                </h2>
-                {activeTab === 'upcoming' ? (
-                  <>
-                    <p className="text-vm-muted font-body mb-6">
-                      Book in minutes and we'll take care of the rest.
-                    </p>
-                    <Link
-                      href="/book"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-vm-navy text-vm-white rounded-lg hover:bg-vm-navy/90 transition-colors font-heading font-semibold"
-                    >
-                      Book a Service
-                    </Link>
-                  </>
-                ) : (
-                  <p className="text-vm-muted font-body">
-                    Your completed cleanings will appear here.
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-4">
-                {jobs.map((job) => (
-                  <Link
-                    key={job.id}
-                    href={`/customer/jobs/${job.id}`}
-                    className="bg-vm-white rounded-xl shadow-sm border border-vm-navy/10 p-6 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-start gap-3 mb-2">
-                          <h3 className="text-lg font-heading font-semibold text-vm-navy">
-                            {job.serviceType || 'Cleaning Service'}
-                          </h3>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {getStatusBadge(job.status)}
-                            {getPaymentStatusBadge(job.paymentStatus)}
-                          </div>
-                        </div>
-                        {job.status.toLowerCase() === 'pending' && (
-                          <p className="text-xs text-vm-muted font-body mt-1 ml-0">We're assigning your cleaner.</p>
-                        )}
-                        {job.number && (
-                          <p className="text-sm text-vm-muted font-body mt-1">Job #{job.number}</p>
-                        )}
-                      </div>
-                      {job.price !== null && (
-                        <div className="text-right">
-                          <p className="text-lg font-heading font-bold text-vm-navy">{formatCurrency(job.price)}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div className="flex items-center gap-2 text-vm-text font-body">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formatDate(job.scheduledDate)}</span>
-                      </div>
-                      {job.timeWindow && (
-                        <div className="flex items-center gap-2 text-vm-text font-body">
-                          <Clock className="w-4 h-4" />
-                          <span>{job.timeWindow}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2 text-vm-text font-body">
-                        <MapPin className="w-4 h-4" />
-                        <span className="truncate">{job.address}</span>
-                      </div>
-                    </div>
-
-                    {job.paymentStatus === 'BALANCE_DUE' && (
-                      <p className="mt-3 text-sm font-medium text-orange-700">
-                        Your service is complete — tap to pay the remaining balance securely.
-                      </p>
-                    )}
-                    {job.status.toLowerCase() === 'assigned' && job.paymentStatus === 'DEPOSIT_PAID' && (
-                      <p className="mt-3 text-sm text-vm-cyan font-body">
-                        Your cleaner is assigned. Tap for details and updates.
-                      </p>
-                    )}
-
-                    {job.cleaner && (
-                      <div className="mt-4 pt-4 border-t border-vm-navy/10 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-vm-cyan/15 rounded-full flex items-center justify-center">
-                          <User className="w-4 h-4 text-vm-cyan" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-vm-navy font-body">{job.cleaner.name}</p>
-                          <p className="text-xs text-vm-muted font-body">Assigned Cleaner</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {job.rating && (
-                      <div className="mt-4 pt-4 border-t border-vm-navy/10">
-                        <div className="flex items-center gap-2">
-                          <div className="flex">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <span
-                                key={i}
-                                className={i < job.rating!.score ? 'text-vm-cyan' : 'text-vm-muted/40'}
-                              >
-                                ★
-                              </span>
-                            ))}
-                          </div>
-                          <span className="text-sm text-vm-muted font-body">Rated</span>
-                        </div>
-                      </div>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+      {/* Quick actions */}
+      <div className="grid grid-cols-2 gap-3 pt-2">
+        <Link
+          href="/book"
+          className="flex flex-col items-start gap-3 rounded-xl border border-vm-border bg-vm-white p-5 hover:shadow-sm transition-shadow"
+        >
+          <Plus className="h-5 w-5 text-vm-cyan" />
+          <span className="font-heading text-sm font-semibold text-vm-navy">Book a clean</span>
+        </Link>
+        <Link
+          href={lastJob ? `/book?rebook=${lastJob.id}` : '/book'}
+          className="flex flex-col items-start gap-3 rounded-xl border border-vm-border bg-vm-white p-5 hover:shadow-sm transition-shadow"
+        >
+          <RefreshCw className="h-5 w-5 text-vm-cyan" />
+          <span className="font-heading text-sm font-semibold text-vm-navy">Rebook last</span>
+        </Link>
+        <Link
+          href="/tip"
+          className="flex flex-col items-start gap-3 rounded-xl border border-vm-border bg-vm-white p-5 hover:shadow-sm transition-shadow"
+        >
+          <Star className="h-5 w-5 text-vm-cyan" />
+          <span className="font-heading text-sm font-semibold text-vm-navy">Leave a tip</span>
+        </Link>
+        <a
+          href={supportWhatsApp}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col items-start gap-3 rounded-xl border border-vm-border bg-vm-white p-5 hover:shadow-sm transition-shadow"
+        >
+          <Headphones className="h-5 w-5 text-vm-cyan" />
+          <span className="font-heading text-sm font-semibold text-vm-navy">Get help</span>
+        </a>
+      </div>
     </div>
   );
 }
-
-
-
-
-
-
-
-

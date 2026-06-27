@@ -1,0 +1,35 @@
+<!-- @dsCard group="Components" viewport="700x320" name="Cards & KPIs" subtitle="Card elevations, pricing highlight, KPI tile" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style> body { margin: 0; background: var(--vm-surface); padding: 22px; } </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { Card, CardTitle, CardDescription, KpiCard, Button } = window.VelocityMaidDesignSystem_2d9dc2;
+const Cal = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>;
+function Demo() {
+  return (
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,alignItems:"start"}}>
+      <Card elevation="flat"><CardTitle>Flat</CardTitle><CardDescription>Hairline border, no shadow.</CardDescription></Card>
+      <Card elevation="feature" highlight>
+        <CardTitle>Deep clean</CardTitle>
+        <div style={{margin:"8px 0"}}><span style={{fontFamily:"var(--font-heading)",fontWeight:700,fontSize:30,color:"var(--vm-cyan)"}}>$220</span><span style={{color:"var(--vm-muted)",fontSize:14}}> / service</span></div>
+        <CardDescription>Thorough top-to-bottom clean.</CardDescription>
+        <div style={{marginTop:14}}><Button variant="navy" pill fullWidth>Book Now</Button></div>
+      </Card>
+      <KpiCard label="Jobs this week" value="128" delta={{value:"12% vs last wk",direction:"up"}} icon={<Cal/>} />
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

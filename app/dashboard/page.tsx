@@ -85,7 +85,7 @@ export default function DashboardPage() {
         <DashboardHeader />
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard data...</p>
+          <p className="mt-4 text-vm-muted">Loading dashboard data...</p>
         </div>
       </div>
     );
@@ -100,7 +100,7 @@ export default function DashboardPage() {
           <p className="text-red-500 text-sm mt-2">{error}</p>
           <button
             onClick={fetchDashboardData}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="mt-4 px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger transition-colors"
           >
             Retry
           </button>
@@ -186,7 +186,7 @@ export default function DashboardPage() {
       {data.cleanerSchedules.length > 0 && (
         <div className="mb-6">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Cleaner Schedules</h2>
+            <h2 className="text-xl font-bold text-vm-text mb-4">Cleaner Schedules</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {data.cleanerSchedules.map((schedule, index) => (
                 <CleanerScheduleCard
@@ -213,7 +213,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Auto-refresh indicator */}
-      <div className="text-center text-sm text-gray-500 mt-6">
+      <div className="text-center text-sm text-vm-muted mt-6">
         <p>Auto-refreshing every 10 seconds • Last updated: {new Date().toLocaleTimeString()}</p>
       </div>
     </div>

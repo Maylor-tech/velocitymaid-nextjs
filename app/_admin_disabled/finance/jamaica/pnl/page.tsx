@@ -94,7 +94,7 @@ export default function JamaicaPnLPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading P&L data...</p>
+          <p className="mt-4 text-vm-muted">Loading P&L data...</p>
         </div>
       </div>
     );
@@ -117,29 +117,29 @@ export default function JamaicaPnLPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Jamaica P&L Dashboard</h1>
-          <p className="text-gray-600">Profit & Loss for Port Antonio Branch</p>
+          <h1 className="text-3xl font-bold text-vm-text mb-2">Jamaica P&L Dashboard</h1>
+          <p className="text-vm-muted">Profit & Loss for Port Antonio Branch</p>
         </div>
 
         {/* Revenue Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Revenue</h2>
+          <h2 className="text-xl font-bold text-vm-text mb-4">Revenue</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <p className="text-sm text-gray-600">JMD Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-vm-muted">JMD Revenue</p>
+              <p className="text-2xl font-bold text-vm-text">
                 {formatCurrency(data.revenue.jmd, 'JMD')}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">USD Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-vm-muted">USD Revenue</p>
+              <p className="text-2xl font-bold text-vm-text">
                 {formatCurrency(data.revenue.usd, 'USD')}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Combined Revenue</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-sm text-vm-muted">Combined Revenue</p>
+              <p className="text-2xl font-bold text-vm-success">
                 {formatCurrency(data.revenue.combined, 'JMD')}
               </p>
             </div>
@@ -148,28 +148,28 @@ export default function JamaicaPnLPage() {
 
         {/* Costs Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Costs</h2>
+          <h2 className="text-xl font-bold text-vm-text mb-4">Costs</h2>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-gray-700">Cleaner Payouts</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-vm-text">Cleaner Payouts</span>
+              <span className="font-semibold text-vm-text">
                 {formatCurrency(data.costs.payouts, 'JMD')}
               </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-gray-700">Bonuses</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-vm-text">Bonuses</span>
+              <span className="font-semibold text-vm-text">
                 {formatCurrency(data.costs.bonuses, 'JMD')}
               </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-gray-700">Operational Expenses</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-vm-text">Operational Expenses</span>
+              <span className="font-semibold text-vm-text">
                 {formatCurrency(data.costs.expenses, 'JMD')}
               </span>
             </div>
             <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
-              <span className="font-semibold text-gray-900">Total Costs</span>
+              <span className="font-semibold text-vm-text">Total Costs</span>
               <span className="text-xl font-bold text-red-600">
                 {formatCurrency(data.costs.total, 'JMD')}
               </span>
@@ -180,37 +180,37 @@ export default function JamaicaPnLPage() {
         {/* Net Margin */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Net Margin</h2>
+            <h2 className="text-xl font-bold text-vm-text">Net Margin</h2>
             {data.netMargin >= 0 ? (
-              <TrendingUp className="w-6 h-6 text-green-600" />
+              <TrendingUp className="w-6 h-6 text-vm-success" />
             ) : (
               <TrendingDown className="w-6 h-6 text-red-600" />
             )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <p className="text-sm text-gray-600">Net Profit/Loss</p>
+              <p className="text-sm text-vm-muted">Net Profit/Loss</p>
               <p
                 className={`text-3xl font-bold ${
-                  data.netMargin >= 0 ? 'text-green-600' : 'text-red-600'
+                  data.netMargin >= 0 ? 'text-vm-success' : 'text-red-600'
                 }`}
               >
                 {formatCurrency(data.netMargin, 'JMD')}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Margin Percentage</p>
+              <p className="text-sm text-vm-muted">Margin Percentage</p>
               <p
                 className={`text-3xl font-bold ${
-                  data.marginPercentage >= 0 ? 'text-green-600' : 'text-red-600'
+                  data.marginPercentage >= 0 ? 'text-vm-success' : 'text-red-600'
                 }`}
               >
                 {data.marginPercentage.toFixed(1)}%
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Profit per Job</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-vm-muted">Profit per Job</p>
+              <p className="text-2xl font-bold text-vm-text">
                 {formatCurrency(data.profitPerJob, 'JMD')}
               </p>
             </div>
@@ -220,10 +220,10 @@ export default function JamaicaPnLPage() {
         {/* Expenses Management */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Operational Expenses</h2>
+            <h2 className="text-xl font-bold text-vm-text">Operational Expenses</h2>
             <button
               onClick={() => setShowAddExpense(!showAddExpense)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy transition-colors flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               Add Expense
@@ -234,7 +234,7 @@ export default function JamaicaPnLPage() {
             <form onSubmit={handleAddExpense} className="mb-6 p-4 bg-gray-50 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Amount
                   </label>
                   <input
@@ -249,7 +249,7 @@ export default function JamaicaPnLPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Currency
                   </label>
                   <select
@@ -264,7 +264,7 @@ export default function JamaicaPnLPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-vm-text mb-1">
                     Description
                   </label>
                   <input
@@ -281,7 +281,7 @@ export default function JamaicaPnLPage() {
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="px-4 py-2 bg-vm-success text-white rounded-lg hover:bg-vm-success transition-colors"
                 >
                   Save Expense
                 </button>
@@ -291,7 +291,7 @@ export default function JamaicaPnLPage() {
                     setShowAddExpense(false);
                     setExpenseForm({ amount: '', currency: 'JMD', description: '' });
                   }}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors"
                 >
                   Cancel
                 </button>
@@ -301,7 +301,7 @@ export default function JamaicaPnLPage() {
 
           <div className="space-y-2">
             {data.expenses.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No expenses recorded</p>
+              <p className="text-vm-muted text-center py-4">No expenses recorded</p>
             ) : (
               data.expenses.map((expense, index) => (
                 <div
@@ -309,12 +309,12 @@ export default function JamaicaPnLPage() {
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                 >
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-vm-text">
                       {expense.description || 'No description'}
                     </p>
-                    <p className="text-sm text-gray-600">{expense.currency}</p>
+                    <p className="text-sm text-vm-muted">{expense.currency}</p>
                   </div>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-vm-text">
                     {formatCurrency(expense.amount, expense.currency)}
                   </p>
                 </div>

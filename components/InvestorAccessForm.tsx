@@ -59,7 +59,7 @@ export default function InvestorAccessForm({ onSubmitted }: InvestorAccessFormPr
   return (
     <form className="mt-8 max-w-xl space-y-4" onSubmit={handleSubmit}>
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-vm-text">
           Full name
         </label>
         <input
@@ -70,7 +70,7 @@ export default function InvestorAccessForm({ onSubmitted }: InvestorAccessFormPr
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-vm-text">
           Email address
         </label>
         <input
@@ -82,7 +82,7 @@ export default function InvestorAccessForm({ onSubmitted }: InvestorAccessFormPr
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-vm-text">
           Organization
         </label>
         <input
@@ -92,7 +92,7 @@ export default function InvestorAccessForm({ onSubmitted }: InvestorAccessFormPr
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-vm-text">
           Investment interest
         </label>
         <select

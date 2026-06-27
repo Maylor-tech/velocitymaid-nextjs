@@ -1,0 +1,61 @@
+/* VelocityMaid — Color tokens
+ * Approved palette only. Never introduce new colors. (velocitymaid-brand-v1)
+ * Base palette → semantic aliases. Use semantic aliases in product code. */
+
+:root {
+  /* ---- Base palette (approved) ---- */
+  --vm-navy: #0F1C2E;        /* primary brand, headers, primary CTA fill */
+  --vm-cyan: #00C2CB;        /* accent, highlights, secondary CTA */
+  --vm-cyan-dark: #00A8B0;   /* cyan hover / pressed */
+  --vm-surface: #F4F6F9;     /* app & section background */
+  --vm-text: #1A1A2E;        /* primary body text */
+  --vm-muted: #6B7280;       /* secondary / muted text */
+  --vm-white: #FFFFFF;
+
+  /* Cyan tint — selected-card fill, soft highlight (derived, not new hue) */
+  --vm-cyan-tint: #E6FAFB;
+  /* Hairline borders — navy at low opacity, resolved to a flat token */
+  --vm-border: #E2E8F0;
+
+  /* ---- Semantic status (functional only; kept calm, not neon) ---- */
+  --vm-success: #1F8A5B;
+  --vm-success-bg: #E7F5EE;
+  --vm-warning: #B7791F;
+  --vm-warning-bg: #FBF3E2;
+  --vm-danger: #C0392B;
+  --vm-danger-bg: #FCEDEC;
+  --vm-info: var(--vm-cyan);
+  --vm-info-bg: var(--vm-cyan-tint);
+  /* "In progress" — the single sanctioned non-navy/cyan accent (indigo),
+   * used only to keep the active job state distinguishable in status maps. */
+  --vm-progress: #4338CA;
+  --vm-progress-bg: #EEF0FF;
+
+  /* ---- Semantic aliases (prefer these in product code) ---- */
+  --color-bg: var(--vm-surface);
+  --color-surface: var(--vm-white);
+  --color-surface-raised: var(--vm-white);
+  --color-surface-inverse: var(--vm-navy);
+
+  --text-primary: var(--vm-text);
+  --text-heading: var(--vm-navy);
+  --text-muted: var(--vm-muted);
+  --text-on-navy: var(--vm-white);
+  --text-on-cyan: var(--vm-navy);
+  --text-link: var(--vm-cyan);
+
+  --border-default: var(--vm-border);
+  --border-strong: rgba(15, 28, 46, 0.20);
+  --border-on-navy: rgba(255, 255, 255, 0.10);
+
+  --accent: var(--vm-cyan);
+  --accent-hover: var(--vm-cyan-dark);
+
+  /* CTA tokens (lib/brand/buttons.ts) */
+  --cta-primary-bg: var(--vm-navy);
+  --cta-primary-fg: var(--vm-white);
+  --cta-accent-bg: var(--vm-cyan);
+  --cta-accent-fg: var(--vm-navy);
+
+  --focus-ring: var(--vm-cyan);
+}

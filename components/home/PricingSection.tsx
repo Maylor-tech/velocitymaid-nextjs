@@ -133,7 +133,7 @@ export default function PricingSection() {
           </p>
         </div>
 
-        <div className="flex items-center justify-center gap-2 mb-10">
+        <div className="flex items-center justify-center gap-2 mb-8">
           <button
             type="button"
             onClick={() => setMarket("nj")}
@@ -222,8 +222,8 @@ export default function PricingSection() {
 
         {market === "vermont" && (
           <p className="text-center text-sm font-body text-vm-muted mt-6">
-            Locally operated from Ludlow, VT. Serving Okemo Valley, Middlebury,
-            and surrounding areas.
+            Locally operated in Vermont&apos;s Okemo Valley, serving Ludlow,
+            Middlebury, and surrounding towns.
             <a href="/vermont" className="text-vm-cyan hover:underline ml-1">
               Learn more about Vermont cleaning →
             </a>

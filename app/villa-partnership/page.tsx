@@ -152,10 +152,10 @@ export default function VillaPartnershipPage() {
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              <h2 className="text-4xl font-bold text-vm-text mb-4">
                 Why Partner With VelocityMaid?
               </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              <p className="text-xl text-vm-muted max-w-2xl mx-auto">
                 Comprehensive villa management services designed for vacation rental owners
               </p>
             </div>
@@ -165,13 +165,13 @@ export default function VillaPartnershipPage() {
                   key={index}
                   className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow"
                 >
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-vm-cyan-tint rounded-lg flex items-center justify-center mb-4">
                     <benefit.icon className="w-6 h-6 text-blue-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-vm-text mb-2">
                     {benefit.title}
                   </h3>
-                  <p className="text-gray-600">{benefit.description}</p>
+                  <p className="text-vm-muted">{benefit.description}</p>
                 </div>
               ))}
             </div>
@@ -182,19 +182,19 @@ export default function VillaPartnershipPage() {
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              <h2 className="text-4xl font-bold text-vm-text mb-4">
                 See the Difference
               </h2>
-              <p className="text-xl text-gray-600">
+              <p className="text-xl text-vm-muted">
                 Professional cleaning that makes your villa shine
               </p>
             </div>
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-gray-200 rounded-xl aspect-video flex items-center justify-center">
-                <p className="text-gray-500">Before Photo Placeholder</p>
+                <p className="text-vm-muted">Before Photo Placeholder</p>
               </div>
               <div className="bg-gray-200 rounded-xl aspect-video flex items-center justify-center">
-                <p className="text-gray-500">After Photo Placeholder</p>
+                <p className="text-vm-muted">After Photo Placeholder</p>
               </div>
             </div>
           </div>
@@ -204,77 +204,77 @@ export default function VillaPartnershipPage() {
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-blue-50">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              <h2 className="text-4xl font-bold text-vm-text mb-4">
                 Partnership Pricing (JMD)
               </h2>
-              <p className="text-xl text-gray-600">
+              <p className="text-xl text-vm-muted">
                 Transparent pricing for villa owners
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="bg-white p-8 rounded-xl shadow-md">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Standard Turnover</h3>
+                <h3 className="text-2xl font-bold text-vm-text mb-4">Standard Turnover</h3>
                 <p className="text-4xl font-bold text-blue-600 mb-2">JMD $7,500</p>
-                <p className="text-gray-600 mb-6">Per turnover</p>
-                <ul className="space-y-2 text-gray-700">
+                <p className="text-vm-muted mb-6">Per turnover</p>
+                <ul className="space-y-2 text-vm-text">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Full villa clean</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Bathroom reset</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Kitchen reset</span>
                   </li>
                 </ul>
               </div>
               <div className="bg-white p-8 rounded-xl shadow-md border-2 border-blue-500">
-                <div className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold inline-block mb-4">
+                <div className="bg-vm-navy text-white px-4 py-1 rounded-full text-sm font-semibold inline-block mb-4">
                   Most Popular
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Turnover + Linen</h3>
+                <h3 className="text-2xl font-bold text-vm-text mb-4">Turnover + Linen</h3>
                 <p className="text-4xl font-bold text-blue-600 mb-2">JMD $9,500</p>
-                <p className="text-gray-600 mb-6">Per turnover</p>
-                <ul className="space-y-2 text-gray-700">
+                <p className="text-vm-muted mb-6">Per turnover</p>
+                <ul className="space-y-2 text-vm-text">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Everything in Standard</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Bed makeover & linen reset</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Photo documentation</span>
                   </li>
                 </ul>
               </div>
               <div className="bg-white p-8 rounded-xl shadow-md">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Full Service</h3>
+                <h3 className="text-2xl font-bold text-vm-text mb-4">Full Service</h3>
                 <p className="text-4xl font-bold text-blue-600 mb-2">JMD $12,000</p>
-                <p className="text-gray-600 mb-6">Per turnover</p>
-                <ul className="space-y-2 text-gray-700">
+                <p className="text-vm-muted mb-6">Per turnover</p>
+                <ul className="space-y-2 text-vm-text">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Everything in Turnover + Linen</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Inventory check & report</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-vm-success" />
                     <span>Damage reporting</span>
                   </li>
                 </ul>
               </div>
             </div>
             <div className="mt-8 text-center">
-              <p className="text-gray-600 mb-4">
+              <p className="text-vm-muted mb-4">
                 Custom pricing available for weekly/monthly contracts
               </p>
               <Link
@@ -292,10 +292,10 @@ export default function VillaPartnershipPage() {
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              <h2 className="text-4xl font-bold text-vm-text mb-4">
                 What Villa Owners Say
               </h2>
-              <p className="text-xl text-gray-600">
+              <p className="text-xl text-vm-muted">
                 Trusted by vacation rental owners across Port Antonio
               </p>
             </div>
@@ -307,9 +307,9 @@ export default function VillaPartnershipPage() {
                       <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
-                  <p className="text-gray-700 mb-4 italic">"{testimonial.text}"</p>
-                  <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                  <p className="text-sm text-gray-600">{testimonial.property}</p>
+                  <p className="text-vm-text mb-4 italic">"{testimonial.text}"</p>
+                  <p className="font-semibold text-vm-text">{testimonial.name}</p>
+                  <p className="text-sm text-vm-muted">{testimonial.property}</p>
                 </div>
               ))}
             </div>
@@ -333,7 +333,7 @@ export default function VillaPartnershipPage() {
               </Link>
               <Link
                 href="/villa-partnership/brochure"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-400 transition-colors text-lg border-2 border-white"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-vm-navy text-white rounded-lg font-semibold hover:bg-vm-navy transition-colors text-lg border-2 border-white"
               >
                 <Download className="w-5 h-5" />
                 Download Brochure
@@ -342,7 +342,7 @@ export default function VillaPartnershipPage() {
                 href="https://wa.me/18765551985?text=Hi%20VelocityMaid,%20I'd%20like%20to%20learn%20more%20about%20the%20Villa%20Partnership%20Program."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-400 transition-colors text-lg"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-vm-success text-white rounded-lg font-semibold hover:bg-vm-success transition-colors text-lg"
               >
                 <MessageCircle className="w-5 h-5" />
                 WhatsApp Us

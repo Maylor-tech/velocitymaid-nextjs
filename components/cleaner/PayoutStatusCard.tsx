@@ -69,8 +69,8 @@ export function PayoutStatusCard() {
         <span
           className={`px-3 py-1 rounded-full text-sm font-medium ${
             data.eligible
-              ? "bg-green-100 text-green-700"
-              : "bg-yellow-100 text-yellow-700"
+              ? "bg-vm-success-bg text-vm-success"
+              : "bg-vm-warning-bg text-yellow-700"
           }`}
         >
           {data.eligible ? "Eligible" : "Not Eligible"}
@@ -88,7 +88,7 @@ export function PayoutStatusCard() {
       )}
 
       {data.eligible && (
-        <div className="rounded-md bg-green-50 p-3 text-green-700 text-sm">
+        <div className="rounded-md bg-vm-success-bg p-3 text-vm-success text-sm">
           You're eligible for payout. Payments are processed automatically
           according to the platform schedule.
         </div>

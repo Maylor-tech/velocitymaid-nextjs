@@ -49,10 +49,10 @@ export default function PayoutFilters({
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
+      <h2 className="text-lg font-semibold text-vm-text mb-4">Filters</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Period</label>
+          <label className="block text-sm font-medium text-vm-text mb-2">Period</label>
           <div className="flex gap-2 flex-wrap">
             {[0, 1, 2, 3, 4].map((weeks) => {
               const range = getLastWeekRange(weeks);
@@ -63,8 +63,8 @@ export default function PayoutFilters({
                   onClick={() => onPeriodChange(range.start, range.end)}
                   className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                     isSelected
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-vm-navy text-white shadow-md'
+                      : 'bg-gray-200 text-vm-text hover:bg-gray-300'
                   }`}
                 >
                   {weeks === 0 ? 'This Week' : `${weeks} Week${weeks !== 1 ? 's' : ''} Ago`}
@@ -74,7 +74,7 @@ export default function PayoutFilters({
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+          <label className="block text-sm font-medium text-vm-text mb-2">Status</label>
           <div className="flex gap-2 flex-wrap">
             {statusOptions.map((option) => (
               <button
@@ -82,8 +82,8 @@ export default function PayoutFilters({
                 onClick={() => onStatusChange(option.id)}
                 className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                   status === option.id
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-vm-navy text-white shadow-md'
+                    : 'bg-gray-200 text-vm-text hover:bg-gray-300'
                 }`}
               >
                 {option.label}
@@ -92,14 +92,14 @@ export default function PayoutFilters({
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Branch</label>
+          <label className="block text-sm font-medium text-vm-text mb-2">Branch</label>
           <div className="flex gap-2">
             <button
               onClick={() => onBranchChange(null)}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                 branch === null
                   ? 'bg-gray-800 text-white shadow-md'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-gray-200 text-vm-text hover:bg-gray-300'
               }`}
             >
               All
@@ -108,8 +108,8 @@ export default function PayoutFilters({
               onClick={() => onBranchChange('new_jersey')}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                 branch === 'new_jersey'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-vm-navy text-white shadow-md'
+                  : 'bg-gray-200 text-vm-text hover:bg-gray-300'
               }`}
             >
               New Jersey
@@ -118,8 +118,8 @@ export default function PayoutFilters({
               onClick={() => onBranchChange('vermont')}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                 branch === 'vermont'
-                  ? 'bg-green-600 text-white shadow-md'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-vm-success text-white shadow-md'
+                  : 'bg-gray-200 text-vm-text hover:bg-gray-300'
               }`}
             >
               Vermont

@@ -4,6 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2, ArrowLeft, Mail, Phone, MapPin, Calendar, FileText, User } from 'lucide-react';
 import Link from 'next/link';
+import {
+  TalentApplicationView,
+  parseTalentApplicationData,
+} from '@/components/admin/cleaners/TalentApplicationView';
+import {
+  CLEANER_APPLICATION_STATUS_LABELS,
+  isOpenCleanerApplication,
+} from '@/lib/cleaners/applicationStatus';
 
 interface CleanerApplication {
   id: string;
@@ -14,7 +22,9 @@ interface CleanerApplication {
   experienceLevel: string | null;
   daysAvailable: any;
   notes: string | null;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: string;
+  preferredName?: string | null;
+  applicationData?: unknown;
   createdAt: string;
   updatedAt: string;
   applicantFitScore: number | null;
@@ -134,14 +144,73 @@ export default function CleanerApplicationDetailPage() {
     }
   };
 
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const [adminNotes, setAdminNotes] = useState('');
+  const [notesSaving, setNotesSaving] = useState(false);
+
+  useEffect(() => {
+    if (application?.notes) setAdminNotes(application.notes);
+  }, [application?.notes]);
+
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      setStatusUpdating(true);
+      const response = await fetch(`/api/admin/cleaners/applications/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Failed to update status');
+      setApplication(data.application);
+      setToastMessage('Status updated');
+      setToastType('success');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (err: unknown) {
+      setToastMessage(err instanceof Error ? err.message : 'Failed to update status');
+      setToastType('error');
+      setShowToast(true);
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
+  const saveAdminNotes = async () => {
+    try {
+      setNotesSaving(true);
+      const response = await fetch(`/api/admin/cleaners/applications/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminNotes }),
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Failed to save notes');
+      setApplication(data.application);
+      setToastMessage('Notes saved');
+      setToastType('success');
+      setShowToast(true);
+    } catch (err: unknown) {
+      setToastMessage(err instanceof Error ? err.message : 'Failed to save notes');
+      setToastType('error');
+      setShowToast(true);
+    } finally {
+      setNotesSaving(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'ACCEPTED':
       case 'APPROVED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-vm-success-bg text-vm-success';
       case 'REJECTED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-vm-danger-bg text-red-800';
+      case 'REVIEWING':
+      case 'TRAINING_INVITED':
+        return 'bg-vm-cyan-tint text-vm-navy';
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-vm-warning-bg text-yellow-800';
     }
   };
 
@@ -160,7 +229,7 @@ export default function CleanerApplicationDetailPage() {
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="text-center py-12">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading application...</p>
+          <p className="mt-4 text-vm-muted">Loading application...</p>
         </div>
       </div>
     );
@@ -192,7 +261,7 @@ export default function CleanerApplicationDetailPage() {
         {showToast && (
           <div
             className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-              toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+              toastType === 'success' ? 'bg-vm-success text-white' : 'bg-vm-danger text-white'
             }`}
           >
             {toastMessage}
@@ -210,22 +279,50 @@ export default function CleanerApplicationDetailPage() {
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{application.name}</h1>
-              <p className="text-gray-600">Application Details</p>
+              <h1 className="text-3xl font-bold text-vm-text mb-2">{application.name}</h1>
+              <p className="text-vm-muted">Application Details</p>
             </div>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(application.status)}`}>
-              {application.status}
-            </span>
+            <div className="flex flex-col items-end gap-2">
+              <span className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(application.status)}`}>
+                {CLEANER_APPLICATION_STATUS_LABELS[application.status] || application.status}
+              </span>
+              <select
+                value={application.status}
+                disabled={statusUpdating}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className="rounded-lg border border-vm-border px-3 py-1.5 font-body text-sm text-vm-navy"
+              >
+                {Object.entries(CLEANER_APPLICATION_STATUS_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        {application.status === 'PENDING' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex gap-4">
+        {isOpenCleanerApplication(application.status) && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => handleStatusChange('REVIEWING')}
+              disabled={processing || statusUpdating}
+              className="rounded-lg border border-vm-border px-4 py-2 font-body text-sm text-vm-navy"
+            >
+              Mark reviewing
+            </button>
+            <button
+              type="button"
+              onClick={() => handleStatusChange('TRAINING_INVITED')}
+              disabled={processing || statusUpdating}
+              className="rounded-lg border border-vm-cyan bg-vm-cyan-tint px-4 py-2 font-body text-sm text-vm-navy"
+            >
+              Invite to training
+            </button>
             <button
               onClick={handleApprove}
               disabled={processing}
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-vm-success text-white rounded-lg hover:bg-vm-success disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {processing ? (
                 <>
@@ -242,7 +339,7 @@ export default function CleanerApplicationDetailPage() {
             <button
               onClick={handleReject}
               disabled={processing}
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 min-w-[140px] px-4 py-2 bg-vm-danger text-white rounded-lg hover:bg-vm-danger disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {processing ? (
                 <>
@@ -263,40 +360,40 @@ export default function CleanerApplicationDetailPage() {
         <div className="space-y-6">
           {/* Contact Information */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-vm-text mb-4 flex items-center gap-2">
               <User className="w-5 h-5" />
               Contact Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-start gap-3">
-                <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
+                <Mail className="w-5 h-5 text-vm-muted mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="text-gray-900">{application.email}</p>
+                  <p className="text-sm text-vm-muted">Email</p>
+                  <p className="text-vm-text">{application.email}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
+                <Phone className="w-5 h-5 text-vm-muted mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Phone</p>
-                  <p className="text-gray-900">{application.phone}</p>
+                  <p className="text-sm text-vm-muted">Phone</p>
+                  <p className="text-vm-text">{application.phone}</p>
                 </div>
               </div>
               {application.whatsappNumber && (
                 <div className="flex items-start gap-3">
-                  <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <Phone className="w-5 h-5 text-vm-muted mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">WhatsApp</p>
-                    <p className="text-gray-900">{application.whatsappNumber}</p>
+                    <p className="text-sm text-vm-muted">WhatsApp</p>
+                    <p className="text-vm-text">{application.whatsappNumber}</p>
                   </div>
                 </div>
               )}
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                <MapPin className="w-5 h-5 text-vm-muted mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Branch</p>
-                  <p className="text-gray-900">{application.Branch.name}</p>
-                  <p className="text-sm text-gray-500">{application.Branch.city}, {application.Branch.state}</p>
+                  <p className="text-sm text-vm-muted">Branch</p>
+                  <p className="text-vm-text">{application.Branch.name}</p>
+                  <p className="text-sm text-vm-muted">{application.Branch.city}, {application.Branch.state}</p>
                 </div>
               </div>
             </div>
@@ -304,43 +401,43 @@ export default function CleanerApplicationDetailPage() {
 
           {/* Application Details */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-vm-text mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5" />
               Application Details
             </h2>
             <div className="space-y-4">
               {application.experienceLevel && (
                 <div>
-                  <p className="text-sm text-gray-500">Experience Level</p>
-                  <p className="text-gray-900">{application.experienceLevel}</p>
+                  <p className="text-sm text-vm-muted">Experience Level</p>
+                  <p className="text-vm-text">{application.experienceLevel}</p>
                 </div>
               )}
               {application.areaOfResidence && (
                 <div>
-                  <p className="text-sm text-gray-500">Area of Residence</p>
-                  <p className="text-gray-900">{application.areaOfResidence}</p>
+                  <p className="text-sm text-vm-muted">Area of Residence</p>
+                  <p className="text-vm-text">{application.areaOfResidence}</p>
                 </div>
               )}
               {application.applicantFitScore !== null && (
                 <div>
-                  <p className="text-sm text-gray-500">Applicant Fit Score</p>
-                  <p className="text-gray-900">{application.applicantFitScore}/100</p>
+                  <p className="text-sm text-vm-muted">Applicant Fit Score</p>
+                  <p className="text-vm-text">{application.applicantFitScore}/100</p>
                 </div>
               )}
               <div className="flex gap-6">
                 <div>
-                  <p className="text-sm text-gray-500">Can Travel to Villas</p>
-                  <p className="text-gray-900">{application.canTravelToVillas ? 'Yes' : 'No'}</p>
+                  <p className="text-sm text-vm-muted">Can Travel to Villas</p>
+                  <p className="text-vm-text">{application.canTravelToVillas ? 'Yes' : 'No'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Weekend Availability</p>
-                  <p className="text-gray-900">{application.weekendAbility ? 'Yes' : 'No'}</p>
+                  <p className="text-sm text-vm-muted">Weekend Availability</p>
+                  <p className="text-vm-text">{application.weekendAbility ? 'Yes' : 'No'}</p>
                 </div>
               </div>
               {application.daysAvailable && (
                 <div>
-                  <p className="text-sm text-gray-500">Days Available</p>
-                  <p className="text-gray-900">
+                  <p className="text-sm text-vm-muted">Days Available</p>
+                  <p className="text-vm-text">
                     {Array.isArray(application.daysAvailable)
                       ? application.daysAvailable.join(', ')
                       : JSON.stringify(application.daysAvailable)}
@@ -349,21 +446,44 @@ export default function CleanerApplicationDetailPage() {
               )}
               {application.notes && (
                 <div>
-                  <p className="text-sm text-gray-500">Notes</p>
-                  <p className="text-gray-900 whitespace-pre-wrap">{application.notes}</p>
+                  <p className="text-sm text-vm-muted">Notes</p>
+                  <p className="text-vm-text whitespace-pre-wrap">{application.notes}</p>
                 </div>
               )}
             </div>
           </div>
 
+          {parseTalentApplicationData(application.applicationData) && (
+            <TalentApplicationView data={parseTalentApplicationData(application.applicationData)!} />
+          )}
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-vm-text mb-4">Admin notes</h2>
+            <textarea
+              rows={4}
+              value={adminNotes}
+              onChange={(e) => setAdminNotes(e.target.value)}
+              className="w-full rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy"
+              placeholder="Internal notes for Brian and Caryll…"
+            />
+            <button
+              type="button"
+              disabled={notesSaving}
+              onClick={saveAdminNotes}
+              className="mt-3 rounded-lg bg-vm-navy px-4 py-2 font-body text-sm text-white disabled:opacity-60"
+            >
+              {notesSaving ? 'Saving…' : 'Save notes'}
+            </button>
+          </div>
+
           {/* Documents */}
           {(application.idUploadUrl || application.referencesUploadUrl) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Documents</h2>
+              <h2 className="text-xl font-semibold text-vm-text mb-4">Documents</h2>
               <div className="space-y-2">
                 {application.idUploadUrl && (
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">ID Document</p>
+                    <p className="text-sm text-vm-muted mb-1">ID Document</p>
                     <a
                       href={application.idUploadUrl}
                       target="_blank"
@@ -376,7 +496,7 @@ export default function CleanerApplicationDetailPage() {
                 )}
                 {application.referencesUploadUrl && (
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">References</p>
+                    <p className="text-sm text-vm-muted mb-1">References</p>
                     <a
                       href={application.referencesUploadUrl}
                       target="_blank"
@@ -393,18 +513,18 @@ export default function CleanerApplicationDetailPage() {
 
           {/* Timestamps */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-vm-text mb-4 flex items-center gap-2">
               <Calendar className="w-5 h-5" />
               Timeline
             </h2>
             <div className="space-y-2">
               <div>
-                <p className="text-sm text-gray-500">Applied</p>
-                <p className="text-gray-900">{formatDate(application.createdAt)}</p>
+                <p className="text-sm text-vm-muted">Applied</p>
+                <p className="text-vm-text">{formatDate(application.createdAt)}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Last Updated</p>
-                <p className="text-gray-900">{formatDate(application.updatedAt)}</p>
+                <p className="text-sm text-vm-muted">Last Updated</p>
+                <p className="text-vm-text">{formatDate(application.updatedAt)}</p>
               </div>
             </div>
           </div>

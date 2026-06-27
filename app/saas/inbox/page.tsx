@@ -72,19 +72,19 @@ export default function InboxPage() {
     switch (status) {
       case 'NEW':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-vm-cyan-tint text-blue-800">
             New
           </span>
         );
       case 'REVIEWED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-vm-warning-bg text-yellow-800">
             Reviewed
           </span>
         );
       case 'REPLIED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-vm-success-bg text-vm-success">
             Replied
           </span>
         );
@@ -97,8 +97,8 @@ export default function InboxPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading messages...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vm-navy mx-auto mb-4"></div>
+          <p className="text-vm-muted">Loading messages...</p>
         </div>
       </div>
     );
@@ -111,12 +111,12 @@ export default function InboxPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link href="/saas" className="flex items-center space-x-2">
-              <Sparkles className="w-7 h-7 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900">VelocityMaid</span>
+              <Sparkles className="w-7 h-7 text-vm-cyan-dark" />
+              <span className="text-xl font-bold text-vm-text">VelocityMaid</span>
             </Link>
             <Link
               href="/saas/dashboard"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-vm-muted hover:text-vm-text"
             >
               ← Back to Dashboard
             </Link>
@@ -127,8 +127,8 @@ export default function InboxPage() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Unified Inbox</h1>
-          <p className="text-gray-600 mt-2">All communication logged in a single, auditable inbox</p>
+          <h1 className="text-3xl font-bold text-vm-text">Unified Inbox</h1>
+          <p className="text-vm-muted mt-2">All communication logged in a single, auditable inbox</p>
         </div>
 
         {loadError && (
@@ -141,10 +141,10 @@ export default function InboxPage() {
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
-              <Inbox className="w-8 h-8 text-primary-600 mr-3" />
+              <Inbox className="w-8 h-8 text-vm-cyan-dark mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Total Messages</p>
-                <p className="text-2xl font-bold text-gray-900">{messages.length}</p>
+                <p className="text-sm text-vm-muted">Total Messages</p>
+                <p className="text-2xl font-bold text-vm-text">{messages.length}</p>
               </div>
             </div>
           </div>
@@ -152,8 +152,8 @@ export default function InboxPage() {
             <div className="flex items-center">
               <Mail className="w-8 h-8 text-blue-600 mr-3" />
               <div>
-                <p className="text-sm text-gray-600">New</p>
-                <p className="text-2xl font-bold text-gray-900">{newCount}</p>
+                <p className="text-sm text-vm-muted">New</p>
+                <p className="text-2xl font-bold text-vm-text">{newCount}</p>
               </div>
             </div>
           </div>
@@ -161,17 +161,17 @@ export default function InboxPage() {
             <div className="flex items-center">
               <Clock className="w-8 h-8 text-yellow-600 mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Reviewed</p>
-                <p className="text-2xl font-bold text-gray-900">{reviewedCount}</p>
+                <p className="text-sm text-vm-muted">Reviewed</p>
+                <p className="text-2xl font-bold text-vm-text">{reviewedCount}</p>
               </div>
             </div>
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
-              <CheckCircle className="w-8 h-8 text-green-600 mr-3" />
+              <CheckCircle className="w-8 h-8 text-vm-success mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Replied</p>
-                <p className="text-2xl font-bold text-gray-900">{repliedCount}</p>
+                <p className="text-sm text-vm-muted">Replied</p>
+                <p className="text-2xl font-bold text-vm-text">{repliedCount}</p>
               </div>
             </div>
           </div>
@@ -184,8 +184,8 @@ export default function InboxPage() {
               onClick={() => setFilter('all')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filter === 'all'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-vm-navy text-white'
+                  : 'bg-gray-100 text-vm-text hover:bg-gray-200'
               }`}
             >
               All ({messages.length})
@@ -194,8 +194,8 @@ export default function InboxPage() {
               onClick={() => setFilter('NEW')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filter === 'NEW'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-vm-navy text-white'
+                  : 'bg-gray-100 text-vm-text hover:bg-gray-200'
               }`}
             >
               New ({newCount})
@@ -204,8 +204,8 @@ export default function InboxPage() {
               onClick={() => setFilter('REVIEWED')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filter === 'REVIEWED'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-vm-navy text-white'
+                  : 'bg-gray-100 text-vm-text hover:bg-gray-200'
               }`}
             >
               Reviewed ({reviewedCount})
@@ -214,8 +214,8 @@ export default function InboxPage() {
               onClick={() => setFilter('REPLIED')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filter === 'REPLIED'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-vm-navy text-white'
+                  : 'bg-gray-100 text-vm-text hover:bg-gray-200'
               }`}
             >
               Replied ({repliedCount})
@@ -227,8 +227,8 @@ export default function InboxPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           {filteredMessages.length === 0 ? (
             <div className="px-6 py-12 text-center">
-              <Inbox className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No messages found.</p>
+              <Inbox className="w-12 h-12 text-vm-muted mx-auto mb-4" />
+              <p className="text-vm-muted">No messages found.</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
@@ -237,17 +237,17 @@ export default function InboxPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{message.name}</h3>
+                        <h3 className="text-lg font-semibold text-vm-text">{message.name}</h3>
                         {getStatusBadge(message.status)}
                       </div>
-                      <p className="text-sm text-gray-600 mb-1">
+                      <p className="text-sm text-vm-muted mb-1">
                         {message.email}
                         {message.organization && ` • ${message.organization}`}
                       </p>
                       {message.message && (
-                        <p className="text-gray-700 mt-2">{message.message}</p>
+                        <p className="text-vm-text mt-2">{message.message}</p>
                       )}
-                      <div className="flex items-center space-x-4 mt-3 text-xs text-gray-500">
+                      <div className="flex items-center space-x-4 mt-3 text-xs text-vm-muted">
                         <span>Received: {new Date(message.createdAt).toLocaleString()}</span>
                         {message.repliedAt && (
                           <span>Replied: {new Date(message.repliedAt).toLocaleString()}</span>

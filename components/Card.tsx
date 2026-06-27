@@ -18,7 +18,7 @@ export default function Card({
   title,
   description,
   icon: Icon,
-  iconColor = 'text-primary-600',
+  iconColor = 'text-vm-cyan-dark',
   hover = true,
   className = '',
   padding = 'md',
@@ -41,13 +41,13 @@ export default function Card({
       )}
       
       {title && (
-        <h3 className="text-xl font-bold text-gray-900 mb-2">
+        <h3 className="text-xl font-bold text-vm-text mb-2">
           {title}
         </h3>
       )}
       
       {description && (
-        <p className="text-gray-600 mb-4">
+        <p className="text-vm-muted mb-4">
           {description}
         </p>
       )}

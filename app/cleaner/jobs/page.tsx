@@ -112,12 +112,12 @@ export default function CleanerJobsPage() {
   const getStatusBadgeColor = (status: string) => {
     const colors: Record<string, string> = {
       ASSIGNED: "bg-purple-100 text-purple-800",
-      ON_THE_WAY: "bg-blue-100 text-blue-800",
-      IN_PROGRESS: "bg-yellow-100 text-yellow-800",
-      COMPLETED: "bg-green-100 text-green-800",
-      CANCELLED: "bg-red-100 text-red-800",
+      ON_THE_WAY: "bg-vm-cyan-tint text-blue-800",
+      IN_PROGRESS: "bg-vm-warning-bg text-yellow-800",
+      COMPLETED: "bg-vm-success-bg text-vm-success",
+      CANCELLED: "bg-vm-danger-bg text-red-800",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return colors[status] || "bg-gray-100 text-vm-text";
   };
 
   const getStatusAction = (status: string) => {
@@ -169,7 +169,7 @@ export default function CleanerJobsPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold mb-2">My Jobs</h1>
-          <p className="text-gray-600">View and manage your assigned jobs</p>
+          <p className="text-vm-muted">View and manage your assigned jobs</p>
         </div>
 
         {/* Filter */}
@@ -189,7 +189,7 @@ export default function CleanerJobsPage() {
 
         {/* Error */}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-vm-danger-bg border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
@@ -197,8 +197,8 @@ export default function CleanerJobsPage() {
         {/* Jobs List */}
         {jobs.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-500">No jobs found</p>
-            <p className="text-sm text-gray-400 mt-2">
+            <p className="text-vm-muted">No jobs found</p>
+            <p className="text-sm text-vm-muted mt-2">
               {statusFilter
                 ? "Try changing the status filter"
                 : "You don't have any assigned jobs yet"}
@@ -227,7 +227,7 @@ export default function CleanerJobsPage() {
                       </span>
                     </div>
 
-                    <div className="space-y-2 text-sm text-gray-600">
+                    <div className="space-y-2 text-sm text-vm-muted">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         <span>
@@ -249,11 +249,11 @@ export default function CleanerJobsPage() {
                       </div>
 
                       {job.serviceType && (
-                        <p className="text-gray-500">{job.serviceType}</p>
+                        <p className="text-vm-muted">{job.serviceType}</p>
                       )}
 
                       {job.Branch && (
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-vm-muted">
                           Branch: {job.Branch.name}
                         </p>
                       )}
@@ -262,7 +262,7 @@ export default function CleanerJobsPage() {
 
                   <div className="ml-4 text-right flex flex-col items-end gap-2">
                     {getStatusAction(job.status)}
-                    <span className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
+                    <span className="inline-flex items-center rounded-lg bg-vm-navy px-4 py-2 text-sm font-semibold text-white">
                       Open Job →
                     </span>
                   </div>
