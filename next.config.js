@@ -4,6 +4,8 @@ const path = require('path');
 const nextConfig = {
   async redirects() {
     return [
+      { source: '/admin/dashboard', destination: '/admin', permanent: false },
+      { source: '/admin/dashboard/:path*', destination: '/admin', permanent: false },
       { source: '/franchise', destination: '/', permanent: true },
       { source: '/franchise/:path*', destination: '/', permanent: true },
       { source: '/jamaica', destination: '/', permanent: true },

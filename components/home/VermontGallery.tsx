@@ -15,7 +15,7 @@ export const VERMONT_GALLERY_ENABLED = true;
 
 const TRUST = [
   "Photo report after every clean",
-  "Locally operated from Middlebury, VT",
+  "Locally operated in Vermont's Okemo Valley, serving Ludlow, Middlebury, and surrounding towns.",
   "Turnover-ready in time for check-in",
 ];
 

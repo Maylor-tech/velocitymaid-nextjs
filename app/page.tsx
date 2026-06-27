@@ -243,7 +243,8 @@ export default function Home() {
 
               <p className="font-body text-white/55 text-sm leading-relaxed mb-8 flex-1">
                 Turnover cleaning for ski rentals, Airbnbs, and second homes in the Okemo
-                Valley. Locally operated from Ludlow, VT.
+                Valley. Locally operated in Vermont&apos;s Okemo Valley, serving Ludlow,
+                Middlebury, and surrounding towns.
               </p>
 
               <ul className="space-y-2 mb-8">

@@ -147,6 +147,9 @@ export async function POST(request: NextRequest) {
             overallStatus: true,
           },
         },
+        CleanerProfile: {
+          select: { isInternalTeam: true, publicDisplayName: true },
+        },
       },
     });
 
@@ -174,7 +177,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Phase 1: Check cleaner has APPROVED application
+    const isInternalTeam = cleaner.CleanerProfile?.isInternalTeam === true;
+
+    // Phase 1: Check cleaner has APPROVED application (internal team exempt)
     const approvedApplication = await prisma.cleanerApplication.findFirst({
       where: {
         email: cleaner.email,
@@ -182,7 +187,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!approvedApplication) {
+    if (!isInternalTeam && !approvedApplication) {
       return NextResponse.json(
         {
           success: false,
@@ -256,6 +261,11 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    });
+
+    await prisma.jobTeamMember.deleteMany({ where: { jobId } });
+    await prisma.jobTeamMember.create({
+      data: { jobId, cleanerId, sortOrder: 0 },
     });
 
     // Phase 5 Step 5: Log audit entry (existing system)
