@@ -10,7 +10,7 @@ export default function CustomerVerifyPage() {
   const router = useRouter();
 
   const emailFromQuery = searchParams.get('email') || '';
-  const redirectUrl = searchParams.get('redirect') || '/customer/jobs';
+  const redirectUrl = searchParams.get('redirect') || '/customer';
 
   const [code, setCode] = useState('');
   const [email, setEmail] = useState(emailFromQuery);
@@ -51,7 +51,7 @@ export default function CustomerVerifyPage() {
         throw new Error(data.error || 'Invalid or expired code.');
       }
 
-      router.push(redirectUrl || '/customer/jobs');
+      router.push(redirectUrl || '/customer');
     } catch (err: unknown) {
       console.error(err);
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';

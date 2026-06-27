@@ -48,7 +48,9 @@ export function CustomerDocList({ title, empty, fetchUrl, mapRows }: CustomerDoc
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-bold text-vm-navy mb-6">{title}</h1>
+      {title ? (
+        <h1 className="font-heading text-2xl font-bold text-vm-navy mb-6">{title}</h1>
+      ) : null}
       {error && (
         <p className="mb-4 rounded-lg bg-vm-danger-bg px-3 py-2 font-body text-sm text-vm-danger">{error}</p>
       )}
