@@ -5,6 +5,7 @@ import {
   MapPin,
   DollarSign,
   Settings,
+  Target,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -21,6 +22,12 @@ export const ADMIN_NAV: AdminNavItem[] = [
     label: 'Dashboard',
     icon: LayoutDashboard,
     match: (p) => p === '/admin',
+  },
+  {
+    href: '/admin/lead-center',
+    label: 'Lead Center',
+    icon: Target,
+    match: (p) => p.startsWith('/admin/lead-center'),
   },
   {
     href: '/admin/jobs',

@@ -1606,3 +1606,71 @@ model Receipt {
   @@index([publicToken])
   @@map("receipts")
 }
+
+// ─── Lead Command Center (separate from legacy Lead model) ───────────────────
+
+enum PipelineLeadStage {
+  NEW_LEAD
+  CONTACTED
+  DISCOVERY_CALL
+  QUOTE_SENT
+  FOLLOW_UP
+  WON
+  ACTIVE_CLIENT
+  LOST
+}
+
+enum PipelineLeadTaskType {
+  FOLLOW_UP
+  QUOTE_REMINDER
+  ONBOARDING
+}
+
+enum PipelineLeadTaskStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model PipelineLead {
+  id               String             @id @default(cuid())
+  name             String
+  phone            String
+  email            String?
+  propertyAddress  String?
+  bedrooms         Int?
+  bathrooms        Int?
+  propertyType     String?
+  leadSource       String?
+  estimatedRevenue Decimal?           @db.Decimal(10, 2)
+  notes            String?
+  stage            PipelineLeadStage  @default(NEW_LEAD)
+  nextActionDate   DateTime?
+  isRecurring      Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  tasks            PipelineLeadTask[]
+
+  @@index([stage])
+  @@index([nextActionDate])
+  @@index([createdAt])
+  @@map("pipeline_leads")
+}
+
+model PipelineLeadTask {
+  id          String                 @id @default(cuid())
+  leadId      String
+  type        PipelineLeadTaskType
+  title       String
+  dueAt       DateTime
+  status      PipelineLeadTaskStatus @default(PENDING)
+  completedAt DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  lead        PipelineLead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([dueAt])
+  @@index([status])
+  @@map("pipeline_lead_tasks")
+}
