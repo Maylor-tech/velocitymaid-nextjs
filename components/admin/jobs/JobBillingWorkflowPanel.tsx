@@ -278,6 +278,11 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted }: JobBillingWorkf
           </a>
         )}
         {s.invoice.invoiceId && (
+          <Link href={`/admin/invoices/${s.invoice.invoiceId}/edit`} className="text-vm-cyan-dark hover:underline">
+            Edit invoice (line items &amp; email) →
+          </Link>
+        )}
+        {s.invoice.invoiceId && (
           <Link href={`/admin/invoices/${s.invoice.invoiceId}`} className="text-vm-cyan-dark hover:underline">
             Admin invoice →
           </Link>

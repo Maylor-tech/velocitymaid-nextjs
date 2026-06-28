@@ -158,8 +158,13 @@ export function InvoiceForm({ initial, onSubmit, submitLabel = 'Save draft' }: I
           {values.items.map((item, index) => (
             <div key={index} className="grid gap-2 rounded-lg border border-vm-border p-3 sm:grid-cols-12">
               <div className="sm:col-span-6">
-                <input placeholder="Description" className={inputClass} value={item.description}
-                  onChange={(e) => updateItem(index, { description: e.target.value })} />
+                <textarea
+                  rows={3}
+                  placeholder="Service title (first line)&#10;Detail line 2&#10;Detail line 3"
+                  className={`${inputClass} resize-y min-h-[72px]`}
+                  value={item.description}
+                  onChange={(e) => updateItem(index, { description: e.target.value })}
+                />
               </div>
               <div className="sm:col-span-2">
                 <input type="number" min={0} step={0.01} placeholder="Qty" className={inputClass}
@@ -202,9 +207,15 @@ export function InvoiceForm({ initial, onSubmit, submitLabel = 'Save draft' }: I
       </div>
 
       <div>
-        <label className={labelClass}>Notes</label>
-        <textarea rows={3} className={inputClass} value={values.notes}
+        <label className={labelClass}>Notes &amp; email extras</label>
+        <textarea rows={5} className={inputClass} value={values.notes}
+          placeholder={`Closing note (optional)\n\n---UPCOMING---\nMon Jun 29 — Office prep — $150\nJul 1 — Turnover — $300`}
           onChange={(e) => setValues({ ...values, notes: e.target.value })} />
+        <p className="mt-1 font-body text-xs text-vm-muted">
+          First line(s) appear as the closing note in the invoice email. Add{" "}
+          <code className="rounded bg-vm-surface px-1">---UPCOMING---</code> on its own line,
+          then list upcoming services below it.
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-3">
