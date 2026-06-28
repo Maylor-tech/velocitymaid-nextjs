@@ -1,3 +1,4 @@
+import { getCleanerHandbookUrl } from '@/lib/cleaners/handbookUrl';
 import { resend, getResendFromEmail } from './resendClient';
 
 const NAVY = '#0F1C2E';
@@ -52,14 +53,29 @@ export async function sendCleanerApplicationConfirmationEmail(params: {
        Your application has been received. Our team reviews every candidate carefully.
        If selected, the next step will be the <strong>VelocityMaid Certification Program</strong>.
      </p>
+     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${NAVY};">
+       Once your application is reviewed and approved, you will receive the full
+       VelocityMaid Cleaner Handbook — everything you need to know about working with us,
+       how jobs work, and how you get paid.
+     </p>
      <p style="margin:0;font-size:14px;color:${MUTED};">— The VelocityMaid Talent Team</p>`
   );
+
+  const text = `Hi ${params.applicantName.trim() || 'there'},
+
+Your application has been received. Our team reviews every candidate carefully.
+If selected, the next step will be the VelocityMaid Certification Program.
+
+Once your application is reviewed and approved, you will receive the full VelocityMaid Cleaner Handbook — everything you need to know about working with us, how jobs work, and how you get paid.
+
+— The VelocityMaid Talent Team`;
 
   await resend.emails.send({
     from: getResendFromEmail(),
     to: params.toEmail,
     subject: 'VelocityMaid Cleaner Application Received',
     html,
+    text,
   });
 
   return { sent: true };
@@ -107,4 +123,106 @@ export async function sendCleanerApplicationInternalNotification(params: {
   });
 
   return { sent: true };
+}
+
+export async function sendCleanerApprovalEmail(params: {
+  toEmail: string;
+  firstName: string;
+}): Promise<{ sent: boolean; skippedReason?: string }> {
+  if (!resend) {
+    return { sent: false, skippedReason: 'RESEND_API_KEY not configured' };
+  }
+
+  const firstName = escapeHtml(params.firstName.trim() || 'there');
+  const handbookUrl = escapeHtml(getCleanerHandbookUrl());
+  const loginUrl = escapeHtml(
+    `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || 'https://velocitymaid.com'}/cleaners/login`
+  );
+
+  const html = brandHtml(
+    "Welcome to VelocityMaid — you're approved",
+    `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${NAVY};">Hi ${firstName},</p>
+     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${NAVY};">
+       Great news — your VelocityMaid application has been approved.
+     </p>
+     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${NAVY};">
+       Before your first job, please review your Cleaner Handbook. It covers everything:
+       how jobs are assigned, how you get paid, travel pay, cleaning standards, and your
+       rights and responsibilities as part of the team.
+     </p>
+     <p style="margin:0 0 20px;">
+       <a href="${handbookUrl}" style="display:inline-block;background:${CYAN};color:${NAVY};font-weight:700;text-decoration:none;padding:12px 20px;border-radius:8px;">
+         Download your handbook
+       </a>
+     </p>
+     <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:${NAVY};"><strong>Your next steps:</strong></p>
+     <ol style="margin:0 0 20px;padding-left:20px;font-size:15px;line-height:1.7;color:${NAVY};">
+       <li>Review the handbook</li>
+       <li>Complete your W-9 and direct deposit form (Brian will send these separately)</li>
+       <li>Log in to your cleaner portal: <a href="${loginUrl}" style="color:${CYAN};">${loginUrl}</a></li>
+     </ol>
+     <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:${NAVY};">Welcome to the team.</p>
+     <p style="margin:0;font-size:14px;line-height:1.6;color:${NAVY};">
+       Brian Maylor<br/>
+       Founder, VelocityMaid<br/>
+       (802) 733-5348<br/>
+       hello@velocitymaid.com
+     </p>
+     <p style="margin:20px 0 0;font-size:12px;font-weight:700;letter-spacing:0.08em;color:${MUTED};">COME HOME TO CLEAN.</p>`
+  );
+
+  const text = `Hi ${params.firstName.trim() || 'there'},
+
+Great news — your VelocityMaid application has been approved.
+
+Before your first job, please review your Cleaner Handbook. It covers everything: how jobs are assigned, how you get paid, travel pay, cleaning standards, and your rights and responsibilities as part of the team.
+
+Download your handbook here:
+${getCleanerHandbookUrl()}
+
+Your next steps:
+1. Review the handbook
+2. Complete your W-9 and direct deposit form (Brian will send these separately)
+3. Log in to your cleaner portal: ${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || 'https://velocitymaid.com'}/cleaners/login
+
+Welcome to the team.
+
+Brian Maylor
+Founder, VelocityMaid
+(802) 733-5348
+hello@velocitymaid.com
+
+COME HOME TO CLEAN.`;
+
+  await resend.emails.send({
+    from: getResendFromEmail(),
+    to: params.toEmail,
+    subject: "Welcome to VelocityMaid — you're approved",
+    html,
+    text,
+  });
+
+  return { sent: true };
+}
+
+/** Application statuses that trigger the cleaner handbook approval email. */
+export const CLEANER_APPROVAL_EMAIL_STATUSES = new Set(['APPROVED', 'ACCEPTED']);
+
+export async function sendCleanerApprovalEmailIfNeeded(params: {
+  toEmail: string;
+  firstName: string;
+  previousStatus: string;
+  newStatus: string;
+}): Promise<{ sent: boolean; skippedReason?: string }> {
+  if (!CLEANER_APPROVAL_EMAIL_STATUSES.has(params.newStatus)) {
+    return { sent: false, skippedReason: 'Status is not an approval status' };
+  }
+  if (CLEANER_APPROVAL_EMAIL_STATUSES.has(params.previousStatus)) {
+    return { sent: false, skippedReason: 'Already approved' };
+  }
+
+  return sendCleanerApprovalEmail({
+    toEmail: params.toEmail,
+    firstName: params.firstName,
+  });
 }

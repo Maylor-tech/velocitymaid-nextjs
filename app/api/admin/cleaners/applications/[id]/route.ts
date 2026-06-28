@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import { CleanerApplicationStatus } from '@prisma/client';
+import { sendCleanerApprovalEmailIfNeeded } from '@/lib/email/sendCleanerApplicationEmails';
 
 const ALLOWED_STATUSES: CleanerApplicationStatus[] = [
   'NEW',
@@ -72,6 +73,13 @@ export async function PATCH(
       data.notes = adminNotes;
     }
 
+    const existing = status
+      ? await prisma.cleanerApplication.findUnique({
+          where: { id: params.id },
+          select: { status: true, email: true, name: true },
+        })
+      : null;
+
     const application = await prisma.cleanerApplication.update({
       where: { id: params.id },
       data,
@@ -81,6 +89,20 @@ export async function PATCH(
         },
       },
     });
+
+    if (existing && status && existing.status !== status) {
+      const nameParts = existing.name.trim().split(/\s+/);
+      try {
+        await sendCleanerApprovalEmailIfNeeded({
+          toEmail: existing.email,
+          firstName: nameParts[0] || existing.name,
+          previousStatus: existing.status,
+          newStatus: status,
+        });
+      } catch (emailError) {
+        console.error('Failed to send cleaner approval email:', emailError);
+      }
+    }
 
     return NextResponse.json({ success: true, application });
   } catch (error: unknown) {

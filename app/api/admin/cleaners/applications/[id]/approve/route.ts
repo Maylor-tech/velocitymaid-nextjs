@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { sendTrainingWelcomeNotification } from '@/app/services/trainingNotifications';
 import { isOpenCleanerApplication } from '@/lib/cleaners/applicationStatus';
 import { createInternalCleaner } from '@/lib/cleaners/internalCleanerService';
+import { sendCleanerApprovalEmailIfNeeded } from '@/lib/email/sendCleanerApplicationEmails';
 import { parseTalentApplicationData } from '@/components/admin/cleaners/TalentApplicationView';
 
 export async function POST(
@@ -79,6 +80,17 @@ export async function POST(
       where: { id },
       data: { status: 'ACCEPTED', updatedAt: now },
     });
+
+    try {
+      await sendCleanerApprovalEmailIfNeeded({
+        toEmail: application.email,
+        firstName,
+        previousStatus: application.status,
+        newStatus: 'ACCEPTED',
+      });
+    } catch (emailError) {
+      console.error('Failed to send cleaner approval email:', emailError);
+    }
 
     const branch = application.Branch;
     if (

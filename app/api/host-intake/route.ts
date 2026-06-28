@@ -1,173 +1,125 @@
 /**
  * POST /api/host-intake
  *
- * Receives Vermont host intake form submissions and notifies the team via email.
+ * Receives Vermont host intake form submissions, emails the host and team,
+ * and creates a draft Customer record when possible.
  */
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
-import { getResendFromEmail } from "@/lib/email/resendClient";
-
-const NOTIFICATION_EMAIL =
-  process.env.CONTACT_NOTIFICATIONS_EMAIL || "hello@velocitymaid.com";
-
-function getResend() {
-  if (!process.env.RESEND_API_KEY) {
-    return null;
-  }
-  return new Resend(process.env.RESEND_API_KEY);
-}
+import {
+  sendHostIntakeConfirmationEmail,
+  sendHostIntakeInternalNotification,
+} from "@/lib/email/sendHostIntakeEmails";
+import { createDraftHostCustomer } from "@/lib/hostIntake/createDraftCustomer";
+import { parseHostIntakeBody } from "@/lib/hostIntake/formatSubmission";
+import type { HostIntakePayload } from "@/lib/hostIntake/types";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function formatList(items: string[] | undefined): string {
-  if (!items || items.length === 0) return "—";
-  return items.join(", ");
+function validateExistingRequiredFields(payload: HostIntakePayload): string | null {
+  if (
+    !payload.propertyAddress ||
+    !payload.city ||
+    !payload.bedrooms ||
+    !payload.bathrooms ||
+    !payload.fullName ||
+    !payload.email
+  ) {
+    return "Missing required fields";
+  }
+
+  if (!isValidEmail(payload.email)) {
+    return "Invalid email address";
+  }
+
+  return null;
 }
 
-function buildEmailBody(data: Record<string, unknown>): { html: string; text: string } {
-  const propertySection = `
-Property address: ${data.propertyAddress || "—"}
-City / Town: ${data.city || "—"}
-Bedrooms: ${data.bedrooms || "—"}
-Bathrooms: ${data.bathrooms || "—"}
-Booking platform(s): ${formatList(data.bookingPlatforms as string[])}
-  `.trim();
+function validateNewRequiredFields(payload: HostIntakePayload): string | null {
+  if (!payload.accessType) {
+    return "Access type is required";
+  }
 
-  const cleaningSection = `
-Service types: ${formatList(data.serviceTypes as string[])}
-Turnover frequency: ${data.turnoverFrequency || "—"}
-Currently has a cleaner: ${data.hasCleaner || "—"}
-Special instructions: ${data.specialInstructions || "—"}
-  `.trim();
+  if (
+    payload.accessType === "Other (please describe)" &&
+    !payload.accessTypeOther.trim()
+  ) {
+    return "Please describe your access type";
+  }
 
-  const contactSection = `
-Full name: ${data.fullName || "—"}
-Email: ${data.email || "—"}
-Phone: ${data.phone || "—"}
-Preferred contact: ${data.preferredContact || "—"}
-Best time to reach: ${data.bestTimeToReach || "—"}
-  `.trim();
+  if (!payload.willSendAccessDetails) {
+    return "Please confirm you will send access details before the first service";
+  }
 
-  const text = `
-NEW VERMONT HOST INQUIRY
-=======================
+  if (!payload.linenProvider) {
+    return "Please select who provides linens and towels";
+  }
 
-YOUR PROPERTY
-${propertySection}
+  if (!payload.sameDayTurnovers) {
+    return "Please select same-day turnover preference";
+  }
 
-CLEANING NEEDS
-${cleaningSection}
+  if (payload.propertyActiveSeasons.length === 0) {
+    return "Please select when your property is most active";
+  }
 
-CONTACT INFO
-${contactSection}
-  `.trim();
+  if (!payload.preferredPaymentMethod) {
+    return "Please select a preferred payment method";
+  }
 
-  const html = `
-<h2>New Vermont Host Inquiry</h2>
-
-<h3>Your property</h3>
-<ul>
-  <li><strong>Property address:</strong> ${data.propertyAddress || "—"}</li>
-  <li><strong>City / Town:</strong> ${data.city || "—"}</li>
-  <li><strong>Bedrooms:</strong> ${data.bedrooms || "—"}</li>
-  <li><strong>Bathrooms:</strong> ${data.bathrooms || "—"}</li>
-  <li><strong>Booking platform(s):</strong> ${formatList(data.bookingPlatforms as string[])}</li>
-</ul>
-
-<h3>Cleaning needs</h3>
-<ul>
-  <li><strong>Service types:</strong> ${formatList(data.serviceTypes as string[])}</li>
-  <li><strong>Turnover frequency:</strong> ${data.turnoverFrequency || "—"}</li>
-  <li><strong>Currently has a cleaner:</strong> ${data.hasCleaner || "—"}</li>
-  <li><strong>Special instructions:</strong> ${(data.specialInstructions as string) || "—"}</li>
-</ul>
-
-<h3>Contact info</h3>
-<ul>
-  <li><strong>Full name:</strong> ${data.fullName || "—"}</li>
-  <li><strong>Email:</strong> ${data.email || "—"}</li>
-  <li><strong>Phone:</strong> ${data.phone || "—"}</li>
-  <li><strong>Preferred contact:</strong> ${data.preferredContact || "—"}</li>
-  <li><strong>Best time to reach:</strong> ${data.bestTimeToReach || "—"}</li>
-</ul>
-  `.trim();
-
-  return { html, text };
+  return null;
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    const payload = parseHostIntakeBody(body);
 
-    const propertyAddress = String(body.propertyAddress ?? "").trim();
-    const city = String(body.city ?? "").trim();
-    const bedrooms = String(body.bedrooms ?? "").trim();
-    const bathrooms = String(body.bathrooms ?? "").trim();
-    const fullName = String(body.fullName ?? "").trim();
-    const email = String(body.email ?? "").trim().toLowerCase();
-
-    if (!propertyAddress || !city || !bedrooms || !bathrooms || !fullName || !email) {
+    const existingError = validateExistingRequiredFields(payload);
+    if (existingError) {
       return NextResponse.json(
-        { success: false, error: "Missing required fields" },
+        { success: false, error: existingError },
         { status: 400 }
       );
     }
 
-    if (!isValidEmail(email)) {
+    const newFieldsError = validateNewRequiredFields(payload);
+    if (newFieldsError) {
       return NextResponse.json(
-        { success: false, error: "Invalid email address" },
+        { success: false, error: newFieldsError },
         { status: 400 }
       );
     }
 
-    const payload = {
-      propertyAddress,
-      city,
-      bedrooms,
-      bathrooms,
-      bookingPlatforms: Array.isArray(body.bookingPlatforms)
-        ? body.bookingPlatforms
-        : [],
-      serviceTypes: Array.isArray(body.serviceTypes) ? body.serviceTypes : [],
-      turnoverFrequency: String(body.turnoverFrequency ?? "").trim(),
-      hasCleaner: String(body.hasCleaner ?? "").trim(),
-      specialInstructions: String(body.specialInstructions ?? "").trim(),
-      fullName,
-      email,
-      phone: String(body.phone ?? "").trim(),
-      preferredContact: String(body.preferredContact ?? "").trim(),
-      bestTimeToReach: String(body.bestTimeToReach ?? "").trim(),
-    };
+    try {
+      await createDraftHostCustomer(payload);
+    } catch (customerError) {
+      console.error("[HOST-INTAKE] Draft customer creation failed:", customerError);
+    }
 
-    const resend = getResend();
+    const [confirmation, internal] = await Promise.all([
+      sendHostIntakeConfirmationEmail(payload),
+      sendHostIntakeInternalNotification(payload),
+    ]);
 
-    if (!resend) {
-      // TODO: Remove console.log once RESEND_API_KEY is confirmed in production.
+    if (!confirmation.sent && !internal.sent) {
       console.log("[HOST-INTAKE] RESEND_API_KEY not configured. Form data:", payload);
-      return NextResponse.json({ success: true });
     }
 
-    const { html, text } = buildEmailBody(payload);
-    const subject = `New host inquiry — ${city}, VT — ${fullName}`;
+    if (confirmation.sent) {
+      console.log(`[HOST-INTAKE] Confirmation sent to ${payload.email}`);
+    }
 
-    await resend.emails.send({
-      from: getResendFromEmail(),
-      to: [NOTIFICATION_EMAIL],
-      replyTo: email,
-      subject,
-      html,
-      text,
-    });
-
-    console.log(
-      `[HOST-INTAKE] Notification sent to ${NOTIFICATION_EMAIL} for ${fullName} (${city}, VT)`
-    );
+    if (internal.sent) {
+      console.log(
+        `[HOST-INTAKE] Internal notification sent for ${payload.propertyAddress}`
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {

@@ -2,6 +2,19 @@
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
+import {
+  ACCESS_TYPE_OPTIONS,
+  BOOKING_ADVANCE_OPTIONS,
+  GUEST_CHECKIN_OPTIONS,
+  GUEST_CHECKOUT_OPTIONS,
+  LINEN_PROVIDER_OPTIONS,
+  PAYMENT_METHOD_OPTIONS,
+  PROPERTY_ACTIVE_SEASON_OPTIONS,
+  PROPERTY_AMENITY_OPTIONS,
+  SAME_DAY_TURNOVER_OPTIONS,
+  SQUARE_FOOTAGE_OPTIONS,
+} from "@/lib/hostIntake/constants";
+import type { HostIntakePayload } from "@/lib/hostIntake/types";
 
 const BOOKING_PLATFORMS = [
   "Airbnb",
@@ -36,22 +49,13 @@ const BEST_TIME_OPTIONS = [
   "Anytime",
 ] as const;
 
-type FormFields = {
-  propertyAddress: string;
-  city: string;
-  bedrooms: string;
-  bathrooms: string;
-  bookingPlatforms: string[];
-  serviceTypes: string[];
-  turnoverFrequency: string;
-  hasCleaner: string;
-  specialInstructions: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  preferredContact: string;
-  bestTimeToReach: string;
-};
+type ArrayFieldKey =
+  | "bookingPlatforms"
+  | "serviceTypes"
+  | "propertyAmenities"
+  | "propertyActiveSeasons";
+
+type FormFields = HostIntakePayload;
 
 type FormErrors = Partial<Record<keyof FormFields, string>>;
 
@@ -60,10 +64,28 @@ const initialForm: FormFields = {
   city: "",
   bedrooms: "",
   bathrooms: "",
+  squareFootage: "",
+  bedConfiguration: "",
+  propertyAmenities: [],
+  restrictedAreas: "",
   bookingPlatforms: [],
+  accessType: "",
+  accessTypeOther: "",
+  willSendAccessDetails: false,
+  guestCheckoutTime: "",
+  guestCheckoutTimeOther: "",
+  guestCheckinTime: "",
+  guestCheckinTimeOther: "",
+  supplyStorageLocation: "",
+  trashBinLocation: "",
   serviceTypes: [],
   turnoverFrequency: "",
   hasCleaner: "",
+  linenProvider: "",
+  sameDayTurnovers: "",
+  bookingAdvanceNotice: "",
+  propertyActiveSeasons: [],
+  preferredPaymentMethod: "",
   specialInstructions: "",
   fullName: "",
   email: "",
@@ -86,6 +108,10 @@ function FieldError({ message }: { message?: string }) {
   return <p className="text-red-500 text-xs mt-1">{message}</p>;
 }
 
+function FieldHelper({ children }: { children: React.ReactNode }) {
+  return <p className="text-vm-muted text-xs mt-1">{children}</p>;
+}
+
 export default function HostIntakeForm() {
   const [form, setForm] = useState<FormFields>(initialForm);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -100,10 +126,7 @@ export default function HostIntakeForm() {
     setSubmitError(null);
   }
 
-  function toggleArrayField(
-    key: "bookingPlatforms" | "serviceTypes",
-    value: string
-  ) {
+  function toggleArrayField(key: ArrayFieldKey, value: string) {
     setForm((prev) => {
       const current = prev[key];
       const next = current.includes(value)
@@ -111,6 +134,7 @@ export default function HostIntakeForm() {
         : [...current, value];
       return { ...prev, [key]: next };
     });
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
   }
 
   function validate(): FormErrors {
@@ -134,6 +158,31 @@ export default function HostIntakeForm() {
       next.email = "Email address is required.";
     } else if (!isValidEmail(form.email.trim())) {
       next.email = "Please enter a valid email address.";
+    }
+    if (!form.accessType) {
+      next.accessType = "Please select an access type.";
+    } else if (
+      form.accessType === "Other (please describe)" &&
+      !form.accessTypeOther.trim()
+    ) {
+      next.accessTypeOther = "Please describe your access type.";
+    }
+    if (!form.willSendAccessDetails) {
+      next.willSendAccessDetails =
+        "Please confirm you will send access details before the first service.";
+    }
+    if (!form.linenProvider) {
+      next.linenProvider = "Please select who provides linens and towels.";
+    }
+    if (!form.sameDayTurnovers) {
+      next.sameDayTurnovers = "Please select a same-day turnover preference.";
+    }
+    if (form.propertyActiveSeasons.length === 0) {
+      next.propertyActiveSeasons =
+        "Please select when your property is most active.";
+    }
+    if (!form.preferredPaymentMethod) {
+      next.preferredPaymentMethod = "Please select a preferred payment method.";
     }
     return next;
   }
@@ -200,7 +249,7 @@ export default function HostIntakeForm() {
             </h1>
             <p className="font-body text-vm-muted text-sm leading-relaxed mb-8">
               We&apos;ll be in touch within 24 hours to confirm your quote and
-              next steps. Check your email — we&apos;ll send a summary shortly.
+              next steps. Check your email — we&apos;ve sent a welcome summary.
             </p>
             <Link
               href="/vermont"
@@ -329,6 +378,87 @@ export default function HostIntakeForm() {
             </div>
 
             <div>
+              <label htmlFor="squareFootage" className={labelClassName}>
+                Approximate square footage{" "}
+                <span className="text-vm-muted font-normal">(optional)</span>
+              </label>
+              <select
+                id="squareFootage"
+                value={form.squareFootage}
+                onChange={(e) => updateField("squareFootage", e.target.value)}
+                className={`${inputClassName} mt-1`}
+              >
+                <option value="">Select…</option>
+                {SQUARE_FOOTAGE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="bedConfiguration" className={labelClassName}>
+                Bed configuration{" "}
+                <span className="text-vm-muted font-normal">(optional)</span>
+              </label>
+              <input
+                id="bedConfiguration"
+                type="text"
+                value={form.bedConfiguration}
+                onChange={(e) => updateField("bedConfiguration", e.target.value)}
+                placeholder="e.g. 2 Kings, 3 Queens, 1 Twin"
+                className={`${inputClassName} mt-1`}
+              />
+              <FieldHelper>
+                Helps us prepare the right number of linens for each visit
+              </FieldHelper>
+            </div>
+
+            <div>
+              <p className={labelClassName}>
+                Property amenities{" "}
+                <span className="text-vm-muted font-normal">(optional)</span>
+              </p>
+              <div className="mt-2 space-y-2">
+                {PROPERTY_AMENITY_OPTIONS.map((amenity) => (
+                  <label
+                    key={amenity}
+                    className="flex items-start gap-2 font-body text-sm text-vm-text cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={form.propertyAmenities.includes(amenity)}
+                      onChange={() =>
+                        toggleArrayField("propertyAmenities", amenity)
+                      }
+                      className="mt-0.5 rounded border-vm-border text-vm-cyan focus:ring-vm-cyan"
+                    />
+                    {amenity}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="restrictedAreas" className={labelClassName}>
+                Restricted areas{" "}
+                <span className="text-vm-muted font-normal">(optional)</span>
+              </label>
+              <input
+                id="restrictedAreas"
+                type="text"
+                value={form.restrictedAreas}
+                onChange={(e) => updateField("restrictedAreas", e.target.value)}
+                placeholder="e.g. Office, basement storage room"
+                className={`${inputClassName} mt-1`}
+              />
+              <FieldHelper>
+                Areas cleaners should not enter without specific instruction
+              </FieldHelper>
+            </div>
+
+            <div>
               <p className={labelClassName}>Booking platform(s)</p>
               <div className="mt-2 space-y-2">
                 {BOOKING_PLATFORMS.map((platform) => (
@@ -348,6 +478,194 @@ export default function HostIntakeForm() {
                   </label>
                 ))}
               </div>
+            </div>
+          </fieldset>
+
+          {/* Access & Operations */}
+          <fieldset className="space-y-4">
+            <legend className="font-heading font-semibold text-vm-navy text-lg mb-2">
+              Access &amp; Operations
+            </legend>
+
+            <div>
+              <p className={labelClassName}>
+                Access type <span className="text-red-500">*</span>
+              </p>
+              <div className="mt-2 space-y-2">
+                {ACCESS_TYPE_OPTIONS.map((option) => (
+                  <label
+                    key={option}
+                    className="flex items-start gap-2 font-body text-sm text-vm-text cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name="accessType"
+                      value={option}
+                      checked={form.accessType === option}
+                      onChange={(e) => updateField("accessType", e.target.value)}
+                      className="mt-0.5 border-vm-border text-vm-cyan focus:ring-vm-cyan"
+                    />
+                    {option}
+                  </label>
+                ))}
+              </div>
+              <FieldError message={errors.accessType} />
+            </div>
+
+            {form.accessType === "Other (please describe)" && (
+              <div>
+                <label htmlFor="accessTypeOther" className={labelClassName}>
+                  Access details <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="accessTypeOther"
+                  type="text"
+                  value={form.accessTypeOther}
+                  onChange={(e) =>
+                    updateField("accessTypeOther", e.target.value)
+                  }
+                  className={`${inputClassName} mt-1`}
+                />
+                <FieldError message={errors.accessTypeOther} />
+              </div>
+            )}
+
+            <div>
+              <label className="flex items-start gap-2 font-body text-sm text-vm-text cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.willSendAccessDetails}
+                  onChange={(e) =>
+                    updateField("willSendAccessDetails", e.target.checked)
+                  }
+                  className="mt-0.5 rounded border-vm-border text-vm-cyan focus:ring-vm-cyan"
+                />
+                <span>
+                  I will send the access code or key instructions to
+                  VelocityMaid before the first service{" "}
+                  <span className="text-red-500">*</span>
+                </span>
+              </label>
+              <FieldHelper>
+                Send to hello@velocitymaid.com or through your client portal
+                after onboarding
+              </FieldHelper>
+              <FieldError message={errors.willSendAccessDetails} />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="guestCheckoutTime" className={labelClassName}>
+                  Guest check-out time{" "}
+                  <span className="text-vm-muted font-normal">(optional)</span>
+                </label>
+                <select
+                  id="guestCheckoutTime"
+                  value={form.guestCheckoutTime}
+                  onChange={(e) =>
+                    updateField("guestCheckoutTime", e.target.value)
+                  }
+                  className={`${inputClassName} mt-1`}
+                >
+                  <option value="">Select…</option>
+                  {GUEST_CHECKOUT_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="guestCheckinTime" className={labelClassName}>
+                  Guest check-in time{" "}
+                  <span className="text-vm-muted font-normal">(optional)</span>
+                </label>
+                <select
+                  id="guestCheckinTime"
+                  value={form.guestCheckinTime}
+                  onChange={(e) =>
+                    updateField("guestCheckinTime", e.target.value)
+                  }
+                  className={`${inputClassName} mt-1`}
+                >
+                  <option value="">Select…</option>
+                  {GUEST_CHECKIN_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {form.guestCheckoutTime === "Other" && (
+              <div>
+                <label
+                  htmlFor="guestCheckoutTimeOther"
+                  className={labelClassName}
+                >
+                  Check-out time details
+                </label>
+                <input
+                  id="guestCheckoutTimeOther"
+                  type="text"
+                  value={form.guestCheckoutTimeOther}
+                  onChange={(e) =>
+                    updateField("guestCheckoutTimeOther", e.target.value)
+                  }
+                  className={`${inputClassName} mt-1`}
+                />
+              </div>
+            )}
+
+            {form.guestCheckinTime === "Other" && (
+              <div>
+                <label htmlFor="guestCheckinTimeOther" className={labelClassName}>
+                  Check-in time details
+                </label>
+                <input
+                  id="guestCheckinTimeOther"
+                  type="text"
+                  value={form.guestCheckinTimeOther}
+                  onChange={(e) =>
+                    updateField("guestCheckinTimeOther", e.target.value)
+                  }
+                  className={`${inputClassName} mt-1`}
+                />
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="supplyStorageLocation" className={labelClassName}>
+                Supply storage location{" "}
+                <span className="text-vm-muted font-normal">(optional)</span>
+              </label>
+              <input
+                id="supplyStorageLocation"
+                type="text"
+                value={form.supplyStorageLocation}
+                onChange={(e) =>
+                  updateField("supplyStorageLocation", e.target.value)
+                }
+                placeholder="e.g. Locked cabinet in main bathroom, linen closet second floor"
+                className={`${inputClassName} mt-1`}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="trashBinLocation" className={labelClassName}>
+                Trash bin location and pickup day{" "}
+                <span className="text-vm-muted font-normal">(optional)</span>
+              </label>
+              <input
+                id="trashBinLocation"
+                type="text"
+                value={form.trashBinLocation}
+                onChange={(e) => updateField("trashBinLocation", e.target.value)}
+                placeholder="e.g. Bins behind garage, pickup Tuesday mornings"
+                className={`${inputClassName} mt-1`}
+              />
             </div>
           </fieldset>
 
@@ -425,6 +743,144 @@ export default function HostIntakeForm() {
                 ))}
               </div>
             </div>
+
+            <fieldset className="space-y-4 border-t border-vm-border pt-4">
+              <legend className="font-heading font-semibold text-vm-navy text-base mb-2">
+                Service preferences
+              </legend>
+
+              <div>
+                <p className={labelClassName}>
+                  Who provides linens and towels?{" "}
+                  <span className="text-red-500">*</span>
+                </p>
+                <div className="mt-2 space-y-2">
+                  {LINEN_PROVIDER_OPTIONS.map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-start gap-2 font-body text-sm text-vm-text cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="linenProvider"
+                        value={option}
+                        checked={form.linenProvider === option}
+                        onChange={(e) =>
+                          updateField("linenProvider", e.target.value)
+                        }
+                        className="mt-0.5 border-vm-border text-vm-cyan focus:ring-vm-cyan"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+                <FieldError message={errors.linenProvider} />
+              </div>
+
+              <div>
+                <p className={labelClassName}>
+                  Same-day turnovers needed?{" "}
+                  <span className="text-red-500">*</span>
+                </p>
+                <div className="mt-2 space-y-2">
+                  {SAME_DAY_TURNOVER_OPTIONS.map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-start gap-2 font-body text-sm text-vm-text cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="sameDayTurnovers"
+                        value={option}
+                        checked={form.sameDayTurnovers === option}
+                        onChange={(e) =>
+                          updateField("sameDayTurnovers", e.target.value)
+                        }
+                        className="mt-0.5 border-vm-border text-vm-cyan focus:ring-vm-cyan"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+                <FieldError message={errors.sameDayTurnovers} />
+              </div>
+
+              <div>
+                <label htmlFor="bookingAdvanceNotice" className={labelClassName}>
+                  How far in advance do you know about bookings?{" "}
+                  <span className="text-vm-muted font-normal">(optional)</span>
+                </label>
+                <select
+                  id="bookingAdvanceNotice"
+                  value={form.bookingAdvanceNotice}
+                  onChange={(e) =>
+                    updateField("bookingAdvanceNotice", e.target.value)
+                  }
+                  className={`${inputClassName} mt-1`}
+                >
+                  <option value="">Select…</option>
+                  {BOOKING_ADVANCE_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <p className={labelClassName}>
+                  When is your property most active?{" "}
+                  <span className="text-red-500">*</span>
+                </p>
+                <div className="mt-2 space-y-2">
+                  {PROPERTY_ACTIVE_SEASON_OPTIONS.map((season) => (
+                    <label
+                      key={season}
+                      className="flex items-start gap-2 font-body text-sm text-vm-text cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.propertyActiveSeasons.includes(season)}
+                        onChange={() =>
+                          toggleArrayField("propertyActiveSeasons", season)
+                        }
+                        className="mt-0.5 rounded border-vm-border text-vm-cyan focus:ring-vm-cyan"
+                      />
+                      {season}
+                    </label>
+                  ))}
+                </div>
+                <FieldError message={errors.propertyActiveSeasons} />
+              </div>
+
+              <div>
+                <p className={labelClassName}>
+                  Preferred payment method{" "}
+                  <span className="text-red-500">*</span>
+                </p>
+                <div className="mt-2 space-y-2">
+                  {PAYMENT_METHOD_OPTIONS.map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-start gap-2 font-body text-sm text-vm-text cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="preferredPaymentMethod"
+                        value={option}
+                        checked={form.preferredPaymentMethod === option}
+                        onChange={(e) =>
+                          updateField("preferredPaymentMethod", e.target.value)
+                        }
+                        className="mt-0.5 border-vm-border text-vm-cyan focus:ring-vm-cyan"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+                <FieldError message={errors.preferredPaymentMethod} />
+              </div>
+            </fieldset>
 
             <div>
               <label htmlFor="specialInstructions" className={labelClassName}>
