@@ -7,6 +7,11 @@ import { prisma } from '@/lib/prisma';
 import { calculateApplicantFitScore } from '@/utils/applicantScore';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';
 import type { TalentApplicationPayload } from '@/lib/cleaners/talentApplicationTypes';
+import {
+  isCleanerApplyPayload,
+  type CleanerApplyPayload,
+} from '@/lib/cleaners/cleanerApplyTypes';
+import { validateCleanerApply } from '@/lib/cleaners/validateCleanerApply';
 import { validateTalentApplication } from '@/lib/cleaners/validateTalentApplication';
 import { resolveBranchIdFromServiceAreas } from '@/lib/cleaners/resolveApplicationBranch';
 import {
@@ -26,6 +31,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    if (isCleanerApplyPayload(body.application)) {
+      return handleApplyV2Submit(body.application);
+    }
+
     if (isTalentPortal(body)) {
       return handleTalentPortalSubmit(body.application);
     }
@@ -36,6 +45,94 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : 'Failed to submit application';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
+}
+
+async function handleApplyV2Submit(payload: CleanerApplyPayload) {
+  const branch = await prisma.branch.findUnique({
+    where: { id: payload.personal.branchId },
+    select: { id: true, name: true, slug: true, status: true, country: true },
+  });
+
+  if (!branch) {
+    return NextResponse.json({ success: false, error: 'Invalid branch selected.' }, { status: 400 });
+  }
+
+  if (branch.status !== 'ACTIVE' && branch.status !== 'COMING_SOON') {
+    return NextResponse.json(
+      { success: false, error: 'Branch is not accepting applications' },
+      { status: 400 }
+    );
+  }
+
+  const isVermontBranch = branch.slug === 'vermont';
+  const validationError = validateCleanerApply(payload, { isVermontBranch });
+  if (validationError) {
+    return NextResponse.json({ success: false, error: validationError }, { status: 400 });
+  }
+
+  const areaOfResidence = `${payload.personal.neighborhood.trim()}, ${payload.personal.city.trim()}, ${payload.personal.state}`;
+
+  const record = await prisma.cleanerApplication.create({
+    data: {
+      id: randomUUID(),
+      name: payload.personal.fullName.trim(),
+      email: payload.personal.email.trim().toLowerCase(),
+      phone: payload.personal.phone.trim(),
+      whatsappNumber: null,
+      branchId: branch.id,
+      experienceLevel: payload.experience.yearsExperience,
+      areaOfResidence,
+      daysAvailable: payload.availability.daysAvailable,
+      weekendAbility: payload.availability.daysAvailable.some((d) =>
+        ['Saturday', 'Sunday'].includes(d)
+      ),
+      canTravelToVillas: isVermontBranch,
+      notes: buildApplyV2NotesSummary(payload),
+      applicationData: payload as object,
+      status: 'PENDING',
+      updatedAt: new Date(),
+    },
+  });
+
+  const emailResults = await Promise.allSettled([
+    sendCleanerApplicationConfirmationEmail({
+      toEmail: record.email,
+      applicantName: payload.personal.fullName.trim().split(/\s+/)[0] || record.name,
+    }),
+    sendCleanerApplicationInternalNotification({
+      applicantName: record.name,
+      applicantEmail: record.email,
+      branchName: branch.name,
+      applicationId: record.id,
+      serviceAreas: [payload.personal.city, payload.personal.neighborhood].filter(Boolean),
+    }),
+  ]);
+
+  for (const result of emailResults) {
+    if (result.status === 'rejected') {
+      console.error('[APPLY-V2] Email notification failed:', result.reason);
+    } else if (!result.value.sent) {
+      console.warn('[APPLY-V2] Email skipped:', result.value.skippedReason);
+    }
+  }
+
+  return NextResponse.json({
+    success: true,
+    applicationId: record.id,
+    message: 'Application submitted successfully',
+  });
+}
+
+function buildApplyV2NotesSummary(app: CleanerApplyPayload): string {
+  return [
+    'Cleaner apply v2',
+    `City: ${app.personal.city}, ${app.personal.state}`,
+    `Neighborhood: ${app.personal.neighborhood}`,
+    `Hours/week: ${app.availability.hoursPerWeek}`,
+    `Same-day bookings: ${app.availability.sameDayBookings}`,
+    `Experience: ${app.experience.yearsExperience}`,
+    `How heard: ${app.professionalFit.howHeardAboutUs}`,
+  ].join('\n');
 }
 
 async function handleTalentPortalSubmit(payload: TalentApplicationPayload) {

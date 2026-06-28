@@ -9,6 +9,10 @@ import {
   parseTalentApplicationData,
 } from '@/components/admin/cleaners/TalentApplicationView';
 import {
+  CleanerApplyView,
+  parseCleanerApplyData,
+} from '@/components/admin/cleaners/CleanerApplyView';
+import {
   CLEANER_APPLICATION_STATUS_LABELS,
   isOpenCleanerApplication,
 } from '@/lib/cleaners/applicationStatus';
@@ -455,6 +459,10 @@ export default function CleanerApplicationDetailPage() {
 
           {parseTalentApplicationData(application.applicationData) && (
             <TalentApplicationView data={parseTalentApplicationData(application.applicationData)!} />
+          )}
+
+          {parseCleanerApplyData(application.applicationData) && (
+            <CleanerApplyView data={parseCleanerApplyData(application.applicationData)!} />
           )}
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
