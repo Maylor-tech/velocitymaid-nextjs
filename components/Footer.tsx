@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { BrandLogo } from "./brand";
-
+import {
+  SUPPORT_EMAIL,
+  VERMONT_SUPPORT,
+  VERMONT_WHATSAPP_URL,
+} from '@/lib/customer/marketSupport';
 /**
  * Footer — institutional pages, unified brand lockup
  */
@@ -42,18 +46,18 @@ export default function Footer() {
             <h4 className={footerHeadingClass}>Contact</h4>
             <ul className="space-y-2 text-sm font-body">
               <li>
-                <a href="tel:+19732809190" className={footerLinkClass}>
-                  New Jersey — (973) 280-9190
+                <a href={`mailto:${SUPPORT_EMAIL}`} className={footerLinkClass}>
+                  New Jersey — {SUPPORT_EMAIL}
                 </a>
               </li>
               <li>
-                <a href="tel:+18027335348" className={footerLinkClass}>
-                  Vermont — (802) 733-5348
+                <a href={`tel:+1${VERMONT_SUPPORT.phoneTel}`} className={footerLinkClass}>
+                  Vermont — {VERMONT_SUPPORT.phoneDisplay}
                 </a>
               </li>
               <li>
-                <a href="mailto:hello@velocitymaid.com" className={footerLinkClass}>
-                  hello@velocitymaid.com
+                <a href={VERMONT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className={footerLinkClass}>
+                  Vermont WhatsApp
                 </a>
               </li>
             </ul>

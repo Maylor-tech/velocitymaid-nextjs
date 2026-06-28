@@ -110,7 +110,7 @@ export default function RootLayout({
         "addressCountry": "US"
       },
       "url": "https://velocitymaid.com/locations/new-jersey",
-      "telephone": "+19732809190",
+      "telephone": "+18027335348",
       "email": "hello@velocitymaid.com",
       "priceRange": "$$",
       "openingHoursSpecification": [

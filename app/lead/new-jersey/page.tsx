@@ -63,7 +63,7 @@ export default function LeadCapturePage() {
             Thank You!
           </h2>
           <p className="text-vm-text mb-6">
-            We've received your information and will contact you shortly via WhatsApp.
+            We've received your information and will contact you shortly at hello@velocitymaid.com.
           </p>
           <Link
             href="/locations/new-jersey"

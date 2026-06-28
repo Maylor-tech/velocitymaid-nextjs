@@ -17,7 +17,9 @@ import { createReview } from '@/utils/reviewData';
 import { createComplaint } from '@/utils/complaintData';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';
 
-const GOOGLE_REVIEW_URL = process.env.NEXT_PUBLIC_NJ_GOOGLE_REVIEW_URL || 'https://g.page/r/YOUR_GOOGLE_REVIEW_URL';
+import { getGoogleReviewUrl } from '@/lib/reviews/googleReviewUrl';
+
+const GOOGLE_REVIEW_URL = getGoogleReviewUrl();
 
 export async function POST(request: NextRequest) {
   try {

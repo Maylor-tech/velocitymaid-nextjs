@@ -4,7 +4,8 @@ export const fetchCache = 'force-no-store';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
-import { Phone, MessageCircle, MapPin, Check, Sparkles, ArrowRight } from 'lucide-react';
+import { Phone, MessageCircle, MapPin, Check, Sparkles, ArrowRight, Mail } from 'lucide-react';
+import { resolveMarketSupportFromBranch } from '@/lib/customer/marketSupport';
 
 interface PageProps {
   params: {
@@ -791,6 +792,8 @@ export default async function BranchLandingPage({ params }: PageProps) {
     },
   };
 
+  const support = resolveMarketSupportFromBranch(branch);
+
   // Active Branch Landing Page
   return (
     <>
@@ -823,21 +826,30 @@ export default async function BranchLandingPage({ params }: PageProps) {
           </p>
           <div className="flex flex-wrap gap-4">
             <a
-              href={`tel:${branch.primaryPhone}`}
+              href={`tel:${support.phoneTel}`}
               className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-lg"
             >
               <Phone className="w-5 h-5" />
-              {branch.primaryPhone}
+              {support.phoneDisplay}
             </a>
             <a
-              href={`https://wa.me/${branch.whatsappNumber.replace(/[^0-9]/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-vm-success text-white rounded-lg font-semibold hover:bg-vm-success transition-colors shadow-lg"
+              href={`mailto:${support.email}`}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white/90 text-blue-700 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-lg"
             >
-              <MessageCircle className="w-5 h-5" />
-              WhatsApp Us
+              <Mail className="w-5 h-5" />
+              {support.email}
             </a>
+            {support.whatsappUrl && (
+              <a
+                href={support.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-vm-success text-white rounded-lg font-semibold hover:bg-vm-success transition-colors shadow-lg"
+              >
+                <MessageCircle className="w-5 h-5" />
+                WhatsApp Us
+              </a>
+            )}
           </div>
         </div>
       </div>

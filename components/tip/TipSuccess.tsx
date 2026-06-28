@@ -1,4 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
+import { DEFAULT_GOOGLE_REVIEW_URL } from "@/lib/reviews/googleReviewUrl";
 
 export interface TipSuccessProps {
   amountDollars: number;
@@ -28,7 +29,7 @@ export default function TipSuccess({ amountDollars, guestName }: TipSuccessProps
         You tipped ${formattedAmount}
       </p>
       <a
-        href="https://g.page/r/PLACEHOLDER/review"
+        href={DEFAULT_GOOGLE_REVIEW_URL}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-8 bg-transparent border border-white/20 text-white/70 hover:border-vm-cyan hover:text-vm-cyan rounded-lg px-6 py-3 text-sm font-heading transition-colors text-center block"

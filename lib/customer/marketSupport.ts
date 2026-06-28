@@ -2,28 +2,37 @@
  * Guest-facing support contact by branch / market.
  */
 
+export const SUPPORT_EMAIL = 'hello@velocitymaid.com';
+
 export type MarketSupportContact = {
   market: 'vermont' | 'new-jersey';
   marketLabel: string;
   phoneDisplay: string;
   phoneTel: string;
-  whatsappUrl: string;
+  email: string;
+  /** Vermont only — NJ uses email + phone backup (no WhatsApp). */
+  whatsappUrl?: string | null;
 };
 
-const VERMONT: MarketSupportContact = {
+export const VERMONT_WHATSAPP_URL = 'https://wa.me/18027335348';
+
+export const VERMONT_SUPPORT: MarketSupportContact = {
   market: 'vermont',
   marketLabel: 'Vermont',
   phoneDisplay: '(802) 733-5348',
   phoneTel: '8027335348',
-  whatsappUrl: 'https://wa.me/18027335348',
+  email: SUPPORT_EMAIL,
+  whatsappUrl: VERMONT_WHATSAPP_URL,
 };
 
-const NEW_JERSEY: MarketSupportContact = {
+/** NJ line lost — email primary, Vermont phone as call backup, no WhatsApp. */
+export const NEW_JERSEY_SUPPORT: MarketSupportContact = {
   market: 'new-jersey',
   marketLabel: 'New Jersey',
-  phoneDisplay: '(973) 280-9190',
-  phoneTel: '9732809190',
-  whatsappUrl: 'https://wa.me/19732809190',
+  phoneDisplay: VERMONT_SUPPORT.phoneDisplay,
+  phoneTel: VERMONT_SUPPORT.phoneTel,
+  email: SUPPORT_EMAIL,
+  whatsappUrl: null,
 };
 
 function isVermontAddressText(text: string | null | undefined): boolean {
@@ -67,25 +76,10 @@ export function resolveMarketSupportFromBranch(
     whatsappNumber?: string | null;
   } | null | undefined
 ): MarketSupportContact {
-  const base = isVermontBranch(branch) ? VERMONT : NEW_JERSEY;
-
-  if (branch?.primaryPhone?.trim()) {
-    const digits = branch.primaryPhone.replace(/\D/g, '');
-    const display =
-      branch.primaryPhone.includes('(') ? branch.primaryPhone : formatUsPhone(digits);
-    const tel = digits.length >= 10 ? digits.slice(-10) : base.phoneTel;
-    const wa =
-      branch.whatsappNumber?.replace(/\D/g, '') ||
-      (tel.length >= 10 ? `1${tel}` : base.phoneTel);
-    return {
-      ...base,
-      phoneDisplay: display,
-      phoneTel: tel,
-      whatsappUrl: `https://wa.me/${wa.startsWith('1') ? wa : `1${wa}`}`,
-    };
+  if (isVermontBranch(branch)) {
+    return { ...VERMONT_SUPPORT };
   }
-
-  return base;
+  return { ...NEW_JERSEY_SUPPORT };
 }
 
 /** Resolve support line from branch + customer address/state. */
@@ -118,24 +112,7 @@ export function resolveMarketSupportForCustomer(customer: {
     state === 'VERMONT' ||
     isVermontAddressText(addressBlob);
 
-  return resolveMarketSupportFromBranch(
-    isVt
-      ? {
-          slug: 'vermont',
-          state: 'VT',
-          name: 'Vermont',
-          regionLabel: 'Vermont',
-          primaryPhone: VERMONT.phoneDisplay,
-          whatsappNumber: '18027335348',
-        }
-      : customer.Branch
-  );
-}
-
-function formatUsPhone(digits: string): string {
-  const d = digits.replace(/\D/g, '').slice(-10);
-  if (d.length !== 10) return digits;
-  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+  return isVt ? { ...VERMONT_SUPPORT } : { ...NEW_JERSEY_SUPPORT };
 }
 
 export function resolveMarketSupportFromBranchId(
@@ -149,6 +126,12 @@ export function resolveMarketSupportFromBranchId(
     whatsappNumber: string;
   } | null>
 ): Promise<MarketSupportContact> {
-  if (!branchId) return Promise.resolve(NEW_JERSEY);
+  if (!branchId) return Promise.resolve({ ...NEW_JERSEY_SUPPORT });
   return loadBranch(branchId).then((b) => resolveMarketSupportFromBranch(b));
+}
+
+/** Primary href for "Get help" / support shortcuts (WhatsApp when available, else email). */
+export function primarySupportHref(contact: MarketSupportContact): string {
+  if (contact.whatsappUrl) return contact.whatsappUrl;
+  return `mailto:${contact.email}`;
 }

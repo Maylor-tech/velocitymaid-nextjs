@@ -162,7 +162,7 @@ export function renderEstimateEmail({
                   </p>
                   <p style="margin:0 0 8px 0;">
                     To confirm this booking, simply return to the VelocityMaid website and complete the
-                    checkout steps, or call us at <a href="tel:+19732809190" style="color:#2563eb;text-decoration:none;">(973) 280-9190</a>
+                    checkout steps, or email us at <a href="mailto:hello@velocitymaid.com" style="color:#2563eb;text-decoration:none;">hello@velocitymaid.com</a>
                     for help.
                   </p>
                 </div>

@@ -14,6 +14,9 @@ import {
   Home,
 } from 'lucide-react';
 import type { MarketSupportContact } from '@/lib/customer/marketSupport';
+import {
+  NEW_JERSEY_SUPPORT,
+} from '@/lib/customer/marketSupport';
 
 interface CustomerLayoutProps {
   children: React.ReactNode;
@@ -26,13 +29,7 @@ interface CustomerInfo {
   email: string;
 }
 
-const DEFAULT_SUPPORT: MarketSupportContact = {
-  market: 'new-jersey',
-  marketLabel: 'New Jersey',
-  phoneDisplay: '(973) 280-9190',
-  phoneTel: '9732809190',
-  whatsappUrl: 'https://wa.me/19732809190',
-};
+const DEFAULT_SUPPORT: MarketSupportContact = NEW_JERSEY_SUPPORT;
 
 const NAV_ITEMS = [
   { href: '/customer/jobs', label: 'Home', icon: Home, match: (p: string) => p === '/customer/jobs' || p === '/customer' },
@@ -184,21 +181,30 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
           </p>
           <div className="flex flex-wrap items-center gap-4">
             <a
-              href={`tel:${support.phoneTel}`}
+              href={`mailto:${support.email}`}
               className="flex items-center gap-2 text-sm text-vm-cyan-dark font-body font-medium"
+            >
+              {support.email}
+            </a>
+            <a
+              href={`tel:${support.phoneTel}`}
+              className="flex items-center gap-2 text-sm text-vm-muted font-body font-medium"
             >
               <Phone className="w-4 h-4" />
               {support.phoneDisplay}
+              {support.market === 'new-jersey' ? ' (Vermont line)' : ''}
             </a>
-            <a
-              href={support.whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-vm-success font-body font-medium"
-            >
-              <MessageSquare className="w-4 h-4" />
-              WhatsApp
-            </a>
+            {support.whatsappUrl && (
+              <a
+                href={support.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-vm-success font-body font-medium"
+              >
+                <MessageSquare className="w-4 h-4" />
+                WhatsApp
+              </a>
+            )}
           </div>
         </div>
       </footer>

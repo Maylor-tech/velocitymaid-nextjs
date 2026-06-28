@@ -21,7 +21,9 @@ import { Suspense } from 'react';
 import { BrandLogo } from '@/components/brand';
 import BranchLandingNav from '@/components/layout/BranchLandingNav';
 import FAQAccordion from './components/FAQAccordion';
-import BeforeAfterGallery from './components/BeforeAfterGallery';
+import BeforeAfterGallery, {
+  NJ_SHOWCASE_IMAGE,
+} from './components/BeforeAfterGallery';
 
 export const metadata: Metadata = {
   title: 'New Jersey Cleaning Services | VelocityMaid',
@@ -88,7 +90,7 @@ const DEFAULT_NJ_PRICING = {
   moveInOut: 320,
 };
 
-const DEFAULT_NJ_PHONE = '(973) 280-9190';
+import { SUPPORT_EMAIL, VERMONT_SUPPORT } from '@/lib/customer/marketSupport';
 
 type NjBranchData = {
   branch: {
@@ -170,7 +172,9 @@ export default async function NewJerseyLandingPage() {
   const basicPrice = getServicePrice('basic');
   const deepPrice = getServicePrice('deep');
   const moveInOutPrice = getServicePrice('moveinout');
-  const contactPhone = branch?.primaryPhone || DEFAULT_NJ_PHONE;
+  const contactPhone = VERMONT_SUPPORT.phoneDisplay;
+  const contactPhoneTel = VERMONT_SUPPORT.phoneTel;
+  const contactEmail = SUPPORT_EMAIL;
 
   // Service areas
   const serviceAreas = [
@@ -217,10 +221,10 @@ export default async function NewJerseyLandingPage() {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: 'VelocityMaid New Jersey',
-    image: 'https://velocitymaid.com/cleaning/clean-kitchen.jpg',
+    image: NJ_SHOWCASE_IMAGE,
     '@id': 'https://velocitymaid.com/locations/new-jersey',
     url: 'https://velocitymaid.com/locations/new-jersey',
-    telephone: contactPhone,
+    telephone: `+1${VERMONT_SUPPORT.phoneTel}`,
     priceRange: '$$',
     address: {
       '@type': 'PostalAddress',
@@ -598,7 +602,7 @@ export default async function NewJerseyLandingPage() {
           </div>
         </section>
 
-        {/* SECTION 3: BEFORE & AFTER GALLERY */}
+        {/* SECTION 3: HOSPITALITY SHOWCASE */}
         <section className="py-20 bg-vm-surface">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <p className="text-vm-cyan text-xs font-body font-bold uppercase tracking-widest mb-2 text-center">
@@ -610,7 +614,7 @@ export default async function NewJerseyLandingPage() {
             <p className="text-center text-vm-muted font-body text-sm mb-12 max-w-2xl mx-auto">
               Every visit follows our structured property-care protocol — guest-ready results, every time.
             </p>
-            <Suspense fallback={<div>Loading gallery...</div>}>
+            <Suspense fallback={<div className="max-w-4xl mx-auto aspect-[4/3] rounded-2xl bg-vm-navy/5 animate-pulse" />}>
               <BeforeAfterGallery />
             </Suspense>
           </div>
@@ -729,18 +733,34 @@ export default async function NewJerseyLandingPage() {
           </div>
         </section>
 
-        {/* SECTION 7: CTA BLOCK */}
+        {/* SECTION 7: INQUIRY / BOOKING */}
         <section className="py-20 bg-vm-surface border-y border-vm-navy/5">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="font-heading font-bold text-vm-navy text-3xl md:text-4xl mb-6">
-              Ready for a cleaner home?
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="font-heading font-bold text-vm-navy text-3xl md:text-4xl mb-8">
+              Ready to book a clean?
             </h2>
-            <Link
-              href="/book?branch=new-jersey"
-              className="inline-block bg-vm-cyan text-vm-navy font-body font-bold uppercase tracking-wider text-xs px-8 py-4 rounded hover:bg-vm-cyan/90 transition shadow-md"
-            >
-              Book Now
-            </Link>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              <Link
+                href="/book?branch=new-jersey"
+                className="flex flex-col items-center justify-center rounded-xl bg-vm-cyan text-vm-navy px-6 py-8 font-body font-bold uppercase tracking-wider text-sm hover:bg-vm-cyan/90 transition shadow-md"
+              >
+                Book online
+              </Link>
+              <a
+                href={`tel:+1${contactPhoneTel}`}
+                className="flex flex-col items-center justify-center rounded-xl border-2 border-vm-navy/15 bg-white px-6 py-8 text-vm-navy hover:border-vm-cyan/40 hover:bg-vm-white transition shadow-sm"
+              >
+                <span className="font-body font-bold uppercase tracking-wider text-sm">
+                  Call or text us
+                </span>
+                <span className="mt-3 font-heading text-xl font-semibold text-vm-navy">
+                  {contactPhone}
+                </span>
+              </a>
+            </div>
+            <p className="font-body text-sm text-vm-muted">
+              We respond within 2 hours on business days.
+            </p>
           </div>
         </section>
 
@@ -766,7 +786,7 @@ export default async function NewJerseyLandingPage() {
                 },
                 {
                   question: 'How do I book a cleaning?',
-                  answer: 'You can book online through our website, call us, or send us a WhatsApp message. We\'ll confirm your appointment and send you a reminder the day before.',
+                  answer: 'You can book online through our website or call or text us at (802) 733-5348. We\'ll confirm your appointment and send you a reminder the day before.',
                 },
                 {
                   question: 'What if I\'m not satisfied?',
@@ -835,7 +855,17 @@ export default async function NewJerseyLandingPage() {
               </div>
               <div>
                 <h3 className="font-heading font-bold mb-4 text-sm uppercase tracking-wider">Contact</h3>
-                <p className="text-vm-white/70 font-body text-sm">{contactPhone}</p>
+                <p className="text-vm-white/70 font-body text-sm">
+                  <a href={`mailto:${contactEmail}`} className="hover:text-vm-cyan transition">
+                    {contactEmail}
+                  </a>
+                </p>
+                <p className="text-vm-white/70 font-body text-sm mt-1">
+                  Call or text:{' '}
+                  <a href={`tel:+1${contactPhoneTel}`} className="hover:text-vm-cyan transition">
+                    {contactPhone}
+                  </a>
+                </p>
                 <p className="text-vm-white/70 font-body text-sm">Serving New Jersey</p>
               </div>
             </div>

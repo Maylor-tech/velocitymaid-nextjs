@@ -13,6 +13,11 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
+import type { MarketSupportContact } from '@/lib/customer/marketSupport';
+import {
+  NEW_JERSEY_SUPPORT,
+  primarySupportHref,
+} from '@/lib/customer/marketSupport';
 
 interface CustomerJob {
   id: string;
@@ -111,7 +116,7 @@ export default function CustomerJobsPage() {
   const [upcomingJobs, setUpcomingJobs] = useState<CustomerJob[]>([]);
   const [pastJobs, setPastJobs] = useState<CustomerJob[]>([]);
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
-  const [supportWhatsApp, setSupportWhatsApp] = useState('https://wa.me/19732809190');
+  const [support, setSupport] = useState<MarketSupportContact>(NEW_JERSEY_SUPPORT);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,7 +137,7 @@ export default function CustomerJobsPage() {
           address: meData.customer?.address,
           marketLabel: meData.customer?.marketLabel || meData.support?.marketLabel,
         });
-        if (meData.support?.whatsappUrl) setSupportWhatsApp(meData.support.whatsappUrl);
+        if (meData.support) setSupport(meData.support);
 
         const [upcomingRes, pastRes] = await Promise.all([
           fetch('/api/customer/jobs?type=upcoming'),
@@ -234,9 +239,9 @@ export default function CustomerJobsPage() {
                 </div>
               </div>
               <a
-                href={supportWhatsApp}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={primarySupportHref(support)}
+                target={support.whatsappUrl ? '_blank' : undefined}
+                rel={support.whatsappUrl ? 'noopener noreferrer' : undefined}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-vm-cyan text-vm-navy"
                 aria-label="Contact support"
               >
@@ -362,9 +367,9 @@ export default function CustomerJobsPage() {
           <span className="font-heading text-sm font-semibold text-vm-navy">Leave a tip</span>
         </Link>
         <a
-          href={supportWhatsApp}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={primarySupportHref(support)}
+          target={support.whatsappUrl ? '_blank' : undefined}
+          rel={support.whatsappUrl ? 'noopener noreferrer' : undefined}
           className="flex flex-col items-start gap-3 rounded-xl border border-vm-border bg-vm-white p-5 hover:shadow-sm transition-shadow"
         >
           <Headphones className="h-5 w-5 text-vm-cyan" />

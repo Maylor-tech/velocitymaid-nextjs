@@ -19,6 +19,7 @@ import {
   Wallet,
   ShieldCheck,
 } from 'lucide-react';
+import { NEW_JERSEY_SUPPORT, primarySupportHref } from '@/lib/customer/marketSupport';
 
 interface HomeData {
   welcome: { greeting: string; message: string };
@@ -288,10 +289,10 @@ export default function CustomerHomePage() {
             sublabel="Completion reports"
           />
           <QuickActionCard
-            href="https://wa.me/19732809190"
+            href={primarySupportHref(NEW_JERSEY_SUPPORT)}
             icon={Headphones}
             label="Get Support"
-            sublabel="WhatsApp or call"
+            sublabel={NEW_JERSEY_SUPPORT.whatsappUrl ? 'WhatsApp or call' : NEW_JERSEY_SUPPORT.email}
             accent="cyan"
           />
         </div>

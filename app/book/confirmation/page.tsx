@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { SUPPORT_EMAIL } from "@/lib/customer/marketSupport";
 
 function BookingConfirmationContent() {
   const searchParams = useSearchParams();
@@ -363,7 +364,7 @@ function BookingConfirmationContent() {
             View My Jobs
           </button>
           <a
-            href="tel:9732809190"
+            href={`mailto:${SUPPORT_EMAIL}`}
             className="px-6 py-3 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors font-medium text-center"
           >
             Contact Support

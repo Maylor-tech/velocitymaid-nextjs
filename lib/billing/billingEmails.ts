@@ -3,6 +3,7 @@ import type { SerializedCompletionReport } from './serializeCompletionReport';
 import type { SerializedReceipt } from './serializeReceipt';
 import type { SerializedInvoice } from '@/lib/invoices/serializeInvoice';
 import { escapeHtml, brandHtmlBlock } from '@/lib/billing/emailBrand';
+import { getGoogleReviewUrl } from '@/lib/reviews/googleReviewUrl';
 
 function appBaseUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || 'https://velocitymaid.com';
@@ -74,9 +75,7 @@ export async function sendReviewRequestAfterPayment(params: {
 }): Promise<{ sent: boolean; skippedReason?: string }> {
   if (!resend) return { sent: false, skippedReason: 'RESEND_API_KEY not configured' };
 
-  const googleReviewUrl =
-    process.env.GOOGLE_REVIEW_URL ||
-    'https://g.page/r/velocitymaid/review';
+  const googleReviewUrl = getGoogleReviewUrl();
 
   const html = brandHtml(
     'How did we do?',

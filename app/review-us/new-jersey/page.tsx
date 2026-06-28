@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Star, QrCode, ExternalLink, Sparkles, Gift } from 'lucide-react';
 import Link from 'next/link';
+import { getPublicGoogleReviewUrl } from "@/lib/reviews/googleReviewUrl";
 
 
 
@@ -10,9 +11,7 @@ export default function ReviewUsPage() {
 
   const [imageError, setImageError] = useState(false);
 
-  const GOOGLE_REVIEW_URL =
-
-    process.env.NEXT_PUBLIC_NJ_GOOGLE_REVIEW_URL || "#";
+  const GOOGLE_REVIEW_URL = getPublicGoogleReviewUrl();
 
 
 

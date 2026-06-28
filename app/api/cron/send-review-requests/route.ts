@@ -16,6 +16,7 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendReviewRequestEmail } from "@/lib/email/sendReviewRequestEmail";
+import { getGoogleReviewUrl } from "@/lib/reviews/googleReviewUrl";
 
 const MAX_PER_RUN = 200;
 
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
       nameByJobId.set(job.id, name);
     }
 
-    const reviewUrl = process.env.GOOGLE_REVIEW_URL || undefined;
+    const reviewUrl = getGoogleReviewUrl();
 
     let sent = 0;
     let failed = 0;

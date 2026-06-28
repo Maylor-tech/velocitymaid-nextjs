@@ -138,7 +138,10 @@ export default async function CityLandingPage({ params }: PageProps) {
   // Hero content
   const headline = cityData.headline || `Professional House Cleaning in ${cityName}, New Jersey`;
   const subheadline = cityData.subheadline || `Reliable, background-checked cleaners in ${cityName}. Flat-rate pricing, eco-friendly supplies, 100% satisfaction guarantee.`;
-  const heroImageUrl = cityData.heroImageUrl || branch.BranchLandingContent?.heroImageUrl || '/cleaning/clean-kitchen.jpg';
+  const heroImageUrl =
+    cityData.heroImageUrl ||
+    branch.BranchLandingContent?.heroImageUrl ||
+    'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1200&q=80';
 
   // Structured Data
   const localBusinessSchema = {

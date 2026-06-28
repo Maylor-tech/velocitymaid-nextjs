@@ -28,6 +28,11 @@ import PricingSection from '../components/home/PricingSection';
 import VermontGallery from '@/components/home/VermontGallery';
 import { MIDDLEBURY_PHOTO_PATHS } from '@/lib/vermont/middleburyPhotos';
 import { BrandLogo } from '@/components/brand';
+import {
+  SUPPORT_EMAIL,
+  VERMONT_SUPPORT,
+  VERMONT_WHATSAPP_URL,
+} from '@/lib/customer/marketSupport';
 
 // FAQ Item Component
 function FAQItem({ question, answer }: { question: string; answer: string }) {
@@ -119,10 +124,9 @@ export default function Home() {
   }, [selectedImage]);
 
   const bookingUrl = "/book?branch=new-jersey";
-  const phoneNumber = "(973) 280-9190";
-  const phoneNumberTel = "+19732809190"; // For tel: links
-  const whatsappNumber = "19732809190";
-  const email = "hello@velocitymaid.com";
+  const phoneNumber = VERMONT_SUPPORT.phoneDisplay;
+  const phoneNumberTel = `+1${VERMONT_SUPPORT.phoneTel}`;
+  const email = SUPPORT_EMAIL;
 
   return (
     <div className="min-h-screen bg-vm-surface">
@@ -673,7 +677,7 @@ export default function Home() {
               Book Online Now <ArrowRight className="ml-2 w-5 h-5" />
             </a>
             <a 
-              href={`https://wa.me/${whatsappNumber}`}
+              href={VERMONT_WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-vm-success text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-vm-success transition inline-flex items-center justify-center"
@@ -683,7 +687,7 @@ export default function Home() {
                 });
               }}
             >
-              <MessageCircle className="mr-2 w-5 h-5" /> WhatsApp Us
+              <MessageCircle className="mr-2 w-5 h-5" /> WhatsApp (Vermont)
             </a>
           </div>
         </div>
@@ -710,6 +714,7 @@ export default function Home() {
               <Phone className="w-12 h-12 text-vm-cyan mx-auto mb-4" />
               <h3 className="text-xl font-bold text-vm-navy mb-2">Call Us</h3>
               <p className="text-vm-muted">{phoneNumber}</p>
+              <p className="text-vm-muted text-sm mt-1">Vermont line · NJ email below</p>
             </a>
             <a
               href={`mailto:${email}`}
@@ -718,9 +723,10 @@ export default function Home() {
               <Mail className="w-12 h-12 text-vm-cyan mx-auto mb-4" />
               <h3 className="text-xl font-bold text-vm-navy mb-2">Email Us</h3>
               <p className="text-vm-muted">{email}</p>
+              <p className="text-vm-muted text-sm mt-1">Best for New Jersey</p>
             </a>
             <a
-              href={`https://wa.me/${whatsappNumber}`}
+              href={VERMONT_WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-vm-surface p-8 rounded-2xl text-center card-hover"
@@ -732,7 +738,7 @@ export default function Home() {
             >
               <MessageCircle className="w-12 h-12 text-vm-cyan mx-auto mb-4" />
               <h3 className="text-xl font-bold text-vm-navy mb-2">WhatsApp</h3>
-              <p className="text-vm-muted">Chat with us instantly</p>
+              <p className="text-vm-muted">Vermont market only</p>
             </a>
           </div>
         </div>
@@ -772,18 +778,13 @@ export default function Home() {
               <h4 className="text-sm font-heading font-bold mb-4 uppercase tracking-wider">Contact</h4>
               <ul className="space-y-2 text-sm font-body">
                 <li>
-                  <a href={`tel:${phoneNumberTel}`} className="text-vm-white/70 hover:text-vm-cyan transition">
-                    New Jersey — {phoneNumber}
-                  </a>
-                </li>
-                <li>
-                  <a href="tel:+18027335348" className="text-vm-white/70 hover:text-vm-cyan transition">
-                    Vermont — (802) 733-5348
-                  </a>
-                </li>
-                <li>
                   <a href={`mailto:${email}`} className="text-vm-white/70 hover:text-vm-cyan transition">
-                    {email}
+                    New Jersey — {email}
+                  </a>
+                </li>
+                <li>
+                  <a href={`tel:${phoneNumberTel}`} className="text-vm-white/70 hover:text-vm-cyan transition">
+                    Vermont — {phoneNumber}
                   </a>
                 </li>
               </ul>
@@ -794,26 +795,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-
-      {/* Live Chat Widget */}
-      <div className="fixed bottom-6 right-6 z-50">
-            <a 
-              href={`https://wa.me/${whatsappNumber}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-vm-success text-white p-4 rounded-full shadow-lg hover:bg-vm-success transition cursor-pointer group"
-              onClick={() => {
-                sendGAEvent('event', 'whatsapp_clicked', {
-                  location: 'floating_button'
-                });
-              }}
-            >
-              <MessageCircle className="w-6 h-6" />
-              <div className="absolute bottom-full right-0 mb-2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
-                Chat on WhatsApp!
-              </div>
-            </a>
-      </div>
 
       {/* Image Lightbox Modal */}
       {selectedImage && (

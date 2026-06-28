@@ -1,9 +1,12 @@
 import { resend, getResendFromEmail } from "./resendClient";
+import { getGoogleReviewUrl } from "@/lib/reviews/googleReviewUrl";
+
+export { DEFAULT_GOOGLE_REVIEW_URL } from "@/lib/reviews/googleReviewUrl";
 
 export interface SendReviewRequestEmailParams {
   toEmail: string;
   toName: string;
-  /** Google Business Profile review link. Placeholder until GBP is live. */
+  /** Google Business Profile review link. */
   reviewUrl?: string;
 }
 
@@ -19,10 +22,6 @@ const CYAN = "#00C2CB";
 const SURFACE = "#F4F6F9";
 const MUTED = "#6B7280";
 const FONT = "'Helvetica Neue', Arial, sans-serif";
-
-/** Placeholder — Brian will swap this for the live Google Business Profile URL. */
-export const DEFAULT_GOOGLE_REVIEW_URL =
-  "https://search.google.com/local/writereview?placeid=REPLACE_WITH_PLACE_ID";
 
 function resolveFromEmail(): string {
   if (process.env.RESEND_FROM_EMAIL) {
@@ -44,7 +43,7 @@ const LOGO_SVG = `<svg width="40" height="40" viewBox="0 0 100 100" xmlns="http:
 
 function buildHtml(params: SendReviewRequestEmailParams): string {
   const safeName = escapeHtml(params.toName?.trim() || "there");
-  const reviewUrl = escapeHtml(params.reviewUrl || DEFAULT_GOOGLE_REVIEW_URL);
+  const reviewUrl = escapeHtml(params.reviewUrl || getGoogleReviewUrl());
 
   return `<!doctype html>
 <html lang="en">

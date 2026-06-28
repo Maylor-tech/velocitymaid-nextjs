@@ -1,8 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { MessageCircle, X } from 'lucide-react';
 import { sendGAEvent } from '@next/third-parties/google';
+
+/** NJ market: WhatsApp temporarily unavailable — hide widget on these paths */
+const NJ_WHATSAPP_HIDDEN_PREFIXES = [
+  '/locations/new-jersey',
+  '/lead/new-jersey',
+  '/review-us/new-jersey',
+];
 
 interface WhatsAppButtonProps {
   phoneNumber: string;
@@ -19,8 +27,13 @@ export default function WhatsAppButton({
   showPopup = true,
   className = ''
 }: WhatsAppButtonProps) {
+  const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+
+  const hiddenForNj =
+    pathname != null &&
+    NJ_WHATSAPP_HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   useEffect(() => {
     // Show button after a short delay for better UX
@@ -39,7 +52,7 @@ export default function WhatsAppButton({
     window.open(whatsappUrl, '_blank');
   };
 
-  if (!isVisible) return null;
+  if (hiddenForNj || !isVisible) return null;
 
   return (
     <div className={`fixed ${position}-6 bottom-6 z-50 ${className}`}>
