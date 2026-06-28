@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BrandLogo } from '@/components/brand';
 import { ADMIN_NAV } from './adminNav';
+
+const AdminShellContext = createContext<{ userEmail?: string }>({});
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -32,6 +34,7 @@ export function AdminShell({ children, userEmail, branchName }: AdminShellProps)
   }, [pathname]);
 
   return (
+    <AdminShellContext.Provider value={{ userEmail }}>
     <div className="flex min-h-screen bg-vm-surface">
       <aside className="flex w-[232px] shrink-0 flex-col bg-vm-navy px-3.5 py-5">
         <div className="px-2.5 pb-6">
@@ -84,6 +87,7 @@ export function AdminShell({ children, userEmail, branchName }: AdminShellProps)
 
       <div className="flex min-w-0 flex-1 flex-col">{children}</div>
     </div>
+    </AdminShellContext.Provider>
   );
 }
 
@@ -92,12 +96,16 @@ export function AdminPageHeader({
   title,
   subtitle,
   actions,
+  userEmail: userEmailProp,
 }: {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
   userEmail?: string;
 }) {
+  const { userEmail: userEmailFromShell } = useContext(AdminShellContext);
+  const userEmail = userEmailProp ?? userEmailFromShell;
+
   const initials =
     userEmail
       ?.split('@')[0]
