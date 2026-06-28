@@ -14,6 +14,7 @@ import {
 } from "@/components/admin/jobs/JobOperationsCard";
 import type { OperationsSummary } from "@/lib/admin/jobsOperations";
 import { getJobPriority } from "@/lib/admin/jobsOperations";
+import { useAdminShell } from "@/components/admin/shell/AdminShell";
 
 type MarketTab = "all" | "vermont" | "new-jersey";
 
@@ -22,16 +23,25 @@ const navyButton =
 
 function AdminJobsPageContent() {
   const searchParams = useSearchParams();
+  const { isBranchScoped } = useAdminShell();
   const [allJobs, setAllJobs] = useState<AdminJobListItem[]>([]);
   const [summary, setSummary] = useState<OperationsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
 
-  const [marketTab, setMarketTab] = useState<MarketTab>("all");
+  const [marketTab, setMarketTab] = useState<MarketTab>(
+    isBranchScoped ? "vermont" : "all"
+  );
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [showArchived, setShowArchived] = useState(false);
   const [unassignedOnly, setUnassignedOnly] = useState(false);
+
+  useEffect(() => {
+    if (isBranchScoped) {
+      setMarketTab("vermont");
+    }
+  }, [isBranchScoped]);
 
   useEffect(() => {
     if (searchParams.get("needsAssignment") === "1") {
@@ -203,11 +213,12 @@ function AdminJobsPageContent() {
           <>
             {summary && (
               <>
-                <JobsOperationsKpis summary={summary} />
+                <JobsOperationsKpis summary={summary} hideFinancial={isBranchScoped} />
                 <OperationsHealthScore summary={summary} />
               </>
             )}
 
+            {!isBranchScoped && (
             <div className="mb-4 flex items-center gap-6 border-b border-vm-border">
               <MarketTabButton
                 label="All Jobs"
@@ -228,6 +239,7 @@ function AdminJobsPageContent() {
                 onClick={() => setMarketTab("new-jersey")}
               />
             </div>
+            )}
 
             <div className="mb-6 flex flex-wrap items-center gap-3">
               <select
@@ -243,6 +255,7 @@ function AdminJobsPageContent() {
                 <option value="COMPLETED">Completed</option>
                 <option value="CANCELLED">Cancelled</option>
               </select>
+              {!isBranchScoped && (
               <select
                 value={paymentFilter}
                 onChange={(e) => setPaymentFilter(e.target.value)}
@@ -255,6 +268,7 @@ function AdminJobsPageContent() {
                 <option value="BALANCE_DUE">Balance Due</option>
                 <option value="FAILED">Failed</option>
               </select>
+              )}
               <label className="ml-auto flex cursor-pointer items-center gap-2 font-body text-sm text-vm-muted">
                 <input
                   type="checkbox"

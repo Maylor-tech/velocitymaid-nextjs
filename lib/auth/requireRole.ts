@@ -7,6 +7,7 @@ import { prisma } from "../prisma";
 import { UserRole } from "@prisma/client";
 import { cookies } from "next/headers";
 import { allowLegacyAdminBypass, isLegacyAdminSession } from "./adminBypass";
+import { isBranchScopedAdmin } from "./adminScope";
 
 export type RequiredRole = "ADMIN" | "CUSTOMER" | "CLEANER" | "BRANCH_OWNER" | "BRANCH_OPERATOR";
 
@@ -23,15 +24,11 @@ type AdminBranchRow = { branchId: string; Branch: { name: string } };
  * Single-branch admins (e.g. a New-Jersey-only operator) stay scoped to that
  * branch, so their access is unchanged.
  */
-function resolveAdminBranchScope(
+export function resolveAdminBranchScope(
   email: string | null | undefined,
   branches: AdminBranchRow[]
 ): { branchId?: string; branchName?: string } {
-  const ownerEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const isOwner =
-    !!ownerEmail && !!email && email.trim().toLowerCase() === ownerEmail;
-
-  if (isOwner || branches.length !== 1) {
+  if (!isBranchScopedAdmin(email, branches.length)) {
     return {};
   }
 
@@ -49,6 +46,17 @@ export interface AuthContext {
   branchId?: string;
   /** Branch display name when branch-scoped */
   branchName?: string;
+}
+
+/** Reject branch-scoped admins from super-admin-only APIs (billing, payouts, etc.). */
+export function assertSuperAdmin(auth: AuthContext): void {
+  if (auth.branchId) {
+    const response = NextResponse.json(
+      { success: false, error: "Forbidden: Super admin access required" },
+      { status: 403 }
+    );
+    throw response;
+  }
 }
 
 /**

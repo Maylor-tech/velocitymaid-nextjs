@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2, CheckCircle } from "lucide-react";
+import { useAdminShell } from "@/components/admin/shell/AdminShell";
 
 type StateCode = "VT" | "NJ" | "";
 
@@ -70,13 +71,20 @@ const EMPTY_FORM = {
 };
 
 export default function NewManualJobPage() {
-  const [form, setForm] = useState({ ...EMPTY_FORM });
+  const { isBranchScoped } = useAdminShell();
+  const [form, setForm] = useState({ ...EMPTY_FORM, state: "" as StateCode });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedJobId, setSavedJobId] = useState<string | null>(null);
 
   const update = (key: keyof typeof EMPTY_FORM, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
+
+  useEffect(() => {
+    if (isBranchScoped) {
+      setForm((prev) => (prev.state === "VT" ? prev : { ...prev, state: "VT", serviceType: "" }));
+    }
+  }, [isBranchScoped]);
 
   const branch = form.state === "VT" ? "vermont" : form.state === "NJ" ? "new-jersey" : "";
   const serviceOptions = useMemo(() => {
@@ -320,10 +328,11 @@ export default function NewManualJobPage() {
                   className={inputClass}
                   value={form.state}
                   onChange={(e) => handleStateChange(e.target.value as StateCode)}
+                  disabled={isBranchScoped}
                 >
                   <option value="">Select state…</option>
                   <option value="VT">Vermont</option>
-                  <option value="NJ">New Jersey</option>
+                  {!isBranchScoped && <option value="NJ">New Jersey</option>}
                 </select>
               </div>
               <div className="sm:col-span-2">

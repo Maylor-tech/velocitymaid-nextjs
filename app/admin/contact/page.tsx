@@ -268,7 +268,7 @@ export default function AdminContactPage() {
       </h1>
 
       <p className="mt-2 text-vm-muted">
-        Review contact form submissions from partners, investors, and operators.
+        Review contact form submissions from prospective clients, partners, and hosts.
       </p>
 
       <div className="mt-8 divide-y border border-gray-200 rounded-md">

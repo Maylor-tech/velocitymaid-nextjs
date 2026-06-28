@@ -6,19 +6,35 @@ import { usePathname } from 'next/navigation';
 import { BrandLogo } from '@/components/brand';
 import { ADMIN_NAV } from './adminNav';
 
-const AdminShellContext = createContext<{ userEmail?: string }>({});
+const AdminShellContext = createContext<{
+  userEmail?: string;
+  isBranchScoped?: boolean;
+}>({});
 
 interface AdminShellProps {
   children: React.ReactNode;
   userEmail?: string;
   branchName?: string;
+  isBranchScoped?: boolean;
 }
 
-export function AdminShell({ children, userEmail, branchName }: AdminShellProps) {
+export function AdminShell({
+  children,
+  userEmail,
+  branchName,
+  isBranchScoped = false,
+}: AdminShellProps) {
   const pathname = usePathname();
   const [unassignedJobs, setUnassignedJobs] = useState<number | null>(null);
 
+  const navItems = isBranchScoped
+    ? ADMIN_NAV.filter((item) => item.href.startsWith('/admin/jobs'))
+    : ADMIN_NAV;
+
+  const homeHref = isBranchScoped ? '/admin/jobs' : '/admin';
+
   useEffect(() => {
+    if (isBranchScoped) return;
     let cancelled = false;
     fetch('/api/admin/dashboard/operations', { credentials: 'include' })
       .then((r) => r.json())
@@ -31,14 +47,14 @@ export function AdminShell({ children, userEmail, branchName }: AdminShellProps)
     return () => {
       cancelled = true;
     };
-  }, [pathname]);
+  }, [pathname, isBranchScoped]);
 
   return (
-    <AdminShellContext.Provider value={{ userEmail }}>
+    <AdminShellContext.Provider value={{ userEmail, isBranchScoped }}>
     <div className="flex min-h-screen bg-vm-surface">
       <aside className="flex w-[232px] shrink-0 flex-col bg-vm-navy px-3.5 py-5">
         <div className="px-2.5 pb-6">
-          <Link href="/admin" aria-label="VelocityMaid Admin home">
+          <Link href={homeHref} aria-label="VelocityMaid Admin home">
             <BrandLogo theme="dark" size="sm" showTagline={false} />
           </Link>
           {branchName && (
@@ -49,7 +65,7 @@ export function AdminShell({ children, userEmail, branchName }: AdminShellProps)
         </div>
 
         <nav className="flex flex-col gap-0.5">
-          {ADMIN_NAV.map((item) => {
+          {navItems.map((item) => {
             const active = item.match?.(pathname) ?? pathname === item.href;
             const Icon = item.icon;
             return (
@@ -69,7 +85,7 @@ export function AdminShell({ children, userEmail, branchName }: AdminShellProps)
           })}
         </nav>
 
-        {unassignedJobs != null && unassignedJobs > 0 && (
+        {unassignedJobs != null && unassignedJobs > 0 && !isBranchScoped && (
           <div className="mt-7 rounded-lg bg-vm-white/5 p-3.5">
             <p className="font-body text-xs leading-relaxed text-vm-white/70">
               {unassignedJobs} job{unassignedJobs === 1 ? '' : 's'} need a specialist
@@ -91,7 +107,6 @@ export function AdminShell({ children, userEmail, branchName }: AdminShellProps)
   );
 }
 
-/** Page chrome: title row + actions slot (matches DS kit header). */
 export function AdminPageHeader({
   title,
   subtitle,
@@ -134,4 +149,8 @@ export function AdminPageHeader({
       </div>
     </header>
   );
+}
+
+export function useAdminShell() {
+  return useContext(AdminShellContext);
 }

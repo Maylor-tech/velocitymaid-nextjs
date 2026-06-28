@@ -13,9 +13,10 @@ import {
 
 interface JobsOperationsKpisProps {
   summary: OperationsSummary;
+  hideFinancial?: boolean;
 }
 
-export function JobsOperationsKpis({ summary }: JobsOperationsKpisProps) {
+export function JobsOperationsKpis({ summary, hideFinancial = false }: JobsOperationsKpisProps) {
   const attention = summary.needsAttention;
 
   return (
@@ -25,12 +26,14 @@ export function JobsOperationsKpis({ summary }: JobsOperationsKpisProps) {
         value={summary.scheduledToday}
         icon={<Calendar className="h-5 w-5" />}
       />
-      <KpiCard
-        label="Awaiting Payment"
-        value={formatUsd(summary.awaitingPaymentAmount)}
-        subtitle={`${summary.awaitingPaymentCount} awaiting payment`}
-        icon={<DollarSign className="h-5 w-5" />}
-      />
+      {!hideFinancial && (
+        <KpiCard
+          label="Awaiting Payment"
+          value={formatUsd(summary.awaitingPaymentAmount)}
+          subtitle={`${summary.awaitingPaymentCount} awaiting payment`}
+          icon={<DollarSign className="h-5 w-5" />}
+        />
+      )}
       <KpiCard
         label="Needs Attention"
         value={attention.total}
@@ -38,7 +41,9 @@ export function JobsOperationsKpis({ summary }: JobsOperationsKpisProps) {
           attention.total > 0
             ? [
                 attention.unassigned > 0 && `${attention.unassigned} unassigned`,
-                attention.overduePayments > 0 && `${attention.overduePayments} overdue pay`,
+                !hideFinancial &&
+                  attention.overduePayments > 0 &&
+                  `${attention.overduePayments} overdue pay`,
                 attention.missingPhotos > 0 && `${attention.missingPhotos} missing photos`,
                 attention.incompleteChecklists > 0 &&
                   `${attention.incompleteChecklists} incomplete checklist`,
@@ -54,12 +59,14 @@ export function JobsOperationsKpis({ summary }: JobsOperationsKpisProps) {
         value={summary.completedThisMonth}
         icon={<CheckCircle2 className="h-5 w-5" />}
       />
-      <KpiCard
-        label={`${summary.monthName} Revenue`}
-        value={formatUsd(summary.monthRevenue)}
-        subtitle="Paid this month"
-        icon={<DollarSign className="h-5 w-5" />}
-      />
+      {!hideFinancial && (
+        <KpiCard
+          label={`${summary.monthName} Revenue`}
+          value={formatUsd(summary.monthRevenue)}
+          subtitle="Paid this month"
+          icon={<DollarSign className="h-5 w-5" />}
+        />
+      )}
     </div>
   );
 }

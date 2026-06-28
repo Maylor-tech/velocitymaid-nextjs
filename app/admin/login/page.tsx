@@ -7,6 +7,7 @@ import { brandClasses } from '@/lib/brand/colors';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function AdminLoginPage() {
       const res = await fetch('/api/auth/admin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), password: password || undefined }),
       });
 
       const data = await res.json();
@@ -61,7 +62,7 @@ export default function AdminLoginPage() {
               Admin Portal
             </p>
             <p className="text-xs font-sans text-vm-text/60">
-              Enter your email to access operations.
+              Enter your email and password to access operations.
             </p>
           </div>
 
@@ -76,6 +77,18 @@ export default function AdminLoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className={brandClasses.label}>Password</label>
+              <input
+                type="password"
+                className={brandClasses.input}
+                placeholder="Required for branch managers"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
             </div>
 

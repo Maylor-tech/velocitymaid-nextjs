@@ -3,6 +3,11 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
 import { safeError } from '@/lib/safeError';
+import {
+  getScopedAdminPassword,
+  isBranchScopedAdmin,
+  type AdminSessionPayload,
+} from '@/lib/auth/adminScope';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,7 +15,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email } = body;
+    const { email, password } = body;
 
     if (!email || typeof email !== 'string') {
       return NextResponse.json(
@@ -46,10 +51,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const session = {
+    const branchScoped = isBranchScopedAdmin(normalizedEmail, branches.length);
+
+    if (branchScoped) {
+      const expectedPassword = getScopedAdminPassword(normalizedEmail);
+      if (!expectedPassword) {
+        console.error('[ADMIN LOGIN] Branch-scoped admin password not configured:', normalizedEmail);
+        return NextResponse.json(
+          { success: false, error: 'Admin login is not configured. Contact support.' },
+          { status: 503 }
+        );
+      }
+      if (!password || typeof password !== 'string' || password !== expectedPassword) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid email or password' },
+          { status: 401 }
+        );
+      }
+    }
+
+    const session: AdminSessionPayload = {
       userId: user.id,
       role: user.role,
-      branchId: branches[0].branchId,
+      isBranchScoped: branchScoped,
+      ...(branchScoped ? { branchId: branches[0].branchId } : {}),
     };
 
     const cookieStore = await cookies();

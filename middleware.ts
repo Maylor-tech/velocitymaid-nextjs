@@ -3,32 +3,61 @@ import {
   COOKIE_NAME,
   verifyCustomerSessionToken,
 } from './lib/customerSession';
+import {
+  isPathAllowedForBranchScopedAdmin,
+  isPathAllowedForBranchScopedAdminApi,
+  type AdminSessionPayload,
+} from './lib/auth/adminScope';
+
+function parseAdminSession(
+  adminSession: string | undefined
+): AdminSessionPayload | null {
+  if (!adminSession || adminSession === 'true') return null;
+  try {
+    const s = JSON.parse(adminSession) as AdminSessionPayload;
+    return s?.userId ? s : null;
+  } catch {
+    return null;
+  }
+}
 
 function isAdminSessionValid(adminSession: string | undefined): boolean {
   if (!adminSession) return false;
   if (adminSession === 'true') {
     return process.env.NODE_ENV !== 'production';
   }
-  try {
-    const s = JSON.parse(adminSession) as { userId?: string };
-    return Boolean(s?.userId);
-  } catch {
-    return false;
-  }
+  return Boolean(parseAdminSession(adminSession)?.userId);
 }
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Branch-scoped admin API guard (jobs ops only)
+  if (pathname.startsWith('/api/admin')) {
+    const session = parseAdminSession(req.cookies.get('admin_session')?.value);
+    if (session?.isBranchScoped && !isPathAllowedForBranchScopedAdminApi(pathname)) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Access denied' },
+        { status: 403 }
+      );
+    }
+  }
+
   // 🔐 OPS DASHBOARD — same session as admin
   if (pathname.startsWith('/dashboard')) {
-    const adminSession = req.cookies.get('admin_session')?.value;
-    const isAdminLoggedIn = isAdminSessionValid(adminSession);
+    const adminSessionRaw = req.cookies.get('admin_session')?.value;
+    const session = parseAdminSession(adminSessionRaw);
+    const isAdminLoggedIn = isAdminSessionValid(adminSessionRaw);
     if (!isAdminLoggedIn) {
       const loginUrl = req.nextUrl.clone();
       loginUrl.pathname = '/admin/login';
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
+    }
+    if (session?.isBranchScoped) {
+      const jobsUrl = req.nextUrl.clone();
+      jobsUrl.pathname = '/admin/jobs';
+      return NextResponse.redirect(jobsUrl);
     }
   }
 
@@ -63,8 +92,9 @@ export async function middleware(req: NextRequest) {
   // 🔐 ADMIN ROUTE PROTECTION
   if (pathname.startsWith('/admin')) {
     const isLoginRoute = pathname === '/admin/login';
-    const adminSession = req.cookies.get('admin_session')?.value;
-    const isAdminLoggedIn = isAdminSessionValid(adminSession);
+    const adminSessionRaw = req.cookies.get('admin_session')?.value;
+    const session = parseAdminSession(adminSessionRaw);
+    const isAdminLoggedIn = isAdminSessionValid(adminSessionRaw);
 
     if (!isAdminLoggedIn && !isLoginRoute) {
       const loginUrl = req.nextUrl.clone();
@@ -73,8 +103,14 @@ export async function middleware(req: NextRequest) {
     }
     if (isAdminLoggedIn && isLoginRoute) {
       const dashUrl = req.nextUrl.clone();
-      dashUrl.pathname = '/admin';
+      dashUrl.pathname = session?.isBranchScoped ? '/admin/jobs' : '/admin';
       return NextResponse.redirect(dashUrl);
+    }
+
+    if (session?.isBranchScoped && !isPathAllowedForBranchScopedAdmin(pathname)) {
+      const jobsUrl = req.nextUrl.clone();
+      jobsUrl.pathname = '/admin/jobs';
+      return NextResponse.redirect(jobsUrl);
     }
 
     const response = NextResponse.next();
@@ -213,6 +249,7 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     '/admin/:path*',
+    '/api/admin/:path*',
     '/dashboard/:path*',
     '/cleaner/:path*',
     '/cleaners/:path*',

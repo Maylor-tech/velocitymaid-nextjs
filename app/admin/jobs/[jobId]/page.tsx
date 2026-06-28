@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, User, Calendar, MapPin, DollarSign, CheckCircle, XC
 import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 import { JobBillingWorkflowPanel } from '@/components/admin/jobs/JobBillingWorkflowPanel';
+import { useAdminShell } from '@/components/admin/shell/AdminShell';
 import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
 import { getJobLoopProgress } from '@/lib/booking/jobLoopProgress';
 
@@ -97,6 +98,7 @@ export default function AdminJobDetailPage() {
   const router = useRouter();
   const params = useParams();
   const jobId = params.jobId as string;
+  const { isBranchScoped } = useAdminShell();
   
   const [job, setJob] = useState<Job | null>(null);
   const [cleaners, setCleaners] = useState<Cleaner[]>([]);
@@ -695,9 +697,11 @@ export default function AdminJobDetailPage() {
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(job.status)}`}>
                 {job.status}
               </span>
+              {!isBranchScoped && (
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(job.paymentStatus)}`}>
                 Payment: {job.paymentStatus}
               </span>
+              )}
               {job.reviewStatus && (
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getReviewStatusColor(job.reviewStatus)}`}>
                   Review: {job.reviewStatus}
@@ -780,6 +784,8 @@ export default function AdminJobDetailPage() {
           </div>
         )}
 
+        {!isBranchScoped && (
+        <>
         <div className="mb-6">
           <JobBillingWorkflowPanel
             jobId={jobId}
@@ -1060,6 +1066,8 @@ export default function AdminJobDetailPage() {
             </div>
           </div>
         </div>
+        </>
+        )}
 
         {/* Job Information */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">

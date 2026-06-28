@@ -64,7 +64,7 @@ function isPaymentStatus(value: unknown): value is PaymentStatus {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireRole(request, "ADMIN");
+    const auth = await requireRole(request, "ADMIN");
 
     const body = (await request.json()) as ManualJobBody;
 
@@ -130,6 +130,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: `Branch not found for slug "${branchSlug}"` },
         { status: 400 }
+      );
+    }
+
+    if (auth.branchId && branch.id !== auth.branchId) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: You can only create jobs in your assigned branch" },
+        { status: 403 }
       );
     }
 

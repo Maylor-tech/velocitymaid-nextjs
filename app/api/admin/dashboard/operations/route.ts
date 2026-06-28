@@ -7,8 +7,9 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth/requireRole';
+import { requireRole, assertSuperAdmin } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
+import { JobStatus } from '@prisma/client';
 import {
   startOfWeek,
   endOfWeek,
@@ -64,6 +65,7 @@ function formatRatingDelta(
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireRole(request, 'ADMIN');
+    assertSuperAdmin(auth);
     const branchWhere = auth.branchId ? { branchId: auth.branchId } : {};
 
     const now = new Date();
@@ -71,7 +73,12 @@ export async function GET(request: NextRequest) {
     const weekEnd = endOfWeek(now);
     const lastWeekStart = addDays(weekStart, -7);
     const lastWeekEnd = addDays(weekEnd, -7);
-    const notCancelled = { notIn: ['cancelled', 'CANCELLED'] as string[] };
+    const notCancelled: { notIn: JobStatus[] } = {
+      notIn: [JobStatus.CANCELLED, JobStatus.CANCELLED_EMERGENCY],
+    };
+    const activeStatuses: { notIn: JobStatus[] } = {
+      notIn: [JobStatus.CANCELLED, JobStatus.CANCELLED_EMERGENCY, JobStatus.COMPLETED],
+    };
 
     const [
       jobsThisWeek,
@@ -137,7 +144,7 @@ export async function GET(request: NextRequest) {
           ...branchWhere,
           archivedAt: null,
           assignedCleanerId: null,
-          status: { notIn: ['cancelled', 'CANCELLED', 'completed', 'COMPLETED'] },
+          status: activeStatuses,
           preferredDate: { gte: now },
         },
       }),
