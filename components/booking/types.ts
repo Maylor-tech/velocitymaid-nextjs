@@ -1,4 +1,11 @@
-export type ServiceType = 'STANDARD' | 'DEEP_CLEAN' | 'MOVE_IN_OUT';
+export type ServiceType =
+  | 'STANDARD'
+  | 'DEEP_CLEAN'
+  | 'MOVE_IN_OUT'
+  | 'RECURRING'
+  | 'VACATION_RENTAL_TURNOVER'
+  | 'PROPERTY_WALKTHROUGH'
+  | 'EMERGENCY_CLEAN';
 
 export interface BookingContactInfo {
   firstName: string;

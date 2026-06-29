@@ -31,8 +31,8 @@ export default function VermontOverviewPage() {
   return (
     <div className="min-h-screen bg-white font-body">
       <BranchLandingNav
-        bookingHref="/booking?location=vermont"
-        bookingLabel="Book a Clean"
+        bookingHref="/vermont/host-intake"
+        bookingLabel="Host Intake"
         phone="+18027335348"
         phoneDisplay="(802) 733-5348"
         email="hello@velocitymaid.com"

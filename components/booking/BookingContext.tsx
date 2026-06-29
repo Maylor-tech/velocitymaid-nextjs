@@ -25,7 +25,22 @@ interface BookingContextType {
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
-const BOOKABLE_MARKETS = new Set(['new-jersey', 'vermont']);
+import {
+  BOOKING_MARKETS,
+  resolveMarketFromLocationParam,
+  type BookingMarketCode,
+} from '@/lib/booking/markets';
+
+const BOOKABLE_MARKETS = new Set<string>(BOOKING_MARKETS.map((m) => m.code));
+
+function resolveInitialMarket(branchSlug: string | null): BookingMarketCode | null {
+  if (!branchSlug) return null;
+  const fromParam = resolveMarketFromLocationParam(branchSlug);
+  if (fromParam) return fromParam;
+  if (branchSlug === 'vermont-middlebury' || branchSlug === 'vermont') return 'vermont';
+  if (branchSlug === 'new-jersey') return 'new-jersey';
+  return BOOKABLE_MARKETS.has(branchSlug) ? (branchSlug as BookingMarketCode) : null;
+}
 
 const initialData: BookingDraft = {
   market: null, // Market must be selected first
@@ -79,8 +94,7 @@ const defaultPaymentConfig: BookingPaymentConfig = {
 export function BookingProvider({ children, initialBranchSlug }: BookingProviderProps) {
   const [data, setData] = useState<BookingDraft>(() => {
     const branchSlug = initialBranchSlug || null;
-    const market =
-      branchSlug && BOOKABLE_MARKETS.has(branchSlug) ? branchSlug : null;
+    const market = resolveInitialMarket(branchSlug);
     return {
       ...initialData,
       branchSlug,
@@ -250,9 +264,13 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
 
       // Map service type to checkout API format
       const serviceTypeMap: Record<string, string> = {
-        'STANDARD': 'basic',
-        'DEEP_CLEAN': 'deep',
-        'MOVE_IN_OUT': 'moveInOut',
+        STANDARD: 'basic',
+        DEEP_CLEAN: 'deep',
+        MOVE_IN_OUT: 'moveInOut',
+        RECURRING: 'recurring',
+        VACATION_RENTAL_TURNOVER: 'turnover',
+        PROPERTY_WALKTHROUGH: 'walkthrough',
+        EMERGENCY_CLEAN: 'emergency',
       };
       const mappedServiceType = serviceTypeMap[data.serviceType] || data.serviceType.toLowerCase();
 
@@ -268,8 +286,9 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
       // Map branch slug to service location
       const branchLocationMap: Record<string, string> = {
         'new-jersey': 'new_jersey',
-        'vermont': 'vermont',
-        'miami': 'miami',
+        vermont: 'vermont',
+        'vermont-middlebury': 'vermont',
+        miami: 'miami',
         'port-antonio': 'port_antonio',
       };
       const serviceLocation = branchLocationMap[data.branchSlug] || data.branchSlug;

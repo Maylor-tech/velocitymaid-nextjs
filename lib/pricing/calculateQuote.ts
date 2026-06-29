@@ -87,13 +87,35 @@ export async function calculateBookingQuoteAsync(
   const lineItems: PricingLineItem[] = [];
   const warnings: string[] = [];
 
-  // Base price
+  const serviceLabels: Partial<Record<string, string>> = {
+    DEEP_CLEAN: 'Deep Clean',
+    MOVE_IN_OUT: 'Move In/Out',
+    RECURRING: 'Recurring Cleaning',
+    VACATION_RENTAL_TURNOVER: 'Vacation Rental Turnover',
+    PROPERTY_WALKTHROUGH: 'Property Walkthrough',
+    EMERGENCY_CLEAN: 'Emergency Clean',
+  };
+
+  let baseAmount = config.baseRate;
+  if (input.serviceType === 'PROPERTY_WALKTHROUGH') {
+    baseAmount = 75;
+  }
+
   lineItems.push({
     key: 'base',
-    label: `${input.serviceType === 'DEEP_CLEAN' ? 'Deep Clean' : input.serviceType === 'MOVE_IN_OUT' ? 'Move In/Out' : 'Standard Cleaning'} (Base)`,
-    amount: config.baseRate,
+    label: `${serviceLabels[input.serviceType ?? ''] ?? 'Standard Cleaning'} (Base)`,
+    amount: baseAmount,
     type: 'BASE',
   });
+
+  if (input.serviceType === 'EMERGENCY_CLEAN') {
+    lineItems.push({
+      key: 'emergency_fee',
+      label: 'Emergency Response Fee',
+      amount: 75,
+      type: 'FEE',
+    });
+  }
 
   // Bedrooms (beyond the first)
   const extraBedrooms = Math.max(0, input.home.bedrooms - 1);
@@ -266,6 +288,10 @@ export async function calculateBookingQuoteAsync(
     estimatedHours *= 1.5;
   } else if (input.serviceType === 'MOVE_IN_OUT') {
     estimatedHours *= 1.3;
+  } else if (input.serviceType === 'PROPERTY_WALKTHROUGH') {
+    estimatedHours = 1;
+  } else if (input.serviceType === 'VACATION_RENTAL_TURNOVER') {
+    estimatedHours *= 1.1;
   }
 
   // Recommended cleaners

@@ -131,19 +131,53 @@ export async function getBranchServicePricingConfig(
         laundry: 12,
       },
       travelFeeFlat: 12,
-      taxRate: 0.06, // VT sales tax
+      taxRate: 0.06,
+    },
+    'vermont-middlebury': {
+      baseRate: 110,
+      hourlyRate: 35,
+      minHours: 2,
+      perBedroom: 12,
+      perBathroom: 8,
+      sqftThresholds: [
+        { upto: 1000, multiplier: 1.0 },
+        { upto: 1500, multiplier: 1.1 },
+        { upto: 2000, multiplier: 1.2 },
+        { upto: 3000, multiplier: 1.3 },
+      ],
+      petFee: 8,
+      extras: {
+        insideFridge: 20,
+        insideOven: 25,
+        insideCabinets: 18,
+        windows: 18,
+        laundry: 12,
+      },
+      travelFeeFlat: 12,
+      taxRate: 0.06,
     },
   };
 
   // Service type multipliers
-  const serviceMultipliers: Record<ServiceType, number> = {
+  const serviceMultipliers: Partial<Record<ServiceType, number>> = {
     STANDARD: 1.0,
     DEEP_CLEAN: 1.5,
     MOVE_IN_OUT: 1.3,
+    RECURRING: 1.0,
+    VACATION_RENTAL_TURNOVER: 1.1,
+    PROPERTY_WALKTHROUGH: 1.0,
+    EMERGENCY_CLEAN: 1.2,
   };
 
-  const baseConfig = defaultConfigs[branchSlug || 'new-jersey'] || defaultConfigs['new-jersey'];
-  const serviceMultiplier = serviceType ? serviceMultipliers[serviceType] : 1.0;
+  const pricingSlug =
+    branchSlug?.startsWith('vermont') ? 'vermont' : branchSlug || 'new-jersey';
+
+  const baseConfig =
+    defaultConfigs[pricingSlug] || defaultConfigs['new-jersey'];
+  const serviceMultiplier =
+    serviceType && serviceMultipliers[serviceType]
+      ? serviceMultipliers[serviceType]!
+      : 1.0;
 
   // Apply service type multiplier to base rate
   const adjustedConfig: BranchServicePricingConfig = {

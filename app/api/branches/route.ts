@@ -17,8 +17,8 @@ export async function GET(request: NextRequest) {
     const branches = await prisma.branch.findMany({
       where: {
         status: {
-          in: ['ACTIVE', 'COMING_SOON']
-        }
+          in: ['ACTIVE', 'COMING_SOON'],
+        },
       },
       select: {
         id: true,
@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
         state: true,
         country: true,
         status: true,
+        regionLabel: true,
       },
       orderBy: { name: 'asc' },
     });

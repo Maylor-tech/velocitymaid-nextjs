@@ -4,9 +4,13 @@ import { useBooking } from "../BookingContext";
 import { Loader2 } from "lucide-react";
 
 const serviceTypeLabels: Record<string, string> = {
-  STANDARD: 'Standard Cleaning',
+  STANDARD: 'Standard Residential Clean',
   DEEP_CLEAN: 'Deep Clean',
   MOVE_IN_OUT: 'Move In / Out',
+  RECURRING: 'Recurring Cleaning Plan',
+  VACATION_RENTAL_TURNOVER: 'Vacation Rental Turnover',
+  PROPERTY_WALKTHROUGH: 'Property Walkthrough',
+  EMERGENCY_CLEAN: 'Emergency Clean',
 };
 
 export default function ConfirmationStep() {
