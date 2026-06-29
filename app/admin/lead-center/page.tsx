@@ -25,7 +25,6 @@ import type {
   CreateLeadInput,
   LeadCenterDashboard,
   PipelineLeadRecord,
-  PipelineLeadTaskRecord,
 } from '@/lib/leadCenter/types';
 
 type ViewMode = 'kanban' | 'table' | 'calendar';
@@ -38,7 +37,6 @@ function formatPipeline(value: number) {
 export default function LeadCommandCenterPage() {
   const [view, setView] = useState<ViewMode>('kanban');
   const [leads, setLeads] = useState<PipelineLeadRecord[]>([]);
-  const [tasks, setTasks] = useState<PipelineLeadTaskRecord[]>([]);
   const [metrics, setMetrics] = useState<LeadCenterDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,18 +48,13 @@ export default function LeadCommandCenterPage() {
     setLoading(true);
     setError(null);
     try {
-      const [dashRes, leadsRes, tasksRes] = await Promise.all([
+      const [dashRes, leadsRes] = await Promise.all([
         fetch('/api/admin/lead-center/dashboard', { credentials: 'include', cache: 'no-store' }),
         fetch('/api/admin/lead-center/leads', { credentials: 'include', cache: 'no-store' }),
-        fetch('/api/admin/lead-center/tasks?status=PENDING', {
-          credentials: 'include',
-          cache: 'no-store',
-        }),
       ]);
 
       const dash = await dashRes.json();
       const leadsData = await leadsRes.json();
-      const tasksData = await tasksRes.json();
 
       if (!dash.success || !leadsData.success) {
         throw new Error(dash.error || leadsData.error || 'Failed to load lead center');
@@ -69,7 +62,6 @@ export default function LeadCommandCenterPage() {
 
       setMetrics(dash.metrics);
       setLeads(leadsData.leads);
-      setTasks(tasksData.success ? tasksData.tasks : []);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load');
     } finally {
@@ -119,16 +111,20 @@ export default function LeadCommandCenterPage() {
     await load();
   };
 
-  const handleCompleteTask = async (taskId: string) => {
-    const res = await fetch(`/api/admin/lead-center/tasks/${taskId}`, {
+  const handleMarkContacted = async (leadId: string) => {
+    const res = await fetch(`/api/admin/lead-center/leads/${leadId}`, {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'COMPLETED' }),
+      body: JSON.stringify({ markContacted: true }),
     });
     const json = await res.json();
     if (!json.success) throw new Error(json.error);
     await load();
+  };
+
+  const handleMoveToWon = async (leadId: string) => {
+    await handleStageChange(leadId, 'WON');
   };
 
   const viewTabs = [
@@ -216,9 +212,9 @@ export default function LeadCommandCenterPage() {
           {view === 'calendar' && (
             <LeadCalendarView
               leads={leads}
-              tasks={tasks}
               onSelectLead={setSelectedLead}
-              onCompleteTask={handleCompleteTask}
+              onMarkContacted={handleMarkContacted}
+              onMoveToWon={handleMoveToWon}
             />
           )}
         </>

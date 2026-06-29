@@ -1,37 +1,11 @@
 import type { PipelineLeadStage, PipelineLeadTaskType } from '@prisma/client';
 
-export const PIPELINE_STAGES: PipelineLeadStage[] = [
-  'NEW_LEAD',
-  'CONTACTED',
-  'DISCOVERY_CALL',
-  'QUOTE_SENT',
-  'FOLLOW_UP',
-  'WON',
-  'ACTIVE_CLIENT',
-  'LOST',
-];
-
-export const STAGE_LABELS: Record<PipelineLeadStage, string> = {
-  NEW_LEAD: 'New Lead',
-  CONTACTED: 'Contacted',
-  DISCOVERY_CALL: 'Discovery Call',
-  QUOTE_SENT: 'Quote Sent',
-  FOLLOW_UP: 'Follow-Up',
-  WON: 'Won',
-  ACTIVE_CLIENT: 'Active Client',
-  LOST: 'Lost',
-};
-
-export const STAGE_COLORS: Record<PipelineLeadStage, { bg: string; fg: string }> = {
-  NEW_LEAD: { bg: 'bg-vm-cyan-tint', fg: 'text-vm-navy' },
-  CONTACTED: { bg: 'bg-vm-surface', fg: 'text-vm-navy' },
-  DISCOVERY_CALL: { bg: 'bg-vm-warning-bg', fg: 'text-vm-warning' },
-  QUOTE_SENT: { bg: 'bg-vm-cyan-tint', fg: 'text-vm-cyan-dark' },
-  FOLLOW_UP: { bg: 'bg-vm-warning-bg', fg: 'text-vm-warning' },
-  WON: { bg: 'bg-vm-success-bg', fg: 'text-vm-success' },
-  ACTIVE_CLIENT: { bg: 'bg-vm-success-bg', fg: 'text-vm-success' },
-  LOST: { bg: 'bg-vm-surface', fg: 'text-vm-muted' },
-};
+export {
+  PIPELINE_STAGES,
+  STAGE_LABELS,
+  STAGE_DESCRIPTIONS,
+  STAGE_COLORS,
+} from './stages';
 
 export const PROPERTY_TYPES = [
   'Single-family home',
@@ -60,6 +34,7 @@ export const TASK_TYPE_LABELS: Record<PipelineLeadTaskType, string> = {
 
 export interface PipelineLeadRecord {
   id: string;
+  customerId: string | null;
   name: string;
   phone: string;
   email: string | null;
@@ -72,9 +47,13 @@ export interface PipelineLeadRecord {
   notes: string | null;
   stage: PipelineLeadStage;
   nextActionDate: string | null;
+  followUpDate: string | null;
+  followUpEnteredAt: string | null;
+  lastContactedAt: string | null;
   isRecurring: boolean;
   createdAt: string;
   updatedAt: string;
+  source?: 'manual' | 'intake';
 }
 
 export interface PipelineLeadTaskRecord {
@@ -115,4 +94,5 @@ export interface CreateLeadInput {
 
 export interface UpdateLeadInput extends Partial<CreateLeadInput> {
   stage?: PipelineLeadStage;
+  markContacted?: boolean;
 }

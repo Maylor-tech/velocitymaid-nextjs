@@ -3,8 +3,9 @@ export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
-import { runLeadAutomations } from '@/lib/leadCenter/automation';
+import { followUpStageFields, runLeadAutomations } from '@/lib/leadCenter/automation';
 import { serializeLead } from '@/lib/leadCenter/serialize';
+import { syncCustomerLeadStatus } from '@/lib/leadCenter/syncFromCustomer';
 import type { UpdateLeadInput } from '@/lib/leadCenter/types';
 
 export async function GET(
@@ -61,6 +62,21 @@ export async function PATCH(
     }
 
     const body = (await request.json()) as UpdateLeadInput;
+    const now = new Date();
+
+    const stageChanged = body.stage !== undefined && body.stage !== existing.stage;
+    const enteringFollowUp =
+      stageChanged && body.stage === 'FOLLOW_UP' && existing.stage !== 'FOLLOW_UP';
+
+    const followUpFields = enteringFollowUp
+      ? body.nextActionDate
+        ? {
+            followUpEnteredAt: now,
+            followUpDate: new Date(body.nextActionDate),
+            nextActionDate: new Date(body.nextActionDate),
+          }
+        : followUpStageFields(now)
+      : {};
 
     const lead = await prisma.pipelineLead.update({
       where: { id: params.leadId },
@@ -78,18 +94,25 @@ export async function PATCH(
         ...(body.estimatedRevenue !== undefined && { estimatedRevenue: body.estimatedRevenue }),
         ...(body.notes !== undefined && { notes: body.notes?.trim() || null }),
         ...(body.stage !== undefined && { stage: body.stage }),
-        ...(body.nextActionDate !== undefined && {
-          nextActionDate: body.nextActionDate ? new Date(body.nextActionDate) : null,
-        }),
+        ...(body.nextActionDate !== undefined &&
+          !enteringFollowUp && {
+            nextActionDate: body.nextActionDate ? new Date(body.nextActionDate) : null,
+          }),
         ...(body.isRecurring !== undefined && { isRecurring: body.isRecurring }),
+        ...(body.markContacted && { lastContactedAt: now }),
+        ...followUpFields,
       },
     });
 
-    if (body.stage && body.stage !== existing.stage) {
+    if (stageChanged && body.stage) {
       await runLeadAutomations(prisma, lead.id, {
         previousStage: existing.stage,
         newStage: body.stage,
       });
+
+      if (existing.customerId) {
+        await syncCustomerLeadStatus(prisma, existing.customerId, body.stage);
+      }
     }
 
     const refreshed = await prisma.pipelineLead.findUniqueOrThrow({

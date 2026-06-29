@@ -1,31 +1,88 @@
-import type { PipelineLead } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import type { LeadCenterDashboard } from './types';
+import { JobStatus } from '@prisma/client';
 
-const OPEN_STAGES = new Set([
-  'NEW_LEAD',
-  'CONTACTED',
-  'DISCOVERY_CALL',
-  'QUOTE_SENT',
-  'FOLLOW_UP',
-]);
+function monthBounds(): { start: Date; end: Date } {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  return { start, end };
+}
 
-export function computeDashboardMetrics(leads: PipelineLead[]): LeadCenterDashboard {
-  const newLeads = leads.filter((l) => l.stage === 'NEW_LEAD').length;
-  const activeQuotes = leads.filter(
-    (l) => l.stage === 'QUOTE_SENT' || l.stage === 'FOLLOW_UP'
-  ).length;
-  const recurringClients = leads.filter(
-    (l) => l.stage === 'ACTIVE_CLIENT' && l.isRecurring
-  ).length;
-  const jobsBooked = leads.filter((l) => l.stage === 'WON' || l.stage === 'ACTIVE_CLIENT').length;
+/** Dashboard KPIs sourced from Customer + Job tables per spec. */
+export async function computeDashboardMetrics(
+  prisma: PrismaClient
+): Promise<LeadCenterDashboard> {
+  const { start, end } = monthBounds();
 
-  const closed = leads.filter((l) => l.stage === 'WON' || l.stage === 'LOST').length;
-  const won = leads.filter((l) => l.stage === 'WON' || l.stage === 'ACTIVE_CLIENT').length;
-  const conversionRate = closed > 0 ? Math.round((won / closed) * 100) : null;
+  const [
+    newLeads,
+    activeQuotes,
+    multiJobCustomers,
+    jobsBooked,
+    quoteSentCount,
+    followUpCount,
+    wonCount,
+    revenueAgg,
+  ] = await Promise.all([
+    prisma.customer.count({
+      where: { leadStatus: { in: ['NEW', 'INTAKE_RECEIVED'] } },
+    }),
+    prisma.customer.count({
+      where: { leadStatus: { in: ['QUOTE_SENT', 'FOLLOW_UP'] } },
+    }),
+    prisma.customer.count({
+      where: { leadStatus: 'ACTIVE_CLIENT' },
+    }),
+    prisma.customer.findMany({
+      where: {
+        Job: { some: { status: 'COMPLETED' } },
+      },
+      select: {
+        id: true,
+        leadStatus: true,
+        _count: {
+          select: {
+            Job: { where: { status: 'COMPLETED' } },
+          },
+        },
+      },
+    }),
+    prisma.job.count({
+      where: {
+        archivedAt: null,
+        status: { in: [JobStatus.CONFIRMED, JobStatus.RECEIVED] },
+        OR: [
+          { preferredDate: { gte: start, lte: end } },
+          { createdAt: { gte: start, lte: end } },
+        ],
+      },
+    }),
+    prisma.customer.count({ where: { leadStatus: 'QUOTE_SENT' } }),
+    prisma.customer.count({ where: { leadStatus: 'FOLLOW_UP' } }),
+    prisma.customer.count({ where: { leadStatus: 'WON' } }),
+    prisma.pipelineLead.aggregate({
+      where: { stage: { in: ['QUOTE_SENT', 'FOLLOW_UP'] } },
+      _sum: { estimatedRevenue: true },
+    }),
+  ]);
 
-  const revenuePipeline = leads
-    .filter((l) => OPEN_STAGES.has(l.stage))
-    .reduce((sum, l) => sum + (l.estimatedRevenue ? Number(l.estimatedRevenue) : 0), 0);
+  const recurringFromJobs = multiJobCustomers.filter((c) => c._count.Job >= 2).length;
+  const recurringIds = new Set(
+    multiJobCustomers.filter((c) => c._count.Job >= 2).map((c) => c.id)
+  );
+  const activeClientIds = await prisma.customer.findMany({
+    where: { leadStatus: 'ACTIVE_CLIENT' },
+    select: { id: true },
+  });
+  for (const c of activeClientIds) recurringIds.add(c.id);
+  const recurringClients = recurringIds.size;
+
+  const quoteDenom = quoteSentCount + followUpCount + wonCount;
+  const conversionRate =
+    quoteDenom > 0 ? Math.round((wonCount / quoteDenom) * 100) : null;
+
+  const revenuePipeline = Number(revenueAgg._sum.estimatedRevenue ?? 0);
 
   return {
     newLeads,

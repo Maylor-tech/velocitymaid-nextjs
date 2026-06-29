@@ -291,6 +291,7 @@ model Customer {
   ReferralLink                                             ReferralLink[]
   Invoice                                                  Invoice[]
   Receipt                                                  Receipt[]
+  PipelineLead                                             PipelineLead?
 
   @@index([branchId])
   @@index([email])
@@ -1295,6 +1296,12 @@ enum FranchiseApplicationStatus {
 
 enum LeadStatus {
   NEW
+  INTAKE_RECEIVED
+  WALKTHROUGH_SCHEDULED
+  QUOTE_SENT
+  FOLLOW_UP
+  WON
+  ACTIVE_CLIENT
   ACTIVE
   BOOKED
   CLOSED
@@ -1611,13 +1618,12 @@ model Receipt {
 
 enum PipelineLeadStage {
   NEW_LEAD
-  CONTACTED
-  DISCOVERY_CALL
+  INTAKE_RECEIVED
+  WALKTHROUGH_SCHEDULED
   QUOTE_SENT
   FOLLOW_UP
   WON
   ACTIVE_CLIENT
-  LOST
 }
 
 enum PipelineLeadTaskType {
@@ -1633,27 +1639,34 @@ enum PipelineLeadTaskStatus {
 }
 
 model PipelineLead {
-  id               String             @id @default(cuid())
-  name             String
-  phone            String
-  email            String?
-  propertyAddress  String?
-  bedrooms         Int?
-  bathrooms        Int?
-  propertyType     String?
-  leadSource       String?
-  estimatedRevenue Decimal?           @db.Decimal(10, 2)
-  notes            String?
-  stage            PipelineLeadStage  @default(NEW_LEAD)
-  nextActionDate   DateTime?
-  isRecurring      Boolean            @default(false)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  tasks            PipelineLeadTask[]
+  id                String             @id @default(cuid())
+  customerId        String?            @unique
+  name              String
+  phone             String
+  email             String?
+  propertyAddress   String?
+  bedrooms          Int?
+  bathrooms         Int?
+  propertyType      String?
+  leadSource        String?
+  estimatedRevenue  Decimal?           @db.Decimal(10, 2)
+  notes             String?
+  stage             PipelineLeadStage  @default(NEW_LEAD)
+  nextActionDate    DateTime?
+  followUpDate      DateTime?
+  followUpEnteredAt DateTime?
+  lastContactedAt   DateTime?
+  isRecurring       Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  Customer          Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  tasks             PipelineLeadTask[]
 
   @@index([stage])
   @@index([nextActionDate])
+  @@index([followUpDate])
   @@index([createdAt])
+  @@index([customerId])
   @@map("pipeline_leads")
 }
 

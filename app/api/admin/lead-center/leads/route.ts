@@ -5,11 +5,14 @@ import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import { runLeadAutomations } from '@/lib/leadCenter/automation';
 import { serializeLead } from '@/lib/leadCenter/serialize';
+import { syncMissingPipelineLeads } from '@/lib/leadCenter/syncFromCustomer';
 import type { CreateLeadInput } from '@/lib/leadCenter/types';
 
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, 'ADMIN');
+
+    await syncMissingPipelineLeads(prisma);
 
     const stage = request.nextUrl.searchParams.get('stage');
 

@@ -9,8 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     await requireRole(request, 'ADMIN');
 
-    const leads = await prisma.pipelineLead.findMany();
-    const metrics = computeDashboardMetrics(leads);
+    const metrics = await computeDashboardMetrics(prisma);
 
     return NextResponse.json({ success: true, metrics });
   } catch (error: unknown) {

@@ -4,6 +4,7 @@ import type { PipelineLeadRecord, PipelineLeadTaskRecord } from './types';
 export function serializeLead(lead: PipelineLead): PipelineLeadRecord {
   return {
     id: lead.id,
+    customerId: lead.customerId,
     name: lead.name,
     phone: lead.phone,
     email: lead.email,
@@ -16,9 +17,13 @@ export function serializeLead(lead: PipelineLead): PipelineLeadRecord {
     notes: lead.notes,
     stage: lead.stage,
     nextActionDate: lead.nextActionDate?.toISOString() ?? null,
+    followUpDate: lead.followUpDate?.toISOString() ?? null,
+    followUpEnteredAt: lead.followUpEnteredAt?.toISOString() ?? null,
+    lastContactedAt: lead.lastContactedAt?.toISOString() ?? null,
     isRecurring: lead.isRecurring,
     createdAt: lead.createdAt.toISOString(),
     updatedAt: lead.updatedAt.toISOString(),
+    source: lead.customerId ? 'intake' : 'manual',
   };
 }
 

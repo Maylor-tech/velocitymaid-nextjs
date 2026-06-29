@@ -92,7 +92,7 @@ export function AdminShell({
               assigned.
             </p>
             <Link
-              href="/admin/jobs?needsAssignment=1"
+              href="/admin/jobs?unassignedOnly=true"
               className="mt-1 inline-block font-body text-xs font-semibold text-vm-cyan no-underline hover:underline"
             >
               Assign now →

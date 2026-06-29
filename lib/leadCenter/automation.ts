@@ -1,10 +1,5 @@
 import type { PipelineLeadStage, PrismaClient } from '@prisma/client';
-
-function addDays(date: Date, days: number): Date {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
+import { addDays } from './stages';
 
 export async function runLeadAutomations(
   prisma: PrismaClient,
@@ -63,4 +58,13 @@ export async function runLeadAutomations(
     where: { id: leadId },
     data: { nextActionDate: earliest },
   });
+}
+
+export function followUpStageFields(now = new Date()) {
+  const followUpDate = addDays(now, 3);
+  return {
+    followUpEnteredAt: now,
+    followUpDate,
+    nextActionDate: followUpDate,
+  };
 }

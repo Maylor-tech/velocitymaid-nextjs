@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import type { HostIntakePayload } from "./types";
+import { upsertPipelineLeadFromIntake } from "@/lib/leadCenter/syncFromCustomer";
 
 /** Creates or updates a draft Customer record from host intake data. */
 export async function createDraftHostCustomer(payload: HostIntakePayload) {
@@ -27,22 +28,24 @@ export async function createDraftHostCustomer(payload: HostIntakePayload) {
     state: "VT",
     branchId: vermontBranch?.id ?? existing?.branchId ?? null,
     defaultAddress: `${payload.propertyAddress}, ${payload.city}, VT`,
-    leadStatus: "NEW" as const,
+    leadStatus: "INTAKE_RECEIVED" as const,
     updatedAt: now,
   };
 
-  if (existing) {
-    return prisma.customer.update({
-      where: { id: existing.id },
-      data,
-    });
-  }
+  const customer = existing
+    ? await prisma.customer.update({
+        where: { id: existing.id },
+        data,
+      })
+    : await prisma.customer.create({
+        data: {
+          id: randomUUID(),
+          email: payload.email,
+          ...data,
+        },
+      });
 
-  return prisma.customer.create({
-    data: {
-      id: randomUUID(),
-      email: payload.email,
-      ...data,
-    },
-  });
+  await upsertPipelineLeadFromIntake(prisma, customer, payload);
+
+  return customer;
 }

@@ -44,7 +44,7 @@ function AdminJobsPageContent() {
   }, [isBranchScoped]);
 
   useEffect(() => {
-    if (searchParams.get("needsAssignment") === "1") {
+    if (searchParams.get("needsAssignment") === "1" || searchParams.get("unassignedOnly") === "true") {
       setUnassignedOnly(true);
       setStatusFilter("all");
     }
@@ -151,7 +151,6 @@ function AdminJobsPageContent() {
       if (
         unassignedOnly &&
         (job.assignedCleanerId ||
-          job.status === "COMPLETED" ||
           job.status === "CANCELLED" ||
           job.status === "CANCELLED_EMERGENCY")
       ) {

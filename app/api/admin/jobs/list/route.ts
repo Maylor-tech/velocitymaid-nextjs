@@ -87,6 +87,7 @@ export async function GET(request: NextRequest) {
       where.assignedCleanerId = cleanerId;
     } else if (unassignedOnly) {
       where.assignedCleanerId = null;
+      where.status = { notIn: ['CANCELLED', 'CANCELLED_EMERGENCY'] };
     }
 
     if (dateFrom || dateTo) {
