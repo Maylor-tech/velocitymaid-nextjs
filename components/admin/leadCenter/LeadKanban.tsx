@@ -24,6 +24,8 @@ function formatMoney(n: number | null) {
 }
 
 export function LeadKanban({ leads, onSelect, onStageChange }: LeadKanbanProps) {
+  const leadList = Array.isArray(leads) ? leads : [];
+
   const handleDrop = (e: React.DragEvent, stage: PipelineLeadStage) => {
     e.preventDefault();
     const leadId = e.dataTransfer.getData('leadId');
@@ -33,7 +35,7 @@ export function LeadKanban({ leads, onSelect, onStageChange }: LeadKanbanProps) 
   return (
     <div className="flex gap-3 overflow-x-auto pb-4">
       {PIPELINE_STAGES.map((stage) => {
-        const columnLeads = leads.filter((l) => l.stage === stage);
+        const columnLeads = leadList.filter((l) => l.stage === stage);
         return (
           <div
             key={stage}

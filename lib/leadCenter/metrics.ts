@@ -31,9 +31,6 @@ export async function computeDashboardMetrics(
     prisma.customer.count({
       where: { leadStatus: { in: ['QUOTE_SENT', 'FOLLOW_UP'] } },
     }),
-    prisma.customer.count({
-      where: { leadStatus: 'ACTIVE_CLIENT' },
-    }),
     prisma.customer.findMany({
       where: {
         Job: { some: { status: 'COMPLETED' } },
@@ -67,7 +64,6 @@ export async function computeDashboardMetrics(
     }),
   ]);
 
-  const recurringFromJobs = multiJobCustomers.filter((c) => c._count.Job >= 2).length;
   const recurringIds = new Set(
     multiJobCustomers.filter((c) => c._count.Job >= 2).map((c) => c.id)
   );
