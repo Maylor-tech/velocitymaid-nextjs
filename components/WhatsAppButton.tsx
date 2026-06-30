@@ -35,6 +35,9 @@ export default function WhatsAppButton({
     pathname != null &&
     NJ_WHATSAPP_HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
+  const isAdmin = pathname != null && pathname.startsWith('/admin');
+  const isMapPage = pathname === '/admin/map';
+
   useEffect(() => {
     // Show button after a short delay for better UX
     const timer = setTimeout(() => setIsVisible(true), 2000);
@@ -52,10 +55,17 @@ export default function WhatsAppButton({
     window.open(whatsappUrl, '_blank');
   };
 
-  if (hiddenForNj || !isVisible) return null;
+  if (hiddenForNj || isAdmin || isMapPage || !isVisible) return null;
+
+  const horizontalPosition =
+    position === 'left'
+      ? 'left-4 sm:left-6'
+      : 'right-4 sm:right-6';
 
   return (
-    <div className={`fixed ${position}-6 bottom-6 z-50 ${className}`}>
+    <div
+      className={`fixed bottom-20 sm:bottom-6 ${horizontalPosition} z-50 ${className}`}
+    >
       {/* Tooltip */}
       {showPopup && showTooltip && (
         <div className="absolute bottom-full mb-2 right-0 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap animate-fadeIn">
