@@ -24,6 +24,7 @@ import {
   type TalentApplicationPayload,
 } from '@/lib/cleaners/talentApplicationTypes';
 import { validateTalentApplication } from '@/lib/cleaners/validateTalentApplication';
+import { trackEvent } from '@/lib/analytics/trackEvent';
 import {
   CheckboxGroup,
   FieldGrid,
@@ -111,6 +112,9 @@ export default function TalentApplyPortal() {
       if (!res.ok || !json.success) {
         throw new Error(json.error || 'Failed to submit application');
       }
+      trackEvent('cleaner_applied', {
+        market: data.serviceAreas.join(',') || 'unknown',
+      });
       router.push('/cleaners/apply/success');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit application');

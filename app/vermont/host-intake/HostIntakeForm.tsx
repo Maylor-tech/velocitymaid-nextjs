@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 import {
   ACCESS_TYPE_OPTIONS,
   BOOKING_ADVANCE_OPTIONS,
@@ -211,6 +212,10 @@ export default function HostIntakeForm() {
       }
 
       const name = form.fullName.trim().split(/\s+/)[0] || "there";
+      trackEvent("host_intake_submitted", {
+        market: "vermont",
+        address: `${form.propertyAddress}, ${form.city}, VT`,
+      });
       setFirstName(name);
       setSubmitted(true);
     } catch {

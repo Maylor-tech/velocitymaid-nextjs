@@ -6,8 +6,8 @@ import {
   Plus_Jakarta_Sans,
 } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 import WhatsAppButton from "../components/WhatsAppButton";
-import { GoogleAnalytics } from '@next/third-parties/google';
 import { DemoModeBanner } from "../components/DemoModeBanner";
 
 const inter = Inter({
@@ -77,8 +77,9 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    // Add when you set up Google Search Console:
-    // google: 'your-google-verification-code',
+    ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION
+      ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION }
+      : {}),
   },
   icons: {
     icon: [
@@ -94,6 +95,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
   // Structured data for local business SEO - Multiple locations
   const structuredData = [
     {
@@ -252,8 +255,21 @@ export default function RootLayout({
           position="right"
           showPopup={true}
         />
-        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+        {gaId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaId}');
+              `}
+            </Script>
+          </>
         )}
       </body>
     </html>

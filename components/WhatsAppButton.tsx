@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { MessageCircle, X } from 'lucide-react';
-import { sendGAEvent } from '@next/third-parties/google';
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 /** NJ market: WhatsApp temporarily unavailable — hide widget on these paths */
 const NJ_WHATSAPP_HIDDEN_PREFIXES = [
@@ -46,8 +46,8 @@ export default function WhatsAppButton({
 
   const handleClick = () => {
     // Track WhatsApp click event
-    sendGAEvent('event', 'whatsapp_clicked', {
-      location: 'whatsapp_button_component'
+    trackEvent('whatsapp_clicked', {
+      location: 'whatsapp_button_component',
     });
     
     const encodedMessage = encodeURIComponent(message);

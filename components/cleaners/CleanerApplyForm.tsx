@@ -22,6 +22,7 @@ import {
   validateCleanerApply,
 } from "@/lib/cleaners/validateCleanerApply";
 import { parseApplyMarket } from "@/lib/cleaners/applyMarket";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 interface Branch {
   id: string;
@@ -188,6 +189,9 @@ export default function CleanerApplyForm() {
       const data = await response.json();
 
       if (data.success) {
+        trackEvent("cleaner_applied", {
+          market: selectedBranch?.slug || market || "unknown",
+        });
         setSuccess(true);
         setShowToast(true);
         setTimeout(() => router.push("/cleaners/apply/success"), 2000);

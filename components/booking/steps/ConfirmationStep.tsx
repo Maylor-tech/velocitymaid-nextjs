@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { useBooking } from "../BookingContext";
 import { Loader2 } from "lucide-react";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 const serviceTypeLabels: Record<string, string> = {
   STANDARD: 'Standard Residential Clean',
@@ -17,6 +19,13 @@ export default function ConfirmationStep() {
   const { data, submitBooking, loading, error, paymentConfig } = useBooking();
   const depositMode = paymentConfig.depositMode;
   const depositLabel = String(paymentConfig.depositDollars);
+
+  useEffect(() => {
+    trackEvent("booking_confirmed", {
+      market: data.market || "unknown",
+      service: data.serviceType || "unknown",
+    });
+  }, [data.market, data.serviceType]);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'Not selected';
