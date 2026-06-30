@@ -57,9 +57,12 @@ export const ADMIN_NAV: AdminNavItem[] = [
       p.startsWith('/admin/invoices'),
   },
   {
-    href: '/admin/contact',
+    href: '/admin/settings',
     label: 'Settings',
     icon: Settings,
-    match: (p) => p.startsWith('/admin/contact') || p.startsWith('/admin/inbox'),
+    match: (p) =>
+      p.startsWith('/admin/settings') ||
+      p.startsWith('/admin/contact') ||
+      p.startsWith('/admin/inbox'),
   },
 ];

@@ -3,7 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2, CheckCircle } from "lucide-react";
+import type { TravelZone } from "@prisma/client";
 import { useAdminShell } from "@/components/admin/shell/AdminShell";
+import {
+  shouldSuggestTravelFee,
+  TRAVEL_ZONE_FEE,
+  TRAVEL_ZONE_SHORT_LABEL,
+  travelFeeLineDescription,
+} from "@/lib/vermont/travelZone";
 
 type StateCode = "VT" | "NJ" | "";
 
@@ -15,6 +22,9 @@ const VERMONT_SERVICES = [
   "Property Readiness",
   "Emergency Response Cleaning",
   "Property Walkthrough",
+  "Office Prep",
+  "Garage Cleanup",
+  "Grill Deep Clean",
 ];
 
 const NEW_JERSEY_SERVICES = [
@@ -76,6 +86,14 @@ export default function NewManualJobPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedJobId, setSavedJobId] = useState<string | null>(null);
+  const [matchedCustomer, setMatchedCustomer] = useState<{
+    id: string;
+    travelZone: TravelZone | null;
+    firstName: string;
+    lastName: string;
+  } | null>(null);
+  const [travelFeeApplied, setTravelFeeApplied] = useState(false);
+  const [travelBannerDismissed, setTravelBannerDismissed] = useState(false);
 
   const update = (key: keyof typeof EMPTY_FORM, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -94,6 +112,70 @@ export default function NewManualJobPage() {
   }, [form.state]);
 
   const isCompleted = form.jobStatus === "COMPLETED";
+
+  const suggestedTravelFee = useMemo(() => {
+    if (
+      !shouldSuggestTravelFee(form.state, form.serviceType, matchedCustomer?.travelZone)
+    ) {
+      return null;
+    }
+    const zone = matchedCustomer!.travelZone!;
+    const fee = TRAVEL_ZONE_FEE[zone];
+    if (fee == null || fee <= 0) return null;
+    return { zone, fee };
+  }, [form.state, form.serviceType, matchedCustomer]);
+
+  const showTravelBanner =
+    suggestedTravelFee &&
+    !travelFeeApplied &&
+    !travelBannerDismissed;
+
+  useEffect(() => {
+    setTravelFeeApplied(false);
+    setTravelBannerDismissed(false);
+  }, [form.serviceType, matchedCustomer?.id]);
+
+  const lookupCustomer = async (email: string) => {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !trimmed.includes("@")) {
+      setMatchedCustomer(null);
+      return;
+    }
+    try {
+      const res = await fetch(
+        `/api/admin/customers/lookup?email=${encodeURIComponent(trimmed)}`,
+        { credentials: "include" }
+      );
+      const data = await res.json();
+      if (data.success && data.customer) {
+        setMatchedCustomer(data.customer);
+      } else {
+        setMatchedCustomer(null);
+      }
+    } catch {
+      setMatchedCustomer(null);
+    }
+  };
+
+  const handleAddTravelFee = () => {
+    if (!suggestedTravelFee) return;
+    const propertyLabel =
+      form.propertyAddress.trim() ||
+      [form.clientFirstName, form.clientLastName].filter(Boolean).join(" ") ||
+      "Property";
+    const line = travelFeeLineDescription(suggestedTravelFee.zone, propertyLabel);
+    const currentTotal = Number(form.totalAmount) || 0;
+    const newTotal = currentTotal + suggestedTravelFee.fee;
+    const noteLine = `${line}: $${suggestedTravelFee.fee}`;
+    setForm((prev) => ({
+      ...prev,
+      totalAmount: String(newTotal),
+      internalNotes: prev.internalNotes.trim()
+        ? `${prev.internalNotes.trim()}\n${noteLine}`
+        : noteLine,
+    }));
+    setTravelFeeApplied(true);
+  };
 
   const handleStateChange = (state: StateCode) => {
     setForm((prev) => ({
@@ -273,6 +355,7 @@ export default function NewManualJobPage() {
                   className={inputClass}
                   value={form.clientEmail}
                   onChange={(e) => update("clientEmail", e.target.value)}
+                  onBlur={(e) => lookupCustomer(e.target.value)}
                 />
               </div>
               <div>
@@ -290,6 +373,17 @@ export default function NewManualJobPage() {
             </div>
             <p className="mt-3 font-body text-sm text-vm-muted">
               Already in the system? We&apos;ll match by email automatically.
+              {matchedCustomer?.id && (
+                <>
+                  {" "}
+                  <Link
+                    href={`/admin/customers/${matchedCustomer.id}`}
+                    className="font-semibold text-vm-cyan-dark hover:underline"
+                  >
+                    Edit property travel zone →
+                  </Link>
+                </>
+              )}
             </p>
           </section>
 
@@ -356,6 +450,34 @@ export default function NewManualJobPage() {
                   ))}
                 </select>
               </div>
+
+              {showTravelBanner && suggestedTravelFee && (
+                <div className="sm:col-span-2 rounded-lg border border-vm-warning/40 bg-vm-warning-bg p-4">
+                  <p className="font-body text-sm text-vm-navy">
+                    This property is in{" "}
+                    <strong>{TRAVEL_ZONE_SHORT_LABEL[suggestedTravelFee.zone]}</strong>.
+                    Standalone visits typically include a{" "}
+                    <strong>${suggestedTravelFee.fee}</strong> travel fee. Add to this job?
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={handleAddTravelFee}
+                      className="rounded-lg bg-vm-navy px-4 py-2 font-heading text-xs font-semibold text-vm-white hover:opacity-90"
+                    >
+                      Add Travel Fee
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTravelBannerDismissed(true)}
+                      className="rounded-lg border border-vm-border bg-vm-white px-4 py-2 font-heading text-xs font-semibold text-vm-navy hover:bg-vm-surface"
+                    >
+                      Skip
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className={labelClass} htmlFor="date">
                   Date *

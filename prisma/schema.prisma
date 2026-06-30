@@ -278,6 +278,7 @@ model Customer {
   notifySMS                                                Boolean                    @default(false)
   postalCode                                               String?                    @db.VarChar(20)
   state                                                    String?                    @db.VarChar(100)
+  travelZone                                               TravelZone?
   CleanerRating                                            CleanerRating[]
   Branch                                                   Branch?                    @relation(fields: [branchId], references: [id])
   CustomerJobChangeRequest                                 CustomerJobChangeRequest[]
@@ -297,6 +298,7 @@ model Customer {
   @@index([email])
   @@index([homeZipCode])
   @@index([leadStatus])
+  @@index([travelZone])
   @@index([isBlocked])
   @@index([riskScore])
 }
@@ -1686,4 +1688,19 @@ model PipelineLeadTask {
   @@index([dueAt])
   @@index([status])
   @@map("pipeline_lead_tasks")
+}
+
+enum TravelZone {
+  ZONE_A
+  ZONE_B
+  ZONE_C
+  ZONE_D
+}
+
+model AdminPlatformSettings {
+  id                   String   @id @default("default")
+  invoiceQuickAddItems Json?
+  updatedAt            DateTime @updatedAt
+
+  @@map("admin_platform_settings")
 }

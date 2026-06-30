@@ -53,6 +53,9 @@ export function InvoiceForm({ initial, onSubmit, submitLabel = 'Save draft' }: I
   const [values, setValues] = useState<InvoiceFormValues>(defaultValues);
   const [busy, setBusy] = useState(false);
   const [previewNumber, setPreviewNumber] = useState('');
+  const [quickAddItems, setQuickAddItems] = useState<
+    { key: string; label: string; description: string; amount: number }[]
+  >([]);
 
   useEffect(() => {
     if (initial) {
@@ -80,6 +83,24 @@ export function InvoiceForm({ initial, onSubmit, submitLabel = 'Save draft' }: I
         .then((d) => d.success && setPreviewNumber(d.invoiceNumber));
     }
   }, [initial]);
+
+  useEffect(() => {
+    fetch('/api/admin/settings/invoice-line-items', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && Array.isArray(d.items)) {
+          setQuickAddItems(d.items);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const addQuickLine = (description: string, amount: number) => {
+    setValues((v) => ({
+      ...v,
+      items: [...v.items, { description, quantity: 1, unitPrice: amount }],
+    }));
+  };
 
   const updateItem = (index: number, patch: Partial<InvoiceLineInput>) => {
     setValues((v) => ({
@@ -154,6 +175,25 @@ export function InvoiceForm({ initial, onSubmit, submitLabel = 'Save draft' }: I
             <Plus className="h-3.5 w-3.5" /> Add line
           </button>
         </div>
+        {quickAddItems.length > 0 && (
+          <div className="mb-3">
+            <p className="mb-2 font-heading text-xs font-semibold uppercase tracking-wide text-vm-muted">
+              Quick add
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {quickAddItems.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => addQuickLine(item.description, item.amount)}
+                  className="rounded-lg border border-vm-border bg-vm-surface px-3 py-1.5 font-body text-xs font-semibold text-vm-navy hover:border-vm-cyan hover:bg-vm-cyan-tint"
+                >
+                  + {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="space-y-3">
           {values.items.map((item, index) => (
             <div key={index} className="grid gap-2 rounded-lg border border-vm-border p-3 sm:grid-cols-12">
