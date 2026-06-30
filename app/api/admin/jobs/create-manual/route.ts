@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { JobStatus, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
+import { geocodeCustomerInBackground } from "@/lib/geocoding/geocodeCustomer";
 
 interface ManualJobBody {
   clientFirstName?: string;
@@ -143,11 +144,25 @@ export async function POST(request: NextRequest) {
     // 1. Find or create the customer (match by email)
     const clientLastName = body.clientLastName?.trim() || "";
     const clientPhone = body.clientPhone?.trim() || null;
+    const propertyCity = body.propertyCity?.trim() || null;
+    const propertyState = body.propertyState?.trim() || branch.state || null;
+    const fullAddress = propertyCity
+      ? `${propertyAddress}, ${propertyCity}${propertyState ? `, ${propertyState}` : ""}`
+      : propertyAddress;
 
     let customer = await prisma.customer.findUnique({
       where: { email: clientEmail },
       select: { id: true },
     });
+
+    const customerAddressData = {
+      addressLine1: propertyAddress,
+      city: propertyCity,
+      state: propertyState,
+      defaultAddress: fullAddress,
+      branchId: branch.id,
+      updatedAt: new Date(),
+    };
 
     if (!customer) {
       customer = await prisma.customer.create({
@@ -157,11 +172,20 @@ export async function POST(request: NextRequest) {
           lastName: clientLastName,
           email: clientEmail,
           phone: clientPhone,
-          branchId: branch.id,
-          updatedAt: new Date(),
+          ...customerAddressData,
         },
         select: { id: true },
       });
+      geocodeCustomerInBackground(customer.id);
+    } else {
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          phone: clientPhone ?? undefined,
+          ...customerAddressData,
+        },
+      });
+      geocodeCustomerInBackground(customer.id);
     }
 
     // 2. Build the Job record

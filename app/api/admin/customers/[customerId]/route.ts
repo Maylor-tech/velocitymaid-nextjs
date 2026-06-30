@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { TravelZone } from '@prisma/client';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
+import { geocodeCustomerInBackground } from '@/lib/geocoding/geocodeCustomer';
 
 const VALID_ZONES = new Set<string>(Object.values(TravelZone));
 
@@ -94,6 +95,15 @@ export async function PATCH(
         defaultAddress: true,
       },
     });
+
+    if (
+      body.addressLine1 !== undefined ||
+      body.city !== undefined ||
+      body.state !== undefined ||
+      body.defaultAddress !== undefined
+    ) {
+      geocodeCustomerInBackground(customer.id);
+    }
 
     return NextResponse.json({ success: true, customer });
   } catch (error: unknown) {

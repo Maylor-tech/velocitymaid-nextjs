@@ -3,6 +3,7 @@ import {
   Calendar,
   Users,
   MapPin,
+  Map,
   DollarSign,
   Settings,
   Target,
@@ -46,6 +47,12 @@ export const ADMIN_NAV: AdminNavItem[] = [
     label: 'Branches',
     icon: MapPin,
     match: (p) => p.startsWith('/admin/branches'),
+  },
+  {
+    href: '/admin/map',
+    label: 'Map',
+    icon: Map,
+    match: (p) => p.startsWith('/admin/map'),
   },
   {
     href: '/admin/invoices',

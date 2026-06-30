@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
     const unassignedOnly = searchParams.get('unassignedOnly') === 'true';
     const includeArchived = searchParams.get('includeArchived') === 'true';
     const search = searchParams.get('search') || '';
+    const customerId = searchParams.get('customerId') || '';
 
     const branchIdParam = searchParams.get('branchId');
     const branchFilter =
@@ -109,6 +110,10 @@ export async function GET(request: NextRequest) {
         { address: { contains: search, mode: 'insensitive' } },
         { serviceLocation: { contains: search, mode: 'insensitive' } },
       ];
+    }
+
+    if (customerId) {
+      where.customerId = customerId;
     }
 
     const jobs = await prisma.job.findMany({

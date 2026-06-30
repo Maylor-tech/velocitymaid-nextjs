@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import type { HostIntakePayload } from "./types";
 import { upsertPipelineLeadFromIntake } from "@/lib/leadCenter/syncFromCustomer";
+import { geocodeCustomerInBackground } from "@/lib/geocoding/geocodeCustomer";
 
 /** Creates or updates a draft Customer record from host intake data. */
 export async function createDraftHostCustomer(payload: HostIntakePayload) {
@@ -46,6 +47,8 @@ export async function createDraftHostCustomer(payload: HostIntakePayload) {
       });
 
   await upsertPipelineLeadFromIntake(prisma, customer, payload);
+
+  geocodeCustomerInBackground(customer.id);
 
   return customer;
 }

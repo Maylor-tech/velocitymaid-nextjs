@@ -279,6 +279,8 @@ model Customer {
   postalCode                                               String?                    @db.VarChar(20)
   state                                                    String?                    @db.VarChar(100)
   travelZone                                               TravelZone?
+  latitude                                                 Float?
+  longitude                                                Float?
   CleanerRating                                            CleanerRating[]
   Branch                                                   Branch?                    @relation(fields: [branchId], references: [id])
   CustomerJobChangeRequest                                 CustomerJobChangeRequest[]

@@ -36,6 +36,7 @@ function AdminJobsPageContent() {
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [showArchived, setShowArchived] = useState(false);
   const [unassignedOnly, setUnassignedOnly] = useState(false);
+  const customerIdFilter = searchParams.get("customerId") || "";
 
   useEffect(() => {
     if (isBranchScoped) {
@@ -62,6 +63,7 @@ function AdminJobsPageContent() {
     try {
       const params = new URLSearchParams();
       if (showArchived) params.append("includeArchived", "true");
+      if (customerIdFilter) params.append("customerId", customerIdFilter);
 
       const res = await fetch(`/api/admin/jobs/list?${params.toString()}`);
       const data = await res.json();
@@ -81,7 +83,7 @@ function AdminJobsPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [showArchived]);
+  }, [showArchived, customerIdFilter]);
 
   useEffect(() => {
     fetchJobs();
@@ -187,6 +189,14 @@ function AdminJobsPageContent() {
             <p className="mt-1 font-body text-sm text-vm-muted">
               Daily schedule, payments, assignments, photos, and host communication.
             </p>
+            {customerIdFilter && (
+              <p className="mt-2 font-body text-xs text-vm-cyan-dark">
+                Filtered to one customer ·{" "}
+                <Link href="/admin/jobs" className="font-semibold hover:underline">
+                  Clear filter
+                </Link>
+              </p>
+            )}
           </div>
           <Link href="/admin/jobs/new" className={navyButton}>
             <Plus className="mr-1 h-4 w-4" />
