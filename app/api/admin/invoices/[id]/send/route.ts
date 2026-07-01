@@ -19,7 +19,7 @@ export async function POST(
       include: { items: true, payments: true },
     });
 
-    const serialized = serializeInvoice(invoice);
+    const serialized = serializeInvoice(invoice, { forOutboundEmail: true });
     const emailResult = await sendInvoiceSentEmail(serialized);
 
     return NextResponse.json({

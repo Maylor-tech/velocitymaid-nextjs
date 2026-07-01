@@ -13,15 +13,28 @@ export type InvoiceWithRelations = Invoice & {
   payments: InvoicePayment[];
 };
 
-export function serializeInvoice(invoice: InvoiceWithRelations) {
+export function serializeInvoice(
+  invoice: InvoiceWithRelations,
+  options?: { forOutboundEmail?: boolean }
+) {
   const total = decimalToNumber(invoice.total);
   const amountPaid = decimalToNumber(invoice.amountPaid);
-  const status = deriveInvoiceStatus({
+  let status = deriveInvoiceStatus({
     status: invoice.status,
     total,
     amountPaid,
     dueDate: invoice.dueDate,
   });
+
+  // Outbound invoice emails must reflect stored workflow status — never show
+  // PAID on a SENT invoice because job-level amountPaid was copied at creation.
+  if (
+    options?.forOutboundEmail &&
+    invoice.status === 'SENT' &&
+    amountPaid < total
+  ) {
+    status = 'SENT';
+  }
 
   return {
     id: invoice.id,
@@ -51,6 +64,7 @@ export function serializeInvoice(invoice: InvoiceWithRelations) {
     statusLabel: INVOICE_STATUS_LABELS[status as InvoiceStatus],
     notes: invoice.notes,
     sentAt: invoice.sentAt?.toISOString() ?? null,
+    paidAt: invoice.paidAt?.toISOString() ?? null,
     createdAt: invoice.createdAt.toISOString(),
     updatedAt: invoice.updatedAt.toISOString(),
     items: invoice.items

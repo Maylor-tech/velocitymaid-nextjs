@@ -74,7 +74,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       where: { stripeSessionId: session.id },
     });
     if (!existing && amount > 0) {
-      const payment = await recordInvoicePayment({
+      const { payment } = await recordInvoicePayment({
         invoiceId: metadata.invoiceId,
         amount,
         paymentMethod: 'STRIPE',

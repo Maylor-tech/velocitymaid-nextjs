@@ -2,6 +2,7 @@ import {
   LayoutDashboard,
   Calendar,
   Users,
+  UserCircle,
   MapPin,
   Map,
   DollarSign,
@@ -35,6 +36,12 @@ export const ADMIN_NAV: AdminNavItem[] = [
     label: 'Jobs',
     icon: Calendar,
     match: (p) => p.startsWith('/admin/jobs'),
+  },
+  {
+    href: '/admin/customers',
+    label: 'Customers',
+    icon: UserCircle,
+    match: (p) => p.startsWith('/admin/customers'),
   },
   {
     href: '/admin/cleaners',

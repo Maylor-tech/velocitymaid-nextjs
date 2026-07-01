@@ -52,9 +52,12 @@ export async function GET(request: NextRequest) {
       0
     );
 
-    const paidThisMonth = await prisma.invoicePayment.aggregate({
-      where: { paymentDate: { gte: monthStart } },
-      _sum: { amount: true },
+    const paidThisMonth = await prisma.invoice.aggregate({
+      where: {
+        status: 'PAID',
+        paidAt: { gte: monthStart },
+      },
+      _sum: { total: true },
     });
 
     const overdueCount = await prisma.invoice.count({
@@ -65,7 +68,7 @@ export async function GET(request: NextRequest) {
       success: true,
       summary: {
         totalUnpaidBalance,
-        paidThisMonth: decimalToNumber(paidThisMonth._sum.amount),
+        paidThisMonth: decimalToNumber(paidThisMonth._sum.total),
         overdueCount,
       },
       invoices: invoices.map(serializeInvoice),

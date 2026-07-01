@@ -23,7 +23,7 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
     }
 
-    const serialized = serializeInvoice(invoice);
+    const serialized = serializeInvoice(invoice, { forOutboundEmail: true });
     if (serialized.balanceDue <= 0) {
       return NextResponse.json({ success: false, error: 'Invoice has no balance due' }, { status: 400 });
     }

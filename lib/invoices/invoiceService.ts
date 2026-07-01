@@ -51,6 +51,8 @@ export async function recordInvoicePayment(params: {
   const amount = Math.max(0, params.amount);
   if (amount <= 0) throw new Error('Payment amount must be greater than zero');
 
+  const previousStatus = invoice.status;
+
   const payment = await prisma.invoicePayment.create({
     data: {
       invoiceId: params.invoiceId,
@@ -81,11 +83,14 @@ export async function recordInvoicePayment(params: {
       amountPaid: newPaid,
       balanceDue,
       status,
+      ...(status === 'PAID'
+        ? { paidAt: invoice.paidAt ?? params.paymentDate ?? new Date() }
+        : {}),
       updatedAt: new Date(),
     },
   });
 
-  return payment;
+  return { payment, previousStatus, becamePaid: status === 'PAID' && previousStatus !== 'PAID' };
 }
 
 /** After payment is recorded, create receipt + optional emails/review. */

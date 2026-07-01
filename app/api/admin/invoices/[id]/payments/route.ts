@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma';
 import type { InvoicePaymentMethod } from '@prisma/client';
 import { recordInvoicePayment, finalizeInvoicePayment } from '@/lib/invoices/invoiceService';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
-import { sendInvoiceReceiptEmail } from '@/lib/email/invoiceEmails';
+import { notifyInvoicePaymentConfirmation } from '@/lib/invoices/notifyPaymentConfirmation';
 
 export async function POST(
   request: NextRequest,
@@ -29,7 +29,7 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Invalid payment method' }, { status: 400 });
     }
 
-    const payment = await recordInvoicePayment({
+    const { payment, previousStatus, becamePaid } = await recordInvoicePayment({
       invoiceId: params.id,
       amount,
       paymentMethod,
@@ -43,7 +43,9 @@ export async function POST(
       include: { items: true, payments: true },
     });
     const serialized = serializeInvoice(invoice!);
-    await sendInvoiceReceiptEmail(serialized, amount);
+    if (becamePaid) {
+      await notifyInvoicePaymentConfirmation(params.id, previousStatus, amount);
+    }
     await finalizeInvoicePayment(params.id, payment.id, amount);
 
     return NextResponse.json({ success: true, invoice: serialized });

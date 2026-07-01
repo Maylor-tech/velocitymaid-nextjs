@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, User, Calendar, MapPin, DollarSign, CheckCircle, XC
 import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 import { JobBillingWorkflowPanel } from '@/components/admin/jobs/JobBillingWorkflowPanel';
+import { CustomerPortalPreview } from '@/components/admin/jobs/CustomerPortalPreview';
 import { useAdminShell } from '@/components/admin/shell/AdminShell';
 import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
 import { getJobLoopProgress } from '@/lib/booking/jobLoopProgress';
@@ -20,6 +21,7 @@ interface Job {
   serviceLocation: string | null;
   status: string;
   completedAt?: string | null;
+  internalNotes?: string | null;
   totalPrice: number | null;
   currency: string | null;
   paymentStatus: string;
@@ -123,6 +125,18 @@ export default function AdminJobDetailPage() {
   const [markPaidReference, setMarkPaidReference] = useState('');
   const [sendingInvite, setSendingInvite] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    preferredDate: '',
+    preferredTime: '',
+    internalNotes: '',
+    address: '',
+    serviceType: '',
+    status: '',
+    totalPrice: '',
+    assignedCleanerId: '',
+  });
 
   useEffect(() => {
     if (jobId) {
@@ -178,6 +192,23 @@ export default function AdminJobDetailPage() {
         if (data.job.assignedCleanerId) {
           setSelectedCleanerId(data.job.assignedCleanerId);
         }
+        setEditForm({
+          preferredDate: data.job.preferredDate
+            ? new Date(data.job.preferredDate).toISOString().slice(0, 10)
+            : '',
+          preferredTime: data.job.preferredTime || '',
+          internalNotes: data.job.internalNotes || '',
+          address: data.job.address || '',
+          serviceType: data.job.serviceType || '',
+          status: data.job.status || '',
+          totalPrice:
+            data.job.totalPrice != null
+              ? String(data.job.totalPrice)
+              : data.job.quotedTotal != null
+                ? String(data.job.quotedTotal)
+                : '',
+          assignedCleanerId: data.job.assignedCleanerId || '',
+        });
       } else {
         throw new Error(data.error || 'Failed to fetch job');
       }
@@ -441,6 +472,42 @@ export default function AdminJobDetailPage() {
       setTimeout(() => setShowToast(false), 5000);
     } finally {
       setSendingInvite(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    setEditSaving(true);
+    try {
+      const response = await fetch(`/api/admin/jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          preferredDate: editForm.preferredDate || null,
+          preferredTime: editForm.preferredTime,
+          internalNotes: editForm.internalNotes,
+          address: editForm.address,
+          serviceType: editForm.serviceType,
+          status: editForm.status,
+          totalPrice: editForm.totalPrice ? Number(editForm.totalPrice) : undefined,
+          assignedCleanerId: editForm.assignedCleanerId || null,
+        }),
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Save failed');
+      setToastMessage('Job updated');
+      setToastType('success');
+      setShowToast(true);
+      setEditOpen(false);
+      await fetchJob();
+      await fetchAuditLogs();
+    } catch (err: unknown) {
+      setToastMessage(err instanceof Error ? err.message : 'Save failed');
+      setToastType('error');
+      setShowToast(true);
+    } finally {
+      setEditSaving(false);
+      setTimeout(() => setShowToast(false), 4000);
     }
   };
 
@@ -790,6 +857,7 @@ export default function AdminJobDetailPage() {
           <JobBillingWorkflowPanel
             jobId={jobId}
             jobCompleted={job.status === 'COMPLETED' || Boolean(job.completedAt)}
+            jobStatus={job.status}
           />
         </div>
 
@@ -1071,7 +1139,125 @@ export default function AdminJobDetailPage() {
 
         {/* Job Information */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-vm-text mb-4">Job Information</h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-vm-text">Job Information</h2>
+            {!isBranchScoped && (
+              <button
+                type="button"
+                onClick={() => setEditOpen((o) => !o)}
+                className="rounded-lg border border-vm-navy/20 bg-vm-navy/5 px-4 py-2 text-sm font-semibold text-vm-navy hover:bg-vm-navy/10"
+              >
+                {editOpen ? 'Cancel edit' : 'Edit job'}
+              </button>
+            )}
+          </div>
+
+          {editOpen && !isBranchScoped && (
+            <div className="mb-6 rounded-lg border border-vm-cyan/30 bg-vm-cyan-tint/30 p-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-vm-muted">Scheduled date</label>
+                  <input
+                    type="date"
+                    value={editForm.preferredDate}
+                    onChange={(e) => setEditForm((f) => ({ ...f, preferredDate: e.target.value }))}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-vm-muted">Scheduled time</label>
+                  <input
+                    type="text"
+                    value={editForm.preferredTime}
+                    onChange={(e) => setEditForm((f) => ({ ...f, preferredTime: e.target.value }))}
+                    placeholder="e.g. 9:00 AM – 12:00 PM"
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-vm-muted">Service type</label>
+                  <input
+                    type="text"
+                    value={editForm.serviceType}
+                    onChange={(e) => setEditForm((f) => ({ ...f, serviceType: e.target.value }))}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-vm-muted">Amount ($)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editForm.totalPrice}
+                    onChange={(e) => setEditForm((f) => ({ ...f, totalPrice: e.target.value }))}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-vm-muted">Job status</label>
+                  <select
+                    value={editForm.status}
+                    onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value }))}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  >
+                    {['RECEIVED', 'CONFIRMED', 'ASSIGNED', 'IN_PROGRESS', 'ON_THE_WAY', 'COMPLETED', 'CANCELLED'].map(
+                      (s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-vm-muted">Assigned cleaner</label>
+                  <select
+                    value={editForm.assignedCleanerId}
+                    onChange={(e) => setEditForm((f) => ({ ...f, assignedCleanerId: e.target.value }))}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  >
+                    <option value="">Unassigned</option>
+                    {cleaners.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name || c.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="mb-1 block text-xs font-medium text-vm-muted">Property address</label>
+                  <input
+                    type="text"
+                    value={editForm.address}
+                    onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="mb-1 block text-xs font-medium text-vm-muted">
+                    Service notes / special instructions
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editForm.internalNotes}
+                    onChange={(e) => setEditForm((f) => ({ ...f, internalNotes: e.target.value }))}
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={editSaving}
+                className="inline-flex items-center gap-2 rounded-lg bg-vm-navy px-4 py-2 text-sm font-semibold text-white hover:bg-vm-navy/90 disabled:opacity-60"
+              >
+                {editSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Save changes
+              </button>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-vm-muted">Customer</p>
@@ -1161,8 +1347,20 @@ export default function AdminJobDetailPage() {
                 <p className="text-sm text-vm-muted">{job.assignedCleaner.email}</p>
               </div>
             )}
+            {job.internalNotes && (
+              <div className="md:col-span-2">
+                <p className="text-sm text-vm-muted">Service notes</p>
+                <p className="text-vm-text whitespace-pre-wrap">{job.internalNotes}</p>
+              </div>
+            )}
           </div>
         </div>
+
+        {!isBranchScoped && job.customer?.id && (
+          <div className="mb-6">
+            <CustomerPortalPreview jobId={jobId} customerId={job.customer.id} />
+          </div>
+        )}
 
         {needsReview && (
           <div className="bg-white rounded-xl shadow-sm border border-blue-200 p-6 mb-6">

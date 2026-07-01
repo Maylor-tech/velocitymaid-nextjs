@@ -5,6 +5,7 @@ import { TravelZone } from '@prisma/client';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import { geocodeCustomerInBackground } from '@/lib/geocoding/geocodeCustomer';
+import { getCustomerPortalStats } from '@/lib/admin/customerPortalStats';
 
 const VALID_ZONES = new Set<string>(Object.values(TravelZone));
 
@@ -38,7 +39,9 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Customer not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, customer });
+    const portal = await getCustomerPortalStats(params.customerId);
+
+    return NextResponse.json({ success: true, customer: { ...customer, portal } });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to load customer';
     const status = message.includes('Unauthorized') ? 401 : 500;

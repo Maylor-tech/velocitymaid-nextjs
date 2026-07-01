@@ -7,7 +7,7 @@ import {
   formatUsd,
 } from '@/lib/invoices/invoiceUtils';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
-import { sendInvoiceSentEmail, sendInvoiceReceiptEmail } from '@/lib/email/invoiceEmails';
+import { sendInvoiceSentEmail } from '@/lib/email/invoiceEmails';
 import { recordInvoicePayment } from '@/lib/invoices/invoiceService';
 import type { InvoicePaymentMethod } from '@prisma/client';
 import { nextReportNumber } from './numbering';
@@ -125,11 +125,14 @@ export async function getJobBillingWorkflowStatus(
 
   const isCompleted =
     job.status === 'COMPLETED' || job.completedAt != null;
+  const hasPhotos = job.photos.length > 0;
 
   const invoiceBalance = invoice ? decimalToNumber(invoice.balanceDue) : null;
   const invoicePaid =
     invoice != null &&
-    (invoice.status === 'PAID' || (invoiceBalance != null && invoiceBalance <= 0));
+    (invoice.status === 'PAID' ||
+      invoice.paidAt != null ||
+      (invoiceBalance != null && invoiceBalance <= 0));
 
   return {
     jobId: job.id,
@@ -137,13 +140,12 @@ export async function getJobBillingWorkflowStatus(
     completedAt: job.completedAt?.toISOString() ?? null,
     steps: {
       completionReport: {
-        state: report
-          ? report.status === 'SENT'
+        state:
+          report?.status === 'SENT' || hasPhotos || isCompleted
             ? 'done'
-            : 'ready'
-          : isCompleted
-            ? 'ready'
-            : 'pending',
+            : report
+              ? 'ready'
+              : 'pending',
         reportNumber: report?.reportNumber ?? null,
         publicToken: report?.publicToken ?? null,
         status: report?.status ?? null,
@@ -152,15 +154,7 @@ export async function getJobBillingWorkflowStatus(
         pdfUrl: report ? `${baseUrl()}/api/report/${report.publicToken}/pdf` : null,
       },
       invoice: {
-        state: invoice
-          ? invoicePaid
-            ? 'done'
-            : invoice.sentAt
-              ? 'ready'
-              : 'ready'
-          : isCompleted
-            ? 'ready'
-            : 'pending',
+        state: invoice ? 'done' : isCompleted ? 'ready' : 'pending',
         invoiceId: invoice?.id ?? null,
         invoiceNumber: invoice?.invoiceNumber ?? null,
         publicToken: invoice?.publicToken ?? null,
@@ -190,13 +184,13 @@ export async function getJobBillingWorkflowStatus(
       },
       receipt: {
         state:
-          receipts.length > 0
-            ? receipts.some((r) => r.status === 'SENT')
-              ? 'done'
-              : 'ready'
-            : invoicePaid
+          receipts.some((r) => r.sentAt != null)
+            ? 'done'
+            : receipts.length > 0
               ? 'ready'
-              : 'pending',
+              : invoicePaid
+                ? 'ready'
+                : 'pending',
         count: receipts.length,
         latestReceiptNumber: latestReceipt?.receiptNumber ?? null,
         latestPublicToken: latestReceipt?.publicToken ?? null,
@@ -296,8 +290,6 @@ export async function generateInvoiceFromJob(jobId: string) {
     [job.Customer?.firstName, job.Customer?.lastName].filter(Boolean).join(' ') ||
     'Client';
   const totalPrice = decimalToNumber(job.totalPrice ?? job.quotedTotal);
-  const amountPaid = decimalToNumber(job.amountPaid);
-  const balanceDue = computeBalanceDue(totalPrice, amountPaid);
   const completedAt = job.completedAt ?? new Date();
   const dueDate = new Date(completedAt);
   dueDate.setDate(dueDate.getDate() + 7);
@@ -318,9 +310,9 @@ export async function generateInvoiceFromJob(jobId: string) {
       tax: 0,
       discount: 0,
       total: totalPrice,
-      amountPaid,
-      balanceDue,
-      status: balanceDue <= 0 ? 'PAID' : 'DRAFT',
+      amountPaid: 0,
+      balanceDue: totalPrice,
+      status: 'DRAFT',
       notes: `Generated from job ${job.id}`,
       items: {
         create: [
@@ -345,7 +337,7 @@ export async function sendLinkedInvoiceForJob(jobId: string) {
   if (!job.Invoice) throw new Error('No invoice linked to this job. Generate one first.');
   if (!job.Invoice.clientEmail) throw new Error('No client email on invoice');
 
-  const serialized = serializeInvoice(job.Invoice);
+  const serialized = serializeInvoice(job.Invoice, { forOutboundEmail: true });
   const email = await sendInvoiceSentEmail(serialized);
   if (email.sent) {
     await prisma.invoice.update({
@@ -369,7 +361,7 @@ export async function recordPaymentForJobInvoice(
   const job = await loadJobBillingContext(jobId);
   if (!job.Invoice) throw new Error('No invoice linked to this job');
 
-  const payment = await recordInvoicePayment({
+  const { payment, previousStatus, becamePaid } = await recordInvoicePayment({
     invoiceId: job.Invoice.id,
     amount: params.amount,
     paymentMethod: params.paymentMethod,
@@ -390,8 +382,11 @@ export async function recordPaymentForJobInvoice(
   });
   const serialized = serializeInvoice(updated!);
 
-  if (params.sendEmails !== false) {
-    await sendInvoiceReceiptEmail(serialized, params.amount);
+  if (becamePaid && params.sendEmails !== false) {
+    const { notifyInvoicePaymentConfirmation } = await import(
+      '@/lib/invoices/notifyPaymentConfirmation'
+    );
+    await notifyInvoicePaymentConfirmation(job.Invoice.id, previousStatus, params.amount);
   }
 
   return { payment, invoice: serialized, receipt: receiptResult?.receipt ?? null };

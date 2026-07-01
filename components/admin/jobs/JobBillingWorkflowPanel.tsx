@@ -18,6 +18,7 @@ import type { JobBillingWorkflowStatus } from '@/lib/billing/jobBillingSteps';
 interface JobBillingWorkflowPanelProps {
   jobId: string;
   jobCompleted: boolean;
+  jobStatus?: string;
 }
 
 type StepKey = keyof JobBillingWorkflowStatus['steps'];
@@ -44,7 +45,7 @@ function stateIcon(state: string) {
   return <Circle className="h-5 w-5 text-vm-muted/40" />;
 }
 
-export function JobBillingWorkflowPanel({ jobId, jobCompleted }: JobBillingWorkflowPanelProps) {
+export function JobBillingWorkflowPanel({ jobId, jobCompleted, jobStatus }: JobBillingWorkflowPanelProps) {
   const [workflow, setWorkflow] = useState<JobBillingWorkflowStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -167,7 +168,14 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted }: JobBillingWorkf
                   </p>
                 )}
                 {key === 'reviewRequest' && s.reviewRequest.sentAt && (
-                  <p className="font-body text-xs text-vm-muted">Sent</p>
+                  <p className="font-body text-xs text-vm-muted">
+                    Review requested on{' '}
+                    {new Date(s.reviewRequest.sentAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </p>
                 )}
               </div>
               <span
@@ -215,13 +223,20 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted }: JobBillingWorkf
           label="Generate receipt"
           onClick={() => runAction('generate_receipt', { sendEmail: true })}
         />
-        <ActionButton
-          busy={busy === 'send_review'}
-          disabled={!!busy}
-          icon={<Star className="h-4 w-4" />}
-          label="Send review request"
-          onClick={() => runAction('send_review')}
-        />
+        {jobStatus === 'COMPLETED' && !s.reviewRequest.sentAt ? (
+          <ActionButton
+            busy={busy === 'send_review'}
+            disabled={!!busy}
+            icon={<Star className="h-4 w-4" />}
+            label="Send review request"
+            onClick={() => runAction('send_review')}
+          />
+        ) : s.reviewRequest.sentAt ? (
+          <span className="inline-flex items-center gap-2 rounded-lg border border-vm-success/30 bg-vm-success-bg px-3 py-2 font-body text-sm text-vm-success">
+            <CheckCircle2 className="h-4 w-4" />
+            Review requested
+          </span>
+        ) : null}
       </div>
 
       {s.invoice.invoiceId && s.payment.state !== 'done' && (

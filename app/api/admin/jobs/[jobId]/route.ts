@@ -12,6 +12,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 import { computePayoutEligibility } from '@/lib/booking/payoutEligibility';
+import { logAuditEntry } from '@/lib/audit';
+import type { JobStatus } from '@prisma/client';
 
 export async function GET(
   request: NextRequest,
@@ -65,6 +67,7 @@ export async function GET(
         onTheWayAt: true,
         completedAt: true,
         jobQualityScore: true,
+        internalNotes: true,
         appliedReferralCode: true,
         promoApplied: true,
         promoDiscount: true,
@@ -200,6 +203,7 @@ export async function GET(
       assignedAt: job.assignedAt?.toISOString() || null,
       onTheWayAt: job.onTheWayAt?.toISOString() || null,
       completedAt: job.completedAt?.toISOString() || null,
+      internalNotes: job.internalNotes,
       jobQualityScore: job.jobQualityScore,
       appliedReferralCode: job.appliedReferralCode,
       promoApplied: job.promoApplied,
@@ -227,6 +231,166 @@ export async function GET(
       },
       { status: 500 }
     );
+  }
+}
+
+const EDITABLE_STATUSES = new Set<string>([
+  'RECEIVED',
+  'CONFIRMED',
+  'ASSIGNED',
+  'IN_PROGRESS',
+  'ON_THE_WAY',
+  'COMPLETED',
+  'CANCELLED',
+  'CANCELLED_EMERGENCY',
+]);
+
+/**
+ * PATCH /api/admin/jobs/[jobId]
+ * Admin job edit — always allowed regardless of workflow status.
+ * Payment status is intentionally excluded (use Mark as Paid).
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { jobId: string } }
+) {
+  try {
+    const auth = await requireRole(request, 'ADMIN');
+    const { jobId } = params;
+
+    const existing = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: {
+        id: true,
+        branchId: true,
+        preferredDate: true,
+        preferredTime: true,
+        internalNotes: true,
+        address: true,
+        serviceType: true,
+        status: true,
+        totalPrice: true,
+        quotedTotal: true,
+        assignedCleanerId: true,
+      },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
+    }
+    if (auth.branchId && existing.branchId !== auth.branchId) {
+      return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const data: Record<string, unknown> = {};
+
+    if (body.preferredDate !== undefined) {
+      data.preferredDate = body.preferredDate ? new Date(body.preferredDate) : null;
+    }
+    if (body.preferredTime !== undefined) {
+      data.preferredTime = body.preferredTime?.trim() || null;
+    }
+    if (body.internalNotes !== undefined) {
+      data.internalNotes = body.internalNotes?.trim() || null;
+    }
+    if (body.address !== undefined) {
+      data.address = body.address?.trim() || null;
+    }
+    if (body.serviceType !== undefined) {
+      data.serviceType = body.serviceType?.trim() || null;
+    }
+    if (body.status !== undefined) {
+      if (!EDITABLE_STATUSES.has(body.status)) {
+        return NextResponse.json({ success: false, error: 'Invalid job status' }, { status: 400 });
+      }
+      data.status = body.status as JobStatus;
+      if (body.status === 'COMPLETED' && !body.completedAt) {
+        data.completedAt = new Date();
+      }
+    }
+    if (body.totalPrice !== undefined) {
+      const amount = Number(body.totalPrice);
+      if (Number.isNaN(amount) || amount < 0) {
+        return NextResponse.json({ success: false, error: 'Invalid total price' }, { status: 400 });
+      }
+      data.totalPrice = amount;
+      data.quotedTotal = amount;
+    }
+    if (body.assignedCleanerId !== undefined) {
+      if (body.assignedCleanerId) {
+        const cleaner = await prisma.user.findFirst({
+          where: { id: body.assignedCleanerId, role: 'CLEANER', isActive: true },
+          select: { id: true },
+        });
+        if (!cleaner) {
+          return NextResponse.json({ success: false, error: 'Cleaner not found' }, { status: 400 });
+        }
+      }
+      data.assignedCleanerId = body.assignedCleanerId || null;
+      if (body.assignedCleanerId && !existing.assignedCleanerId) {
+        data.assignedAt = new Date();
+      }
+    }
+
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ success: false, error: 'No fields to update' }, { status: 400 });
+    }
+
+    const updated = await prisma.job.update({
+      where: { id: jobId },
+      data,
+    });
+
+    await logAuditEntry({
+      actorId: auth.userId,
+      actorRole: auth.role,
+      action: 'JOB_UPDATED',
+      entityType: 'Job',
+      entityId: jobId,
+      description: 'Admin edited job details',
+      changes: {
+        before: {
+          preferredDate: existing.preferredDate?.toISOString() ?? null,
+          preferredTime: existing.preferredTime,
+          internalNotes: existing.internalNotes,
+          address: existing.address,
+          serviceType: existing.serviceType,
+          status: existing.status,
+          totalPrice: existing.totalPrice ? Number(existing.totalPrice) : null,
+          assignedCleanerId: existing.assignedCleanerId,
+        },
+        after: {
+          preferredDate: updated.preferredDate?.toISOString() ?? null,
+          preferredTime: updated.preferredTime,
+          internalNotes: updated.internalNotes,
+          address: updated.address,
+          serviceType: updated.serviceType,
+          status: updated.status,
+          totalPrice: updated.totalPrice ? Number(updated.totalPrice) : null,
+          assignedCleanerId: updated.assignedCleanerId,
+        },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      job: {
+        id: updated.id,
+        preferredDate: updated.preferredDate?.toISOString() ?? null,
+        preferredTime: updated.preferredTime,
+        internalNotes: updated.internalNotes,
+        address: updated.address,
+        serviceType: updated.serviceType,
+        status: updated.status,
+        totalPrice: updated.totalPrice ? Number(updated.totalPrice) : null,
+        assignedCleanerId: updated.assignedCleanerId,
+      },
+    });
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
+    const message = error instanceof Error ? error.message : 'Failed to update job';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 

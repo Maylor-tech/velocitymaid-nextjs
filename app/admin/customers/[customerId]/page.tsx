@@ -23,6 +23,13 @@ interface CustomerProfile {
   defaultAddress: string | null;
   travelZone: TravelZone | null;
   Branch: { name: string; slug: string } | null;
+  portal?: {
+    portalInviteSent: boolean;
+    inviteAccepted: boolean;
+    loginCount: number;
+    lastPortalLoginAt: string | null;
+    invitedAt: string | null;
+  };
 }
 
 export default function AdminCustomerProfilePage() {
@@ -102,6 +109,52 @@ export default function AdminCustomerProfilePage() {
         </p>
 
         <div className="mt-6 space-y-6 rounded-xl border border-vm-border bg-vm-white p-6">
+          {customer.portal && (
+            <div className="rounded-lg bg-vm-surface/80 p-4">
+              <p className={labelClass}>Customer portal</p>
+              <dl className="mt-2 grid grid-cols-1 gap-2 font-body text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-vm-muted">Account status</dt>
+                  <dd className="font-medium text-vm-text">
+                    {customer.portal.inviteAccepted
+                      ? 'Active — has logged in'
+                      : customer.portal.portalInviteSent
+                        ? 'Invited — not yet logged in'
+                        : 'No portal invite sent'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-vm-muted">Last portal login</dt>
+                  <dd className="font-medium text-vm-text">
+                    {customer.portal.lastPortalLoginAt
+                      ? new Date(customer.portal.lastPortalLoginAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })
+                      : 'Never'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-vm-muted">Total logins</dt>
+                  <dd className="font-medium text-vm-text">{customer.portal.loginCount}</dd>
+                </div>
+                {customer.portal.invitedAt && (
+                  <div>
+                    <dt className="text-vm-muted">Invite sent</dt>
+                    <dd className="font-medium text-vm-text">
+                      {new Date(customer.portal.invitedAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+          )}
+
           <div>
             <p className={labelClass}>Property address</p>
             <p className="font-body text-sm text-vm-text">{propertyAddress || '—'}</p>
