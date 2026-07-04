@@ -18,8 +18,8 @@ export function distanceMiles(
 
 /** VelocityMaid HQ — Ludlow, VT (travel zone reference point). */
 export const VM_HQ = {
-  lat: 43.3956,
-  lng: -72.7023,
+  lat: 43.3977,
+  lng: -72.7013,
   label: 'VelocityMaid HQ — Ludlow, VT',
 } as const;
 

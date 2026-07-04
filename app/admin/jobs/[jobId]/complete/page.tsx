@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -8,8 +8,6 @@ import {
   Loader2,
   UploadCloud,
   CheckCircle,
-  X,
-  ImageIcon,
   Link2,
 } from "lucide-react";
 
@@ -28,20 +26,14 @@ interface JobInfo {
   branch: { name: string } | null;
 }
 
-interface UploadedPhoto {
-  id: string;
-  url: string;
-  uploadedAt: string;
-}
-
-const ACCEPT = ".jpg,.jpeg,.png,.webp,.mp4";
-const ACCEPT_MIME = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "video/mp4",
-]);
-const MAX_FILES = 20;
+import { useJobPhotoUpload } from "@/lib/photos/useJobPhotoUpload";
+import { MAX_PHOTOS_PER_BATCH } from "@/lib/photos/cleanPhotoStorage";
+import {
+  PhotoQueueGrid,
+  PhotoQueueItemErrors,
+  PhotoQueueMessages,
+  PhotoQueueWarnings,
+} from "@/components/photos/PhotoQueueGrid";
 
 export default function MarkCleanCompletePage() {
   const params = useParams();
@@ -51,10 +43,20 @@ export default function MarkCleanCompletePage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [uploadedPhotos, setUploadedPhotos] = useState<UploadedPhoto[]>([]);
+  const {
+    items: queueItems,
+    fileMessages,
+    uploading,
+    readyCount,
+    uploadedPhotos,
+    addFiles,
+    removeAt,
+    uploadAll,
+    retryOne,
+    setFileMessages,
+  } = useJobPhotoUpload(jobId);
+
+  const [retryingKey, setRetryingKey] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,7 +70,6 @@ export default function MarkCleanCompletePage() {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2500);
     } catch {
-      // Fallback for browsers without clipboard API
       window.prompt("Copy this upload link:", url);
     }
   };
@@ -117,31 +118,6 @@ export default function MarkCleanCompletePage() {
     };
   }, [jobId]);
 
-  useEffect(() => {
-    // Revoke object URLs on change / unmount to avoid leaks.
-    return () => {
-      previews.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [previews]);
-
-  const addFiles = useCallback(
-    (incoming: FileList | File[]) => {
-      const list = Array.from(incoming).filter((f) => ACCEPT_MIME.has(f.type));
-      if (list.length === 0) return;
-      setSelectedFiles((prev) => {
-        const combined = [...prev, ...list].slice(0, MAX_FILES);
-        return combined;
-      });
-      setPreviews((prev) => {
-        const next = list.map((f) =>
-          f.type.startsWith("image/") ? URL.createObjectURL(f) : ""
-        );
-        return [...prev, ...next].slice(0, MAX_FILES);
-      });
-    },
-    []
-  );
-
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) addFiles(e.target.files);
     e.target.value = "";
@@ -153,40 +129,22 @@ export default function MarkCleanCompletePage() {
     if (e.dataTransfer.files) addFiles(e.dataTransfer.files);
   };
 
-  const removeSelected = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-    setPreviews((prev) => {
-      const url = prev[index];
-      if (url) URL.revokeObjectURL(url);
-      return prev.filter((_, i) => i !== index);
-    });
+  const handleRetry = async (key: string) => {
+    setRetryingKey(key);
+    setFormError(null);
+    await retryOne(key, completedBy.trim() || "Admin");
+    setRetryingKey(null);
   };
 
   const handleUpload = async () => {
-    if (selectedFiles.length === 0) return;
-    setUploading(true);
+    if (readyCount === 0) return;
     setFormError(null);
-    try {
-      const formData = new FormData();
-      selectedFiles.forEach((f) => formData.append("files", f));
-      if (completedBy.trim()) formData.append("uploadedBy", completedBy.trim());
-
-      const res = await fetch(`/api/jobs/${jobId}/photos`, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Upload failed");
-      }
-      setUploadedPhotos((prev) => [...prev, ...(data.photos as UploadedPhoto[])]);
-      previews.forEach((url) => url && URL.revokeObjectURL(url));
-      setSelectedFiles([]);
-      setPreviews([]);
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploading(false);
+    setFileMessages([]);
+    const { hasFailures } = await uploadAll(completedBy.trim() || "Admin");
+    if (hasFailures) {
+      setFormError(
+        "Some photos did not upload. Tap Retry on each failed file, then upload again."
+      );
     }
   };
 
@@ -267,7 +225,7 @@ export default function MarkCleanCompletePage() {
             Back to Jobs
           </Link>
           <div className="rounded-lg border border-vm-border bg-vm-white p-6">
-            <p className="font-body text-red-600">
+            <p className="font-body text-vm-danger">
               {loadError || "Job not found"}
             </p>
           </div>
@@ -421,73 +379,53 @@ export default function MarkCleanCompletePage() {
               Drag &amp; drop photos here, or click to choose
             </p>
             <p className="mt-1 font-body text-xs text-vm-muted">
-              JPG, PNG, WebP, MP4 · up to {MAX_FILES} files
+              JPG, PNG, WebP, HEIC, MP4 · up to {MAX_PHOTOS_PER_BATCH} files
             </p>
             <input
               ref={fileInputRef}
               type="file"
-              accept={ACCEPT}
+              accept="image/*,video/*,.heic,.heif"
               multiple
               className="hidden"
               onChange={handleFileInput}
             />
           </div>
 
-          {selectedFiles.length > 0 && (
+          {queueItems.length > 0 && (
             <div className="mt-4">
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {selectedFiles.map((file, i) => (
-                  <div
-                    key={`${file.name}-${i}`}
-                    className="relative overflow-hidden rounded-lg border border-vm-border bg-vm-surface"
-                  >
-                    {previews[i] ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={previews[i]}
-                        alt={file.name}
-                        className="h-24 w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-24 w-full items-center justify-center">
-                        <ImageIcon className="h-6 w-6 text-vm-muted" />
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeSelected(i);
-                      }}
-                      className="absolute right-1 top-1 rounded-full bg-vm-navy/80 p-1 text-vm-white"
-                      aria-label="Remove"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={handleUpload}
-                disabled={uploading}
-                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-vm-navy px-4 py-2 font-heading text-sm font-semibold text-vm-white disabled:opacity-60"
-              >
-                {uploading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Uploading…
-                  </>
-                ) : (
-                  <>
-                    <UploadCloud className="h-4 w-4" />
-                    Upload {selectedFiles.length} photo
-                    {selectedFiles.length > 1 ? "s" : ""}
-                  </>
-                )}
-              </button>
+              <PhotoQueueGrid
+                items={queueItems}
+                onRemove={removeAt}
+                onRetry={handleRetry}
+                retryingKey={retryingKey}
+              />
+              <PhotoQueueWarnings items={queueItems} />
+              <PhotoQueueItemErrors items={queueItems} />
+              {readyCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleUpload}
+                  disabled={uploading}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-vm-navy px-4 py-2 font-heading text-sm font-semibold text-vm-white disabled:opacity-60"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Uploading…
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="h-4 w-4" />
+                      Upload {readyCount} photo
+                      {readyCount > 1 ? "s" : ""}
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           )}
+
+          <PhotoQueueMessages messages={fileMessages} />
 
           {uploadedPhotos.length > 0 && (
             <div className="mt-6">
@@ -646,7 +584,7 @@ export default function MarkCleanCompletePage() {
             </div>
 
             {formError && (
-              <p className="font-body text-sm text-red-600">{formError}</p>
+              <p className="font-body text-sm text-vm-danger">{formError}</p>
             )}
 
             <button

@@ -13,6 +13,10 @@ import {
   MapPin,
   Clock,
 } from "lucide-react";
+import {
+  VERMONT_OPERATIONS_SUPPORT_LINE1,
+  VERMONT_OPERATIONS_SUPPORT_LINE2,
+} from "@/lib/company/businessAddress";
 
 export interface VermontClusterLandingProps {
   cluster: VermontClusterConfig;
@@ -183,8 +187,8 @@ export default function VermontClusterLanding({
 
         <section className="border-t border-vm-border pt-6 text-xs text-vm-muted font-body space-y-1">
           <p>
-            VelocityMaid — Vermont Operations Support · 79 Main Street, Apt 7,
-            Ludlow, VT 05149, USA
+            {VERMONT_OPERATIONS_SUPPORT_LINE1}{" "}
+            {VERMONT_OPERATIONS_SUPPORT_LINE2}
           </p>
           <p>{cluster.footerServing}</p>
           <p>

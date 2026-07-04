@@ -5,6 +5,10 @@ import BranchLandingNav from "@/components/layout/BranchLandingNav";
 import { VERMONT_CLUSTER_LIST } from "@/lib/vermont/clusters";
 import { MIDDLEBURY_PHOTO_PATHS } from "@/lib/vermont/middleburyPhotos";
 import { ArrowRight, MapPin, Snowflake } from "lucide-react";
+import {
+  VERMONT_OPERATIONS_SUPPORT_LINE1,
+  VERMONT_OPERATIONS_SUPPORT_LINE2,
+} from "@/lib/company/businessAddress";
 
 export const metadata: Metadata = {
   title: "Vermont Cleaning Services | VelocityMaid — Okemo Valley & Middlebury",
@@ -160,8 +164,8 @@ export default function VermontOverviewPage() {
 
         <section className="border-t border-vm-border pt-6 text-xs text-vm-muted font-body space-y-1">
           <p>
-            VelocityMaid — Vermont Operations Support · 79 Main Street, Apt 7,
-            Ludlow, VT 05149, USA
+            {VERMONT_OPERATIONS_SUPPORT_LINE1}{" "}
+            {VERMONT_OPERATIONS_SUPPORT_LINE2}
           </p>
           <p>
             Serving Okemo Valley (Ludlow, Proctorsville, Cavendish, Chester) and

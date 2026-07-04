@@ -1,100 +1,80 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Camera,
   ImagePlus,
   Loader2,
   CheckCircle,
-  X,
-  Film,
   MapPin,
 } from "lucide-react";
+import { MAX_PHOTOS_PER_BATCH } from "@/lib/photos/cleanPhotoStorage";
+import { useJobPhotoUpload } from "@/lib/photos/useJobPhotoUpload";
+import {
+  PhotoQueueGrid,
+  PhotoQueueItemErrors,
+  PhotoQueueMessages,
+  PhotoQueueWarnings,
+} from "@/components/photos/PhotoQueueGrid";
 
 interface Props {
   jobId: string;
   address: string | null;
 }
 
-const MAX_FILES = 20;
-
 export default function CleanerUploadClient({ jobId, address }: Props) {
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    items,
+    fileMessages,
+    uploading,
+    readyCount,
+    addFiles,
+    removeAt,
+    uploadAll,
+    retryOne,
+  } = useJobPhotoUpload(jobId);
+
+  const [retryingKey, setRetryingKey] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    return () => {
-      previews.forEach((url) => url && URL.revokeObjectURL(url));
-    };
-  }, [previews]);
-
-  const addFiles = useCallback((incoming: FileList | null) => {
-    if (!incoming || incoming.length === 0) return;
-    const list = Array.from(incoming).filter(
-      (f) => f.type.startsWith("image/") || f.type.startsWith("video/")
-    );
-    if (list.length === 0) return;
-    setError(null);
-    setFiles((prev) => [...prev, ...list].slice(0, MAX_FILES));
-    setPreviews((prev) =>
-      [
-        ...prev,
-        ...list.map((f) =>
-          f.type.startsWith("image/") ? URL.createObjectURL(f) : ""
-        ),
-      ].slice(0, MAX_FILES)
-    );
-  }, []);
-
   const onGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    addFiles(e.target.files);
+    addFiles(e.target.files ?? []);
     e.target.value = "";
   };
 
   const onCameraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    addFiles(e.target.files);
+    addFiles(e.target.files ?? []);
     e.target.value = "";
   };
 
-  const removeAt = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-    setPreviews((prev) => {
-      const url = prev[index];
-      if (url) URL.revokeObjectURL(url);
-      return prev.filter((_, i) => i !== index);
-    });
-  };
+  const handleRetry = useCallback(
+    async (key: string) => {
+      setRetryingKey(key);
+      setSubmitError(null);
+      await retryOne(key, "Cleaner (mobile)");
+      setRetryingKey(null);
+    },
+    [retryOne]
+  );
 
   const handleSubmit = async () => {
-    if (files.length === 0) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      const formData = new FormData();
-      files.forEach((f) => formData.append("files", f));
-      formData.append("uploadedBy", "Cleaner (mobile)");
+    if (readyCount === 0) return;
+    setSubmitError(null);
 
-      const res = await fetch(`/api/jobs/${jobId}/photos`, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Upload failed. Please try again.");
-      }
-      previews.forEach((url) => url && URL.revokeObjectURL(url));
-      setDone(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed. Please try again.");
-    } finally {
-      setSubmitting(false);
+    const { hasFailures } = await uploadAll("Cleaner (mobile)");
+
+    if (hasFailures) {
+      setSubmitError(
+        "Some photos did not upload. Tap Retry on each failed file, then submit again."
+      );
+      return;
     }
+
+    setDone(true);
   };
 
   if (done) {
@@ -115,7 +95,6 @@ export default function CleanerUploadClient({ jobId, address }: Props) {
 
   return (
     <div className="min-h-screen bg-vm-surface">
-      {/* Header */}
       <header className="bg-vm-navy px-5 py-5 text-center">
         <span className="font-heading text-lg font-bold uppercase tracking-widest text-vm-white">
           VelocityMaid
@@ -123,7 +102,6 @@ export default function CleanerUploadClient({ jobId, address }: Props) {
       </header>
 
       <main className="mx-auto max-w-md px-5 py-6">
-        {/* Property */}
         <div className="rounded-2xl border border-vm-border bg-vm-white p-5">
           <p className="font-body text-xs uppercase tracking-wide text-vm-muted">
             Property
@@ -138,7 +116,6 @@ export default function CleanerUploadClient({ jobId, address }: Props) {
           Upload your photos from this clean
         </h1>
 
-        {/* Camera (opens phone camera directly) */}
         <button
           type="button"
           onClick={() => cameraInputRef.current?.click()}
@@ -148,7 +125,6 @@ export default function CleanerUploadClient({ jobId, address }: Props) {
           Take a photo
         </button>
 
-        {/* Tap-to-upload area (gallery) */}
         <button
           type="button"
           onClick={() => galleryInputRef.current?.click()}
@@ -159,14 +135,14 @@ export default function CleanerUploadClient({ jobId, address }: Props) {
             Tap to choose from your photos
           </span>
           <span className="font-body text-xs text-vm-muted">
-            Photos or video · up to {MAX_FILES} files
+            Photos or video · up to {MAX_PHOTOS_PER_BATCH} files · HEIC OK
           </span>
         </button>
 
         <input
           ref={cameraInputRef}
           type="file"
-          accept="image/*,video/*"
+          accept="image/*,video/*,.heic,.heif"
           capture="environment"
           className="hidden"
           onChange={onCameraChange}
@@ -174,70 +150,51 @@ export default function CleanerUploadClient({ jobId, address }: Props) {
         <input
           ref={galleryInputRef}
           type="file"
-          accept="image/*,video/*"
+          accept="image/*,video/*,.heic,.heif"
           multiple
           className="hidden"
           onChange={onGalleryChange}
         />
 
-        {/* Thumbnails */}
-        {files.length > 0 && (
+        {items.length > 0 && (
           <div className="mt-6">
             <p className="mb-2 font-body text-sm font-medium text-vm-text">
-              {files.length} selected
+              {items.length} selected
             </p>
-            <div className="grid grid-cols-3 gap-3">
-              {files.map((file, i) => (
-                <div
-                  key={`${file.name}-${i}`}
-                  className="relative overflow-hidden rounded-xl border border-vm-border bg-vm-white"
-                >
-                  {previews[i] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={previews[i]}
-                      alt={file.name}
-                      className="h-28 w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-28 w-full items-center justify-center bg-vm-surface">
-                      <Film className="h-7 w-7 text-vm-muted" />
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeAt(i)}
-                    className="absolute right-1.5 top-1.5 rounded-full bg-vm-navy/80 p-1.5 text-vm-white"
-                    aria-label="Remove photo"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
+            <PhotoQueueGrid
+              items={items}
+              onRemove={removeAt}
+              onRetry={handleRetry}
+              retryingKey={retryingKey}
+            />
+            <PhotoQueueWarnings items={items} />
+            <PhotoQueueItemErrors items={items} />
           </div>
         )}
 
-        {error && (
-          <p className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-center font-body text-sm text-red-600">
-            {error}
+        <PhotoQueueMessages messages={fileMessages} />
+
+        {submitError && (
+          <p className="mt-4 rounded-lg bg-vm-danger-bg px-4 py-3 text-center font-body text-sm text-vm-danger">
+            {submitError}
           </p>
         )}
 
-        {/* Submit */}
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={submitting || files.length === 0}
+          disabled={uploading || readyCount === 0}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-vm-navy px-5 py-4 font-heading text-lg font-semibold text-vm-white transition-opacity active:opacity-80 disabled:opacity-40"
         >
-          {submitting ? (
+          {uploading ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
               Uploading…
             </>
-          ) : files.length > 0 ? (
-            `Submit ${files.length} Photo${files.length === 1 ? "" : "s"}`
+          ) : readyCount > 0 ? (
+            `Submit ${readyCount} Photo${readyCount === 1 ? "" : "s"}`
+          ) : items.length > 0 ? (
+            "All photos uploaded"
           ) : (
             "Submit Photos"
           )}

@@ -64,7 +64,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t border-vm-cyan/10 pt-8 text-center text-sm font-body text-white/35">
-          <p>&copy; {new Date().getFullYear()} VelocityMaid. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} VelocityMaid LLC. All rights reserved.</p>
         </div>
       </div>
     </footer>

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Sparkles, FileText, Scale, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import {
+  BUSINESS_ADDRESS,
+  BUSINESS_ADDRESS_LOCALITY,
+} from '@/lib/company/businessAddress';
 
 export const metadata: Metadata = {
   title: "Terms of Service | VelocityMaid",
@@ -191,8 +195,8 @@ export default function TermsOfService() {
             </p>
             <div className="bg-gray-50 p-6 rounded-lg">
               <p className="text-vm-text mb-2"><strong>VelocityMaid</strong></p>
-              <p className="text-vm-text mb-2">79 Main Street, Apt 7</p>
-              <p className="text-vm-text mb-2">Ludlow, VT 05149, USA</p>
+              <p className="text-vm-text mb-2">{BUSINESS_ADDRESS.street}</p>
+              <p className="text-vm-text mb-2">{BUSINESS_ADDRESS_LOCALITY}</p>
               <p className="text-vm-text mb-2">Email: <a href="mailto:hello@velocitymaid.com" className="text-vm-cyan-dark hover:underline">hello@velocitymaid.com</a></p>
               <p className="text-vm-text">Phone: <a href="tel:+18027335348" className="text-vm-cyan-dark hover:underline">(802) 733-5348</a></p>
             </div>

@@ -9,6 +9,7 @@ import "./globals.css";
 import Script from "next/script";
 import WhatsAppButton from "../components/WhatsAppButton";
 import { DemoModeBanner } from "../components/DemoModeBanner";
+import { BUSINESS_ADDRESS } from "@/lib/company/businessAddress";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -171,16 +172,16 @@ export default function RootLayout({
       "description": "VelocityMaid provides reliable home and apartment cleaning services in Vermont, specializing in move-in/out cleaning, deep cleaning, and maintenance cleaning.",
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "79 Main Street, Apt 7",
-        "addressLocality": "Ludlow",
-        "addressRegion": "VT",
-        "postalCode": "05149",
+        "streetAddress": BUSINESS_ADDRESS.street,
+        "addressLocality": BUSINESS_ADDRESS.city,
+        "addressRegion": BUSINESS_ADDRESS.state,
+        "postalCode": BUSINESS_ADDRESS.zip,
         "addressCountry": "US"
       },
       "geo": {
         "@type": "GeoCoordinates",
-        "latitude": "43.3956",
-        "longitude": "-72.7023"
+        "latitude": "43.3977",
+        "longitude": "-72.7013"
       },
       "url": "https://velocitymaid.com/vermont",
       "telephone": "+18027335348",
