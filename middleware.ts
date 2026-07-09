@@ -123,7 +123,9 @@ export async function middleware(req: NextRequest) {
   if (isProduction) {
     if (
       pathname.startsWith('/branch-owner') ||
-      pathname.startsWith('/pilot')
+      pathname.startsWith('/pilot') ||
+      pathname.startsWith('/saas') ||
+      pathname.startsWith('/customer/subscriptions')
     ) {
       return new NextResponse(null, { status: 404 });
     }

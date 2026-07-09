@@ -10,12 +10,18 @@ import { getSubscriptionByCustomerId } from '@/utils/subscriptionData';
 
 const ACTION = 'SUBSCRIPTION_PROMPT_SENT';
 
+// Subscription billing is deprioritized (recurring-plan tracking is an in-memory
+// prototype, and /customer/subscriptions is 404'd in production) — disabled until
+// that feature is actually built. Set ENABLE_SUBSCRIPTION_UPSELL=true to re-enable.
+const SUBSCRIPTION_UPSELL_ENABLED = process.env.ENABLE_SUBSCRIPTION_UPSELL === 'true';
+
 /**
  * If the customer is eligible (≥2 completed jobs in branch or any 5⭐ rating)
  * and not already prompted/subscribed, send subscription upsell WhatsApp.
  * Call after job is set to COMPLETED. Fire-and-forget; never throws.
  */
 export async function sendSubscriptionUpsellIfEligible(jobId: string): Promise<void> {
+  if (!SUBSCRIPTION_UPSELL_ENABLED) return;
   try {
     const job = await prisma.job.findUnique({
       where: { id: jobId },
