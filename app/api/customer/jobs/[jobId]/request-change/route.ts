@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readCustomerSession } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
 import { notifyAdmin } from '@/lib/notifyAdmin';
+import { nanoid } from 'nanoid';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -79,8 +80,10 @@ export async function POST(
       );
     }
 
-    // Only allow change request if status is "SCHEDULED" or "scheduled" or "pending"
-    const allowedStatuses = ['SCHEDULED', 'scheduled', 'pending', 'assigned'];
+    // Only allow change requests once the booking is a firm, upcoming commitment.
+    // Excludes RECEIVED (not yet admin-reviewed/approved — could still be rejected)
+    // and IN_PROGRESS (cleaner is actively on site; COMPLETED/CANCELLED are blocked above).
+    const allowedStatuses = ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY'];
     if (!allowedStatuses.includes(job.status)) {
       return NextResponse.json(
         { success: false, error: 'Job must be scheduled to request changes' },
@@ -126,6 +129,7 @@ export async function POST(
     // Create change request
     const changeRequest = await prisma.customerJobChangeRequest.create({
       data: {
+        id: nanoid(),
         jobId: params.jobId,
         customerId: session.customerId,
         payload,
@@ -134,7 +138,7 @@ export async function POST(
     });
 
     // Notify admin
-    notifyAdmin('JOB_CHANGE_REQUEST', {
+    await notifyAdmin('JOB_CHANGE_REQUEST', {
       jobId: params.jobId,
       customerId: session.customerId,
       customerName: job.Customer

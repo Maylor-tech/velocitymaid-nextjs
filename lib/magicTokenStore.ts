@@ -1,11 +1,14 @@
 /**
  * Magic Token Store (Database-backed)
- * 
- * Production-ready token storage using Prisma.
- * Provides durability, replay protection, and auditability.
+ *
+ * Stores one-click magic-link tokens in the `CustomerLoginToken` table — the
+ * same table the email+code login flow uses (`code` holds either a 6-digit
+ * login code or a long random hex magic-link token; `used`/`expiresAt` gate
+ * both the same way). There is no separate `MagicLoginToken` model.
  */
 
 import { prisma } from './prisma';
+import { nanoid } from 'nanoid';
 
 export interface MagicTokenData {
   customerId: string;
@@ -20,10 +23,11 @@ export async function storeMagicToken(
   token: string,
   data: MagicTokenData
 ): Promise<void> {
-  await prisma.magicLoginToken.create({
+  await prisma.customerLoginToken.create({
     data: {
-      token,
+      id: nanoid(),
       customerId: data.customerId,
+      code: token,
       expiresAt: new Date(data.expiresAt),
     },
   });
@@ -36,34 +40,28 @@ export async function consumeMagicToken(
   token: string
 ): Promise<MagicTokenData | null> {
   // Find unused, non-expired token
-  const tokenRecord = await prisma.magicLoginToken.findUnique({
-    where: { token },
-    include: { customer: { select: { id: true, email: true } } },
+  const tokenRecord = await prisma.customerLoginToken.findFirst({
+    where: {
+      code: token,
+      used: false,
+      expiresAt: { gt: new Date() },
+    },
+    include: { Customer: { select: { id: true, email: true } } },
   });
 
   if (!tokenRecord) {
     return null;
   }
 
-  // Check if already used
-  if (tokenRecord.usedAt) {
-    return null; // Token already consumed
-  }
-
-  // Check if expired
-  if (tokenRecord.expiresAt < new Date()) {
-    return null;
-  }
-
   // Mark as used (atomic update)
-  await prisma.magicLoginToken.update({
+  await prisma.customerLoginToken.update({
     where: { id: tokenRecord.id },
-    data: { usedAt: new Date() },
+    data: { used: true },
   });
 
   return {
-    customerId: tokenRecord.customer.id,
-    email: tokenRecord.customer.email,
+    customerId: tokenRecord.Customer.id,
+    email: tokenRecord.Customer.email,
     expiresAt: tokenRecord.expiresAt.getTime(),
   };
 }
@@ -72,7 +70,7 @@ export async function consumeMagicToken(
  * Clean up expired tokens (call from cron job)
  */
 export async function cleanupExpiredTokens(): Promise<number> {
-  const result = await prisma.magicLoginToken.deleteMany({
+  const result = await prisma.customerLoginToken.deleteMany({
     where: {
       expiresAt: {
         lt: new Date(),
@@ -89,10 +87,10 @@ export async function cleanupExpiredTokens(): Promise<number> {
 export async function countActiveTokensForCustomer(
   customerId: string
 ): Promise<number> {
-  return await prisma.magicLoginToken.count({
+  return await prisma.customerLoginToken.count({
     where: {
       customerId,
-      usedAt: null,
+      used: false,
       expiresAt: {
         gt: new Date(),
       },
