@@ -79,10 +79,17 @@ export async function calculateBookingQuoteAsync(
   }
 
   // Get configuration
-  const { config, currency, branchId } = await getBranchServicePricingConfig(
+  const { config, currency, branchId, error: pricingError } = await getBranchServicePricingConfig(
     input.branchSlug,
     input.serviceType
   );
+
+  if (pricingError || !config) {
+    return {
+      quote: null,
+      errors: [{ field: 'serviceType', message: pricingError ?? 'Pricing is not available for this service.' }],
+    };
+  }
 
   const lineItems: PricingLineItem[] = [];
   const warnings: string[] = [];

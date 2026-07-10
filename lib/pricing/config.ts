@@ -21,13 +21,38 @@ export interface BranchServicePricingConfig {
 }
 
 /**
+ * Some BranchServicePackage rows predate the ServiceType enum and use a
+ * legacy code that doesn't match it literally (e.g. New Jersey's "Basic
+ * Clean" row is still coded BASIC_CLEAN, not STANDARD). Only add an alias
+ * here when the underlying data genuinely uses a different code — never as
+ * a substitute for a missing price.
+ */
+const SERVICE_TYPE_PACKAGE_CODE_ALIASES: Partial<Record<ServiceType, string>> = {
+  STANDARD: 'BASIC_CLEAN',
+};
+
+/**
+ * PROPERTY_WALKTHROUGH has always been priced independently of
+ * config.baseRate — calculateBookingQuoteAsync() overrides baseAmount to a
+ * flat $75 for it regardless of what this function returns. It's exempted
+ * from the "no matching package" failure below so that behavior, which
+ * already works today, isn't disturbed by this change.
+ */
+const SERVICE_TYPES_PRICED_ELSEWHERE = new Set<ServiceType>(['PROPERTY_WALKTHROUGH']);
+
+/**
  * Get pricing configuration for a branch and service type
  * Falls back to sensible defaults if branch/config not found
  */
 export async function getBranchServicePricingConfig(
   branchSlug: string | null,
   serviceType: ServiceType | null
-): Promise<{ config: BranchServicePricingConfig; currency: string; branchId: string | null }> {
+): Promise<{
+  config: BranchServicePricingConfig | null;
+  currency: string;
+  branchId: string | null;
+  error?: string;
+}> {
   let branchId: string | null = null;
   let currency = 'USD';
 
@@ -47,7 +72,40 @@ export async function getBranchServicePricingConfig(
 
         // If branch has a pricing model, use it
         if (branch.PricingModel) {
-          const baseRate = Number(branch.PricingModel.baseRate);
+          let baseRate: number;
+
+          if (serviceType && SERVICE_TYPES_PRICED_ELSEWHERE.has(serviceType)) {
+            // Priced downstream in calculateQuote.ts; this value is never used.
+            baseRate = 0;
+          } else {
+            const candidateCodes = [
+              serviceType,
+              serviceType ? SERVICE_TYPE_PACKAGE_CODE_ALIASES[serviceType] : undefined,
+            ].filter((c): c is string => Boolean(c));
+
+            const pkg = candidateCodes.length
+              ? await prisma.branchServicePackage.findFirst({
+                  where: {
+                    branchId: branch.id,
+                    code: { in: candidateCodes },
+                    isActive: true,
+                  },
+                })
+              : null;
+
+            if (!pkg) {
+              return {
+                branchId,
+                currency,
+                config: null,
+                error:
+                  'No configured price for this service at this location. A manual quote is required — please contact support.',
+              };
+            }
+
+            baseRate = Number(pkg.basePrice);
+          }
+
           const minHours = branch.PricingModel.minHours || 2;
           const hourlyRate = Number(branch.PricingModel.extraHourRate || baseRate / minHours);
 
