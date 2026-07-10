@@ -12,6 +12,7 @@ interface PricingPlan {
   cta: string;
   href: string;
   highlight: boolean;
+  startingAt?: boolean;
 }
 
 const njPricing: PricingPlan[] = [
@@ -67,10 +68,11 @@ const njPricing: PricingPlan[] = [
 
 const vermontPricing: PricingPlan[] = [
   {
-    name: "Turnover clean",
-    price: "$225",
+    name: "Vacation rental turnover",
+    price: "$175",
     per: "per turn",
-    description: "Between-guest reset for STRs",
+    startingAt: true,
+    description: "Between-guest reset for STRs — studio/1BR up to 5BR",
     features: [
       "Full kitchen reset",
       "All bathrooms cleaned",
@@ -83,25 +85,10 @@ const vermontPricing: PricingPlan[] = [
     highlight: false,
   },
   {
-    name: "Large property",
-    price: "$275",
-    per: "per turn",
-    description: "4+ bed homes & extended area",
-    features: [
-      "Everything in Turnover",
-      "Travel premium included",
-      "Linen change add-on",
-      "Priority scheduling",
-      "Dedicated host support",
-    ],
-    cta: "Book Vermont",
-    href: "/vermont/host-intake",
-    highlight: true,
-  },
-  {
-    name: "Deep clean",
-    price: "$375",
+    name: "Deep cleaning",
+    price: "$300",
     per: "per visit",
+    startingAt: true,
     description: "First visit or post-season reset",
     features: [
       "Full-day service",
@@ -109,6 +96,23 @@ const vermontPricing: PricingPlan[] = [
       "Baseboards & window sills",
       "Mudroom & laundry room",
       "Detailed photo report",
+    ],
+    cta: "Get a quote",
+    href: "/vermont/host-intake",
+    highlight: true,
+  },
+  {
+    name: "Move in / move out",
+    price: "$450",
+    per: "per service",
+    startingAt: true,
+    description: "Full property reset",
+    features: [
+      "Everything in Deep Cleaning",
+      "Inside all cabinets",
+      "Walls spot-cleaned",
+      "Appliances inside/out",
+      "Deposit-ready finish",
     ],
     cta: "Get a quote",
     href: "/vermont/host-intake",
@@ -177,6 +181,11 @@ export default function PricingSection() {
                 {plan.name}
               </h3>
               <div className="mb-4">
+                {plan.startingAt && (
+                  <div className="text-xs font-body font-semibold uppercase tracking-wide text-vm-muted mb-1">
+                    Starting at
+                  </div>
+                )}
                 <span className="text-4xl font-heading font-bold text-vm-cyan">
                   {plan.price}
                 </span>
@@ -230,9 +239,32 @@ export default function PricingSection() {
           </p>
         )}
 
-        <p className="text-center text-vm-muted font-body mt-8">
-          *Prices may vary based on home size and condition. Contact us for a
-          custom quote.
+        {market === "vermont" && (
+          <div className="mt-10 max-w-2xl mx-auto rounded-2xl border border-vm-navy/10 bg-vm-white p-6 sm:p-8 text-center">
+            <h3 className="text-lg font-heading font-bold text-vm-navy mb-2">
+              Project Cleaning &amp; Custom Quotes
+            </h3>
+            <p className="text-sm text-vm-muted font-body leading-relaxed">
+              Jobs requiring more than one cleaner, excessive debris,
+              post-construction cleanup, neglected properties, estate
+              cleanouts, or labor beyond standard service levels are quoted
+              individually — not covered by the flat rates above.
+            </p>
+            <a
+              href="/vermont/host-intake"
+              className="inline-block mt-4 text-vm-cyan font-heading font-semibold hover:underline"
+            >
+              Get a custom quote →
+            </a>
+          </div>
+        )}
+
+        <p className="text-center text-vm-muted font-body mt-8 max-w-2xl mx-auto">
+          Pricing is based on the property size, condition, occupancy, labor
+          requirements, and service scope represented at booking. Excessive
+          soil or trash, construction debris, biohazards, pet waste,
+          additional labor requirements, or conditions requiring additional
+          cleaners may result in an adjusted quote before work begins.
         </p>
       </div>
     </section>

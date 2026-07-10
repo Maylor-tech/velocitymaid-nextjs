@@ -295,6 +295,30 @@ export default function HostIntakeForm() {
           </p>
         </div>
 
+        <div className="max-w-[560px] mx-auto mb-8 rounded-xl border border-vm-border bg-white p-6 text-left">
+          <h2 className="font-heading font-semibold text-vm-navy text-sm uppercase tracking-wide mb-3">
+            Reference pricing
+          </h2>
+          <ul className="font-body text-sm text-vm-text space-y-1.5 mb-4">
+            <li>Vacation rental turnover — starting at $175 per turn</li>
+            <li>Deep cleaning — starting at $300 per visit</li>
+            <li>Move in / move out — starting at $450 per service</li>
+          </ul>
+          <p className="font-body text-sm text-vm-muted leading-relaxed mb-2">
+            <strong className="text-vm-navy">Project cleaning &amp; custom quotes:</strong>{" "}
+            properties needing more than one cleaner, excessive debris,
+            post-construction cleanup, neglected conditions, estate cleanouts,
+            or labor beyond standard service levels are quoted individually —
+            this is common for larger or first-visit Vermont properties.
+          </p>
+          <p className="font-body text-xs text-vm-muted leading-relaxed">
+            Your final quote is based on the property size, condition,
+            occupancy, labor requirements, and service scope described below.
+            Conditions found to differ once we&apos;re on site may result in an
+            adjusted quote before work begins.
+          </p>
+        </div>
+
         <form
           onSubmit={handleSubmit}
           noValidate
