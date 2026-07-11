@@ -1,5 +1,6 @@
 import { resend, getResendFromEmail } from "./resendClient";
 import { prisma } from "@/lib/prisma";
+import { logIntegrationEvent } from "@/lib/google/integrationLog";
 
 export interface CleanCompletePhoto {
   url: string;
@@ -316,8 +317,30 @@ export async function sendCleanCompleteEmail(
     });
 
     if (error) {
+      logIntegrationEvent({
+        jobId: params.jobId,
+        channel: 'EMAIL',
+        action: 'SEND_CLEAN_COMPLETE_EMAIL',
+        provider: 'RESEND',
+        status: 'FAILED',
+        recipient: params.toEmail,
+        templateKey: 'clean_complete',
+        triggeredBy: 'system',
+        errorSummary: error.message,
+      }).catch(() => {});
       return { sent: false, error: error.message };
     }
+
+    logIntegrationEvent({
+      jobId: params.jobId,
+      channel: 'EMAIL',
+      action: 'SEND_CLEAN_COMPLETE_EMAIL',
+      provider: 'RESEND',
+      status: 'SUCCESS',
+      recipient: params.toEmail,
+      templateKey: 'clean_complete',
+      triggeredBy: 'system',
+    }).catch(() => {});
 
     // Schedule the 3-day follow-up review request after a successful send.
     if (params.jobId) {

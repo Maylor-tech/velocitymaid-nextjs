@@ -1,4 +1,5 @@
 import { resend, getResendFromEmail } from "./resendClient";
+import { logIntegrationEvent } from "@/lib/google/integrationLog";
 
 export interface SendQuoteEmailParams {
   to: string;
@@ -39,8 +40,28 @@ export async function sendQuoteEmail(
     });
 
     if (error) {
+      logIntegrationEvent({
+        channel: 'EMAIL',
+        action: 'SEND_QUOTE_EMAIL',
+        provider: 'RESEND',
+        status: 'FAILED',
+        recipient: to,
+        templateKey: 'quote_email',
+        triggeredBy: 'system',
+        errorSummary: error.message,
+      }).catch(() => {});
       return { sent: false, error: error.message || "Failed to send email" };
     }
+
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_QUOTE_EMAIL',
+      provider: 'RESEND',
+      status: 'SUCCESS',
+      recipient: to,
+      templateKey: 'quote_email',
+      triggeredBy: 'system',
+    }).catch(() => {});
 
     return { sent: true, id: data?.id };
   } catch (err: unknown) {

@@ -1,4 +1,5 @@
 import { resend, getResendFromEmail } from './resendClient';
+import { logIntegrationEvent } from '@/lib/google/integrationLog';
 
 function firstName(fullName: string): string {
   return fullName.trim().split(/\s+/)[0] || 'there';
@@ -54,12 +55,29 @@ VelocityMaid`;
       text,
       html: text.replace(/\n/g, '<br>'),
     });
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_INVOICE_OVERDUE_REMINDER_EMAIL',
+      provider: 'RESEND',
+      status: 'SUCCESS',
+      recipient: params.toEmail,
+      templateKey: 'invoice_overdue_reminder',
+      triggeredBy: 'cron',
+    }).catch(() => {});
     return { sent: true };
   } catch (err) {
-    return {
-      sent: false,
-      error: err instanceof Error ? err.message : 'Send failed',
-    };
+    const message = err instanceof Error ? err.message : 'Send failed';
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_INVOICE_OVERDUE_REMINDER_EMAIL',
+      provider: 'RESEND',
+      status: 'FAILED',
+      recipient: params.toEmail,
+      templateKey: 'invoice_overdue_reminder',
+      triggeredBy: 'cron',
+      errorSummary: message,
+    }).catch(() => {});
+    return { sent: false, error: message };
   }
 }
 
@@ -97,12 +115,29 @@ VelocityMaid`;
       text,
       html: text.replace(/\n/g, '<br>'),
     });
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_REBOOKING_REMINDER_EMAIL',
+      provider: 'RESEND',
+      status: 'SUCCESS',
+      recipient: params.toEmail,
+      templateKey: 'rebooking_reminder',
+      triggeredBy: 'cron',
+    }).catch(() => {});
     return { sent: true };
   } catch (err) {
-    return {
-      sent: false,
-      error: err instanceof Error ? err.message : 'Send failed',
-    };
+    const message = err instanceof Error ? err.message : 'Send failed';
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_REBOOKING_REMINDER_EMAIL',
+      provider: 'RESEND',
+      status: 'FAILED',
+      recipient: params.toEmail,
+      templateKey: 'rebooking_reminder',
+      triggeredBy: 'cron',
+      errorSummary: message,
+    }).catch(() => {});
+    return { sent: false, error: message };
   }
 }
 
@@ -135,11 +170,28 @@ Founder, VelocityMaid
       text,
       html: text.replace(/\n/g, '<br>'),
     });
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_LEAD_FOLLOWUP_EMAIL',
+      provider: 'RESEND',
+      status: 'SUCCESS',
+      recipient: params.toEmail,
+      templateKey: 'lead_followup',
+      triggeredBy: 'cron',
+    }).catch(() => {});
     return { sent: true };
   } catch (err) {
-    return {
-      sent: false,
-      error: err instanceof Error ? err.message : 'Send failed',
-    };
+    const message = err instanceof Error ? err.message : 'Send failed';
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_LEAD_FOLLOWUP_EMAIL',
+      provider: 'RESEND',
+      status: 'FAILED',
+      recipient: params.toEmail,
+      templateKey: 'lead_followup',
+      triggeredBy: 'cron',
+      errorSummary: message,
+    }).catch(() => {});
+    return { sent: false, error: message };
   }
 }

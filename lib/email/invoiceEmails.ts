@@ -5,6 +5,7 @@ import {
   buildInvoiceBrandedEmailHtml,
   buildInvoiceBrandedEmailText,
 } from './templates/invoiceBrandedEmail';
+import { logIntegrationEvent } from '@/lib/google/integrationLog';
 
 function appBaseUrl(): string {
   return (
@@ -29,6 +30,16 @@ export async function sendInvoiceSentEmail(
     html,
     text,
   });
+  logIntegrationEvent({
+    jobId: invoice.jobId,
+    channel: 'EMAIL',
+    action: 'SEND_INVOICE_SENT_EMAIL',
+    provider: 'RESEND',
+    status: 'SUCCESS',
+    recipient: invoice.clientEmail,
+    templateKey: 'invoice_sent',
+    triggeredBy: 'system',
+  }).catch(() => {});
   return { sent: true };
 }
 
@@ -58,6 +69,16 @@ export async function sendInvoiceReceiptEmail(
     html,
     text,
   });
+  logIntegrationEvent({
+    jobId: invoice.jobId,
+    channel: 'EMAIL',
+    action: 'SEND_INVOICE_RECEIPT_EMAIL',
+    provider: 'RESEND',
+    status: 'SUCCESS',
+    recipient: invoice.clientEmail,
+    templateKey: 'invoice_receipt',
+    triggeredBy: 'system',
+  }).catch(() => {});
   return { sent: true };
 }
 
@@ -78,6 +99,16 @@ export async function sendInvoiceReminderEmail(
     html,
     text,
   });
+  logIntegrationEvent({
+    jobId: invoice.jobId,
+    channel: 'EMAIL',
+    action: 'SEND_INVOICE_REMINDER_EMAIL',
+    provider: 'RESEND',
+    status: 'SUCCESS',
+    recipient: invoice.clientEmail,
+    templateKey: 'invoice_reminder',
+    triggeredBy: 'cron',
+  }).catch(() => {});
   return { sent: true };
 }
 
@@ -149,5 +180,15 @@ COME HOME TO CLEAN.`;
     html,
     text,
   });
+  logIntegrationEvent({
+    jobId: params.invoice.jobId,
+    channel: 'EMAIL',
+    action: 'SEND_PAYMENT_CONFIRMATION_EMAIL',
+    provider: 'RESEND',
+    status: 'SUCCESS',
+    recipient: params.invoice.clientEmail,
+    templateKey: 'payment_confirmation',
+    triggeredBy: 'webhook',
+  }).catch(() => {});
   return { sent: true };
 }

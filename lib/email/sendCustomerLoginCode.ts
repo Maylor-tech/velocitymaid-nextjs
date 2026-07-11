@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { colors } from "@/lib/brand/colors";
 import { getResendFromEmail } from "@/lib/email/resendClient";
+import { logIntegrationEvent } from "@/lib/google/integrationLog";
 
 function getResend(): Resend | null {
   if (!process.env.RESEND_API_KEY) return null;
@@ -37,10 +38,30 @@ export async function sendCustomerLoginCodeEmail(params: {
       `,
       text: `Your VelocityMaid sign-in code is: ${code}\n\nThis code expires in ${expiresMinutes} minutes.`,
     });
+    // Note: the code itself is never logged, only the send attempt.
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_CUSTOMER_LOGIN_CODE_EMAIL',
+      provider: 'RESEND',
+      status: 'SUCCESS',
+      recipient: email,
+      templateKey: 'customer_login_code',
+      triggeredBy: 'system',
+    }).catch(() => {});
     return { sent: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to send email";
     console.error("[CUSTOMER_LOGIN_CODE_EMAIL]", message);
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_CUSTOMER_LOGIN_CODE_EMAIL',
+      provider: 'RESEND',
+      status: 'FAILED',
+      recipient: email,
+      templateKey: 'customer_login_code',
+      triggeredBy: 'system',
+      errorSummary: message,
+    }).catch(() => {});
     return { sent: false, error: message };
   }
 }

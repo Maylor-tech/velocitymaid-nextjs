@@ -1,4 +1,5 @@
 import { resend, getResendFromEmail } from "./resendClient";
+import { logIntegrationEvent } from "@/lib/google/integrationLog";
 
 export interface SendPortalInviteEmailParams {
   toEmail: string;
@@ -159,8 +160,27 @@ export async function sendPortalInviteEmail(
       html,
     });
     if (error) {
+      logIntegrationEvent({
+        channel: 'EMAIL',
+        action: 'SEND_PORTAL_INVITE_EMAIL',
+        provider: 'RESEND',
+        status: 'FAILED',
+        recipient: params.toEmail,
+        templateKey: 'portal_invite',
+        triggeredBy: 'admin',
+        errorSummary: error.message,
+      }).catch(() => {});
       return { sent: false, error: error.message };
     }
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_PORTAL_INVITE_EMAIL',
+      provider: 'RESEND',
+      status: 'SUCCESS',
+      recipient: params.toEmail,
+      templateKey: 'portal_invite',
+      triggeredBy: 'admin',
+    }).catch(() => {});
     return { sent: true, id: data?.id };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to send email";

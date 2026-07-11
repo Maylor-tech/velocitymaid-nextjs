@@ -1,5 +1,6 @@
 import { getCleanerHandbookUrl } from '@/lib/cleaners/handbookUrl';
 import { resend, getResendFromEmail } from './resendClient';
+import { logIntegrationEvent } from '@/lib/google/integrationLog';
 
 const NAVY = '#0F1C2E';
 const CYAN = '#00C2CB';
@@ -78,6 +79,16 @@ Once your application is reviewed and approved, you will receive the full Veloci
     text,
   });
 
+  logIntegrationEvent({
+    channel: 'EMAIL',
+    action: 'SEND_CLEANER_APPLICATION_CONFIRMATION',
+    provider: 'RESEND',
+    status: 'SUCCESS',
+    recipient: params.toEmail,
+    templateKey: 'cleaner_application_confirmation',
+    triggeredBy: 'webhook',
+  }).catch(() => {});
+
   return { sent: true };
 }
 
@@ -121,6 +132,16 @@ export async function sendCleanerApplicationInternalNotification(params: {
     subject: `New VelocityMaid Cleaner Application — ${params.applicantName}`,
     html,
   });
+
+  logIntegrationEvent({
+    channel: 'EMAIL',
+    action: 'SEND_CLEANER_APPLICATION_INTERNAL_NOTIFICATION',
+    provider: 'RESEND',
+    status: 'SUCCESS',
+    recipient: opsEmail,
+    templateKey: 'cleaner_application_internal_notification',
+    triggeredBy: 'webhook',
+  }).catch(() => {});
 
   return { sent: true };
 }
@@ -201,6 +222,16 @@ COME HOME TO CLEAN.`;
     html,
     text,
   });
+
+  logIntegrationEvent({
+    channel: 'EMAIL',
+    action: 'SEND_CLEANER_APPROVAL_EMAIL',
+    provider: 'RESEND',
+    status: 'SUCCESS',
+    recipient: params.toEmail,
+    templateKey: 'cleaner_approval',
+    triggeredBy: 'admin',
+  }).catch(() => {});
 
   return { sent: true };
 }

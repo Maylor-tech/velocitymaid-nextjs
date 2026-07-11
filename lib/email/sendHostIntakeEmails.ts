@@ -1,4 +1,5 @@
 import { resend, getResendFromEmail } from "./resendClient";
+import { logIntegrationEvent } from "@/lib/google/integrationLog";
 import { HOST_WELCOME_PACKET_URL } from "@/lib/hostIntake/constants";
 import {
   formatHostIntakeHtml,
@@ -92,6 +93,16 @@ VelocityMaid Team`;
     text,
   });
 
+  logIntegrationEvent({
+    channel: 'EMAIL',
+    action: 'SEND_HOST_INTAKE_CONFIRMATION',
+    provider: 'RESEND',
+    status: 'SUCCESS',
+    recipient: payload.email,
+    templateKey: 'host_intake_confirmation',
+    triggeredBy: 'webhook',
+  }).catch(() => {});
+
   return { sent: true };
 }
 
@@ -112,6 +123,16 @@ export async function sendHostIntakeInternalNotification(
     html: formatHostIntakeHtml(payload),
     text: formatHostIntakeText(payload),
   });
+
+  logIntegrationEvent({
+    channel: 'EMAIL',
+    action: 'SEND_HOST_INTAKE_INTERNAL_NOTIFICATION',
+    provider: 'RESEND',
+    status: 'SUCCESS',
+    recipient: NOTIFICATION_EMAIL,
+    templateKey: 'host_intake_internal_notification',
+    triggeredBy: 'webhook',
+  }).catch(() => {});
 
   return { sent: true };
 }

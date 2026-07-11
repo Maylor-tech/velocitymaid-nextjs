@@ -1,5 +1,6 @@
 import { resend, getResendFromEmail } from "./resendClient";
 import { getGoogleReviewUrl } from "@/lib/reviews/googleReviewUrl";
+import { logIntegrationEvent } from "@/lib/google/integrationLog";
 
 export { DEFAULT_GOOGLE_REVIEW_URL } from "@/lib/reviews/googleReviewUrl";
 
@@ -131,8 +132,27 @@ export async function sendReviewRequestEmail(
       html,
     });
     if (error) {
+      logIntegrationEvent({
+        channel: 'EMAIL',
+        action: 'SEND_REVIEW_REQUEST_EMAIL',
+        provider: 'RESEND',
+        status: 'FAILED',
+        recipient: params.toEmail,
+        templateKey: 'review_request',
+        triggeredBy: 'cron',
+        errorSummary: error.message,
+      }).catch(() => {});
       return { sent: false, error: error.message };
     }
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_REVIEW_REQUEST_EMAIL',
+      provider: 'RESEND',
+      status: 'SUCCESS',
+      recipient: params.toEmail,
+      templateKey: 'review_request',
+      triggeredBy: 'cron',
+    }).catch(() => {});
     return { sent: true, id: data?.id };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to send email";

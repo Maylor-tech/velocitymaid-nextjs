@@ -8,6 +8,7 @@ import {
   DollarSign,
   Settings,
   Target,
+  Bell,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -69,6 +70,12 @@ export const ADMIN_NAV: AdminNavItem[] = [
       p.startsWith('/admin/payouts') ||
       p.startsWith('/admin/taxes') ||
       p.startsWith('/admin/invoices'),
+  },
+  {
+    href: '/admin/notifications',
+    label: 'Notifications',
+    icon: Bell,
+    match: (p) => p.startsWith('/admin/notifications'),
   },
   {
     href: '/admin/settings',
