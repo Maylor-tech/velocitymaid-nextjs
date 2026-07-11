@@ -1,5 +1,6 @@
 import type { InvoiceStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { nextVmReference } from '@/lib/billing/numbering';
 
 export interface InvoiceLineInput {
   description: string;
@@ -57,24 +58,16 @@ function endOfDay(d: Date): Date {
   return x;
 }
 
-export async function nextInvoiceNumber(): Promise<string> {
-  const year = new Date().getFullYear();
-  const prefix = `VM-${year}-`;
-
-  const latest = await prisma.invoice.findFirst({
-    where: { invoiceNumber: { startsWith: prefix } },
-    orderBy: { invoiceNumber: 'desc' },
-    select: { invoiceNumber: true },
-  });
-
-  let seq = 1;
-  if (latest?.invoiceNumber) {
-    const part = latest.invoiceNumber.slice(prefix.length);
-    const parsed = parseInt(part, 10);
-    if (!Number.isNaN(parsed)) seq = parsed + 1;
-  }
-
-  return `${prefix}${String(seq).padStart(4, '0')}`;
+/**
+ * Returns the invoice number to use. If the invoice is linked to a job that
+ * already has a jobReference (the normal case — minted once at job
+ * creation), that same value is reused so the job and its invoice show the
+ * identical VM-YYYY-#### code. Only mints a new number when there's no
+ * existing reference to reuse (standalone invoices with no linked job).
+ */
+export async function nextInvoiceNumber(existingReference?: string | null): Promise<string> {
+  if (existingReference) return existingReference;
+  return nextVmReference();
 }
 
 export function decimalToNumber(value: unknown): number {

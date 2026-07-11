@@ -6,6 +6,7 @@ import { getAuthenticatedCleaner } from '@/lib/cleanerAuth';
 import { requireCleanerJobAssignment } from '@/lib/auth/requireRole';
 import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
 import { assertTransition } from '@/lib/jobStatus';
+import { createAdminNotification, adminNotificationHelpers } from '@/lib/notifications/adminNotificationCenter';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -80,6 +81,14 @@ export async function PATCH(
         newStatus: JobStatus.ON_THE_WAY,
       },
     });
+
+    createAdminNotification({
+      type: 'CLEANER_ACCEPTED',
+      severity: 'INFO',
+      message: `Cleaner accepted job ${job.jobReference || jobId} and is on the way`,
+      jobId,
+      actionUrl: adminNotificationHelpers.adminJobLink(jobId),
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

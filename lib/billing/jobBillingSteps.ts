@@ -10,7 +10,7 @@ import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
 import { sendInvoiceSentEmail } from '@/lib/email/invoiceEmails';
 import { recordInvoicePayment } from '@/lib/invoices/invoiceService';
 import type { InvoicePaymentMethod } from '@prisma/client';
-import { nextReportNumber } from './numbering';
+import { nextReportNumber, ensureJobReference } from './numbering';
 import { serializeCompletionReport, type ReportPhoto } from './serializeCompletionReport';
 import { serializeReceipt } from './serializeReceipt';
 import {
@@ -294,9 +294,11 @@ export async function generateInvoiceFromJob(jobId: string) {
   const dueDate = new Date(completedAt);
   dueDate.setDate(dueDate.getDate() + 7);
 
+  const jobReference = await ensureJobReference(job.id, job.jobReference);
+
   const invoice = await prisma.invoice.create({
     data: {
-      invoiceNumber: await nextInvoiceNumber(),
+      invoiceNumber: await nextInvoiceNumber(jobReference),
       jobId: job.id,
       customerId: job.customerId,
       clientName,

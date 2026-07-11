@@ -137,7 +137,7 @@ export async function GET(
             }
           : null,
         // Additional fields for compatibility
-        number: job.sessionId || undefined,
+        number: job.jobReference || job.sessionId || undefined,
         serviceType: job.serviceType || undefined,
         scheduledDate: job.preferredDate?.toISOString() || undefined,
         timeWindow: job.preferredTime || undefined,

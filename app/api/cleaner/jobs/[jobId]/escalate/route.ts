@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedCleaner } from "@/lib/cleanerAuth";
 import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
 import { escalateJobIssue } from "@/lib/pilot/dayOfJob";
+import { createAdminNotification, adminNotificationHelpers } from "@/lib/notifications/adminNotificationCenter";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,14 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    createAdminNotification({
+      type: "JOB_ISSUE_REPORTED",
+      severity: issueType === "TECHNICAL_ISSUE" ? "INFO" : "CRITICAL",
+      message: `Cleaner reported ${issueType.replace(/_/g, " ").toLowerCase()} on job ${jobId}: ${reason}`,
+      jobId,
+      actionUrl: adminNotificationHelpers.adminJobLink(jobId),
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

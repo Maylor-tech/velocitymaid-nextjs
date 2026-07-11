@@ -367,6 +367,11 @@ model JamaicaPayout {
 model Job {
   id                       String                     @id
   sessionId                String?                    @unique
+  jobReference             String?                    @unique // "VM-2026-0001" — master cross-system reference, reused by Invoice
+  driveFolderId            String?
+  driveFolderUrl           String?
+  calendarEventId          String?
+  calendarEventStatus      String?                    // synced | pending | cancelled | error
   branchId                 String
   customerId               String?
   assignedCleanerId        String?
@@ -422,6 +427,8 @@ model Job {
   CompletionReport         CompletionReport?
   Invoice                  Invoice?
   Receipts                 Receipt[]
+  IntegrationEventLog      IntegrationEventLog[]
+  AdminNotification        AdminNotification[]
   User                     User?                      @relation(fields: [assignedCleanerId], references: [id])
   ApprovedBy               User?                      @relation("JobApprovedBy", fields: [approvedById], references: [id])
   Branch                   Branch                     @relation(fields: [branchId], references: [id])
@@ -1703,9 +1710,58 @@ enum TravelZone {
 }
 
 model AdminPlatformSettings {
-  id                   String   @id @default("default")
-  invoiceQuickAddItems Json?
-  updatedAt            DateTime @updatedAt
+  id                      String    @id @default("default")
+  invoiceQuickAddItems    Json?
+  googleDriveConnected    Boolean   @default(false)
+  googleCalendarConnected Boolean   @default(false)
+  googleDriveRootFolderId String?
+  googleCalendarId        String?
+  lastSyncError           String?
+  lastSyncErrorAt         DateTime?
+  updatedAt               DateTime  @updatedAt
 
   @@map("admin_platform_settings")
+}
+
+/// Records every attempted outbound integration action (email send, Drive
+/// folder creation, Calendar event sync) — one table for both the
+/// send-attempt log and the integration activity log, since both answer
+/// "did this external action succeed."
+model IntegrationEventLog {
+  id           String   @id @default(cuid())
+  jobId        String?
+  channel      String // EMAIL | DRIVE | CALENDAR
+  action       String // e.g. "SEND_CLEANER_ASSIGNMENT_EMAIL", "CREATE_DRIVE_FOLDER"
+  provider     String // RESEND | GOOGLE_DRIVE | GOOGLE_CALENDAR
+  status       String // SUCCESS | FAILED
+  recipient    String?
+  templateKey  String?
+  triggeredBy  String // cron | webhook | admin | system
+  errorSummary String?
+  createdAt    DateTime @default(now())
+  Job          Job?     @relation(fields: [jobId], references: [id])
+
+  @@index([jobId])
+  @@index([channel])
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// Admin-facing notification center — distinct from IntegrationEventLog:
+/// this is actionable and has read state, not just a raw attempt record.
+model AdminNotification {
+  id        String    @id @default(cuid())
+  type      String // NEW_QUOTE | DEPOSIT_RECEIVED | CLEANER_ASSIGNED | CLEANER_ACCEPTED | ...
+  severity  String // INFO | WARNING | CRITICAL
+  status    String    @default("OPEN") // OPEN | ACKNOWLEDGED
+  jobId     String?
+  message   String
+  actionUrl String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  Job       Job?      @relation(fields: [jobId], references: [id])
+
+  @@index([status])
+  @@index([severity])
+  @@index([createdAt])
 }

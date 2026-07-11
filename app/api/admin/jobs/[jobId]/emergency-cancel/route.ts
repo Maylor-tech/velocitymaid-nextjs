@@ -12,6 +12,7 @@ import { requireRole } from '@/lib/auth/requireRole';
 import { sendEmergencyCancelNoticeForJob } from '@/lib/notifications/emergencyCancelNotice';
 import { prisma } from '@/lib/prisma';
 import { JobStatus } from '@prisma/client';
+import { cancelJobCalendarEventById } from '@/lib/google/calendar';
 
 export async function POST(
   request: NextRequest,
@@ -52,6 +53,9 @@ export async function POST(
         cancellationReason: 'Emergency cancellation',
       },
     });
+
+    // Fire-and-forget: mark the calendar event cancelled, not deleted.
+    cancelJobCalendarEventById(jobId).catch(() => {});
 
     const sent = await sendEmergencyCancelNoticeForJob(jobId);
     return NextResponse.json({ ok: true, sent });

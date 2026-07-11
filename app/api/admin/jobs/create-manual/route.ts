@@ -16,6 +16,7 @@ import { JobStatus, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
 import { geocodeCustomerInBackground } from "@/lib/geocoding/geocodeCustomer";
+import { nextVmReference } from "@/lib/billing/numbering";
 
 interface ManualJobBody {
   clientFirstName?: string;
@@ -266,9 +267,12 @@ export async function POST(request: NextRequest) {
     const customerName =
       `${clientFirstName}${clientLastName ? ` ${clientLastName}` : ""}`.trim();
 
+    const jobReference = await nextVmReference();
+
     const job = await prisma.job.create({
       data: {
         id: randomUUID(),
+        jobReference,
         Branch: { connect: { id: branch.id } },
         Customer: { connect: { id: customer.id } },
         customerName,

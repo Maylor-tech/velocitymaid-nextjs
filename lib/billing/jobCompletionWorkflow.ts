@@ -3,7 +3,8 @@ import { loadJobTeamMembers } from '@/lib/cleaners/internalCleanerService';
 import { nextInvoiceNumber, decimalToNumber, computeBalanceDue } from '@/lib/invoices/invoiceUtils';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
 import { sendInvoiceSentEmail } from '@/lib/email/invoiceEmails';
-import { nextReportNumber, nextReceiptNumber } from './numbering';
+import { nextReportNumber, nextReceiptNumber, ensureJobReference } from './numbering';
+import { createAdminNotification, adminNotificationHelpers } from '@/lib/notifications/adminNotificationCenter';
 import {
   serializeCompletionReport,
   type ReportPhoto,
@@ -140,7 +141,8 @@ export async function runJobCompletionBillingWorkflow(
     const totalPrice = decimalToNumber(job.totalPrice ?? job.quotedTotal);
     const amountPaid = decimalToNumber(job.amountPaid);
     const balanceDue = computeBalanceDue(totalPrice, amountPaid);
-    const invoiceNumber = await nextInvoiceNumber();
+    const jobReference = await ensureJobReference(job.id, job.jobReference);
+    const invoiceNumber = await nextInvoiceNumber(jobReference);
     const dueDate = new Date(input.completedAt);
     dueDate.setDate(dueDate.getDate() + 7);
 
@@ -208,6 +210,14 @@ export async function runJobCompletionBillingWorkflow(
       }
     }
   }
+
+  createAdminNotification({
+    type: 'JOB_COMPLETED',
+    severity: 'INFO',
+    message: `Job ${job.jobReference || job.id} completed for ${clientName}`,
+    jobId: job.id,
+    actionUrl: adminNotificationHelpers.adminJobLink(job.id),
+  }).catch(() => {});
 
   return {
     report: serializedReport,

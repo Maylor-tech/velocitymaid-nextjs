@@ -6,6 +6,8 @@ import { JobReviewStatus, JobStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 import { logAuditEntry } from '@/lib/audit';
+import { createClientJobFolder } from '@/lib/google/drive';
+import { syncJobCalendarEvent } from '@/lib/google/calendar';
 
 /**
  * POST /api/admin/jobs/[jobId]/approve
@@ -57,6 +59,15 @@ export async function POST(
       entityId: jobId,
       description: `Deposit booking approved for assignment`,
     });
+
+    // Fire-and-forget: this is the "booking confirmed" moment for
+    // deposit-mode jobs (full-payment jobs already got this at creation).
+    createClientJobFolder({
+      id: updated.id,
+      jobReference: updated.jobReference,
+      customerName: updated.customerName,
+    }).catch(() => {});
+    syncJobCalendarEvent(updated.id).catch(() => {});
 
     return NextResponse.json({ success: true, job: updated });
   } catch (error: unknown) {

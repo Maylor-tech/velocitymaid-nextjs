@@ -6,6 +6,7 @@ import { JobStatus } from "@prisma/client";
 import { autoAssignCleaner } from "@/lib/dispatch/autoAssignCleaner";
 import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
 import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
+import { createAdminNotification, adminNotificationHelpers } from "@/lib/notifications/adminNotificationCenter";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -136,6 +137,14 @@ export async function PATCH(
     // The dispatcher will pick it up later
 
     console.log(`[CLEANER] Job ${jobId} declined by cleaner ${cleanerId}, triggering reassignment`);
+
+    createAdminNotification({
+      type: "CLEANER_DECLINED",
+      severity: "WARNING",
+      message: `Cleaner declined job ${jobId} — needs reassignment`,
+      jobId,
+      actionUrl: adminNotificationHelpers.adminJobLink(jobId),
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

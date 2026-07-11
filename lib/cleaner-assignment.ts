@@ -2,6 +2,8 @@ import { prisma } from './prisma';
 import { JobStatus } from '@prisma/client';
 import { ACTIVE_JOB_STATUS_EXCLUDE, CANCELLED_JOB_STATUS_EXCLUDE } from './jobStatus';
 import { sendCleanerAssignment } from './sendCleanerAssignment';
+import { syncJobCalendarEvent } from './google/calendar';
+import { notifyCleanerOfAssignmentByEmail } from './notifications/cleanerAssignmentEmail';
 import { getCleanerAverageJQS } from '../utils/jobQualityScore';
 import { isCleanerTrainingEligible } from '../utils/trainingEligibility';
 import { resolveCityFromZip } from '../utils/cityRouting';
@@ -757,6 +759,10 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
         assignedAt: new Date(),
       },
     });
+
+    // Fire-and-forget: keep the ops calendar event in sync with the new cleaner.
+    syncJobCalendarEvent(jobId).catch(() => {});
+    notifyCleanerOfAssignmentByEmail(jobId).catch(() => {});
 
     // Send WhatsApp notification to cleaner (non-blocking)
     try {

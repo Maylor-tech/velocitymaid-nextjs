@@ -18,6 +18,8 @@ import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
 import { logAuditEntry } from '@/lib/audit';
 import { logAdminEvent } from '@/lib/auditLog';
 import { APPROVED_CLEANER_APPLICATION_STATUSES } from '@/lib/cleaners/applicationStatus';
+import { syncJobCalendarEvent } from '@/lib/google/calendar';
+import { notifyCleanerOfAssignmentByEmail } from '@/lib/notifications/cleanerAssignmentEmail';
 
 export async function POST(request: NextRequest) {
   try {
@@ -267,6 +269,10 @@ export async function POST(request: NextRequest) {
     await prisma.jobTeamMember.create({
       data: { jobId, cleanerId, sortOrder: 0 },
     });
+
+    // Fire-and-forget: keep the ops calendar event in sync with the new cleaner.
+    syncJobCalendarEvent(jobId).catch(() => {});
+    notifyCleanerOfAssignmentByEmail(jobId).catch(() => {});
 
     // Phase 5 Step 5: Log audit entry (existing system)
     await logAuditEntry({

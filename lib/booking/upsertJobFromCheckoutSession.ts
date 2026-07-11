@@ -3,6 +3,10 @@ import type Stripe from 'stripe';
 import type { Job, Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { computeJobPaymentFromSession } from '@/lib/booking/jobPayment';
+import { nextVmReference } from '@/lib/billing/numbering';
+import { createClientJobFolder } from '@/lib/google/drive';
+import { syncJobCalendarEvent } from '@/lib/google/calendar';
+import { createAdminNotification, adminNotificationHelpers } from '@/lib/notifications/adminNotificationCenter';
 
 export type UpsertJobFromCheckoutResult = {
   job: Job;
@@ -26,11 +30,11 @@ export function isPrismaUniqueConstraintError(
   return false;
 }
 
-function buildJobCreateData(
+async function buildJobCreateData(
   session: Stripe.Checkout.Session,
   metadata: Record<string, string>,
   customerId: string | null
-): Prisma.JobCreateInput {
+): Promise<Prisma.JobCreateInput> {
   const branchId = metadata.branchId;
   if (!branchId) {
     throw new Error('Branch ID not found in payment session metadata');
@@ -46,9 +50,11 @@ function buildJobCreateData(
   const promoDiscount = metadata.referralDiscount
     ? parseFloat(metadata.referralDiscount)
     : null;
+  const jobReference = await nextVmReference();
 
   return {
     id: randomUUID(),
+    jobReference,
     sessionId: session.id,
     Branch: { connect: { id: branchId } },
     ...(customerId ? { Customer: { connect: { id: customerId } } } : {}),
@@ -103,10 +109,34 @@ export async function upsertJobFromCheckoutSession(options: {
     return { job: existing, created: false };
   }
 
-  const createData = buildJobCreateData(session, metadata, customerId);
+  const createData = await buildJobCreateData(session, metadata, customerId);
 
   try {
     const job = await prisma.job.create({ data: createData });
+
+    // Fire-and-forget: a "booking becomes an active client job" (full-payment
+    // bookings land here already APPROVED) gets its Drive folder + Calendar
+    // event right away. Deposit-mode bookings stay PENDING here and get the
+    // same treatment later, when an admin approves them (see approve/route.ts).
+    if (job.reviewStatus === 'APPROVED') {
+      createClientJobFolder({
+        id: job.id,
+        jobReference: job.jobReference,
+        customerName: job.customerName,
+      }).catch(() => {});
+      syncJobCalendarEvent(job.id).catch(() => {});
+    }
+
+    if (job.paymentStatus === 'DEPOSIT_PAID') {
+      createAdminNotification({
+        type: 'DEPOSIT_RECEIVED',
+        severity: 'INFO',
+        message: `Deposit received for ${job.jobReference || job.id} — awaiting review`,
+        jobId: job.id,
+        actionUrl: adminNotificationHelpers.adminJobLink(job.id),
+      }).catch(() => {});
+    }
+
     return { job, created: true };
   } catch (error) {
     if (isPrismaUniqueConstraintError(error, 'sessionId')) {
