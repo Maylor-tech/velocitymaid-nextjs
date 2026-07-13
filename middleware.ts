@@ -103,7 +103,8 @@ export async function middleware(req: NextRequest) {
     }
     if (isAdminLoggedIn && isLoginRoute) {
       const dashUrl = req.nextUrl.clone();
-      dashUrl.pathname = session?.isBranchScoped ? '/admin/jobs' : '/admin';
+      // Branch-scoped admins land on the command center (filtered to their branch)
+      dashUrl.pathname = '/admin';
       return NextResponse.redirect(dashUrl);
     }
 

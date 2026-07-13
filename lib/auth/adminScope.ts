@@ -30,15 +30,23 @@ export function isPathAllowedForBranchScopedAdmin(pathname: string): boolean {
   if (pathname === '/admin/login' || pathname.startsWith('/admin/login/')) {
     return true;
   }
+  // Exact /admin = Daily Operations Command Center (branch-filtered)
+  if (pathname === '/admin') return true;
   return BRANCH_SCOPED_PAGE_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
 }
 
-/** API routes a branch-scoped admin may call (jobs ops only — no billing/payouts). */
+/** API routes a branch-scoped admin may call (jobs ops + command center — no billing/payouts). */
 export function isPathAllowedForBranchScopedAdminApi(pathname: string): boolean {
   if (pathname === '/api/admin/me') return true;
   if (pathname.startsWith('/api/admin/cleaners/by-branch')) return true;
+  if (
+    pathname === '/api/admin/dashboard/command-center' ||
+    pathname.startsWith('/api/admin/dashboard/command-center/')
+  ) {
+    return true;
+  }
   if (!pathname.startsWith('/api/admin/jobs')) return false;
 
   const blockedSegments = ['/payout/', '/mark-paid', '/pricing', '/billing'];
