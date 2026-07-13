@@ -31,7 +31,11 @@ export async function GET(
         postalCode: true,
         defaultAddress: true,
         travelZone: true,
+        archivedAt: true,
+        archivedBy: true,
+        recordKind: true,
         Branch: { select: { name: true, slug: true } },
+        _count: { select: { Job: true, Invoice: true } },
       },
     });
 
@@ -41,7 +45,15 @@ export async function GET(
 
     const portal = await getCustomerPortalStats(params.customerId);
 
-    return NextResponse.json({ success: true, customer: { ...customer, portal } });
+    return NextResponse.json({
+      success: true,
+      customer: {
+        ...customer,
+        jobCount: customer._count.Job,
+        invoiceCount: customer._count.Invoice,
+        portal,
+      },
+    });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to load customer';
     const status = message.includes('Unauthorized') ? 401 : 500;

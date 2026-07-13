@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import type { TravelZone } from '@prisma/client';
 import { TRAVEL_ZONE_OPTIONS } from '@/lib/vermont/travelZone';
 import { PortalInviteButton } from '@/components/admin/PortalInviteButton';
+import { CustomerActionsMenu } from '@/components/admin/CustomerActionsMenu';
 
 const inputClass =
   'w-full rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy focus:border-vm-cyan focus:outline-none focus:ring-1 focus:ring-vm-cyan';
@@ -23,6 +24,11 @@ interface CustomerProfile {
   state: string | null;
   defaultAddress: string | null;
   travelZone: TravelZone | null;
+  archivedAt: string | null;
+  archivedBy: string | null;
+  recordKind: 'STANDARD' | 'SYSTEM' | 'TEST';
+  jobCount?: number;
+  invoiceCount?: number;
   Branch: { name: string; slug: string } | null;
   portal?: {
     portalInviteSent: boolean;
@@ -35,6 +41,7 @@ interface CustomerProfile {
 
 export default function AdminCustomerProfilePage() {
   const params = useParams<{ customerId: string }>();
+  const router = useRouter();
   const customerId = params.customerId;
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
   const [travelZone, setTravelZone] = useState<TravelZone | ''>('');
@@ -42,7 +49,7 @@ export default function AdminCustomerProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = () =>
     fetch(`/api/admin/customers/${customerId}`, { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => {
@@ -50,8 +57,10 @@ export default function AdminCustomerProfilePage() {
           setCustomer(d.customer);
           setTravelZone(d.customer.travelZone || '');
         }
-      })
-      .finally(() => setLoading(false));
+      });
+
+  useEffect(() => {
+    load().finally(() => setLoading(false));
   }, [customerId]);
 
   const save = async () => {
@@ -92,6 +101,8 @@ export default function AdminCustomerProfilePage() {
   const propertyAddress =
     customer.defaultAddress ||
     [customer.addressLine1, customer.city, customer.state].filter(Boolean).join(', ');
+  const displayName =
+    `${customer.firstName} ${customer.lastName}`.trim() || customer.email;
 
   return (
     <div className="min-h-screen bg-vm-surface p-6">
@@ -104,17 +115,53 @@ export default function AdminCustomerProfilePage() {
           Back to customers
         </Link>
 
-        <h1 className="font-heading text-2xl font-bold text-vm-navy">Property Profile</h1>
-        <p className="mt-1 font-body text-sm text-vm-muted">
-          {customer.firstName} {customer.lastName} · {customer.email}
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="font-heading text-2xl font-bold text-vm-navy">Property Profile</h1>
+            <p className="mt-1 font-body text-sm text-vm-muted">
+              {displayName} · {customer.email}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {customer.recordKind === 'SYSTEM' && (
+                <span className="rounded-full bg-vm-surface px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-vm-muted">
+                  System account
+                </span>
+              )}
+              {customer.archivedAt && (
+                <span className="rounded-full bg-vm-warning-bg px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-vm-warning">
+                  Archived
+                </span>
+              )}
+            </div>
+          </div>
+          <CustomerActionsMenu
+            customerId={customer.id}
+            customerName={displayName}
+            isArchived={Boolean(customer.archivedAt)}
+            recordKind={customer.recordKind}
+            jobCount={customer.jobCount ?? 0}
+            invoiceCount={customer.invoiceCount ?? 0}
+            onChanged={(action) => {
+              if (action === 'delete') {
+                router.push('/admin/customers');
+                return;
+              }
+              setMessage(
+                action === 'archive'
+                  ? 'Customer archived. Hidden from Active list.'
+                  : 'Customer restored to Active list.'
+              );
+              void load();
+            }}
+          />
+        </div>
 
         <div className="mt-6 space-y-6 rounded-xl border border-vm-border bg-vm-white p-6">
           {customer.portal && (
             <div className="rounded-lg bg-vm-surface/80 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className={labelClass}>Customer portal</p>
-                {!customer.portal.inviteAccepted && (
+                {!customer.portal.inviteAccepted && customer.recordKind !== 'SYSTEM' && (
                   <PortalInviteButton
                     customerId={customer.id}
                     alreadyInvited={customer.portal.portalInviteSent}
@@ -132,9 +179,7 @@ export default function AdminCustomerProfilePage() {
                             }
                           : c
                       );
-                      setMessage(
-                        `Portal invite sent to ${customer.email}.`
-                      );
+                      setMessage(`Portal invite sent to ${customer.email}.`);
                     }}
                   />
                 )}

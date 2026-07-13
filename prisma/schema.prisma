@@ -282,6 +282,12 @@ model Customer {
   latitude                                                 Float?
   longitude                                                Float?
   followUpSentAt                                           DateTime?
+  /// Soft-archive timestamp — archived customers are hidden from default lists
+  archivedAt                                               DateTime?
+  /// Admin user id (or email) who archived the record
+  archivedBy                                               String?
+  /// STANDARD = normal client; SYSTEM = ops/admin accounts; TEST = QA fixtures
+  recordKind                                               CustomerRecordKind         @default(STANDARD)
   CleanerRating                                            CleanerRating[]
   Branch                                                   Branch?                    @relation(fields: [branchId], references: [id])
   CustomerJobChangeRequest                                 CustomerJobChangeRequest[]
@@ -304,6 +310,8 @@ model Customer {
   @@index([travelZone])
   @@index([isBlocked])
   @@index([riskScore])
+  @@index([archivedAt])
+  @@index([recordKind])
 }
 
 model FranchiseApplication {
@@ -1319,6 +1327,12 @@ enum LeadStatus {
   CLOSED
   QUALIFIED
   REJECTED
+}
+
+enum CustomerRecordKind {
+  STANDARD
+  SYSTEM
+  TEST
 }
 
 enum NurtureChannel {
