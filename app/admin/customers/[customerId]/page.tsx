@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import type { TravelZone } from '@prisma/client';
 import { TRAVEL_ZONE_OPTIONS } from '@/lib/vermont/travelZone';
+import { PortalInviteButton } from '@/components/admin/PortalInviteButton';
 
 const inputClass =
   'w-full rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy focus:border-vm-cyan focus:outline-none focus:ring-1 focus:ring-vm-cyan';
@@ -96,11 +97,11 @@ export default function AdminCustomerProfilePage() {
     <div className="min-h-screen bg-vm-surface p-6">
       <div className="mx-auto max-w-2xl">
         <Link
-          href="/admin/jobs"
+          href="/admin/customers"
           className="mb-4 inline-flex items-center gap-1 font-body text-sm text-vm-cyan-dark hover:underline"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to jobs
+          Back to customers
         </Link>
 
         <h1 className="font-heading text-2xl font-bold text-vm-navy">Property Profile</h1>
@@ -111,7 +112,33 @@ export default function AdminCustomerProfilePage() {
         <div className="mt-6 space-y-6 rounded-xl border border-vm-border bg-vm-white p-6">
           {customer.portal && (
             <div className="rounded-lg bg-vm-surface/80 p-4">
-              <p className={labelClass}>Customer portal</p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <p className={labelClass}>Customer portal</p>
+                {!customer.portal.inviteAccepted && (
+                  <PortalInviteButton
+                    customerId={customer.id}
+                    alreadyInvited={customer.portal.portalInviteSent}
+                    size="md"
+                    onInvited={({ invitedAt }) => {
+                      setCustomer((c) =>
+                        c?.portal
+                          ? {
+                              ...c,
+                              portal: {
+                                ...c.portal,
+                                portalInviteSent: true,
+                                invitedAt,
+                              },
+                            }
+                          : c
+                      );
+                      setMessage(
+                        `Portal invite sent to ${customer.email}.`
+                      );
+                    }}
+                  />
+                )}
+              </div>
               <dl className="mt-2 grid grid-cols-1 gap-2 font-body text-sm sm:grid-cols-2">
                 <div>
                   <dt className="text-vm-muted">Account status</dt>

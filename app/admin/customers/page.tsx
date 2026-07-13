@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Search } from 'lucide-react';
+import { PortalInviteButton } from '@/components/admin/PortalInviteButton';
 
 interface CustomerRow {
   id: string;
@@ -91,6 +92,7 @@ export default function AdminCustomersPage() {
                   <th className="px-4 py-3">Portal account</th>
                   <th className="px-4 py-3">Last login</th>
                   <th className="px-4 py-3">Logins</th>
+                  <th className="px-4 py-3">Invite</th>
                 </tr>
               </thead>
               <tbody>
@@ -120,11 +122,37 @@ export default function AdminCustomersPage() {
                     </td>
                     <td className="px-4 py-3 text-vm-muted">{formatDate(c.portal.lastPortalLoginAt)}</td>
                     <td className="px-4 py-3 text-vm-text">{c.portal.loginCount}</td>
+                    <td className="px-4 py-3">
+                      {c.portal.inviteAccepted ? (
+                        <span className="font-body text-xs text-vm-muted">—</span>
+                      ) : (
+                        <PortalInviteButton
+                          customerId={c.id}
+                          alreadyInvited={c.portal.portalInviteSent}
+                          onInvited={() => {
+                            setCustomers((prev) =>
+                              prev.map((row) =>
+                                row.id === c.id
+                                  ? {
+                                      ...row,
+                                      portal: {
+                                        ...row.portal,
+                                        portalInviteSent: true,
+                                        invitedAt: new Date().toISOString(),
+                                      },
+                                    }
+                                  : row
+                              )
+                            );
+                          }}
+                        />
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {customers.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-vm-muted">
+                    <td colSpan={6} className="px-4 py-8 text-center text-vm-muted">
                       No customers found.
                     </td>
                   </tr>
