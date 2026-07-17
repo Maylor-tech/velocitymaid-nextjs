@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import HostIntakeForm from "./HostIntakeForm";
+import { VermontHostMarketing } from "@/components/marketing/VermontHostMarketing";
 
 export const metadata: Metadata = {
   title: "Get a Quote | VelocityMaid Vermont",
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function HostIntakePage() {
-  return <HostIntakeForm />;
+  return (
+    <VermontHostMarketing>
+      <HostIntakeForm embedded />
+    </VermontHostMarketing>
+  );
 }

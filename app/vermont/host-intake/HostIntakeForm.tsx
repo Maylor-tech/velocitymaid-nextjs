@@ -113,7 +113,7 @@ function FieldHelper({ children }: { children: React.ReactNode }) {
   return <p className="text-vm-muted text-xs mt-1">{children}</p>;
 }
 
-export default function HostIntakeForm() {
+export default function HostIntakeForm({ embedded = false }: { embedded?: boolean }) {
   const [form, setForm] = useState<FormFields>(initialForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -229,8 +229,8 @@ export default function HostIntakeForm() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-vm-surface font-body">
-        <header className="bg-vm-navy border-b border-white/10">
+      <div className={embedded ? "font-body" : "min-h-screen bg-vm-surface font-body"}>
+        {!embedded && <header className="bg-vm-navy border-b border-white/10">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
             <Link
               href="/vermont"
@@ -245,9 +245,9 @@ export default function HostIntakeForm() {
               VelocityMaid
             </Link>
           </div>
-        </header>
+        </header>}
 
-        <main className="px-4 sm:px-6 py-12 sm:py-16">
+        <main className={embedded ? "" : "px-4 sm:px-6 py-12 sm:py-16"}>
           <div className="max-w-[560px] mx-auto bg-white border border-vm-border rounded-xl p-8 sm:p-8 text-center">
             <h1 className="font-heading font-semibold text-vm-navy text-2xl mb-4">
               You&apos;re all set, {firstName}!
@@ -269,8 +269,8 @@ export default function HostIntakeForm() {
   }
 
   return (
-    <div className="min-h-screen bg-vm-surface font-body">
-      <header className="bg-vm-navy border-b border-white/10">
+    <div className={embedded ? "font-body" : "min-h-screen bg-vm-surface font-body"}>
+      {!embedded && <header className="bg-vm-navy border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
           <Link
             href="/vermont"
@@ -282,9 +282,9 @@ export default function HostIntakeForm() {
             VelocityMaid
           </Link>
         </div>
-      </header>
+      </header>}
 
-      <main className="px-4 sm:px-6 py-8 sm:py-16">
+      <main className={embedded ? "" : "px-4 sm:px-6 py-8 sm:py-16"}>
         <div className="max-w-[560px] mx-auto mb-8 text-center">
           <h1 className="font-heading font-bold text-vm-navy text-2xl sm:text-3xl mb-2">
             Host intake form
@@ -295,7 +295,7 @@ export default function HostIntakeForm() {
           </p>
         </div>
 
-        <div className="max-w-[560px] mx-auto mb-8 rounded-xl border border-vm-border bg-white p-6 text-left">
+        {!embedded && <div className="max-w-[560px] mx-auto mb-8 rounded-xl border border-vm-border bg-white p-6 text-left">
           <h2 className="font-heading font-semibold text-vm-navy text-sm uppercase tracking-wide mb-3">
             Reference pricing
           </h2>
@@ -317,7 +317,7 @@ export default function HostIntakeForm() {
             Conditions found to differ once we&apos;re on site may result in an
             adjusted quote before work begins.
           </p>
-        </div>
+        </div>}
 
         <form
           onSubmit={handleSubmit}
@@ -1034,7 +1034,7 @@ export default function HostIntakeForm() {
               disabled={submitting}
               className="bg-vm-cyan text-vm-navy font-heading font-semibold w-full py-3 rounded-lg hover:bg-vm-cyan-dark transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {submitting ? "Sending…" : "Submit inquiry"}
+              {submitting ? "Sending…" : "HOST INTAKE"}
             </button>
             {submitError && (
               <p className="text-red-500 text-xs mt-3 text-center">

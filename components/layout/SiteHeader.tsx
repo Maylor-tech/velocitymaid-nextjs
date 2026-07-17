@@ -18,6 +18,7 @@ export interface SiteHeaderProps {
   /** Use hash links for homepage sections */
   homeAnchors?: boolean;
   bookingHref?: string;
+  bookingLabel?: "Book Now" | "Host Intake" | "Book Cleaning";
 }
 
 function isNavActive(href: string, pathname: string): boolean {
@@ -42,6 +43,7 @@ const ctaClassName =
 export default function SiteHeader({
   homeAnchors = false,
   bookingHref = "/book?branch=new-jersey",
+  bookingLabel = "Book Now",
 }: SiteHeaderProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -129,13 +131,13 @@ export default function SiteHeader({
               Customer Portal
             </Link>
             <Link href={bookingHref} className={ctaClassName}>
-              Book Now
+              {bookingLabel}
             </Link>
           </nav>
 
           <div className="flex items-center gap-2 lg:hidden">
             <Link href={bookingHref} className={cn(ctaClassName, "text-[10px] px-3 py-2")}>
-              Book Now
+              {bookingLabel}
             </Link>
             <button
               type="button"
