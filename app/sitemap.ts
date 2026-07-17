@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/pricing`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${baseUrl}/gallery`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${baseUrl}/locations/new-jersey`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/new-jersey`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/vermont`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/vermont/okemo`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${baseUrl}/vermont/middlebury`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
@@ -29,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { status: 'ACTIVE' },
       select: { slug: true, updatedAt: true },
     });
-    const HIDDEN_BRANCH_SLUGS = new Set(['port-antonio']);
+    const HIDDEN_BRANCH_SLUGS = new Set(['port-antonio', 'new-jersey']);
     branchRoutes = branches
       .filter((b) => !HIDDEN_BRANCH_SLUGS.has(b.slug))
       .map((b) => ({

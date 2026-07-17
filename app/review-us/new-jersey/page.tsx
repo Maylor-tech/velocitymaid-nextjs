@@ -197,7 +197,7 @@ export default function ReviewUsPage() {
 
         <div className="text-center text-vm-muted">
 
-          <Link href="/locations/new-jersey" className="hover:text-white">
+          <Link href="/new-jersey" className="hover:text-white">
 
             Back to New Jersey Page
 

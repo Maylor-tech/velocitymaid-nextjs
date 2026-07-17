@@ -66,7 +66,7 @@ export default function LeadCapturePage() {
             We've received your information and will contact you shortly at hello@velocitymaid.com.
           </p>
           <Link
-            href="/locations/new-jersey"
+            href="/new-jersey"
             className="inline-block bg-[#0A3D2F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#083025] transition"
           >
             Back to Home

@@ -181,7 +181,7 @@ export default function CustomerLoginPage() {
             Vermont
           </a>
           <a
-            href="/locations/new-jersey"
+            href="/new-jersey"
             className="font-body text-xs text-white/35 hover:text-white/60 transition-colors"
           >
             New Jersey

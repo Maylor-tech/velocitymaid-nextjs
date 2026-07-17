@@ -113,7 +113,7 @@ export default function RootLayout({
         "addressRegion": "NJ",
         "addressCountry": "US"
       },
-      "url": "https://velocitymaid.com/locations/new-jersey",
+      "url": "https://velocitymaid.com/new-jersey",
       "telephone": "+18027335348",
       "email": "hello@velocitymaid.com",
       "priceRange": "$$",

@@ -8,7 +8,7 @@ import { BrandLogo } from "@/components/brand";
 import { cn } from "@/lib/utils";
 
 const LOCATIONS = [
-  { href: "/locations/new-jersey", label: "New Jersey" },
+  { href: "/new-jersey", label: "New Jersey" },
   { href: "/vermont", label: "Vermont (Overview)" },
   { href: "/vermont/okemo", label: "Okemo Valley" },
   { href: "/vermont/middlebury", label: "Middlebury" },

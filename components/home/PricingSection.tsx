@@ -221,7 +221,7 @@ export default function PricingSection() {
           <p className="text-center text-sm font-body text-vm-muted mt-6">
             Serving Newark, Jersey City, Paterson and surrounding areas.
             <a
-              href="/locations/new-jersey"
+              href="/new-jersey"
               className="text-vm-cyan hover:underline ml-1"
             >
               Learn more about NJ cleaning →

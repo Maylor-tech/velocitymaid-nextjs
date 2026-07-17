@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'New Jersey Cleaning Services | VelocityMaid',
     description: 'Reliable, background-checked cleaners in New Jersey. Flat-rate pricing, eco-friendly supplies, 100% satisfaction guarantee.',
-    url: 'https://velocitymaid.com/locations/new-jersey',
+    url: 'https://velocitymaid.com/new-jersey',
     siteName: 'VelocityMaid',
     type: 'website',
   },
@@ -222,8 +222,8 @@ export default async function NewJerseyLandingPage() {
     '@type': 'LocalBusiness',
     name: 'VelocityMaid New Jersey',
     image: NJ_SHOWCASE_IMAGE,
-    '@id': 'https://velocitymaid.com/locations/new-jersey',
-    url: 'https://velocitymaid.com/locations/new-jersey',
+    '@id': 'https://velocitymaid.com/new-jersey',
+    url: 'https://velocitymaid.com/new-jersey',
     telephone: `+1${VERMONT_SUPPORT.phoneTel}`,
     priceRange: '$$',
     address: {
@@ -842,12 +842,12 @@ export default async function NewJerseyLandingPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/locations/new-jersey#services" className="hover:text-vm-cyan transition">
+                    <Link href="/new-jersey#services" className="hover:text-vm-cyan transition">
                       Services
                     </Link>
                   </li>
                   <li>
-                    <Link href="/locations/new-jersey#faq" className="hover:text-vm-cyan transition">
+                    <Link href="/new-jersey#faq" className="hover:text-vm-cyan transition">
                       FAQ
                     </Link>
                   </li>

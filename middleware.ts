@@ -140,6 +140,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl, 301);
   }
 
+  // Canonical New Jersey marketing page. Keep city child routes intact.
+  if (pathname === '/locations/new-jersey') {
+    const redirectUrl = req.nextUrl.clone();
+    redirectUrl.pathname = '/new-jersey';
+    return NextResponse.redirect(redirectUrl, 301);
+  }
+
   // 🔐 SaaS ROUTE PROTECTION
   if (pathname.startsWith('/saas')) {
     const isAuthRoute = pathname === '/saas/login' || pathname === '/saas/signup' || pathname === '/saas/signup/success';
@@ -260,6 +267,7 @@ export const config = {
     '/branch-owner/:path*',
     '/pilot/:path*',
     '/booking/:path*',
+    '/locations/new-jersey',
     '/customer/:path*',
     '/saas/:path*',
   ],

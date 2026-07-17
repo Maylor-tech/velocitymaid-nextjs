@@ -212,7 +212,7 @@ export default async function CityLandingPage({ params }: PageProps) {
                   Book a Cleaning
                 </Link>
                 <Link
-                  href="/locations/new-jersey"
+                  href="/new-jersey"
                   className="bg-vm-white/10 text-vm-white px-8 py-4 rounded-xl font-heading font-bold text-lg hover:bg-vm-white/20 transition border-2 border-vm-white/30"
                 >
                   View All NJ Areas

@@ -7,6 +7,7 @@ import { trackEvent } from "@/lib/analytics/trackEvent";
 
 /** NJ market: WhatsApp temporarily unavailable — hide widget on these paths */
 const NJ_WHATSAPP_HIDDEN_PREFIXES = [
+  '/new-jersey',
   '/locations/new-jersey',
   '/lead/new-jersey',
   '/review-us/new-jersey',
