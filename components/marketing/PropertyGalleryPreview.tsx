@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ImageIcon, LockKeyhole } from "lucide-react";
 
 export type PropertyGalleryImage = {
@@ -50,13 +51,13 @@ export function PropertyGalleryPreview({
               >
                 <div className="relative flex aspect-[4/3] items-center justify-center bg-vm-navy">
                   {canShowImage ? (
-                    // Kept as a standard img so this reusable staged component does
-                    // not require a real image until permission is explicitly granted.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={hero.src}
                       alt={hero.alt}
-                      className="h-full w-full object-cover"
+                      fill
+                      sizes="(max-width: 767px) calc(100vw - 2.5rem), (max-width: 1100px) calc((100vw - 5rem) / 3), 328px"
+                      className="object-cover"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="flex flex-col items-center gap-3 px-6 text-center">
@@ -78,13 +79,19 @@ export function PropertyGalleryPreview({
                 {thumbnails.length > 0 && (
                   <div className="grid grid-cols-4 gap-1 p-1">
                     {thumbnails.map((thumb) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <div
                         key={thumb.src}
-                        src={thumb.src}
-                        alt={thumb.alt}
-                        className="aspect-square w-full rounded object-cover"
-                      />
+                        className="relative aspect-square overflow-hidden rounded"
+                      >
+                        <Image
+                          src={thumb.src}
+                          alt={thumb.alt}
+                          fill
+                          sizes="(max-width: 767px) calc((100vw - 4rem) / 4), (max-width: 1100px) calc((100vw - 8rem) / 12), 78px"
+                          className="object-cover"
+                          loading="lazy"
+                        />
+                      </div>
                     ))}
                   </div>
                 )}
