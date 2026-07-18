@@ -97,7 +97,7 @@ export default function VermontGallery({
               {current.label}
             </span>
             <span className="text-white/55 font-body text-xs ml-2">
-              {regionLabel}
+              {current.location ?? regionLabel}
             </span>
           </div>
         </div>

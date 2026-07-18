@@ -3,6 +3,13 @@ import { CalendarDays, CheckCircle2, Clock3, Home, ShieldCheck } from "lucide-re
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import { PropertyGalleryPreview } from "@/components/marketing/PropertyGalleryPreview";
+import { MarketingTestimonials } from "@/components/marketing/MarketingTestimonials";
+import {
+  LUDLOW_CARD_IMAGES,
+  MIDDLEBURY_CARD_IMAGES,
+  PERKINSVILLE_CARD_IMAGES,
+} from "@/lib/vermont/middleburyPhotos";
+import { VERMONT_TESTIMONIALS } from "@/lib/marketing/testimonials";
 
 const primaryButton =
   "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
@@ -115,12 +122,31 @@ export function VermontHostMarketing({ children }: { children: React.ReactNode }
         <ValueStrip />
         <PropertyGalleryPreview
           title="Vermont Properties We Service"
-          description="A staged preview for recent turnovers and property-readiness work. Photography will remain private until each owner approves publication."
+          description="Recent turnovers and property-readiness work. Photography is published only with each owner's approval."
           items={[
-            { name: "Fern Hill", location: "Perkinsville, VT" },
-            { name: "Bear Hill", location: "Ludlow, VT" },
-            { name: "Chipman Park", location: "Middlebury, VT" },
+            {
+              name: "Fern Hill",
+              location: "Perkinsville, VT",
+              images: PERKINSVILLE_CARD_IMAGES,
+              permissionGranted: true,
+            },
+            {
+              name: "Ludlow, VT",
+              location: "Okemo Valley",
+              images: LUDLOW_CARD_IMAGES,
+              permissionGranted: true,
+            },
+            {
+              name: "Chipman Park",
+              location: "Middlebury, VT",
+              images: MIDDLEBURY_CARD_IMAGES,
+              permissionGranted: true,
+            },
           ]}
+        />
+        <MarketingTestimonials
+          testimonials={VERMONT_TESTIMONIALS}
+          subtitle="Feedback from Vermont hosts after guest-ready turnovers."
         />
         <section className="px-5 py-16">
           <div className="mx-auto max-w-5xl text-center">

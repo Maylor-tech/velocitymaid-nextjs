@@ -1,10 +1,15 @@
 import { ImageIcon, LockKeyhole } from "lucide-react";
 
+export type PropertyGalleryImage = {
+  src: string;
+  alt: string;
+};
+
 export type PropertyGalleryItem = {
   name: string;
   location: string;
-  imageSrc?: string;
-  imageAlt?: string;
+  /** First image is the card hero; the rest render as a thumbnail strip. */
+  images?: readonly PropertyGalleryImage[];
   permissionGranted?: boolean;
 };
 
@@ -34,9 +39,9 @@ export function PropertyGalleryPreview({
 
         <div className="mt-9 grid gap-5 md:grid-cols-3">
           {items.map((item) => {
-            const canShowImage = Boolean(
-              item.permissionGranted && item.imageSrc && item.imageAlt
-            );
+            const images = item.permissionGranted ? (item.images ?? []) : [];
+            const canShowImage = images.length > 0;
+            const [hero, ...thumbnails] = images;
 
             return (
               <article
@@ -49,8 +54,8 @@ export function PropertyGalleryPreview({
                     // not require a real image until permission is explicitly granted.
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={item.imageSrc}
-                      alt={item.imageAlt}
+                      src={hero.src}
+                      alt={hero.alt}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -70,6 +75,19 @@ export function PropertyGalleryPreview({
                     </span>
                   )}
                 </div>
+                {thumbnails.length > 0 && (
+                  <div className="grid grid-cols-4 gap-1 p-1">
+                    {thumbnails.map((thumb) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={thumb.src}
+                        src={thumb.src}
+                        alt={thumb.alt}
+                        className="aspect-square w-full rounded object-cover"
+                      />
+                    ))}
+                  </div>
+                )}
                 <div className="p-4">
                   <h3 className="font-heading text-sm font-bold text-vm-navy">
                     {item.name}

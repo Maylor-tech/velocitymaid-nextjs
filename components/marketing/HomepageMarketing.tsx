@@ -1,8 +1,15 @@
 import Link from "next/link";
-import { CheckCircle2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock3, ShieldCheck } from "lucide-react";
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import { PropertyGalleryPreview } from "@/components/marketing/PropertyGalleryPreview";
+import { MarketingTestimonials } from "@/components/marketing/MarketingTestimonials";
+import {
+  LUDLOW_CARD_IMAGES,
+  MIDDLEBURY_CARD_IMAGES,
+  PERKINSVILLE_CARD_IMAGES,
+} from "@/lib/vermont/middleburyPhotos";
+import { HOMEPAGE_TESTIMONIALS } from "@/lib/marketing/testimonials";
 
 const primaryButton =
   "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
@@ -16,6 +23,29 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
     </p>
   );
 }
+
+const homepageFaqs = [
+  {
+    question: "Do you serve both Vermont and New Jersey?",
+    answer:
+      "Yes. Vermont service focuses on vacation rentals, turnovers, and property readiness. New Jersey service focuses on residential cleaning for homes and apartments.",
+  },
+  {
+    question: "How is final pricing confirmed?",
+    answer:
+      "Website prices are starting points. We confirm the final scope and price after reviewing your home, property, schedule, and requested services.",
+  },
+  {
+    question: "Can you work around guest check-in times?",
+    answer:
+      "Yes. Vermont turnover scheduling is planned around checkout and check-in windows, with direct host communication throughout the service.",
+  },
+  {
+    question: "How do I get started?",
+    answer:
+      "New Jersey customers can book online. Vermont hosts can complete the host-intake form for a tailored quote and service plan.",
+  },
+];
 
 export function HomepageMarketing() {
   return (
@@ -84,14 +114,150 @@ export function HomepageMarketing() {
           </article>
         </section>
 
+        <section id="why-us" className="scroll-mt-20 bg-vm-navy px-5 py-16">
+          <div className="mx-auto max-w-marketing text-center">
+            <p className="mb-3 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-vm-cyan">
+              Why VelocityMaid
+            </p>
+            <h2 className="font-heading text-3xl font-bold text-white">
+              Professional care you can rely on
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl font-body text-sm leading-relaxed text-white/65">
+              Clear expectations, dependable scheduling, and property-ready results
+              across every market we serve.
+            </p>
+            <div className="mt-9 grid gap-4 text-left sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  title: "Trusted Service",
+                  text: "Respectful teams and clear service standards.",
+                  icon: ShieldCheck,
+                },
+                {
+                  title: "Reliable Scheduling",
+                  text: "Arrival windows planned around your priorities.",
+                  icon: Clock3,
+                },
+                {
+                  title: "Property-Ready Detail",
+                  text: "Careful resets for homes, rentals, and guest spaces.",
+                  icon: CheckCircle2,
+                },
+                {
+                  title: "Convenient Support",
+                  text: "Simple booking, host intake, and direct communication.",
+                  icon: CalendarDays,
+                },
+              ].map(({ title, text, icon: Icon }) => (
+                <article key={title} className="rounded-xl border border-white/10 bg-white/5 p-5">
+                  <Icon className="h-5 w-5 text-vm-cyan" />
+                  <h3 className="mt-4 font-heading text-base font-bold text-white">{title}</h3>
+                  <p className="mt-2 font-body text-sm leading-relaxed text-white/60">{text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <PropertyGalleryPreview
           items={[
-            { name: "Fern Hill", location: "Perkinsville, VT" },
-            { name: "Bear Hill", location: "Ludlow, VT" },
-            { name: "Chipman Park", location: "Middlebury, VT" },
+            {
+              name: "Fern Hill",
+              location: "Perkinsville, VT",
+              images: PERKINSVILLE_CARD_IMAGES,
+              permissionGranted: true,
+            },
+            {
+              name: "Ludlow, VT",
+              location: "Okemo Valley",
+              images: LUDLOW_CARD_IMAGES,
+              permissionGranted: true,
+            },
+            {
+              name: "Chipman Park",
+              location: "Middlebury, VT",
+              images: MIDDLEBURY_CARD_IMAGES,
+              permissionGranted: true,
+            },
           ]}
-          description="The gallery structure is ready. Client property photography remains private until publication permission is confirmed."
+          description="Client property photography is published only with the owner's approval."
         />
+
+        <section id="pricing" className="scroll-mt-20 bg-vm-surface px-5 py-16">
+          <div className="mx-auto max-w-5xl text-center">
+            <Eyebrow>Starting-at pricing</Eyebrow>
+            <h2 className="font-heading text-3xl font-bold text-vm-navy">
+              Choose your market
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl font-body text-sm leading-relaxed text-vm-muted">
+              Every property is different. These starting points help you plan before
+              we confirm the final scope and quote.
+            </p>
+            <div className="mt-9 grid gap-5 text-left md:grid-cols-2">
+              <article className="rounded-xl border border-vm-border bg-white p-7">
+                <p className="font-body text-xs font-bold uppercase tracking-wider text-vm-cyan-dark">
+                  Vermont
+                </p>
+                <h3 className="mt-3 font-heading text-2xl font-bold text-vm-navy">
+                  Vacation rental turnovers
+                </h3>
+                <p className="mt-3 font-heading text-3xl font-bold text-vm-navy">
+                  $225 <span className="font-body text-xs font-medium text-vm-muted">starting</span>
+                </p>
+                <p className="mt-3 font-body text-sm leading-relaxed text-vm-muted">
+                  Guest-ready resets for hosts and property managers in the Okemo Valley,
+                  Middlebury, and surrounding towns.
+                </p>
+                <Link href="/vermont/host-intake" className={`${primaryButton} mt-6`}>
+                  Request a quote
+                </Link>
+              </article>
+              <article className="rounded-xl border border-vm-border bg-white p-7">
+                <p className="font-body text-xs font-bold uppercase tracking-wider text-vm-cyan-dark">
+                  New Jersey
+                </p>
+                <h3 className="mt-3 font-heading text-2xl font-bold text-vm-navy">
+                  Residential cleaning
+                </h3>
+                <p className="mt-3 font-heading text-3xl font-bold text-vm-navy">
+                  $120 <span className="font-body text-xs font-medium text-vm-muted">starting</span>
+                </p>
+                <p className="mt-3 font-body text-sm leading-relaxed text-vm-muted">
+                  Recurring, deep, and move-in or move-out cleaning for homes and apartments.
+                </p>
+                <Link href="/book?branch=new-jersey" className={`${primaryButton} mt-6`}>
+                  Book cleaning
+                </Link>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <MarketingTestimonials
+          testimonials={HOMEPAGE_TESTIMONIALS}
+          subtitle="Real feedback from homeowners and hosts in Vermont and New Jersey."
+        />
+
+        <section id="faq" className="scroll-mt-20 bg-vm-surface px-5 py-16">
+          <div className="mx-auto max-w-3xl">
+            <div className="text-center">
+              <Eyebrow>Frequently asked questions</Eyebrow>
+              <h2 className="font-heading text-3xl font-bold text-vm-navy">
+                Helpful answers before you book
+              </h2>
+            </div>
+            <div className="mt-9 space-y-3">
+              {homepageFaqs.map(({ question, answer }) => (
+                <details key={question} className="group rounded-xl border border-vm-border bg-white p-5">
+                  <summary className="cursor-pointer list-none font-heading text-sm font-bold text-vm-navy">
+                    {question}
+                  </summary>
+                  <p className="mt-3 font-body text-sm leading-relaxed text-vm-muted">{answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
       <Footer />
     </div>
