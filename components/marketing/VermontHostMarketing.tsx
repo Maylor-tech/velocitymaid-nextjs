@@ -137,8 +137,8 @@ export function VermontHostMarketing({ children }: { children: React.ReactNode }
               permissionGranted: true,
             },
             {
-              name: "Chipman Park",
-              location: "Middlebury, VT",
+              name: "Middlebury, VT",
+              location: "Addison County",
               images: MIDDLEBURY_CARD_IMAGES,
               permissionGranted: true,
             },

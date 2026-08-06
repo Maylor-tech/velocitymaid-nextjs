@@ -174,8 +174,8 @@ export function HomepageMarketing() {
               permissionGranted: true,
             },
             {
-              name: "Chipman Park",
-              location: "Middlebury, VT",
+              name: "Middlebury, VT",
+              location: "Addison County",
               images: MIDDLEBURY_CARD_IMAGES,
               permissionGranted: true,
             },
