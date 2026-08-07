@@ -42,17 +42,42 @@ export type PropertyAlertCategory =
   | 'Maintenance'
   | 'Unresolved';
 
+export type ExceptionEntityAction = 'resend_invite' | 'open';
+
+export type ExceptionEntity = {
+  id: string;
+  name: string;
+  href: string;
+  /** Inline action on the ops desk (HQ only for invite resend). */
+  action?: ExceptionEntityAction;
+};
+
 export type ActionItem = {
   id: string;
   label: string;
   count: number;
   href: string;
   urgency: 'normal' | 'warning' | 'danger';
+  /** One-line reason this needs a human today. */
+  reason: string;
+  /** Primary CTA label. */
+  cta: string;
+  /** When false, branch-scoped admins never see this row (no dead links). */
+  branchScopedVisible: boolean;
+  /** Up to a few concrete entities for inline actions. */
+  entities?: ExceptionEntity[];
 };
 
 export type OpsCommandCenterPayload = {
   generatedAt: string;
   branchScoped: boolean;
+  /** Compact today strip — only decision-relevant counts. */
+  todayBrief: {
+    jobsToday: number;
+    unassignedToday: number;
+    exceptionCount: number;
+    cashDueFormatted: string | null;
+  };
   actionCenter: ActionItem[];
   kpis: {
     jobsThisWeek: number;
@@ -149,6 +174,25 @@ type ArRow = {
   href: string;
 };
 
+/**
+ * Exception desk visibility: hide zero-count rows and HQ-only items for branch ops.
+ * Danger first, then warning, then normal; stable by label within urgency.
+ */
+export function visibleExceptionItems(
+  items: ActionItem[],
+  branchScoped: boolean
+): ActionItem[] {
+  const urgencyRank = { danger: 0, warning: 1, normal: 2 } as const;
+  return items
+    .filter((item) => item.count > 0)
+    .filter((item) => !branchScoped || item.branchScopedVisible)
+    .sort((a, b) => {
+      const u = urgencyRank[a.urgency] - urgencyRank[b.urgency];
+      if (u !== 0) return u;
+      return b.count - a.count;
+    });
+}
+
 /** Keyword bucket for derived property alerts (no schema change). */
 export function categorizePropertyAlertText(
   text: string,
@@ -181,6 +225,183 @@ export function bucketInvoiceDueDate(
   if (dueDate >= todayStart && dueDate <= todayEnd) return 'dueToday';
   if (dueDate > todayEnd && dueDate <= weekEnd) return 'dueThisWeek';
   return 'other';
+}
+
+/** Composite key for audit entity → branch lookups. */
+export function auditEntityBranchKey(entityType: string, entityId: string): string {
+  return `${entityType}:${entityId}`;
+}
+
+export type AuditFeedEntry = {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  description: string | null;
+  createdAt: Date;
+};
+
+/**
+ * Branch-scoped Recent Activity policy for AuditLog:
+ * - Keep only entries whose entity resolves to the admin's branchId.
+ * - Exclude system/cross-branch/unresolvable entities entirely (fail closed).
+ *   No redacted stubs — branch-scoped admins must not learn that other-market
+ *   or global system events occurred.
+ * Super admins (no branchId) should skip this filter and see the raw feed.
+ */
+export function filterAuditLogsForBranch<T extends AuditFeedEntry>(
+  entries: T[],
+  branchId: string,
+  entityBranchByKey: Map<string, string | null>
+): T[] {
+  return entries.filter((entry) => {
+    const key = auditEntityBranchKey(entry.entityType, entry.entityId);
+    const entityBranch = entityBranchByKey.get(key);
+    return entityBranch != null && entityBranch === branchId;
+  });
+}
+
+/**
+ * Resolve AuditLog entityType/entityId → owning branchId.
+ * Returns null when the entity has no branch (or cannot be mapped) — those
+ * entries are excluded for branch-scoped admins by filterAuditLogsForBranch.
+ */
+export async function resolveAuditEntityBranches(
+  entries: Array<{ entityType: string; entityId: string }>
+): Promise<Map<string, string | null>> {
+  const result = new Map<string, string | null>();
+  if (entries.length === 0) return result;
+
+  const idsByType = new Map<string, Set<string>>();
+  for (const e of entries) {
+    const type = e.entityType;
+    if (!idsByType.has(type)) idsByType.set(type, new Set());
+    idsByType.get(type)!.add(e.entityId);
+    // Default null until resolved — System / unknown stay null → excluded
+    result.set(auditEntityBranchKey(e.entityType, e.entityId), null);
+  }
+
+  const asList = (type: string) => [...(idsByType.get(type) ?? [])];
+
+  const jobIds = asList('Job');
+  const customerIds = asList('Customer');
+  const invoiceIds = asList('Invoice');
+  const payoutIds = asList('JobPayout');
+  const complianceIds = asList('ComplianceIssue');
+  const branchIds = asList('Branch');
+  const cleanerIds = [...asList('Cleaner'), ...asList('User')];
+  const paymentIds = asList('Payment');
+
+  const [
+    jobs,
+    customers,
+    invoices,
+    payouts,
+    compliance,
+    cleaners,
+    payments,
+  ] = await Promise.all([
+    jobIds.length
+      ? prisma.job.findMany({
+          where: { id: { in: jobIds } },
+          select: { id: true, branchId: true },
+        })
+      : Promise.resolve([]),
+    customerIds.length
+      ? prisma.customer.findMany({
+          where: { id: { in: customerIds } },
+          select: { id: true, branchId: true },
+        })
+      : Promise.resolve([]),
+    invoiceIds.length
+      ? prisma.invoice.findMany({
+          where: { id: { in: invoiceIds } },
+          select: {
+            id: true,
+            Job: { select: { branchId: true } },
+            Customer: { select: { branchId: true } },
+          },
+        })
+      : Promise.resolve([]),
+    payoutIds.length
+      ? prisma.jobPayout.findMany({
+          where: { id: { in: payoutIds } },
+          select: { id: true, branchId: true },
+        })
+      : Promise.resolve([]),
+    complianceIds.length
+      ? prisma.complianceIssue.findMany({
+          where: { id: { in: complianceIds } },
+          select: {
+            id: true,
+            job: { select: { branchId: true } },
+            cleaner: { select: { primaryBranchId: true } },
+          },
+        })
+      : Promise.resolve([]),
+    cleanerIds.length
+      ? prisma.user.findMany({
+          where: { id: { in: cleanerIds } },
+          select: { id: true, primaryBranchId: true },
+        })
+      : Promise.resolve([]),
+    paymentIds.length
+      ? prisma.invoicePayment.findMany({
+          where: { id: { in: paymentIds } },
+          select: {
+            id: true,
+            Invoice: {
+              select: {
+                Job: { select: { branchId: true } },
+                Customer: { select: { branchId: true } },
+              },
+            },
+          },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  for (const j of jobs) {
+    result.set(auditEntityBranchKey('Job', j.id), j.branchId);
+  }
+  for (const c of customers) {
+    result.set(auditEntityBranchKey('Customer', c.id), c.branchId);
+  }
+  for (const inv of invoices) {
+    result.set(
+      auditEntityBranchKey('Invoice', inv.id),
+      inv.Job?.branchId ?? inv.Customer?.branchId ?? null
+    );
+  }
+  for (const p of payouts) {
+    result.set(auditEntityBranchKey('JobPayout', p.id), p.branchId);
+  }
+  for (const ci of compliance) {
+    result.set(
+      auditEntityBranchKey('ComplianceIssue', ci.id),
+      ci.job?.branchId ?? ci.cleaner?.primaryBranchId ?? null
+    );
+  }
+  for (const id of branchIds) {
+    result.set(auditEntityBranchKey('Branch', id), id);
+  }
+  for (const u of cleaners) {
+    const branch = u.primaryBranchId;
+    if (idsByType.get('Cleaner')?.has(u.id)) {
+      result.set(auditEntityBranchKey('Cleaner', u.id), branch);
+    }
+    if (idsByType.get('User')?.has(u.id)) {
+      result.set(auditEntityBranchKey('User', u.id), branch);
+    }
+  }
+  for (const pay of payments) {
+    result.set(
+      auditEntityBranchKey('Payment', pay.id),
+      pay.Invoice?.Job?.branchId ?? pay.Invoice?.Customer?.branchId ?? null
+    );
+  }
+
+  return result;
 }
 
 function jobRevenueUsd(totalPrice: unknown, currency: string | null): number {
@@ -219,10 +440,10 @@ export async function getOpsCommandCenter(
     jobsThisWeek,
     monthJobs,
     unassignedJobs,
-    jobsNext24h,
+    _jobsNext24h,
     todayJobs,
     activeCleaners,
-    cleanerAppsNew,
+    _cleanerAppsNew,
     trainingIncomplete,
     pendingPayouts,
     billing,
@@ -453,7 +674,8 @@ export async function getOpsCommandCenter(
     }),
     prisma.auditLog.findMany({
       orderBy: { createdAt: 'desc' },
-      take: 12,
+      // Over-fetch when branch-scoped so post-filter still fills ~12 slots
+      take: branchId ? 80 : 12,
       select: {
         id: true,
         action: true,
@@ -571,6 +793,22 @@ export async function getOpsCommandCenter(
     }),
   ]);
 
+  // Retained for payload/report parity; not shown on the exception desk.
+  void _jobsNext24h;
+  void _cleanerAppsNew;
+
+  // Fail closed for branch-scoped admins: only audits whose entity belongs
+  // to this branch. System / unresolvable / other-branch entries are dropped.
+  let scopedAudits = recentAudits;
+  if (branchId) {
+    const entityBranches = await resolveAuditEntityBranches(recentAudits);
+    scopedAudits = filterAuditLogsForBranch(
+      recentAudits,
+      branchId,
+      entityBranches
+    ).slice(0, 12);
+  }
+
   const revenueThisMonth = monthJobs.reduce((sum, j) => {
     const paid = j.amountPaid != null ? Number(j.amountPaid) : null;
     if (paid != null && Number.isFinite(paid)) return sum + paid;
@@ -663,13 +901,74 @@ export async function getOpsCommandCenter(
     });
   }
 
+  const unassignedTodayJobs = todayJobs.filter((j) => !j.assignedCleanerId);
+  const arDueCount = overdueMap.size + dueToday.length;
+
+  /** Exception desk only — vanity counts (coverage, 24h watch list, training) stay off home. */
   const actionCenter: ActionItem[] = [
+    {
+      id: 'unassigned',
+      label: 'Unassigned jobs',
+      count: unassignedJobs,
+      href: '/admin/jobs?filter=needs',
+      urgency: unassignedJobs > 0 ? 'danger' : 'normal',
+      reason: 'No cleaner assigned — schedule will slip without a decision.',
+      cta: 'Assign',
+      branchScopedVisible: true,
+      entities: unassignedTodayJobs.slice(0, 5).map((j) => ({
+        id: j.id,
+        name:
+          j.customerName ||
+          [j.Customer?.firstName, j.Customer?.lastName].filter(Boolean).join(' ') ||
+          j.address ||
+          'Job',
+        href: `/admin/jobs/${j.id}`,
+        action: 'open' as const,
+      })),
+    },
+    {
+      id: 'property-alerts',
+      label: 'Property exceptions',
+      count: propertyAlerts.length,
+      href: '#property-alerts',
+      urgency: propertyAlerts.length > 0 ? 'warning' : 'normal',
+      reason: 'Damage, access, or supply issues from recent cleans.',
+      cta: 'Review',
+      branchScopedVisible: true,
+      entities: propertyAlerts.slice(0, 5).map((a) => ({
+        id: a.id,
+        name: `${a.category}: ${a.property}`,
+        href: a.jobId ? `/admin/jobs/${a.jobId}` : '#property-alerts',
+        action: 'open' as const,
+      })),
+    },
+    {
+      id: 'ar-due',
+      label: 'Cash due / overdue',
+      count: arDueCount,
+      href: '/admin/invoices',
+      urgency: overdueMap.size > 0 ? 'danger' : dueToday.length > 0 ? 'warning' : 'normal',
+      reason: 'Invoices overdue or due today need a chase or payment.',
+      cta: 'Open invoices',
+      branchScopedVisible: false,
+      entities: [...overdueMap.values(), ...dueToday]
+        .slice(0, 5)
+        .map((row) => ({
+          id: row.id,
+          name: `${row.clientName} · ${row.balanceDueFormatted}`,
+          href: row.href,
+          action: 'open' as const,
+        })),
+    },
     {
       id: 'new-leads',
       label: 'New leads not contacted',
       count: newLeads,
       href: '/admin/lead-center',
       urgency: newLeads > 0 ? 'warning' : 'normal',
+      reason: 'Fresh intake sitting without a first touch.',
+      cta: 'Lead center',
+      branchScopedVisible: false,
     },
     {
       id: 'quote-followup',
@@ -677,27 +976,9 @@ export async function getOpsCommandCenter(
       count: quoteFollowUps,
       href: '/admin/lead-center',
       urgency: quoteFollowUps > 0 ? 'warning' : 'normal',
-    },
-    {
-      id: 'unassigned',
-      label: 'Unassigned jobs',
-      count: unassignedJobs,
-      href: '/admin/jobs?filter=needs',
-      urgency: unassignedJobs > 0 ? 'danger' : 'normal',
-    },
-    {
-      id: 'next-24h',
-      label: 'Jobs within 24 hours',
-      count: jobsNext24h,
-      href: '/admin/jobs',
-      urgency: jobsNext24h > 0 ? 'warning' : 'normal',
-    },
-    {
-      id: 'ar-due',
-      label: 'Due and overdue invoices',
-      count: overdueMap.size + dueToday.length,
-      href: '/admin/invoices',
-      urgency: overdueMap.size > 0 ? 'danger' : dueToday.length > 0 ? 'warning' : 'normal',
+      reason: 'Quoted leads past the follow-up window.',
+      cta: 'Follow up',
+      branchScopedVisible: false,
     },
     {
       id: 'portal-nudge',
@@ -705,22 +986,28 @@ export async function getOpsCommandCenter(
       count: invitedNeverLoggedIn.length,
       href: '/admin/customers',
       urgency: invitedNeverLoggedIn.length > 0 ? 'warning' : 'normal',
-    },
-    {
-      id: 'cleaner-onboarding',
-      label: 'Cleaner onboarding / certification',
-      count: cleanerAppsNew + trainingIncomplete,
-      href: '/admin/cleaners',
-      urgency: cleanerAppsNew + trainingIncomplete > 0 ? 'warning' : 'normal',
-    },
-    {
-      id: 'property-alerts',
-      label: 'Open property alerts',
-      count: propertyAlerts.length,
-      href: '#property-alerts',
-      urgency: propertyAlerts.length > 0 ? 'warning' : 'normal',
+      reason: 'Magic links expire in 7 days — resend if still needed.',
+      cta: 'Customers',
+      branchScopedVisible: false,
+      entities: invitedNeverLoggedIn.slice(0, 6).map((c) => ({
+        id: c.id,
+        name: `${c.firstName} ${c.lastName}`.trim() || c.email,
+        href: `/admin/customers/${c.id}`,
+        action: 'resend_invite' as const,
+      })),
     },
   ];
+
+  const hqExceptionCount =
+    (unassignedJobs > 0 ? 1 : 0) +
+    (propertyAlerts.length > 0 ? 1 : 0) +
+    (arDueCount > 0 ? 1 : 0) +
+    (newLeads > 0 ? 1 : 0) +
+    (quoteFollowUps > 0 ? 1 : 0) +
+    (invitedNeverLoggedIn.length > 0 ? 1 : 0);
+  const branchExceptionCount =
+    (unassignedJobs > 0 ? 1 : 0) + (propertyAlerts.length > 0 ? 1 : 0);
+  const exceptionCount = branchId ? branchExceptionCount : hqExceptionCount;
 
   const recentActivity: OpsCommandCenterPayload['recentActivity'] = [];
   for (const j of recentCompletions) {
@@ -750,7 +1037,7 @@ export async function getOpsCommandCenter(
       href: `/admin/customers/${c.id}`,
     });
   }
-  for (const a of recentAudits) {
+  for (const a of scopedAudits) {
     recentActivity.push({
       id: `audit-${a.id}`,
       at: a.createdAt.toISOString(),
@@ -783,6 +1070,21 @@ export async function getOpsCommandCenter(
   return {
     generatedAt: now.toISOString(),
     branchScoped: Boolean(branchId),
+    todayBrief: {
+      jobsToday: todayJobs.length,
+      unassignedToday: unassignedTodayJobs.length,
+      exceptionCount,
+      cashDueFormatted: branchId
+        ? null
+        : arDueCount > 0
+          ? formatUsd(
+              [...overdueMap.values(), ...dueToday].reduce(
+                (sum, row) => sum + row.balanceDue,
+                0
+              )
+            )
+          : formatUsd(0),
+    },
     actionCenter,
     kpis: {
       jobsThisWeek,

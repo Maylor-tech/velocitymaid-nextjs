@@ -5,16 +5,11 @@ import Link from 'next/link';
 import { Loader2, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdminPageHeader } from '@/components/admin/shell/AdminShell';
-import { ActionCenter } from '@/components/admin/ops/ActionCenter';
-import { OpsKpis } from '@/components/admin/ops/OpsKpis';
+import { NeedsAttention } from '@/components/admin/ops/NeedsAttention';
+import { TodayStrip } from '@/components/admin/ops/TodayStrip';
 import { TodaySchedule } from '@/components/admin/ops/TodaySchedule';
-import { ArPanel } from '@/components/admin/ops/ArPanel';
-import { LeadPipelinePanel } from '@/components/admin/ops/LeadPipelinePanel';
-import { PortalAdoptionPanel } from '@/components/admin/ops/PortalAdoptionPanel';
-import { CleanerOpsPanel } from '@/components/admin/ops/CleanerOpsPanel';
+import { ArDueCompact } from '@/components/admin/ops/ArDueCompact';
 import { PropertyAlerts } from '@/components/admin/ops/PropertyAlerts';
-import { RecentActivity } from '@/components/admin/ops/RecentActivity';
-import { QuickActions } from '@/components/admin/ops/QuickActions';
 import type { OpsCommandCenterPayload } from '@/lib/admin/opsCommandCenter';
 
 function formatHeaderDate(branchScoped: boolean): string {
@@ -86,7 +81,7 @@ export default function OpsCommandCenterPage() {
         }
       />
 
-      <div className="p-7 pb-24">
+      <div className="p-4 pb-8 sm:p-7">
         {loading && !data ? (
           <div className="flex items-center justify-center py-24">
             <Loader2 className="h-8 w-8 animate-spin text-vm-cyan" />
@@ -105,33 +100,19 @@ export default function OpsCommandCenterPage() {
             </Button>
           </div>
         ) : data ? (
-          <>
-            <ActionCenter items={data.actionCenter} branchScoped={branchScoped} />
-            <OpsKpis kpis={data.kpis} />
+          <div className="mx-auto max-w-5xl">
+            <TodayStrip brief={data.todayBrief} branchScoped={branchScoped} />
+            <NeedsAttention
+              items={data.actionCenter}
+              branchScoped={branchScoped}
+              onInviteSent={fetchData}
+            />
             <TodaySchedule rows={data.todaySchedule} />
-
-            <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              {!branchScoped ? (
-                <>
-                  <ArPanel data={data.accountsReceivable} />
-                  <LeadPipelinePanel data={data.leadPipeline} />
-                </>
-              ) : (
-                <div className="lg:col-span-2">
-                  <LeadPipelinePanel data={data.leadPipeline} branchScoped />
-                </div>
-              )}
-            </div>
-
-            <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <PortalAdoptionPanel data={data.portalAdoption} branchScoped={branchScoped} />
-              <CleanerOpsPanel data={data.cleanerOps} />
-            </div>
-
-            <PropertyAlerts alerts={data.propertyAlerts} />
-            <RecentActivity items={data.recentActivity} />
-            <QuickActions actions={data.quickActions} branchScoped={branchScoped} />
-          </>
+            {!branchScoped ? <ArDueCompact data={data.accountsReceivable} /> : null}
+            {data.propertyAlerts.length > 0 ? (
+              <PropertyAlerts alerts={data.propertyAlerts} />
+            ) : null}
+          </div>
         ) : null}
       </div>
     </>
