@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
-import { syncJobCalendarEvent } from '@/lib/google/calendar';
+import { queueJobCalendarSync } from '@/lib/google/jobGoogleSync';
 import { notifyCleanerOfAssignmentByEmail } from '@/lib/notifications/cleanerAssignmentEmail';
 
 export async function POST(request: NextRequest) {
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Fire-and-forget: keep the ops calendar event in sync with the new cleaner.
-    syncJobCalendarEvent(jobId).catch(() => {});
+    queueJobCalendarSync(jobId);
     notifyCleanerOfAssignmentByEmail(jobId).catch(() => {});
 
     // Send WhatsApp notification if requested

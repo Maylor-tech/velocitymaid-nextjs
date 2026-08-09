@@ -18,7 +18,7 @@ import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
 import { logAuditEntry } from '@/lib/audit';
 import { logAdminEvent } from '@/lib/auditLog';
 import { APPROVED_CLEANER_APPLICATION_STATUSES } from '@/lib/cleaners/applicationStatus';
-import { syncJobCalendarEvent } from '@/lib/google/calendar';
+import { queueJobCalendarSync } from '@/lib/google/jobGoogleSync';
 import { notifyCleanerOfAssignmentByEmail } from '@/lib/notifications/cleanerAssignmentEmail';
 
 export async function POST(request: NextRequest) {
@@ -271,7 +271,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Fire-and-forget: keep the ops calendar event in sync with the new cleaner.
-    syncJobCalendarEvent(jobId).catch(() => {});
+    queueJobCalendarSync(jobId);
     notifyCleanerOfAssignmentByEmail(jobId).catch(() => {});
 
     // Phase 5 Step 5: Log audit entry (existing system)

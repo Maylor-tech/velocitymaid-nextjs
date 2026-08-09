@@ -4,8 +4,7 @@ import type { Job, Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { computeJobPaymentFromSession } from '@/lib/booking/jobPayment';
 import { nextVmReference } from '@/lib/billing/numbering';
-import { createClientJobFolder } from '@/lib/google/drive';
-import { syncJobCalendarEvent } from '@/lib/google/calendar';
+import { queueJobGoogleSync } from '@/lib/google/jobGoogleSync';
 import { createAdminNotification, adminNotificationHelpers } from '@/lib/notifications/adminNotificationCenter';
 
 export type UpsertJobFromCheckoutResult = {
@@ -52,6 +51,15 @@ async function buildJobCreateData(
     : null;
   const jobReference = await nextVmReference();
 
+  const RECURRING_FREQUENCY_LABELS: Record<string, string> = {
+    WEEKLY: 'Weekly',
+    BIWEEKLY: 'Bi-Weekly',
+    MONTHLY: 'Monthly',
+  };
+  const internalNotes = metadata.recurringFrequency
+    ? `Recurring frequency: ${RECURRING_FREQUENCY_LABELS[metadata.recurringFrequency] ?? metadata.recurringFrequency}`
+    : null;
+
   return {
     id: randomUUID(),
     jobReference,
@@ -79,6 +87,7 @@ async function buildJobCreateData(
     appliedReferralCode: metadata.referralCode || null,
     promoApplied: metadata.promoCode || null,
     promoDiscount: promoDiscount ?? null,
+    internalNotes,
   };
 }
 
@@ -119,12 +128,7 @@ export async function upsertJobFromCheckoutSession(options: {
     // event right away. Deposit-mode bookings stay PENDING here and get the
     // same treatment later, when an admin approves them (see approve/route.ts).
     if (job.reviewStatus === 'APPROVED') {
-      createClientJobFolder({
-        id: job.id,
-        jobReference: job.jobReference,
-        customerName: job.customerName,
-      }).catch(() => {});
-      syncJobCalendarEvent(job.id).catch(() => {});
+      queueJobGoogleSync(job.id);
     }
 
     if (job.paymentStatus === 'DEPOSIT_PAID') {

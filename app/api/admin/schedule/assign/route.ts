@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 import { sendJobOffer } from '@/app/services/whatsappService';
+import { queueJobCalendarSync } from '@/lib/google/jobGoogleSync';
 
 interface AssignRequest {
   jobId: string;
@@ -159,6 +160,8 @@ export async function POST(request: NextRequest) {
         }
       }
     }
+
+    queueJobCalendarSync(jobId);
 
     return NextResponse.json({
       success: true,

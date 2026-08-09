@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import { loadJobTeamMembers } from '@/lib/cleaners/internalCleanerService';
+import { queueJobCalendarSync } from '@/lib/google/jobGoogleSync';
 
 export async function GET(
   request: NextRequest,
@@ -53,6 +54,7 @@ export async function PUT(
         where: { id: params.jobId },
         data: { assignedCleanerId: cleanerIds[0], assignedAt: new Date() },
       });
+      queueJobCalendarSync(params.jobId);
     }
 
     const team = await loadJobTeamMembers(params.jobId);

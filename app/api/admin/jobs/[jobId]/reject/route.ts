@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 import { logAuditEntry } from '@/lib/audit';
 import { refundDepositForRejectedJob } from '@/lib/booking/depositRefund';
+import { queueJobCalendarCancel } from '@/lib/google/jobGoogleSync';
 
 /**
  * POST /api/admin/jobs/[jobId]/reject
@@ -61,6 +62,8 @@ export async function POST(
       description: reason || 'Deposit booking rejected',
       changes: { refund },
     });
+
+    queueJobCalendarCancel(jobId);
 
     const jobAfterRefund = await prisma.job.findUnique({ where: { id: jobId } });
 

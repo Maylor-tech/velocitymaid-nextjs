@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { notifyAdmin } from '@/lib/notifyAdmin';
 import { JobStatus } from '@prisma/client';
 import { requireCustomerJobOwnership } from '@/lib/auth/requireRole';
-import { cancelJobCalendarEventById } from '@/lib/google/calendar';
+import { queueJobCalendarCancel } from '@/lib/google/jobGoogleSync';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -113,7 +113,7 @@ export async function POST(
     });
 
     // Fire-and-forget: mark the calendar event cancelled, not deleted.
-    cancelJobCalendarEventById(params.jobId).catch(() => {});
+    queueJobCalendarCancel(params.jobId);
 
     // Notify admin
     notifyAdmin('JOB_CANCELLED_BY_CUSTOMER', {

@@ -129,7 +129,11 @@ async function syncCalendar(
 
     const refreshed = await prisma.job.findUnique({
       where: { id: jobId },
-      select: { calendarEventId: true, calendarEventStatus: true },
+      select: {
+        calendarEventId: true,
+        calendarEventStatus: true,
+        preferredDate: true,
+      },
     });
 
     if (refreshed?.calendarEventStatus === 'error') {
@@ -155,6 +159,15 @@ async function syncCalendar(
         message: 'Calendar event created successfully.',
         eventId: refreshed.calendarEventId,
         eventStatus: refreshed.calendarEventStatus,
+      };
+    }
+
+    if (!hadEvent && !refreshed?.preferredDate) {
+      return {
+        status: 'skipped',
+        message: 'Calendar create skipped — job has no preferredDate yet.',
+        eventId: null,
+        eventStatus: refreshed?.calendarEventStatus ?? null,
       };
     }
 

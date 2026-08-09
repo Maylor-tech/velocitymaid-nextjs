@@ -6,6 +6,9 @@
  * absent means insert (create) then persist the new id. A cron or webhook
  * firing twice for the same job always resolves to one event.
  *
+ * Create gate: new events require preferredDate ("enough scheduling info").
+ * Updates always patch the existing event (never insert a second one).
+ *
  * Sensitive access codes are intentionally never written into the event
  * description — only the job reference, service type, general property
  * area, assigned cleaner name(s), and an admin link.
@@ -25,13 +28,64 @@ export interface CalendarJobInput {
    *  intentionally never goes on the shared ops calendar. */
   areaLabel: string | null;
   preferredDate: Date | null;
+  preferredTime: string | null;
   cleanerName: string | null;
   calendarEventId: string | null;
+}
+
+/** True when the job has a scheduled date — required before creating a new event. */
+export function hasEnoughSchedulingInfo(job: {
+  preferredDate: Date | null | undefined;
+}): boolean {
+  return Boolean(job.preferredDate);
+}
+
+/**
+ * Parse a clock time from preferredTime for overlay onto preferredDate.
+ * Supports "14:00", "2:00 PM", and range starts like "10:00 - 12:00".
+ * Returns null for labels like "Morning" / unparseable values.
+ */
+export function parsePreferredClockTime(
+  preferredTime: string | null | undefined
+): { hours: number; minutes: number } | null {
+  if (!preferredTime?.trim()) return null;
+  const startPart = preferredTime.split('-')[0].trim();
+  const ampm = startPart.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (ampm) {
+    let hours = parseInt(ampm[1], 10);
+    const minutes = parseInt(ampm[2], 10);
+    const mer = ampm[3].toUpperCase();
+    if (mer === 'PM' && hours < 12) hours += 12;
+    if (mer === 'AM' && hours === 12) hours = 0;
+    if (hours > 23 || minutes > 59) return null;
+    return { hours, minutes };
+  }
+  const h24 = startPart.match(/^(\d{1,2}):(\d{2})$/);
+  if (h24) {
+    const hours = parseInt(h24[1], 10);
+    const minutes = parseInt(h24[2], 10);
+    if (hours > 23 || minutes > 59) return null;
+    return { hours, minutes };
+  }
+  return null;
 }
 
 function adminLinkFor(jobId: string): string {
   const base = (process.env.NEXT_PUBLIC_BASE_URL || 'https://velocitymaid.com').replace(/\/$/, '');
   return `${base}/admin/jobs/${jobId}`;
+}
+
+function resolveEventBounds(preferredDate: Date, preferredTime: string | null) {
+  const start = new Date(preferredDate);
+  const clock = parsePreferredClockTime(preferredTime);
+  if (clock) {
+    start.setUTCHours(clock.hours, clock.minutes, 0, 0);
+  }
+  const end = new Date(start.getTime() + DEFAULT_EVENT_DURATION_MS);
+  return {
+    start: { dateTime: start.toISOString() },
+    end: { dateTime: end.toISOString() },
+  };
 }
 
 function buildEventBody(job: CalendarJobInput) {
@@ -44,20 +98,16 @@ function buildEventBody(job: CalendarJobInput) {
     job.serviceType ? `Service: ${job.serviceType}` : null,
     job.areaLabel ? `Area: ${job.areaLabel}` : null,
     `Cleaner: ${job.cleanerName || 'Unassigned'}`,
+    job.preferredTime ? `Window: ${job.preferredTime}` : null,
     `Admin: ${adminLinkFor(job.id)}`,
     '',
     'Exact address and access notes are intentionally excluded — see admin link.',
   ].filter((line): line is string => line !== null);
 
-  const start = job.preferredDate ?? undefined;
-  const end = start ? new Date(start.getTime() + DEFAULT_EVENT_DURATION_MS) : undefined;
-
   return {
     summary,
     description: descriptionLines.join('\n'),
-    ...(start && end
-      ? { start: { dateTime: start.toISOString() }, end: { dateTime: end.toISOString() } }
-      : {}),
+    ...(job.preferredDate ? resolveEventBounds(job.preferredDate, job.preferredTime) : {}),
   };
 }
 
@@ -69,8 +119,14 @@ export async function upsertJobCalendarEvent(job: CalendarJobInput): Promise<str
   const calendarId = config.operationsCalendarId;
   if (!calendarId) return null;
 
-  const body = buildEventBody(job);
   const isUpdate = Boolean(job.calendarEventId);
+
+  // Create only when the job has a scheduled date; updates always patch the linked event.
+  if (!isUpdate && !hasEnoughSchedulingInfo(job)) {
+    return null;
+  }
+
+  const body = buildEventBody(job);
 
   try {
     const calendar = getCalendarClient();
@@ -78,6 +134,10 @@ export async function upsertJobCalendarEvent(job: CalendarJobInput): Promise<str
 
     if (eventId) {
       await calendar.events.patch({ calendarId, eventId, requestBody: body });
+      await prisma.job.update({
+        where: { id: job.id },
+        data: { calendarEventStatus: 'synced' },
+      });
     } else {
       const res = await calendar.events.insert({ calendarId, requestBody: body });
       eventId = res.data.id ?? null;
@@ -131,12 +191,19 @@ export async function syncJobCalendarEvent(jobId: string): Promise<void> {
       serviceType: true,
       serviceLocation: true,
       preferredDate: true,
+      preferredTime: true,
       calendarEventId: true,
+      status: true,
       User: { select: { name: true } },
       Branch: { select: { name: true } },
     },
   });
   if (!job) return;
+
+  if (job.status === 'CANCELLED' || job.status === 'CANCELLED_EMERGENCY') {
+    await cancelJobCalendarEvent(job);
+    return;
+  }
 
   await upsertJobCalendarEvent({
     id: job.id,
@@ -144,6 +211,7 @@ export async function syncJobCalendarEvent(jobId: string): Promise<void> {
     serviceType: job.serviceType,
     areaLabel: job.serviceLocation || job.Branch?.name || null,
     preferredDate: job.preferredDate,
+    preferredTime: job.preferredTime,
     cleanerName: job.User?.name ?? null,
     calendarEventId: job.calendarEventId,
   });

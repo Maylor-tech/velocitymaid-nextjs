@@ -1,8 +1,6 @@
 /**
- * Tests upsertJobCalendarEvent()'s idempotency (create once, then always
- * patch the same event via the stored calendarEventId) and
- * cancelJobCalendarEvent() marking the event cancelled rather than
- * deleting it. Mocks the Google API client entirely; makes no real calls.
+ * Tests Calendar create gate (preferredDate required for new events),
+ * preferredTime clock parsing, and update-never-duplicates behavior.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -22,6 +20,7 @@ vi.mock('../../prisma', () => ({
         jobUpdates.push(data);
         return data;
       }),
+      findUnique: vi.fn(),
     },
   },
 }));
@@ -65,7 +64,12 @@ vi.mock('../integrationLog', () => ({
   logIntegrationEvent: vi.fn(async () => {}),
 }));
 
-import { upsertJobCalendarEvent, cancelJobCalendarEvent } from '../calendar';
+import {
+  upsertJobCalendarEvent,
+  cancelJobCalendarEvent,
+  parsePreferredClockTime,
+  hasEnoughSchedulingInfo,
+} from '../calendar';
 import { isCalendarEnabled } from '../config';
 import { logIntegrationEvent } from '../integrationLog';
 
@@ -75,9 +79,25 @@ const baseJob = {
   serviceType: 'DEEP_CLEAN',
   areaLabel: 'Vermont',
   preferredDate: new Date('2026-08-01T14:00:00Z'),
+  preferredTime: null as string | null,
   cleanerName: null as string | null,
   calendarEventId: null as string | null,
 };
+
+describe('parsePreferredClockTime / hasEnoughSchedulingInfo', () => {
+  it('parses 24h, 12h, and range starts; rejects labels', () => {
+    expect(parsePreferredClockTime('14:30')).toEqual({ hours: 14, minutes: 30 });
+    expect(parsePreferredClockTime('2:00 PM')).toEqual({ hours: 14, minutes: 0 });
+    expect(parsePreferredClockTime('10:00 - 12:00')).toEqual({ hours: 10, minutes: 0 });
+    expect(parsePreferredClockTime('Morning')).toBeNull();
+    expect(parsePreferredClockTime(null)).toBeNull();
+  });
+
+  it('requires preferredDate for enough scheduling info', () => {
+    expect(hasEnoughSchedulingInfo({ preferredDate: new Date() })).toBe(true);
+    expect(hasEnoughSchedulingInfo({ preferredDate: null })).toBe(false);
+  });
+});
 
 describe('upsertJobCalendarEvent', () => {
   beforeEach(() => {
@@ -96,11 +116,40 @@ describe('upsertJobCalendarEvent', () => {
     expect(calendarMock.inserted).toHaveLength(0);
   });
 
+  it('skips create when preferredDate is missing (fail soft / enough-info gate)', async () => {
+    const result = await upsertJobCalendarEvent({ ...baseJob, preferredDate: null });
+    expect(result).toBeNull();
+    expect(calendarMock.inserted).toHaveLength(0);
+    expect(calendarMock.patched).toHaveLength(0);
+  });
+
+  it('still patches an existing event when preferredDate is missing (never creates another)', async () => {
+    const result = await upsertJobCalendarEvent({
+      ...baseJob,
+      preferredDate: null,
+      calendarEventId: 'event-existing',
+      cleanerName: 'Jane',
+    });
+    expect(result).toBe('event-existing');
+    expect(calendarMock.inserted).toHaveLength(0);
+    expect(calendarMock.patched).toHaveLength(1);
+    expect(calendarMock.patched[0].eventId).toBe('event-existing');
+  });
+
   it('never puts the exact street address in the description — area label only', async () => {
     await upsertJobCalendarEvent(baseJob);
     const description = calendarMock.inserted[0].description as string;
     expect(description).toContain('Vermont');
     expect(description).not.toMatch(/\d{1,5}\s+\w+\s+(St|Street|Ave|Avenue|Rd|Road)/i);
+  });
+
+  it('applies preferredTime onto the event start when parseable', async () => {
+    await upsertJobCalendarEvent({
+      ...baseJob,
+      preferredDate: new Date('2026-08-01T00:00:00Z'),
+      preferredTime: '10:00 AM',
+    });
+    expect(calendarMock.inserted[0].start.dateTime).toBe('2026-08-01T10:00:00.000Z');
   });
 
   it('creates one event on first sync, then patches the SAME event on subsequent syncs (idempotent)', async () => {
@@ -110,12 +159,16 @@ describe('upsertJobCalendarEvent', () => {
     expect(jobUpdates).toHaveLength(1);
     expect(jobUpdates[0].calendarEventId).toBe('event-1');
 
-    // Second sync — now with a calendarEventId, as if reloaded from the job row
-    const updated = await upsertJobCalendarEvent({ ...baseJob, calendarEventId: 'event-1', cleanerName: 'Jane Cleaner' });
+    const updated = await upsertJobCalendarEvent({
+      ...baseJob,
+      calendarEventId: 'event-1',
+      cleanerName: 'Jane Cleaner',
+    });
     expect(updated).toBe('event-1');
-    expect(calendarMock.inserted).toHaveLength(1); // still just one insert ever
+    expect(calendarMock.inserted).toHaveLength(1);
     expect(calendarMock.patched).toHaveLength(1);
     expect(calendarMock.patched[0].requestBody.summary).toContain('Jane Cleaner');
+    expect(jobUpdates.some((u) => u.calendarEventStatus === 'synced')).toBe(true);
   });
 
   it('logs failure and returns null (never throws) when the Calendar API errors', async () => {

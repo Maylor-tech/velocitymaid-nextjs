@@ -17,6 +17,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
 import { geocodeCustomerInBackground } from "@/lib/geocoding/geocodeCustomer";
 import { nextVmReference } from "@/lib/billing/numbering";
+import { queueJobGoogleSync } from "@/lib/google/jobGoogleSync";
 
 interface ManualJobBody {
   clientFirstName?: string;
@@ -297,6 +298,13 @@ export async function POST(request: NextRequest) {
       },
       select: { id: true },
     });
+
+    // Fire-and-forget: Drive whenever enabled; Calendar creates only once
+    // preferredDate is present (enough scheduling info). Cancelled jobs skip
+    // via syncJobCalendarEvent status check.
+    if (jobStatus !== JobStatus.CANCELLED && jobStatus !== JobStatus.CANCELLED_EMERGENCY) {
+      queueJobGoogleSync(job.id);
+    }
 
     return NextResponse.json({
       success: true,

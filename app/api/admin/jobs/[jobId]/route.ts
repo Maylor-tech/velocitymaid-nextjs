@@ -14,6 +14,7 @@ import { requireRole } from '@/lib/auth/requireRole';
 import { computePayoutEligibility } from '@/lib/booking/payoutEligibility';
 import { logAuditEntry } from '@/lib/audit';
 import type { JobStatus } from '@prisma/client';
+import { queueJobCalendarCancel, queueJobCalendarSync } from '@/lib/google/jobGoogleSync';
 
 export async function GET(
   request: NextRequest,
@@ -372,6 +373,21 @@ export async function PATCH(
         },
       },
     });
+
+    const becameCancelled =
+      (updated.status === 'CANCELLED' || updated.status === 'CANCELLED_EMERGENCY') &&
+      existing.status !== updated.status;
+    const scheduleOrCleanerChanged =
+      data.preferredDate !== undefined ||
+      data.preferredTime !== undefined ||
+      data.assignedCleanerId !== undefined ||
+      data.serviceType !== undefined;
+
+    if (becameCancelled) {
+      queueJobCalendarCancel(jobId);
+    } else if (scheduleOrCleanerChanged) {
+      queueJobCalendarSync(jobId);
+    }
 
     return NextResponse.json({
       success: true,

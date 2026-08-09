@@ -8,6 +8,7 @@ import { logAuditEntry } from '@/lib/audit';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
 import { JobStatus } from '@prisma/client';
 import { requireCustomerJobOwnership } from '@/lib/auth/requireRole';
+import { queueJobCalendarSync } from '@/lib/google/jobGoogleSync';
 
 /**
  * POST /api/customer/jobs/[jobId]/reschedule
@@ -114,6 +115,10 @@ If you have questions, just reply here.
         newTime: newPreferredTime || null,
       },
     });
+
+    if (dateChanged || timeChanged) {
+      queueJobCalendarSync(params.jobId);
+    }
 
     return NextResponse.json({
       success: true,

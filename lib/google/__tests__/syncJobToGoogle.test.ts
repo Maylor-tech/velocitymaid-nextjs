@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
     driveFolderUrl: null as string | null,
     calendarEventId: null as string | null,
     calendarEventStatus: null as string | null,
+    preferredDate: new Date('2026-08-01T14:00:00Z') as Date | null,
   },
   driveEnabled: true,
   calendarEnabled: true,
@@ -59,6 +60,7 @@ describe('syncJobToGoogle', () => {
       driveFolderUrl: null,
       calendarEventId: null,
       calendarEventStatus: null,
+      preferredDate: new Date('2026-08-01T14:00:00Z'),
     };
     mocks.driveEnabled = true;
     mocks.calendarEnabled = true;
@@ -144,6 +146,17 @@ describe('syncJobToGoogle', () => {
     expect(result.drive.folderId == null).toBe(true);
     expect(result.calendar.status).toBe('synced');
     expect(result.calendar.eventId).toBe('event-new');
+  });
+
+  it('Calendar create skipped when job has no preferredDate yet', async () => {
+    mocks.job.preferredDate = null;
+    mocks.syncJobCalendarEvent.mockImplementation(async () => {
+      // Mirror upsert create-gate: no event persisted
+    });
+    const result = await syncJobToGoogle('job-1');
+    expect(result.calendar.status).toBe('skipped');
+    expect(result.calendar.message).toMatch(/no preferredDate/);
+    expect(result.drive.status).toBe('synced');
   });
 
   it('throws JOB_NOT_FOUND when job missing', async () => {
