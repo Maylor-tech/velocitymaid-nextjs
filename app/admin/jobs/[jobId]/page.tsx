@@ -118,6 +118,11 @@ export default function AdminJobDetailPage() {
   const [payoutMethod, setPayoutMethod] = useState('');
   const [payoutNote, setPayoutNote] = useState('');
   const [payoutReference, setPayoutReference] = useState('');
+  const [googleSyncing, setGoogleSyncing] = useState(false);
+  const [googleSyncResult, setGoogleSyncResult] = useState<{
+    drive: { status: string; message: string; folderUrl?: string | null };
+    calendar: { status: string; message: string; eventId?: string | null };
+  } | null>(null);
   const [showMarkPaid, setShowMarkPaid] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [markPaidAmount, setMarkPaidAmount] = useState('');
@@ -580,6 +585,49 @@ export default function AdminJobDetailPage() {
       setTimeout(() => setShowToast(false), 3000);
     } finally {
       setAssigning(false);
+    }
+  };
+
+  const handleGoogleSync = async () => {
+    const confirmed = window.confirm(
+      'Sync this job to Google Drive and Google Calendar?\n\n' +
+        'If a folder or event already exists, it will be reused (no duplicates).'
+    );
+    if (!confirmed) return;
+
+    setGoogleSyncing(true);
+    setGoogleSyncResult(null);
+    try {
+      const response = await fetch(`/api/admin/jobs/${jobId}/sync-google`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Google sync failed');
+      }
+      setGoogleSyncResult({
+        drive: data.drive,
+        calendar: data.calendar,
+      });
+      setToastMessage(
+        `Google sync — Drive: ${data.drive.status}, Calendar: ${data.calendar.status}`
+      );
+      setToastType(
+        data.drive.status === 'error' && data.calendar.status === 'error'
+          ? 'error'
+          : 'success'
+      );
+      setShowToast(true);
+      await fetchJob();
+      await fetchAuditLogs();
+    } catch (err: unknown) {
+      setToastMessage(err instanceof Error ? err.message : 'Google sync failed');
+      setToastType('error');
+      setShowToast(true);
+    } finally {
+      setGoogleSyncing(false);
+      setTimeout(() => setShowToast(false), 5000);
     }
   };
 
@@ -1355,6 +1403,62 @@ export default function AdminJobDetailPage() {
             )}
           </div>
         </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-vm-text mb-2">Google Workspace</h2>
+            <p className="text-sm text-vm-muted mb-4">
+              Manually create or refresh the Drive client folder and Calendar event for this job.
+              Existing links are reused — this does not duplicate folders or events.
+            </p>
+            <button
+              type="button"
+              disabled={googleSyncing}
+              onClick={handleGoogleSync}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-vm-navy text-white rounded-lg hover:bg-vm-navy/90 disabled:opacity-60"
+            >
+              {googleSyncing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Syncing…
+                </>
+              ) : (
+                'Sync to Google'
+              )}
+            </button>
+            {googleSyncResult && (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-gray-200 bg-vm-surface/40 px-3 py-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-vm-muted">Drive</p>
+                  <p className="mt-1 text-sm font-semibold text-vm-text capitalize">
+                    {googleSyncResult.drive.status}
+                  </p>
+                  <p className="mt-0.5 text-xs text-vm-muted">{googleSyncResult.drive.message}</p>
+                  {googleSyncResult.drive.folderUrl && (
+                    <a
+                      href={googleSyncResult.drive.folderUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-block text-xs font-semibold text-vm-cyan-dark hover:underline"
+                    >
+                      Open folder →
+                    </a>
+                  )}
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-vm-surface/40 px-3 py-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-vm-muted">Calendar</p>
+                  <p className="mt-1 text-sm font-semibold text-vm-text capitalize">
+                    {googleSyncResult.calendar.status}
+                  </p>
+                  <p className="mt-0.5 text-xs text-vm-muted">{googleSyncResult.calendar.message}</p>
+                  {googleSyncResult.calendar.eventId && (
+                    <p className="mt-1 text-xs text-vm-muted">
+                      Event ID: {googleSyncResult.calendar.eventId}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
         {!isBranchScoped && job.customer?.id && (
           <div className="mb-6">
