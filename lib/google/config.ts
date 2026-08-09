@@ -6,6 +6,9 @@
  * explicitly enabled the integration in AdminPlatformSettings (the "disable
  * individual integrations" kill switch) — configuring credentials alone
  * never turns anything on.
+ *
+ * Calendar also requires GOOGLE_CALENDAR_IMPERSONATION_EMAIL (DWD subject).
+ * Drive does not use impersonation.
  */
 import { prisma } from '@/lib/prisma';
 
@@ -15,15 +18,19 @@ export interface GoogleEnvConfig {
   sharedDriveId: string | null;
   driveRootFolderId: string | null;
   operationsCalendarId: string | null;
+  /** Workspace user impersonated for Calendar DWD (owner of ops calendar). */
+  calendarImpersonationEmail: string | null;
 }
 
 export function readGoogleEnvConfig(): GoogleEnvConfig {
+  const impersonation = process.env.GOOGLE_CALENDAR_IMPERSONATION_EMAIL?.trim() || null;
   return {
     serviceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || null,
     hasPrivateKey: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY),
     sharedDriveId: process.env.GOOGLE_SHARED_DRIVE_ID || null,
     driveRootFolderId: process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || null,
     operationsCalendarId: process.env.GOOGLE_OPERATIONS_CALENDAR_ID || null,
+    calendarImpersonationEmail: impersonation,
   };
 }
 
@@ -34,7 +41,12 @@ export function hasCompleteDriveEnvConfig(): boolean {
 
 export function hasCompleteCalendarEnvConfig(): boolean {
   const c = readGoogleEnvConfig();
-  return Boolean(c.serviceAccountEmail && c.hasPrivateKey && c.operationsCalendarId);
+  return Boolean(
+    c.serviceAccountEmail &&
+      c.hasPrivateKey &&
+      c.operationsCalendarId &&
+      c.calendarImpersonationEmail
+  );
 }
 
 /** Singleton row — created on first read if it doesn't exist yet. */

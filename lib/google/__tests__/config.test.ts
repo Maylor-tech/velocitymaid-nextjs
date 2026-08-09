@@ -34,6 +34,7 @@ const ENV_KEYS = [
   'GOOGLE_SHARED_DRIVE_ID',
   'GOOGLE_DRIVE_ROOT_FOLDER_ID',
   'GOOGLE_OPERATIONS_CALENDAR_ID',
+  'GOOGLE_CALENDAR_IMPERSONATION_EMAIL',
 ] as const;
 
 function clearEnv() {
@@ -64,11 +65,36 @@ describe('Google Workspace config gating', () => {
     expect(hasCompleteDriveEnvConfig()).toBe(true);
   });
 
-  it('reports Calendar configured only when its required env vars are present', () => {
+  it('Drive config does not require Calendar impersonation email', () => {
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = 'svc@test.iam.gserviceaccount.com';
+    process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY = 'fake-key';
+    process.env.GOOGLE_SHARED_DRIVE_ID = 'drive-123';
+    process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID = 'folder-123';
+    delete process.env.GOOGLE_CALENDAR_IMPERSONATION_EMAIL;
+    expect(hasCompleteDriveEnvConfig()).toBe(true);
+  });
+
+  it('reports Calendar incomplete without impersonation email (fail closed)', () => {
     expect(hasCompleteCalendarEnvConfig()).toBe(false);
     process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = 'svc@test.iam.gserviceaccount.com';
     process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY = 'fake-key';
     process.env.GOOGLE_OPERATIONS_CALENDAR_ID = 'cal-123';
+    expect(hasCompleteCalendarEnvConfig()).toBe(false);
+  });
+
+  it('reports Calendar incomplete when impersonation email is blank', () => {
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = 'svc@test.iam.gserviceaccount.com';
+    process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY = 'fake-key';
+    process.env.GOOGLE_OPERATIONS_CALENDAR_ID = 'cal-123';
+    process.env.GOOGLE_CALENDAR_IMPERSONATION_EMAIL = '   ';
+    expect(hasCompleteCalendarEnvConfig()).toBe(false);
+  });
+
+  it('reports Calendar configured when SA, calendar id, and impersonation email are present', () => {
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = 'svc@test.iam.gserviceaccount.com';
+    process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY = 'fake-key';
+    process.env.GOOGLE_OPERATIONS_CALENDAR_ID = 'cal-123';
+    process.env.GOOGLE_CALENDAR_IMPERSONATION_EMAIL = 'hello@velocitymaid.com';
     expect(hasCompleteCalendarEnvConfig()).toBe(true);
   });
 
