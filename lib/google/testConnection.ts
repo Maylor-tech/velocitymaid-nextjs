@@ -16,14 +16,40 @@ export async function testDriveConnection(): Promise<ConnectionTestResult> {
     return { ok: false, message: 'Drive credentials or folder ID are not fully configured.' };
   }
   const config = readGoogleEnvConfig();
+  const rootFolderId = config.driveRootFolderId!;
+  const sharedDriveId = config.sharedDriveId!;
   try {
     const drive = getDriveClient();
+    // Shared Drive items require supportsAllDrives; fields.driveId confirms the corpus.
     const res = await drive.files.get({
-      fileId: config.driveRootFolderId!,
-      fields: 'id, name',
+      fileId: rootFolderId,
+      fields: 'id, name, driveId, mimeType',
       supportsAllDrives: true,
     });
-    return { ok: true, message: `Connected — root folder "${res.data.name}" is reachable.` };
+
+    if (res.data.driveId && res.data.driveId !== sharedDriveId) {
+      return {
+        ok: false,
+        message:
+          'Root folder is reachable but is not in the configured GOOGLE_SHARED_DRIVE_ID.',
+      };
+    }
+
+    // Same Shared Drive list flags as lib/google/drive.ts folder lookup.
+    await drive.files.list({
+      q: `'${rootFolderId}' in parents and trashed = false`,
+      corpora: 'drive',
+      driveId: sharedDriveId,
+      includeItemsFromAllDrives: true,
+      supportsAllDrives: true,
+      pageSize: 1,
+      fields: 'files(id)',
+    });
+
+    return {
+      ok: true,
+      message: `Connected — root folder "${res.data.name}" is reachable in Shared Drive.`,
+    };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown Google Drive error';
     return { ok: false, message };
@@ -37,8 +63,20 @@ export async function testCalendarConnection(): Promise<ConnectionTestResult> {
   const config = readGoogleEnvConfig();
   try {
     const calendar = getCalendarClient();
-    const res = await calendar.calendars.get({ calendarId: config.operationsCalendarId! });
-    return { ok: true, message: `Connected — calendar "${res.data.summary}" is reachable.` };
+    // Use events.list (matches calendar.events scope) — calendars.get needs broader calendar scope.
+    const res = await calendar.events.list({
+      calendarId: config.operationsCalendarId!,
+      maxResults: 1,
+      singleEvents: true,
+      orderBy: 'startTime',
+      timeMin: new Date().toISOString(),
+    });
+    const label = config.operationsCalendarId!;
+    const count = res.data.items?.length ?? 0;
+    return {
+      ok: true,
+      message: `Connected — operations calendar "${label}" is reachable (${count} upcoming event${count === 1 ? '' : 's'} sampled).`,
+    };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown Google Calendar error';
     return { ok: false, message };

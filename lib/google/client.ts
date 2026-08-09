@@ -1,16 +1,20 @@
 /**
  * Service-account auth for Google Drive + Calendar.
  *
- * Least-privilege scopes: drive.file (only files/folders this app creates —
- * not full drive access) and calendar.events (events only, not calendar
- * settings/ACLs). No domain-wide delegation — this JWT authenticates as the
- * service account itself, never impersonates a human mailbox.
+ * Drive: drive.file for folders/files this app creates, plus metadata.readonly so
+ * connection tests and Shared Drive parents created by humans remain readable
+ * when the service account is a Shared Drive member.
+ * Calendar: calendar.events only (events, not calendar ACLs/settings).
+ * No domain-wide delegation — JWT authenticates as the service account itself.
  */
 import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
 import { readGoogleEnvConfig } from './config';
 
-const DRIVE_SCOPES = ['https://www.googleapis.com/auth/drive.file'];
+const DRIVE_SCOPES = [
+  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive.metadata.readonly',
+];
 const CALENDAR_SCOPES = ['https://www.googleapis.com/auth/calendar.events'];
 
 function normalizePrivateKey(raw: string): string {
