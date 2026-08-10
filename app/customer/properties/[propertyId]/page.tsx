@@ -11,6 +11,7 @@ import {
   Plus,
   Save,
 } from 'lucide-react';
+import { formatServiceDate } from '@/lib/dates/serviceDate';
 
 interface HostProperty {
   id: string;
@@ -423,7 +424,7 @@ export default function CustomerPropertyDetailPage() {
                   </p>
                   <p className="font-body text-sm text-vm-muted">
                     {job.preferredDate
-                      ? new Date(job.preferredDate).toLocaleDateString('en-US', {
+                      ? formatServiceDate(job.preferredDate, {
                           weekday: 'short',
                           month: 'short',
                           day: 'numeric',

@@ -20,6 +20,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { NEW_JERSEY_SUPPORT, primarySupportHref } from '@/lib/customer/marketSupport';
+import { formatServiceDate as formatServiceCalendarDate } from '@/lib/dates/serviceDate';
 
 interface HomeData {
   welcome: { greeting: string; message: string };
@@ -72,8 +73,7 @@ interface HomeData {
 
 function formatServiceDate(iso: string | null, timeWindow: string | null) {
   if (!iso) return timeWindow || 'Date to be confirmed';
-  const date = new Date(iso);
-  const datePart = date.toLocaleDateString('en-US', {
+  const datePart = formatServiceCalendarDate(iso, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',

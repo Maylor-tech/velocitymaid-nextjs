@@ -5,6 +5,7 @@ import { Calendar, MapPin, Clock, DollarSign } from 'lucide-react';
 import type { CustomerBooking } from '@/utils/customerBookings';
 import RegionBadge from './RegionBadge';
 import BookingStatusBadge from './BookingStatusBadge';
+import { formatServiceDate } from '@/lib/dates/serviceDate';
 
 interface BookingCardProps {
   booking: CustomerBooking;
@@ -20,8 +21,7 @@ export default function BookingCard({
   onCancel,
 }: BookingCardProps) {
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
+    return formatServiceDate(dateStr, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

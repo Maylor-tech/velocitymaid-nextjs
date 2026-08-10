@@ -6,6 +6,7 @@ import { Loader2, Calendar, MapPin, DollarSign } from "lucide-react";
 import Link from "next/link";
 import CleanerPortalNav from "@/components/cleaner/CleanerPortalNav";
 import TrainingIncompleteBanner from "@/components/cleaner/TrainingIncompleteBanner";
+import { formatServiceDate } from "@/lib/dates/serviceDate";
 
 interface Job {
   id: string;
@@ -89,8 +90,7 @@ export default function CleanerJobsPage() {
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "TBD";
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
+    return formatServiceDate(dateStr, {
       weekday: "short",
       month: "short",
       day: "numeric",

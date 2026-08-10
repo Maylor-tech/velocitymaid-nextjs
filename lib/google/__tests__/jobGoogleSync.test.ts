@@ -20,6 +20,7 @@ vi.mock('../calendar', () => ({
 }));
 
 import {
+  awaitJobGoogleSync,
   queueJobGoogleSync,
   queueJobCalendarSync,
   queueJobCalendarCancel,
@@ -31,6 +32,23 @@ describe('jobGoogleSync queue helpers', () => {
     mocks.syncJobToGoogle.mockResolvedValue({ jobId: 'job-1' });
     mocks.syncJobCalendarEvent.mockResolvedValue(undefined);
     mocks.cancelJobCalendarEventById.mockResolvedValue(undefined);
+  });
+
+  it('awaitJobGoogleSync awaits sync and never throws when sync rejects', async () => {
+    mocks.syncJobToGoogle.mockRejectedValue(new Error('Google down'));
+    await expect(awaitJobGoogleSync('job-1')).resolves.toBeUndefined();
+    expect(mocks.syncJobToGoogle).toHaveBeenCalledWith('job-1');
+  });
+
+  it('awaitJobGoogleSync completes before caller continues when sync succeeds', async () => {
+    let finished = false;
+    mocks.syncJobToGoogle.mockImplementation(async () => {
+      await new Promise((r) => setTimeout(r, 20));
+      finished = true;
+      return { jobId: 'job-1' };
+    });
+    await awaitJobGoogleSync('job-1');
+    expect(finished).toBe(true);
   });
 
   it('queueJobGoogleSync invokes syncJobToGoogle without throwing when sync rejects', async () => {

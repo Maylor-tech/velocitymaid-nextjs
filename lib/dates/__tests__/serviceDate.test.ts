@@ -1,0 +1,66 @@
+import { describe, expect, it } from 'vitest';
+import {
+  formatServiceDate,
+  parseServiceDateInput,
+  serviceDateKey,
+} from '../serviceDate';
+
+describe('parseServiceDateInput', () => {
+  it('parses YYYY-MM-DD as UTC midnight of that calendar day', () => {
+    const d = parseServiceDateInput('2026-09-15');
+    expect(d).not.toBeNull();
+    expect(d!.toISOString()).toBe('2026-09-15T00:00:00.000Z');
+  });
+
+  it('rejects invalid calendar dates', () => {
+    expect(parseServiceDateInput('2026-02-31')).toBeNull();
+    expect(parseServiceDateInput('not-a-date')).toBeNull();
+    expect(parseServiceDateInput('')).toBeNull();
+  });
+
+  it('normalizes ISO instants to UTC calendar midnight', () => {
+    const d = parseServiceDateInput('2026-09-15T14:30:00.000Z');
+    expect(d!.toISOString()).toBe('2026-09-15T00:00:00.000Z');
+  });
+});
+
+describe('formatServiceDate', () => {
+  it('renders UTC-midnight preferredDate as September 15 (no local day shift)', () => {
+    // 2026-09-15T00:00:00.000Z is evening Sep 14 in US timezones when formatted locally.
+    expect(
+      formatServiceDate('2026-09-15T00:00:00.000Z', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    ).toBe('September 15, 2026');
+  });
+
+  it('keeps noon-UTC seeded dates on the same calendar day', () => {
+    expect(
+      formatServiceDate('2026-09-15T12:00:00.000Z', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    ).toBe('September 15, 2026');
+  });
+
+  it('matches weekday for the UTC calendar day', () => {
+    // 2026-09-15 is a Tuesday.
+    expect(
+      formatServiceDate('2026-09-15T00:00:00.000Z', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    ).toBe('Tuesday, September 15, 2026');
+  });
+});
+
+describe('serviceDateKey', () => {
+  it('returns YYYY-MM-DD from UTC midnight storage', () => {
+    expect(serviceDateKey('2026-09-15T00:00:00.000Z')).toBe('2026-09-15');
+  });
+});

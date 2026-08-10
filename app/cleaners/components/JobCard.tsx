@@ -4,6 +4,7 @@ import { useState } from 'react';
 import StatusBadge from './StatusBadge';
 import LocationBadge from './LocationBadge';
 import { JobChecklistPanel } from '@/components/cleaner/JobChecklistPanel';
+import { formatServiceDate } from '@/lib/dates/serviceDate';
 
 export interface CleanerJob {
   id: string;
@@ -28,12 +29,11 @@ interface JobCardProps {
 export default function JobCard({ job, onStatusUpdate }: JobCardProps) {
   const [showChecklist, setShowChecklist] = useState(false);
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
+    return formatServiceDate(dateStr, {
       weekday: 'short',
-      month: 'short', 
+      month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 

@@ -6,6 +6,7 @@ import JobInfoRow from './JobInfoRow';
 import AssignCleanerModal from './AssignCleanerModal';
 import CleanerProfileDrawer from '../cleaners/CleanerProfileDrawer';
 import { Loader2, RefreshCw, UserCheck, XCircle, UserPlus } from 'lucide-react';
+import { formatServiceDate } from '@/lib/dates/serviceDate';
 
 interface JobDetailDrawerProps {
   jobId: string | null;
@@ -291,7 +292,7 @@ export default function JobDetailDrawer({
                 label="Date"
                 value={
                   job.preferredDate
-                    ? new Date(job.preferredDate).toLocaleDateString('en-US', {
+                    ? formatServiceDate(job.preferredDate, {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',

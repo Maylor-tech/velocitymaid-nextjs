@@ -3,6 +3,8 @@
  * Pure functions — safe to use on client and server.
  */
 
+import { formatServiceDate } from '@/lib/dates/serviceDate';
+
 export type JobPriority = 'urgent' | 'high' | 'medium' | 'normal';
 
 export type PhotoStatusKind = 'none' | 'partial' | 'complete' | 'missing';
@@ -497,7 +499,8 @@ export function formatUsdDetailed(amount: number, currency = 'USD'): string {
 
 export function formatJobDate(dateStr: string | null): string {
   if (!dateStr) return 'Not scheduled';
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  // preferredDate is date-only (UTC midnight) — format in UTC to avoid local day shift.
+  return formatServiceDate(dateStr, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',

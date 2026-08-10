@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Loader2, Calendar, MapPin, DollarSign, CheckCircle, XCircle, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 import { JobChecklistPanel } from "@/components/cleaner/JobChecklistPanel";
+import { formatServiceDate } from "@/lib/dates/serviceDate";
 
 interface CustomerInfo {
   id: string;
@@ -230,8 +231,7 @@ export default function CleanerJobDetailPage() {
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "TBD";
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
+    return formatServiceDate(dateStr, {
       weekday: "long",
       year: "numeric",
       month: "long",

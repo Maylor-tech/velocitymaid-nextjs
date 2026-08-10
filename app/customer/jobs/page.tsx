@@ -18,6 +18,7 @@ import {
   NEW_JERSEY_SUPPORT,
   primarySupportHref,
 } from '@/lib/customer/marketSupport';
+import { formatServiceDate, serviceDateKey } from '@/lib/dates/serviceDate';
 
 interface CustomerJob {
   id: string;
@@ -51,8 +52,7 @@ function initials(name: string): string {
 
 function formatShortDateTime(dateStr?: string, timeWindow?: string): string {
   if (!dateStr) return timeWindow || 'Date TBD';
-  const date = new Date(dateStr);
-  const datePart = date.toLocaleDateString('en-US', {
+  const datePart = formatServiceDate(dateStr, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -62,11 +62,13 @@ function formatShortDateTime(dateStr?: string, timeWindow?: string): string {
 
 function countdownLabel(dateStr?: string): string | null {
   if (!dateStr) return null;
-  const target = new Date(dateStr);
-  target.setHours(0, 0, 0, 0);
+  const key = serviceDateKey(dateStr);
+  if (!key) return null;
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diff = Math.round((target.getTime() - today.getTime()) / 86400000);
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const target = new Date(`${key}T12:00:00`);
+  const todayNoon = new Date(`${todayKey}T12:00:00`);
+  const diff = Math.round((target.getTime() - todayNoon.getTime()) / 86400000);
   if (diff < 0) return null;
   if (diff === 0) return 'Today';
   if (diff === 1) return 'Tomorrow';

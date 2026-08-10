@@ -159,6 +159,15 @@ describe('upsertJobCalendarEvent', () => {
     );
   });
 
+  it('keeps date-only preferredDate on the intended UTC calendar day for Calendar start', async () => {
+    await upsertJobCalendarEvent({
+      ...baseJob,
+      preferredDate: new Date('2026-09-15T00:00:00.000Z'),
+      preferredTime: '10:00 AM',
+    });
+    expect(calendarMock.inserted[0].start.dateTime).toBe('2026-09-15T10:00:00.000Z');
+  });
+
   it('applies preferredTime onto the event start when parseable', async () => {
     await upsertJobCalendarEvent({
       ...baseJob,

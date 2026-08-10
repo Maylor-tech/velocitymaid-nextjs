@@ -6,7 +6,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCustomerSession } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
 import { nextVmReference } from '@/lib/billing/numbering';
-import { queueJobGoogleSync } from '@/lib/google/jobGoogleSync';
+import { awaitJobGoogleSync } from '@/lib/google/jobGoogleSync';
+import { parseServiceDateInput } from '@/lib/dates/serviceDate';
 import {
   buildHostCleaningJobNotes,
   buildPropertyDefaultsForJob,
@@ -20,7 +21,8 @@ type RouteContext = { params: { propertyId: string } };
  * POST /api/customer/properties/[propertyId]/cleanings
  *
  * Host Add Cleaning — creates a Job occurrence linked to Property.
- * Snapshots Property.address onto Job.address; queues existing Google sync.
+ * Snapshots Property.address onto Job.address; awaits Google sync in-request
+ * (serverless fire-and-forget is unreliable). Job commit still succeeds if Google fails.
  */
 export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
@@ -67,8 +69,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         { status: 400 }
       );
     }
-    const preferredDate = new Date(preferredDateRaw);
-    if (Number.isNaN(preferredDate.getTime())) {
+    const preferredDate = parseServiceDateInput(preferredDateRaw);
+    if (!preferredDate) {
       return NextResponse.json(
         { success: false, error: 'preferredDate is invalid' },
         { status: 400 }
@@ -162,7 +164,16 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       },
     });
 
-    queueJobGoogleSync(job.id);
+    // Await so Vercel does not freeze the function before Drive/Calendar run.
+    // Job row already committed; never fail the HTTP response on Google errors.
+    try {
+      await awaitJobGoogleSync(job.id);
+    } catch (syncError) {
+      console.error(
+        '[customer/properties/:id/cleanings] Google sync failed after job create',
+        syncError
+      );
+    }
 
     return NextResponse.json({
       success: true,

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 import { canShowPayBalance } from '@/lib/booking/payBalanceVisibility';
+import { formatServiceDate } from '@/lib/dates/serviceDate';
 
 interface JobDetails {
   id: string;
@@ -162,8 +163,7 @@ function JobDetailsContent() {
 
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return 'TBD';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
+    return formatServiceDate(dateStr, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

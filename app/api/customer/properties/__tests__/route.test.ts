@@ -14,7 +14,7 @@ const findUniqueCustomer = vi.fn();
 const findUniqueBranch = vi.fn();
 const jobCreate = vi.fn();
 const nextVmReference = vi.fn();
-const queueJobGoogleSync = vi.fn();
+const awaitJobGoogleSync = vi.fn();
 
 vi.mock('@/lib/customerSession', () => ({
   getCustomerSession: (...a: unknown[]) => getCustomerSession(...a),
@@ -53,7 +53,7 @@ vi.mock('@/lib/billing/numbering', () => ({
 }));
 
 vi.mock('@/lib/google/jobGoogleSync', () => ({
-  queueJobGoogleSync: (...a: unknown[]) => queueJobGoogleSync(...a),
+  awaitJobGoogleSync: (...a: unknown[]) => awaitJobGoogleSync(...a),
 }));
 
 import { GET as listGET } from '@/app/api/customer/properties/route';
@@ -249,8 +249,113 @@ describe('Host property APIs', () => {
         }),
       })
     );
-    expect(queueJobGoogleSync).toHaveBeenCalledWith('job-new');
+    expect(awaitJobGoogleSync).toHaveBeenCalledWith('job-new');
     expect(findUniqueBranch).not.toHaveBeenCalled();
+  });
+
+  it('Add Cleaning still returns success when Google sync rejects', async () => {
+    getCustomerSession.mockResolvedValue({
+      customerId: CUST_A,
+      email: 'loulouslandingvt@gmail.com',
+    });
+    loadOwnedProperty.mockResolvedValue(makeProperty());
+    findUniqueCustomer.mockResolvedValue({
+      id: CUST_A,
+      firstName: 'Tiffany',
+      lastName: 'Mayo',
+      branchId: 'branch-vt',
+      Branch: { id: 'branch-vt', slug: 'vermont' },
+    });
+    nextVmReference.mockResolvedValue('VM-2026-0099');
+    jobCreate.mockResolvedValue({
+      id: 'job-new',
+      jobReference: 'VM-2026-0099',
+      propertyId: PROP_ID,
+      address: '111 Thomson Drive',
+      preferredDate: new Date('2026-09-15T00:00:00.000Z'),
+      preferredTime: '10:00 AM',
+      serviceType: 'Vacation Rental Turnover',
+      status: 'RECEIVED',
+      branchId: 'branch-vt',
+    });
+    // Even if the helper unexpectedly rejected, route try/catch keeps Job success.
+    awaitJobGoogleSync.mockRejectedValueOnce(new Error('Google down'));
+
+    const res = await cleaningsPOST(
+      new NextRequest('http://localhost/api', {
+        method: 'POST',
+        body: JSON.stringify({
+          preferredDate: '2026-09-15',
+          preferredTime: '10:00 AM',
+          serviceType: 'Vacation Rental Turnover',
+          sameDayTurnover: false,
+          jobSpecificNotes: 'PROPERTY PILOT TEST',
+        }),
+      }),
+      { params: { propertyId: PROP_ID } }
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.job.id).toBe('job-new');
+    expect(awaitJobGoogleSync).toHaveBeenCalledWith('job-new');
+    expect(jobCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          preferredDate: new Date('2026-09-15T00:00:00.000Z'),
+        }),
+      })
+    );
+  });
+
+  it('Add Cleaning awaits Google sync before returning (not fire-and-forget)', async () => {
+    const order: string[] = [];
+    getCustomerSession.mockResolvedValue({
+      customerId: CUST_A,
+      email: 'loulouslandingvt@gmail.com',
+    });
+    loadOwnedProperty.mockResolvedValue(makeProperty());
+    findUniqueCustomer.mockResolvedValue({
+      id: CUST_A,
+      firstName: 'Tiffany',
+      lastName: 'Mayo',
+      branchId: 'branch-vt',
+      Branch: { id: 'branch-vt', slug: 'vermont' },
+    });
+    nextVmReference.mockResolvedValue('VM-2026-0099');
+    jobCreate.mockImplementation(async () => {
+      order.push('create');
+      return {
+        id: 'job-new',
+        jobReference: 'VM-2026-0099',
+        propertyId: PROP_ID,
+        address: '111 Thomson Drive',
+        preferredDate: new Date('2026-09-15T00:00:00.000Z'),
+        preferredTime: '10:00 AM',
+        serviceType: 'Vacation Rental Turnover',
+        status: 'RECEIVED',
+        branchId: 'branch-vt',
+      };
+    });
+    awaitJobGoogleSync.mockImplementation(async () => {
+      order.push('google');
+    });
+
+    const res = await cleaningsPOST(
+      new NextRequest('http://localhost/api', {
+        method: 'POST',
+        body: JSON.stringify({
+          preferredDate: '2026-09-15',
+          serviceType: 'Vacation Rental Turnover',
+          sameDayTurnover: false,
+        }),
+      }),
+      { params: { propertyId: PROP_ID } }
+    );
+
+    expect(res.status).toBe(200);
+    expect(order).toEqual(['create', 'google']);
   });
 
   it('Add Cleaning uses another valid customer branch (not Vermont fallback)', async () => {
@@ -334,7 +439,7 @@ describe('Host property APIs', () => {
     expect(json.code).toBe('BRANCH_NOT_CONFIGURED');
     expect(jobCreate).not.toHaveBeenCalled();
     expect(findUniqueBranch).not.toHaveBeenCalled();
-    expect(queueJobGoogleSync).not.toHaveBeenCalled();
+    expect(awaitJobGoogleSync).not.toHaveBeenCalled();
   });
 
   it('Add Cleaning returns 404 for non-owned Property', async () => {

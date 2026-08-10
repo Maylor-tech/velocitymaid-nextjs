@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ExternalLink, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { formatServiceDate } from '@/lib/dates/serviceDate';
 
 interface CustomerPreview {
   id: string;
@@ -21,8 +22,7 @@ interface CustomerPreview {
 
 function formatDate(dateStr: string | null, timeWindow: string | null): string {
   if (!dateStr) return timeWindow || 'Date TBD';
-  const date = new Date(dateStr);
-  const datePart = date.toLocaleDateString('en-US', {
+  const datePart = formatServiceDate(dateStr, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',

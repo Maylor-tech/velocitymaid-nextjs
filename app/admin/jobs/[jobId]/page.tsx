@@ -11,6 +11,7 @@ import JobTeamSection from '@/components/admin/jobs/JobTeamSection';
 import { useAdminShell } from '@/components/admin/shell/AdminShell';
 import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
 import { getJobLoopProgress } from '@/lib/booking/jobLoopProgress';
+import { formatServiceDate } from '@/lib/dates/serviceDate';
 
 interface Job {
   id: string;
@@ -710,7 +711,7 @@ export default function AdminJobDetailPage() {
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'Not scheduled';
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    return formatServiceDate(dateStr, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
