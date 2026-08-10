@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 import { JobBillingWorkflowPanel } from '@/components/admin/jobs/JobBillingWorkflowPanel';
 import { CustomerPortalPreview } from '@/components/admin/jobs/CustomerPortalPreview';
+import JobTeamSection from '@/components/admin/jobs/JobTeamSection';
 import { useAdminShell } from '@/components/admin/shell/AdminShell';
 import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
 import { getJobLoopProgress } from '@/lib/booking/jobLoopProgress';
@@ -1598,6 +1599,26 @@ export default function AdminJobDetailPage() {
             </p>
           </div>
         )}
+
+        <div className="mt-6">
+          <JobTeamSection
+            jobId={jobId}
+            cleaners={cleaners}
+            disabled={isPaymentBlocked}
+            onToast={(message, type) => {
+              setToastMessage(message);
+              setToastType(type);
+              setShowToast(true);
+              setTimeout(() => setShowToast(false), 4000);
+            }}
+            onSaved={({ primaryCleanerId }) => {
+              void fetchJob();
+              if (primaryCleanerId) {
+                setSelectedCleanerId(primaryCleanerId);
+              }
+            }}
+          />
+        </div>
 
         <div className="mt-6">
           <JobChecklistSection
