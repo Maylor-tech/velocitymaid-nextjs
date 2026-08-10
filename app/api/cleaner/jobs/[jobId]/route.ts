@@ -1,16 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
-import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
 /**
  * GET /api/cleaner/jobs/[jobId]
  *
  * Get a specific job assigned to the authenticated cleaner.
+ * When Job.propertyId is set, includes standing Property instructions.
  */
+
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
+import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
+import { toCleanerPropertyView } from "@/lib/properties/propertyService";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function GET(
   req: NextRequest,
   { params }: { params: { jobId: string } }
@@ -36,6 +39,8 @@ export async function GET(
         assignedCleanerId: true,
         onTheWayAt: true,
         completedAt: true,
+        internalNotes: true,
+        propertyId: true,
         Branch: {
           select: {
             id: true,
@@ -51,6 +56,7 @@ export async function GET(
             phone: true,
           },
         },
+        Property: true,
       },
     });
 
@@ -71,13 +77,19 @@ export async function GET(
       );
     }
 
+    const { Property, internalNotes, propertyId, ...jobFields } = job;
+
     const formattedJob = {
-      ...job,
+      ...jobFields,
+      propertyId,
       preferredDate: job.preferredDate?.toISOString() ?? null,
       assignedAt: job.assignedAt?.toISOString() ?? null,
       onTheWayAt: job.onTheWayAt?.toISOString() ?? null,
       completedAt: job.completedAt?.toISOString() ?? null,
       totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
+      /** Occurrence-specific notes (admin). Distinct from Property standing instructions. */
+      jobSpecificNotes: internalNotes,
+      property: Property ? toCleanerPropertyView(Property) : null,
     };
 
     return NextResponse.json({

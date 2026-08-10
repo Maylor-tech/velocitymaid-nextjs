@@ -78,6 +78,18 @@ interface Job {
     reason: string;
     payoutRecord: { id: string; status: string } | null;
   };
+  propertyId?: string | null;
+  property?: {
+    id: string;
+    name: string;
+    address: string;
+    city: string | null;
+    state: string | null;
+    bedrooms: number | null;
+    bathrooms: number | null;
+    accessType: string | null;
+    standingInstructions: string | null;
+  } | null;
 }
 
 interface Cleaner {
@@ -1404,6 +1416,52 @@ export default function AdminJobDetailPage() {
             )}
           </div>
         </div>
+
+        {job.property && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-vm-text mb-2">Linked Property</h2>
+            <p className="text-sm text-vm-muted mb-4">
+              Standing property profile linked to this job occurrence. Job address remains a
+              historical snapshot and is not rewritten when the property profile changes.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-vm-muted">Name</p>
+                <p className="text-vm-text font-medium">{job.property.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-vm-muted">Address</p>
+                <p className="text-vm-text">
+                  {job.property.address}
+                  {job.property.city ? `, ${job.property.city}` : ""}
+                  {job.property.state ? `, ${job.property.state}` : ""}
+                </p>
+              </div>
+              {(job.property.bedrooms != null || job.property.bathrooms != null) && (
+                <div>
+                  <p className="text-sm text-vm-muted">Beds / Baths</p>
+                  <p className="text-vm-text">
+                    {job.property.bedrooms ?? "—"} bed / {job.property.bathrooms ?? "—"} bath
+                  </p>
+                </div>
+              )}
+              {job.property.accessType && (
+                <div>
+                  <p className="text-sm text-vm-muted">Access type</p>
+                  <p className="text-vm-text">{job.property.accessType}</p>
+                </div>
+              )}
+              {job.property.standingInstructions && (
+                <div className="md:col-span-2">
+                  <p className="text-sm text-vm-muted">Standing instructions</p>
+                  <p className="text-vm-text whitespace-pre-wrap">
+                    {job.property.standingInstructions}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             <h2 className="text-xl font-semibold text-vm-text mb-2">Google Workspace</h2>

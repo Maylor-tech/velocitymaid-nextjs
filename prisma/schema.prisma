@@ -302,6 +302,7 @@ model Customer {
   Invoice                                                  Invoice[]
   Receipt                                                  Receipt[]
   PipelineLead                                             PipelineLead?
+  Property                                                 Property[]
 
   @@index([branchId])
   @@index([email])
@@ -312,6 +313,45 @@ model Customer {
   @@index([riskScore])
   @@index([archivedAt])
   @@index([recordKind])
+}
+
+/// Persistent STR / host property profile (standing operational defaults).
+/// Jobs snapshot occurrence fields separately — changing Property later must
+/// not rewrite historical Job.address / Job notes.
+model Property {
+  id                     String   @id @default(cuid())
+  customerId             String
+  name                   String
+  address                String
+  city                   String?
+  state                  String?
+  postalCode             String?
+  bedrooms               Int?
+  bathrooms              Float?
+  approximateSquareFeet  Int?
+  bedConfiguration       String?
+  amenities              String[] @default([])
+  restrictedAreas        String?
+  /// Access method only (keypad / lockbox / etc.). Not a vault for codes.
+  accessType             String?
+  /// Restricted operational access details (codes, alarm). Never send to Calendar.
+  accessNotes            String?
+  supplyStorageLocation  String?
+  trashInstructions      String?
+  linenInstructions      String?
+  standardCheckoutTime   String?
+  standardCheckinTime    String?
+  turnoverFrequency      String?
+  sameDayTurnovers       String?
+  standingInstructions   String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  Customer               Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  Job                    Job[]
+
+  @@index([customerId])
+  @@index([customerId, address])
+  @@map("properties")
 }
 
 model FranchiseApplication {
@@ -382,12 +422,15 @@ model Job {
   calendarEventStatus      String?                    // synced | pending | cancelled | error
   branchId                 String
   customerId               String?
+  /// Optional link to standing Property profile. Nullable for legacy Jobs.
+  propertyId               String?
   assignedCleanerId        String?
   customerName             String?
   preferredDate            DateTime?
   preferredTime            String?
   serviceType              String?
   serviceLocation          String?
+  /// Occurrence snapshot — independent of Property.address after create.
   address                  String?
   totalPrice               Decimal?                   @db.Decimal(10, 2)
   quotedTotal              Decimal?                   @db.Decimal(10, 2)
@@ -441,12 +484,14 @@ model Job {
   ApprovedBy               User?                      @relation("JobApprovedBy", fields: [approvedById], references: [id])
   Branch                   Branch                     @relation(fields: [branchId], references: [id])
   Customer                 Customer?                  @relation(fields: [customerId], references: [id])
+  Property                 Property?                  @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   JobPayout                JobPayout?
 
   @@index([appliedReferralCode])
   @@index([assignedCleanerId])
   @@index([branchId])
   @@index([customerId])
+  @@index([propertyId])
   @@index([jobQualityScore])
   @@index([preferredDate])
   @@index([status])

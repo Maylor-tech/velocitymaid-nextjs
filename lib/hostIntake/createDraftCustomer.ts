@@ -3,8 +3,9 @@ import { prisma } from "@/lib/prisma";
 import type { HostIntakePayload } from "./types";
 import { upsertPipelineLeadFromIntake } from "@/lib/leadCenter/syncFromCustomer";
 import { geocodeCustomerInBackground } from "@/lib/geocoding/geocodeCustomer";
+import { createOrUpdatePropertyFromHostIntake } from "@/lib/properties/propertyService";
 
-/** Creates or updates a draft Customer record from host intake data. */
+/** Creates or updates a draft Customer + Property from host intake data. */
 export async function createDraftHostCustomer(payload: HostIntakePayload) {
   const vermontBranch = await prisma.branch.findUnique({
     where: { slug: "vermont" },
@@ -48,7 +49,14 @@ export async function createDraftHostCustomer(payload: HostIntakePayload) {
 
   await upsertPipelineLeadFromIntake(prisma, customer, payload);
 
+  // Persist standing property profile (upsert by customer + address).
+  const property = await createOrUpdatePropertyFromHostIntake(
+    prisma,
+    customer.id,
+    payload
+  );
+
   geocodeCustomerInBackground(customer.id);
 
-  return customer;
+  return { customer, property };
 }

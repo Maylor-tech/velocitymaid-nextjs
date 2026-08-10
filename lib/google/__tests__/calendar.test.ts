@@ -143,6 +143,22 @@ describe('upsertJobCalendarEvent', () => {
     expect(description).not.toMatch(/\d{1,5}\s+\w+\s+(St|Street|Ave|Avenue|Rd|Road)/i);
   });
 
+  it('never includes Property accessNotes / lockbox codes in Calendar body', async () => {
+    // Calendar input has no Property fields by design — regression guard if
+    // someone later threads standing instructions into buildEventBody.
+    await upsertJobCalendarEvent({
+      ...baseJob,
+      cleanerName: null,
+    });
+    const body = calendarMock.inserted[0];
+    const haystack = `${body.summary}\n${body.description}`;
+    expect(haystack).toContain('Cleaner: Unassigned');
+    expect(haystack).not.toMatch(/LOCKBOX|accessNotes|standingInstructions|door code/i);
+    expect(haystack).toContain(
+      'Exact address and access notes are intentionally excluded'
+    );
+  });
+
   it('applies preferredTime onto the event start when parseable', async () => {
     await upsertJobCalendarEvent({
       ...baseJob,

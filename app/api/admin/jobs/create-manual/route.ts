@@ -18,6 +18,10 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { geocodeCustomerInBackground } from "@/lib/geocoding/geocodeCustomer";
 import { nextVmReference } from "@/lib/billing/numbering";
 import { queueJobGoogleSync } from "@/lib/google/jobGoogleSync";
+import {
+  findPropertyForCustomerAddress,
+  loadPropertyById,
+} from "@/lib/properties/propertyService";
 
 interface ManualJobBody {
   clientFirstName?: string;
@@ -28,6 +32,8 @@ interface ManualJobBody {
   propertyAddress?: string;
   propertyCity?: string;
   propertyState?: string;
+  /** Optional explicit Property link when known. */
+  propertyId?: string;
 
   serviceType?: string;
   scheduledDate?: string;
@@ -270,12 +276,32 @@ export async function POST(request: NextRequest) {
 
     const jobReference = await nextVmReference();
 
+    // Link Property when explicitly provided or when customer+address match uniquely.
+    let propertyConnect: { connect: { id: string } } | undefined;
+    const explicitPropertyId = body.propertyId?.trim();
+    if (explicitPropertyId) {
+      const owned = await loadPropertyById(prisma, explicitPropertyId);
+      if (owned && owned.customerId === customer.id) {
+        propertyConnect = { connect: { id: owned.id } };
+      }
+    } else {
+      const matched = await findPropertyForCustomerAddress(
+        prisma,
+        customer.id,
+        propertyAddress
+      );
+      if (matched) {
+        propertyConnect = { connect: { id: matched.id } };
+      }
+    }
+
     const job = await prisma.job.create({
       data: {
         id: randomUUID(),
         jobReference,
         Branch: { connect: { id: branch.id } },
         Customer: { connect: { id: customer.id } },
+        ...(propertyConnect ? { Property: propertyConnect } : {}),
         customerName,
         address: propertyAddress,
         serviceLocation: body.propertyCity?.trim() || null,
@@ -296,7 +322,7 @@ export async function POST(request: NextRequest) {
         internalNotes,
         marketLabel,
       },
-      select: { id: true },
+      select: { id: true, propertyId: true },
     });
 
     // Fire-and-forget: Drive whenever enabled; Calendar creates only once
@@ -310,6 +336,7 @@ export async function POST(request: NextRequest) {
       success: true,
       jobId: job.id,
       customerId: customer.id,
+      propertyId: job.propertyId,
     });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;

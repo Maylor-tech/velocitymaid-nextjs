@@ -14,6 +14,27 @@ interface CustomerInfo {
   phone: string | null;
 }
 
+interface PropertyInstructions {
+  id: string;
+  name: string;
+  address: string;
+  city: string | null;
+  state: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  bedConfiguration: string | null;
+  amenities: string[];
+  restrictedAreas: string | null;
+  supplyStorageLocation: string | null;
+  trashInstructions: string | null;
+  linenInstructions: string | null;
+  standingInstructions: string | null;
+  accessType: string | null;
+  accessNotes: string | null;
+  standardCheckoutTime: string | null;
+  standardCheckinTime: string | null;
+}
+
 interface Job {
   id: string;
   status: string;
@@ -27,6 +48,8 @@ interface Job {
   totalPrice: number | null;
   currency: string | null;
   assignedAt: string | null;
+  jobSpecificNotes?: string | null;
+  property?: PropertyInstructions | null;
   Customer?: CustomerInfo | null;
   Branch: {
     id: string;
@@ -398,6 +421,128 @@ export default function CleanerJobDetailPage() {
             )}
           </div>
         </div>
+
+        {(job.property || job.jobSpecificNotes) && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6 border-l-4 border-vm-navy">
+            <h2 className="font-semibold text-lg mb-4">Property Instructions</h2>
+
+            {job.property && (
+              <div className="space-y-6">
+                <section>
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-2">
+                    Property overview
+                  </h3>
+                  <p className="font-medium text-vm-text">{job.property.name}</p>
+                  <p className="text-vm-muted text-sm mt-1">
+                    {job.property.address}
+                    {job.property.city ? `, ${job.property.city}` : ""}
+                    {job.property.state ? `, ${job.property.state}` : ""}
+                  </p>
+                  {(job.property.bedrooms != null ||
+                    job.property.bathrooms != null ||
+                    job.property.bedConfiguration) && (
+                    <p className="text-vm-muted text-sm mt-2">
+                      {job.property.bedrooms != null ? `${job.property.bedrooms} bed` : null}
+                      {job.property.bedrooms != null && job.property.bathrooms != null
+                        ? " · "
+                        : null}
+                      {job.property.bathrooms != null ? `${job.property.bathrooms} bath` : null}
+                      {job.property.bedConfiguration
+                        ? ` · ${job.property.bedConfiguration}`
+                        : null}
+                    </p>
+                  )}
+                  {job.property.amenities?.length > 0 && (
+                    <p className="text-vm-muted text-sm mt-2">
+                      Amenities: {job.property.amenities.join(", ")}
+                    </p>
+                  )}
+                  {job.property.restrictedAreas && (
+                    <p className="text-sm mt-2 text-amber-800">
+                      Restricted: {job.property.restrictedAreas}
+                    </p>
+                  )}
+                </section>
+
+                {(job.property.accessType || job.property.accessNotes) && (
+                  <section>
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-2">
+                      Access
+                    </h3>
+                    {job.property.accessType && (
+                      <p className="text-vm-text">{job.property.accessType}</p>
+                    )}
+                    {job.property.accessNotes && (
+                      <p className="text-vm-text whitespace-pre-wrap mt-1">
+                        {job.property.accessNotes}
+                      </p>
+                    )}
+                    {(job.property.standardCheckoutTime ||
+                      job.property.standardCheckinTime) && (
+                      <p className="text-vm-muted text-sm mt-2">
+                        {job.property.standardCheckoutTime
+                          ? `Checkout: ${job.property.standardCheckoutTime}`
+                          : null}
+                        {job.property.standardCheckoutTime &&
+                        job.property.standardCheckinTime
+                          ? " · "
+                          : null}
+                        {job.property.standardCheckinTime
+                          ? `Check-in: ${job.property.standardCheckinTime}`
+                          : null}
+                      </p>
+                    )}
+                  </section>
+                )}
+
+                {(job.property.linenInstructions ||
+                  job.property.supplyStorageLocation ||
+                  job.property.trashInstructions) && (
+                  <section>
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-2">
+                      Linens &amp; supplies
+                    </h3>
+                    {job.property.linenInstructions && (
+                      <p className="text-vm-text">
+                        Linens: {job.property.linenInstructions}
+                      </p>
+                    )}
+                    {job.property.supplyStorageLocation && (
+                      <p className="text-vm-text mt-1">
+                        Supplies: {job.property.supplyStorageLocation}
+                      </p>
+                    )}
+                    {job.property.trashInstructions && (
+                      <p className="text-vm-text mt-1">
+                        Trash: {job.property.trashInstructions}
+                      </p>
+                    )}
+                  </section>
+                )}
+
+                {job.property.standingInstructions && (
+                  <section>
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-2">
+                      Standard cleaning instructions
+                    </h3>
+                    <p className="text-vm-text whitespace-pre-wrap">
+                      {job.property.standingInstructions}
+                    </p>
+                  </section>
+                )}
+              </div>
+            )}
+
+            {job.jobSpecificNotes && (
+              <section className={job.property ? "mt-6 pt-6 border-t border-gray-200" : ""}>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-2">
+                  Job-specific notes
+                </h3>
+                <p className="text-vm-text whitespace-pre-wrap">{job.jobSpecificNotes}</p>
+              </section>
+            )}
+          </div>
+        )}
 
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="font-semibold text-lg mb-4">Job Details</h2>

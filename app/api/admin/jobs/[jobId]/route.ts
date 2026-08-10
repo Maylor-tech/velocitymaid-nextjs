@@ -119,6 +119,20 @@ export async function GET(
             policyEvalDetails: true,
           },
         },
+        propertyId: true,
+        Property: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            city: true,
+            state: true,
+            bedrooms: true,
+            bathrooms: true,
+            accessType: true,
+            standingInstructions: true,
+          },
+        },
       },
     });
 
@@ -210,6 +224,20 @@ export async function GET(
       promoApplied: job.promoApplied,
       promoDiscount: job.promoDiscount ? Number(job.promoDiscount) : null,
       JobPayout: formattedPayout,
+      propertyId: job.propertyId,
+      property: job.Property
+        ? {
+            id: job.Property.id,
+            name: job.Property.name,
+            address: job.Property.address,
+            city: job.Property.city,
+            state: job.Property.state,
+            bedrooms: job.Property.bedrooms,
+            bathrooms: job.Property.bathrooms,
+            accessType: job.Property.accessType,
+            standingInstructions: job.Property.standingInstructions,
+          }
+        : null,
       payoutEligibility: computePayoutEligibility({
         status: job.status,
         paymentStatus: job.paymentStatus,
