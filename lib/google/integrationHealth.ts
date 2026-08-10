@@ -205,7 +205,7 @@ export async function getIntegrationHealthReport(): Promise<IntegrationHealthRep
     prisma.job.findMany({
       where: { calendarEventStatus: 'error' },
       select: jobSelect,
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { createdAt: 'desc' },
       take: JOB_ISSUE_LIMIT,
     }),
     calendarEnabled
@@ -218,7 +218,7 @@ export async function getIntegrationHealthReport(): Promise<IntegrationHealthRep
             OR: eligibleOr,
           },
           select: jobSelect,
-          orderBy: { updatedAt: 'desc' },
+          orderBy: { createdAt: 'desc' },
           take: JOB_ISSUE_LIMIT,
         })
       : Promise.resolve([]),
@@ -231,7 +231,7 @@ export async function getIntegrationHealthReport(): Promise<IntegrationHealthRep
             OR: eligibleOr,
           },
           select: jobSelect,
-          orderBy: { updatedAt: 'desc' },
+          orderBy: { createdAt: 'desc' },
           take: JOB_ISSUE_LIMIT,
         })
       : Promise.resolve([]),
