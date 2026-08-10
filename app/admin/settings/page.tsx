@@ -7,6 +7,7 @@ import type { TravelZone } from '@prisma/client';
 import { TRAVEL_ZONE_OPTIONS } from '@/lib/vermont/travelZone';
 import type { InvoiceQuickAddItem } from '@/lib/admin/invoiceQuickAddSettings';
 import type { GoogleIntegrationStatus } from '@/lib/admin/googleIntegrationSettings';
+import GoogleIntegrationHealth from '@/components/admin/GoogleIntegrationHealth';
 
 const inputClass =
   'w-full rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy focus:border-vm-cyan focus:outline-none focus:ring-1 focus:ring-vm-cyan';
@@ -182,6 +183,8 @@ function IntegrationsSection() {
           </div>
         </div>
       )}
+
+      <GoogleIntegrationHealth />
     </div>
   );
 }
