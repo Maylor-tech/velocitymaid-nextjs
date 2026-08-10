@@ -5,13 +5,13 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { BrandLogo } from '@/components/brand';
 import {
-  Calendar,
   Settings,
   LogOut,
   Phone,
   MessageSquare,
   CreditCard,
   Home,
+  Building2,
 } from 'lucide-react';
 import type { MarketSupportContact } from '@/lib/customer/marketSupport';
 import {
@@ -33,7 +33,7 @@ const DEFAULT_SUPPORT: MarketSupportContact = NEW_JERSEY_SUPPORT;
 
 const NAV_ITEMS = [
   { href: '/customer/jobs', label: 'Home', icon: Home, match: (p: string) => p === '/customer/jobs' || p === '/customer' },
-  { href: '/customer/jobs', label: 'My Bookings', icon: Calendar, match: (p: string) => p.startsWith('/customer/jobs') },
+  { href: '/customer/properties', label: 'Properties', icon: Building2, match: (p: string) => p.startsWith('/customer/properties') },
   { href: '/customer/payments', label: 'Payments', icon: CreditCard, match: (p: string) => p.startsWith('/customer/payments') },
   { href: '/customer/profile', label: 'Profile', icon: Settings, match: (p: string) => p.startsWith('/customer/profile') },
 ] as const;

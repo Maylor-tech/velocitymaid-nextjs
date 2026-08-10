@@ -132,6 +132,195 @@ export function toAdminPropertySummary(property: Property): AdminPropertySummary
   };
 }
 
+/** Host-visible Property fields (excludes accessNotes — not editable in V1 host UI). */
+export type HostPropertyView = {
+  id: string;
+  name: string;
+  address: string;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  approximateSquareFeet: number | null;
+  bedConfiguration: string | null;
+  amenities: string[];
+  restrictedAreas: string | null;
+  accessType: string | null;
+  supplyStorageLocation: string | null;
+  trashInstructions: string | null;
+  linenInstructions: string | null;
+  standardCheckoutTime: string | null;
+  standardCheckinTime: string | null;
+  turnoverFrequency: string | null;
+  sameDayTurnovers: string | null;
+  standingInstructions: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function toHostPropertyView(property: Property): HostPropertyView {
+  return {
+    id: property.id,
+    name: property.name,
+    address: property.address,
+    city: property.city,
+    state: property.state,
+    postalCode: property.postalCode,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    approximateSquareFeet: property.approximateSquareFeet,
+    bedConfiguration: property.bedConfiguration,
+    amenities: property.amenities,
+    restrictedAreas: property.restrictedAreas,
+    accessType: property.accessType,
+    supplyStorageLocation: property.supplyStorageLocation,
+    trashInstructions: property.trashInstructions,
+    linenInstructions: property.linenInstructions,
+    standardCheckoutTime: property.standardCheckoutTime,
+    standardCheckinTime: property.standardCheckinTime,
+    turnoverFrequency: property.turnoverFrequency,
+    sameDayTurnovers: property.sameDayTurnovers,
+    standingInstructions: property.standingInstructions,
+    createdAt: property.createdAt.toISOString(),
+    updatedAt: property.updatedAt.toISOString(),
+  };
+}
+
+/** Standing fields a host may PATCH in V1. Does not include accessNotes. */
+export type HostPropertyUpdateInput = {
+  name?: string;
+  address?: string;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  approximateSquareFeet?: number | null;
+  bedConfiguration?: string | null;
+  amenities?: string[];
+  restrictedAreas?: string | null;
+  accessType?: string | null;
+  supplyStorageLocation?: string | null;
+  trashInstructions?: string | null;
+  linenInstructions?: string | null;
+  standardCheckoutTime?: string | null;
+  standardCheckinTime?: string | null;
+  turnoverFrequency?: string | null;
+  sameDayTurnovers?: string | null;
+  standingInstructions?: string | null;
+};
+
+/**
+ * Load Property only if it belongs to customerId.
+ * Prevents IDOR across customers.
+ */
+export async function loadOwnedProperty(
+  db: Db,
+  propertyId: string,
+  customerId: string
+): Promise<Property | null> {
+  return db.property.findFirst({
+    where: { id: propertyId, customerId },
+  });
+}
+
+export async function updateHostProperty(
+  db: Db,
+  propertyId: string,
+  customerId: string,
+  input: HostPropertyUpdateInput
+): Promise<Property | null> {
+  const owned = await loadOwnedProperty(db, propertyId, customerId);
+  if (!owned) return null;
+
+  const data: Prisma.PropertyUpdateInput = {};
+  if (input.name !== undefined) data.name = input.name.trim() || owned.name;
+  if (input.address !== undefined) data.address = input.address.trim() || owned.address;
+  if (input.city !== undefined) data.city = input.city?.trim() || null;
+  if (input.state !== undefined) data.state = input.state?.trim() || null;
+  if (input.postalCode !== undefined) data.postalCode = input.postalCode?.trim() || null;
+  if (input.bedrooms !== undefined) data.bedrooms = input.bedrooms;
+  if (input.bathrooms !== undefined) data.bathrooms = input.bathrooms;
+  if (input.approximateSquareFeet !== undefined) {
+    data.approximateSquareFeet = input.approximateSquareFeet;
+  }
+  if (input.bedConfiguration !== undefined) {
+    data.bedConfiguration = input.bedConfiguration?.trim() || null;
+  }
+  if (input.amenities !== undefined) data.amenities = input.amenities;
+  if (input.restrictedAreas !== undefined) {
+    data.restrictedAreas = input.restrictedAreas?.trim() || null;
+  }
+  if (input.accessType !== undefined) {
+    data.accessType = input.accessType?.trim() || null;
+  }
+  if (input.supplyStorageLocation !== undefined) {
+    data.supplyStorageLocation = input.supplyStorageLocation?.trim() || null;
+  }
+  if (input.trashInstructions !== undefined) {
+    data.trashInstructions = input.trashInstructions?.trim() || null;
+  }
+  if (input.linenInstructions !== undefined) {
+    data.linenInstructions = input.linenInstructions?.trim() || null;
+  }
+  if (input.standardCheckoutTime !== undefined) {
+    data.standardCheckoutTime = input.standardCheckoutTime?.trim() || null;
+  }
+  if (input.standardCheckinTime !== undefined) {
+    data.standardCheckinTime = input.standardCheckinTime?.trim() || null;
+  }
+  if (input.turnoverFrequency !== undefined) {
+    data.turnoverFrequency = input.turnoverFrequency?.trim() || null;
+  }
+  if (input.sameDayTurnovers !== undefined) {
+    data.sameDayTurnovers = input.sameDayTurnovers?.trim() || null;
+  }
+  if (input.standingInstructions !== undefined) {
+    data.standingInstructions = input.standingInstructions?.trim() || null;
+  }
+
+  return db.property.update({ where: { id: propertyId }, data });
+}
+
+/** Vermont host Add Cleaning service types (aligned with admin VT list). */
+export const HOST_CLEANING_SERVICE_TYPES = [
+  'Vacation Rental Turnover',
+  'Deep Cleaning & Property Reset',
+  'Move-In Cleaning',
+  'Move-Out Cleaning',
+  'Property Readiness',
+  'Emergency Response Cleaning',
+  'Property Walkthrough',
+] as const;
+
+export type CreateCleaningFromPropertyInput = {
+  preferredDate: Date;
+  preferredTime?: string | null;
+  serviceType: string;
+  sameDayTurnover: boolean;
+  checkInDeadline?: string | null;
+  jobSpecificNotes?: string | null;
+};
+
+/**
+ * Create a Job occurrence from Property defaults.
+ * Snapshots address at create time; does not copy standing instructions onto Job.
+ */
+export function buildHostCleaningJobNotes(
+  input: CreateCleaningFromPropertyInput
+): string {
+  const lines = ['[Source: HOST_PORTAL]'];
+  lines.push(`Same-day turnover: ${input.sameDayTurnover ? 'Yes' : 'No'}`);
+  if (input.checkInDeadline?.trim()) {
+    lines.push(`Check-in deadline: ${input.checkInDeadline.trim()}`);
+  }
+  if (input.jobSpecificNotes?.trim()) {
+    lines.push(input.jobSpecificNotes.trim());
+  }
+  return lines.join('\n');
+}
+
 export async function loadPropertyById(
   db: Db,
   propertyId: string

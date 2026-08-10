@@ -16,6 +16,9 @@ import {
 /** Canonical marker written by admin manual job create. */
 export const MANUAL_JOB_SOURCE_MARKER = '[Source: MANUAL]';
 
+/** Canonical marker written by host-portal Add Cleaning. */
+export const HOST_PORTAL_JOB_SOURCE_MARKER = '[Source: HOST_PORTAL]';
+
 export type HealthReason = 'CALENDAR_ERROR' | 'MISSING_CALENDAR_EVENT' | 'MISSING_DRIVE_FOLDER';
 export type JobHealthSeverity = 'critical' | 'warning';
 export type OverallHealthStatus = 'healthy' | 'attention' | 'critical';
@@ -57,11 +60,17 @@ export function isManualJob(job: { internalNotes?: string | null }): boolean {
   return Boolean(job.internalNotes?.includes(MANUAL_JOB_SOURCE_MARKER));
 }
 
+export function isHostPortalJob(job: { internalNotes?: string | null }): boolean {
+  return Boolean(job.internalNotes?.includes(HOST_PORTAL_JOB_SOURCE_MARKER));
+}
+
 /**
- * Jobs that auto-sync would have targeted: approved bookings or manual creates.
+ * Jobs the lifecycle expects Google Drive/Calendar artifacts for.
+ * Includes approved bookings, admin manual creates, and host-portal cleanings.
+ * Ordinary PENDING Stripe/deposit bookings are not included.
  * Cancelled / rejected are never eligible for missing-artifact warnings.
  */
-export function isSyncEligibleJob(job: {
+export function isGoogleSyncExpectedJob(job: {
   status: string;
   reviewStatus: string;
   internalNotes?: string | null;
@@ -71,7 +80,18 @@ export function isSyncEligibleJob(job: {
   }
   if (job.reviewStatus === 'REJECTED') return false;
   if (job.reviewStatus === 'APPROVED') return true;
-  return isManualJob(job);
+  if (isManualJob(job)) return true;
+  if (isHostPortalJob(job)) return true;
+  return false;
+}
+
+/** @deprecated Prefer isGoogleSyncExpectedJob — kept as alias for existing imports/tests. */
+export function isSyncEligibleJob(job: {
+  status: string;
+  reviewStatus: string;
+  internalNotes?: string | null;
+}): boolean {
+  return isGoogleSyncExpectedJob(job);
 }
 
 export function severityForReasons(reasons: HealthReason[]): JobHealthSeverity {
@@ -108,13 +128,13 @@ export function collectReasonsForJob(
     reasons.push('CALENDAR_ERROR');
   }
 
-  if (opts.calendarEnabled && isSyncEligibleJob(job)) {
+  if (opts.calendarEnabled && isGoogleSyncExpectedJob(job)) {
     if (!job.calendarEventId && job.preferredDate) {
       reasons.push('MISSING_CALENDAR_EVENT');
     }
   }
 
-  if (opts.driveEnabled && isSyncEligibleJob(job)) {
+  if (opts.driveEnabled && isGoogleSyncExpectedJob(job)) {
     if (!job.driveFolderId) {
       reasons.push('MISSING_DRIVE_FOLDER');
     }
@@ -199,6 +219,7 @@ export async function getIntegrationHealthReport(): Promise<IntegrationHealthRep
   const eligibleOr = [
     { reviewStatus: 'APPROVED' as const },
     { internalNotes: { contains: MANUAL_JOB_SOURCE_MARKER } },
+    { internalNotes: { contains: HOST_PORTAL_JOB_SOURCE_MARKER } },
   ];
 
   const [calendarErrors, missingCalendar, missingDrive, recentFailureRows] = await Promise.all([

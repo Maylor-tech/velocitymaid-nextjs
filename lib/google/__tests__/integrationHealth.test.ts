@@ -4,12 +4,15 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   isManualJob,
+  isHostPortalJob,
+  isGoogleSyncExpectedJob,
   isSyncEligibleJob,
   collectReasonsForJob,
   buildHealthJobIssues,
   computeOverallHealthStatus,
   retryJobGoogleSyncAndRefreshHealth,
   MANUAL_JOB_SOURCE_MARKER,
+  HOST_PORTAL_JOB_SOURCE_MARKER,
   type IntegrationHealthReport,
 } from '../integrationHealth';
 
@@ -26,47 +29,85 @@ const baseJob = {
   driveFolderId: 'folder-1' as string | null,
 };
 
-describe('isManualJob / isSyncEligibleJob', () => {
+describe('isGoogleSyncExpectedJob', () => {
   it('detects manual jobs via canonical marker only', () => {
     expect(isManualJob({ internalNotes: `${MANUAL_JOB_SOURCE_MARKER}\nCleaner: X` })).toBe(true);
     expect(isManualJob({ internalNotes: 'phone booking' })).toBe(false);
     expect(isManualJob({ internalNotes: null })).toBe(false);
   });
 
-  it('APPROVED jobs are eligible; pending Stripe/deposit are not', () => {
+  it('detects host-portal jobs via canonical marker', () => {
     expect(
-      isSyncEligibleJob({ status: 'RECEIVED', reviewStatus: 'PENDING', internalNotes: null })
+      isHostPortalJob({ internalNotes: `${HOST_PORTAL_JOB_SOURCE_MARKER}\nSame-day turnover: No` })
+    ).toBe(true);
+    expect(isHostPortalJob({ internalNotes: MANUAL_JOB_SOURCE_MARKER })).toBe(false);
+  });
+
+  it('APPROVED jobs are expected; pending Stripe/deposit are not', () => {
+    expect(
+      isGoogleSyncExpectedJob({
+        status: 'RECEIVED',
+        reviewStatus: 'PENDING',
+        internalNotes: null,
+      })
     ).toBe(false);
     expect(
-      isSyncEligibleJob({ status: 'CONFIRMED', reviewStatus: 'APPROVED', internalNotes: null })
+      isGoogleSyncExpectedJob({
+        status: 'CONFIRMED',
+        reviewStatus: 'APPROVED',
+        internalNotes: null,
+      })
     ).toBe(true);
   });
 
-  it('manual PENDING jobs are eligible', () => {
+  it('manual and HOST_PORTAL PENDING jobs are expected', () => {
     expect(
-      isSyncEligibleJob({
+      isGoogleSyncExpectedJob({
         status: 'CONFIRMED',
         reviewStatus: 'PENDING',
         internalNotes: MANUAL_JOB_SOURCE_MARKER,
       })
     ).toBe(true);
+    expect(
+      isGoogleSyncExpectedJob({
+        status: 'RECEIVED',
+        reviewStatus: 'PENDING',
+        internalNotes: HOST_PORTAL_JOB_SOURCE_MARKER,
+      })
+    ).toBe(true);
   });
 
-  it('cancelled and rejected are never eligible for missing-artifact warnings', () => {
+  it('cancelled and rejected are never expected for missing-artifact warnings', () => {
     expect(
-      isSyncEligibleJob({
+      isGoogleSyncExpectedJob({
         status: 'CANCELLED',
         reviewStatus: 'APPROVED',
         internalNotes: null,
       })
     ).toBe(false);
     expect(
-      isSyncEligibleJob({
+      isGoogleSyncExpectedJob({
         status: 'CONFIRMED',
         reviewStatus: 'REJECTED',
         internalNotes: null,
       })
     ).toBe(false);
+    expect(
+      isGoogleSyncExpectedJob({
+        status: 'CANCELLED',
+        reviewStatus: 'PENDING',
+        internalNotes: HOST_PORTAL_JOB_SOURCE_MARKER,
+      })
+    ).toBe(false);
+  });
+
+  it('isSyncEligibleJob remains an alias of isGoogleSyncExpectedJob', () => {
+    const job = {
+      status: 'RECEIVED',
+      reviewStatus: 'PENDING',
+      internalNotes: HOST_PORTAL_JOB_SOURCE_MARKER,
+    };
+    expect(isSyncEligibleJob(job)).toBe(isGoogleSyncExpectedJob(job));
   });
 });
 
@@ -87,7 +128,7 @@ describe('collectReasonsForJob / buildHealthJobIssues', () => {
     ).toContain('MISSING_DRIVE_FOLDER');
   });
 
-  it('pending deposit without MANUAL → no missing reasons', () => {
+  it('pending deposit without MANUAL/HOST_PORTAL → no missing reasons', () => {
     const reasons = collectReasonsForJob(
       {
         ...baseJob,
@@ -111,6 +152,68 @@ describe('collectReasonsForJob / buildHealthJobIssues', () => {
       bothOn
     );
     expect(reasons).toEqual(['MISSING_DRIVE_FOLDER']);
+  });
+
+  it('HOST_PORTAL + missing Drive → warning', () => {
+    const reasons = collectReasonsForJob(
+      {
+        ...baseJob,
+        status: 'RECEIVED',
+        reviewStatus: 'PENDING',
+        internalNotes: `${HOST_PORTAL_JOB_SOURCE_MARKER}\nSame-day turnover: No`,
+        driveFolderId: null,
+        calendarEventId: 'event-1',
+      },
+      bothOn
+    );
+    expect(reasons).toEqual(['MISSING_DRIVE_FOLDER']);
+  });
+
+  it('HOST_PORTAL + preferredDate + missing calendarEventId → warning', () => {
+    const reasons = collectReasonsForJob(
+      {
+        ...baseJob,
+        status: 'RECEIVED',
+        reviewStatus: 'PENDING',
+        internalNotes: HOST_PORTAL_JOB_SOURCE_MARKER,
+        calendarEventId: null,
+        driveFolderId: 'folder-1',
+      },
+      bothOn
+    );
+    expect(reasons).toEqual(['MISSING_CALENDAR_EVENT']);
+  });
+
+  it('cancelled HOST_PORTAL with missing IDs → no missing-artifact warning', () => {
+    const reasons = collectReasonsForJob(
+      {
+        ...baseJob,
+        status: 'CANCELLED',
+        reviewStatus: 'PENDING',
+        internalNotes: HOST_PORTAL_JOB_SOURCE_MARKER,
+        calendarEventId: null,
+        driveFolderId: null,
+        calendarEventStatus: null,
+      },
+      bothOn
+    );
+    expect(reasons).toEqual([]);
+  });
+
+  it('healthy HOST_PORTAL job → no exception', () => {
+    const reasons = collectReasonsForJob(
+      {
+        ...baseJob,
+        status: 'RECEIVED',
+        reviewStatus: 'PENDING',
+        internalNotes: HOST_PORTAL_JOB_SOURCE_MARKER,
+        calendarEventId: 'event-1',
+        calendarEventStatus: 'synced',
+        driveFolderId: 'folder-1',
+      },
+      bothOn
+    );
+    expect(reasons).toEqual([]);
   });
 
   it('missing Calendar without preferredDate is not an issue', () => {
