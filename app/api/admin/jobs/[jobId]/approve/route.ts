@@ -6,7 +6,7 @@ import { JobReviewStatus, JobStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 import { logAuditEntry } from '@/lib/audit';
-import { queueJobGoogleSync } from '@/lib/google/jobGoogleSync';
+import { awaitJobGoogleSync } from '@/lib/google/jobGoogleSync';
 
 /**
  * POST /api/admin/jobs/[jobId]/approve
@@ -59,9 +59,9 @@ export async function POST(
       description: `Deposit booking approved for assignment`,
     });
 
-    // Fire-and-forget: this is the "booking confirmed" moment for
-    // deposit-mode jobs (full-payment jobs already got this at creation).
-    queueJobGoogleSync(updated.id);
+    // Await in-request so serverless freeze cannot skip Drive/Calendar.
+    // Job approval already committed — Google failure must not fail this response.
+    await awaitJobGoogleSync(updated.id);
 
     return NextResponse.json({ success: true, job: updated });
   } catch (error: unknown) {

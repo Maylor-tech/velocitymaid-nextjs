@@ -6,8 +6,12 @@
  * remains recovery. Idempotency is owned by those helpers (reuse folder/event ids).
  *
  * On Vercel/serverless, fire-and-forget `queue*` may freeze after the response
- * is sent before Google work finishes. Prefer `awaitJobGoogleSync` (or await
- * the matching calendar helper) on paths that must complete in-request.
+ * is sent before Google work finishes. Prefer the `await*` helpers on request
+ * / webhook / cron paths that must complete in-request.
+ *
+ * Ordering: commit the Job/business mutation first, then `await` the matching
+ * non-throwing helper. A Google outage must not turn a successful business
+ * write into an HTTP failure that encourages the client to retry the mutation.
  *
  * Supabase/Prisma Job remains the source of truth. No bulk backfill.
  */
@@ -26,17 +30,41 @@ export async function awaitJobGoogleSync(jobId: string): Promise<void> {
   }
 }
 
-/** Fire-and-forget Drive+Calendar. Prefer awaitJobGoogleSync on serverless creates. */
+/**
+ * Await Calendar create/update (assign, reassign, reschedule, team).
+ * Never throws.
+ */
+export async function awaitJobCalendarSync(jobId: string): Promise<void> {
+  try {
+    await syncJobCalendarEvent(jobId);
+  } catch {
+    // Errors already recorded inside Calendar helpers.
+  }
+}
+
+/**
+ * Await Calendar cancel (mark cancelled, not delete).
+ * Never throws. One cancel request should reliably attempt this once.
+ */
+export async function awaitJobCalendarCancel(jobId: string): Promise<void> {
+  try {
+    await cancelJobCalendarEventById(jobId);
+  } catch {
+    // Errors already recorded inside Calendar helpers.
+  }
+}
+
+/** @deprecated Prefer awaitJobGoogleSync on serverless request paths. */
 export function queueJobGoogleSync(jobId: string): void {
-  void syncJobToGoogle(jobId).catch(() => {});
+  void awaitJobGoogleSync(jobId);
 }
 
-/** Calendar event create/update only (assign, reassign, reschedule). */
+/** @deprecated Prefer awaitJobCalendarSync on serverless request paths. */
 export function queueJobCalendarSync(jobId: string): void {
-  void syncJobCalendarEvent(jobId).catch(() => {});
+  void awaitJobCalendarSync(jobId);
 }
 
-/** Mark ops-calendar event cancelled (not deleted) per existing policy. */
+/** @deprecated Prefer awaitJobCalendarCancel on serverless request paths. */
 export function queueJobCalendarCancel(jobId: string): void {
-  void cancelJobCalendarEventById(jobId).catch(() => {});
+  void awaitJobCalendarCancel(jobId);
 }

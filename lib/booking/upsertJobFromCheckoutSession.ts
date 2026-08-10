@@ -4,7 +4,7 @@ import type { Job, Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { computeJobPaymentFromSession } from '@/lib/booking/jobPayment';
 import { nextVmReference } from '@/lib/billing/numbering';
-import { queueJobGoogleSync } from '@/lib/google/jobGoogleSync';
+import { awaitJobGoogleSync } from '@/lib/google/jobGoogleSync';
 import { createAdminNotification, adminNotificationHelpers } from '@/lib/notifications/adminNotificationCenter';
 
 export type UpsertJobFromCheckoutResult = {
@@ -123,12 +123,12 @@ export async function upsertJobFromCheckoutSession(options: {
   try {
     const job = await prisma.job.create({ data: createData });
 
-    // Fire-and-forget: a "booking becomes an active client job" (full-payment
-    // bookings land here already APPROVED) gets its Drive folder + Calendar
-    // event right away. Deposit-mode bookings stay PENDING here and get the
-    // same treatment later, when an admin approves them (see approve/route.ts).
+    // Await in-request (webhook/booking create): full-payment bookings land
+    // here already APPROVED and need Drive + Calendar before the function freezes.
+    // Deposit-mode stays PENDING and syncs later on admin approve.
+    // Job row already committed — Google failure must not fail checkout upsert.
     if (job.reviewStatus === 'APPROVED') {
-      queueJobGoogleSync(job.id);
+      await awaitJobGoogleSync(job.id);
     }
 
     if (job.paymentStatus === 'DEPOSIT_PAID') {

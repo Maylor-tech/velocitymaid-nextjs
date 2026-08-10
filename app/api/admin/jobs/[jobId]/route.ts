@@ -14,7 +14,7 @@ import { requireRole } from '@/lib/auth/requireRole';
 import { computePayoutEligibility } from '@/lib/booking/payoutEligibility';
 import { logAuditEntry } from '@/lib/audit';
 import type { JobStatus } from '@prisma/client';
-import { queueJobCalendarCancel, queueJobCalendarSync } from '@/lib/google/jobGoogleSync';
+import { awaitJobCalendarCancel, awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
 
 export async function GET(
   request: NextRequest,
@@ -412,9 +412,10 @@ export async function PATCH(
       data.serviceType !== undefined;
 
     if (becameCancelled) {
-      queueJobCalendarCancel(jobId);
+      // Await so first CANCELLED transition reliably cancels Calendar (no second PATCH needed).
+      await awaitJobCalendarCancel(jobId);
     } else if (scheduleOrCleanerChanged) {
-      queueJobCalendarSync(jobId);
+      await awaitJobCalendarSync(jobId);
     }
 
     return NextResponse.json({

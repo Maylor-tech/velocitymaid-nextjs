@@ -17,7 +17,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
 import { geocodeCustomerInBackground } from "@/lib/geocoding/geocodeCustomer";
 import { nextVmReference } from "@/lib/billing/numbering";
-import { queueJobGoogleSync } from "@/lib/google/jobGoogleSync";
+import { awaitJobGoogleSync } from "@/lib/google/jobGoogleSync";
 import {
   findPropertyForCustomerAddress,
   loadPropertyById,
@@ -325,11 +325,11 @@ export async function POST(request: NextRequest) {
       select: { id: true, propertyId: true },
     });
 
-    // Fire-and-forget: Drive whenever enabled; Calendar creates only once
+    // Await in-request: Drive whenever enabled; Calendar creates only once
     // preferredDate is present (enough scheduling info). Cancelled jobs skip
-    // via syncJobCalendarEvent status check.
+    // via syncJobCalendarEvent status check. Job row already committed.
     if (jobStatus !== JobStatus.CANCELLED && jobStatus !== JobStatus.CANCELLED_EMERGENCY) {
-      queueJobGoogleSync(job.id);
+      await awaitJobGoogleSync(job.id);
     }
 
     return NextResponse.json({

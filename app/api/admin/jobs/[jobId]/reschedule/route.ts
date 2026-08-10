@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 import { logAuditEntry } from '@/lib/audit';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
-import { queueJobCalendarSync } from '@/lib/google/jobGoogleSync';
+import { awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
 
 /**
  * PATCH /api/admin/jobs/[jobId]/reschedule
@@ -97,7 +97,7 @@ If you have questions, just reply here.
     });
 
     if (dateChanged || timeChanged) {
-      queueJobCalendarSync(jobId);
+      await awaitJobCalendarSync(jobId);
     }
 
     return NextResponse.json({

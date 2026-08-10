@@ -1,5 +1,5 @@
 /**
- * PUT/GET /api/admin/jobs/[jobId]/team — auth, ordering, empty team, calendar queue.
+ * PUT/GET /api/admin/jobs/[jobId]/team — auth, ordering, empty team, calendar await.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
@@ -10,7 +10,7 @@ const deleteMany = vi.fn();
 const createMany = vi.fn();
 const jobUpdate = vi.fn();
 const loadJobTeamMembers = vi.fn();
-const queueJobCalendarSync = vi.fn();
+const awaitJobCalendarSync = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...args: unknown[]) => requireRole(...args),
@@ -34,7 +34,7 @@ vi.mock('@/lib/cleaners/internalCleanerService', () => ({
 }));
 
 vi.mock('@/lib/google/jobGoogleSync', () => ({
-  queueJobCalendarSync: (...args: unknown[]) => queueJobCalendarSync(...args),
+  awaitJobCalendarSync: (...args: unknown[]) => awaitJobCalendarSync(...args),
 }));
 
 import { GET, PUT } from '../route';
@@ -94,7 +94,7 @@ describe('GET/PUT /api/admin/jobs/[jobId]/team', () => {
       where: { id: JOB_ID },
       data: { assignedCleanerId: BRIAN, assignedAt: expect.any(Date) },
     });
-    expect(queueJobCalendarSync).toHaveBeenCalledWith(JOB_ID);
+    expect(awaitJobCalendarSync).toHaveBeenCalledWith(JOB_ID);
   });
 
   it('Brian + Caryll → ordered team; Brian is primary', async () => {
@@ -116,7 +116,7 @@ describe('GET/PUT /api/admin/jobs/[jobId]/team', () => {
         data: expect.objectContaining({ assignedCleanerId: BRIAN }),
       })
     );
-    expect(queueJobCalendarSync).toHaveBeenCalledWith(JOB_ID);
+    expect(awaitJobCalendarSync).toHaveBeenCalledWith(JOB_ID);
   });
 
   it('three-person team preserves sortOrder', async () => {
@@ -141,7 +141,7 @@ describe('GET/PUT /api/admin/jobs/[jobId]/team', () => {
         data: expect.objectContaining({ assignedCleanerId: CARYLL }),
       })
     );
-    expect(queueJobCalendarSync).toHaveBeenCalledWith(JOB_ID);
+    expect(awaitJobCalendarSync).toHaveBeenCalledWith(JOB_ID);
   });
 
   it('removing an assistant is a full replace without that id', async () => {
@@ -169,7 +169,7 @@ describe('GET/PUT /api/admin/jobs/[jobId]/team', () => {
       where: { id: JOB_ID },
       data: { assignedCleanerId: null },
     });
-    expect(queueJobCalendarSync).toHaveBeenCalledWith(JOB_ID);
+    expect(awaitJobCalendarSync).toHaveBeenCalledWith(JOB_ID);
     const json = await res.json();
     expect(json.team).toEqual([]);
   });
