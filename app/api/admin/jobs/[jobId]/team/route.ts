@@ -54,8 +54,16 @@ export async function PUT(
         where: { id: params.jobId },
         data: { assignedCleanerId: cleanerIds[0], assignedAt: new Date() },
       });
-      queueJobCalendarSync(params.jobId);
+    } else {
+      // Empty team: clear primary so portal/payout owner and Calendar summary
+      // reflect Unassigned. Do not cancel/delete the Calendar event.
+      await prisma.job.update({
+        where: { id: params.jobId },
+        data: { assignedCleanerId: null },
+      });
     }
+
+    queueJobCalendarSync(params.jobId);
 
     const team = await loadJobTeamMembers(params.jobId);
     return NextResponse.json({ success: true, team });

@@ -157,16 +157,30 @@ describe('GET/PUT /api/admin/jobs/[jobId]/team', () => {
     });
   });
 
-  it('empty-team clears members and does not update primary or calendar', async () => {
+  it('clearing Brian + Caryll → no team rows, assignedCleanerId null, calendar sync queued', async () => {
     loadJobTeamMembers.mockResolvedValue([]);
     const res = await PUT(putRequest({ cleanerIds: [] }), {
       params: { jobId: JOB_ID },
     });
     expect(res.status).toBe(200);
-    expect(deleteMany).toHaveBeenCalled();
+    expect(deleteMany).toHaveBeenCalledWith({ where: { jobId: JOB_ID } });
     expect(createMany).not.toHaveBeenCalled();
-    expect(jobUpdate).not.toHaveBeenCalled();
-    expect(queueJobCalendarSync).not.toHaveBeenCalled();
+    expect(jobUpdate).toHaveBeenCalledWith({
+      where: { id: JOB_ID },
+      data: { assignedCleanerId: null },
+    });
+    expect(queueJobCalendarSync).toHaveBeenCalledWith(JOB_ID);
+    const json = await res.json();
+    expect(json.team).toEqual([]);
+  });
+
+  it('empty team remains a valid PUT payload', async () => {
+    loadJobTeamMembers.mockResolvedValue([]);
+    const res = await PUT(putRequest({ cleanerIds: [] }), {
+      params: { jobId: JOB_ID },
+    });
+    expect(res.status).toBe(200);
+    expect((await res.json()).success).toBe(true);
   });
 
   it('GET returns team for authorized admin', async () => {
