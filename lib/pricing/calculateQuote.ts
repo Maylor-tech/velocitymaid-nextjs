@@ -1,5 +1,7 @@
 import { BookingQuoteInput, BookingQuoteResult, PricingLineItem } from './types';
 import { getBranchServicePricingConfig } from './config';
+import { protectOperationalPrice } from './processingPolicy';
+import { roundMoney } from './money';
 
 export function calculateBookingQuote(
   input: BookingQuoteInput,
@@ -72,6 +74,16 @@ export async function calculateBookingQuoteAsync(
 
   if (!input.schedule.timeSlot) {
     errors.push({ field: 'schedule.timeSlot', message: 'Time slot is required' });
+  }
+
+  if (input.serviceType === 'RECURRING') {
+    const validFrequencies = new Set(['WEEKLY', 'BIWEEKLY', 'MONTHLY']);
+    if (!input.frequency || !validFrequencies.has(input.frequency)) {
+      errors.push({
+        field: 'frequency',
+        message: 'Please select a cleaning frequency (weekly, bi-weekly, or monthly) to get an accurate price.',
+      });
+    }
   }
 
   if (errors.length > 0) {
@@ -250,12 +262,41 @@ export async function calculateBookingQuoteAsync(
     return sum;
   }, 0);
 
-  // Promo code discount (placeholder logic)
   let discounts = 0;
+
+  // Recurring plan discount — applied against the calculated standard clean
+  // total (the same lineItems every other service type builds up above),
+  // not a separate recurring price table. Monthly gets no discount, matching
+  // the standard clean total exactly.
+  if (input.serviceType === 'RECURRING' && input.frequency) {
+    const RECURRING_DISCOUNT_RATES: Record<string, number> = {
+      WEEKLY: 0.15,
+      BIWEEKLY: 0.10,
+      MONTHLY: 0,
+    };
+    const RECURRING_FREQUENCY_LABELS: Record<string, string> = {
+      WEEKLY: 'Weekly',
+      BIWEEKLY: 'Bi-Weekly',
+      MONTHLY: 'Monthly',
+    };
+    const rate = RECURRING_DISCOUNT_RATES[input.frequency] ?? 0;
+    if (rate > 0) {
+      const discountAmount = subtotal * rate;
+      discounts += discountAmount;
+      lineItems.push({
+        key: 'recurring_discount',
+        label: `Recurring Plan Discount (${RECURRING_FREQUENCY_LABELS[input.frequency]})`,
+        amount: -discountAmount,
+        type: 'DISCOUNT',
+      });
+    }
+  }
+
+  // Promo code discount (placeholder logic)
   if (input.promoCode) {
     // Placeholder: $15 off for demo
     const discountAmount = 15;
-    discounts = discountAmount;
+    discounts += discountAmount;
     lineItems.push({
       key: 'promo',
       label: `Promo Code: ${input.promoCode}`,
@@ -276,8 +317,16 @@ export async function calculateBookingQuoteAsync(
     });
   }
 
-  // Total
-  const total = subtotal - discounts + tax;
+  // Operational total (before processing protection)
+  const operationalTotal = roundMoney(subtotal - discounts + tax);
+
+  // Processing protection AFTER all billable components — never as a
+  // customer-facing "card fee" line item.
+  const protectedPrice = await protectOperationalPrice(operationalTotal);
+  // Do NOT push pass-through/disabled warnings into customer-facing quote.warnings
+  // (ReviewStep renders them). Admin observability is via Settings + job economics.
+
+  const total = protectedPrice.customerPrice;
 
   // Time estimate
   let estimatedHours = config.minHours;
@@ -320,7 +369,13 @@ export async function calculateBookingQuoteAsync(
     discounts: Math.round(discounts * 100) / 100,
     fees: Math.round(config.travelFeeFlat * 100) / 100,
     tax: Math.round(tax * 100) / 100,
-    total: Math.round(total * 100) / 100,
+    total,
+    operationalTotal: protectedPrice.operationalSubtotal,
+    processingAllowanceEstimated: protectedPrice.processingAllowanceEstimated,
+    pricingPolicyVersion: protectedPrice.pricingPolicyVersion,
+    estimatedNetAfterProcessing: protectedPrice.protected
+      ? protectedPrice.estimatedNetAfterProcessing
+      : null,
     lineItems,
     warnings,
   };

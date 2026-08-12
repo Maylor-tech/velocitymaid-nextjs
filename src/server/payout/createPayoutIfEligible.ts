@@ -20,6 +20,7 @@ export async function createPayoutIfEligible(jobId: string): Promise<CreatePayou
       paymentStatus: true,
       totalPrice: true,
       quotedTotal: true,
+      operationalTotal: true,
       branchId: true,
       assignedCleanerId: true,
       currency: true,
@@ -38,11 +39,16 @@ export async function createPayoutIfEligible(jobId: string): Promise<CreatePayou
     return { ok: true, reason: 'ALREADY_EXISTS', payoutId: existing.id };
   }
 
-  const grossAmount = job.quotedTotal
-    ? Number(job.quotedTotal)
-    : job.totalPrice
-      ? Number(job.totalPrice)
-      : 0;
+  // Protected jobs: payout gross = operationalTotal (economics base).
+  // Legacy jobs (operationalTotal null): quotedTotal ?? totalPrice.
+  const grossAmount =
+    job.operationalTotal != null
+      ? Number(job.operationalTotal)
+      : job.quotedTotal
+        ? Number(job.quotedTotal)
+        : job.totalPrice
+          ? Number(job.totalPrice)
+          : 0;
 
   if (grossAmount <= 0) {
     return { ok: false, reason: 'ZERO_GROSS_AMOUNT' };

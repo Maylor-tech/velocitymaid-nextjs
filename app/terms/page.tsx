@@ -84,7 +84,7 @@ export default function TermsOfService() {
 
             <h3 className="text-xl font-semibold text-vm-text mb-3">Payment</h3>
             <p className="text-vm-text leading-relaxed mb-4">
-              Payment is required at the time of booking. We accept payment through our secure payment processor (Stripe). All prices are in U.S. dollars and are subject to change without notice.
+              Payment is required at the time of booking. We accept payment through our secure payment processor (Stripe). All prices are in U.S. dollars and are subject to change without notice. Published service rates reflect VelocityMaid&apos;s standard electronic payment and administrative costs.
             </p>
 
             <h3 className="text-xl font-semibold text-vm-text mb-3">Pricing</h3>

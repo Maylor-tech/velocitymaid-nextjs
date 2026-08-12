@@ -434,6 +434,13 @@ model Job {
   address                  String?
   totalPrice               Decimal?                   @db.Decimal(10, 2)
   quotedTotal              Decimal?                   @db.Decimal(10, 2)
+  /// Economics / cleaner-payout base when processing protection applied. Null = legacy job.
+  /// Contract: totalPrice/quotedTotal remain the customer-facing charged amounts.
+  operationalTotal         Decimal?                   @db.Decimal(10, 2)
+  /// customerTotal − operationalTotal when protection applied; else null/0 for legacy.
+  processingAllowanceEstimated Decimal?               @db.Decimal(10, 2)
+  /// Policy version string that produced protected pricing (e.g. "pp-v1").
+  pricingPolicyVersion     String?
   depositAmount            Decimal?                   @db.Decimal(10, 2)
   amountPaid               Decimal?                   @db.Decimal(10, 2)
   balanceDue               Decimal?                   @db.Decimal(10, 2)
@@ -1777,6 +1784,13 @@ model AdminPlatformSettings {
   googleCalendarId        String?
   lastSyncError           String?
   lastSyncErrorAt         DateTime?
+  /// When false/missing, pricing pass-through (customer = operational). Default OFF.
+  processingProtectionEnabled Boolean @default(false)
+  /// e.g. 0.0349 for 3.49%. Not brand-specific — configurable allowance.
+  processingPercentageRate    Decimal?  @db.Decimal(8, 6)
+  processingFixedFee          Decimal?  @db.Decimal(10, 2)
+  processingRoundingIncrement Int       @default(5)
+  processingPolicyVersion     String?
   updatedAt               DateTime  @updatedAt
 
   @@map("admin_platform_settings")

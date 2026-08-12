@@ -22,6 +22,8 @@ export interface BookingQuoteInput {
     notes?: string;
   };
   promoCode?: string | null;
+  /** Only meaningful when serviceType === 'RECURRING'; required in that case. */
+  frequency?: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | null;
 }
 
 export interface PricingLineItem {
@@ -40,7 +42,18 @@ export interface BookingQuoteResult {
   discounts: number;
   fees: number;
   tax: number;
+  /** Customer-facing total (includes processing protection when enabled). */
   total: number;
+  /**
+   * Operational economics subtotal (payout base). Equals `total` when
+   * processing protection is disabled/pass-through.
+   */
+  operationalTotal: number;
+  /** customer total − operational; 0 when pass-through. */
+  processingAllowanceEstimated: number;
+  pricingPolicyVersion: string | null;
+  /** Informational estimate; null when unprotected. */
+  estimatedNetAfterProcessing: number | null;
   lineItems: PricingLineItem[];
   warnings: string[];
 }

@@ -38,9 +38,11 @@ const { mockBranches, mockPackages } = vi.hoisted(() => {
     },
   };
 
-  // Matches live BranchServicePackage rows as of 2026-07-10. Note
-  // vermont-middlebury deliberately has ZERO rows, matching the real gap
-  // found in the audit.
+  // Matches live BranchServicePackage rows as of 2026-07-11 (Emergency Clean
+  // seeded per the 2026-07-11 pricing decision: $350 base + existing $75
+  // rush fee). Note vermont-middlebury deliberately has ZERO rows, matching
+  // the real gap found in the audit. Recurring has no row of its own — it's
+  // aliased to BASIC_CLEAN in config.ts and discounted downstream.
   const mockPackages = [
     { branchId: 'branch-nj', code: 'BASIC_CLEAN', basePrice: '120', isActive: true },
     { branchId: 'branch-nj', code: 'DEEP_CLEAN', basePrice: '220', isActive: true },
@@ -48,6 +50,7 @@ const { mockBranches, mockPackages } = vi.hoisted(() => {
     { branchId: 'branch-vt', code: 'VACATION_RENTAL_TURNOVER', basePrice: '175', isActive: true },
     { branchId: 'branch-vt', code: 'DEEP_CLEAN', basePrice: '300', isActive: true },
     { branchId: 'branch-vt', code: 'MOVE_IN_OUT', basePrice: '450', isActive: true },
+    { branchId: 'branch-vt', code: 'EMERGENCY_CLEAN', basePrice: '350', isActive: true },
   ];
 
   return { mockBranches, mockPackages };
@@ -71,6 +74,16 @@ vi.mock('../../prisma', () => ({
         );
       }),
     },
+    // Feature flag OFF — golden booking totals must remain unchanged.
+    adminPlatformSettings: {
+      findUnique: vi.fn(async () => ({
+        processingProtectionEnabled: false,
+        processingPercentageRate: null,
+        processingFixedFee: null,
+        processingRoundingIncrement: 5,
+        processingPolicyVersion: null,
+      })),
+    },
   },
 }));
 
@@ -91,6 +104,7 @@ function input(overrides: Partial<BookingQuoteInput> = {}): BookingQuoteInput {
       laundry: false,
     },
     promoCode: null,
+    frequency: null,
     ...overrides,
   };
 }
@@ -133,14 +147,21 @@ describe('/book pricing engine — service-type base price regression', () => {
       expect(quote?.total).toBe(90);
     });
 
-    it('Emergency Clean fails safely (no configured price) instead of silently reusing another tier\'s price', async () => {
+    it('Emergency Clean totals $440 ($350 base + $75 rush fee + $15 travel)', async () => {
       const { quote, errors } = await calculateBookingQuoteAsync(
         input({ serviceType: 'EMERGENCY_CLEAN', branchSlug: 'vermont' })
       );
-      expect(quote).toBeNull();
-      expect(errors).toHaveLength(1);
-      expect(errors[0].field).toBe('serviceType');
-      expect(errors[0].message).toMatch(/manual quote/i);
+      expect(errors).toEqual([]);
+      expect(quote?.total).toBe(440);
+    });
+
+    it('Emergency Clean minimum charge (base + rush fee, before travel/add-ons) is $425 per the 2026-07-11 pricing decision', async () => {
+      const { quote } = await calculateBookingQuoteAsync(
+        input({ serviceType: 'EMERGENCY_CLEAN', branchSlug: 'vermont' })
+      );
+      const base = quote?.lineItems.find((li) => li.key === 'base')?.amount ?? 0;
+      const rushFee = quote?.lineItems.find((li) => li.key === 'emergency_fee')?.amount ?? 0;
+      expect(base + rushFee).toBe(425);
     });
 
     it('the three priced Vermont tiers are all different from each other (the actual bug fix)', async () => {
@@ -184,14 +205,56 @@ describe('/book pricing engine — service-type base price regression', () => {
       expect(quote?.total).toBe(335);
     });
 
-    it('Recurring fails safely (no configured price) instead of silently reusing Standard\'s price', async () => {
+    it('Recurring without a frequency fails safely instead of guessing which discount to apply', async () => {
       const { quote, errors } = await calculateBookingQuoteAsync(
         input({ serviceType: 'RECURRING', branchSlug: 'new-jersey' })
       );
       expect(quote).toBeNull();
       expect(errors).toHaveLength(1);
-      expect(errors[0].field).toBe('serviceType');
-      expect(errors[0].message).toMatch(/manual quote/i);
+      expect(errors[0].field).toBe('frequency');
+      expect(errors[0].message).toMatch(/frequency/i);
+    });
+
+    describe('Recurring — priced off the Standard total (BASIC_CLEAN alias), discounted by frequency', () => {
+      it('Monthly equals Standard exactly ($135) — no discount', async () => {
+        const standard = await calculateBookingQuoteAsync(
+          input({ serviceType: 'STANDARD', branchSlug: 'new-jersey' })
+        );
+        const monthly = await calculateBookingQuoteAsync(
+          input({ serviceType: 'RECURRING', branchSlug: 'new-jersey', frequency: 'MONTHLY' })
+        );
+        expect(monthly.errors).toEqual([]);
+        expect(monthly.quote?.total).toBe(standard.quote?.total);
+        expect(monthly.quote?.lineItems.some((li) => li.key === 'recurring_discount')).toBe(false);
+      });
+
+      it('Bi-Weekly is 10% off the Standard total: $121.50', async () => {
+        const { quote, errors } = await calculateBookingQuoteAsync(
+          input({ serviceType: 'RECURRING', branchSlug: 'new-jersey', frequency: 'BIWEEKLY' })
+        );
+        expect(errors).toEqual([]);
+        expect(quote?.total).toBe(121.5);
+      });
+
+      it('Weekly is 15% off the Standard total: $114.75', async () => {
+        const { quote, errors } = await calculateBookingQuoteAsync(
+          input({ serviceType: 'RECURRING', branchSlug: 'new-jersey', frequency: 'WEEKLY' })
+        );
+        expect(errors).toEqual([]);
+        expect(quote?.total).toBe(114.75);
+      });
+
+      it('does not maintain a separate recurring price table — RECURRING and STANDARD share the same base line item amount', async () => {
+        const standard = await calculateBookingQuoteAsync(
+          input({ serviceType: 'STANDARD', branchSlug: 'new-jersey' })
+        );
+        const recurring = await calculateBookingQuoteAsync(
+          input({ serviceType: 'RECURRING', branchSlug: 'new-jersey', frequency: 'WEEKLY' })
+        );
+        const standardBase = standard.quote?.lineItems.find((li) => li.key === 'base')?.amount;
+        const recurringBase = recurring.quote?.lineItems.find((li) => li.key === 'base')?.amount;
+        expect(recurringBase).toBe(standardBase);
+      });
     });
 
     it('Standard, Deep Clean, and Move In/Out are all different from each other (the actual bug fix)', async () => {

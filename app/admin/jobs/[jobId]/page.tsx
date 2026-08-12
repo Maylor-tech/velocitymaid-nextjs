@@ -29,6 +29,9 @@ interface Job {
   paymentStatus: string;
   reviewStatus?: string;
   quotedTotal?: number | null;
+  operationalTotal?: number | null;
+  processingAllowanceEstimated?: number | null;
+  pricingPolicyVersion?: string | null;
   depositAmount?: number | null;
   amountPaid?: number | null;
   balanceDue?: number | null;
@@ -926,6 +929,54 @@ export default function AdminJobDetailPage() {
         {/* Payment Summary */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <h2 className="text-xl font-semibold text-vm-text mb-4">Payment Summary</h2>
+          {job.operationalTotal != null && (
+            <div className="mb-5 rounded-lg border border-vm-border bg-vm-surface/60 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-vm-muted mb-3">
+                Pricing economics (internal)
+              </p>
+              <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2 text-sm">
+                <div className="flex justify-between gap-4 sm:block">
+                  <dt className="text-vm-muted">Operational subtotal</dt>
+                  <dd className="font-semibold text-vm-text">
+                    {formatCurrency(job.operationalTotal, job.currency)}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 sm:block">
+                  <dt className="text-vm-muted">Processing protection</dt>
+                  <dd className="font-semibold text-vm-text">
+                    {formatCurrency(job.processingAllowanceEstimated ?? 0, job.currency)}{' '}
+                    <span className="font-normal text-vm-muted">estimated</span>
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 sm:block">
+                  <dt className="text-vm-muted">Customer price</dt>
+                  <dd className="font-semibold text-vm-text">
+                    {formatCurrency(job.quotedTotal ?? job.totalPrice, job.currency)}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 sm:block">
+                  <dt className="text-vm-muted">Estimated net</dt>
+                  <dd className="font-semibold text-vm-text">
+                    {formatCurrency(
+                      (job.quotedTotal ?? job.totalPrice ?? 0) -
+                        (job.processingAllowanceEstimated ?? 0),
+                      job.currency
+                    )}
+                  </dd>
+                </div>
+                {job.pricingPolicyVersion && (
+                  <div className="flex justify-between gap-4 sm:col-span-2 sm:block">
+                    <dt className="text-vm-muted">Policy</dt>
+                    <dd className="font-mono text-xs text-vm-text">{job.pricingPolicyVersion}</dd>
+                  </div>
+                )}
+              </dl>
+              <p className="mt-3 text-xs text-vm-muted">
+                Electronic payment cost allowance is internal. Cleaner payout uses the operational
+                subtotal, not the customer price.
+              </p>
+            </div>
+          )}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <div className="rounded-lg bg-gray-50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">Quoted Total</p>

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
-import type { TravelZone } from '@prisma/client';
 import { TRAVEL_ZONE_OPTIONS } from '@/lib/vermont/travelZone';
 import type { InvoiceQuickAddItem } from '@/lib/admin/invoiceQuickAddSettings';
 import type { GoogleIntegrationStatus } from '@/lib/admin/googleIntegrationSettings';
@@ -11,6 +10,132 @@ import GoogleIntegrationHealth from '@/components/admin/GoogleIntegrationHealth'
 
 const inputClass =
   'w-full rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy focus:border-vm-cyan focus:outline-none focus:ring-1 focus:ring-vm-cyan';
+
+function ProcessingProtectionSection() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [enabled, setEnabled] = useState(false);
+  const [percentageRate, setPercentageRate] = useState('0.0349');
+  const [fixedFee, setFixedFee] = useState('0.49');
+  const [roundingIncrement, setRoundingIncrement] = useState('5');
+  const [policyVersion, setPolicyVersion] = useState('pp-v1');
+  const [message, setMessage] = useState<string | null>(null);
+
+  const load = () => {
+    setLoading(true);
+    fetch('/api/admin/settings/processing-protection', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.success) return;
+        setEnabled(Boolean(d.enabled));
+        if (d.percentageRate != null) setPercentageRate(String(d.percentageRate));
+        if (d.fixedFee != null) setFixedFee(String(d.fixedFee));
+        if (d.roundingIncrement != null) setRoundingIncrement(String(d.roundingIncrement));
+        if (d.policyVersion) setPolicyVersion(String(d.policyVersion));
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(load, []);
+
+  const save = async () => {
+    setSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/admin/settings/processing-protection', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          enabled,
+          percentageRate: Number(percentageRate),
+          fixedFee: Number(fixedFee),
+          roundingIncrement: Number(roundingIncrement),
+          policyVersion,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Save failed');
+      }
+      setMessage(enabled ? 'Processing protection enabled.' : 'Processing protection disabled (pass-through).');
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-vm-cyan" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-4">
+      <label className="flex items-center gap-2 font-body text-sm text-vm-navy">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => setEnabled(e.target.checked)}
+          className="rounded border-vm-border"
+        />
+        Enable processing protection for newly priced jobs
+      </label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-vm-muted">Percentage rate</label>
+          <input
+            className={inputClass}
+            value={percentageRate}
+            onChange={(e) => setPercentageRate(e.target.value)}
+            placeholder="0.0349"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-vm-muted">Fixed fee ($)</label>
+          <input
+            className={inputClass}
+            value={fixedFee}
+            onChange={(e) => setFixedFee(e.target.value)}
+            placeholder="0.49"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-vm-muted">Rounding increment ($)</label>
+          <input
+            className={inputClass}
+            value={roundingIncrement}
+            onChange={(e) => setRoundingIncrement(e.target.value)}
+            placeholder="5"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-vm-muted">Policy version</label>
+          <input
+            className={inputClass}
+            value={policyVersion}
+            onChange={(e) => setPolicyVersion(e.target.value)}
+            placeholder="pp-v1"
+          />
+        </div>
+      </div>
+      {message && <p className="font-body text-sm text-vm-muted">{message}</p>}
+      <button
+        type="button"
+        onClick={save}
+        disabled={saving}
+        className="inline-flex items-center gap-2 rounded-lg bg-vm-navy px-5 py-2.5 font-heading text-sm font-bold uppercase tracking-wider text-vm-white hover:bg-vm-navy/90 disabled:opacity-60"
+      >
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        Save processing protection
+      </button>
+    </div>
+  );
+}
 
 function IntegrationsSection() {
   const [status, setStatus] = useState<GoogleIntegrationStatus | null>(null);
@@ -305,6 +430,17 @@ export default function AdminSettingsPage() {
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Save settings
           </button>
+        </section>
+
+        <section className="mt-6 rounded-xl border border-vm-border bg-vm-white p-6">
+          <h2 className="font-heading text-lg font-semibold text-vm-navy">
+            Processing protection
+          </h2>
+          <p className="mt-1 font-body text-sm text-vm-muted">
+            Internal electronic-payment cost allowance used when establishing customer prices.
+            Not a customer-facing surcharge. Defaults off — historical jobs are never recalculated.
+          </p>
+          <ProcessingProtectionSection />
         </section>
 
         <section className="mt-6 rounded-xl border border-vm-border bg-vm-white p-6">

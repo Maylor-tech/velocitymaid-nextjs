@@ -56,6 +56,9 @@ export async function GET(
         paymentStatus: true,
         reviewStatus: true,
         quotedTotal: true,
+        operationalTotal: true,
+        processingAllowanceEstimated: true,
+        pricingPolicyVersion: true,
         depositAmount: true,
         amountPaid: true,
         balanceDue: true,
@@ -204,6 +207,13 @@ export async function GET(
       paymentStatus: job.paymentStatus,
       reviewStatus: job.reviewStatus,
       quotedTotal: job.quotedTotal ? Number(job.quotedTotal) : null,
+      operationalTotal:
+        job.operationalTotal != null ? Number(job.operationalTotal) : null,
+      processingAllowanceEstimated:
+        job.processingAllowanceEstimated != null
+          ? Number(job.processingAllowanceEstimated)
+          : null,
+      pricingPolicyVersion: job.pricingPolicyVersion ?? null,
       depositAmount: job.depositAmount ? Number(job.depositAmount) : null,
       amountPaid: job.amountPaid ? Number(job.amountPaid) : null,
       balanceDue: job.balanceDue ? Number(job.balanceDue) : null,

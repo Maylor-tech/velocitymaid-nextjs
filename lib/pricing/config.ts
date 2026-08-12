@@ -29,6 +29,9 @@ export interface BranchServicePricingConfig {
  */
 const SERVICE_TYPE_PACKAGE_CODE_ALIASES: Partial<Record<ServiceType, string>> = {
   STANDARD: 'BASIC_CLEAN',
+  // Recurring is priced off the standard clean total, not a separate table —
+  // see calculateQuote.ts, which applies the frequency discount downstream.
+  RECURRING: 'BASIC_CLEAN',
 };
 
 /**

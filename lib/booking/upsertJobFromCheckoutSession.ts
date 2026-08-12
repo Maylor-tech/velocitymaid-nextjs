@@ -51,6 +51,17 @@ async function buildJobCreateData(
     : null;
   const jobReference = await nextVmReference();
 
+  const operationalTotal =
+    metadata.operationalTotal != null && metadata.operationalTotal !== ''
+      ? parseFloat(metadata.operationalTotal)
+      : null;
+  const processingAllowanceEstimated =
+    metadata.processingAllowanceEstimated != null &&
+    metadata.processingAllowanceEstimated !== ''
+      ? parseFloat(metadata.processingAllowanceEstimated)
+      : null;
+  const pricingPolicyVersion = metadata.pricingPolicyVersion || null;
+
   const RECURRING_FREQUENCY_LABELS: Record<string, string> = {
     WEEKLY: 'Weekly',
     BIWEEKLY: 'Bi-Weekly',
@@ -75,6 +86,13 @@ async function buildJobCreateData(
     status: 'RECEIVED',
     totalPrice: paymentFields.totalPrice,
     quotedTotal: paymentFields.quotedTotal,
+    ...(operationalTotal != null && Number.isFinite(operationalTotal)
+      ? { operationalTotal }
+      : {}),
+    ...(processingAllowanceEstimated != null && Number.isFinite(processingAllowanceEstimated)
+      ? { processingAllowanceEstimated }
+      : {}),
+    ...(pricingPolicyVersion ? { pricingPolicyVersion } : {}),
     depositAmount: paymentFields.depositAmount,
     amountPaid: paymentFields.amountPaid,
     balanceDue: paymentFields.balanceDue,

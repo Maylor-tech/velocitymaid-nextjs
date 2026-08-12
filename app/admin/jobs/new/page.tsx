@@ -94,6 +94,9 @@ export default function NewManualJobPage() {
   } | null>(null);
   const [travelFeeApplied, setTravelFeeApplied] = useState(false);
   const [travelBannerDismissed, setTravelBannerDismissed] = useState(false);
+  const [customerPricePreview, setCustomerPricePreview] = useState<number | null>(null);
+  const [allowancePreview, setAllowancePreview] = useState<number | null>(null);
+  const [previewWarning, setPreviewWarning] = useState<string | null>(null);
 
   const update = (key: keyof typeof EMPTY_FORM, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -103,6 +106,43 @@ export default function NewManualJobPage() {
       setForm((prev) => (prev.state === "VT" ? prev : { ...prev, state: "VT", serviceType: "" }));
     }
   }, [isBranchScoped]);
+
+  useEffect(() => {
+    const amount = Number(form.totalAmount);
+    if (!form.totalAmount || !Number.isFinite(amount) || amount < 0) {
+      setCustomerPricePreview(null);
+      setAllowancePreview(null);
+      setPreviewWarning(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      fetch("/api/admin/pricing/protect-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ operationalSubtotal: amount }),
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (cancelled || !d.success) return;
+          setCustomerPricePreview(Number(d.customerPrice));
+          setAllowancePreview(Number(d.processingAllowanceEstimated ?? 0));
+          setPreviewWarning(d.warning ?? null);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setCustomerPricePreview(amount);
+            setAllowancePreview(0);
+            setPreviewWarning("Could not preview processing protection.");
+          }
+        });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [form.totalAmount]);
 
   const branch = form.state === "VT" ? "vermont" : form.state === "NJ" ? "new-jersey" : "";
   const serviceOptions = useMemo(() => {
@@ -234,6 +274,7 @@ export default function NewManualJobPage() {
           scheduledEndTime: form.scheduledEndTime || undefined,
           branch,
           totalAmount: Number(form.totalAmount),
+          priceInputMode: "operational",
           paymentStatus: paymentOption.value,
           cleanerName: form.cleanerName.trim() || undefined,
           jobStatus: form.jobStatus,
@@ -525,7 +566,7 @@ export default function NewManualJobPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className={labelClass} htmlFor="totalAmount">
-                  Total Amount ($) *
+                  Operational subtotal ($) *
                 </label>
                 <input
                   id="totalAmount"
@@ -536,6 +577,29 @@ export default function NewManualJobPage() {
                   value={form.totalAmount}
                   onChange={(e) => update("totalAmount", e.target.value)}
                 />
+                <p className="mt-1 text-xs text-vm-muted">
+                  Enter the operational economics amount. Processing protection (when enabled)
+                  calculates the customer price automatically — it is not a card surcharge line.
+                </p>
+                {customerPricePreview != null && (
+                  <div className="mt-3 rounded-lg border border-vm-border bg-vm-surface p-3 text-sm">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-vm-muted">Customer price</span>
+                      <span className="font-semibold text-vm-navy">
+                        ${customerPricePreview.toFixed(2)}
+                      </span>
+                    </div>
+                    {allowancePreview != null && allowancePreview > 0 && (
+                      <div className="mt-1 flex justify-between gap-2 text-xs">
+                        <span className="text-vm-muted">Processing protection (est.)</span>
+                        <span>${allowancePreview.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {previewWarning && (
+                      <p className="mt-2 text-xs text-amber-800">{previewWarning}</p>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <label className={labelClass} htmlFor="paymentStatus">

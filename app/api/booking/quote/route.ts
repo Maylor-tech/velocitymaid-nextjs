@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
         notes: body.extras?.notes ?? '',
       },
       promoCode: body.promoCode ?? null,
+      frequency: body.frequency ?? null,
     };
 
     const { quote, errors } = await calculateBookingQuoteAsync(input);

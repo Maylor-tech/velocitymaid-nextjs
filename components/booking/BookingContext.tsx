@@ -77,6 +77,7 @@ const initialData: BookingDraft = {
     laundry: false,
     notes: '',
   },
+  recurringFrequency: null,
 };
 
 interface BookingProviderProps {
@@ -144,12 +145,16 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
         setError('Please select a service type to continue.');
         return;
       }
+      if (data.serviceType === 'RECURRING' && !data.recurringFrequency) {
+        setError('Please select a cleaning frequency to continue.');
+        return;
+      }
     }
-    
+
     // Clear any previous errors
     setError(null);
     setStep((prev) => Math.min(prev + 1, 5) as BookingStep);
-  }, [step, data.market, data.branchSlug, data.serviceType]);
+  }, [step, data.market, data.branchSlug, data.serviceType, data.recurringFrequency]);
 
   const prevStep = useCallback(() => {
     setStep((prev) => Math.max(prev - 1, 0) as BookingStep);
@@ -248,6 +253,7 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
           home: data.home,
           schedule: data.schedule,
           extras: data.extras,
+          frequency: data.recurringFrequency,
         }),
       });
 
@@ -315,6 +321,16 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
         zipCode: data.contact.zip || data.address.zip || null,
         branchSlug: data.branchSlug,
         currency: quote.currency || 'USD',
+        recurringFrequency: data.serviceType === 'RECURRING' ? data.recurringFrequency : null,
+        // Authoritative pricing inputs — checkout recomputes server-side
+        quoteInput: {
+          serviceType: data.serviceType,
+          branchSlug: data.branchSlug,
+          home: data.home,
+          schedule: data.schedule,
+          extras: data.extras,
+          frequency: data.serviceType === 'RECURRING' ? data.recurringFrequency : null,
+        },
       };
 
       // Call checkout API to create Stripe session

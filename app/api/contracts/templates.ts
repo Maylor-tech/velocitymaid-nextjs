@@ -94,7 +94,7 @@ export const customerTermsTemplate = {
     },
     {
       title: '3. Pricing',
-      content: `All prices are in Jamaican Dollars (JMD) and are subject to change. Current pricing:
+      content: `All prices are in Jamaican Dollars (JMD) and are subject to change. Published service rates reflect VelocityMaid's standard electronic payment and administrative costs. Current pricing:
 • Standard Clean: JMD $7,500
 • Deep Clean: JMD $12,000
 • Move In/Out: JMD $20,000

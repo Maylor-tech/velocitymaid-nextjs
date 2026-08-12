@@ -8,6 +8,12 @@ export const dynamic = "force-dynamic";
  * Lets admins record jobs booked offline (phone, text, in person) that live
  * outside the Stripe booking flow. Creates/links a Customer by email and
  * creates a Job. Does not touch Stripe, payment, or booking logic.
+ *
+ * priceInputMode (ADMIN-ONLY — this route requires requireRole ADMIN):
+ * - 'operational' (default): totalAmount is economics base; processing
+ *   protection may raise the customer total when enabled.
+ * - 'customer': totalAmount is the final customer price (no gross-up).
+ *   Public booking/checkout APIs do not accept this field.
  */
 
 import { randomUUID } from "crypto";
@@ -18,6 +24,8 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { geocodeCustomerInBackground } from "@/lib/geocoding/geocodeCustomer";
 import { nextVmReference } from "@/lib/billing/numbering";
 import { awaitJobGoogleSync } from "@/lib/google/jobGoogleSync";
+import { protectOperationalPrice } from "@/lib/pricing/processingPolicy";
+import { roundMoney } from "@/lib/pricing/money";
 import {
   findPropertyForCustomerAddress,
   loadPropertyById,
@@ -41,7 +49,15 @@ interface ManualJobBody {
   scheduledEndTime?: string;
   branch?: string;
 
+  /**
+   * Dollar amount. Interpreted as operational subtotal by default
+   * (`priceInputMode: 'operational'`). Processing protection produces
+   * customer totalPrice/quotedTotal. Use `priceInputMode: 'customer'` to
+   * treat this as the final customer total (no second gross-up).
+   */
   totalAmount?: number;
+  /** @default 'operational' */
+  priceInputMode?: 'operational' | 'customer';
   depositAmount?: number;
 
   cleanerName?: string;
@@ -197,17 +213,56 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Build the Job record
-    const totalAmount =
+    const inputAmount =
       typeof body.totalAmount === "number" && Number.isFinite(body.totalAmount)
         ? body.totalAmount
         : null;
+    const priceInputMode =
+      body.priceInputMode === "customer" ? "customer" : "operational";
     const depositAmount =
       typeof body.depositAmount === "number" &&
       Number.isFinite(body.depositAmount)
         ? body.depositAmount
         : null;
 
+    let operationalTotal: number | null = null;
+    let customerTotal: number | null = null;
+    let processingAllowanceEstimated: number | null = null;
+    let pricingPolicyVersion: string | null = null;
+    let processingWarning: string | null = null;
+
+    if (inputAmount != null) {
+      if (priceInputMode === "customer") {
+        // Explicit customer override — admin-only; do not apply a second gross-up.
+        // Persist operationalTotal = customer so payout basis matches the override.
+        customerTotal = roundMoney(inputAmount);
+        operationalTotal = customerTotal;
+        processingAllowanceEstimated = 0;
+        pricingPolicyVersion = "manual-customer-override";
+      } else {
+        const protectedPrice = await protectOperationalPrice(inputAmount);
+        processingWarning = protectedPrice.warning;
+        if (protectedPrice.protected) {
+          operationalTotal = protectedPrice.operationalSubtotal;
+          customerTotal = protectedPrice.customerPrice;
+          processingAllowanceEstimated =
+            protectedPrice.processingAllowanceEstimated;
+          pricingPolicyVersion = protectedPrice.pricingPolicyVersion;
+        } else {
+          // Feature OFF / pass-through: behave like pre-protection manual pricing.
+          // Do not require new economics fields on the Job row.
+          customerTotal = roundMoney(inputAmount);
+          operationalTotal = null;
+          processingAllowanceEstimated = null;
+          pricingPolicyVersion = null;
+        }
+      }
+    }
+
+    const totalAmount = customerTotal;
+
     // Derive paid / balance from the chosen payment status (manual, non-Stripe).
+    // Balance math uses CUSTOMER total.
     let amountPaid: number | null = null;
     let balanceDue: number | null = null;
     if (totalAmount != null) {
@@ -311,6 +366,11 @@ export async function POST(request: NextRequest) {
         currency: "USD",
         totalPrice: totalAmount,
         quotedTotal: totalAmount,
+        ...(operationalTotal != null ? { operationalTotal } : {}),
+        ...(processingAllowanceEstimated != null
+          ? { processingAllowanceEstimated }
+          : {}),
+        ...(pricingPolicyVersion ? { pricingPolicyVersion } : {}),
         depositAmount,
         amountPaid,
         balanceDue,
@@ -337,6 +397,14 @@ export async function POST(request: NextRequest) {
       jobId: job.id,
       customerId: customer.id,
       propertyId: job.propertyId,
+      pricing: {
+        operationalTotal,
+        customerTotal: totalAmount,
+        processingAllowanceEstimated,
+        pricingPolicyVersion,
+        warning: processingWarning,
+        priceInputMode,
+      },
     });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
