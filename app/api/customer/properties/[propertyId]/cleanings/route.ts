@@ -87,6 +87,18 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       );
     }
 
+    if (sameDayTurnover && !checkInDeadline) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Check-in deadline is required for same-day turnovers (property-ready deadline).',
+          code: 'CHECK_IN_DEADLINE_REQUIRED',
+        },
+        { status: 400 }
+      );
+    }
+
     const customer = await prisma.customer.findUnique({
       where: { id: session.customerId },
       select: {

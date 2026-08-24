@@ -1,17 +1,19 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   AlertCircle,
   ArrowLeft,
   Calendar,
+  CheckCircle2,
   Loader2,
   Plus,
   Save,
 } from 'lucide-react';
 import { formatServiceDate } from '@/lib/dates/serviceDate';
+import { parseHostCleaningNotes } from '@/lib/properties/propertyService';
 
 interface HostProperty {
   id: string;
@@ -43,14 +45,18 @@ interface UpcomingJob {
   preferredTime: string | null;
   serviceType: string | null;
   status: string;
+  internalNotes?: string | null;
 }
 
 const inputClass =
   'mt-1 w-full rounded-lg border border-vm-navy/15 px-3 py-2 font-body text-sm text-vm-navy focus:outline-none focus:ring-2 focus:ring-vm-cyan';
 
-export default function CustomerPropertyDetailPage() {
+function CustomerPropertyDetailPageInner() {
   const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const propertyId = params.propertyId as string;
+  const createdJobId = searchParams.get('created');
 
   const [property, setProperty] = useState<HostProperty | null>(null);
   const [form, setForm] = useState<HostProperty | null>(null);
@@ -59,6 +65,7 @@ export default function CustomerPropertyDetailPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [showCreatedBanner, setShowCreatedBanner] = useState(Boolean(createdJobId));
 
   const load = async () => {
     setLoading(true);
@@ -85,6 +92,25 @@ export default function CustomerPropertyDetailPage() {
     if (propertyId) void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propertyId]);
+
+  useEffect(() => {
+    setShowCreatedBanner(Boolean(createdJobId));
+  }, [createdJobId]);
+
+  const createdJob = useMemo(() => {
+    if (!createdJobId) return null;
+    return upcomingJobs.find((j) => j.id === createdJobId) ?? null;
+  }, [createdJobId, upcomingJobs]);
+
+  const createdJobMeta = useMemo(
+    () => parseHostCleaningNotes(createdJob?.internalNotes),
+    [createdJob]
+  );
+
+  const dismissCreatedBanner = () => {
+    setShowCreatedBanner(false);
+    router.replace(`/customer/properties/${propertyId}`);
+  };
 
   const update = <K extends keyof HostProperty>(key: K, value: HostProperty[K]) => {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
@@ -198,6 +224,81 @@ export default function CustomerPropertyDetailPage() {
       {saveMessage && (
         <div className="rounded-xl border border-vm-success/30 bg-vm-success-bg px-4 py-3 text-sm text-vm-success">
           {saveMessage}
+        </div>
+      )}
+      {showCreatedBanner && createdJob && (
+        <div className="rounded-xl border border-vm-success/30 bg-vm-success-bg px-4 py-3 text-sm text-vm-navy">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-vm-success" />
+              <div>
+                <p className="font-heading font-semibold text-vm-navy">
+                  Cleaning scheduled
+                </p>
+                <ul className="mt-1 space-y-0.5 font-body text-sm text-vm-muted">
+                  <li>
+                    Property:{' '}
+                    <span className="text-vm-navy">
+                      {property?.name || form.name}
+                    </span>
+                  </li>
+                  <li>
+                    Cleaning date:{' '}
+                    <span className="text-vm-navy">
+                      {createdJob.preferredDate
+                        ? formatServiceDate(createdJob.preferredDate, {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : '—'}
+                      {createdJob.preferredTime
+                        ? ` · ${createdJob.preferredTime}`
+                        : ''}
+                    </span>
+                  </li>
+                  <li>
+                    Service:{' '}
+                    <span className="text-vm-navy">
+                      {createdJob.serviceType || 'Cleaning'}
+                    </span>
+                  </li>
+                  <li>
+                    Same-day turnover:{' '}
+                    <span className="text-vm-navy">
+                      {createdJobMeta.sameDayTurnover ? 'Yes' : 'No'}
+                    </span>
+                  </li>
+                  {createdJobMeta.sameDayTurnover &&
+                    createdJobMeta.checkInDeadline && (
+                      <li>
+                        Check-in deadline:{' '}
+                        <span className="text-vm-navy">
+                          {createdJobMeta.checkInDeadline}
+                        </span>
+                      </li>
+                    )}
+                </ul>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={dismissCreatedBanner}
+              className="shrink-0 font-body text-xs font-semibold text-vm-cyan-dark"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+      {showCreatedBanner && createdJobId && !loading && !createdJob && (
+        <div className="rounded-xl border border-vm-success/30 bg-vm-success-bg px-4 py-3 text-sm text-vm-navy">
+          <p className="font-heading font-semibold">Cleaning scheduled</p>
+          <p className="mt-1 font-body text-sm text-vm-muted">
+            Your cleaning was saved for {property?.name || form.name}. It will
+            appear under Upcoming cleans once the date is in range.
+          </p>
         </div>
       )}
 
@@ -443,5 +544,19 @@ export default function CustomerPropertyDetailPage() {
         )}
       </section>
     </div>
+  );
+}
+
+export default function CustomerPropertyDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-vm-cyan" />
+        </div>
+      }
+    >
+      <CustomerPropertyDetailPageInner />
+    </Suspense>
   );
 }

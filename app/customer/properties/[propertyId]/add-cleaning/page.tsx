@@ -61,6 +61,15 @@ export default function AddCleaningPage() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+
+    if (sameDayTurnover && !checkInDeadline.trim()) {
+      setError(
+        'Check-in deadline is required for same-day turnovers (property-ready deadline).'
+      );
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const res = await fetch(`/api/customer/properties/${propertyId}/cleanings`, {
         method: 'POST',
@@ -70,7 +79,7 @@ export default function AddCleaningPage() {
           preferredTime: preferredTime || null,
           serviceType,
           sameDayTurnover,
-          checkInDeadline: checkInDeadline || null,
+          checkInDeadline: sameDayTurnover ? checkInDeadline.trim() : null,
           jobSpecificNotes: jobSpecificNotes || null,
         }),
       });
@@ -112,6 +121,12 @@ export default function AddCleaningPage() {
         </p>
       </div>
 
+      <div className="rounded-xl border border-vm-cyan/30 bg-vm-cyan/5 px-4 py-3 font-body text-sm text-vm-navy">
+        Schedule the day you need VelocityMaid at the property. You do not need
+        to enter every Airbnb reservation — only the cleaning/turnover we need
+        to service.
+      </div>
+
       {error && (
         <div className="flex items-start gap-2 rounded-xl border border-vm-danger/20 bg-vm-danger-bg px-4 py-3 text-sm text-vm-danger">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -124,7 +139,7 @@ export default function AddCleaningPage() {
         className="space-y-4 rounded-xl border border-vm-navy/10 bg-vm-white p-6 shadow-sm"
       >
         <label className="block font-body text-sm text-vm-muted">
-          Cleaning / service date
+          Cleaning date
           <input
             type="date"
             required
@@ -132,6 +147,10 @@ export default function AddCleaningPage() {
             value={preferredDate}
             onChange={(e) => setPreferredDate(e.target.value)}
           />
+          <span className="mt-1 block text-xs text-vm-muted">
+            Enter the day our team should clean the property — usually the guest
+            checkout/turnover day, not the incoming guest&apos;s arrival date.
+          </span>
         </label>
 
         <label className="block font-body text-sm text-vm-muted">
@@ -162,14 +181,17 @@ export default function AddCleaningPage() {
 
         <fieldset className="space-y-2">
           <legend className="font-body text-sm text-vm-muted">
-            Same-day turnover?
+            Are new guests checking in the same day?
           </legend>
           <label className="flex items-center gap-2 font-body text-sm text-vm-navy">
             <input
               type="radio"
               name="sameDay"
               checked={!sameDayTurnover}
-              onChange={() => setSameDayTurnover(false)}
+              onChange={() => {
+                setSameDayTurnover(false);
+                setCheckInDeadline('');
+              }}
             />
             No
           </label>
@@ -184,18 +206,30 @@ export default function AddCleaningPage() {
           </label>
         </fieldset>
 
-        <label className="block font-body text-sm text-vm-muted">
-          Check-in deadline / time (optional)
-          <input
-            className={inputClass}
-            placeholder="e.g. Guest arrives 4:00 PM"
-            value={checkInDeadline}
-            onChange={(e) => setCheckInDeadline(e.target.value)}
-          />
-        </label>
+        {sameDayTurnover && (
+          <label className="block font-body text-sm text-vm-muted">
+            Check-in deadline / time
+            <input
+              className={inputClass}
+              placeholder="e.g. Guest arrives 4:00 PM"
+              value={checkInDeadline}
+              onChange={(e) => setCheckInDeadline(e.target.value)}
+              required
+            />
+            <span className="mt-1 block text-xs text-vm-muted">
+              We&apos;ll use this time as the property-ready deadline.
+            </span>
+          </label>
+        )}
+
+        <p className="rounded-lg bg-vm-surface px-3 py-2 font-body text-xs text-vm-muted">
+          Example: Guests stay Oct 9–11 → choose Oct 11 as the cleaning date. If
+          new guests also arrive Oct 11, mark this as a same-day turnover and
+          enter their check-in time.
+        </p>
 
         <label className="block font-body text-sm text-vm-muted">
-          Reservation-specific notes (optional)
+          Notes for this cleaning (optional)
           <textarea
             className={inputClass}
             rows={3}
@@ -216,7 +250,7 @@ export default function AddCleaningPage() {
               Scheduling…
             </>
           ) : (
-            'Submit cleaning request'
+            'Schedule Cleaning'
           )}
         </button>
       </form>

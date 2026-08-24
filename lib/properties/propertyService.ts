@@ -321,6 +321,18 @@ export function buildHostCleaningJobNotes(
   return lines.join('\n');
 }
 
+/** Parse HOST_PORTAL occurrence notes for host UI (success banner). */
+export function parseHostCleaningNotes(notes: string | null | undefined): {
+  sameDayTurnover: boolean;
+  checkInDeadline: string | null;
+} {
+  if (!notes) return { sameDayTurnover: false, checkInDeadline: null };
+  const sameDayTurnover = /Same-day turnover:\s*Yes/i.test(notes);
+  const deadlineMatch = notes.match(/Check-in deadline:\s*(.+)/i);
+  const checkInDeadline = deadlineMatch?.[1]?.trim() || null;
+  return { sameDayTurnover, checkInDeadline };
+}
+
 export async function loadPropertyById(
   db: Db,
   propertyId: string

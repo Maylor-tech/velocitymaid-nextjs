@@ -59,6 +59,8 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
         status: true,
         paymentStatus: true,
         address: true,
+        // Host-authored notes (same-day / check-in) for success banner display only.
+        internalNotes: true,
       },
       take: 50,
     });
@@ -75,6 +77,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
         status: j.status,
         paymentStatus: j.paymentStatus,
         address: j.address,
+        internalNotes: j.internalNotes,
       })),
     });
   } catch (error: unknown) {

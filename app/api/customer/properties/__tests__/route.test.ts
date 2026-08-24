@@ -65,6 +65,7 @@ import { POST as cleaningsPOST } from '@/app/api/customer/properties/[propertyId
 import {
   buildPropertyDefaultsForJob,
   buildHostCleaningJobNotes,
+  parseHostCleaningNotes,
 } from '@/lib/properties/propertyService';
 import type { Property } from '@prisma/client';
 
@@ -251,6 +252,10 @@ describe('Host property APIs', () => {
     );
     expect(awaitJobGoogleSync).toHaveBeenCalledWith('job-new');
     expect(findUniqueBranch).not.toHaveBeenCalled();
+    const notesArg = jobCreate.mock.calls[0][0].data.internalNotes as string;
+    expect(notesArg).toContain('[Source: HOST_PORTAL]');
+    expect(notesArg).toContain('Same-day turnover: Yes');
+    expect(notesArg).toContain('Check-in deadline: 4:00 PM');
   });
 
   it('Add Cleaning still returns success when Google sync rejects', async () => {
@@ -442,6 +447,94 @@ describe('Host property APIs', () => {
     expect(awaitJobGoogleSync).not.toHaveBeenCalled();
   });
 
+  it('Add Cleaning same-day=Yes without check-in deadline returns validation error', async () => {
+    getCustomerSession.mockResolvedValue({
+      customerId: CUST_A,
+      email: 'loulouslandingvt@gmail.com',
+    });
+    loadOwnedProperty.mockResolvedValue(makeProperty());
+
+    const res = await cleaningsPOST(
+      new NextRequest('http://localhost/api', {
+        method: 'POST',
+        body: JSON.stringify({
+          preferredDate: '2026-10-11',
+          serviceType: 'Vacation Rental Turnover',
+          sameDayTurnover: true,
+        }),
+      }),
+      { params: { propertyId: PROP_ID } }
+    );
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.code).toBe('CHECK_IN_DEADLINE_REQUIRED');
+    expect(jobCreate).not.toHaveBeenCalled();
+    expect(awaitJobGoogleSync).not.toHaveBeenCalled();
+  });
+
+  it('Add Cleaning same-day=No succeeds without check-in deadline', async () => {
+    getCustomerSession.mockResolvedValue({
+      customerId: CUST_A,
+      email: 'loulouslandingvt@gmail.com',
+    });
+    loadOwnedProperty.mockResolvedValue(makeProperty());
+    findUniqueCustomer.mockResolvedValue({
+      id: CUST_A,
+      firstName: 'Tiffany',
+      lastName: 'Mayo',
+      branchId: 'branch-vt',
+      Branch: { id: 'branch-vt', slug: 'vermont' },
+    });
+    nextVmReference.mockResolvedValue('VM-2026-0100');
+    jobCreate.mockResolvedValue({
+      id: 'job-no-same-day',
+      jobReference: 'VM-2026-0100',
+      propertyId: PROP_ID,
+      address: '111 Thomson Drive',
+      preferredDate: new Date('2026-10-11T00:00:00.000Z'),
+      preferredTime: null,
+      serviceType: 'Vacation Rental Turnover',
+      status: 'RECEIVED',
+      branchId: 'branch-vt',
+    });
+
+    const res = await cleaningsPOST(
+      new NextRequest('http://localhost/api', {
+        method: 'POST',
+        body: JSON.stringify({
+          preferredDate: '2026-10-11',
+          serviceType: 'Vacation Rental Turnover',
+          sameDayTurnover: false,
+        }),
+      }),
+      { params: { propertyId: PROP_ID } }
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.job.propertyId).toBe(PROP_ID);
+    expect(json.job.preferredDate).toBe('2026-10-11T00:00:00.000Z');
+    expect(jobCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          preferredDate: new Date('2026-10-11T00:00:00.000Z'),
+          address: '111 Thomson Drive',
+          Property: { connect: { id: PROP_ID } },
+          internalNotes: expect.stringContaining('[Source: HOST_PORTAL]'),
+        }),
+      })
+    );
+    const notesArg = jobCreate.mock.calls[0][0].data.internalNotes as string;
+    expect(notesArg).toContain('Same-day turnover: No');
+    expect(notesArg).not.toContain('Check-in deadline:');
+    // Response must not claim Google success fields
+    expect(json.job.driveFolderId).toBeUndefined();
+    expect(json.job.calendarEventId).toBeUndefined();
+    expect(json.googleSynced).toBeUndefined();
+  });
+
   it('Add Cleaning returns 404 for non-owned Property', async () => {
     getCustomerSession.mockResolvedValue({ customerId: CUST_B, email: 'b@x.com' });
     loadOwnedProperty.mockResolvedValue(null);
@@ -480,5 +573,31 @@ describe('Property snapshot contract', () => {
     expect(notes).toContain('[Source: HOST_PORTAL]');
     expect(notes).toContain('Deep clean only');
     expect(notes).not.toContain('Flip beds');
+  });
+
+  it('parseHostCleaningNotes resolves same-day + deadline for success banner', () => {
+    const notes = buildHostCleaningJobNotes({
+      preferredDate: new Date('2026-10-11'),
+      serviceType: 'Vacation Rental Turnover',
+      sameDayTurnover: true,
+      checkInDeadline: '4:00 PM',
+    });
+    const parsed = parseHostCleaningNotes(notes);
+    expect(parsed.sameDayTurnover).toBe(true);
+    expect(parsed.checkInDeadline).toBe('4:00 PM');
+    expect(parseHostCleaningNotes('Same-day turnover: No').sameDayTurnover).toBe(
+      false
+    );
+  });
+
+  it('success banner job resolution matches created id from upcomingJobs', () => {
+    const upcomingJobs = [
+      { id: 'job-a', preferredDate: '2026-10-11T00:00:00.000Z' },
+      { id: 'job-created', preferredDate: '2026-10-11T00:00:00.000Z' },
+    ];
+    const createdJobId = 'job-created';
+    const createdJob = upcomingJobs.find((j) => j.id === createdJobId) ?? null;
+    expect(createdJob?.id).toBe('job-created');
+    expect(createdJob?.preferredDate).toBe('2026-10-11T00:00:00.000Z');
   });
 });
