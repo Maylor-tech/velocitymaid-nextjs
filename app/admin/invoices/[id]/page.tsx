@@ -15,6 +15,11 @@ import {
 } from 'lucide-react';
 import type { SerializedInvoice } from '@/lib/invoices/serializeInvoice';
 import { InvoiceDocument } from '@/components/invoices/InvoiceDocument';
+import {
+  SendInvoiceDialog,
+  type SendInvoicePayload,
+  type SendInvoiceResponse,
+} from '@/components/admin/invoices/SendInvoiceDialog';
 import type { InvoicePaymentMethod } from '@prisma/client';
 
 const PAYMENT_METHODS: InvoicePaymentMethod[] = [
@@ -28,6 +33,7 @@ export default function InvoiceDetailPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showSend, setShowSend] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<InvoicePaymentMethod>('CHECK');
   const [toast, setToast] = useState('');
@@ -41,6 +47,37 @@ export default function InvoiceDetailPage() {
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  const sendInvoice = async (payload: SendInvoicePayload): Promise<SendInvoiceResponse> => {
+    const res = await fetch(`/api/admin/invoices/${id}/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    return {
+      status: res.status,
+      success: !!data.success,
+      code: data.code,
+      error: data.error,
+      errors: data.errors,
+      warnings: data.warnings,
+      email: data.email,
+    };
+  };
+
+  const handleSent = (res: SendInvoiceResponse) => {
+    setShowSend(false);
+    if (res.success) {
+      setToast(res.email?.sent === false ? 'Invoice sent (email not dispatched)' : 'Invoice sent');
+    } else if (res.code === 'INVOICE_ALREADY_SENT') {
+      setToast('Invoice was already sent');
+    } else if (res.code === 'INVOICE_SENT_EMAIL_FAILED') {
+      setToast('Invoice marked sent — email failed, retry from Send email');
+    }
+    load();
+    setTimeout(() => setToast(''), 4000);
+  };
 
   const action = async (path: string, body?: object) => {
     setBusy(true);
@@ -92,19 +129,17 @@ export default function InvoiceDetailPage() {
             <Pencil className="h-4 w-4" /> Edit
           </Link>
           {invoice.status === 'DRAFT' && (
-            <button type="button" disabled={busy} onClick={() => action('send')}
+            <button type="button" disabled={busy} onClick={() => setShowSend(true)}
               className="inline-flex items-center gap-1 rounded-lg bg-vm-cyan px-3 py-2 font-body text-sm font-semibold text-vm-navy">
-              <Send className="h-4 w-4" /> Mark sent / email
+              <Send className="h-4 w-4" /> Send invoice
             </button>
           )}
-          <button type="button" disabled={busy} onClick={() => action('send')}
-            className="inline-flex items-center gap-1 rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy">
-            <Mail className="h-4 w-4" /> Send email
-          </button>
-          <button type="button" disabled={busy} onClick={() => action('remind')}
-            className="inline-flex items-center gap-1 rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy">
-            Remind
-          </button>
+          {invoice.status !== 'DRAFT' && invoice.status !== 'CANCELLED' && (
+            <button type="button" disabled={busy} onClick={() => action('remind')}
+              className="inline-flex items-center gap-1 rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy">
+              <Mail className="h-4 w-4" /> Send reminder
+            </button>
+          )}
           {invoice.balanceDue > 0 && invoice.status !== 'CANCELLED' && (
             <>
               <button type="button" onClick={() => { setPaymentAmount(String(invoice.balanceDue)); setShowPayment(true); }}
@@ -144,6 +179,14 @@ export default function InvoiceDetailPage() {
           </ul>
         </div>
       )}
+
+      <SendInvoiceDialog
+        open={showSend}
+        invoiceLabel={invoice.invoiceNumber}
+        onClose={() => setShowSend(false)}
+        onSent={handleSent}
+        send={sendInvoice}
+      />
 
       {showPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 print:hidden">

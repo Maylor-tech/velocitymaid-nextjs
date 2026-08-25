@@ -12,6 +12,7 @@ import {
 } from '@/lib/invoices/invoiceService';
 import { computeBalanceDue, decimalToNumber, type InvoiceLineInput } from '@/lib/invoices/invoiceUtils';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
+import { assertInvoiceDraftEditable, InvoiceImmutableError } from '@/lib/invoices/invoiceImmutability';
 
 async function loadInvoice(id: string) {
   return prisma.invoice.findUnique({
@@ -69,6 +70,47 @@ export async function PATCH(
     }
 
     const body = (await request.json()) as UpdateBody;
+
+    // Incident #001 (P5): issuing an invoice (transition to SENT / any issued
+    // state) must go through the send gate, never a direct status PATCH — that
+    // would bypass reimbursement confirmation, validation, and the atomic send
+    // claim. Cancellation has its own endpoint.
+    const ISSUED_STATUSES: InvoiceStatus[] = ['SENT', 'PARTIALLY_PAID', 'PAID', 'OVERDUE'];
+    if (
+      body.status !== undefined &&
+      body.status !== existing.status &&
+      ISSUED_STATUSES.includes(body.status)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'INVOICE_STATUS_TRANSITION_BLOCKED',
+          error: 'Use the Send action to issue an invoice; status cannot be set to an issued state here.',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Incident #001 (P2): a sent/issued invoice is an immutable accounting
+    // artifact. Reject any PATCH that would mutate its locked fields; only
+    // internal notes / phone remain editable.
+    try {
+      assertInvoiceDraftEditable(existing, body);
+    } catch (guardError) {
+      if (guardError instanceof InvoiceImmutableError) {
+        return NextResponse.json(
+          {
+            success: false,
+            code: guardError.code,
+            error: guardError.message,
+            fields: guardError.fields,
+            hint: 'Use a revision invoice (Phase 4) to make financial changes.',
+          },
+          { status: 409 }
+        );
+      }
+      throw guardError;
+    }
     const tax = body.tax ?? decimalToNumber(existing.tax);
     const discount = body.discount ?? decimalToNumber(existing.discount);
 

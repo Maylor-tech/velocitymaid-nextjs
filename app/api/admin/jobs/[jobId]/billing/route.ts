@@ -38,7 +38,7 @@ export async function POST(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
     const body = await request.json();
     const action = body.action as string;
 
@@ -56,8 +56,25 @@ export async function POST(
         return NextResponse.json({ success: true, ...result });
       }
       case 'send_invoice': {
-        const result = await sendLinkedInvoiceForJob(params.jobId);
-        return NextResponse.json({ success: true, ...result });
+        const result = await sendLinkedInvoiceForJob(params.jobId, {
+          reimbursementsConfirmed: body.reimbursementsConfirmed,
+          acknowledgeWarnings: body.acknowledgeWarnings,
+          acknowledgeWarningReasons: body.acknowledgeWarningReasons,
+          adminUserId: auth.userId,
+        });
+        if (!result.ok) {
+          return NextResponse.json(
+            {
+              success: false,
+              code: result.code,
+              error: result.error,
+              errors: result.errors,
+              warnings: result.warnings,
+            },
+            { status: result.status }
+          );
+        }
+        return NextResponse.json({ success: true, email: result.email, invoice: result.invoice });
       }
       case 'record_payment': {
         const amount = Number(body.amount);

@@ -9,6 +9,8 @@ import {
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
 import { sendInvoiceSentEmail } from '@/lib/email/invoiceEmails';
 import { recordInvoicePayment } from '@/lib/invoices/invoiceService';
+import { validateInvoiceSendable, type InvoiceSendFinding } from '@/lib/invoices/validateInvoiceSendable';
+import { logAuditEntry } from '@/lib/audit';
 import type { InvoicePaymentMethod } from '@prisma/client';
 import { nextReportNumber, ensureJobReference } from './numbering';
 import { serializeCompletionReport, type ReportPhoto } from './serializeCompletionReport';
@@ -334,20 +336,106 @@ export async function generateInvoiceFromJob(jobId: string) {
   return { invoice: serializeInvoice(invoice), created: true };
 }
 
-export async function sendLinkedInvoiceForJob(jobId: string) {
+export interface SendLinkedInvoiceOptions {
+  reimbursementsConfirmed?: boolean;
+  acknowledgeWarnings?: string[];
+  acknowledgeWarningReasons?: Record<string, string>;
+  adminUserId?: string;
+}
+
+export interface SendLinkedInvoiceResult {
+  ok: boolean;
+  email?: Awaited<ReturnType<typeof sendInvoiceSentEmail>>;
+  invoice?: ReturnType<typeof serializeInvoice>;
+  status?: number;
+  code?: string;
+  error?: string;
+  errors?: InvoiceSendFinding[];
+  warnings?: InvoiceSendFinding[];
+}
+
+/**
+ * Admin "send the invoice linked to this job" path. Runs the same Incident #001
+ * send gate + idempotent atomic claim as the direct invoice send route.
+ */
+export async function sendLinkedInvoiceForJob(
+  jobId: string,
+  options?: SendLinkedInvoiceOptions
+): Promise<SendLinkedInvoiceResult> {
   const job = await loadJobBillingContext(jobId);
   if (!job.Invoice) throw new Error('No invoice linked to this job. Generate one first.');
-  if (!job.Invoice.clientEmail) throw new Error('No client email on invoice');
 
-  const serialized = serializeInvoice(job.Invoice, { forOutboundEmail: true });
-  const email = await sendInvoiceSentEmail(serialized);
-  if (email.sent) {
-    await prisma.invoice.update({
-      where: { id: job.Invoice.id },
-      data: { sentAt: new Date(), status: job.Invoice.status === 'DRAFT' ? 'SENT' : job.Invoice.status },
+  const invoiceId = job.Invoice.id;
+
+  const validation = await validateInvoiceSendable(invoiceId, {
+    reimbursementsConfirmed: options?.reimbursementsConfirmed,
+    acknowledgeWarnings: options?.acknowledgeWarnings,
+    acknowledgeWarningReasons: options?.acknowledgeWarningReasons,
+    adminUserId: options?.adminUserId,
+  });
+  if (!validation.ok) {
+    if (validation.errors.length > 0) {
+      return { ok: false, status: 400, code: 'INVOICE_SEND_BLOCKED', errors: validation.errors, warnings: validation.warnings };
+    }
+    return { ok: false, status: 409, code: 'INVOICE_SEND_WARNINGS', warnings: validation.warnings };
+  }
+
+  // Idempotent claim before dispatch.
+  const claim = await prisma.invoice.updateMany({
+    where: { id: invoiceId, status: 'DRAFT' },
+    data: { status: 'SENT', sentAt: new Date() },
+  });
+  if (claim.count === 0) {
+    return { ok: false, status: 409, code: 'INVOICE_ALREADY_SENT', error: 'Invoice was already sent.' };
+  }
+
+  await logAuditEntry({
+    actorId: options?.adminUserId ?? null,
+    actorRole: 'ADMIN',
+    action: 'INVOICE_SEND_REIMBURSEMENT_CONFIRMED',
+    entityType: 'Invoice',
+    entityId: invoiceId,
+    description: 'Admin confirmed reimbursement completeness before sending invoice (job billing).',
+    changes: { acknowledgedWarnings: validation.warnings.map((w) => w.code), jobId },
+  });
+  for (const w of validation.warnings) {
+    await logAuditEntry({
+      actorId: options?.adminUserId ?? null,
+      actorRole: 'ADMIN',
+      action: 'INVOICE_SEND_WARNING_ACK',
+      entityType: 'Invoice',
+      entityId: invoiceId,
+      description: `Admin acknowledged send warning: ${w.code}`,
+      changes: { code: w.code, reason: options?.acknowledgeWarningReasons?.[w.code] ?? null, jobId },
     });
   }
-  return { email, invoice: serialized };
+
+  const fresh = await prisma.invoice.findUnique({
+    where: { id: invoiceId },
+    include: { items: true, payments: true },
+  });
+  const serialized = serializeInvoice(fresh!, { forOutboundEmail: true });
+
+  try {
+    const email = await sendInvoiceSentEmail(serialized);
+    return { ok: true, email, invoice: serialized };
+  } catch (emailError) {
+    await logAuditEntry({
+      actorId: options?.adminUserId ?? null,
+      actorRole: 'ADMIN',
+      action: 'INVOICE_SEND_EMAIL_FAILED',
+      entityType: 'Invoice',
+      entityId: invoiceId,
+      description: 'Invoice marked SENT but email dispatch threw (job billing).',
+      changes: { error: emailError instanceof Error ? emailError.message : String(emailError), jobId },
+    });
+    return {
+      ok: false,
+      status: 502,
+      code: 'INVOICE_SENT_EMAIL_FAILED',
+      error: 'Invoice was marked sent but the email failed to dispatch. Retry sending the email.',
+    };
+  }
 }
 
 export async function recordPaymentForJobInvoice(
