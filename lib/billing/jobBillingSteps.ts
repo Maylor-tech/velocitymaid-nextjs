@@ -370,6 +370,7 @@ export async function sendLinkedInvoiceForJob(
   const validation = await validateInvoiceSendable(invoiceId, {
     reimbursementsConfirmed: options?.reimbursementsConfirmed,
     acknowledgeWarnings: options?.acknowledgeWarnings,
+    acknowledgeWarningReasons: options?.acknowledgeWarningReasons,
     adminUserId: options?.adminUserId,
   });
   if (!validation.ok) {

@@ -55,6 +55,8 @@ export const INVOICE_SEND_ERRORS = {
   DUPLICATE_SERVICE: 'INVOICE_DUPLICATE_SERVICE',
   REIMBURSEMENTS_UNCONFIRMED: 'INVOICE_REIMBURSEMENTS_UNCONFIRMED',
   NUMBER_CONFLICT: 'INVOICE_NUMBER_CONFLICT',
+  /** R1 — a warning was acknowledged without a required operator reason. */
+  WARNING_ACK_REASON_REQUIRED: 'INVOICE_WARNING_ACK_REASON_REQUIRED',
 } as const;
 
 /** Warning codes — the ONLY findings an admin may acknowledge to proceed. */
@@ -115,6 +117,8 @@ export interface EvaluateInvoiceSendableInput {
   options?: {
     reimbursementsConfirmed?: boolean;
     acknowledgeWarnings?: string[];
+    /** Per-warning operator reason. R1: acknowledging a raised warning requires a non-empty reason. */
+    acknowledgeWarningReasons?: Record<string, string>;
   };
   now?: Date;
 }
@@ -284,11 +288,29 @@ export function evaluateInvoiceSendable(
     });
   }
 
-  // Resolve warnings against explicit acknowledgements (scoped to warnings only).
-  const acknowledged = new Set(
-    (options?.acknowledgeWarnings ?? []).filter((c) => OVERRIDABLE_WARNING_CODES.includes(c))
-  );
+  // Resolve warnings against explicit acknowledgements (scoped to overridable
+  // warnings only). R1: acknowledging a RAISED warning requires a non-empty
+  // operator reason — enforced here in the shared gate so every API path (not
+  // just the UI) rejects a reasonless override. A reasonless acknowledgement is
+  // a hard error and never counts as a valid override.
   const dedupedWarnings = dedupe(rawWarnings);
+  const raisedCodes = new Set(dedupedWarnings.map((w) => w.code));
+  const reasons = options?.acknowledgeWarningReasons ?? {};
+  const acknowledged = new Set<string>();
+  for (const code of options?.acknowledgeWarnings ?? []) {
+    if (!OVERRIDABLE_WARNING_CODES.includes(code)) continue;
+    // Acknowledging a warning that was not raised is a harmless no-op.
+    if (!raisedCodes.has(code)) continue;
+    const reason = reasons[code];
+    if (typeof reason === 'string' && reason.trim() !== '') {
+      acknowledged.add(code);
+    } else {
+      errors.push({
+        code: INVOICE_SEND_ERRORS.WARNING_ACK_REASON_REQUIRED,
+        message: `A reason is required to acknowledge and override the warning ${code} before sending.`,
+      });
+    }
+  }
   const unacknowledged = dedupedWarnings.filter((w) => !acknowledged.has(w.code));
 
   if (errors.length > 0) {
@@ -322,6 +344,7 @@ export async function validateInvoiceSendable(
   options?: {
     reimbursementsConfirmed?: boolean;
     acknowledgeWarnings?: string[];
+    acknowledgeWarningReasons?: Record<string, string>;
     adminUserId?: string;
   }
 ): Promise<InvoiceSendValidationResult> {

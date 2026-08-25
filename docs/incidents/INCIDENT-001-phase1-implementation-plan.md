@@ -342,7 +342,7 @@ And email block ~L203-210 sends invoice immediately after create.
 | 1 — Immutability (P2) | `lib/invoices/invoiceImmutability.ts` (new) · `app/api/admin/invoices/[id]/route.ts` (PATCH guard → 409 `INVOICE_IMMUTABLE`, incl. `dueDate` lock) | ✅ |
 | 2 — Send gate (P5 + honest P4) | `lib/invoices/validateInvoiceSendable.ts` (new; pure `evaluateInvoiceSendable` + DB loader) · `lib/dates/serviceDate.ts` (added `businessDateKey`/`isSameServiceDay` for C7) · `app/api/admin/invoices/[id]/send/route.ts` (validator + atomic claim + audit + email-failure recovery) · `lib/billing/jobBillingSteps.ts` `sendLinkedInvoiceForJob` + `app/api/admin/jobs/[jobId]/billing/route.ts` (same gate) | ✅ |
 | 3 — Completion DRAFT-only | `lib/billing/jobCompletionWorkflow.ts` (creates DRAFT; prepaid $0 → PAID; no auto-send; `invoiceSendDeferred` flag + ops notification) | ✅ |
-| 4 — Tests (incl. 2 mandatory) | `lib/invoices/__tests__/invoiceImmutability.test.ts` · `validateInvoiceSendable.test.ts` · `invoiceSendGuard.integration.test.ts` · `app/api/admin/invoices/[id]/__tests__/route.immutability.test.ts` · `app/api/admin/invoices/__tests__/route.create.test.ts` · `lib/billing/__tests__/jobCompletionWorkflow.noAutoSend.test.ts` | ✅ 39 tests pass |
+| 4 — Tests (incl. 2 mandatory) | `lib/invoices/__tests__/invoiceImmutability.test.ts` · `validateInvoiceSendable.test.ts` · `invoiceSendGuard.integration.test.ts` · `app/api/admin/invoices/[id]/__tests__/route.immutability.test.ts` · `app/api/admin/invoices/__tests__/route.create.test.ts` · `lib/billing/__tests__/jobCompletionWorkflow.noAutoSend.test.ts` | ✅ 46 tests pass |
 
 | 5 — Send UI (same PR) | `components/admin/invoices/SendInvoiceDialog.tsx` (new) wired into `app/admin/invoices/[id]/page.tsx`, `app/admin/invoices/[id]/edit/page.tsx`, `components/admin/jobs/JobBillingWorkflowPanel.tsx` · closed a PATCH bypass (`status→SENT` escalation now 400 `INVOICE_STATUS_TRANSITION_BLOCKED`) · added optional audited `acknowledgeWarningReasons` to send paths | ✅ |
 
@@ -354,7 +354,7 @@ And email block ~L203-210 sends invoice immediately after create.
 - No Phase 2/3 concepts: no schema changes, no revision UI, no reimbursement entity.
 - The three send surfaces (invoice detail, invoice edit "Save & mark sent", job billing panel) all route through the same dialog + gate. Direct `status→SENT` PATCH is now blocked so issuing always goes through the gate.
 
-**Verification:** full suite `263 passed` across 34 suites. **1 pre-existing, unrelated suite failure**: `services/payout/__tests__/evaluatePayout.test.ts` fails to load because it never imports vitest globals (`describe is not defined`) — it lives in `services/payout`, was not touched by this work, and is not part of Incident #001. `tsc --noEmit`: zero new errors in any touched file (the repo's ~990 baseline errors are pre-existing under `strict:false` + `ignoreBuildErrors:true`). Lint clean on all touched files.
+**Verification:** full suite `270 passed` across 34 suites. **1 pre-existing, unrelated suite failure**: `services/payout/__tests__/evaluatePayout.test.ts` fails to load because it never imports vitest globals (`describe is not defined`) — it lives in `services/payout`, was not touched by this work, and is not part of Incident #001. `tsc --noEmit`: zero new errors in any touched file (the repo's ~990 baseline errors are pre-existing under `strict:false` + `ignoreBuildErrors:true`). Lint clean on all touched files.
 
 **Approval standard for this PR:** *all Incident #001 tests pass, touched files are type/lint clean, and no new regression is introduced* — not "the entire legacy repo becomes clean."
 
@@ -396,8 +396,8 @@ Tasks 1–5 complete. One additional send-path bypass was **discovered and close
 The `SENT`/`sentAt` matches in `jobCompletionWorkflow.ts:203/312` and `jobBillingSteps.ts:276/527` write **CompletionReport / Receipt / ReviewRequest**, not Invoice.
 
 ### Test counts
-- Focused Incident #001 suites: **39 passed** (6 files).
-- Full suite: **263 passed** across 34 suites; **1 pre-existing unrelated suite failure** (see baseline).
+- Focused Incident #001 suites: **46 passed** (6 files).
+- Full suite: **270 passed** across 34 suites; **1 pre-existing unrelated suite failure** (see baseline).
 
 ### Critical regression evidence (control → test)
 | Control | Test | Result |
@@ -413,6 +413,7 @@ The `SENT`/`sentAt` matches in `jobCompletionWorkflow.ts:203/312` and `jobBillin
 | service-date timezone-safe | `validateInvoiceSendable.test.ts` (VT-day vs UTC-day) + `serviceDate.test.ts` | ✅ |
 | hard-error override denied | `validateInvoiceSendable.test.ts` (C4 cannot be acknowledged away) | ✅ |
 | allowed warning ack succeeds (+ audit) | `validateInvoiceSendable.test.ts` (C8/C10 warnings) + send route `logAuditEntry` | ✅ |
+| **warning-ack reason required by API (R1)** | `validateInvoiceSendable.test.ts` (4 R1 unit cases) + `invoiceSendGuard.integration.test.ts` (reasonless ack → 400 `INVOICE_WARNING_ACK_REASON_REQUIRED`, no email/claim) | ✅ |
 
 ### Lint / type / build
 - **Lint:** clean on all touched files.
@@ -434,7 +435,7 @@ Docs: `docs/incidents/INCIDENT-001-*.md`.
 - **Customer contacted:** no.
 
 ### Remaining known risks (non-blocking; none reproduce the Incident #001 failure path)
-- **R1** — Warning-acknowledgement reason is enforced in the UI but is **audit-only** server-side (a raw API client could acknowledge a warning with a null reason). Errors remain non-overridable regardless. Candidate for server-side hardening.
+- **R1 — CLOSED (server-side).** Acknowledging an overridable warning now requires a non-empty operator reason, enforced in the shared send gate (`evaluateInvoiceSendable`) so **every** API path rejects a reasonless override with hard error `INVOICE_WARNING_ACK_REASON_REQUIRED` (400). A reasonless (or whitespace-only) acknowledgement never counts as a valid override; errors remain non-overridable. Regression tests added at both the pure-evaluator and route-integration levels.
 - **R2** — Duplicate-service detection (C9) matches property by normalized string equality; differently-formatted addresses for the same property could evade C9. C8b (human confirmation) + immutability remain the primary controls.
 - **R3** — `recordInvoicePayment` escalates a `DRAFT`→`SENT` as a payment side-effect (no customer email) without the C8b reimbursement gate. Pre-existing, non-send; flagged for Phase 2 (should recording payment on an un-reviewed draft require the completeness assertion?).
 - **R4** — Generic 500 handlers return `error.message`; consistent with the rest of the codebase, no secrets exposed by the invoice paths.

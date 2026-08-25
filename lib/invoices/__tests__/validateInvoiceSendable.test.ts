@@ -180,6 +180,10 @@ describe('warnings — scoped acknowledgement', () => {
         options: {
           reimbursementsConfirmed: true,
           acknowledgeWarnings: [INVOICE_SEND_WARNINGS.JOB_TOTAL_MISMATCH],
+          acknowledgeWarningReasons: {
+            [INVOICE_SEND_WARNINGS.JOB_TOTAL_MISMATCH]:
+              'Reimbursements added; total intentionally differs from the booked quote.',
+          },
         },
       })
     );
@@ -197,6 +201,77 @@ describe('warnings — scoped acknowledgement', () => {
     expect(r.ok).toBe(false);
     expect(codes(r)).toContain(INVOICE_SEND_WARNINGS.RECENT_SEND_CONFLICT);
     expect(codes(r)).not.toContain(INVOICE_SEND_ERRORS.DUPLICATE_SERVICE);
+  });
+});
+
+describe('R1 — warning acknowledgement requires a non-empty operator reason', () => {
+  // A raised job-total-mismatch warning that the operator tries to override.
+  const invoice = baseInvoice({ items: [{ lineTotal: 500.63 }], subtotal: 500.63, total: 500.63 });
+  const job = baseJob({ totalPrice: 300, quotedTotal: 300 });
+
+  it('rejects a JOB_TOTAL_MISMATCH acknowledgement with no reason', () => {
+    const r = evaluateInvoiceSendable(
+      input({
+        invoice,
+        job,
+        options: {
+          reimbursementsConfirmed: true,
+          acknowledgeWarnings: [INVOICE_SEND_WARNINGS.JOB_TOTAL_MISMATCH],
+          // no acknowledgeWarningReasons
+        },
+      })
+    );
+    expect(r.ok).toBe(false);
+    expect(codes(r)).toContain(INVOICE_SEND_ERRORS.WARNING_ACK_REASON_REQUIRED);
+  });
+
+  it('rejects a whitespace-only reason', () => {
+    const r = evaluateInvoiceSendable(
+      input({
+        invoice,
+        job,
+        options: {
+          reimbursementsConfirmed: true,
+          acknowledgeWarnings: [INVOICE_SEND_WARNINGS.JOB_TOTAL_MISMATCH],
+          acknowledgeWarningReasons: { [INVOICE_SEND_WARNINGS.JOB_TOTAL_MISMATCH]: '   ' },
+        },
+      })
+    );
+    expect(r.ok).toBe(false);
+    expect(codes(r)).toContain(INVOICE_SEND_ERRORS.WARNING_ACK_REASON_REQUIRED);
+  });
+
+  it('rejects a RECENT_SEND_CONFLICT acknowledgement with no reason', () => {
+    const r = evaluateInvoiceSendable(
+      input({
+        siblings: [
+          { id: 'inv-old', status: 'SENT', jobDate: new Date('2026-08-20T00:00:00.000Z'), sentAt: new Date() },
+        ],
+        options: {
+          reimbursementsConfirmed: true,
+          acknowledgeWarnings: [INVOICE_SEND_WARNINGS.RECENT_SEND_CONFLICT],
+        },
+      })
+    );
+    expect(r.ok).toBe(false);
+    expect(codes(r)).toContain(INVOICE_SEND_ERRORS.WARNING_ACK_REASON_REQUIRED);
+  });
+
+  it('accepts the acknowledgement once a real reason is supplied', () => {
+    const r = evaluateInvoiceSendable(
+      input({
+        invoice,
+        job,
+        options: {
+          reimbursementsConfirmed: true,
+          acknowledgeWarnings: [INVOICE_SEND_WARNINGS.JOB_TOTAL_MISMATCH],
+          acknowledgeWarningReasons: {
+            [INVOICE_SEND_WARNINGS.JOB_TOTAL_MISMATCH]: 'Added $200.63 of approved reimbursements.',
+          },
+        },
+      })
+    );
+    expect(r.ok).toBe(true);
   });
 });
 

@@ -34,6 +34,7 @@ export async function POST(
     const validation = await validateInvoiceSendable(params.id, {
       reimbursementsConfirmed: body.reimbursementsConfirmed,
       acknowledgeWarnings: body.acknowledgeWarnings,
+      acknowledgeWarningReasons: body.acknowledgeWarningReasons,
       adminUserId: auth.userId,
     });
 
