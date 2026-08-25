@@ -11,7 +11,6 @@ import {
 } from '@/lib/invoices/invoiceService';
 import { nextInvoiceNumber, decimalToNumber, type InvoiceLineInput } from '@/lib/invoices/invoiceUtils';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
-import { sendInvoiceSentEmail } from '@/lib/email/invoiceEmails';
 
 export async function GET(request: NextRequest) {
   try {
@@ -92,6 +91,12 @@ interface CreateBody {
   discount?: number;
   notes?: string;
   items: InvoiceLineInput[];
+  /**
+   * Deprecated for issuing. Incident #001 (P5): a manual invoice can no longer be
+   * created-and-sent in one ungated step — that was the invoice-0017 origin. This
+   * route always creates a DRAFT; issuing must go through POST /[id]/send, which
+   * enforces the reimbursement gate, validation, audit, and idempotent claim.
+   */
   markSent?: boolean;
 }
 
@@ -134,8 +139,10 @@ export async function POST(request: NextRequest) {
         total,
         amountPaid: 0,
         balanceDue,
-        status: body.markSent ? 'SENT' : 'DRAFT',
-        sentAt: body.markSent ? new Date() : null,
+        // Always DRAFT. Issuing (SENT + email) is done only via the gated
+        // /[id]/send endpoint so it cannot bypass validateInvoiceSendable().
+        status: 'DRAFT',
+        sentAt: null,
         notes: body.notes?.trim() || null,
         items: { create: mapItemsForCreate(body.items) },
       },
@@ -143,9 +150,6 @@ export async function POST(request: NextRequest) {
     });
 
     const serialized = serializeInvoice(invoice);
-    if (body.markSent) {
-      await sendInvoiceSentEmail(serialized);
-    }
 
     return NextResponse.json({ success: true, invoice: serialized });
   } catch (error: unknown) {

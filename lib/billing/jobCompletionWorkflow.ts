@@ -2,7 +2,6 @@ import { prisma } from '@/lib/prisma';
 import { loadJobTeamMembers } from '@/lib/cleaners/internalCleanerService';
 import { nextInvoiceNumber, decimalToNumber, computeBalanceDue } from '@/lib/invoices/invoiceUtils';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
-import { sendInvoiceSentEmail } from '@/lib/email/invoiceEmails';
 import { nextReportNumber, nextReceiptNumber, ensureJobReference } from './numbering';
 import { createAdminNotification, adminNotificationHelpers } from '@/lib/notifications/adminNotificationCenter';
 import {
@@ -164,8 +163,12 @@ export async function runJobCompletionBillingWorkflow(
         total: totalPrice,
         amountPaid,
         balanceDue,
-        status: balanceDue <= 0 ? 'PAID' : 'SENT',
-        sentAt: balanceDue <= 0 ? null : new Date(),
+        // Incident #001 (P4/P5): job completion NEVER auto-sends an invoice.
+        // Create a DRAFT for ops review; a genuinely prepaid ($0 balance)
+        // invoice may be PAID immediately (no collection email needed) since its
+        // accounting is already settled. It is never created as SENT here.
+        status: balanceDue <= 0 ? 'PAID' : 'DRAFT',
+        sentAt: null,
         notes: `Generated from job ${job.id}`,
         items: {
           create: [
@@ -184,6 +187,7 @@ export async function runJobCompletionBillingWorkflow(
   }
 
   const serializedInvoice = serializeInvoice(invoice);
+  const invoiceSendDeferred = invoice.status === 'DRAFT';
   const emailResults: Record<string, { sent: boolean; skippedReason?: string }> =
     {};
 
@@ -200,21 +204,24 @@ export async function runJobCompletionBillingWorkflow(
       });
     }
 
-    if (serializedInvoice.balanceDue > 0) {
-      emailResults.invoice = await sendInvoiceSentEmail(serializedInvoice);
-      if (emailResults.invoice.sent && !invoice.sentAt) {
-        await prisma.invoice.update({
-          where: { id: invoice.id },
-          data: { sentAt: new Date(), status: 'SENT' },
-        });
-      }
+    // Incident #001 (P4/P5): do NOT auto-send the invoice here. A DRAFT invoice
+    // is sent only via the explicit admin Send action, which enforces the
+    // reimbursement-completeness gate and idempotent claim. Mark it deferred so
+    // ops knows to review + send.
+    if (invoiceSendDeferred) {
+      emailResults.invoice = {
+        sent: false,
+        skippedReason: 'Invoice draft created — review reimbursements and send from Invoices.',
+      };
     }
   }
 
   createAdminNotification({
     type: 'JOB_COMPLETED',
     severity: 'INFO',
-    message: `Job ${job.jobReference || job.id} completed for ${clientName}`,
+    message: invoiceSendDeferred
+      ? `Job ${job.jobReference || job.id} completed for ${clientName} — invoice draft created, add reimbursements and send from Invoices`
+      : `Job ${job.jobReference || job.id} completed for ${clientName}`,
     jobId: job.id,
     actionUrl: adminNotificationHelpers.adminJobLink(job.id),
   }).catch(() => {});
@@ -222,6 +229,7 @@ export async function runJobCompletionBillingWorkflow(
   return {
     report: serializedReport,
     invoice: serializedInvoice,
+    invoiceSendDeferred,
     emailResults,
   };
 }

@@ -14,6 +14,11 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import type { JobBillingWorkflowStatus } from '@/lib/billing/jobBillingSteps';
+import {
+  SendInvoiceDialog,
+  type SendInvoicePayload,
+  type SendInvoiceResponse,
+} from '@/components/admin/invoices/SendInvoiceDialog';
 
 interface JobBillingWorkflowPanelProps {
   jobId: string;
@@ -52,6 +57,7 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted, jobStatus }: JobB
   const [message, setMessage] = useState('');
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('CHECK');
+  const [showSend, setShowSend] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -93,6 +99,37 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted, jobStatus }: JobB
     } finally {
       setBusy(null);
     }
+  };
+
+  const sendInvoice = async (payload: SendInvoicePayload): Promise<SendInvoiceResponse> => {
+    const res = await fetch(`/api/admin/jobs/${jobId}/billing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'send_invoice', ...payload }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return {
+      status: res.status,
+      success: !!data.success,
+      code: data.code,
+      error: data.error,
+      errors: data.errors,
+      warnings: data.warnings,
+      email: data.email,
+    };
+  };
+
+  const handleSent = (res: SendInvoiceResponse) => {
+    setShowSend(false);
+    if (res.success) {
+      setMessage(res.email?.sent === false ? 'Invoice sent (email not dispatched)' : 'Invoice sent');
+    } else if (res.code === 'INVOICE_ALREADY_SENT') {
+      setMessage('Invoice was already sent');
+    } else if (res.code === 'INVOICE_SENT_EMAIL_FAILED') {
+      setMessage('Invoice marked sent — email failed to dispatch, retry later');
+    }
+    refresh();
   };
 
   if (loading && !workflow) {
@@ -214,7 +251,7 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted, jobStatus }: JobB
           disabled={!!busy || !s.invoice.invoiceId}
           icon={<Mail className="h-4 w-4" />}
           label="Send invoice"
-          onClick={() => runAction('send_invoice')}
+          onClick={() => setShowSend(true)}
         />
         <ActionButton
           busy={busy === 'generate_receipt'}
@@ -308,6 +345,14 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted, jobStatus }: JobB
           </a>
         )}
       </div>
+
+      <SendInvoiceDialog
+        open={showSend}
+        invoiceLabel={s.invoice.invoiceNumber ?? undefined}
+        onClose={() => setShowSend(false)}
+        onSent={handleSent}
+        send={sendInvoice}
+      />
     </div>
   );
 }
