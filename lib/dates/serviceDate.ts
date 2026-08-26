@@ -61,6 +61,26 @@ export function formatServiceDate(
   });
 }
 
+/** Timezone-safe confirmed date + requested time for host/ops notifications. */
+export function formatConfirmedSchedule(
+  preferredDate: string | Date | null | undefined,
+  preferredTime: string | null | undefined
+): { dateLabel: string; timeLabel: string; combined: string } {
+  const dateLabel =
+    formatServiceDate(preferredDate, {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    }) || 'As scheduled';
+  const timeLabel = preferredTime?.trim() || 'As scheduled';
+  return {
+    dateLabel,
+    timeLabel,
+    combined: `${dateLabel} at ${timeLabel}`,
+  };
+}
+
 /** UTC YYYY-MM-DD for comparisons / HTML date inputs. */
 export function serviceDateKey(
   value: string | Date | null | undefined

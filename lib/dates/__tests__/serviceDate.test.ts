@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatConfirmedSchedule,
   formatServiceDate,
   parseServiceDateInput,
   serviceDateKey,
@@ -62,5 +63,17 @@ describe('formatServiceDate', () => {
 describe('serviceDateKey', () => {
   it('returns YYYY-MM-DD from UTC midnight storage', () => {
     expect(serviceDateKey('2026-09-15T00:00:00.000Z')).toBe('2026-09-15');
+  });
+});
+
+describe('formatConfirmedSchedule', () => {
+  it('keeps August 30 at 10:00 AM (no local day shift)', () => {
+    const schedule = formatConfirmedSchedule(
+      '2026-08-30T00:00:00.000Z',
+      '10:00 AM'
+    );
+    expect(schedule.dateLabel).toBe('Sunday, August 30, 2026');
+    expect(schedule.timeLabel).toBe('10:00 AM');
+    expect(schedule.combined).toContain('10:00 AM');
   });
 });

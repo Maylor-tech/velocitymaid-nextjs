@@ -87,7 +87,7 @@ export default function AddCleaningPage() {
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to create cleaning');
       }
-      router.push(`/customer/properties/${propertyId}?created=${data.job.id}`);
+      router.push(`/customer/jobs?created=${data.job.id}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create cleaning');
       setSubmitting(false);

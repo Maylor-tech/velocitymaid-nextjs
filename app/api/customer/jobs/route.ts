@@ -4,9 +4,15 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCustomerSession } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
-import { JobStatus, PaymentStatus } from '@prisma/client';
 import { requireRole } from '@/lib/auth/requireRole';
 import { loadJobTeamBatch } from '@/lib/cleaners/internalCleanerService';
+import { customerJobListWhere } from '@/lib/customer/customerJobList';
+import {
+  mapServiceStatusToCustomerBadge,
+  paymentStatusLabel,
+  resolveBillingPolicy,
+  serviceStatusLabel,
+} from '@/lib/billing/billingPolicy';
 import {
   guestServiceTeamLine,
   mergePrimaryWithTeam,
@@ -16,11 +22,12 @@ import {
 
 /**
  * GET /api/customer/jobs
- * 
- * List jobs for the authenticated customer
- * 
- * Query params:
- * - type: 'upcoming' | 'past' | 'all' (default: 'all')
+ * List jobs for the authenticated customer.
+ *
+ * Host operational requests (PENDING payment) are included. Visibility is
+ * by service lifecycle, not Stripe payment status.
+ *
+ * Query params: type = 'upcoming' | 'past' | 'all' (default: 'all')
  */
 export async function GET(request: NextRequest) {
   try {
@@ -36,53 +43,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'all';
-
-    // Build where clause
-    // 🔐 PHASE M POLICY: Customers only see PAID jobs (payment enforcement)
-    const baseWhere = {
-      customerId: session.customerId,
-      paymentStatus: {
-        in: [
-          PaymentStatus.DEPOSIT_PAID,
-          PaymentStatus.BALANCE_DUE,
-          PaymentStatus.PAID,
-        ],
-      },
-    };
-
-    let where: any = { ...baseWhere };
-
-    if (type === 'upcoming') {
-      // Show all active bookings: assigned, in progress, and completed awaiting balance
-      where = {
-        ...baseWhere,
-        status: {
-          notIn: [JobStatus.CANCELLED, JobStatus.CANCELLED_EMERGENCY],
-        },
-        NOT: {
-          AND: [
-            { status: JobStatus.COMPLETED },
-            { paymentStatus: PaymentStatus.PAID },
-          ],
-        },
-      };
-    } else if (type === 'past') {
-      where = {
-        ...baseWhere,
-        OR: [
-          {
-            status: JobStatus.COMPLETED,
-            paymentStatus: PaymentStatus.PAID,
-          },
-          {
-            status: {
-              in: [JobStatus.CANCELLED, JobStatus.CANCELLED_EMERGENCY],
-            },
-          },
-          { paymentStatus: PaymentStatus.REFUNDED },
-        ],
-      };
-    }
+    const where = customerJobListWhere(session.customerId, type);
 
     // Get jobs
     let jobs = [];
@@ -129,20 +90,10 @@ export async function GET(request: NextRequest) {
     const teamMap = await loadJobTeamBatch(jobIds);
 
     const formattedJobs = jobs.map((job) => {
-      // 🔐 PAYMENT TRUTH: Use actual paymentStatus from database (Stripe → webhook → DB)
-      // Do NOT infer from job status - payment truth comes from Stripe
-      const paymentStatus =
-        job.paymentStatus === PaymentStatus.PAID
-          ? 'PAID'
-          : job.paymentStatus === PaymentStatus.DEPOSIT_PAID
-          ? 'DEPOSIT_PAID'
-          : job.paymentStatus === PaymentStatus.BALANCE_DUE
-          ? 'BALANCE_DUE'
-          : job.paymentStatus === PaymentStatus.REFUNDED
-          ? 'REFUNDED'
-          : job.paymentStatus === PaymentStatus.FAILED
-          ? 'UNPAID'
-          : 'UNPAID';
+      const billingPolicy = resolveBillingPolicy({
+        jobPolicy: job.billingPolicy,
+      });
+      const paymentStatus = job.paymentStatus;
 
       // Generate human-friendly job number
       // Format: VM-XXXXXX (last 6 chars of job ID for now)
@@ -161,8 +112,10 @@ export async function GET(request: NextRequest) {
       return {
         id: job.id,
         number: jobNumber,
-        status: mapCustomerJobStatus(job.status, job.paymentStatus),
+        status: mapServiceStatusToCustomerBadge(job.status),
         rawStatus: job.status,
+        serviceStatus: job.status,
+        serviceStatusLabel: serviceStatusLabel(job.status),
         serviceType: job.serviceType || undefined,
         scheduledDate: job.preferredDate?.toISOString() || undefined,
         timeWindow: job.preferredTime || undefined,
@@ -188,7 +141,9 @@ export async function GET(request: NextRequest) {
             }
           : null,
         serviceTeamLine: guestServiceTeamLine(team),
-        paymentStatus, // Now reflects actual database payment status
+        paymentStatus,
+        paymentStatusLabel: paymentStatusLabel(paymentStatus, billingPolicy),
+        billingPolicy,
         rating: job.CleanerRating
           ? {
               score: job.CleanerRating.rating,
@@ -203,50 +158,37 @@ export async function GET(request: NextRequest) {
       jobs: formattedJobs,
       count: formattedJobs.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    // requireRole throws NextResponse (a Response). Returning it preserves 401/403.
+    // `instanceof NextResponse` can fail across bundled copies of next/server;
+    // `instanceof Response` is the reliable check (production logged `Response { status: 401 }` then 500).
+    if (error instanceof Response) return error;
+
     console.error('List customer jobs error:', error);
-    
-    // Handle Prisma connection errors specifically
-    if (error.code === 'P1001') {
+
+    const prismaCode =
+      typeof error === 'object' && error !== null && 'code' in error
+        ? (error as { code?: string }).code
+        : undefined;
+
+    if (prismaCode === 'P1001') {
       return NextResponse.json(
         {
           success: false,
           error: 'Database connection failed. Please try again in a moment.',
         },
-        { status: 503 } // Service Unavailable
+        { status: 503 }
       );
     }
-    
+
+    const message = error instanceof Error ? error.message : 'Failed to fetch jobs';
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch jobs',
+        error: message,
       },
       { status: 500 }
     );
   }
-}
-
-function mapCustomerJobStatus(
-  status: string,
-  paymentStatus: PaymentStatus | null
-): string {
-  if (
-    paymentStatus === PaymentStatus.BALANCE_DUE &&
-    status === JobStatus.COMPLETED
-  ) {
-    return 'completed';
-  }
-  const map: Record<string, string> = {
-    [JobStatus.RECEIVED]: 'pending',
-    [JobStatus.CONFIRMED]: 'pending',
-    [JobStatus.ASSIGNED]: 'assigned',
-    [JobStatus.ON_THE_WAY]: 'in_progress',
-    [JobStatus.IN_PROGRESS]: 'in_progress',
-    [JobStatus.COMPLETED]: 'completed',
-    [JobStatus.CANCELLED]: 'cancelled',
-    [JobStatus.CANCELLED_EMERGENCY]: 'cancelled',
-  };
-  return map[status] || status.toLowerCase();
 }
 

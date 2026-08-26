@@ -102,6 +102,7 @@ async function buildJobCreateData(
     depositPaidAt: paymentFields.depositPaidAt,
     currency: metadata.currency || 'USD',
     paymentMethod: 'card',
+    billingPolicy: 'PREPAY',
     appliedReferralCode: metadata.referralCode || null,
     promoApplied: metadata.promoCode || null,
     promoDiscount: promoDiscount ?? null,

@@ -8,6 +8,8 @@ import { logAuditEntry } from '@/lib/audit';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
 import { Resend } from 'resend';
 import { getResendFromEmail } from '@/lib/email/resendClient';
+import { formatConfirmedSchedule } from '@/lib/dates/serviceDate';
+import { JobStatus } from '@prisma/client';
 
 function getResend() {
   if (!process.env.RESEND_API_KEY) return null;
@@ -34,6 +36,7 @@ export async function POST(
       where: { id: jobId },
       select: {
         id: true,
+        status: true,
         customerName: true,
         preferredDate: true,
         preferredTime: true,
@@ -50,6 +53,14 @@ export async function POST(
     }
 
     const customerEmail = job.Customer?.email ?? null;
+    const schedule = formatConfirmedSchedule(job.preferredDate, job.preferredTime);
+
+    if (job.status === JobStatus.RECEIVED) {
+      await prisma.job.update({
+        where: { id: job.id },
+        data: { status: JobStatus.CONFIRMED },
+      });
+    }
 
     await logAuditEntry({
       actorId: auth.userId,
@@ -57,18 +68,17 @@ export async function POST(
       action: 'SCHEDULE_CONFIRMED',
       entityType: 'Job',
       entityId: job.id,
-      description: 'Schedule confirmed by admin',
+      description: `Schedule confirmed: ${schedule.combined}`,
       changes: {
         confirmedBy: auth.userId,
         confirmedAt: new Date().toISOString(),
+        confirmedDate: schedule.dateLabel,
+        confirmedTime: schedule.timeLabel,
       },
     });
 
     const resend = getResend();
     if (customerEmail && resend) {
-      const dateStr = job.preferredDate
-        ? new Date(job.preferredDate).toDateString()
-        : 'As scheduled';
       resend.emails
         .send({
           from: getResendFromEmail(),
@@ -78,8 +88,8 @@ export async function POST(
         <p>Hi ${job.customerName || 'there'},</p>
         <p>Your cleaning is confirmed for:</p>
         <p>
-          <strong>Date:</strong> ${dateStr}<br/>
-          <strong>Time:</strong> ${job.preferredTime || 'As scheduled'}<br/>
+          <strong>Date:</strong> ${schedule.dateLabel}<br/>
+          <strong>Time:</strong> ${schedule.timeLabel}<br/>
           <strong>Location:</strong> ${job.address || ''}
         </p>
         <p>We're looking forward to serving you.</p>
@@ -93,14 +103,11 @@ export async function POST(
 
     const customerPhone = job.Customer?.phone ?? null;
     if (customerPhone) {
-      const dateStr = job.preferredDate
-        ? new Date(job.preferredDate).toDateString()
-        : 'As scheduled';
       const whatsappBody = `
 ✅ Your cleaning is confirmed!
 
-🗓 ${dateStr}
-⏰ ${job.preferredTime || 'As scheduled'}
+🗓 ${schedule.dateLabel}
+⏰ ${schedule.timeLabel}
 📍 ${job.address || ''}
 
 We're looking forward to serving you.

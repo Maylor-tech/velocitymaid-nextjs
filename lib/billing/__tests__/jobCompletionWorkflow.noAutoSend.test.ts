@@ -81,6 +81,8 @@ beforeEach(() => {
     Customer: { id: 'cust1', firstName: 'Chris', lastName: 'Hautchamp', email: 'c@x.com', phone: null },
     Invoice: null,
     CompletionReport: null,
+    paymentStatus: 'PENDING',
+    billingPolicy: 'INVOICE_AFTER_SERVICE',
   });
   // Return whatever status was requested at create time.
   invoiceCreate.mockImplementation(async ({ data }: { data: { status: string; sentAt: Date | null } }) => ({
@@ -112,5 +114,19 @@ describe('runJobCompletionBillingWorkflow', () => {
     expect(sendCompletionReportEmail).toHaveBeenCalledTimes(1);
     expect(result.invoiceSendDeferred).toBe(true);
     expect(result.emailResults.invoice?.sent).toBe(false);
+  });
+
+  it('invoice-after-service completion still yields one DRAFT billable service and does not mark the Job paid', async () => {
+    const result = await runJobCompletionBillingWorkflow({
+      jobId: 'job1',
+      completedAt: new Date('2026-08-30T15:00:00.000Z'),
+      completedBy: 'Cleaner A',
+      sendEmails: true,
+    });
+
+    expect(invoiceCreate).toHaveBeenCalledTimes(1);
+    expect(invoiceCreate.mock.calls[0][0].data.status).toBe('DRAFT');
+    expect(invoiceCreate.mock.calls[0][0].data.jobId).toBe('job1');
+    expect(result.invoiceSendDeferred).toBe(true);
   });
 });

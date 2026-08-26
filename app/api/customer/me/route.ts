@@ -9,6 +9,7 @@ import {
   isCustomerPortalEmailBlocked,
   customerPortalBlockedMessage,
 } from '@/lib/customer/portalAccess';
+import { resolveAuthenticatedBookingCta } from '@/lib/customer/requestCleaningCta';
 
 /**
  * Get Current Customer API
@@ -41,6 +42,8 @@ export async function GET(request: NextRequest) {
         addressLine1: true,
         city: true,
         state: true,
+        billingPolicy: true,
+        Property: { select: { id: true }, take: 2, orderBy: { createdAt: 'asc' } },
         Branch: {
           select: {
             slug: true,
@@ -77,6 +80,12 @@ export async function GET(request: NextRequest) {
       [customer.addressLine1, customer.city, customer.state].filter(Boolean).join(', ') ||
       null;
 
+    const properties = customer.Property ?? [];
+    const bookingCta = resolveAuthenticatedBookingCta({
+      propertyCount: properties.length >= 2 ? 2 : properties.length,
+      firstPropertyId: properties[0]?.id ?? null,
+    });
+
     return NextResponse.json({
       success: true,
       authenticated: true,
@@ -90,7 +99,9 @@ export async function GET(request: NextRequest) {
         branchId: customer.branchId,
         address: addressLine,
         marketLabel: support.marketLabel,
+        billingPolicy: customer.billingPolicy,
       },
+      bookingCta,
       support,
     });
   } catch (error: unknown) {

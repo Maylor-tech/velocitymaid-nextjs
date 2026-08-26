@@ -75,6 +75,7 @@ function makeProperty(overrides: Partial<Property> = {}): Property {
     turnoverFrequency: 'Weekly',
     sameDayTurnovers: 'Sometimes',
     standingInstructions: 'Leave lights on',
+    billingPolicy: null,
     createdAt: new Date('2026-08-01'),
     updatedAt: new Date('2026-08-01'),
     ...overrides,

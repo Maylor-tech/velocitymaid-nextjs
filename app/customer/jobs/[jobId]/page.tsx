@@ -42,10 +42,14 @@ interface JobDetails {
   serviceType?: string;
   scheduledDate?: string;
   timeWindow?: string;
+  statusBadge?: string;
+  serviceStatusLabel?: string;
   price?: number | null;
   currency?: string;
   branchName?: string;
   paymentStatus?: string;
+  paymentStatusLabel?: string;
+  billingPolicy?: string;
   reviewStatus?: string;
   amountPaid?: number | null;
   balanceDue?: number | null;
@@ -195,6 +199,7 @@ function JobDetailsContent() {
       paymentStatus: job.paymentStatus,
       balanceDue: job.balanceDue,
       reviewStatus: job.reviewStatus,
+      billingPolicy: job.billingPolicy,
     });
 
   const isFullyPaid =
@@ -273,7 +278,7 @@ function JobDetailsContent() {
             </h1>
             {job.number && <p className="text-vm-muted font-body">Job #{job.number}</p>}
           </div>
-          <JobStatusBadge status={job.status} />
+          <JobStatusBadge status={job.statusBadge || job.status} />
         </div>
       </div>
 
@@ -308,6 +313,16 @@ function JobDetailsContent() {
             icon={<MapPin className="w-5 h-5" />}
             label="Address"
             value={job.address}
+          />
+          <JobDetailSection
+            icon={<CheckCircle className="w-5 h-5" />}
+            label="Service status"
+            value={job.serviceStatusLabel || job.status}
+          />
+          <JobDetailSection
+            icon={<CheckCircle className="w-5 h-5" />}
+            label="Payment"
+            value={job.paymentStatusLabel || job.paymentStatus || '—'}
           />
         </div>
 

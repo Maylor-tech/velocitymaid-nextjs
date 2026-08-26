@@ -54,6 +54,7 @@ export async function GET(
         currency: true,
         paymentMethod: true,
         paymentStatus: true,
+        billingPolicy: true,
         reviewStatus: true,
         quotedTotal: true,
         operationalTotal: true,
@@ -205,6 +206,7 @@ export async function GET(
       currency: job.currency,
       paymentMethod: job.paymentMethod,
       paymentStatus: job.paymentStatus,
+      billingPolicy: job.billingPolicy ?? 'PREPAY',
       reviewStatus: job.reviewStatus,
       quotedTotal: job.quotedTotal ? Number(job.quotedTotal) : null,
       operationalTotal:

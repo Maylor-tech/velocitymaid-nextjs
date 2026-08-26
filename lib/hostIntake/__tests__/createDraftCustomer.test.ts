@@ -100,7 +100,14 @@ describe('createDraftHostCustomer Property persistence', () => {
 
     const result = await createDraftHostCustomer(payload());
 
-    expect(createCustomer).toHaveBeenCalled();
+    expect(createCustomer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          billingPolicy: 'INVOICE_AFTER_SERVICE',
+          email: 'loulouslandingvt@gmail.com',
+        }),
+      })
+    );
     expect(createOrUpdatePropertyFromHostIntake).toHaveBeenCalledWith(
       expect.anything(),
       'cust-new',
@@ -126,7 +133,13 @@ describe('createDraftHostCustomer Property persistence', () => {
 
     await createDraftHostCustomer(payload());
 
-    expect(updateCustomer).toHaveBeenCalled();
+    expect(updateCustomer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          billingPolicy: 'INVOICE_AFTER_SERVICE',
+        }),
+      })
+    );
     expect(createOrUpdatePropertyFromHostIntake).toHaveBeenCalledWith(
       expect.anything(),
       'cust-1',

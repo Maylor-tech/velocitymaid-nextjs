@@ -1,0 +1,23 @@
+---
+description: Host requests are operational Jobs, not prepaid bookings; keep PREPAY payment gates intact
+alwaysApply: true
+---
+
+# Host requests vs prepaid bookings
+
+Host Add Cleaning is an **operational request**, not a Stripe checkout.
+
+- Create `Job.status=RECEIVED` and `paymentStatus=PENDING`. Snapshot `billingPolicy` (`INVOICE_AFTER_SERVICE` for approved hosts, `PREPAY` for `/book`).
+- Show every valid Job on `/customer/jobs` and home regardless of payment status. Do not filter to DEPOSIT_PAID / PAID.
+- Keep **service status** and **payment status** separate. Never mark a Job `PAID` to unlock assignment.
+- After host create: send Request Received email immediately; write `HOST_CLEANING_REQUEST` admin notification. Do not fail the HTTP response if email fails.
+- `isJobAssignable` in `lib/billing/billingPolicy.ts` authorizes cleaner assignment. Invoice-after-service may assign while PENDING. PREPAY still requires PAID or approved deposit.
+- Authenticated Vermont hosts CTA to Request Cleaning / Add Cleaning, not `/book`.
+
+```ts
+// ❌ BAD — hides host requests
+where: { customerId, paymentStatus: { in: ['DEPOSIT_PAID', 'PAID'] } }
+
+// ✅ GOOD — service lifecycle only
+customerJobListWhere(customerId, 'upcoming')
+```

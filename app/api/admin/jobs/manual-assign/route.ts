@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 import { PaymentStatus } from '@prisma/client';
-import { isJobAssignable } from '@/lib/booking/jobPayment';
+import { isJobAssignable, resolveBillingPolicy } from '@/lib/billing/billingPolicy';
 import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
 import { logAuditEntry } from '@/lib/audit';
 import { logAdminEvent } from '@/lib/auditLog';
@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
             firstName: true,
             lastName: true,
             phone: true,
+            billingPolicy: true,
           },
         },
       },
@@ -72,11 +73,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Phase 2A: Payment Gating - Check payment status BEFORE any other validation
-    // This prevents wasted API calls and ensures payment is verified first
-    // Why unpaid jobs are blocked: Cleaners should only be assigned to jobs that are guaranteed to pay
-    // This protects cleaner time and ensures payment integrity before assignment
-    if (!isJobAssignable(job)) {
+    // Prepaid (PREPAY) jobs require confirmed payment before assignment.
+    // Invoice-after-service host jobs may be assigned while PENDING — do not mark them paid.
+    const billingPolicy = resolveBillingPolicy({
+      jobPolicy: job.billingPolicy,
+      customerPolicy: job.Customer?.billingPolicy,
+    });
+    if (!isJobAssignable({ ...job, billingPolicy })) {
       const needsReview =
         job.paymentStatus === PaymentStatus.DEPOSIT_PAID &&
         job.reviewStatus !== 'APPROVED';

@@ -14,6 +14,11 @@ import {
 } from '@/lib/cleaners/teamDisplay';
 import { serializeCompletionReport } from '@/lib/billing/serializeCompletionReport';
 import { decimalToNumber } from '@/lib/invoices/invoiceUtils';
+import {
+  paymentStatusLabel,
+  resolveBillingPolicy,
+  serviceStatusLabel,
+} from '@/lib/billing/billingPolicy';
 
 
 function greetingForHour(hour: number): string {
@@ -27,23 +32,6 @@ function friendlyMessage(firstName: string, hasUpcoming: boolean): string {
     return `${firstName}, your property is in good hands. Here is what is happening next.`;
   }
   return `${firstName}, welcome back. Book your next service whenever you are ready.`;
-}
-
-function mapCustomerStatus(status: JobStatus, paymentStatus: PaymentStatus): string {
-  if (paymentStatus === PaymentStatus.BALANCE_DUE && status === JobStatus.COMPLETED) {
-    return 'Balance due';
-  }
-  const labels: Partial<Record<JobStatus, string>> = {
-    RECEIVED: 'Received',
-    CONFIRMED: 'Confirmed',
-    ASSIGNED: 'Team assigned',
-    ON_THE_WAY: 'On the way',
-    IN_PROGRESS: 'In progress',
-    COMPLETED: 'Completed',
-    CANCELLED: 'Cancelled',
-    CANCELLED_EMERGENCY: 'Cancelled',
-  };
-  return labels[status] ?? status.replace(/_/g, ' ').toLowerCase();
 }
 
 async function enrichTeamMembers(members: TeamMemberDisplay[]) {
@@ -108,29 +96,13 @@ export async function GET(request: NextRequest) {
     }
 
     const firstName = customer.firstName?.trim() || 'there';
-    const paidFilter = {
-      paymentStatus: {
-        in: [
-          PaymentStatus.DEPOSIT_PAID,
-          PaymentStatus.BALANCE_DUE,
-          PaymentStatus.PAID,
-        ],
-      },
-    };
 
     const [nextJob, lastCompletedJob, recentReports, invoiceBalances, jobBalances] =
       await Promise.all([
         prisma.job.findFirst({
           where: {
             customerId: session.customerId,
-            ...paidFilter,
-            status: { notIn: [JobStatus.CANCELLED, JobStatus.CANCELLED_EMERGENCY] },
-            NOT: {
-              AND: [
-                { status: JobStatus.COMPLETED },
-                { paymentStatus: PaymentStatus.PAID },
-              ],
-            },
+            status: { notIn: [JobStatus.CANCELLED, JobStatus.CANCELLED_EMERGENCY, JobStatus.COMPLETED] },
           },
           orderBy: [{ preferredDate: 'asc' }, { createdAt: 'desc' }],
           include: {
@@ -150,7 +122,6 @@ export async function GET(request: NextRequest) {
           where: {
             customerId: session.customerId,
             status: JobStatus.COMPLETED,
-            ...paidFilter,
           },
           orderBy: { completedAt: 'desc' },
           select: {
@@ -250,8 +221,13 @@ export async function GET(request: NextRequest) {
             scheduledDate: nextJob.preferredDate?.toISOString() ?? null,
             timeWindow: nextJob.preferredTime ?? null,
             address: nextJob.address || nextJob.serviceLocation || 'Your property',
-            status: mapCustomerStatus(nextJob.status, nextJob.paymentStatus),
+            status: serviceStatusLabel(nextJob.status),
             rawStatus: nextJob.status,
+            paymentStatus: nextJob.paymentStatus,
+            paymentStatusLabel: paymentStatusLabel(
+              nextJob.paymentStatus,
+              resolveBillingPolicy({ jobPolicy: nextJob.billingPolicy })
+            ),
             teamLine:
               assignedTeam.length > 0
                 ? assignedTeam.map((t) => t.name).join(' · ')

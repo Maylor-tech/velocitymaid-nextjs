@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Home,
@@ -24,6 +24,8 @@ interface CustomerJob {
   id: string;
   status: string;
   rawStatus?: string;
+  serviceStatus?: string;
+  serviceStatusLabel?: string;
   serviceType?: string;
   scheduledDate?: string;
   timeWindow?: string;
@@ -33,12 +35,20 @@ interface CustomerJob {
   cleaner?: { id: string; name: string } | null;
   serviceTeamLine?: string;
   paymentStatus?: string;
+  paymentStatusLabel?: string;
+  billingPolicy?: string;
 }
 
 interface CustomerProfile {
   firstName: string;
   address?: string | null;
   marketLabel?: string;
+}
+
+interface BookingCta {
+  href: string;
+  label: string;
+  isHostCta: boolean;
 }
 
 function initials(name: string): string {
@@ -75,15 +85,17 @@ function countdownLabel(dateStr?: string): string | null {
   return `In ${diff} days`;
 }
 
-function statusBadgeLabel(status: string): string {
+function statusBadgeLabel(job: CustomerJob): string {
+  if (job.serviceStatusLabel) return job.serviceStatusLabel;
   const map: Record<string, string> = {
     assigned: 'Assigned',
-    pending: 'Scheduled',
+    pending: 'Request received',
+    scheduled: 'Confirmed',
     in_progress: 'In progress',
     completed: 'Completed',
     cancelled: 'Cancelled',
   };
-  return map[status.toLowerCase()] || status.replace(/_/g, ' ');
+  return map[job.status.toLowerCase()] || job.status.replace(/_/g, ' ');
 }
 
 function formatMoney(amount: number | null | undefined): string {
@@ -96,28 +108,50 @@ function formatMoney(amount: number | null | undefined): string {
   }).format(amount);
 }
 
-function paymentLine(status?: string, balanceDue?: number | null): {
+function paymentLine(job: CustomerJob): {
   text: string;
   className: string;
 } {
-  if (status === 'PAID') {
+  if (job.paymentStatusLabel) {
+    const paid = job.paymentStatus === 'PAID';
+    const due =
+      job.paymentStatus === 'BALANCE_DUE' ||
+      job.paymentStatus === 'PENDING' ||
+      job.paymentStatus === 'UNPAID';
+    return {
+      text: job.paymentStatusLabel,
+      className: paid
+        ? 'text-vm-success text-xs font-body'
+        : due
+          ? 'text-amber-600 text-xs font-body'
+          : 'text-vm-muted text-xs font-body',
+    };
+  }
+  if (job.paymentStatus === 'PAID') {
     return { text: 'Paid', className: 'text-vm-success text-xs font-body' };
   }
-  if (status === 'BALANCE_DUE' || (balanceDue != null && balanceDue > 0)) {
+  if (job.paymentStatus === 'BALANCE_DUE' || (job.balanceDue != null && job.balanceDue > 0)) {
     return { text: 'Balance due', className: 'text-amber-600 text-xs font-body' };
   }
-  if (status === 'DEPOSIT_PAID') {
+  if (job.paymentStatus === 'DEPOSIT_PAID') {
     return { text: 'Deposit paid', className: 'text-vm-muted text-xs font-body' };
   }
-  return { text: 'Pending', className: 'text-vm-muted text-xs font-body' };
+  return { text: 'Payment required', className: 'text-vm-muted text-xs font-body' };
 }
 
-export default function CustomerJobsPage() {
+function CustomerJobsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const justCreated = searchParams.get('created');
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [upcomingJobs, setUpcomingJobs] = useState<CustomerJob[]>([]);
   const [pastJobs, setPastJobs] = useState<CustomerJob[]>([]);
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
+  const [bookingCta, setBookingCta] = useState<BookingCta>({
+    href: '/book',
+    label: 'New Booking +',
+    isHostCta: false,
+  });
   const [support, setSupport] = useState<MarketSupportContact>(NEW_JERSEY_SUPPORT);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -140,6 +174,13 @@ export default function CustomerJobsPage() {
           marketLabel: meData.customer?.marketLabel || meData.support?.marketLabel,
         });
         if (meData.support) setSupport(meData.support);
+        if (meData.bookingCta?.href) {
+          setBookingCta({
+            href: meData.bookingCta.href,
+            label: meData.bookingCta.label || 'Request Cleaning',
+            isHostCta: Boolean(meData.bookingCta.isHostCta),
+          });
+        }
 
         const [upcomingRes, pastRes] = await Promise.all([
           fetch('/api/customer/jobs?type=upcoming'),
@@ -188,6 +229,14 @@ export default function CustomerJobsPage() {
         </div>
       )}
 
+      {justCreated && (
+        <div className="rounded-xl border border-vm-success/30 bg-vm-success-bg p-4">
+          <p className="text-sm font-body text-vm-success">
+            Request received. It is listed under My Jobs — we will confirm the schedule shortly.
+          </p>
+        </div>
+      )}
+
       {/* Welcome row */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -201,10 +250,10 @@ export default function CustomerJobsPage() {
           )}
         </div>
         <Link
-          href="/book"
+          href={bookingCta.href}
           className="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg bg-vm-cyan px-5 py-2.5 font-heading font-semibold text-vm-navy hover:bg-vm-cyan/90 transition-colors"
         >
-          New Booking +
+          {bookingCta.label}
         </Link>
       </div>
 
@@ -261,12 +310,16 @@ export default function CustomerJobsPage() {
       ) : (
         <div className="rounded-2xl border border-vm-border bg-vm-white p-6 text-center shadow-sm">
           <p className="font-heading font-semibold text-vm-navy">No upcoming cleans scheduled</p>
-          <p className="mt-1 text-sm text-vm-muted font-body">Book your next service in minutes.</p>
+          <p className="mt-1 text-sm text-vm-muted font-body">
+            {bookingCta.isHostCta
+              ? 'Request your next cleaning from this property.'
+              : 'Book your next service in minutes.'}
+          </p>
           <Link
-            href="/book"
+            href={bookingCta.href}
             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-vm-navy px-5 py-2.5 text-sm font-heading font-semibold text-vm-white"
           >
-            Book a clean
+            {bookingCta.isHostCta ? 'Request Cleaning' : 'Book a clean'}
           </Link>
         </div>
       )}
@@ -307,7 +360,7 @@ export default function CustomerJobsPage() {
           </p>
         ) : (
           jobs.map((job) => {
-            const pay = paymentLine(job.paymentStatus, job.balanceDue);
+            const pay = paymentLine(job);
             return (
               <Link
                 key={job.id}
@@ -324,7 +377,7 @@ export default function CustomerJobsPage() {
                         {job.serviceType || 'Cleaning service'}
                       </p>
                       <span className="rounded-full bg-vm-cyan/10 px-2 py-0.5 text-[10px] font-body font-semibold text-vm-cyan-dark">
-                        {statusBadgeLabel(job.status)}
+                        {statusBadgeLabel(job)}
                       </span>
                     </div>
                     <p className="mt-1 text-xs text-vm-muted font-body truncate">
@@ -348,14 +401,16 @@ export default function CustomerJobsPage() {
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-3 pt-2">
         <Link
-          href="/book"
+          href={bookingCta.href}
           className="flex flex-col items-start gap-3 rounded-xl border border-vm-border bg-vm-white p-5 hover:shadow-sm transition-shadow"
         >
           <Plus className="h-5 w-5 text-vm-cyan" />
-          <span className="font-heading text-sm font-semibold text-vm-navy">Book a clean</span>
+          <span className="font-heading text-sm font-semibold text-vm-navy">
+            {bookingCta.isHostCta ? 'Request Cleaning' : 'Book a clean'}
+          </span>
         </Link>
         <Link
-          href={lastJob ? `/book?rebook=${lastJob.id}` : '/book'}
+          href={bookingCta.isHostCta ? bookingCta.href : lastJob ? `/book?rebook=${lastJob.id}` : '/book'}
           className="flex flex-col items-start gap-3 rounded-xl border border-vm-border bg-vm-white p-5 hover:shadow-sm transition-shadow"
         >
           <RefreshCw className="h-5 w-5 text-vm-cyan" />
@@ -379,5 +434,19 @@ export default function CustomerJobsPage() {
         </a>
       </div>
     </div>
+  );
+}
+
+export default function CustomerJobsPageWithSearch() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-vm-cyan" />
+        </div>
+      }
+    >
+      <CustomerJobsPage />
+    </Suspense>
   );
 }

@@ -288,6 +288,8 @@ model Customer {
   archivedBy                                               String?
   /// STANDARD = normal client; SYSTEM = ops/admin accounts; TEST = QA fixtures
   recordKind                                               CustomerRecordKind         @default(STANDARD)
+  /// PREPAY = Stripe/deposit before assignment. INVOICE_AFTER_SERVICE = authorized post-service billing.
+  billingPolicy                                            BillingPolicy              @default(PREPAY)
   CleanerRating                                            CleanerRating[]
   Branch                                                   Branch?                    @relation(fields: [branchId], references: [id])
   CustomerJobChangeRequest                                 CustomerJobChangeRequest[]
@@ -344,6 +346,8 @@ model Property {
   turnoverFrequency      String?
   sameDayTurnovers       String?
   standingInstructions   String?
+  /// Null = inherit Customer.billingPolicy.
+  billingPolicy          BillingPolicy?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   Customer               Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
@@ -445,6 +449,8 @@ model Job {
   amountPaid               Decimal?                   @db.Decimal(10, 2)
   balanceDue               Decimal?                   @db.Decimal(10, 2)
   paymentStatus            PaymentStatus              @default(PENDING)
+  /// Snapshot at Job create. Null = treat as PREPAY (legacy / Stripe bookings).
+  billingPolicy            BillingPolicy?
   reviewStatus             JobReviewStatus            @default(PENDING)
   depositPaymentIntentId   String?
   balanceSessionId         String?                    @unique
@@ -1531,6 +1537,12 @@ enum PaymentStatus {
   PAID
   REFUNDED
   FAILED
+}
+
+/// Commercial collection model. Independent of Job.status and PaymentStatus.
+enum BillingPolicy {
+  PREPAY
+  INVOICE_AFTER_SERVICE
 }
 
 enum JobReviewStatus {

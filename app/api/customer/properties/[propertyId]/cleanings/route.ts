@@ -8,6 +8,12 @@ import { prisma } from '@/lib/prisma';
 import { nextVmReference } from '@/lib/billing/numbering';
 import { awaitJobGoogleSync } from '@/lib/google/jobGoogleSync';
 import { parseServiceDateInput } from '@/lib/dates/serviceDate';
+import { resolveBillingPolicy } from '@/lib/billing/billingPolicy';
+import { sendHostRequestReceivedEmail } from '@/lib/email/sendHostRequestReceivedEmail';
+import {
+  createAdminNotification,
+  adminNotificationHelpers,
+} from '@/lib/notifications/adminNotificationCenter';
 import {
   buildHostCleaningJobNotes,
   buildPropertyDefaultsForJob,
@@ -105,7 +111,9 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         id: true,
         firstName: true,
         lastName: true,
+        email: true,
         branchId: true,
+        billingPolicy: true,
         Branch: { select: { id: true, slug: true } },
       },
     });
@@ -143,6 +151,10 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     });
 
     const jobReference = await nextVmReference();
+    const billingPolicy = resolveBillingPolicy({
+      propertyPolicy: property.billingPolicy,
+      customerPolicy: customer.billingPolicy,
+    });
 
     const job = await prisma.job.create({
       data: {
@@ -160,6 +172,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         currency: 'USD',
         status: 'RECEIVED',
         paymentStatus: 'PENDING',
+        billingPolicy,
         internalNotes,
         marketLabel: customer.Branch.slug || null,
       },
@@ -172,6 +185,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         preferredTime: true,
         serviceType: true,
         status: true,
+        paymentStatus: true,
+        billingPolicy: true,
         branchId: true,
       },
     });
@@ -187,6 +202,33 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       );
     }
 
+    try {
+      await sendHostRequestReceivedEmail({
+        to: customer.email || session.email,
+        customerFirstName: customer.firstName,
+        propertyName: property.name,
+        address: defaults.address,
+        preferredDate,
+        preferredTime: preferredTime || null,
+        serviceType,
+        jobReference: job.jobReference,
+        jobId: job.id,
+      });
+    } catch (emailError) {
+      console.error(
+        '[customer/properties/:id/cleanings] Request-received email failed',
+        emailError
+      );
+    }
+
+    createAdminNotification({
+      type: 'HOST_CLEANING_REQUEST',
+      severity: 'INFO',
+      message: `Host cleaning request ${job.jobReference || job.id} — ${customerName} · ${defaults.address}`,
+      jobId: job.id,
+      actionUrl: adminNotificationHelpers.adminJobLink(job.id),
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       job: {
@@ -198,6 +240,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         preferredTime: job.preferredTime,
         serviceType: job.serviceType,
         status: job.status,
+        paymentStatus: job.paymentStatus,
+        billingPolicy: job.billingPolicy,
       },
     });
   } catch (error: unknown) {

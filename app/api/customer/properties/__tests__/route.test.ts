@@ -15,6 +15,8 @@ const findUniqueBranch = vi.fn();
 const jobCreate = vi.fn();
 const nextVmReference = vi.fn();
 const awaitJobGoogleSync = vi.fn();
+const sendHostRequestReceivedEmail = vi.fn(async () => ({ sent: true }));
+const createAdminNotification = vi.fn(async () => undefined);
 
 vi.mock('@/lib/customerSession', () => ({
   getCustomerSession: (...a: unknown[]) => getCustomerSession(...a),
@@ -54,6 +56,17 @@ vi.mock('@/lib/billing/numbering', () => ({
 
 vi.mock('@/lib/google/jobGoogleSync', () => ({
   awaitJobGoogleSync: (...a: unknown[]) => awaitJobGoogleSync(...a),
+}));
+
+vi.mock('@/lib/email/sendHostRequestReceivedEmail', () => ({
+  sendHostRequestReceivedEmail: (...a: unknown[]) => sendHostRequestReceivedEmail(...a),
+}));
+
+vi.mock('@/lib/notifications/adminNotificationCenter', () => ({
+  createAdminNotification: (...a: unknown[]) => createAdminNotification(...a),
+  adminNotificationHelpers: {
+    adminJobLink: (id: string) => `https://velocitymaid.com/admin/jobs/${id}`,
+  },
 }));
 
 import { GET as listGET } from '@/app/api/customer/properties/route';
@@ -98,6 +111,7 @@ function makeProperty(overrides: Partial<Property> = {}): Property {
     turnoverFrequency: null,
     sameDayTurnovers: null,
     standingInstructions: 'Flip beds',
+    billingPolicy: null,
     createdAt: new Date('2026-08-01'),
     updatedAt: new Date('2026-08-01'),
     ...overrides,
@@ -203,7 +217,9 @@ describe('Host property APIs', () => {
       id: CUST_A,
       firstName: 'Tiffany',
       lastName: 'Mayo',
+      email: 'loulouslandingvt@gmail.com',
       branchId: 'branch-vt',
+      billingPolicy: 'INVOICE_AFTER_SERVICE',
       Branch: { id: 'branch-vt', slug: 'vermont' },
     });
     nextVmReference.mockResolvedValue('VM-2026-0099');
@@ -244,6 +260,7 @@ describe('Host property APIs', () => {
           address: '111 Thomson Drive',
           status: 'RECEIVED',
           paymentStatus: 'PENDING',
+          billingPolicy: 'INVOICE_AFTER_SERVICE',
           Property: { connect: { id: PROP_ID } },
           Branch: { connect: { id: 'branch-vt' } },
           marketLabel: 'vermont',
@@ -256,6 +273,19 @@ describe('Host property APIs', () => {
     expect(notesArg).toContain('[Source: HOST_PORTAL]');
     expect(notesArg).toContain('Same-day turnover: Yes');
     expect(notesArg).toContain('Check-in deadline: 4:00 PM');
+    expect(sendHostRequestReceivedEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'loulouslandingvt@gmail.com',
+        serviceType: 'Vacation Rental Turnover',
+        jobId: 'job-new',
+      })
+    );
+    expect(createAdminNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'HOST_CLEANING_REQUEST',
+        jobId: 'job-new',
+      })
+    );
   });
 
   it('Add Cleaning still returns success when Google sync rejects', async () => {
@@ -268,7 +298,9 @@ describe('Host property APIs', () => {
       id: CUST_A,
       firstName: 'Tiffany',
       lastName: 'Mayo',
+      email: 'loulouslandingvt@gmail.com',
       branchId: 'branch-vt',
+      billingPolicy: 'INVOICE_AFTER_SERVICE',
       Branch: { id: 'branch-vt', slug: 'vermont' },
     });
     nextVmReference.mockResolvedValue('VM-2026-0099');
@@ -325,7 +357,9 @@ describe('Host property APIs', () => {
       id: CUST_A,
       firstName: 'Tiffany',
       lastName: 'Mayo',
+      email: 'loulouslandingvt@gmail.com',
       branchId: 'branch-vt',
+      billingPolicy: 'INVOICE_AFTER_SERVICE',
       Branch: { id: 'branch-vt', slug: 'vermont' },
     });
     nextVmReference.mockResolvedValue('VM-2026-0099');
@@ -374,6 +408,7 @@ describe('Host property APIs', () => {
       firstName: 'NJ',
       lastName: 'Host',
       branchId: 'branch-nj',
+      billingPolicy: 'PREPAY',
       Branch: { id: 'branch-nj', slug: 'new-jersey' },
     });
     nextVmReference.mockResolvedValue('VM-2026-0100');
@@ -407,6 +442,7 @@ describe('Host property APIs', () => {
         data: expect.objectContaining({
           Branch: { connect: { id: 'branch-nj' } },
           marketLabel: 'new-jersey',
+          billingPolicy: 'PREPAY',
         }),
       })
     );
@@ -483,7 +519,9 @@ describe('Host property APIs', () => {
       id: CUST_A,
       firstName: 'Tiffany',
       lastName: 'Mayo',
+      email: 'loulouslandingvt@gmail.com',
       branchId: 'branch-vt',
+      billingPolicy: 'INVOICE_AFTER_SERVICE',
       Branch: { id: 'branch-vt', slug: 'vermont' },
     });
     nextVmReference.mockResolvedValue('VM-2026-0100');

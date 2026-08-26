@@ -1,3 +1,5 @@
+import { isJobAssignable } from '@/lib/billing/billingPolicy';
+
 export type JobLoopStep =
   | 'DEPOSIT_PAID'
   | 'REVIEW_PENDING'
@@ -14,6 +16,7 @@ export type JobLoopInput = {
   reviewStatus?: string | null;
   assignedCleanerId?: string | null;
   balanceDue?: number | null;
+  billingPolicy?: string | null;
 };
 
 export type JobLoopProgress = {
@@ -150,8 +153,9 @@ export function getJobLoopProgress(
 }
 
 function isJobAssignableForLoop(job: JobLoopInput): boolean {
-  if (job.paymentStatus === 'PAID') return true;
-  return (
-    job.paymentStatus === 'DEPOSIT_PAID' && job.reviewStatus === 'APPROVED'
-  );
+  return isJobAssignable({
+    paymentStatus: job.paymentStatus,
+    reviewStatus: job.reviewStatus,
+    billingPolicy: job.billingPolicy,
+  });
 }

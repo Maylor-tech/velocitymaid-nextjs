@@ -53,6 +53,7 @@ function propertyRow() {
     turnoverFrequency: 'Weekly',
     sameDayTurnovers: 'Sometimes',
     standingInstructions: 'Flip all beds',
+    billingPolicy: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

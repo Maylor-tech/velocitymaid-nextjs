@@ -4,8 +4,13 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { readCustomerSession } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
-import { PaymentStatus } from '@prisma/client';
 import { requireCustomerJobOwnership } from '@/lib/auth/requireRole';
+import {
+  mapServiceStatusToCustomerBadge,
+  paymentStatusLabel,
+  resolveBillingPolicy,
+  serviceStatusLabel,
+} from '@/lib/billing/billingPolicy';
 
 /**
  * GET /api/customer/jobs/[jobId]
@@ -104,17 +109,7 @@ export async function GET(
     const fees = 0;
     const total = subtotal !== null ? subtotal + fees : null;
 
-    let paymentStatus:
-      | 'UNPAID'
-      | 'PAID'
-      | 'DEPOSIT_PAID'
-      | 'BALANCE_DUE'
-      | 'REFUNDED'
-      | 'PARTIAL' = 'UNPAID';
-    if (job.paymentStatus === PaymentStatus.PAID) paymentStatus = 'PAID';
-    else if (job.paymentStatus === PaymentStatus.DEPOSIT_PAID) paymentStatus = 'DEPOSIT_PAID';
-    else if (job.paymentStatus === PaymentStatus.BALANCE_DUE) paymentStatus = 'BALANCE_DUE';
-    else if (job.paymentStatus === PaymentStatus.REFUNDED) paymentStatus = 'REFUNDED';
+    const billingPolicy = resolveBillingPolicy({ jobPolicy: job.billingPolicy });
 
     return NextResponse.json({
       success: true,
@@ -125,6 +120,9 @@ export async function GET(
         duration: null, // TODO: Add duration field to Job model if needed
         address: job.address || job.serviceLocation || 'Address not provided',
         status: job.status,
+        serviceStatus: job.status,
+        serviceStatusLabel: serviceStatusLabel(job.status),
+        statusBadge: mapServiceStatusToCustomerBadge(job.status),
         subtotal,
         fees,
         total,
@@ -147,7 +145,9 @@ export async function GET(
         depositAmount: job.depositAmount ? Number(job.depositAmount) : null,
         currency: job.currency || 'USD',
         branchName: job.Branch?.name || undefined,
-        paymentStatus,
+        paymentStatus: job.paymentStatus,
+        paymentStatusLabel: paymentStatusLabel(job.paymentStatus, billingPolicy),
+        billingPolicy,
         reviewStatus: job.reviewStatus,
         rating: job.CleanerRating
           ? {

@@ -55,9 +55,20 @@ Nearly every operational record is scoped to a `Branch` (`prisma/schema.prisma`)
 
 ### Job lifecycle drives payments and payouts
 
-`Job.status` and `Job.paymentStatus` progress independently but are coupled by business rules (see `docs/full-job-loop-test.md` for the full state machine): `RECEIVED → CONFIRMED → ASSIGNED → ON_THE_WAY → IN_PROGRESS → COMPLETED`, and payment `DEPOSIT_PAID → BALANCE_DUE → PAID`. `JobPayout` is created only after `paymentStatus` reaches `PAID` (via Stripe webhook, idempotent per `jobId`), and cleaner payout eligibility/amount is computed from branch payout rules (`lib/payoutRules.ts`, `lib/evaluatePayoutEligibility.ts`, `lib/assignment-scoring.ts`). Stripe webhook (`app/api/webhooks/stripe`) is the single source of truth for payment state — never flip `paymentStatus` from a client action alone.
+`Job.status` (service) and `Job.paymentStatus` (money) progress independently. Never hide a valid Job from the customer because payment is `PENDING`. Never flip `paymentStatus` to `PAID` to unlock ops.
 
-Two payment modes exist, controlled by env: `BOOKING_PAYMENT_MODE=full` (charge full quote at checkout) vs `deposit` (charge `BOOKING_DEPOSIT_CENTS` up front, balance charged after job completion). The client reads the effective mode from `/api/booking/payment-config` at runtime rather than trusting `NEXT_PUBLIC_*` build-time values, since Vercel env changes require a redeploy but this endpoint doesn't.
+Two commercial workflows:
+
+| Policy (`BillingPolicy`) | Product | Assignment | Payment |
+|---|---|---|---|
+| `INVOICE_AFTER_SERVICE` | Host portal Add Cleaning — operational request, not a prepaid booking | Allowed while payment stays `PENDING` | Invoice after service; snapshot on the Job at create |
+| `PREPAY` | Public `/book` + Stripe | Requires `PAID` or approved `DEPOSIT_PAID` | Stripe webhook is the source of truth — never flip `paymentStatus` from a client action alone |
+
+Host submission (`POST /api/customer/properties/[id]/cleanings`) creates `RECEIVED` / `PENDING`, emails **Request Received** immediately, and writes an ops `HOST_CLEANING_REQUEST` notification. HTTP success must not depend on email.
+
+`JobPayout` is created only after `paymentStatus` reaches `PAID` (via Stripe webhook, idempotent per `jobId`). Cleaner payout eligibility/amount is computed from branch payout rules (`lib/payoutRules.ts`, `lib/evaluatePayoutEligibility.ts`, `lib/assignment-scoring.ts`). Assignment gating lives in `lib/billing/billingPolicy.ts` (`isJobAssignable`) — do not reintroduce a global “PAID jobs only” filter on `/api/customer/jobs` or `/api/customer/home`.
+
+Two Stripe charge modes exist, controlled by env: `BOOKING_PAYMENT_MODE=full` (charge full quote at checkout) vs `deposit` (charge `BOOKING_DEPOSIT_CENTS` up front, balance charged after job completion). The client reads the effective mode from `/api/booking/payment-config` at runtime rather than trusting `NEXT_PUBLIC_*` build-time values, since Vercel env changes require a redeploy but this endpoint doesn't.
 
 ### Cron jobs
 

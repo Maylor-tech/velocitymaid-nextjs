@@ -12,6 +12,7 @@ import { useAdminShell } from '@/components/admin/shell/AdminShell';
 import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
 import { getJobLoopProgress } from '@/lib/booking/jobLoopProgress';
 import { formatServiceDate } from '@/lib/dates/serviceDate';
+import { isJobAssignable as isJobAssignableByPolicy } from '@/lib/billing/billingPolicy';
 
 interface Job {
   id: string;
@@ -27,6 +28,7 @@ interface Job {
   totalPrice: number | null;
   currency: string | null;
   paymentStatus: string;
+  billingPolicy?: string | null;
   reviewStatus?: string;
   quotedTotal?: number | null;
   operationalTotal?: number | null;
@@ -743,12 +745,14 @@ export default function AdminJobDetailPage() {
     });
   };
 
-  // Phase 2A: Payment Gating - Only allow assignment if payment is PAID
-  // Phase 1: Also check job status allows assignment
+  // Assignment is gated by billing policy, not by falsely marking the Job paid.
   const isJobAssignable =
     job &&
-    (job.paymentStatus === 'PAID' ||
-      (job.paymentStatus === 'DEPOSIT_PAID' && job.reviewStatus === 'APPROVED'));
+    isJobAssignableByPolicy({
+      paymentStatus: job.paymentStatus,
+      reviewStatus: job.reviewStatus,
+      billingPolicy: job.billingPolicy,
+    });
   const canAssign =
     job &&
     isJobAssignable &&
@@ -764,6 +768,7 @@ export default function AdminJobDetailPage() {
         reviewStatus: job.reviewStatus,
         assignedCleanerId: job.assignedCleanerId,
         balanceDue: job.balanceDue,
+        billingPolicy: job.billingPolicy,
       })
     : null;
 
@@ -1604,14 +1609,11 @@ export default function AdminJobDetailPage() {
           </div>
         )}
 
-        {/* Assignment Section */}
-        {/* Phase 2A: Payment Gating - Show assignment UI only if payment is PAID */}
+        {/* Assignment: PREPAY still requires payment; invoice-after-service does not */}
         {isPaymentBlocked ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-semibold text-vm-text mb-4">Assign Cleaner</h2>
             
-            {/* Phase 2A: Payment Gating - Warning message for unpaid jobs */}
-            {/* Why unpaid jobs are blocked: Ensures cleaners are only assigned to jobs with guaranteed payment */}
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
@@ -1622,7 +1624,7 @@ export default function AdminJobDetailPage() {
                   <p className="text-sm text-yellow-800 mt-1">
                     {needsReview
                       ? 'Approve the deposit booking before assigning a cleaner.'
-                      : `Payment must be confirmed before assignment. Current status: ${job.paymentStatus}`}
+                      : `Prepaid bookings must be paid (or approved deposit) before assignment. Current payment status: ${job.paymentStatus}`}
                   </p>
                 </div>
               </div>

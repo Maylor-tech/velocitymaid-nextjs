@@ -31,6 +31,7 @@ export async function createDraftHostCustomer(payload: HostIntakePayload) {
     branchId: vermontBranch?.id ?? existing?.branchId ?? null,
     defaultAddress: `${payload.propertyAddress}, ${payload.city}, VT`,
     leadStatus: "INTAKE_RECEIVED" as const,
+    billingPolicy: "INVOICE_AFTER_SERVICE" as const,
     updatedAt: now,
   };
 

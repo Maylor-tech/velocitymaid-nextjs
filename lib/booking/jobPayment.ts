@@ -1,22 +1,7 @@
 import type Stripe from 'stripe';
 import { JobReviewStatus, PaymentStatus } from '@prisma/client';
 import { getBookingDepositDollars } from './paymentConfig';
-
-export function isJobAssignable(job: {
-  paymentStatus: PaymentStatus;
-  reviewStatus?: JobReviewStatus | null;
-}): boolean {
-  if (job.paymentStatus === PaymentStatus.PAID) {
-    return true;
-  }
-  if (
-    job.paymentStatus === PaymentStatus.DEPOSIT_PAID &&
-    job.reviewStatus === JobReviewStatus.APPROVED
-  ) {
-    return true;
-  }
-  return false;
-}
+export { isJobAssignable } from '@/lib/billing/billingPolicy';
 
 export function hasDepositPaid(job: { paymentStatus: PaymentStatus }): boolean {
   return (
