@@ -27,13 +27,20 @@ export type HostRequestReceivedInput = {
   jobId: string;
 };
 
+export type HostRequestReceivedSendResult = {
+  sent: boolean;
+  skippedReason?: string;
+  provider?: 'RESEND';
+  messageId?: string | null;
+};
+
 /**
  * Immediate "Request Received" email after a host-portal Job is created.
  * Never throws — callers must not fail HTTP on email errors.
  */
 export async function sendHostRequestReceivedEmail(
   input: HostRequestReceivedInput
-): Promise<{ sent: boolean; skippedReason?: string }> {
+): Promise<HostRequestReceivedSendResult> {
   if (!resend) {
     return { sent: false, skippedReason: 'RESEND_API_KEY not configured' };
   }
@@ -102,19 +109,46 @@ Our team will confirm the schedule shortly. You can follow this request under My
 — VelocityMaid`;
 
   try {
-    await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: getResendFromEmail(),
       to: input.to,
       subject: 'Request Received — VelocityMaid',
       html,
       text,
     });
-    return { sent: true };
+    if (error) {
+      console.error('[sendHostRequestReceivedEmail] Resend error', {
+        jobId: input.jobId,
+        to: input.to,
+        error: error.message,
+      });
+      return {
+        sent: false,
+        skippedReason: error.message,
+        provider: 'RESEND',
+        messageId: null,
+      };
+    }
+    console.log('[sendHostRequestReceivedEmail] sent', {
+      jobId: input.jobId,
+      to: input.to,
+      messageId: data?.id ?? null,
+    });
+    return {
+      sent: true,
+      provider: 'RESEND',
+      messageId: data?.id ?? null,
+    };
   } catch (error) {
-    console.error('[sendHostRequestReceivedEmail]', error);
+    console.error('[sendHostRequestReceivedEmail]', {
+      jobId: input.jobId,
+      error,
+    });
     return {
       sent: false,
       skippedReason: error instanceof Error ? error.message : 'Send failed',
+      provider: 'RESEND',
+      messageId: null,
     };
   }
 }

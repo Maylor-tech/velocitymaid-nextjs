@@ -28,11 +28,40 @@ export interface CreateAdminNotificationInput {
   message: string;
   jobId?: string | null;
   actionUrl?: string | null;
+  /**
+   * When true and jobId is set, reuse an existing row of the same type for
+   * that job instead of inserting a duplicate.
+   */
+  idempotent?: boolean;
 }
 
-export async function createAdminNotification(input: CreateAdminNotificationInput): Promise<void> {
+export type CreateAdminNotificationResult = {
+  ok: boolean;
+  created: boolean;
+  id: string | null;
+  error?: string;
+};
+
+export async function createAdminNotification(
+  input: CreateAdminNotificationInput
+): Promise<CreateAdminNotificationResult> {
   try {
-    await prisma.adminNotification.create({
+    if (input.idempotent && input.jobId) {
+      const existing = await prisma.adminNotification.findFirst({
+        where: { type: input.type, jobId: input.jobId },
+        select: { id: true },
+      });
+      if (existing) {
+        console.log('[createAdminNotification] idempotent skip', {
+          type: input.type,
+          jobId: input.jobId,
+          id: existing.id,
+        });
+        return { ok: true, created: false, id: existing.id };
+      }
+    }
+
+    const row = await prisma.adminNotification.create({
       data: {
         type: input.type,
         severity: input.severity,
@@ -40,9 +69,18 @@ export async function createAdminNotification(input: CreateAdminNotificationInpu
         message: input.message,
         actionUrl: input.actionUrl ?? null,
       },
+      select: { id: true },
     });
+    console.log('[createAdminNotification] wrote', {
+      type: input.type,
+      jobId: input.jobId ?? null,
+      id: row.id,
+    });
+    return { ok: true, created: true, id: row.id };
   } catch (err) {
+    const error = err instanceof Error ? err.message : 'Failed to write notification';
     console.error('[createAdminNotification] Failed to write notification:', err);
+    return { ok: false, created: false, id: null, error };
   }
 }
 

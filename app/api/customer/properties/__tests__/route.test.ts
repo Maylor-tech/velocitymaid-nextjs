@@ -16,7 +16,25 @@ const jobCreate = vi.fn();
 const nextVmReference = vi.fn();
 const awaitJobGoogleSync = vi.fn();
 const sendHostRequestReceivedEmail = vi.fn(async () => ({ sent: true }));
-const createAdminNotification = vi.fn(async () => undefined);
+const createAdminNotification = vi.fn(async () => ({
+  ok: true,
+  created: true,
+  id: 'notif-1',
+}));
+const notifyHostCleaningRequestCreated = vi.fn(async () => ({
+  opsAlert: {
+    type: 'HOST_CLEANING_REQUEST',
+    ok: true,
+    created: true,
+    id: 'notif-1',
+  },
+  email: {
+    sent: true,
+    skipped: false,
+    provider: 'RESEND',
+    messageId: 're_msg_1',
+  },
+}));
 
 vi.mock('@/lib/customerSession', () => ({
   getCustomerSession: (...a: unknown[]) => getCustomerSession(...a),
@@ -67,6 +85,11 @@ vi.mock('@/lib/notifications/adminNotificationCenter', () => ({
   adminNotificationHelpers: {
     adminJobLink: (id: string) => `https://velocitymaid.com/admin/jobs/${id}`,
   },
+}));
+
+vi.mock('@/lib/notifications/hostCleaningRequestNotify', () => ({
+  notifyHostCleaningRequestCreated: (...a: unknown[]) =>
+    notifyHostCleaningRequestCreated(...a),
 }));
 
 import { GET as listGET } from '@/app/api/customer/properties/route';
@@ -273,19 +296,15 @@ describe('Host property APIs', () => {
     expect(notesArg).toContain('[Source: HOST_PORTAL]');
     expect(notesArg).toContain('Same-day turnover: Yes');
     expect(notesArg).toContain('Check-in deadline: 4:00 PM');
-    expect(sendHostRequestReceivedEmail).toHaveBeenCalledWith(
+    expect(sendHostRequestReceivedEmail).not.toHaveBeenCalled();
+    expect(notifyHostCleaningRequestCreated).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: 'loulouslandingvt@gmail.com',
+        jobId: 'job-new',
+        customerEmail: 'loulouslandingvt@gmail.com',
         serviceType: 'Vacation Rental Turnover',
-        jobId: 'job-new',
       })
     );
-    expect(createAdminNotification).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'HOST_CLEANING_REQUEST',
-        jobId: 'job-new',
-      })
-    );
+    expect(createAdminNotification).not.toHaveBeenCalled();
   });
 
   it('Add Cleaning still returns success when Google sync rejects', async () => {
@@ -380,6 +399,18 @@ describe('Host property APIs', () => {
     awaitJobGoogleSync.mockImplementation(async () => {
       order.push('google');
     });
+    notifyHostCleaningRequestCreated.mockImplementation(async () => {
+      order.push('notify');
+      return {
+        opsAlert: {
+          type: 'HOST_CLEANING_REQUEST',
+          ok: true,
+          created: true,
+          id: 'notif-1',
+        },
+        email: { sent: true, skipped: false, provider: 'RESEND', messageId: 're_1' },
+      };
+    });
 
     const res = await cleaningsPOST(
       new NextRequest('http://localhost/api', {
@@ -394,7 +425,7 @@ describe('Host property APIs', () => {
     );
 
     expect(res.status).toBe(200);
-    expect(order).toEqual(['create', 'google']);
+    expect(order).toEqual(['create', 'google', 'notify']);
   });
 
   it('Add Cleaning uses another valid customer branch (not Vermont fallback)', async () => {
@@ -571,6 +602,135 @@ describe('Host property APIs', () => {
     expect(json.job.driveFolderId).toBeUndefined();
     expect(json.job.calendarEventId).toBeUndefined();
     expect(json.googleSynced).toBeUndefined();
+  });
+
+  it('Add Cleaning still returns success when request-received email fails', async () => {
+    getCustomerSession.mockResolvedValue({
+      customerId: CUST_A,
+      email: 'loulouslandingvt@gmail.com',
+    });
+    loadOwnedProperty.mockResolvedValue(makeProperty());
+    findUniqueCustomer.mockResolvedValue({
+      id: CUST_A,
+      firstName: 'Tiffany',
+      lastName: 'Mayo',
+      email: 'loulouslandingvt@gmail.com',
+      branchId: 'branch-vt',
+      billingPolicy: 'INVOICE_AFTER_SERVICE',
+      Branch: { id: 'branch-vt', slug: 'vermont' },
+    });
+    nextVmReference.mockResolvedValue('VM-2026-0101');
+    jobCreate.mockResolvedValue({
+      id: 'job-email-fail',
+      jobReference: 'VM-2026-0101',
+      propertyId: PROP_ID,
+      address: '111 Thomson Drive',
+      preferredDate: new Date('2026-10-11T00:00:00.000Z'),
+      preferredTime: null,
+      serviceType: 'Vacation Rental Turnover',
+      status: 'RECEIVED',
+      paymentStatus: 'PENDING',
+      billingPolicy: 'INVOICE_AFTER_SERVICE',
+      branchId: 'branch-vt',
+    });
+    notifyHostCleaningRequestCreated.mockResolvedValueOnce({
+      opsAlert: {
+        type: 'HOST_CLEANING_REQUEST',
+        ok: true,
+        created: true,
+        id: 'notif-1',
+      },
+      email: {
+        sent: false,
+        skipped: false,
+        skippedReason: 'Resend 500',
+        provider: 'RESEND',
+        messageId: null,
+      },
+    });
+
+    const res = await cleaningsPOST(
+      new NextRequest('http://localhost/api', {
+        method: 'POST',
+        body: JSON.stringify({
+          preferredDate: '2026-10-11',
+          serviceType: 'Vacation Rental Turnover',
+          sameDayTurnover: false,
+        }),
+      }),
+      { params: { propertyId: PROP_ID } }
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.job.id).toBe('job-email-fail');
+    expect(json.requestReceivedEmail.sent).toBe(false);
+    expect(json.opsAlert.ok).toBe(true);
+    expect(jobCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it('Add Cleaning surfaces ops notification failure without rolling back the Job', async () => {
+    getCustomerSession.mockResolvedValue({
+      customerId: CUST_A,
+      email: 'loulouslandingvt@gmail.com',
+    });
+    loadOwnedProperty.mockResolvedValue(makeProperty());
+    findUniqueCustomer.mockResolvedValue({
+      id: CUST_A,
+      firstName: 'Tiffany',
+      lastName: 'Mayo',
+      email: 'loulouslandingvt@gmail.com',
+      branchId: 'branch-vt',
+      billingPolicy: 'INVOICE_AFTER_SERVICE',
+      Branch: { id: 'branch-vt', slug: 'vermont' },
+    });
+    nextVmReference.mockResolvedValue('VM-2026-0102');
+    jobCreate.mockResolvedValue({
+      id: 'job-ops-fail',
+      jobReference: 'VM-2026-0102',
+      propertyId: PROP_ID,
+      address: '111 Thomson Drive',
+      preferredDate: new Date('2026-10-11T00:00:00.000Z'),
+      preferredTime: null,
+      serviceType: 'Vacation Rental Turnover',
+      status: 'RECEIVED',
+      paymentStatus: 'PENDING',
+      billingPolicy: 'INVOICE_AFTER_SERVICE',
+      branchId: 'branch-vt',
+    });
+    notifyHostCleaningRequestCreated.mockResolvedValueOnce({
+      opsAlert: {
+        type: 'HOST_CLEANING_REQUEST',
+        ok: false,
+        created: false,
+        id: null,
+        error: 'db down',
+      },
+      email: { sent: true, skipped: false, provider: 'RESEND', messageId: 're_1' },
+    });
+
+    const res = await cleaningsPOST(
+      new NextRequest('http://localhost/api', {
+        method: 'POST',
+        body: JSON.stringify({
+          preferredDate: '2026-10-11',
+          serviceType: 'Vacation Rental Turnover',
+          sameDayTurnover: false,
+        }),
+      }),
+      { params: { propertyId: PROP_ID } }
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.job.id).toBe('job-ops-fail');
+    expect(json.opsAlert).toMatchObject({
+      type: 'HOST_CLEANING_REQUEST',
+      ok: false,
+      error: 'db down',
+    });
   });
 
   it('Add Cleaning returns 404 for non-owned Property', async () => {

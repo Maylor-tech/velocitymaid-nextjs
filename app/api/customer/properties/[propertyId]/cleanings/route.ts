@@ -9,11 +9,7 @@ import { nextVmReference } from '@/lib/billing/numbering';
 import { awaitJobGoogleSync } from '@/lib/google/jobGoogleSync';
 import { parseServiceDateInput } from '@/lib/dates/serviceDate';
 import { resolveBillingPolicy } from '@/lib/billing/billingPolicy';
-import { sendHostRequestReceivedEmail } from '@/lib/email/sendHostRequestReceivedEmail';
-import {
-  createAdminNotification,
-  adminNotificationHelpers,
-} from '@/lib/notifications/adminNotificationCenter';
+import { notifyHostCleaningRequestCreated } from '@/lib/notifications/hostCleaningRequestNotify';
 import {
   buildHostCleaningJobNotes,
   buildPropertyDefaultsForJob,
@@ -202,32 +198,31 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       );
     }
 
+    // Awaited: Vercel freezes the isolate after the response. Fire-and-forget
+    // notification writes never landed in production (HOST_CLEANING_REQUEST = 0).
+    // Email failure must not fail HTTP; opsAlert metadata is returned so the
+    // write is observable even when it fails.
+    let notify: Awaited<ReturnType<typeof notifyHostCleaningRequestCreated>> | null =
+      null;
     try {
-      await sendHostRequestReceivedEmail({
-        to: customer.email || session.email,
+      notify = await notifyHostCleaningRequestCreated({
+        jobId: job.id,
+        jobReference: job.jobReference,
+        customerName,
+        customerEmail: customer.email || session.email,
         customerFirstName: customer.firstName,
         propertyName: property.name,
         address: defaults.address,
         preferredDate,
         preferredTime: preferredTime || null,
         serviceType,
-        jobReference: job.jobReference,
-        jobId: job.id,
       });
-    } catch (emailError) {
+    } catch (notifyError) {
       console.error(
-        '[customer/properties/:id/cleanings] Request-received email failed',
-        emailError
+        '[customer/properties/:id/cleanings] host request notify failed',
+        notifyError
       );
     }
-
-    createAdminNotification({
-      type: 'HOST_CLEANING_REQUEST',
-      severity: 'INFO',
-      message: `Host cleaning request ${job.jobReference || job.id} — ${customerName} · ${defaults.address}`,
-      jobId: job.id,
-      actionUrl: adminNotificationHelpers.adminJobLink(job.id),
-    }).catch(() => {});
 
     return NextResponse.json({
       success: true,
@@ -242,6 +237,18 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         status: job.status,
         paymentStatus: job.paymentStatus,
         billingPolicy: job.billingPolicy,
+      },
+      opsAlert: notify?.opsAlert ?? {
+        type: 'HOST_CLEANING_REQUEST',
+        ok: false,
+        created: false,
+        id: null,
+        error: 'notify threw before returning',
+      },
+      requestReceivedEmail: notify?.email ?? {
+        sent: false,
+        skipped: false,
+        skippedReason: 'notify threw before returning',
       },
     });
   } catch (error: unknown) {

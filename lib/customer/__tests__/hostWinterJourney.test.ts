@@ -14,8 +14,20 @@ const findUniqueCustomer = vi.fn();
 const jobCreate = vi.fn();
 const nextVmReference = vi.fn();
 const awaitJobGoogleSync = vi.fn();
-const sendHostRequestReceivedEmail = vi.fn(async () => ({ sent: true }));
-const createAdminNotification = vi.fn(async () => undefined);
+const notifyHostCleaningRequestCreated = vi.fn(async () => ({
+  opsAlert: {
+    type: 'HOST_CLEANING_REQUEST',
+    ok: true,
+    created: true,
+    id: 'notif-winter',
+  },
+  email: {
+    sent: true,
+    skipped: false,
+    provider: 'RESEND',
+    messageId: 're_winter',
+  },
+}));
 
 vi.mock('@/lib/customerSession', () => ({
   getCustomerSession: (...a: unknown[]) => getCustomerSession(...a),
@@ -46,15 +58,9 @@ vi.mock('@/lib/google/jobGoogleSync', () => ({
   awaitJobGoogleSync: (...a: unknown[]) => awaitJobGoogleSync(...a),
 }));
 
-vi.mock('@/lib/email/sendHostRequestReceivedEmail', () => ({
-  sendHostRequestReceivedEmail: (...a: unknown[]) => sendHostRequestReceivedEmail(...a),
-}));
-
-vi.mock('@/lib/notifications/adminNotificationCenter', () => ({
-  createAdminNotification: (...a: unknown[]) => createAdminNotification(...a),
-  adminNotificationHelpers: {
-    adminJobLink: (id: string) => `https://velocitymaid.com/admin/jobs/${id}`,
-  },
+vi.mock('@/lib/notifications/hostCleaningRequestNotify', () => ({
+  notifyHostCleaningRequestCreated: (...a: unknown[]) =>
+    notifyHostCleaningRequestCreated(...a),
 }));
 
 import { POST as cleaningsPOST } from '@/app/api/customer/properties/[propertyId]/cleanings/route';
@@ -159,24 +165,20 @@ describe('Vermont host winter journey', () => {
       'paymentStatus'
     );
 
-    expect(sendHostRequestReceivedEmail).toHaveBeenCalledWith(
+    expect(notifyHostCleaningRequestCreated).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: 'hautchamp26@gmail.com',
-        preferredTime: '10:00 AM',
         jobId: 'job-aug-30',
+        customerEmail: 'hautchamp26@gmail.com',
+        preferredTime: '10:00 AM',
       })
     );
-    const emailArg = sendHostRequestReceivedEmail.mock.calls[0][0];
-    expect(emailArg.preferredDate.toISOString()).toBe(
+    const notifyArg = notifyHostCleaningRequestCreated.mock.calls[0][0];
+    expect(notifyArg.preferredDate.toISOString()).toBe(
       '2026-08-30T00:00:00.000Z'
     );
-
-    expect(createAdminNotification).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'HOST_CLEANING_REQUEST',
-        jobId: 'job-aug-30',
-      })
-    );
+    expect(json.opsAlert.type).toBe('HOST_CLEANING_REQUEST');
+    expect(json.opsAlert.ok).toBe(true);
+    expect(json.requestReceivedEmail.sent).toBe(true);
   });
 
   it('lets ops assign a cleaner without flipping payment to PAID', () => {
