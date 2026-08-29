@@ -15,6 +15,7 @@ type OfferRow = {
   declineReason: string | null;
   compensationAmount: number;
   compensationCurrency: string;
+  compensationBasis?: 'FLAT' | 'HOURLY' | 'OTHER';
 };
 
 type DispatchPayload = {
@@ -82,6 +83,7 @@ export function DispatchPanel({
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [compensation, setCompensation] = useState('');
+  const [compensationBasis, setCompensationBasis] = useState<'FLAT' | 'HOURLY' | 'OTHER'>('FLAT');
   const [ttlMinutes, setTtlMinutes] = useState('');
   const [urgency, setUrgency] = useState<'STANDARD' | 'SAME_DAY' | 'URGENT'>('STANDARD');
 
@@ -145,6 +147,7 @@ export function DispatchPanel({
         body: JSON.stringify({
           cleanerId: selectedCleanerId,
           compensationAmount: Number(compensation),
+          compensationBasis,
           ttlMinutes: ttlMinutes ? Number(ttlMinutes) : undefined,
         }),
       });
@@ -248,6 +251,22 @@ export function DispatchPanel({
                   : ' No operational total — enter the amount manually.'}
               </p>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-vm-text mb-1">
+                Payment basis
+              </label>
+              <select
+                value={compensationBasis}
+                onChange={(e) =>
+                  setCompensationBasis(e.target.value as 'FLAT' | 'HOURLY' | 'OTHER')
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              >
+                <option value="FLAT">Flat rate</option>
+                <option value="HOURLY">Hourly</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
           </div>
 
           <div className="mb-4">
@@ -270,8 +289,11 @@ export function DispatchPanel({
                 Offer sent to {openOffer.cleanerName || openOffer.cleanerEmail}
               </p>
               <p className="text-sm text-vm-muted mt-1">
-                Pay {formatMoney(openOffer.compensationAmount)} ·{' '}
-                <Countdown expiresAt={openOffer.expiresAt} />
+                Pay {formatMoney(openOffer.compensationAmount)}
+                {openOffer.compensationBasis
+                  ? ` (${openOffer.compensationBasis === 'HOURLY' ? 'hourly' : openOffer.compensationBasis === 'OTHER' ? 'other' : 'flat'})`
+                  : ''}{' '}
+                · <Countdown expiresAt={openOffer.expiresAt} />
               </p>
               <button
                 type="button"

@@ -10,7 +10,7 @@ Chris’s Chipman invoices **0021** and **0022** are already marked paid in prod
 
 Approved amendments incorporated:
 
-- Finish Job = submitted for QC; admin remains billing/completion authority.
+- Finish Job = submitted for QC (`AWAITING_QC`); admin remains billing/completion authority. Do not reuse `COMPLETED` for QC.
 - Compensation is an ops-approved snapshot; never derived from a null/uncertain customer price; never exposed as invoice totals.
 - Offer TTL is env-configurable (`DISPATCH_OFFER_TTL_MINUTES`, `DISPATCH_OFFER_TTL_MINUTES_URGENT`).
 - Access credentials withheld until ACCEPTED.
@@ -152,27 +152,35 @@ Also write `AssignmentLog` on **accept** (`ASSIGNED`) and **decline** (`DECLINED
 
 ### 5. Compensation snapshot rule
 
-```
-gross = job.operationalTotal ?? job.quotedTotal ?? job.totalPrice
-offer.compensationAmount = calcPayout(gross).cleanerAmount
-```
+Ops must enter an explicit cleaner pay snapshot before Send Offer:
 
-Admin sees this amount. Cleaner sees this amount. **Never** the customer invoice.
+- `compensationAmount` (required, positive)
+- `compensationBasis` (`FLAT` | `HOURLY` | `OTHER`, default `FLAT`)
 
-If gross is null (some host jobs), admin must enter compensation before send, or offer is blocked with a clear error.
+Preview may be suggested from `operationalTotal` via `calcPayout` — **never** from `quotedTotal` / `totalPrice`.
+
+The cleaner **must** see this compensation on the offer (portal + email) before accept, along with service date/time, general location, estimated duration, and service type.
+
+The cleaner must **never** see customer invoice total, quotedTotal, totalPrice, operational/platform margin, or customer billing details. Compensation is its own offer field and cannot be inferred from customer pricing.
 
 ---
 
 ## C. Proposed state machine
 
-### Job (service) — unchanged enum
+### Job (service)
 
 ```
 RECEIVED / CONFIRMED  →  (offer outstanding; still unassigned)
-       └─ accept  → ASSIGNED → ON_THE_WAY → IN_PROGRESS → COMPLETED
+       └─ accept  → ASSIGNED → ON_THE_WAY → IN_PROGRESS → AWAITING_QC → COMPLETED
 Decline / expire / cancel offer → stay RECEIVED/CONFIRMED, assignedCleanerId null
 Admin cancel job → CANCELLED (cancel open offer first)
 ```
+
+Cleaner **Finish Job** sets `AWAITING_QC` + `submittedForQcAt`. It does **not** set `COMPLETED` or `completedAt`.
+
+Admin QC (existing Mark Clean Complete / billing workflow) is the only path that sets `COMPLETED` and triggers invoice/customer completion actions.
+
+`COMPLETED` cannot mean Submitted for QC: customer portal, billing invoice-ready, payout eligibility, loyalty, post-clean feedback, and reporting all treat `COMPLETED` as final business completion.
 
 `isJobAssignable` remains the **only** gate for sending an offer. Accept **must not** set `Job.paymentStatus = PAID`. Accept is not customer price approval.
 
@@ -297,7 +305,7 @@ Email deep-links to `/cleaner/jobs/[jobId]` which, if only an offer exists, rend
 - Photos with category chips; `customerVisible` default false; no customer gallery from this UI
 - Flag issue (wire existing escalate)
 - Cleaner notes (job-level or escalate notes — prefer a small `cleanerNotes` on complete payload stored on CompletionReport only at **admin QC**, or `AuditLog` in Phase 1 to avoid billing writes)
-- Finish Job → `completedAt` + duration; status COMPLETED meaning **submitted for QC**, not “invoice sent”
+- Finish Job → `AWAITING_QC` + `submittedForQcAt` + duration; **not** `COMPLETED`, **not** `completedAt`. Admin QC is final completion.
 
 Admin still runs existing Mark Clean Complete / billing panel for customer artifacts.
 

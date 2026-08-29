@@ -51,10 +51,19 @@ interface Job {
   serviceLocation: string | null;
   compensationAmount?: number | null;
   compensationCurrency?: string | null;
+  compensationBasis?: 'FLAT' | 'HOURLY' | 'OTHER' | null;
+  compensation?: {
+    amount: number;
+    currency: string;
+    basis: string;
+    basisLabel: string;
+  } | null;
+  estimatedDurationMins?: number | null;
   currency: string | null;
   assignedAt: string | null;
   startedAt?: string | null;
   completedAt?: string | null;
+  submittedForQcAt?: string | null;
   jobSpecificNotes?: string | null;
   property?: PropertyInstructions | null;
   Customer?: CustomerInfo | null;
@@ -74,6 +83,14 @@ interface OfferPayload {
   location: { areaLabel: string | null };
   compensationAmount: number;
   compensationCurrency: string;
+  compensationBasis?: 'FLAT' | 'HOURLY' | 'OTHER';
+  compensation?: {
+    amount: number;
+    currency: string;
+    basis: string;
+    basisLabel: string;
+  };
+  estimatedDurationMins?: number | null;
   expiresAt: string;
   operationalNotes: string | null;
 }
@@ -324,6 +341,7 @@ export default function CleanerJobDetailPage() {
       ASSIGNED: "bg-purple-100 text-purple-800",
       ON_THE_WAY: "bg-vm-cyan-tint text-blue-800",
       IN_PROGRESS: "bg-vm-warning-bg text-yellow-800",
+      AWAITING_QC: "bg-amber-100 text-amber-900",
       COMPLETED: "bg-vm-success-bg text-vm-success",
       CANCELLED: "bg-vm-danger-bg text-red-800",
     };
@@ -373,10 +391,12 @@ export default function CleanerJobDetailPage() {
   const canStart = access === "ASSIGNED" && job.status === "ON_THE_WAY";
   const canComplete = access === "ASSIGNED" && job.status === "IN_PROGRESS";
   const canDecline = access === "ASSIGNED" && job.status === "ASSIGNED";
+  const submittedForQc = access === "ASSIGNED" && job.status === "AWAITING_QC";
   const showChecklist =
     access === "ASSIGNED" &&
     (job.status === "ON_THE_WAY" ||
       job.status === "IN_PROGRESS" ||
+      job.status === "AWAITING_QC" ||
       job.status === "COMPLETED");
 
   if (access === "OFFER" && offer) {
@@ -397,7 +417,19 @@ export default function CleanerJobDetailPage() {
             <p><span className="text-vm-muted">Service:</span> {offer.serviceType || "Cleaning"}</p>
             <p><span className="text-vm-muted">Date:</span> {offer.serviceDate} {offer.preferredTime ? `at ${offer.preferredTime}` : ""}</p>
             <p><span className="text-vm-muted">Area:</span> {offer.location.areaLabel || "See details after accept"}</p>
-            <p><span className="text-vm-muted">Your pay:</span> {formatPrice(offer.compensationAmount, offer.compensationCurrency)}</p>
+            {offer.estimatedDurationMins != null && (
+              <p><span className="text-vm-muted">Est. duration:</span> {offer.estimatedDurationMins} min</p>
+            )}
+            <p>
+              <span className="text-vm-muted">Your pay:</span>{" "}
+              {formatPrice(
+                offer.compensation?.amount ?? offer.compensationAmount,
+                offer.compensation?.currency || offer.compensationCurrency
+              )}
+              {offer.compensation?.basisLabel
+                ? ` (${offer.compensation.basisLabel})`
+                : ""}
+            </p>
             <p><span className="text-vm-muted">Respond by:</span> {new Date(offer.expiresAt).toLocaleString()}</p>
             {offer.operationalNotes && (
               <p className="whitespace-pre-wrap"><span className="text-vm-muted">Notes:</span> {offer.operationalNotes}</p>
@@ -704,7 +736,13 @@ export default function CleanerJobDetailPage() {
               <div>
                 <p className="font-medium">Your pay</p>
                 <p className="text-vm-muted">
-                  {formatPrice(job.compensationAmount ?? null, job.compensationCurrency || job.currency)}
+                  {formatPrice(
+                    job.compensation?.amount ?? job.compensationAmount ?? null,
+                    job.compensation?.currency || job.compensationCurrency || job.currency
+                  )}
+                  {job.compensation?.basisLabel
+                    ? ` (${job.compensation.basisLabel})`
+                    : ""}
                 </p>
               </div>
             </div>
@@ -727,15 +765,25 @@ export default function CleanerJobDetailPage() {
           </div>
         </div>
 
-        {(canStart || canComplete || job.status === "COMPLETED") && (
+        {(canStart || canComplete || submittedForQc || job.status === "COMPLETED") && (
           <div className="mb-6">
-            <JobTimer startedAt={job.startedAt ?? null} completedAt={job.completedAt ?? null} />
+            <JobTimer
+              startedAt={job.startedAt ?? null}
+              completedAt={job.completedAt ?? job.submittedForQcAt ?? null}
+            />
+          </div>
+        )}
+
+        {submittedForQc && (
+          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
+            Submitted for QC. Admin reviews photos and checklist before the job is marked complete.
           </div>
         )}
 
         {access === "ASSIGNED" &&
           (job.status === "ON_THE_WAY" ||
             job.status === "IN_PROGRESS" ||
+            job.status === "AWAITING_QC" ||
             job.status === "COMPLETED") && (
             <>
               <JobPhotoCapture jobId={jobId} uploadedBy="cleaner" />

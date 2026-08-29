@@ -14,6 +14,8 @@ import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 import { toCleanerPropertyView } from "@/lib/properties/propertyService";
 import { toCleanerOfferLocationView } from "@/lib/dispatch/cleanerViews";
 import { serializeCleanerOffer } from "@/lib/dispatch/serializeCleanerOffer";
+import { toCleanerCompensationView } from "@/lib/dispatch/compensation";
+import { assertNoCustomerFinancials } from "@/lib/dispatch/cleanerFinancialGuard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +32,6 @@ export async function GET(
       select: {
         id: true,
         status: true,
-        paymentStatus: true,
         customerName: true,
         serviceType: true,
         serviceLocation: true,
@@ -43,6 +44,7 @@ export async function GET(
         onTheWayAt: true,
         startedAt: true,
         completedAt: true,
+        submittedForQcAt: true,
         cleanDurationMins: true,
         estimatedDurationMins: true,
         internalNotes: true,
@@ -99,22 +101,23 @@ export async function GET(
     }
 
     if (!assigned && openOffer) {
-      return NextResponse.json({
+      const offer = serializeCleanerOffer({
+        ...openOffer,
+        Job: {
+          jobReference: job.jobReference,
+          serviceType: job.serviceType,
+          preferredDate: job.preferredDate,
+          preferredTime: job.preferredTime,
+          serviceLocation: job.serviceLocation,
+          Property: job.Property
+            ? { city: job.Property.city, state: job.Property.state }
+            : null,
+        },
+      });
+      const body = {
         success: true,
         access: "OFFER",
-        offer: serializeCleanerOffer({
-          ...openOffer,
-          Job: {
-            jobReference: job.jobReference,
-            serviceType: job.serviceType,
-            preferredDate: job.preferredDate,
-            preferredTime: job.preferredTime,
-            serviceLocation: job.serviceLocation,
-            Property: job.Property
-              ? { city: job.Property.city, state: job.Property.state }
-              : null,
-          },
-        }),
+        offer,
         job: {
           id: job.id,
           status: job.status,
@@ -127,16 +130,27 @@ export async function GET(
             property: job.Property,
           }),
           estimatedDurationMins: openOffer.estimatedDurationMins,
-          compensationAmount: Number(openOffer.compensationAmount),
-          compensationCurrency: openOffer.compensationCurrency,
+          compensation: offer.compensation,
+          compensationAmount: offer.compensationAmount,
+          compensationCurrency: offer.compensationCurrency,
+          compensationBasis: offer.compensationBasis,
           operationalNotes: openOffer.operationalNotes,
           Branch: job.Branch,
         },
-      });
+      };
+      assertNoCustomerFinancials(body, "cleaner offer GET");
+      return NextResponse.json(body);
     }
 
     const acceptedOffer =
       offerRow?.status === JobOfferStatus.ACCEPTED ? offerRow : null;
+    const compensation = acceptedOffer
+      ? toCleanerCompensationView({
+          amount: acceptedOffer.compensationAmount,
+          currency: acceptedOffer.compensationCurrency,
+          basis: acceptedOffer.compensationBasis,
+        })
+      : null;
 
     const formattedJob = {
       id: job.id,
@@ -154,24 +168,27 @@ export async function GET(
       onTheWayAt: job.onTheWayAt?.toISOString() ?? null,
       startedAt: job.startedAt?.toISOString() ?? null,
       completedAt: job.completedAt?.toISOString() ?? null,
+      submittedForQcAt: job.submittedForQcAt?.toISOString() ?? null,
       cleanDurationMins: job.cleanDurationMins,
       estimatedDurationMins: job.estimatedDurationMins,
       jobSpecificNotes: job.internalNotes,
       propertyId: job.propertyId,
       property: job.Property ? toCleanerPropertyView(job.Property) : null,
-      compensationAmount: acceptedOffer
-        ? Number(acceptedOffer.compensationAmount)
-        : null,
-      compensationCurrency: acceptedOffer?.compensationCurrency ?? null,
+      compensation,
+      compensationAmount: compensation?.amount ?? null,
+      compensationCurrency: compensation?.currency ?? null,
+      compensationBasis: compensation?.basis ?? null,
       Customer: job.Customer,
       Branch: job.Branch,
     };
 
-    return NextResponse.json({
+    const body = {
       success: true,
       access: "ASSIGNED",
       job: formattedJob,
-    });
+    };
+    assertNoCustomerFinancials(body, "cleaner assigned GET");
+    return NextResponse.json(body);
   } catch (error) {
     const authResp = rethrowIfAuthResponse(error);
     if (authResp) return authResp;

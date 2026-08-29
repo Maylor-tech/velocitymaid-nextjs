@@ -11,7 +11,7 @@ Chris Chipman invoices **0021**, **0022**, and **0017** are out of scope. Do not
 ## 0. Preconditions
 
 - Staging (or production with flag **off**) only.
-- Additive migration `20260829010000_add_job_offer_dispatch` reviewed and applied on the target environment **only after approval**.
+- Additive migration `20260829010000_add_job_offer_dispatch` and `20260829020000_dispatch_qc_and_compensation_basis` reviewed and applied on the target environment **only after approval**.
 - Env (staging):
   - `DISPATCH_OFFERS_VERMONT=false` until step 8.
   - `DISPATCH_OFFER_TTL_MINUTES` (STANDARD, proposed `120`)
@@ -32,7 +32,9 @@ npx prisma migrate deploy
 Verify (read-only):
 
 - `JobOffer` table exists.
-- `Job.startedAt`, `Job.estimatedDurationMins`, `Job.dispatchUrgency` exist.
+- `Job.startedAt`, `Job.estimatedDurationMins`, `Job.dispatchUrgency`, `Job.submittedForQcAt` exist.
+- `JobStatus` includes `AWAITING_QC`.
+- `JobOffer.compensationBasis` exists (`FLAT` / `HOURLY` / `OTHER`).
 - `clean_photos.category` default `OTHER`, `customerVisible` default `false`.
 - No updates to `Invoice` or `Payment` rows.
 - Fingerprint 0021 / 0022 / 0017 unchanged (invoice number, status, amounts).
@@ -66,7 +68,7 @@ Other markets keep immediate assign.
 ## 4. Expire path
 
 1. Create/use a future Vermont host job, `SAME_DAY`, short TTL override (e.g. 2 minutes) on Send offer.
-2. Confirm email: subject **Job offer**, portal link, expiry, cleaner pay — **no** customer invoice `$300` / `$337.80`.
+2. Confirm email: subject **Job offer**, portal link, expiry, cleaner pay and basis — **no** customer invoice `$300` / `$337.80`.
 3. Confirm offer payload has area/city, not lockbox/gate codes.
 4. Wait for `/api/cron/dispatch-offer-expire` (or invoke with `Authorization: Bearer $CRON_SECRET`).
 5. Offer → `EXPIRED`. Job stays unassigned (`assignedCleanerId` null). UI: **Cleaner needed**.
@@ -84,8 +86,8 @@ Other markets keep immediate assign.
 6. **Start Job** → `startedAt` persisted. Timer is server-derived.
 7. Checklist + categorized photos (`BEFORE`/`AFTER`/`ISSUE`). `customerVisible` remains false. No customer gallery.
 8. Flag issue (escalate) → admin `JOB_ISSUE_REPORTED`.
-9. **Finish Job** → submitted for QC. Status `COMPLETED`, duration recorded. **Job not PAID. No invoice created or sent.**
-10. Admin QC: existing Mark Clean Complete / billing panel still works. Invoice only from admin path.
+9. **Finish Job** → `AWAITING_QC`, `submittedForQcAt` set, duration recorded. **Not `COMPLETED`. `completedAt` remains null. Job not PAID. No invoice created or sent.**
+10. Admin QC: existing Mark Clean Complete / billing panel still works. Only that path sets `COMPLETED` and invoices.
 
 ---
 

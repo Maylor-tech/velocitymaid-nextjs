@@ -467,6 +467,8 @@ model Job {
   completedAt              DateTime?
   /// Set when cleaner Start Job → IN_PROGRESS. Server-derived timer source.
   startedAt                DateTime?
+  /// Cleaner Finish Job — Submitted for QC. Not final service completion.
+  submittedForQcAt         DateTime?
   /// Ops estimate; copied onto JobOffer at send time.
   estimatedDurationMins    Int?
   dispatchUrgency          DispatchUrgency            @default(STANDARD)
@@ -549,6 +551,7 @@ model JobOffer {
   /// Cleaner pay snapshot approved by ops. Never a customer invoice total.
   compensationAmount     Decimal         @db.Decimal(10, 2)
   compensationCurrency   String          @default("USD")
+  compensationBasis      CompensationBasis @default(FLAT)
   estimatedDurationMins  Int?
   operationalNotes       String?
   channel                String          @default("EMAIL")
@@ -1569,6 +1572,8 @@ enum JobStatus {
   ASSIGNED
   ON_THE_WAY
   IN_PROGRESS
+  /// Cleaner finished on-site. Admin QC has not approved final completion.
+  AWAITING_QC
   COMPLETED
   CANCELLED
   CANCELLED_EMERGENCY
@@ -1607,6 +1612,13 @@ enum JobOfferStatus {
   DECLINED
   EXPIRED
   CANCELLED
+}
+
+/// How the offered cleaner pay is calculated. Independent of customer pricing.
+enum CompensationBasis {
+  FLAT
+  HOURLY
+  OTHER
 }
 
 enum CleanPhotoCategory {

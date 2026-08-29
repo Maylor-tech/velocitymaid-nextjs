@@ -1,18 +1,13 @@
 import { formatServiceDate } from '@/lib/dates/serviceDate';
+import { assertNoCustomerFinancials } from './cleanerFinancialGuard';
+import {
+  toCleanerCompensationView,
+  type CleanerCompensationView,
+} from './compensation';
 import {
   toCleanerOfferLocationView,
   type CleanerOfferLocationView,
 } from './cleanerViews';
-
-const FORBIDDEN_CUSTOMER_PRICE_KEYS = [
-  'quotedTotal',
-  'totalPrice',
-  'amountPaid',
-  'balanceDue',
-  'depositAmount',
-  'invoiceTotal',
-  'invoice',
-] as const;
 
 export type CleanerOfferJson = {
   offerId: string;
@@ -24,8 +19,11 @@ export type CleanerOfferJson = {
   preferredTime: string | null;
   location: CleanerOfferLocationView;
   estimatedDurationMins: number | null;
+  /** Canonical cleaner pay. Independent of customer pricing. */
+  compensation: CleanerCompensationView;
   compensationAmount: number;
   compensationCurrency: string;
+  compensationBasis: CleanerCompensationView['basis'];
   operationalNotes: string | null;
   expiresAt: string;
   offeredAt: string;
@@ -37,6 +35,7 @@ export type CleanerOfferSource = {
   status: string;
   compensationAmount: unknown;
   compensationCurrency: string;
+  compensationBasis?: unknown;
   estimatedDurationMins: number | null;
   operationalNotes: string | null;
   expiresAt: Date;
@@ -52,11 +51,18 @@ export type CleanerOfferSource = {
     totalPrice?: unknown;
     amountPaid?: unknown;
     balanceDue?: unknown;
+    operationalTotal?: unknown;
     Property?: { city: string | null; state: string | null } | null;
   };
 };
 
 export function serializeCleanerOffer(row: CleanerOfferSource): CleanerOfferJson {
+  const compensation = toCleanerCompensationView({
+    amount: row.compensationAmount,
+    currency: row.compensationCurrency,
+    basis: row.compensationBasis,
+  });
+
   const payload: CleanerOfferJson = {
     offerId: row.id,
     jobId: row.jobId,
@@ -75,36 +81,15 @@ export function serializeCleanerOffer(row: CleanerOfferSource): CleanerOfferJson
       property: row.Job.Property ?? null,
     }),
     estimatedDurationMins: row.estimatedDurationMins,
-    compensationAmount: Number(row.compensationAmount),
-    compensationCurrency: row.compensationCurrency,
+    compensation,
+    compensationAmount: compensation.amount,
+    compensationCurrency: compensation.currency,
+    compensationBasis: compensation.basis,
     operationalNotes: row.operationalNotes,
     expiresAt: row.expiresAt.toISOString(),
     offeredAt: row.offeredAt.toISOString(),
   };
 
-  assertNoForbiddenPriceFields(payload);
+  assertNoCustomerFinancials(payload, 'cleaner offer');
   return payload;
-}
-
-export function assertNoForbiddenPriceFields(payload: unknown): void {
-  if (!payload || typeof payload !== 'object') return;
-  const keys = collectKeys(payload);
-  for (const forbidden of FORBIDDEN_CUSTOMER_PRICE_KEYS) {
-    if (keys.has(forbidden.toLowerCase())) {
-      throw new Error(`Cleaner offer payload leaked ${forbidden}`);
-    }
-  }
-}
-
-function collectKeys(value: unknown, into: Set<string> = new Set()): Set<string> {
-  if (!value || typeof value !== 'object') return into;
-  if (Array.isArray(value)) {
-    for (const item of value) collectKeys(item, into);
-    return into;
-  }
-  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
-    into.add(key.toLowerCase());
-    collectKeys(child, into);
-  }
-  return into;
 }

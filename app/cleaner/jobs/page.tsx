@@ -17,6 +17,13 @@ interface Job {
   preferredTime: string | null;
   address: string | null;
   compensationAmount?: number | null;
+  compensationBasis?: 'FLAT' | 'HOURLY' | 'OTHER' | null;
+  compensation?: {
+    amount: number;
+    currency: string;
+    basis: string;
+    basisLabel: string;
+  } | null;
   currency: string | null;
   assignedAt: string | null;
   Branch: {
@@ -34,6 +41,14 @@ interface OfferCard {
   location: { areaLabel: string | null };
   compensationAmount: number;
   compensationCurrency: string;
+  compensationBasis?: 'FLAT' | 'HOURLY' | 'OTHER';
+  compensation?: {
+    amount: number;
+    currency: string;
+    basis: string;
+    basisLabel: string;
+  };
+  estimatedDurationMins?: number | null;
   expiresAt: string;
 }
 
@@ -132,6 +147,7 @@ export default function CleanerJobsPage() {
       ASSIGNED: "bg-purple-100 text-purple-800",
       ON_THE_WAY: "bg-vm-cyan-tint text-blue-800",
       IN_PROGRESS: "bg-vm-warning-bg text-yellow-800",
+      AWAITING_QC: "bg-amber-100 text-amber-900",
       COMPLETED: "bg-vm-success-bg text-vm-success",
       CANCELLED: "bg-vm-danger-bg text-red-800",
     };
@@ -157,6 +173,13 @@ export default function CleanerJobsPage() {
       return (
         <span className="text-sm text-yellow-600 font-medium">
           In Progress
+        </span>
+      );
+    }
+    if (status === "AWAITING_QC") {
+      return (
+        <span className="text-sm text-amber-700 font-medium">
+          Submitted for QC
         </span>
       );
     }
@@ -201,6 +224,7 @@ export default function CleanerJobsPage() {
             <option value="ASSIGNED">Assigned</option>
             <option value="ON_THE_WAY">On The Way</option>
             <option value="IN_PROGRESS">In Progress</option>
+            <option value="AWAITING_QC">Submitted for QC</option>
             <option value="COMPLETED">Completed</option>
           </select>
         </div>
@@ -237,8 +261,17 @@ export default function CleanerJobsPage() {
                         <p className="text-sm text-vm-muted mt-1">{offer.location.areaLabel}</p>
                       )}
                       <p className="text-sm font-medium mt-2">
-                        Your pay: ${offer.compensationAmount.toFixed(2)}
+                        Your pay: $
+                        {(offer.compensation?.amount ?? offer.compensationAmount).toFixed(2)}
+                        {offer.compensation?.basisLabel
+                          ? ` (${offer.compensation.basisLabel})`
+                          : ""}
                       </p>
+                      {offer.estimatedDurationMins != null && (
+                        <p className="text-sm text-vm-muted mt-1">
+                          Est. {offer.estimatedDurationMins} min
+                        </p>
+                      )}
                     </div>
                     <span className="inline-flex items-center rounded-lg bg-vm-navy px-4 py-2 text-sm font-semibold text-white">
                       Review offer →
@@ -299,10 +332,20 @@ export default function CleanerJobsPage() {
                         </div>
                       )}
 
-                      {typeof job.compensationAmount === "number" && (
+                      {(typeof job.compensationAmount === "number" ||
+                        typeof job.compensation?.amount === "number") && (
                         <div className="flex items-center gap-2">
                           <DollarSign className="w-4 h-4" />
-                          <span>Your pay: {formatPrice(job.compensationAmount, job.currency)}</span>
+                          <span>
+                            Your pay:{" "}
+                            {formatPrice(
+                              job.compensation?.amount ?? job.compensationAmount ?? null,
+                              job.compensation?.currency || job.currency
+                            )}
+                            {job.compensation?.basisLabel
+                              ? ` (${job.compensation.basisLabel})`
+                              : ""}
+                          </span>
                         </div>
                       )}
 

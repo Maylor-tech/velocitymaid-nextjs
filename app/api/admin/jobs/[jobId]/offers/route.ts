@@ -56,6 +56,7 @@ export async function GET(
       declineReason: o.declineReason,
       compensationAmount: Number(o.compensationAmount),
       compensationCurrency: o.compensationCurrency,
+      compensationBasis: o.compensationBasis,
       estimatedDurationMins: o.estimatedDurationMins,
       operationalNotes: o.operationalNotes,
       channel: o.channel,
@@ -134,6 +135,7 @@ export async function POST(
       jobId,
       cleanerId: String(body.cleanerId || ''),
       compensationAmount: body.compensationAmount,
+      compensationBasis: body.compensationBasis,
       estimatedDurationMins:
         body.estimatedDurationMins != null ? Number(body.estimatedDurationMins) : null,
       operationalNotes:
@@ -150,6 +152,7 @@ export async function POST(
         status: offer.status,
         expiresAt: offer.expiresAt.toISOString(),
         compensationAmount: Number(offer.compensationAmount),
+        compensationBasis: offer.compensationBasis,
       },
       message: 'Offer sent. Assignment activates only after the cleaner accepts.',
     });

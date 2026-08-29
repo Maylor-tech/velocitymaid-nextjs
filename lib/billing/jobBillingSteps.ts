@@ -21,6 +21,7 @@ import {
   sendReviewRequestAfterPayment,
 } from './billingEmails';
 import { onInvoicePaymentRecorded, scheduleReviewRequestForJob } from './jobCompletionWorkflow';
+import { invoiceServiceDateFromJob } from '@/lib/dates/serviceDate';
 
 function splitPhotos(
   photos: Array<{ url: string; caption: string | null }>
@@ -125,8 +126,9 @@ export async function getJobBillingWorkflowStatus(
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()) ?? [];
   const latestReceipt = receipts[0] ?? null;
 
-  const isCompleted =
-    job.status === 'COMPLETED' || job.completedAt != null;
+  // Invoice/customer completion is admin QC → COMPLETED only.
+  // AWAITING_QC (cleaner Finish) must not unlock billing steps.
+  const isCompleted = job.status === 'COMPLETED';
   const hasPhotos = job.photos.length > 0;
 
   const invoiceBalance = invoice ? decimalToNumber(invoice.balanceDue) : null;
@@ -308,7 +310,7 @@ export async function generateInvoiceFromJob(jobId: string) {
       clientPhone: job.Customer?.phone ?? null,
       propertyAddress: job.address || 'Property on file',
       serviceType: job.serviceType || 'Professional cleaning',
-      jobDate: completedAt,
+      jobDate: invoiceServiceDateFromJob(job.preferredDate, completedAt),
       dueDate,
       subtotal: totalPrice,
       tax: 0,

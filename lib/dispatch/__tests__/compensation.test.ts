@@ -4,7 +4,9 @@ import {
   CompensationRequiredError,
   assertCompensationNotCustomerTotal,
   parseApprovedCompensation,
+  parseCompensationBasis,
   previewCompensationFromOperationalTotal,
+  toCleanerCompensationView,
 } from '../compensation';
 
 describe('offer compensation snapshot', () => {
@@ -13,6 +15,19 @@ describe('offer compensation snapshot', () => {
     expect(() => parseApprovedCompensation(0)).toThrow(CompensationRequiredError);
     expect(() => parseApprovedCompensation('abc')).toThrow(CompensationRequiredError);
     expect(parseApprovedCompensation('125.5')).toBe(125.5);
+  });
+
+  it('parses payment basis and defaults to FLAT', () => {
+    expect(parseCompensationBasis(null)).toBe('FLAT');
+    expect(parseCompensationBasis('hourly')).toBe('HOURLY');
+    expect(parseCompensationBasis('OTHER')).toBe('OTHER');
+    expect(() => parseCompensationBasis('WEEKLY')).toThrow(/FLAT, HOURLY, or OTHER/);
+    expect(toCleanerCompensationView({ amount: 195, basis: 'HOURLY' })).toEqual({
+      amount: 195,
+      currency: 'USD',
+      basis: 'HOURLY',
+      basisLabel: 'Hourly',
+    });
   });
 
   it('previews from operationalTotal only, never quotedTotal/totalPrice', () => {

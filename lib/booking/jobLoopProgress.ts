@@ -80,6 +80,20 @@ export function getJobLoopProgress(
     };
   }
 
+  if (status === 'AWAITING_QC') {
+    markDone(['deposit', 'review', 'assign']);
+    steps.find((s) => s.id === 'complete')!.current = true;
+    return {
+      step: 'IN_FIELD',
+      label: 'Submitted for QC',
+      nextAction:
+        'Review photos and checklist, then Mark Clean Complete to invoice and notify the customer.',
+      cleanerJobUrl: `/cleaner/jobs/${jobId}`,
+      customerJobUrl: null,
+      steps,
+    };
+  }
+
   if (status === 'ON_THE_WAY' || status === 'IN_PROGRESS') {
     markDone(['deposit', 'review', 'assign']);
     steps.find((s) => s.id === 'complete')!.current = true;

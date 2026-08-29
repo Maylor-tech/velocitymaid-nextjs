@@ -74,6 +74,8 @@ describe('status labels stay separate', () => {
     expect(serviceStatusLabel('RECEIVED')).toBe('Request received');
     expect(serviceStatusLabel('CONFIRMED')).toBe('Confirmed');
     expect(serviceStatusLabel('ASSIGNED')).toBe('Team assigned');
+    expect(serviceStatusLabel('AWAITING_QC')).toBe('In progress');
+    expect(serviceStatusLabel('COMPLETED')).toBe('Completed');
     expect(paymentStatusLabel('PENDING', 'INVOICE_AFTER_SERVICE')).toBe(
       'Invoice after service'
     );

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { JobStatus } from "@prisma/client";
+import { JobOfferStatus, JobStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 import { requireRole } from "@/lib/auth/requireRole";
+import { toCleanerCompensationView } from "@/lib/dispatch/compensation";
+import { assertNoCustomerFinancials } from "@/lib/dispatch/cleanerFinancialGuard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +13,7 @@ const LISTABLE_STATUSES: JobStatus[] = [
   JobStatus.ASSIGNED,
   JobStatus.ON_THE_WAY,
   JobStatus.IN_PROGRESS,
+  JobStatus.AWAITING_QC,
   JobStatus.COMPLETED,
 ];
 
@@ -51,27 +54,59 @@ export async function GET(req: NextRequest) {
         assignedAt: true,
         startedAt: true,
         completedAt: true,
+        submittedForQcAt: true,
+        estimatedDurationMins: true,
         Branch: {
           select: {
             id: true,
             name: true,
           },
         },
+        JobOffer: {
+          where: {
+            cleanerId,
+            status: JobOfferStatus.ACCEPTED,
+          },
+          take: 1,
+          select: {
+            compensationAmount: true,
+            compensationCurrency: true,
+            compensationBasis: true,
+          },
+        },
       },
     });
 
-    const formattedJobs = jobs.map((job) => ({
-      ...job,
-      preferredDate: job.preferredDate?.toISOString() ?? null,
-      assignedAt: job.assignedAt?.toISOString() ?? null,
-      startedAt: job.startedAt?.toISOString() ?? null,
-      completedAt: job.completedAt?.toISOString() ?? null,
-    }));
+    const formattedJobs = jobs.map((job) => {
+      const accepted = job.JobOffer[0] ?? null;
+      const compensation = accepted
+        ? toCleanerCompensationView({
+            amount: accepted.compensationAmount,
+            currency: accepted.compensationCurrency,
+            basis: accepted.compensationBasis,
+          })
+        : null;
+      const { JobOffer: _offers, ...rest } = job;
+      return {
+        ...rest,
+        preferredDate: job.preferredDate?.toISOString() ?? null,
+        assignedAt: job.assignedAt?.toISOString() ?? null,
+        startedAt: job.startedAt?.toISOString() ?? null,
+        completedAt: job.completedAt?.toISOString() ?? null,
+        submittedForQcAt: job.submittedForQcAt?.toISOString() ?? null,
+        compensation,
+        compensationAmount: compensation?.amount ?? null,
+        compensationCurrency: compensation?.currency ?? null,
+        compensationBasis: compensation?.basis ?? null,
+      };
+    });
 
-    return NextResponse.json({
+    const body = {
       success: true,
       jobs: formattedJobs,
-    });
+    };
+    assertNoCustomerFinancials(body, "cleaner jobs list");
+    return NextResponse.json(body);
   } catch (error) {
     const authResp = rethrowIfAuthResponse(error);
     if (authResp) return authResp;

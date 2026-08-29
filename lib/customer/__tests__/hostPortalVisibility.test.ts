@@ -20,6 +20,17 @@ describe('customerJobListWhere', () => {
       status: { in: ['COMPLETED', 'CANCELLED', 'CANCELLED_EMERGENCY'] },
     });
   });
+
+  it('keeps Submitted for QC jobs in upcoming, not past', () => {
+    const upcoming = customerJobListWhere('cust-ray', 'upcoming');
+    const past = customerJobListWhere('cust-ray', 'past');
+    expect(upcoming.status).toEqual({
+      notIn: ['COMPLETED', 'CANCELLED', 'CANCELLED_EMERGENCY'],
+    });
+    expect(past.status).toEqual({
+      in: ['COMPLETED', 'CANCELLED', 'CANCELLED_EMERGENCY'],
+    });
+  });
 });
 
 describe('resolveAuthenticatedBookingCta', () => {

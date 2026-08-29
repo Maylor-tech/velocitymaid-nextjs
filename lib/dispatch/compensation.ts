@@ -59,3 +59,43 @@ export function assertCompensationNotCustomerTotal(input: {
     );
   }
 }
+
+export const COMPENSATION_BASES = ['FLAT', 'HOURLY', 'OTHER'] as const;
+export type CompensationBasisValue = (typeof COMPENSATION_BASES)[number];
+
+export function parseCompensationBasis(raw: unknown): CompensationBasisValue {
+  if (raw == null || raw === '') return 'FLAT';
+  const v = String(raw).toUpperCase();
+  if (v === 'FLAT' || v === 'HOURLY' || v === 'OTHER') return v;
+  throw new CompensationRequiredError(
+    'Payment basis must be FLAT, HOURLY, or OTHER'
+  );
+}
+
+export function compensationBasisLabel(basis: CompensationBasisValue): string {
+  if (basis === 'HOURLY') return 'Hourly';
+  if (basis === 'OTHER') return 'Other';
+  return 'Flat rate';
+}
+
+/** Explicit cleaner-offer pay. Never derived from customer invoice fields. */
+export type CleanerCompensationView = {
+  amount: number;
+  currency: string;
+  basis: CompensationBasisValue;
+  basisLabel: string;
+};
+
+export function toCleanerCompensationView(input: {
+  amount: unknown;
+  currency?: string | null;
+  basis?: unknown;
+}): CleanerCompensationView {
+  const basis = parseCompensationBasis(input.basis);
+  return {
+    amount: Number(input.amount),
+    currency: input.currency || 'USD',
+    basis,
+    basisLabel: compensationBasisLabel(basis),
+  };
+}

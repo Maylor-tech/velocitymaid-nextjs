@@ -8,7 +8,7 @@ export function toDisplayJobStatus(
   const s = status.toUpperCase();
   if (s === 'COMPLETED') return 'completed';
   if (s.includes('CANCEL')) return 'cancelled';
-  if (s === 'IN_PROGRESS' || s === 'ON_THE_WAY') return 'in_progress';
+  if (s === 'IN_PROGRESS' || s === 'ON_THE_WAY' || s === 'AWAITING_QC') return 'in_progress';
   if (s === 'ASSIGNED') return 'scheduled';
   if (!assignedCleanerId && (s === 'RECEIVED' || s === 'CONFIRMED' || s === 'PENDING')) {
     return 'pending';

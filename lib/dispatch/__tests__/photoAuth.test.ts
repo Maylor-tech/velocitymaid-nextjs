@@ -36,6 +36,16 @@ describe('photo upload auth', () => {
     );
   });
 
+  it('allows an admin upload', async () => {
+    requireRole.mockResolvedValueOnce({ userId: 'admin-1', role: 'ADMIN' });
+    const req = new NextRequest('http://localhost/api/jobs/job-1/photos/sign', {
+      method: 'POST',
+    });
+    const actor = await requirePhotoUploadAccess(req, 'job-1');
+    expect(actor).toEqual({ role: 'ADMIN', userId: 'admin-1' });
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
   it('allows an assigned cleaner', async () => {
     requireRole
       .mockRejectedValueOnce(NextResponse.json({ error: 'no admin' }, { status: 401 }))
@@ -56,8 +66,25 @@ describe('photo upload auth', () => {
     const req = new NextRequest('http://localhost/api/jobs/job-1/photos/sign', {
       method: 'POST',
     });
-    await expect(requirePhotoUploadAccess(req, 'job-1')).rejects.toBeInstanceOf(
-      NextResponse
-    );
+    try {
+      await requirePhotoUploadAccess(req, 'job-1');
+      expect.fail('expected forbidden');
+    } catch (err) {
+      expect(err).toBeInstanceOf(NextResponse);
+      expect((err as NextResponse).status).toBe(403);
+    }
+  });
+
+  it('allows a cleaner with an ACCEPTED offer', async () => {
+    requireRole
+      .mockRejectedValueOnce(NextResponse.json({ error: 'no admin' }, { status: 401 }))
+      .mockResolvedValueOnce({ userId: 'cleaner-offer', role: 'CLEANER' });
+    findUnique.mockResolvedValue({ id: 'job-1', assignedCleanerId: 'someone-else' });
+    offerFindFirst.mockResolvedValue({ id: 'offer-accepted' });
+    const req = new NextRequest('http://localhost/api/jobs/job-1/photos/sign', {
+      method: 'POST',
+    });
+    const actor = await requirePhotoUploadAccess(req, 'job-1');
+    expect(actor).toEqual({ role: 'CLEANER', userId: 'cleaner-offer' });
   });
 });

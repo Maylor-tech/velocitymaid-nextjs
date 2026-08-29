@@ -25,6 +25,7 @@ export const JOB_STATUSES = [
   "ASSIGNED",
   "ON_THE_WAY",
   "IN_PROGRESS",
+  "AWAITING_QC",
   "COMPLETED",
   "CANCELLED",
   "CANCELLED_EMERGENCY",
@@ -42,9 +43,10 @@ const VALID_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
   CONFIRMED: ["ASSIGNED", "CANCELLED"],
   ASSIGNED: ["ON_THE_WAY", "REASSIGN_PENDING", "CANCELLED"],
   ON_THE_WAY: ["IN_PROGRESS", "CANCELLED"],
-  IN_PROGRESS: ["COMPLETED", "CANCELLED"],
+  IN_PROGRESS: ["AWAITING_QC", "COMPLETED", "CANCELLED"],
+  AWAITING_QC: ["COMPLETED", "IN_PROGRESS", "CANCELLED"],
   REASSIGN_PENDING: ["ASSIGNED", "CANCELLED"],
-  COMPLETED: [], // Terminal state
+  COMPLETED: [], // Terminal state — admin-approved final service completion only
   CANCELLED: [], // Terminal state
   CANCELLED_EMERGENCY: [], // Terminal state
 };
@@ -100,5 +102,15 @@ export function assertTransition(from: string, to: string): void {
  */
 export function isTerminalStatus(status: string): boolean {
   return status === "COMPLETED" || status === "CANCELLED" || status === "CANCELLED_EMERGENCY";
+}
+
+/** Cleaner Finish Job. Not final business completion. */
+export function isSubmittedForQc(status: string): boolean {
+  return status === "AWAITING_QC";
+}
+
+/** Admin-approved final service completion. Billing/customer completion actions attach here. */
+export function isFinalServiceCompletion(status: string): boolean {
+  return status === "COMPLETED";
 }
 

@@ -21,7 +21,9 @@ import {
 } from '@/lib/notifications/adminNotificationCenter';
 import {
   assertCompensationNotCustomerTotal,
+  CompensationRequiredError,
   parseApprovedCompensation,
+  parseCompensationBasis,
 } from '@/lib/dispatch/compensation';
 import { DispatchError } from '@/lib/dispatch/errors';
 import { computeExpiresAt, resolveOfferTtlMinutes } from '@/lib/dispatch/offerTtl';
@@ -51,6 +53,7 @@ export type CreateOfferInput = {
   jobId: string;
   cleanerId: string;
   compensationAmount: unknown;
+  compensationBasis?: unknown;
   estimatedDurationMins?: number | null;
   operationalNotes?: string | null;
   ttlMinutes?: number | null;
@@ -132,7 +135,17 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
   if (!input.cleanerId) {
     throw new DispatchError('cleanerId is required', 'CLEANER_REQUIRED', 400);
   }
-  const compensationAmount = parseApprovedCompensation(input.compensationAmount);
+  let compensationAmount: number;
+  let compensationBasis: ReturnType<typeof parseCompensationBasis>;
+  try {
+    compensationAmount = parseApprovedCompensation(input.compensationAmount);
+    compensationBasis = parseCompensationBasis(input.compensationBasis);
+  } catch (err) {
+    if (err instanceof CompensationRequiredError) {
+      throw new DispatchError(err.message, err.code, 400);
+    }
+    throw err;
+  }
 
   const job = await prisma.job.findUnique({
     where: { id: input.jobId },
@@ -172,11 +185,18 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
     );
   }
 
-  assertCompensationNotCustomerTotal({
-    compensationAmount,
-    quotedTotal: job.quotedTotal,
-    totalPrice: job.totalPrice,
-  });
+  try {
+    assertCompensationNotCustomerTotal({
+      compensationAmount,
+      quotedTotal: job.quotedTotal,
+      totalPrice: job.totalPrice,
+    });
+  } catch (err) {
+    if (err instanceof CompensationRequiredError) {
+      throw new DispatchError(err.message, err.code, 400);
+    }
+    throw err;
+  }
 
   const existingOpen = await prisma.jobOffer.findFirst({
     where: { jobId: job.id, status: JobOfferStatus.OFFERED },
@@ -220,6 +240,7 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
         expiresAt,
         compensationAmount,
         compensationCurrency: 'USD',
+        compensationBasis,
         estimatedDurationMins:
           input.estimatedDurationMins ?? job.estimatedDurationMins ?? null,
         operationalNotes: input.operationalNotes ?? job.internalNotes ?? null,
@@ -249,6 +270,7 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
       jobId: job.id,
       cleanerId: cleaner.id,
       compensationAmount,
+      compensationBasis,
       expiresAt: expiresAt.toISOString(),
       ttlMinutes,
       paymentStatusUnchanged: job.paymentStatus,

@@ -6,6 +6,7 @@ import { JobStatus } from '@prisma/client';
 import { requireCleanerJobAssignment } from '@/lib/auth/requireRole';
 import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
 import { computeCleanDurationMins } from '@/lib/dispatch/duration';
+import { assertTransition } from '@/lib/jobStatus';
 import {
   createAdminNotification,
   adminNotificationHelpers,
@@ -17,9 +18,9 @@ export const dynamic = 'force-dynamic';
 /**
  * PATCH /api/cleaner/jobs/[jobId]/complete
  *
- * Cleaner submits the job for admin QC. Does not invoice, does not email the
- * customer a completion notice, and never changes paymentStatus (including
- * INVOICE_AFTER_SERVICE jobs, which must remain PENDING until ops bills).
+ * Cleaner Finish → AWAITING_QC (Submitted for QC).
+ * Does not set COMPLETED, does not set completedAt, does not invoice,
+ * does not email the customer, and never changes paymentStatus.
  */
 export async function PATCH(
   req: NextRequest,
@@ -48,6 +49,7 @@ export async function PATCH(
         assignedCleanerId: true,
         startedAt: true,
         completedAt: true,
+        submittedForQcAt: true,
         cleanDurationMins: true,
         jobReference: true,
       },
@@ -69,6 +71,24 @@ export async function PATCH(
           status: job.status,
           paymentStatus: job.paymentStatus,
           completedAt: job.completedAt,
+          submittedForQcAt: job.submittedForQcAt,
+          startedAt: job.startedAt,
+          cleanDurationMins: job.cleanDurationMins,
+        },
+        submittedForQc: true,
+        message: 'Admin already approved completion.',
+      });
+    }
+
+    if (job.status === JobStatus.AWAITING_QC) {
+      return NextResponse.json({
+        success: true,
+        job: {
+          id: job.id,
+          status: job.status,
+          paymentStatus: job.paymentStatus,
+          completedAt: job.completedAt,
+          submittedForQcAt: job.submittedForQcAt,
           startedAt: job.startedAt,
           cleanDurationMins: job.cleanDurationMins,
         },
@@ -88,19 +108,20 @@ export async function PATCH(
       );
     }
 
-    const completionTimestamp = new Date();
+    assertTransition(job.status, JobStatus.AWAITING_QC);
+
+    const submittedForQcAt = new Date();
     const cleanDurationMins = computeCleanDurationMins({
       startedAt: job.startedAt,
-      completedAt: completionTimestamp,
+      completedAt: submittedForQcAt,
       existingMins: job.cleanDurationMins,
     });
 
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
       data: {
-        status: JobStatus.COMPLETED,
-        completedAt: completionTimestamp,
-        completedBy: cleanerId,
+        status: JobStatus.AWAITING_QC,
+        submittedForQcAt,
         ...(cleanDurationMins != null ? { cleanDurationMins } : {}),
       },
       select: {
@@ -109,6 +130,7 @@ export async function PATCH(
         paymentStatus: true,
         billingPolicy: true,
         completedAt: true,
+        submittedForQcAt: true,
         startedAt: true,
         cleanDurationMins: true,
       },
@@ -121,17 +143,25 @@ export async function PATCH(
       );
     }
 
+    if (updatedJob.status === JobStatus.COMPLETED || updatedJob.completedAt != null) {
+      return NextResponse.json(
+        { error: 'Finish Job must not mark the job COMPLETED' },
+        { status: 500 }
+      );
+    }
+
     await logAuditEntry({
       actorId: cleanerId,
       actorRole: 'CLEANER',
       action: 'JOB_SUBMITTED_FOR_QC',
       entityType: 'Job',
       entityId: jobId,
-      description: `Cleaner submitted job for QC (not invoiced)`,
+      description: `Cleaner submitted job for QC (not invoiced, not COMPLETED)`,
       changes: {
         previousStatus: job.status,
-        newStatus: JobStatus.COMPLETED,
-        completedAt: updatedJob.completedAt?.toISOString(),
+        newStatus: JobStatus.AWAITING_QC,
+        submittedForQcAt: updatedJob.submittedForQcAt?.toISOString(),
+        completedAt: updatedJob.completedAt?.toISOString() ?? null,
         startedAt: updatedJob.startedAt?.toISOString() ?? null,
         cleanDurationMins: updatedJob.cleanDurationMins,
         paymentStatusUnchanged: updatedJob.paymentStatus,

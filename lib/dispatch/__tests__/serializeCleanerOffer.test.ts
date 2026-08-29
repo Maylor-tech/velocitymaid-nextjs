@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { serializeCleanerOffer } from '../serializeCleanerOffer';
 import { toCleanerOfferLocationView } from '../cleanerViews';
 import { deriveDispatchUiState, isCleanerNeeded } from '../dispatchState';
+import { assertNoCustomerFinancials } from '../cleanerFinancialGuard';
 
 describe('cleaner offer serializer', () => {
   const row = {
@@ -10,6 +11,7 @@ describe('cleaner offer serializer', () => {
     status: 'OFFERED',
     compensationAmount: 195,
     compensationCurrency: 'USD',
+    compensationBasis: 'FLAT' as const,
     estimatedDurationMins: 180,
     operationalNotes: 'Bring extra towels',
     expiresAt: new Date('2026-08-28T16:30:00.000Z'),
@@ -24,20 +26,48 @@ describe('cleaner offer serializer', () => {
       totalPrice: 337.8,
       amountPaid: 0,
       balanceDue: 337.8,
+      operationalTotal: 200,
       address: '111 Thomson Drive',
       Property: { city: 'Ludlow', state: 'VT' },
     },
   };
 
-  it('returns compensation and omits customer price fields', () => {
+  it('returns explicit compensation and required offer fields', () => {
     const json = serializeCleanerOffer(row);
+    expect(json.compensation).toEqual({
+      amount: 195,
+      currency: 'USD',
+      basis: 'FLAT',
+      basisLabel: 'Flat rate',
+    });
     expect(json.compensationAmount).toBe(195);
+    expect(json.compensationBasis).toBe('FLAT');
+    expect(json.serviceType).toBe('Vacation Rental Turnover');
+    expect(json.serviceDate).toMatch(/Sep/);
+    expect(json.preferredTime).toBe('11:00 AM');
     expect(json.location.areaLabel).toBe('Ludlow');
-    expect(JSON.stringify(json)).not.toMatch(/300|337/);
+    expect(json.estimatedDurationMins).toBe(180);
+  });
+
+  it('cannot leak customer financial values', () => {
+    const json = serializeCleanerOffer(row);
+    const blob = JSON.stringify(json);
+    expect(blob).not.toMatch(/300|337/);
     expect(json).not.toHaveProperty('quotedTotal');
     expect(json).not.toHaveProperty('totalPrice');
     expect(json).not.toHaveProperty('balanceDue');
+    expect(json).not.toHaveProperty('operationalTotal');
     expect(json).not.toHaveProperty('address');
+    expect(() => assertNoCustomerFinancials(json)).not.toThrow();
+  });
+
+  it('rejects a payload that includes customer totals', () => {
+    expect(() =>
+      assertNoCustomerFinancials({ compensationAmount: 195, quotedTotal: 300 })
+    ).toThrow(/quotedtotal/i);
+    expect(() =>
+      assertNoCustomerFinancials({ operationalTotal: 200, platformFee: 20 })
+    ).toThrow(/operationaltotal/i);
   });
 });
 

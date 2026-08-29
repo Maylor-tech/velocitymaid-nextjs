@@ -5,6 +5,7 @@
 import { Resend } from 'resend';
 import { colors } from '@/lib/brand/colors';
 import { getResendFromEmail } from '@/lib/email/resendClient';
+import { compensationBasisLabel, parseCompensationBasis } from '@/lib/dispatch/compensation';
 
 function getResend(): Resend | null {
   if (!process.env.RESEND_API_KEY) return null;
@@ -30,6 +31,7 @@ export interface CleanerOfferEmailParams {
   locationLabel: string;
   compensationAmount: number;
   compensationCurrency: string;
+  compensationBasis?: 'FLAT' | 'HOURLY' | 'OTHER';
   expiresAt: Date;
   jobId: string;
   estimatedDurationMins?: number | null;
@@ -76,6 +78,7 @@ export async function sendCleanerOfferEmail(
   const portalLink = cleanerPortalLink(params.jobId);
   const safeName = escapeHtml(params.cleanerName || 'there');
   const pay = formatMoney(params.compensationAmount, params.compensationCurrency);
+  const basis = compensationBasisLabel(parseCompensationBasis(params.compensationBasis));
 
   const detailRows: Array<[string, string]> = [
     ['Job', reference],
@@ -83,7 +86,7 @@ export async function sendCleanerOfferEmail(
     ['Date', params.scheduledDate],
     ['Time', params.scheduledTime],
     ['Area', params.locationLabel],
-    ['Your pay', pay],
+    ['Your pay', `${pay} (${basis})`],
     ['Respond by', formatExpiry(params.expiresAt)],
   ];
   if (params.estimatedDurationMins) {

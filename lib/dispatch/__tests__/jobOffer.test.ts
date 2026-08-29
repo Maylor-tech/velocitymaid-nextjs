@@ -130,6 +130,21 @@ describe('createJobOffer', () => {
     expect(offer.status).toBe(JobOfferStatus.OFFERED);
     expect(offerCreate).toHaveBeenCalled();
     expect(jobUpdate).not.toHaveBeenCalled();
+    expect(offerCreate.mock.calls[0][0].data).toMatchObject({
+      compensationAmount: 130,
+      compensationBasis: 'FLAT',
+    });
+  });
+
+  it('stores an explicit hourly compensation basis', async () => {
+    jobFindUnique.mockResolvedValue(baseJob());
+    await createJobOffer({
+      jobId: 'job-1',
+      cleanerId: 'cleaner-1',
+      compensationAmount: 130,
+      compensationBasis: 'HOURLY',
+    });
+    expect(offerCreate.mock.calls[0][0].data.compensationBasis).toBe('HOURLY');
   });
 
   it('requires ops-approved compensation and rejects customer totals', async () => {

@@ -59,6 +59,7 @@ export async function notifyCleanerOfOffer(offerId: string): Promise<void> {
       locationLabel: location.areaLabel || 'See cleaner portal',
       compensationAmount: Number(offer.compensationAmount),
       compensationCurrency: offer.compensationCurrency,
+      compensationBasis: offer.compensationBasis,
       expiresAt: offer.expiresAt,
       jobId: offer.jobId,
       estimatedDurationMins: offer.estimatedDurationMins,

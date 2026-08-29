@@ -657,6 +657,7 @@ export default function AdminJobDetailPage() {
 
   const getStatusColor = (status: string) => {
     const statusLower = status.toLowerCase();
+    if (statusLower.includes('awaiting_qc')) return 'bg-amber-100 text-amber-900';
     if (statusLower.includes('completed')) return 'bg-vm-success-bg text-vm-success';
     if (statusLower.includes('cancelled')) return 'bg-vm-danger-bg text-red-800';
     if (statusLower.includes('assigned')) return 'bg-vm-cyan-tint text-blue-800';
@@ -906,7 +907,8 @@ export default function AdminJobDetailPage() {
               )}
               {process.env.NODE_ENV === 'development' &&
                 job.assignedCleanerId &&
-                job.status !== 'COMPLETED' && (
+                job.status !== 'COMPLETED' &&
+                job.status !== 'AWAITING_QC' && (
                   <button
                     type="button"
                     onClick={handleTestComplete}
@@ -1324,7 +1326,7 @@ export default function AdminJobDetailPage() {
                     onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value }))}
                     className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                   >
-                    {['RECEIVED', 'CONFIRMED', 'ASSIGNED', 'IN_PROGRESS', 'ON_THE_WAY', 'COMPLETED', 'CANCELLED'].map(
+                    {['RECEIVED', 'CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS', 'AWAITING_QC', 'COMPLETED', 'CANCELLED'].map(
                       (s) => (
                         <option key={s} value={s}>
                           {s}

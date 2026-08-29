@@ -104,6 +104,7 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
           status: 'ACCEPTED',
           compensationAmount: 195,
           compensationCurrency: 'USD',
+          compensationBasis: 'FLAT',
           estimatedDurationMins: 180,
           operationalNotes: null,
           expiresAt: new Date('2099-01-01'),
@@ -124,7 +125,17 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     expect(json.job.address).toBe('111 Thomson Drive');
     expect(json.job.totalPrice).toBeUndefined();
     expect(json.job.quotedTotal).toBeUndefined();
+    expect(json.job.operationalTotal).toBeUndefined();
+    expect(json.job.paymentStatus).toBeUndefined();
     expect(json.job.compensationAmount).toBe(195);
+    expect(json.job.compensation).toEqual({
+      amount: 195,
+      currency: 'USD',
+      basis: 'FLAT',
+      basisLabel: 'Flat rate',
+    });
+    const assignedBlob = JSON.stringify(json);
+    expect(assignedBlob).not.toMatch(/quotedTotal|totalPrice|operationalTotal|337\.8|platformFee/);
   });
 
   it('withholds access credentials on an unaccepted offer', async () => {
@@ -166,6 +177,7 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
           status: 'OFFERED',
           compensationAmount: 195,
           compensationCurrency: 'USD',
+          compensationBasis: 'FLAT',
           estimatedDurationMins: 180,
           operationalNotes: 'Bring extra towels',
           expiresAt: new Date(Date.now() + 30 * 60 * 1000),
@@ -182,10 +194,19 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     expect(json.access).toBe('OFFER');
     expect(json.job.property).toBeUndefined();
     expect(json.offer.location.areaLabel).toBe('Ludlow');
+    expect(json.offer.compensation).toEqual({
+      amount: 195,
+      currency: 'USD',
+      basis: 'FLAT',
+      basisLabel: 'Flat rate',
+    });
+    expect(json.offer.serviceType).toBe('Vacation Rental Turnover');
+    expect(json.offer.estimatedDurationMins).toBe(180);
+    expect(json.offer.preferredTime).toBe('11:00 AM');
     const blob = JSON.stringify(json);
     expect(blob).not.toContain('LOCKBOX-9999');
     expect(blob).not.toContain('111 Thomson Drive');
-    expect(blob).not.toMatch(/quotedTotal|totalPrice|337/);
+    expect(blob).not.toMatch(/quotedTotal|totalPrice|operationalTotal|337|platformFee|paymentStatus/);
   });
 
   it('works when Job has no propertyId', async () => {
