@@ -24,6 +24,27 @@ export function photoStoragePath(jobId: string, filename: string): string {
   return `${jobId}/${Date.now()}-${sanitizePhotoFilename(filename)}`;
 }
 
+export const CLEAN_PHOTO_CATEGORIES = [
+  "BEFORE",
+  "AFTER",
+  "ISSUE",
+  "DAMAGE",
+  "SUPPLY",
+  "OTHER",
+] as const;
+
+export type CleanPhotoCategoryValue = (typeof CLEAN_PHOTO_CATEGORIES)[number];
+
+export function parseCleanPhotoCategory(
+  raw: unknown
+): CleanPhotoCategoryValue {
+  const value = typeof raw === "string" ? raw.trim().toUpperCase() : "";
+  if ((CLEAN_PHOTO_CATEGORIES as readonly string[]).includes(value)) {
+    return value as CleanPhotoCategoryValue;
+  }
+  return "OTHER";
+}
+
 export function isAllowedUploadContentType(contentType: string): boolean {
   return ALLOWED_UPLOAD_TYPES.has(contentType);
 }

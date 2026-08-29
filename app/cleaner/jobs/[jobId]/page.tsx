@@ -6,6 +6,9 @@ import { Loader2, Calendar, MapPin, DollarSign, CheckCircle, XCircle, Phone, Mai
 import Link from "next/link";
 import { JobChecklistPanel } from "@/components/cleaner/JobChecklistPanel";
 import { formatServiceDate } from "@/lib/dates/serviceDate";
+import { JobTimer } from "@/components/cleaner/JobTimer";
+import { JobPhotoCapture } from "@/components/cleaner/JobPhotoCapture";
+import { EscalateIssueCard } from "@/components/cleaner/EscalateIssueCard";
 
 interface CustomerInfo {
   id: string;
@@ -46,16 +49,33 @@ interface Job {
   preferredTime: string | null;
   address: string | null;
   serviceLocation: string | null;
-  totalPrice: number | null;
+  compensationAmount?: number | null;
+  compensationCurrency?: string | null;
   currency: string | null;
   assignedAt: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
   jobSpecificNotes?: string | null;
   property?: PropertyInstructions | null;
   Customer?: CustomerInfo | null;
+  location?: { city: string | null; state: string | null; areaLabel: string | null };
   Branch: {
     id: string;
     name: string;
   } | null;
+}
+
+interface OfferPayload {
+  offerId: string;
+  jobId: string;
+  serviceType: string | null;
+  serviceDate: string;
+  preferredTime: string | null;
+  location: { areaLabel: string | null };
+  compensationAmount: number;
+  compensationCurrency: string;
+  expiresAt: string;
+  operationalNotes: string | null;
 }
 
 function authMessage(status: number, error?: string): string {
@@ -77,6 +97,8 @@ export default function CleanerJobDetailPage() {
   const jobId = params.jobId as string;
 
   const [job, setJob] = useState<Job | null>(null);
+  const [offer, setOffer] = useState<OfferPayload | null>(null);
+  const [access, setAccess] = useState<"OFFER" | "ASSIGNED" | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -104,11 +126,56 @@ export default function CleanerJobDetailPage() {
       }
 
       setJob(data.job);
+      setAccess(data.access === "OFFER" ? "OFFER" : "ASSIGNED");
+      setOffer(data.offer ?? null);
     } catch (err: unknown) {
       console.error("Failed to fetch job:", err);
       setError(err instanceof Error ? err.message : "Failed to load job");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAcceptOffer = async () => {
+    if (!offer || !confirm("Accept this offer? You will be assigned and receive access details.")) {
+      return;
+    }
+    setProcessing(true);
+    try {
+      const res = await fetch(`/api/cleaner/offers/${offer.offerId}/accept`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to accept offer");
+      }
+      await fetchJob();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to accept offer");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleDeclineOffer = async () => {
+    if (!offer || !confirm("Decline this offer?")) return;
+    const reason = window.prompt("Optional reason:") || "";
+    setProcessing(true);
+    try {
+      const res = await fetch(`/api/cleaner/offers/${offer.offerId}/decline`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to decline offer");
+      }
+      router.push("/cleaner/jobs");
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to decline offer");
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -167,7 +234,11 @@ export default function CleanerJobDetailPage() {
   };
 
   const handleComplete = async () => {
-    if (!confirm("Mark job as COMPLETED? Customer will be prompted to pay any remaining balance.")) {
+    if (
+      !confirm(
+        "Submit this job for QC? This does not invoice the customer. Admin reviews photos and checklist before billing."
+      )
+    ) {
       return;
     }
 
@@ -186,9 +257,7 @@ export default function CleanerJobDetailPage() {
       await fetchJob();
       alert(
         data.message ||
-          (data.job?.paymentStatus === "BALANCE_DUE"
-            ? "Job completed. Customer balance is now due before payout."
-            : "Job completed successfully.")
+          "Submitted for QC. Admin still reviews completion before invoicing."
       );
     } catch (err: unknown) {
       console.error("Failed to complete job:", err);
@@ -201,7 +270,7 @@ export default function CleanerJobDetailPage() {
   const handleDecline = async () => {
     if (
       !confirm(
-        "Decline this job? It will be reassigned to another cleaner automatically."
+        "Decline this assigned job? Ops will need to send a new offer."
       )
     ) {
       return;
@@ -220,7 +289,7 @@ export default function CleanerJobDetailPage() {
       }
 
       router.push("/cleaner/jobs");
-      alert("Job declined. It will be reassigned automatically.");
+      alert("Job declined. Ops can offer it to another cleaner.");
     } catch (err: unknown) {
       console.error("Failed to decline job:", err);
       alert(err instanceof Error ? err.message : "Failed to decline job");
@@ -300,14 +369,60 @@ export default function CleanerJobDetailPage() {
     );
   }
 
-  const canAccept = job.status === "ASSIGNED";
-  const canStart = job.status === "ON_THE_WAY";
-  const canComplete = job.status === "IN_PROGRESS";
-  const canDecline = job.status === "ASSIGNED";
+  const canAccept = access === "ASSIGNED" && job.status === "ASSIGNED";
+  const canStart = access === "ASSIGNED" && job.status === "ON_THE_WAY";
+  const canComplete = access === "ASSIGNED" && job.status === "IN_PROGRESS";
+  const canDecline = access === "ASSIGNED" && job.status === "ASSIGNED";
   const showChecklist =
-    job.status === "ON_THE_WAY" ||
-    job.status === "IN_PROGRESS" ||
-    job.status === "COMPLETED";
+    access === "ASSIGNED" &&
+    (job.status === "ON_THE_WAY" ||
+      job.status === "IN_PROGRESS" ||
+      job.status === "COMPLETED");
+
+  if (access === "OFFER" && offer) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-4xl mx-auto">
+          <Link
+            href="/cleaner/jobs"
+            className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+          >
+            ← Back to Jobs
+          </Link>
+          <h1 className="text-2xl font-semibold mb-2">Job offer</h1>
+          <p className="text-vm-muted mb-6">
+            Accept to be assigned. Access codes and full address are shown after you accept.
+          </p>
+          <div className="bg-white rounded-lg shadow p-6 mb-6 space-y-3">
+            <p><span className="text-vm-muted">Service:</span> {offer.serviceType || "Cleaning"}</p>
+            <p><span className="text-vm-muted">Date:</span> {offer.serviceDate} {offer.preferredTime ? `at ${offer.preferredTime}` : ""}</p>
+            <p><span className="text-vm-muted">Area:</span> {offer.location.areaLabel || "See details after accept"}</p>
+            <p><span className="text-vm-muted">Your pay:</span> {formatPrice(offer.compensationAmount, offer.compensationCurrency)}</p>
+            <p><span className="text-vm-muted">Respond by:</span> {new Date(offer.expiresAt).toLocaleString()}</p>
+            {offer.operationalNotes && (
+              <p className="whitespace-pre-wrap"><span className="text-vm-muted">Notes:</span> {offer.operationalNotes}</p>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleAcceptOffer}
+              disabled={processing}
+              className="px-6 py-3 rounded-lg font-semibold text-white bg-vm-success disabled:bg-gray-400"
+            >
+              {processing ? "Processing..." : "Accept offer"}
+            </button>
+            <button
+              onClick={handleDeclineOffer}
+              disabled={processing}
+              className="px-6 py-3 rounded-lg font-semibold text-white bg-vm-danger disabled:bg-gray-400"
+            >
+              Decline
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -365,7 +480,7 @@ export default function CleanerJobDetailPage() {
                   }`}
                 >
                   <CheckCircle className="w-5 h-5" />
-                  {processing ? "Processing..." : "Start Service"}
+                  {processing ? "Processing..." : "Start Job"}
                 </button>
               )}
               {canComplete && (
@@ -379,7 +494,7 @@ export default function CleanerJobDetailPage() {
                   }`}
                 >
                   <CheckCircle className="w-5 h-5" />
-                  {processing ? "Processing..." : "Complete Job"}
+                  {processing ? "Processing..." : "Finish Job (submit for QC)"}
                 </button>
               )}
               {canDecline && (
@@ -400,29 +515,31 @@ export default function CleanerJobDetailPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="font-semibold text-lg mb-4">Customer</h2>
-          <div className="space-y-3">
-            {job.Customer?.email && (
-              <div className="flex items-center gap-2 text-vm-text">
-                <Mail className="w-4 h-4 text-vm-muted" />
-                <a href={`mailto:${job.Customer.email}`} className="hover:underline">
-                  {job.Customer.email}
-                </a>
-              </div>
-            )}
-            {job.Customer?.phone && (
-              <div className="flex items-center gap-2 text-vm-text">
-                <Phone className="w-4 h-4 text-vm-muted" />
-                <a href={`tel:${job.Customer.phone}`} className="hover:underline">
-                  {job.Customer.phone}
-                </a>
-              </div>
-            )}
+        {access === "ASSIGNED" && job.Customer && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="font-semibold text-lg mb-4">Customer</h2>
+            <div className="space-y-3">
+              {job.Customer?.email && (
+                <div className="flex items-center gap-2 text-vm-text">
+                  <Mail className="w-4 h-4 text-vm-muted" />
+                  <a href={`mailto:${job.Customer.email}`} className="hover:underline">
+                    {job.Customer.email}
+                  </a>
+                </div>
+              )}
+              {job.Customer?.phone && (
+                <div className="flex items-center gap-2 text-vm-text">
+                  <Phone className="w-4 h-4 text-vm-muted" />
+                  <a href={`tel:${job.Customer.phone}`} className="hover:underline">
+                    {job.Customer.phone}
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
-        {(job.property || job.jobSpecificNotes) && (
+        {(job.property || job.jobSpecificNotes) && access === "ASSIGNED" && (
           <div className="bg-white rounded-lg shadow p-6 mb-6 border-l-4 border-vm-navy">
             <h2 className="font-semibold text-lg mb-4">Property Instructions</h2>
 
@@ -585,9 +702,9 @@ export default function CleanerJobDetailPage() {
             <div className="flex items-start gap-3">
               <DollarSign className="w-5 h-5 text-vm-muted mt-0.5" />
               <div>
-                <p className="font-medium">Total Price</p>
+                <p className="font-medium">Your pay</p>
                 <p className="text-vm-muted">
-                  {formatPrice(job.totalPrice, job.currency)}
+                  {formatPrice(job.compensationAmount ?? null, job.compensationCurrency || job.currency)}
                 </p>
               </div>
             </div>
@@ -609,6 +726,22 @@ export default function CleanerJobDetailPage() {
             )}
           </div>
         </div>
+
+        {(canStart || canComplete || job.status === "COMPLETED") && (
+          <div className="mb-6">
+            <JobTimer startedAt={job.startedAt ?? null} completedAt={job.completedAt ?? null} />
+          </div>
+        )}
+
+        {access === "ASSIGNED" &&
+          (job.status === "ON_THE_WAY" ||
+            job.status === "IN_PROGRESS" ||
+            job.status === "COMPLETED") && (
+            <>
+              <JobPhotoCapture jobId={jobId} uploadedBy="cleaner" />
+              <EscalateIssueCard jobId={jobId} />
+            </>
+          )}
 
         {showChecklist && (
           <div className="bg-white rounded-lg shadow p-6">

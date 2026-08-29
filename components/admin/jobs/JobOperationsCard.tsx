@@ -118,6 +118,23 @@ export function JobOperationsCard({
             >
               {job.branch?.name || '—'}
             </span>
+            {job.dispatchUrgency && job.dispatchUrgency !== 'STANDARD' && (
+              <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                {job.dispatchUrgency.replace('_', ' ')}
+              </span>
+            )}
+            {!job.assignedCleanerId && job.openOffer?.status === 'OFFERED' && (
+              <span className="rounded-full bg-vm-cyan-tint px-2 py-0.5 text-xs font-medium text-vm-navy">
+                {job.openOffer.cleanerName
+                  ? `Awaiting ${job.openOffer.cleanerName}`
+                  : 'Offer sent'}
+              </span>
+            )}
+            {!job.assignedCleanerId && !job.openOffer && (
+              <span className="rounded-full bg-vm-warning-bg px-2 py-0.5 text-xs font-medium text-vm-warning">
+                Cleaner needed
+              </span>
+            )}
           </div>
 
           <div>

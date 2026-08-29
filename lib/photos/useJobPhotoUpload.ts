@@ -34,7 +34,7 @@ function previewForFile(file: File): string {
   return URL.createObjectURL(file);
 }
 
-export function useJobPhotoUpload(jobId: string) {
+export function useJobPhotoUpload(jobId: string, category?: string) {
   const [items, setItems] = useState<PhotoQueueItem[]>([]);
   const [fileMessages, setFileMessages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -112,6 +112,7 @@ export function useJobPhotoUpload(jobId: string) {
           jobId,
           file: item.file,
           uploadedBy,
+          category,
         });
         if (item.preview) URL.revokeObjectURL(item.preview);
         updateItem(key, {
@@ -130,7 +131,7 @@ export function useJobPhotoUpload(jobId: string) {
         return null;
       }
     },
-    [jobId, updateItem]
+    [jobId, updateItem, category]
   );
 
   const uploadAll = useCallback(

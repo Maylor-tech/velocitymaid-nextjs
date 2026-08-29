@@ -153,6 +153,7 @@ export async function GET(request: NextRequest) {
         depositAmount: true,
         amountPaid: true,
         balanceDue: true,
+        dispatchUrgency: true,
         Branch: {
           select: {
             id: true,
@@ -189,6 +190,16 @@ export async function GET(request: NextRequest) {
                 certificationLabel: true,
               },
             },
+          },
+        },
+        JobOffer: {
+          where: { status: 'OFFERED' },
+          take: 1,
+          select: {
+            id: true,
+            status: true,
+            expiresAt: true,
+            Cleaner: { select: { name: true } },
           },
         },
         _count: {
@@ -261,6 +272,15 @@ export async function GET(request: NextRequest) {
             id: job.User.id,
             name: job.User.name,
             email: job.User.email,
+          }
+        : null,
+      dispatchUrgency: job.dispatchUrgency,
+      openOffer: job.JobOffer[0]
+        ? {
+            id: job.JobOffer[0].id,
+            status: job.JobOffer[0].status,
+            expiresAt: job.JobOffer[0].expiresAt.toISOString(),
+            cleanerName: job.JobOffer[0].Cleaner.name,
           }
         : null,
       cleanerCertified:

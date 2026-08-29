@@ -16,7 +16,7 @@ interface Job {
   preferredDate: string | null;
   preferredTime: string | null;
   address: string | null;
-  totalPrice: number | null;
+  compensationAmount?: number | null;
   currency: string | null;
   assignedAt: string | null;
   Branch: {
@@ -25,9 +25,22 @@ interface Job {
   } | null;
 }
 
+interface OfferCard {
+  offerId: string;
+  jobId: string;
+  serviceType: string | null;
+  serviceDate: string;
+  preferredTime: string | null;
+  location: { areaLabel: string | null };
+  compensationAmount: number;
+  compensationCurrency: string;
+  expiresAt: string;
+}
+
 export default function CleanerJobsPage() {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [offers, setOffers] = useState<OfferCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -63,11 +76,15 @@ export default function CleanerJobsPage() {
       const params = new URLSearchParams();
       if (statusFilter) params.append("status", statusFilter);
 
-      const res = await fetch(`/api/cleaner/jobs?${params.toString()}`);
-      const data = await res.json();
+      const [jobsRes, offersRes] = await Promise.all([
+        fetch(`/api/cleaner/jobs?${params.toString()}`),
+        fetch(`/api/cleaner/offers`),
+      ]);
+      const data = await jobsRes.json();
+      const offersData = await offersRes.json();
 
-      if (!res.ok) {
-        if (res.status === 401) {
+      if (!jobsRes.ok) {
+        if (jobsRes.status === 401) {
           setError("Please log in at /cleaners/login to view your assigned jobs.");
           setTimeout(() => router.push("/cleaners/login"), 2000);
           return;
@@ -80,6 +97,7 @@ export default function CleanerJobsPage() {
       }
 
       setJobs(data.jobs || []);
+      setOffers(offersData.success ? offersData.offers || [] : []);
     } catch (err: any) {
       console.error("Failed to fetch jobs:", err);
       setError(err.message || "Failed to load jobs");
@@ -169,7 +187,7 @@ export default function CleanerJobsPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold mb-2">My Jobs</h1>
-          <p className="text-vm-muted">View and manage your assigned jobs</p>
+          <p className="text-vm-muted">Offers and assigned work</p>
         </div>
 
         {/* Filter */}
@@ -194,8 +212,46 @@ export default function CleanerJobsPage() {
           </div>
         )}
 
+        {offers.length > 0 && !statusFilter && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold mb-3">Open offers</h2>
+            <div className="grid gap-4">
+              {offers.map((offer) => (
+                <Link
+                  key={offer.offerId}
+                  href={`/cleaner/jobs/${offer.jobId}`}
+                  className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6 block border-l-4 border-vm-navy"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="px-2 py-1 rounded text-xs font-medium bg-vm-navy/10 text-vm-navy">
+                        Offer
+                      </span>
+                      <h3 className="text-lg font-semibold mt-2">
+                        {offer.serviceType || "Cleaning"}
+                      </h3>
+                      <p className="text-sm text-vm-muted mt-1">
+                        {offer.serviceDate} {offer.preferredTime ? `at ${offer.preferredTime}` : ""}
+                      </p>
+                      {offer.location.areaLabel && (
+                        <p className="text-sm text-vm-muted mt-1">{offer.location.areaLabel}</p>
+                      )}
+                      <p className="text-sm font-medium mt-2">
+                        Your pay: ${offer.compensationAmount.toFixed(2)}
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center rounded-lg bg-vm-navy px-4 py-2 text-sm font-semibold text-white">
+                      Review offer →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Jobs List */}
-        {jobs.length === 0 ? (
+        {jobs.length === 0 && offers.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-vm-muted">No jobs found</p>
             <p className="text-sm text-vm-muted mt-2">
@@ -243,10 +299,12 @@ export default function CleanerJobsPage() {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4" />
-                        <span>{formatPrice(job.totalPrice, job.currency)}</span>
-                      </div>
+                      {typeof job.compensationAmount === "number" && (
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" />
+                          <span>Your pay: {formatPrice(job.compensationAmount, job.currency)}</span>
+                        </div>
+                      )}
 
                       {job.serviceType && (
                         <p className="text-vm-muted">{job.serviceType}</p>

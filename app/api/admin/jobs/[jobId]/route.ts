@@ -15,6 +15,8 @@ import { computePayoutEligibility } from '@/lib/booking/payoutEligibility';
 import { logAuditEntry } from '@/lib/audit';
 import type { JobStatus } from '@prisma/client';
 import { awaitJobCalendarCancel, awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
+import { isDispatchOffersEnabledForBranch } from '@/lib/dispatch/featureFlags';
+import { cancelOpenOffersForJob } from '@/lib/dispatch/jobOffer';
 
 export async function GET(
   request: NextRequest,
@@ -70,7 +72,11 @@ export async function GET(
         createdAt: true,
         assignedAt: true,
         onTheWayAt: true,
+        startedAt: true,
         completedAt: true,
+        cleanDurationMins: true,
+        estimatedDurationMins: true,
+        dispatchUrgency: true,
         jobQualityScore: true,
         internalNotes: true,
         appliedReferralCode: true,
@@ -229,7 +235,11 @@ export async function GET(
       createdAt: job.createdAt.toISOString(),
       assignedAt: job.assignedAt?.toISOString() || null,
       onTheWayAt: job.onTheWayAt?.toISOString() || null,
+      startedAt: job.startedAt?.toISOString() || null,
       completedAt: job.completedAt?.toISOString() || null,
+      cleanDurationMins: job.cleanDurationMins,
+      estimatedDurationMins: job.estimatedDurationMins,
+      dispatchUrgency: job.dispatchUrgency,
       internalNotes: job.internalNotes,
       jobQualityScore: job.jobQualityScore,
       appliedReferralCode: job.appliedReferralCode,
@@ -256,6 +266,7 @@ export async function GET(
         assignedCleanerId: job.assignedCleanerId,
         JobPayout: formattedPayout,
       }),
+      dispatchOffersEnabled: isDispatchOffersEnabledForBranch(job.Branch?.slug),
     };
 
     return NextResponse.json({
@@ -373,6 +384,24 @@ export async function PATCH(
         data.assignedAt = new Date();
       }
     }
+    if (body.dispatchUrgency !== undefined) {
+      const urgency = String(body.dispatchUrgency);
+      if (!['STANDARD', 'SAME_DAY', 'URGENT'].includes(urgency)) {
+        return NextResponse.json({ success: false, error: 'Invalid dispatch urgency' }, { status: 400 });
+      }
+      data.dispatchUrgency = urgency;
+    }
+    if (body.estimatedDurationMins !== undefined) {
+      if (body.estimatedDurationMins === null || body.estimatedDurationMins === '') {
+        data.estimatedDurationMins = null;
+      } else {
+        const mins = Number(body.estimatedDurationMins);
+        if (!Number.isFinite(mins) || mins < 0) {
+          return NextResponse.json({ success: false, error: 'Invalid estimated duration' }, { status: 400 });
+        }
+        data.estimatedDurationMins = Math.round(mins);
+      }
+    }
 
     if (Object.keys(data).length === 0) {
       return NextResponse.json({ success: false, error: 'No fields to update' }, { status: 400 });
@@ -424,7 +453,7 @@ export async function PATCH(
       data.serviceType !== undefined;
 
     if (becameCancelled) {
-      // Await so first CANCELLED transition reliably cancels Calendar (no second PATCH needed).
+      await cancelOpenOffersForJob(jobId, auth.userId);
       await awaitJobCalendarCancel(jobId);
     } else if (scheduleOrCleanerChanged) {
       await awaitJobCalendarSync(jobId);

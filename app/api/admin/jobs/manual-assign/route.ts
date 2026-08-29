@@ -20,6 +20,7 @@ import { logAdminEvent } from '@/lib/auditLog';
 import { APPROVED_CLEANER_APPLICATION_STATUSES } from '@/lib/cleaners/applicationStatus';
 import { awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
 import { notifyCleanerOfAssignmentByEmail } from '@/lib/notifications/cleanerAssignmentEmail';
+import { isDispatchOffersEnabledForBranch } from '@/lib/dispatch/featureFlags';
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,6 +71,17 @@ export async function POST(request: NextRequest) {
           error: 'Job not found',
         },
         { status: 404 }
+      );
+    }
+
+    if (isDispatchOffersEnabledForBranch(job.Branch.slug)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Use Send offer for this branch. Immediate assign is disabled while the Vermont dispatcher is on.',
+          code: 'USE_SEND_OFFER',
+        },
+        { status: 409 }
       );
     }
 

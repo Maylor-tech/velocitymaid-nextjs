@@ -6,6 +6,8 @@ import {
   assertJobExists,
   createCleanPhotoSignedUpload,
 } from "@/lib/photos/cleanPhotoStorage.server";
+import { requirePhotoUploadAccess } from "@/lib/dispatch/photoAuth";
+import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 
 /**
  * POST /api/jobs/[jobId]/photos/sign
@@ -21,6 +23,7 @@ export async function POST(
       return NextResponse.json({ error: "jobId is required" }, { status: 400 });
     }
 
+    await requirePhotoUploadAccess(request, jobId);
     await assertJobExists(jobId);
 
     const body = await request.json();
@@ -37,6 +40,8 @@ export async function POST(
 
     return NextResponse.json(signed);
   } catch (error: unknown) {
+    const auth = rethrowIfAuthResponse(error);
+    if (auth) return auth;
     const message = error instanceof Error ? error.message : "Failed to sign upload";
     const status = message === "Job not found" ? 404 : 400;
     console.error("[clean-photos sign]", error);

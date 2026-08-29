@@ -14,6 +14,8 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { MAX_PHOTOS_PER_BATCH } from "@/lib/photos/cleanPhotoStorage";
 import { assertJobExists, registerCleanPhoto } from "@/lib/photos/cleanPhotoStorage.server";
+import { requirePhotoUploadAccess } from "@/lib/dispatch/photoAuth";
+import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 
 export async function POST(
   request: NextRequest,
@@ -28,11 +30,12 @@ export async function POST(
       );
     }
 
+    const actor = await requirePhotoUploadAccess(request, jobId);
     await assertJobExists(jobId);
 
     const body = await request.json();
     const uploadedBy =
-      typeof body.uploadedBy === "string" ? body.uploadedBy.trim() : null;
+      typeof body.uploadedBy === "string" ? body.uploadedBy.trim() : actor.userId;
 
     const paths: string[] = Array.isArray(body.paths)
       ? body.paths.map(String).filter(Boolean)
@@ -68,12 +71,15 @@ export async function POST(
         jobId,
         storagePath: path,
         uploadedBy,
+        category: body.category,
       });
       created.push(record);
     }
 
     return NextResponse.json({ photos: created });
   } catch (error: unknown) {
+    const auth = rethrowIfAuthResponse(error);
+    if (auth) return auth;
     const message =
       error instanceof Error ? error.message : "Failed to register photos";
     const status =

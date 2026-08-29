@@ -12,6 +12,7 @@ export interface UploadSingleJobPhotoOptions {
   jobId: string;
   file: File;
   uploadedBy?: string;
+  category?: string;
 }
 
 async function parseJsonResponse(res: Response): Promise<Record<string, unknown>> {
@@ -53,7 +54,7 @@ function mapStorageUploadError(message: string, fileName: string): string {
 export async function uploadSingleJobPhoto(
   options: UploadSingleJobPhotoOptions
 ): Promise<UploadedJobPhoto> {
-  const { jobId, file, uploadedBy } = options;
+  const { jobId, file, uploadedBy, category } = options;
   const rawName = file.name;
 
   let prepared: File;
@@ -129,6 +130,7 @@ export async function uploadSingleJobPhoto(
     body: JSON.stringify({
       path,
       uploadedBy: uploadedBy || undefined,
+      category: category || undefined,
     }),
   });
 

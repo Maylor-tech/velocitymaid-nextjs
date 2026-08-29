@@ -3,10 +3,12 @@ import { JobStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
 import { getAuthenticatedCleaner } from '@/lib/cleanerAuth';
-import { requireCleanerJobAssignment } from '@/lib/auth/requireRole';
+import { requireRole } from '@/lib/auth/requireRole';
 import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
 import { assertTransition } from '@/lib/jobStatus';
 import { createAdminNotification, adminNotificationHelpers } from '@/lib/notifications/adminNotificationCenter';
+import { isDispatchOffersEnabledForBranch } from '@/lib/dispatch/featureFlags';
+import { loadOpenOfferForCleaner } from '@/lib/dispatch/jobOffer';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,7 +23,7 @@ export async function PATCH(
 ) {
   try {
     const jobId = params.jobId;
-    await requireCleanerJobAssignment(req, jobId);
+    await requireRole(req, 'CLEANER');
     const authResult = await getAuthenticatedCleaner(req);
     if (!authResult.success || !authResult.cleanerId) {
       return NextResponse.json(
@@ -31,10 +33,31 @@ export async function PATCH(
     }
 
     const cleanerId = authResult.cleanerId;
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: { Branch: { select: { slug: true } } },
+    });
 
     if (!job) {
       return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
+    }
+
+    if (!job.assignedCleanerId) {
+      const openOffer = await loadOpenOfferForCleaner(jobId, cleanerId);
+      if (openOffer || isDispatchOffersEnabledForBranch(job.Branch?.slug)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Respond to the job offer to accept. This job is not assigned yet.',
+            code: 'RESPOND_TO_OFFER',
+          },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json(
+        { success: false, error: 'Job is not assigned to you' },
+        { status: 403 }
+      );
     }
 
     if (job.assignedCleanerId !== cleanerId) {

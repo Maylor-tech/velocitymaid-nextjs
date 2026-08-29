@@ -57,10 +57,14 @@ export async function PATCH(
 
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
-      data: { status: JobStatus.IN_PROGRESS },
+      data: {
+        status: JobStatus.IN_PROGRESS,
+        startedAt: new Date(),
+      },
       select: {
         id: true,
         status: true,
+        startedAt: true,
       },
     });
 
@@ -74,6 +78,7 @@ export async function PATCH(
       changes: {
         previousStatus: job.status,
         newStatus: JobStatus.IN_PROGRESS,
+        startedAt: updatedJob.startedAt?.toISOString(),
       },
     });
 

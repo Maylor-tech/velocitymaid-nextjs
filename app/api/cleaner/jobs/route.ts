@@ -47,10 +47,10 @@ export async function GET(req: NextRequest) {
         preferredDate: true,
         preferredTime: true,
         address: true,
-        totalPrice: true,
         currency: true,
         assignedAt: true,
-        paymentStatus: true,
+        startedAt: true,
+        completedAt: true,
         Branch: {
           select: {
             id: true,
@@ -64,7 +64,8 @@ export async function GET(req: NextRequest) {
       ...job,
       preferredDate: job.preferredDate?.toISOString() ?? null,
       assignedAt: job.assignedAt?.toISOString() ?? null,
-      totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
+      startedAt: job.startedAt?.toISOString() ?? null,
+      completedAt: job.completedAt?.toISOString() ?? null,
     }));
 
     return NextResponse.json({

@@ -465,6 +465,11 @@ model Job {
   assignedAt               DateTime?
   onTheWayAt               DateTime?
   completedAt              DateTime?
+  /// Set when cleaner Start Job → IN_PROGRESS. Server-derived timer source.
+  startedAt                DateTime?
+  /// Ops estimate; copied onto JobOffer at send time.
+  estimatedDurationMins    Int?
+  dispatchUrgency          DispatchUrgency            @default(STANDARD)
   currency                 String?                    @default("USD")
   paymentMethod            String?
   jobQualityScore          Int?
@@ -499,6 +504,7 @@ model Job {
   Customer                 Customer?                  @relation(fields: [customerId], references: [id])
   Property                 Property?                  @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   JobPayout                JobPayout?
+  JobOffer                 JobOffer[]
 
   @@index([appliedReferralCode])
   @@index([assignedCleanerId])
@@ -511,19 +517,54 @@ model Job {
   @@index([paymentStatus])
   @@index([reviewStatus])
   @@index([archivedAt])
+  @@index([dispatchUrgency])
 }
 
 model CleanPhoto {
-  id         String   @id @default(cuid())
-  jobId      String
-  url        String
-  caption    String?
-  uploadedBy String?
-  uploadedAt DateTime @default(now())
-  Job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  id              String             @id @default(cuid())
+  jobId           String
+  url             String
+  caption         String?
+  uploadedBy      String?
+  uploadedAt      DateTime           @default(now())
+  category        CleanPhotoCategory @default(OTHER)
+  customerVisible Boolean            @default(false)
+  Job             Job                @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([jobId])
+  @@index([jobId, category])
   @@map("clean_photos")
+}
+
+/// Dispatch offer — source of truth until the cleaner accepts. Not a JobStatus.
+model JobOffer {
+  id                     String          @id @default(cuid())
+  jobId                  String
+  cleanerId              String
+  status                 JobOfferStatus  @default(OFFERED)
+  offeredAt              DateTime        @default(now())
+  expiresAt              DateTime
+  respondedAt            DateTime?
+  declineReason          String?
+  /// Cleaner pay snapshot approved by ops. Never a customer invoice total.
+  compensationAmount     Decimal         @db.Decimal(10, 2)
+  compensationCurrency   String          @default("USD")
+  estimatedDurationMins  Int?
+  operationalNotes       String?
+  channel                String          @default("EMAIL")
+  createdByAdminId       String?
+  cancelledAt            DateTime?
+  cancelledByAdminId     String?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  Job                    Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Cleaner                User            @relation("JobOfferCleaner", fields: [cleanerId], references: [id])
+  CreatedByAdmin         User?           @relation("JobOfferCreatedBy", fields: [createdByAdminId], references: [id])
+  CancelledByAdmin       User?           @relation("JobOfferCancelledBy", fields: [cancelledByAdminId], references: [id])
+
+  @@index([jobId, status])
+  @@index([cleanerId, status])
+  @@index([expiresAt])
 }
 
 model CleanerProfile {
@@ -1016,6 +1057,9 @@ model User {
   JamaicaPayout                       JamaicaPayout[]
   Job                                 Job[]
   JobPayout                           JobPayout[]
+  JobOfferAsCleaner                   JobOffer[]             @relation("JobOfferCleaner")
+  JobOfferCreated                     JobOffer[]             @relation("JobOfferCreatedBy")
+  JobOfferCancelled                   JobOffer[]             @relation("JobOfferCancelledBy")
   JobsApproved                        Job[]                  @relation("JobApprovedBy")
   JobChecklistItemCompleted           JobChecklistItem[]     @relation("JobChecklistItem_completedBy")
   LessonProgress                      LessonProgress[]
@@ -1549,6 +1593,29 @@ enum JobReviewStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum DispatchUrgency {
+  STANDARD
+  SAME_DAY
+  URGENT
+}
+
+enum JobOfferStatus {
+  OFFERED
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CANCELLED
+}
+
+enum CleanPhotoCategory {
+  BEFORE
+  AFTER
+  ISSUE
+  DAMAGE
+  SUPPLY
+  OTHER
 }
 
 model Tip {

@@ -8,6 +8,7 @@ import { getCleanerAverageJQS } from '../utils/jobQualityScore';
 import { isCleanerTrainingEligible } from '../utils/trainingEligibility';
 import { resolveCityFromZip } from '../utils/cityRouting';
 import { APPROVED_CLEANER_APPLICATION_STATUSES } from './cleaners/applicationStatus';
+import { isDispatchOffersEnabledForBranch } from './dispatch/featureFlags';
 
 export interface AssignmentResult {
   success: boolean;
@@ -599,6 +600,17 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
       return {
         success: false,
         reason: 'job_not_found',
+      };
+    }
+
+    const branch = await prisma.branch.findUnique({
+      where: { id: job.branchId },
+      select: { slug: true },
+    });
+    if (isDispatchOffersEnabledForBranch(branch?.slug)) {
+      return {
+        success: false,
+        reason: 'dispatch_offers_required',
       };
     }
 

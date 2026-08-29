@@ -25,8 +25,8 @@
       "schedule": "0 12 * * *"
     },
     {
-      "path": "/api/cron/cleaner-response-check",
-      "schedule": "0 15 * * *"
+      "path": "/api/cron/dispatch-offer-expire",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

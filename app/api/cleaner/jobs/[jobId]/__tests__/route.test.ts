@@ -1,15 +1,15 @@
 /**
  * Cleaner job detail — Property instructions only for assigned cleaner.
+ * Offer view withholds access credentials and customer invoice totals.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 
-const requireCleanerJobAssignment = vi.fn();
+const requireRole = vi.fn();
 const findUnique = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
-  requireCleanerJobAssignment: (...args: unknown[]) =>
-    requireCleanerJobAssignment(...args),
+  requireRole: (...args: unknown[]) => requireRole(...args),
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -62,7 +62,7 @@ function propertyRow() {
 describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requireCleanerJobAssignment.mockResolvedValue({ userId: CLEANER_ID });
+    requireRole.mockResolvedValue({ userId: CLEANER_ID, role: 'CLEANER' });
   });
 
   it('returns Property standing info + job-specific notes for assigned cleaner', async () => {
@@ -76,14 +76,17 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
       preferredDate: new Date('2026-08-12'),
       preferredTime: '12:00 - 16:00',
       address: '111 Thomson Drive',
-      totalPrice: 350,
       currency: 'USD',
       assignedAt: new Date(),
       assignedCleanerId: CLEANER_ID,
       onTheWayAt: null,
+      startedAt: null,
       completedAt: null,
+      cleanDurationMins: null,
+      estimatedDurationMins: null,
       internalNotes: 'Deep clean only — no turnover',
       propertyId: 'prop-1',
+      jobReference: 'VM-TEST-1',
       Branch: { id: 'branch-vt', name: 'Vermont' },
       Customer: {
         id: 'cust-1',
@@ -93,6 +96,20 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
         phone: '2039549764',
       },
       Property: propertyRow(),
+      JobOffer: [
+        {
+          id: 'offer-1',
+          jobId: JOB_ID,
+          cleanerId: CLEANER_ID,
+          status: 'ACCEPTED',
+          compensationAmount: 195,
+          compensationCurrency: 'USD',
+          estimatedDurationMins: 180,
+          operationalNotes: null,
+          expiresAt: new Date('2099-01-01'),
+          offeredAt: new Date(),
+        },
+      ],
     });
 
     const res = await GET(new NextRequest('http://localhost/api/cleaner/jobs/' + JOB_ID), {
@@ -105,6 +122,70 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     expect(json.job.property.accessNotes).toBe('LOCKBOX-9999');
     expect(json.job.jobSpecificNotes).toBe('Deep clean only — no turnover');
     expect(json.job.address).toBe('111 Thomson Drive');
+    expect(json.job.totalPrice).toBeUndefined();
+    expect(json.job.quotedTotal).toBeUndefined();
+    expect(json.job.compensationAmount).toBe(195);
+  });
+
+  it('withholds access credentials on an unaccepted offer', async () => {
+    findUnique.mockResolvedValue({
+      id: JOB_ID,
+      status: 'RECEIVED',
+      paymentStatus: 'PENDING',
+      customerName: 'Tiffany Mayo',
+      serviceType: 'Vacation Rental Turnover',
+      serviceLocation: 'Ludlow',
+      preferredDate: new Date('2026-09-15T00:00:00.000Z'),
+      preferredTime: '11:00 AM',
+      address: '111 Thomson Drive',
+      currency: 'USD',
+      assignedAt: null,
+      assignedCleanerId: null,
+      onTheWayAt: null,
+      startedAt: null,
+      completedAt: null,
+      cleanDurationMins: null,
+      estimatedDurationMins: 180,
+      internalNotes: 'Gate code in property notes',
+      propertyId: 'prop-1',
+      jobReference: 'VM-TEST-1',
+      Branch: { id: 'branch-vt', name: 'Vermont' },
+      Customer: {
+        id: 'cust-1',
+        firstName: 'Tiffany',
+        lastName: 'Mayo',
+        email: 'loulouslandingvt@gmail.com',
+        phone: '2039549764',
+      },
+      Property: propertyRow(),
+      JobOffer: [
+        {
+          id: 'offer-open',
+          jobId: JOB_ID,
+          cleanerId: CLEANER_ID,
+          status: 'OFFERED',
+          compensationAmount: 195,
+          compensationCurrency: 'USD',
+          estimatedDurationMins: 180,
+          operationalNotes: 'Bring extra towels',
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+          offeredAt: new Date(),
+        },
+      ],
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/cleaner/jobs/' + JOB_ID), {
+      params: { jobId: JOB_ID },
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.access).toBe('OFFER');
+    expect(json.job.property).toBeUndefined();
+    expect(json.offer.location.areaLabel).toBe('Ludlow');
+    const blob = JSON.stringify(json);
+    expect(blob).not.toContain('LOCKBOX-9999');
+    expect(blob).not.toContain('111 Thomson Drive');
+    expect(blob).not.toMatch(/quotedTotal|totalPrice|337/);
   });
 
   it('works when Job has no propertyId', async () => {
@@ -118,17 +199,21 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
       preferredDate: null,
       preferredTime: null,
       address: '9 Depot St',
-      totalPrice: null,
       currency: 'USD',
       assignedAt: null,
       assignedCleanerId: CLEANER_ID,
       onTheWayAt: null,
+      startedAt: null,
       completedAt: null,
+      cleanDurationMins: null,
+      estimatedDurationMins: null,
       internalNotes: null,
       propertyId: null,
+      jobReference: null,
       Branch: null,
       Customer: null,
       Property: null,
+      JobOffer: [],
     });
 
     const res = await GET(new NextRequest('http://localhost/api/cleaner/jobs/' + JOB_ID), {
@@ -150,8 +235,13 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
       preferredDate: null,
       assignedAt: null,
       onTheWayAt: null,
+      startedAt: null,
       completedAt: null,
-      totalPrice: null,
+      JobOffer: [],
+      jobReference: null,
+      serviceType: null,
+      preferredTime: null,
+      serviceLocation: null,
       internalNotes: null,
     });
 
@@ -163,8 +253,8 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     expect(json.job).toBeUndefined();
   });
 
-  it('blocks unauthorized cleaner before job load when requireCleaner rejects', async () => {
-    requireCleanerJobAssignment.mockRejectedValue(
+  it('blocks unauthorized cleaner before job load when requireRole rejects', async () => {
+    requireRole.mockRejectedValue(
       NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     );
 

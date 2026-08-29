@@ -8,6 +8,7 @@ import { requireRole } from '@/lib/auth/requireRole';
 import { logAuditEntry } from '@/lib/audit';
 import { refundDepositForRejectedJob } from '@/lib/booking/depositRefund';
 import { awaitJobCalendarCancel } from '@/lib/google/jobGoogleSync';
+import { cancelOpenOffersForJob } from '@/lib/dispatch/jobOffer';
 
 /**
  * POST /api/admin/jobs/[jobId]/reject
@@ -52,6 +53,7 @@ export async function POST(
     });
 
     const refund = await refundDepositForRejectedJob(jobId, auth.userId);
+    await cancelOpenOffersForJob(jobId, auth.userId);
 
     await logAuditEntry({
       actorId: auth.userId,

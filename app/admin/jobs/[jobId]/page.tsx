@@ -13,6 +13,7 @@ import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
 import { getJobLoopProgress } from '@/lib/booking/jobLoopProgress';
 import { formatServiceDate } from '@/lib/dates/serviceDate';
 import { isJobAssignable as isJobAssignableByPolicy } from '@/lib/billing/billingPolicy';
+import { DispatchPanel } from '@/components/admin/jobs/DispatchPanel';
 
 interface Job {
   id: string;
@@ -96,6 +97,10 @@ interface Job {
     accessType: string | null;
     standingInstructions: string | null;
   } | null;
+  dispatchOffersEnabled?: boolean;
+  dispatchUrgency?: string;
+  startedAt?: string | null;
+  estimatedDurationMins?: number | null;
 }
 
 interface Cleaner {
@@ -1654,6 +1659,19 @@ export default function AdminJobDetailPage() {
               </button>
             </div>
           </div>
+        ) : job.dispatchOffersEnabled ? (
+          <DispatchPanel
+            jobId={jobId}
+            enabled={true}
+            canSend={Boolean(canAssign)}
+            cleaners={cleaners}
+            selectedCleanerId={selectedCleanerId}
+            onSelectCleaner={setSelectedCleanerId}
+            onChanged={() => {
+              void fetchJob();
+              void fetchAuditLogs();
+            }}
+          />
         ) : canAssign ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-semibold text-vm-text mb-4">Assign Cleaner</h2>

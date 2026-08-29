@@ -33,6 +33,13 @@ export interface JobOperationsInput {
   checklistTotal?: number;
   checklistCompleted?: number;
   auditActions?: string[];
+  dispatchUrgency?: string | null;
+  openOffer?: {
+    id: string;
+    status: string;
+    expiresAt: string | null;
+    cleanerName: string | null;
+  } | null;
 }
 
 export interface WorkflowStep {
@@ -583,8 +590,17 @@ export function getPrimaryAction(job: JobOperationsInput & { id: string }): {
     (job.status === 'CONFIRMED' || job.status === 'RECEIVED') &&
     !job.assignedCleanerId
   ) {
+    if (job.openOffer?.status === 'OFFERED') {
+      return {
+        label: job.openOffer.cleanerName
+          ? `Awaiting ${job.openOffer.cleanerName}`
+          : 'Awaiting offer response',
+        href: `/admin/jobs/${job.id}`,
+        actionable: true,
+      };
+    }
     return {
-      label: 'Assign cleaner',
+      label: 'Cleaner needed',
       href: `/admin/jobs/${job.id}`,
       actionable: true,
     };

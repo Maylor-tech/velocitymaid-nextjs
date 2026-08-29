@@ -13,6 +13,7 @@ import { sendEmergencyCancelNoticeForJob } from '@/lib/notifications/emergencyCa
 import { prisma } from '@/lib/prisma';
 import { JobStatus } from '@prisma/client';
 import { awaitJobCalendarCancel } from '@/lib/google/jobGoogleSync';
+import { cancelOpenOffersForJob } from '@/lib/dispatch/jobOffer';
 
 export async function POST(
   request: NextRequest,
@@ -53,6 +54,8 @@ export async function POST(
         cancellationReason: 'Emergency cancellation',
       },
     });
+
+    await cancelOpenOffersForJob(jobId);
 
     // Await Calendar cancel in this request — emergency cancel already committed.
     await awaitJobCalendarCancel(jobId);

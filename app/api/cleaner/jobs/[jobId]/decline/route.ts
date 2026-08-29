@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { logAuditEntry } from "@/lib/audit";
 import { getAuthenticatedCleaner } from "@/lib/cleanerAuth";
 import { JobStatus } from "@prisma/client";
-import { autoAssignCleaner } from "@/lib/dispatch/autoAssignCleaner";
 import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
 import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 import { createAdminNotification, adminNotificationHelpers } from "@/lib/notifications/adminNotificationCenter";
+import { isDispatchOffersEnabledForBranch } from "@/lib/dispatch/featureFlags";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,6 +47,7 @@ export async function PATCH(
         status: true,
         assignedCleanerId: true,
         branchId: true,
+        Branch: { select: { slug: true } },
       },
     });
 
@@ -79,34 +79,33 @@ export async function PATCH(
 
     // 5. Use transaction to update job, create assignment log, and audit log
     const updatedJob = await prisma.$transaction(async (tx) => {
-      // Update job: remove assignment, set status to REASSIGN_PENDING
       const updatedJob = await tx.job.update({
         where: { id: jobId },
         data: {
           assignedCleanerId: null,
-          status: JobStatus.REASSIGN_PENDING,
+          status: JobStatus.CONFIRMED,
           assignedAt: null,
         },
         select: {
           id: true,
           status: true,
           assignedCleanerId: true,
+          paymentStatus: true,
         },
       });
 
-      // Create assignment log entry for decline
       await tx.assignmentLog.create({
         data: {
           jobId: jobId,
           cleanerId: cleanerId,
-          branchId: job.branchId, // Use original job's branchId
+          branchId: job.branchId,
           outcome: "DECLINED",
-          reason: `Declined by cleaner ${authResult.cleaner?.name || cleanerId}`,
+          reason: `Walk-off decline by cleaner ${authResult.cleaner?.name || cleanerId}`,
           details: {
             declinedAt: new Date().toISOString(),
             declinedBy: cleanerId,
             previousStatus: job.status,
-            newStatus: JobStatus.REASSIGN_PENDING,
+            newStatus: JobStatus.CONFIRMED,
           },
         },
       });
@@ -114,6 +113,7 @@ export async function PATCH(
       // Create audit log entry
       await tx.auditLog.create({
         data: {
+          id: crypto.randomUUID(),
           actorId: cleanerId,
           actorRole: "CLEANER",
           action: "JOB_DECLINED",
@@ -122,7 +122,7 @@ export async function PATCH(
           description: `Job declined by cleaner ${authResult.cleaner?.name || cleanerId}`,
           changes: {
             from: "ASSIGNED",
-            to: "REASSIGN_PENDING",
+            to: "CONFIRMED",
             declinedBy: cleanerId,
             cleanerName: authResult.cleaner?.name || null,
           },
@@ -136,12 +136,12 @@ export async function PATCH(
     // For now, we just set status to REASSIGN_PENDING
     // The dispatcher will pick it up later
 
-    console.log(`[CLEANER] Job ${jobId} declined by cleaner ${cleanerId}, triggering reassignment`);
+    console.log(`[CLEANER] Job ${jobId} declined by cleaner ${cleanerId} after assignment`);
 
     createAdminNotification({
       type: "CLEANER_DECLINED",
       severity: "WARNING",
-      message: `Cleaner declined job ${jobId} — needs reassignment`,
+      message: `Cleaner declined assigned job ${jobId} — cleaner needed`,
       jobId,
       actionUrl: adminNotificationHelpers.adminJobLink(jobId),
     }).catch(() => {});
@@ -149,7 +149,9 @@ export async function PATCH(
     return NextResponse.json({
       success: true,
       job: updatedJob,
-      message: "Job declined. It will be reassigned automatically.",
+      message: isDispatchOffersEnabledForBranch(job.Branch?.slug)
+        ? "Job declined. Ops can send a new offer."
+        : "Job declined. It is unassigned and needs a cleaner.",
     });
   } catch (err: unknown) {
     const authResp = rethrowIfAuthResponse(err);
