@@ -26,7 +26,7 @@
     },
     {
       "path": "/api/cron/dispatch-offer-expire",
-      "schedule": "*/5 * * * *"
+      "schedule": "15 4 * * *"
     }
   ]
 }

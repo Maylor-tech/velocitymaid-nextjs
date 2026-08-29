@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
  * Expire outstanding JobOffers past expiresAt.
  * GET /api/cron/dispatch-offer-expire
  * Auth: Bearer CRON_SECRET
- * Schedule: every 5 minutes (vercel.json).
+ * Schedule: daily 04:15 UTC on Vercel Hobby (sub-daily crons require Pro).
+ * With DISPATCH_OFFERS_VERMONT off, JobOffer is empty so this is a no-op.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
