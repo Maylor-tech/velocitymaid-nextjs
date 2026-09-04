@@ -46,7 +46,7 @@ export async function POST(
       });
     }
 
-    const allowed = [
+    const allowed: JobStatus[] = [
       JobStatus.ASSIGNED,
       JobStatus.ON_THE_WAY,
       JobStatus.IN_PROGRESS,

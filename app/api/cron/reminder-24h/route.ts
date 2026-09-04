@@ -282,13 +282,13 @@ export async function GET(request: NextRequest) {
         if (!isTest) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
-      } catch (error: any) {
-        log.push(`ERROR: Exception sending reminder to ${booking.customerName} - ${error.message}`);
+      } catch (error: unknown) {
+        log.push(`ERROR: Exception sending reminder to ${booking.customerName} - ${(error instanceof Error ? error.message : undefined)}`);
         failureCount++;
         results.push({
           booking,
           success: false,
-          error: error.message,
+          error: (error instanceof Error ? error.message : undefined),
         });
       }
     }
@@ -306,15 +306,15 @@ export async function GET(request: NextRequest) {
       log,
       duration: `${duration}ms`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
-    log.push(`ERROR: ${error.message}`);
+    log.push(`ERROR: ${(error instanceof Error ? error.message : undefined)}`);
     log.push(`[${new Date().toISOString()}] Cron job failed after ${duration}ms`);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: (error instanceof Error ? error.message : undefined),
         log,
         duration: `${duration}ms`,
       },

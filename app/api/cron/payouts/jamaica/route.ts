@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
         const cleaners = await prisma.user.findMany({
           where: {
             role: 'CLEANER',
-            userBranches: {
+            UserBranch: {
               some: {
                 branchId: branch.id,
               },
@@ -141,15 +141,15 @@ export async function GET(request: NextRequest) {
               console.error(`Failed to send WhatsApp for cleaner ${cleaner.id}:`, whatsappError);
               // Don't fail the payout creation if WhatsApp fails
             }
-          } catch (payoutError: any) {
+          } catch (payoutError: unknown) {
             console.error(`Failed to create payout for cleaner ${cleaner.id}:`, payoutError);
             results.payoutsFailed++;
-            results.errors.push(`Cleaner ${cleaner.id}: ${payoutError.message}`);
+            results.errors.push(`Cleaner ${cleaner.id}: ${(payoutError instanceof Error ? payoutError.message : undefined)}`);
           }
         }
-      } catch (branchError: any) {
+      } catch (branchError: unknown) {
         console.error(`Error processing branch ${branch.id}:`, branchError);
-        results.errors.push(`Branch ${branch.id}: ${branchError.message}`);
+        results.errors.push(`Branch ${branch.id}: ${(branchError instanceof Error ? branchError.message : undefined)}`);
       }
     }
 
@@ -160,10 +160,10 @@ export async function GET(request: NextRequest) {
       periodEnd: periodEnd.toISOString(),
       ...results,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Cron job error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to run cron job' },
+      { success: false, error: (error instanceof Error ? error.message : undefined) || 'Failed to run cron job' },
       { status: 500 }
     );
   }

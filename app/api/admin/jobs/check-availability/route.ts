@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const cleaner = await prisma.user.findUnique({
       where: { id: cleanerId, role: 'CLEANER' },
       include: {
-        availability: true,
+        CleanerAvailability: true,
       },
     });
 
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const availability = cleaner.availability;
+    const availability = cleaner.CleanerAvailability;
 
     if (!availability || !availability.isActive) {
       return NextResponse.json({
@@ -184,13 +184,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       available: true,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     console.error('Error checking availability:', error);
     return NextResponse.json(
       {
         available: false,
-        reason: error.message || 'Error checking availability',
+        reason: error instanceof Error ? error.message : 'Error checking availability',
       },
       { status: 500 }
     );

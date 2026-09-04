@@ -38,16 +38,25 @@ export async function GET(
 
     // Format logs for UI display
     const formattedLogs = logs.map((log) => {
-      const changes = log.changes as any;
+      const changes =
+        log.changes && typeof log.changes === 'object' && !Array.isArray(log.changes)
+          ? (log.changes as Record<string, unknown>)
+          : {};
       return {
         id: log.id,
         timestamp: log.createdAt.toISOString(),
         eventType: log.action,
-        adminEmail: changes?.adminEmail || log.actorRole || 'System',
-        cleanerId: changes?.cleanerId || null,
-        cleanerName: null, // Will be fetched separately if needed
-        branchId: changes?.branchId || null,
-        notes: changes?.notes || log.description || null,
+        adminEmail:
+          typeof changes.adminEmail === 'string'
+            ? changes.adminEmail
+            : log.actorRole || 'System',
+        cleanerId: typeof changes.cleanerId === 'string' ? changes.cleanerId : null,
+        cleanerName: null,
+        branchId: typeof changes.branchId === 'string' ? changes.branchId : null,
+        notes:
+          typeof changes.notes === 'string'
+            ? changes.notes
+            : log.description || null,
       };
     });
 
@@ -56,13 +65,13 @@ export async function GET(
       logs: formattedLogs,
       count: formattedLogs.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     console.error('Get job audit logs error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to get audit logs',
+        error: error instanceof Error ? error.message : 'Failed to get audit logs',
       },
       { status: 500 }
     );

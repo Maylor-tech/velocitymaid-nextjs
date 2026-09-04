@@ -140,8 +140,8 @@ export async function POST(req: NextRequest) {
             `[CRON_PROCESS_PAYOUTS] Batch ${batch.id}: Processed ${result.processed}, Succeeded ${result.succeeded}, Failed ${result.failed}, Complete: ${result.isComplete}`
           );
         }
-      } catch (err: any) {
-        const errorMessage = err?.message || "Unknown error";
+      } catch (err: unknown) {
+        const errorMessage = (err instanceof Error ? err.message : undefined) || "Unknown error";
         results.push({
           batchId: batch.id,
           success: false,
@@ -163,14 +163,14 @@ export async function POST(req: NextRequest) {
       results,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[CRON_PROCESS_PAYOUTS] Fatal error:", error);
     return NextResponse.json(
       {
         ok: false,
-        error: error?.message || "Failed to process payouts",
+        error: (error instanceof Error ? error.message : undefined) || "Failed to process payouts",
         details:
-          process.env.NODE_ENV === "development" ? error.stack : undefined,
+          process.env.NODE_ENV === "development" ? (error instanceof Error ? error.stack : undefined) : undefined,
       },
       { status: 500 }
     );

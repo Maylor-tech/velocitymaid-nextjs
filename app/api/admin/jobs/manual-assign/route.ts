@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const adminEmail = adminAuth.email || 'unknown@admin.com';
 
     const body = await request.json();
-    const { jobId, cleanerId, sendWhatsApp = true, confirmReassign } = body;
+    const { jobId, cleanerId, sendWhatsApp = true } = body;
 
     if (!jobId || !cleanerId) {
       return NextResponse.json(
@@ -383,13 +383,13 @@ export async function POST(request: NextRequest) {
       },
       message: 'Cleaner assigned successfully',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     console.error('Error manually assigning cleaner:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to assign cleaner',
+        error: error instanceof Error ? error.message : 'Failed to assign cleaner',
       },
       { status: 500 }
     );

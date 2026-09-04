@@ -93,7 +93,7 @@ export async function POST(
       paidAt,
     });
 
-    if (!result.ok) {
+    if (result.ok === false) {
       return NextResponse.json(
         { success: false, error: result.error },
         { status: result.status }

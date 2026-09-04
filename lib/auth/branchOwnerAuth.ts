@@ -44,7 +44,7 @@ export async function getAuthenticatedBranchOwner(
       const branchOwner = await prisma.user.findUnique({
         where: {
           id: branchOwnerIdFromCookie,
-          role: UserRole.BRANCH_OWNER,
+          role: UserRole.BRANCH_OPERATOR,
           isActive: true,
         },
         select: {
@@ -103,7 +103,7 @@ export async function getAuthenticatedBranchOwner(
         const branchOwner = await prisma.user.findUnique({
           where: {
             id: token,
-            role: UserRole.BRANCH_OWNER,
+            role: UserRole.BRANCH_OPERATOR,
             isActive: true,
           },
           select: {
@@ -155,11 +155,11 @@ export async function getAuthenticatedBranchOwner(
       success: false,
       error: "Not authenticated as branch owner",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[BRANCH_OWNER_AUTH] Error:", error);
     return {
       success: false,
-      error: error?.message || "Authentication failed",
+      error: error instanceof Error ? error.message : "Authentication failed",
     };
   }
 }

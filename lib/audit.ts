@@ -6,6 +6,7 @@
 
 import { prisma } from './prisma';
 import { randomUUID } from 'crypto';
+import type { Prisma } from '@prisma/client';
 
 export interface AuditLogParams {
   id?: string;
@@ -15,7 +16,7 @@ export interface AuditLogParams {
   entityType: string;
   entityId: string;
   description?: string;
-  changes?: any;
+  changes?: Prisma.InputJsonValue;
 }
 
 export async function logAuditEntry(params: AuditLogParams): Promise<string | null> {

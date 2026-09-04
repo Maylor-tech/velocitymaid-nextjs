@@ -1,0 +1,41 @@
+name: Quality gate
+
+on:
+  pull_request:
+
+jobs:
+  quality:
+    name: Tests, changed-file ratchet, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        run: git fetch origin ${{ github.base_ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Test
+        run: npm test
+
+      - name: Changed-file quality ratchet
+        env:
+          QUALITY_BASE: origin/${{ github.base_ref }}
+        run: npm run quality:changed
+
+      - name: Build
+        run: npm run build

@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { autoAssignCleaner } from '@/lib/cleaner-assignment';
+import { ACTIVE_JOB_STATUS_EXCLUDE } from '@/lib/jobStatus';
 
 /**
  * Cron Job: Auto-assign unassigned jobs
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
           gte: today,
         },
         status: {
-          notIn: ['cancelled', 'completed'],
+          notIn: ACTIVE_JOB_STATUS_EXCLUDE,
         },
       },
       orderBy: {
@@ -92,12 +93,12 @@ export async function GET(request: NextRequest) {
       failed,
       results,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in assign-unassigned cron:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Unknown error',
+        error: (error instanceof Error ? error.message : undefined) || 'Unknown error',
       },
       { status: 500 }
     );

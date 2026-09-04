@@ -50,12 +50,12 @@ export async function GET(
       success: true,
       logs: formattedLogs,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching assignment logs:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch assignment logs',
+        error: error instanceof Error ? error.message : 'Failed to fetch assignment logs',
       },
       { status: 500 }
     );

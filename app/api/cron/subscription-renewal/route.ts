@@ -53,7 +53,10 @@ export async function GET(request: NextRequest) {
     const subscriptions: { id: string; customer: string; current_period_end: number }[] = [];
     for (const sub of response.data ?? []) {
       if (!ACTIVE_STATUSES.includes(sub.status)) continue;
-      const periodEnd = sub.current_period_end;
+      const periodEnd =
+        'currentPeriodEnd' in sub && typeof sub.currentPeriodEnd === 'number'
+          ? sub.currentPeriodEnd
+          : Number((sub as { current_period_end?: number }).current_period_end);
       if (periodEnd >= windowStartSec && periodEnd < windowEndSec) {
         const customerId = typeof sub.customer === 'string' ? sub.customer : (sub.customer as { id?: string })?.id;
         if (customerId) {

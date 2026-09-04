@@ -42,6 +42,9 @@ vi.mock('@/lib/audit', () => ({
   logAuditEntry: (...a: unknown[]) => logAuditEntry(...a),
 }));
 
+// Integration coverage of the send route is intentional; lib/ tests are otherwise
+// barred from importing Phase 1 admin modules.
+// eslint-disable-next-line no-restricted-imports
 import { POST } from '@/app/api/admin/invoices/[id]/send/route';
 
 const DRAFT_INVOICE = {
