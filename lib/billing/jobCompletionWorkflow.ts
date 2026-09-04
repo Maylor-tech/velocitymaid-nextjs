@@ -14,6 +14,7 @@ import {
   sendReceiptDocumentEmail,
   sendReviewRequestAfterPayment,
 } from './billingEmails';
+import { invoiceServiceDateFromJob } from '@/lib/dates/serviceDate';
 
 const REVIEW_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
 
@@ -155,7 +156,7 @@ export async function runJobCompletionBillingWorkflow(
         clientPhone: job.Customer?.phone ?? null,
         propertyAddress,
         serviceType,
-        jobDate: input.completedAt,
+        jobDate: invoiceServiceDateFromJob(job.preferredDate, input.completedAt),
         dueDate,
         subtotal: totalPrice,
         tax: 0,

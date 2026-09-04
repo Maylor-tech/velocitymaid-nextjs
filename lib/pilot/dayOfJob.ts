@@ -8,8 +8,10 @@
  * - Issue escalation
  */
 
+import { randomUUID } from "crypto";
 import { prisma } from "../prisma";
 import { JobStatus } from "@prisma/client";
+import { logAuditEntry } from "../audit";
 
 export interface JobCompletionCheck {
   passed: boolean;
@@ -161,11 +163,13 @@ export async function escalateJobIssue(
       };
     }
 
-    // Create escalation record
-    const escalation = await prisma.auditLog.create({
-      data: {
-        entityType: "Escalation",
-        entityId: `esc_${Date.now()}_${jobId}`,
+    const escalationId = randomUUID();
+    const createdAt = new Date();
+    try {
+      await logAuditEntry({
+        id: escalationId,
+        entityType: "Job",
+        entityId: jobId,
         action: "ESCALATION_CREATED",
         actorRole: reportedBy,
         actorId: reporterId,
@@ -175,31 +179,28 @@ export async function escalateJobIssue(
           reason,
           notes: notes || null,
           jobId,
+          cleanerId: reporterId,
           branchId: job.branchId,
           assignedCleanerId: job.assignedCleanerId,
           jobStatus: job.status,
+          createdAt: createdAt.toISOString(),
         },
-      },
-    });
-
-    // TODO: Send admin notification
-    // This could be:
-    // - Email notification
-    // - In-app notification
-    // - Slack webhook
-    // - Admin dashboard alert
+      });
+    } catch (auditError) {
+      console.error("[PHASE_M] Escalation audit log failed:", auditError);
+    }
 
     console.log(`[PHASE_M] Escalation created for job ${jobId}: ${issueType} - ${reason}`);
 
     return {
       success: true,
-      escalationId: escalation.id,
+      escalationId,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`[PHASE_M] Error creating escalation:`, error);
     return {
       success: false,
-      error: error.message || "Failed to create escalation",
+      error: error instanceof Error ? error.message : "Failed to create escalation",
     };
   }
 }

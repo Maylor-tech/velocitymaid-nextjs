@@ -4,6 +4,7 @@
  * Minimal test cases for payout evaluation engine.
  */
 
+import { describe, expect, it } from "vitest";
 import { evaluatePayout } from "../evaluatePayout";
 import { PayoutRule } from "../ruleSchema";
 import type { Job, Payee, PolicyVersion, PolicyRule } from "../evaluatePayout";
@@ -140,9 +141,7 @@ describe("evaluatePayout", () => {
 
       expect(result.totalAmount).toBe(75); // 65 + 10
       expect(result.breakdown.bonuses).toEqual([10]);
-      expect(result.breakdown.reasons).toContain(
-        expect.stringContaining("Conditional bonus")
-      );
+      expect(result.breakdown.reasons.join("\n")).toContain("Conditional bonus");
     });
 
     it("should not apply bonus when condition is not met", () => {
@@ -252,9 +251,7 @@ describe("evaluatePayout", () => {
       // Final: 150
       expect(result.totalAmount).toBe(150);
       expect(result.breakdown.capsApplied).toBe(true);
-      expect(result.breakdown.reasons).toContain(
-        expect.stringContaining("Cap enforced")
-      );
+      expect(result.breakdown.reasons.join("\n")).toContain("Cap enforced");
     });
   });
 
@@ -300,9 +297,7 @@ describe("evaluatePayout", () => {
       // Min: 40
       // Final: 40
       expect(result.totalAmount).toBe(40);
-      expect(result.breakdown.reasons).toContain(
-        expect.stringContaining("Minimum total enforced")
-      );
+      expect(result.breakdown.reasons.join("\n")).toContain("Minimum total enforced");
     });
   });
 
