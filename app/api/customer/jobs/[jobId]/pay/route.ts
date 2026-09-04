@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { PaymentStatus } from '@prisma/client';
 import { requireCustomerJobOwnership } from '@/lib/auth/requireRole';
-import stripe from '@/utils/stripe';
+import { getStripe } from '@/utils/stripe';
 import { createBalanceCheckoutSession } from '@/lib/booking/stripeCheckout';
 import { getBookingDepositDollars } from '@/lib/booking/paymentConfig';
 import { assertStripeTestModeForDepositBooking } from '@/lib/stripe/stripeMode';
@@ -89,6 +89,7 @@ export async function POST(
 
     if (job.sessionId?.startsWith('cs_')) {
       try {
+        const stripe = getStripe();
         const session = await stripe.checkout.sessions.retrieve(job.sessionId);
         if (session.payment_status === 'paid') {
           return NextResponse.json({

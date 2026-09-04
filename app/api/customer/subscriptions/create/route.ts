@@ -4,8 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { findCustomerById } from '@/utils/customerData';
 import { getOrCreateStripeCustomerForCustomer } from '@/utils/getOrCreateStripeCustomerForCustomer';
-import { createSubscription } from '@/utils/subscriptionData';
-import stripe from '@/utils/stripe';
+import { getStripe } from '@/utils/stripe';
 import type { PlanType } from '@/utils/subscriptionData';
 
 /**
@@ -67,8 +66,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get or create Stripe customer
     const stripeCustomerId = await getOrCreateStripeCustomerForCustomer(customer);
+    const stripe = getStripe();
 
     // Get origin for return URLs
     const origin = request.headers.get('origin') || 'http://localhost:3000';
@@ -115,10 +114,10 @@ export async function POST(request: NextRequest) {
       url: session.url,
       sessionId: session.id,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Create subscription error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create subscription' },
+      { success: false, error: error instanceof Error ? error.message : 'Failed to create subscription' },
       { status: 500 }
     );
   }

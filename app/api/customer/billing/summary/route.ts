@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic'
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { findCustomerById } from '@/utils/customerData';
 import { getOrCreateStripeCustomerForCustomer } from '@/utils/getOrCreateStripeCustomerForCustomer';
-import stripe from '@/utils/stripe';
+import { getStripe } from '@/utils/stripe';
 
 /**
  * Get Billing Summary API
@@ -13,7 +13,7 @@ import stripe from '@/utils/stripe';
  * 
  * Returns payment method and recent invoices
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const cookieStore = await cookies();
     const customerId = cookieStore.get('customerId')?.value;
@@ -33,10 +33,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get or create Stripe customer
     const stripeCustomerId = await getOrCreateStripeCustomerForCustomer(customer);
+    const stripe = getStripe();
 
-    // Fetch payment methods
     let paymentMethodSummary = null;
     try {
       const paymentMethods = await stripe.paymentMethods.list({
@@ -61,7 +60,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch recent invoices
-    let recentInvoices: any[] = [];
+    let recentInvoices: Array<{
+      id: string;
+      amountPaid: number;
+      amountDue: number;
+      status: string | null;
+      hostedInvoiceUrl: string | null;
+      invoicePdf: string | null;
+      created: string;
+      periodStart: string | null;
+      periodEnd: string | null;
+      description: string;
+    }> = [];
     try {
       const invoices = await stripe.invoices.list({
         customer: stripeCustomerId,
@@ -91,10 +101,10 @@ export async function GET(request: NextRequest) {
       recentInvoices,
       stripeCustomerId,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Billing summary error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch billing summary' },
+      { success: false, error: error instanceof Error ? error.message : 'Failed to fetch billing summary' },
       { status: 500 }
     );
   }

@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 import { findCustomerById } from '@/utils/customerData';
 import { getOrCreateStripeCustomerForCustomer } from '@/utils/getOrCreateStripeCustomerForCustomer';
 import { createTip } from '@/utils/tipData';
-import stripe from '@/utils/stripe';
+import { getStripe } from '@/utils/stripe';
 
 /**
  * Create Tip Checkout Session API
@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get or create Stripe customer
     const stripeCustomerId = await getOrCreateStripeCustomerForCustomer(customer);
+    const stripe = getStripe();
 
     // Get origin for return URLs
     const origin = request.headers.get('origin') || 'http://localhost:3000';
@@ -116,10 +116,10 @@ export async function POST(request: NextRequest) {
       sessionId: session.id,
       tipId: tip.id,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Create tip checkout error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create tip checkout session' },
+      { success: false, error: error instanceof Error ? error.message : 'Failed to create tip checkout session' },
       { status: 500 }
     );
   }

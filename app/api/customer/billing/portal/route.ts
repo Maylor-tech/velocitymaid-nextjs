@@ -4,13 +4,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { findCustomerById } from '@/utils/customerData';
 import { getOrCreateStripeCustomerForCustomer } from '@/utils/getOrCreateStripeCustomerForCustomer';
-import stripe from '@/utils/stripe';
+import { getStripe } from '@/utils/stripe';
 
 /**
  * Create Billing Portal Session API
- * 
+ *
  * POST /api/customer/billing/portal
- * 
+ *
  * Creates a Stripe Billing Portal session and returns the URL
  */
 export async function POST(request: NextRequest) {
@@ -33,14 +33,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get or create Stripe customer
     const stripeCustomerId = await getOrCreateStripeCustomerForCustomer(customer);
 
-    // Get return URL from environment or use default
-    const returnUrl = process.env.STRIPE_BILLING_PORTAL_RETURN_URL || 
+    const returnUrl = process.env.STRIPE_BILLING_PORTAL_RETURN_URL ||
                      `${request.headers.get('origin') || 'http://localhost:3000'}/customer/billing`;
 
-    // Create billing portal session
+    const stripe = getStripe();
     const session = await stripe.billingPortal.sessions.create({
       customer: stripeCustomerId,
       return_url: returnUrl,
@@ -50,12 +48,14 @@ export async function POST(request: NextRequest) {
       success: true,
       url: session.url,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Billing portal error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create billing portal session' },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create billing portal session',
+      },
       { status: 500 }
     );
   }
 }
-
