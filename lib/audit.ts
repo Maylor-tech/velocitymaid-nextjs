@@ -8,6 +8,7 @@ import { prisma } from './prisma';
 import { randomUUID } from 'crypto';
 
 export interface AuditLogParams {
+  id?: string;
   actorId?: string | null;
   actorRole?: string | null;
   action: string;
@@ -17,11 +18,12 @@ export interface AuditLogParams {
   changes?: any;
 }
 
-export async function logAuditEntry(params: AuditLogParams) {
+export async function logAuditEntry(params: AuditLogParams): Promise<string | null> {
+  const id = params.id ?? randomUUID();
   try {
     await prisma.auditLog.create({
       data: {
-        id: randomUUID(),
+        id,
         actorId: params.actorId ?? null,
         actorRole: params.actorRole ?? null,
         action: params.action,
@@ -31,9 +33,11 @@ export async function logAuditEntry(params: AuditLogParams) {
         changes: params.changes ?? {},
       },
     });
+    return id;
   } catch (error) {
     console.error('[AUDIT_LOG_ERROR]', error);
     // Don't throw - audit logging should never break the main flow
+    return null;
   }
 }
 

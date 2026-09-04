@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
+import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
 import { prisma } from '@/lib/prisma';
 import { computeOperationsSummary } from '@/lib/admin/jobsOperations';
 import { loadJobTeamBatch } from '@/lib/cleaners/internalCleanerService';
@@ -366,6 +367,8 @@ export async function GET(request: NextRequest) {
       summary,
     });
   } catch (err: unknown) {
+    const authResponse = rethrowIfAuthResponse(err);
+    if (authResponse) return authResponse;
     console.error('Admin jobs API error:', err);
     return NextResponse.json({
       success: true,

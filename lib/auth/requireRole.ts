@@ -9,6 +9,21 @@ import { cookies } from "next/headers";
 import { allowLegacyAdminBypass, isLegacyAdminSession } from "./adminBypass";
 import { isBranchScopedAdmin } from "./adminScope";
 
+type CookieReader = { get(name: string): { value: string } | undefined };
+
+/**
+ * Read an admin cookie from next/headers first, then the incoming request.
+ * Same cookie name and same validation — does not add a weaker auth path.
+ * Route Handlers on Vercel can miss cookies() while request.cookies still has them.
+ */
+export function readAdminCookie(
+  cookieStore: CookieReader,
+  request: NextRequest,
+  name: string
+): string | undefined {
+  return cookieStore.get(name)?.value || request.cookies.get(name)?.value;
+}
+
 export type RequiredRole = "ADMIN" | "CUSTOMER" | "CLEANER" | "BRANCH_OWNER" | "BRANCH_OPERATOR";
 
 type AdminBranchRow = { branchId: string; Branch: { name: string } };
@@ -72,10 +87,10 @@ export async function requireRole(
 ): Promise<AuthContext> {
   if (requiredRole === "ADMIN") {
     const cookieStore = await cookies();
-    const adminSessionRaw = cookieStore.get("admin_session")?.value;
+    const adminSessionRaw = readAdminCookie(cookieStore, request, "admin_session");
     const adminId =
-      cookieStore.get("adminId")?.value ||
-      cookieStore.get("adminSession")?.value ||
+      readAdminCookie(cookieStore, request, "adminId") ||
+      readAdminCookie(cookieStore, request, "adminSession") ||
       request.headers.get("x-admin-id") ||
       request.headers.get("authorization")?.replace("Bearer ", "");
 

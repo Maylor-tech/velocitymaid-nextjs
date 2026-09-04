@@ -14,8 +14,13 @@ import { prisma } from '@/lib/prisma';
 import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { sendRebookingReminderEmail } from '@/lib/email/cronAutomationEmails';
 import { logAuditEntry } from '@/lib/audit';
+import {
+  evaluateRebookingReminder,
+  REBOOKING_REMINDER_ACTION,
+  rebookingCandidateWhere,
+  upcomingTurnoverWhere,
+} from '@/lib/cron/rebookingReminders';
 
-const ACTION = 'REBOOKING_REMINDER_SENT';
 const MAX_PER_RUN = 100;
 
 function dayWindow(daysFromToday: number): { start: Date; end: Date } {
@@ -35,18 +40,13 @@ export async function GET(request: NextRequest) {
     const { start: checkoutStart, end: checkoutEnd } = dayWindow(7);
 
     const jobs = await prisma.job.findMany({
-      where: {
-        preferredDate: { gte: checkoutStart, lt: checkoutEnd },
-        customerId: { not: null },
-        archivedAt: null,
-        status: { notIn: ['CANCELLED', 'CANCELLED_EMERGENCY'] },
-        Customer: { email: { not: null } },
-      },
+      where: rebookingCandidateWhere(checkoutStart, checkoutEnd),
       select: {
         id: true,
         customerId: true,
         preferredDate: true,
         address: true,
+        status: true,
         Customer: {
           select: {
             email: true,
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     const alreadySent = await prisma.auditLog.findMany({
       where: {
-        action: ACTION,
+        action: REBOOKING_REMINDER_ACTION,
         entityType: 'Job',
         entityId: { in: jobs.map((j) => j.id) },
       },
@@ -78,12 +78,17 @@ export async function GET(request: NextRequest) {
     let skipped = 0;
 
     for (const job of jobs) {
-      if (sentSet.has(job.id) || !job.customerId || !job.preferredDate) {
+      const precheck = evaluateRebookingReminder({
+        job,
+        alreadyReminded: sentSet.has(job.id),
+        upcomingTurnoverScheduled: false,
+      });
+      if (!precheck.send) {
         skipped++;
         continue;
       }
 
-      const checkout = new Date(job.preferredDate);
+      const checkout = new Date(job.preferredDate!);
       const followUpStart = new Date(checkout);
       followUpStart.setDate(followUpStart.getDate() + 1);
       followUpStart.setHours(0, 0, 0, 0);
@@ -92,17 +97,12 @@ export async function GET(request: NextRequest) {
       followUpEnd.setHours(0, 0, 0, 0);
 
       const turnoverFollowUp = await prisma.job.count({
-        where: {
-          customerId: job.customerId,
-          id: { not: job.id },
-          archivedAt: null,
-          status: { notIn: ['CANCELLED', 'CANCELLED_EMERGENCY'] },
-          preferredDate: { gte: followUpStart, lt: followUpEnd },
-          OR: [
-            { serviceType: { contains: 'Turnover', mode: 'insensitive' } },
-            { serviceType: { contains: 'turnover', mode: 'insensitive' } },
-          ],
-        },
+        where: upcomingTurnoverWhere(
+          job.customerId!,
+          job.id,
+          followUpStart,
+          followUpEnd
+        ),
       });
 
       if (turnoverFollowUp > 0) {
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
 
       if (result.sent) {
         await logAuditEntry({
-          action: ACTION,
+          action: REBOOKING_REMINDER_ACTION,
           entityType: 'Job',
           entityId: job.id,
           description: 'Rebooking reminder email sent to host',

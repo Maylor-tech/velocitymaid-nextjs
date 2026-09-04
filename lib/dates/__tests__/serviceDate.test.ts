@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatCalendarDate,
   formatConfirmedSchedule,
   formatServiceDate,
+  invoiceServiceDateFromJob,
+  isSameServiceDay,
   parseServiceDateInput,
   serviceDateKey,
 } from '../serviceDate';
@@ -75,5 +78,43 @@ describe('formatConfirmedSchedule', () => {
     expect(schedule.dateLabel).toBe('Sunday, August 30, 2026');
     expect(schedule.timeLabel).toBe('10:00 AM');
     expect(schedule.combined).toContain('10:00 AM');
+  });
+});
+
+describe('invoiceServiceDateFromJob', () => {
+  it('uses preferredDate UTC midnight, not next-day completedAt', () => {
+    const jobDate = invoiceServiceDateFromJob(
+      '2026-08-25T00:00:00.000Z',
+      new Date('2026-08-26T16:00:34.594Z')
+    );
+    expect(jobDate.toISOString()).toBe('2026-08-25T00:00:00.000Z');
+    expect(isSameServiceDay(jobDate, '2026-08-25T00:00:00.000Z')).toBe(true);
+  });
+
+  it('falls back to the business day of completedAt when preferredDate is missing', () => {
+    const jobDate = invoiceServiceDateFromJob(
+      null,
+      new Date('2026-08-26T16:00:34.594Z')
+    );
+    expect(jobDate.toISOString()).toBe('2026-08-26T00:00:00.000Z');
+  });
+
+  it('does not roll a Vermont evening completion onto the next UTC calendar day', () => {
+    // 2026-08-26T03:30:00.000Z is 11:30pm Aug 25 in America/New_York.
+    const jobDate = invoiceServiceDateFromJob(
+      null,
+      new Date('2026-08-26T03:30:00.000Z')
+    );
+    expect(jobDate.toISOString()).toBe('2026-08-25T00:00:00.000Z');
+  });
+});
+
+describe('formatCalendarDate', () => {
+  it('does not backtrack UTC-midnight service days in US timezones', () => {
+    expect(formatCalendarDate('2026-08-25T00:00:00.000Z')).toBe('August 25, 2026');
+  });
+
+  it('renders Vermont-afternoon wall-clock stamps on the Eastern calendar day', () => {
+    expect(formatCalendarDate('2026-08-26T16:00:34.594Z')).toBe('August 26, 2026');
   });
 });

@@ -113,9 +113,14 @@ function isUtcMidnight(date: Date): boolean {
  *   - date-only values encoded as UTC midnight (e.g. Job.preferredDate) →
  *     read the day in UTC, because converting UTC-midnight to a US timezone
  *     would shift it back onto the previous calendar day.
- *   - real wall-clock timestamps (e.g. Invoice.jobDate = completedAt) →
- *     read the day in the business timezone, because a Vermont evening clean
- *     stored in UTC would otherwise roll onto the next UTC calendar day.
+ *   - real wall-clock timestamps (legacy Invoice.jobDate stamped from
+ *     completedAt) → read the day in the business timezone, because a
+ *     Vermont evening clean stored in UTC would otherwise roll onto the
+ *     next UTC calendar day.
+ *
+ * New invoices stamp jobDate as UTC midnight of Job.preferredDate (see
+ * invoiceServiceDateFromJob). Completing a job the next calendar day must
+ * not change the customer-facing service date.
  *
  * This is the timezone-safe comparison required by Incident #001 (C7): never
  * use naive UTC-day equality on a wall-clock timestamp.
@@ -151,4 +156,60 @@ export function isSameServiceDay(
   const kb = businessDateKey(b, timeZone);
   if (ka == null || kb == null) return false;
   return ka === kb;
+}
+
+/**
+ * Customer-facing invoice service date: the job's scheduled calendar day,
+ * encoded as UTC midnight. Never use completedAt — ops often close a job
+ * the morning after the clean, which would fail C7 and print the wrong day.
+ *
+ * If preferredDate is missing, fall back to the business calendar day of
+ * completedAt (still stored as UTC midnight, not the wall-clock instant).
+ */
+export function invoiceServiceDateFromJob(
+  preferredDate: Date | string | null | undefined,
+  fallbackCompletedAt?: Date | string | null
+): Date {
+  if (preferredDate != null && preferredDate !== '') {
+    const raw =
+      preferredDate instanceof Date ? preferredDate.toISOString() : String(preferredDate);
+    const parsed = parseServiceDateInput(raw);
+    if (parsed) return parsed;
+  }
+
+  if (fallbackCompletedAt != null && fallbackCompletedAt !== '') {
+    const key = businessDateKey(fallbackCompletedAt);
+    if (key) {
+      const parsed = parseServiceDateInput(key);
+      if (parsed) return parsed;
+    }
+  }
+
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
+/**
+ * Format a date for invoices / receipts.
+ * UTC-midnight values are service calendar days (no local backtrack).
+ * Wall-clock timestamps use the business timezone.
+ */
+export function formatCalendarDate(
+  value: string | Date | null | undefined,
+  options: ServiceDateFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }
+): string {
+  if (value == null || value === '') return '';
+  const date = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return '';
+  if (isUtcMidnight(date)) {
+    return formatServiceDate(date, options);
+  }
+  return date.toLocaleDateString('en-US', {
+    ...options,
+    timeZone: BUSINESS_TIMEZONE,
+  });
 }
