@@ -8,6 +8,7 @@ import {
   toCleanerOfferLocationView,
   type CleanerOfferLocationView,
 } from './cleanerViews';
+import { effectiveOfferStatus } from './offerExpiry';
 
 export type CleanerOfferJson = {
   offerId: string;
@@ -66,7 +67,7 @@ export function serializeCleanerOffer(row: CleanerOfferSource): CleanerOfferJson
   const payload: CleanerOfferJson = {
     offerId: row.id,
     jobId: row.jobId,
-    status: row.status,
+    status: effectiveOfferStatus(row),
     jobReference: row.Job.jobReference,
     serviceType: row.Job.serviceType,
     serviceDate: formatServiceDate(row.Job.preferredDate, {

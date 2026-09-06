@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle, Clock, Loader2, XCircle } from 'lucide-react';
+import { isEffectivelyOpen, effectiveOfferStatus } from '@/lib/dispatch/offerExpiry';
 
 type OfferRow = {
   id: string;
   status: string;
+  effectiveStatus?: string;
   cleanerId: string;
   cleanerName: string | null;
   cleanerEmail: string | null;
@@ -52,12 +54,12 @@ function formatMoney(amount: number) {
 }
 
 function Countdown({ expiresAt }: { expiresAt: string }) {
-  const [now, setNow] = useState(() => Date.now());
+  const [nowMs, setNowMs] = useState(() => Date.now());
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
+    const t = setInterval(() => setNowMs(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  const remaining = new Date(expiresAt).getTime() - now;
+  const remaining = new Date(expiresAt).getTime() - nowMs;
   if (remaining <= 0) return <span className="text-red-700 font-medium">Expired</span>;
   const mins = Math.floor(remaining / 60000);
   const secs = Math.floor((remaining % 60000) / 1000);
@@ -86,6 +88,11 @@ export function DispatchPanel({
   const [compensationBasis, setCompensationBasis] = useState<'FLAT' | 'HOURLY' | 'OTHER'>('FLAT');
   const [ttlMinutes, setTtlMinutes] = useState('');
   const [urgency, setUrgency] = useState<'STANDARD' | 'SAME_DAY' | 'URGENT'>('STANDARD');
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -116,8 +123,11 @@ export function DispatchPanel({
 
   if (!enabled) return null;
 
-  const openOffer = data?.offers.find((o) => o.status === 'OFFERED') ?? null;
-  const history = data?.offers.filter((o) => o.status !== 'OFFERED') ?? [];
+  const clock = new Date(nowMs);
+  const openOffer =
+    data?.offers.find((o) => isEffectivelyOpen(o, clock)) ?? null;
+  const history =
+    data?.offers.filter((o) => !isEffectivelyOpen(o, clock)) ?? [];
 
   const saveUrgency = async (next: 'STANDARD' | 'SAME_DAY' | 'URGENT') => {
     setUrgency(next);
@@ -355,7 +365,7 @@ export function DispatchPanel({
                 {history.map((o) => (
                   <li key={o.id} className="flex items-center justify-between gap-2">
                     <span>
-                      {o.cleanerName || o.cleanerEmail} · {o.status}
+                      {o.cleanerName || o.cleanerEmail} · {effectiveOfferStatus(o, clock)}
                       {o.declineReason ? ` — ${o.declineReason}` : ''}
                     </span>
                     <span className="text-vm-muted">{formatMoney(o.compensationAmount)}</span>

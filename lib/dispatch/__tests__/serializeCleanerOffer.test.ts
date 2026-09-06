@@ -14,7 +14,7 @@ describe('cleaner offer serializer', () => {
     compensationBasis: 'FLAT' as const,
     estimatedDurationMins: 180,
     operationalNotes: 'Bring extra towels',
-    expiresAt: new Date('2026-08-28T16:30:00.000Z'),
+    expiresAt: new Date('2099-01-01T00:00:00.000Z'),
     offeredAt: new Date('2026-08-28T16:00:00.000Z'),
     Job: {
       jobReference: 'VM-TEST-1',
@@ -42,6 +42,7 @@ describe('cleaner offer serializer', () => {
     });
     expect(json.compensationAmount).toBe(195);
     expect(json.compensationBasis).toBe('FLAT');
+    expect(json.status).toBe('OFFERED');
     expect(json.serviceType).toBe('Vacation Rental Turnover');
     expect(json.serviceDate).toMatch(/Sep/);
     expect(json.preferredTime).toBe('11:00 AM');
@@ -59,6 +60,14 @@ describe('cleaner offer serializer', () => {
     expect(json).not.toHaveProperty('operationalTotal');
     expect(json).not.toHaveProperty('address');
     expect(() => assertNoCustomerFinancials(json)).not.toThrow();
+  });
+
+  it('serializes a stored OFFERED row past expiresAt as EXPIRED (cron never ran)', () => {
+    const json = serializeCleanerOffer({
+      ...row,
+      expiresAt: new Date('2020-01-01T00:00:00.000Z'),
+    });
+    expect(json.status).toBe('EXPIRED');
   });
 
   it('rejects a payload that includes customer totals', () => {
@@ -93,7 +102,7 @@ describe('dispatch UI state', () => {
     ).toBe('CLEANER_NEEDED');
   });
 
-  it('shows offer sent while OFFERED', () => {
+  it('shows offer sent while OFFERED and still within TTL', () => {
     expect(
       deriveDispatchUiState({
         assignedCleanerId: null,
@@ -101,7 +110,7 @@ describe('dispatch UI state', () => {
           id: 'o1',
           status: 'OFFERED',
           cleanerName: 'Brian',
-          expiresAt: '2026-08-28T16:30:00.000Z',
+          expiresAt: '2099-01-01T00:00:00.000Z',
           compensationAmount: 195,
         },
       }).label
