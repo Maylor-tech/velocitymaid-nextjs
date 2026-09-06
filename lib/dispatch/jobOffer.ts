@@ -29,6 +29,9 @@ import { DispatchError } from '@/lib/dispatch/errors';
 import { computeExpiresAt, resolveOfferTtlMinutes } from '@/lib/dispatch/offerTtl';
 import { notifyCleanerOfOffer } from '@/lib/dispatch/notifyOffer';
 import type { DispatchUrgencyValue } from '@/lib/dispatch/offerTtl';
+import {
+  shouldRejectMutationAsExpired,
+} from '@/lib/dispatch/offerExpiry';
 
 const OFFER_JOB_SELECT = {
   id: true,
@@ -65,6 +68,17 @@ function uniqueViolation(err: unknown): boolean {
   return (
     err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002'
   );
+}
+
+async function persistOfferedRowExpired(
+  db: Prisma.TransactionClient | typeof prisma,
+  offerId: string,
+  now: Date
+) {
+  return db.jobOffer.update({
+    where: { id: offerId },
+    data: { status: JobOfferStatus.EXPIRED, respondedAt: now },
+  });
 }
 
 async function assertCleanerEligible(
@@ -198,16 +212,39 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
     throw err;
   }
 
-  const existingOpen = await prisma.jobOffer.findFirst({
-    where: { jobId: job.id, status: JobOfferStatus.OFFERED },
+  const now = new Date();
+  const liveOpen = await prisma.jobOffer.findFirst({
+    where: {
+      jobId: job.id,
+      status: JobOfferStatus.OFFERED,
+      expiresAt: { gt: now },
+    },
     select: { id: true },
   });
-  if (existingOpen) {
+  if (liveOpen) {
     throw new DispatchError(
       'An offer is already outstanding. Cancel, expire, or wait for a response before offering another cleaner.',
       'OFFER_OPEN',
       409
     );
+  }
+
+  const staleOpen = await prisma.jobOffer.findMany({
+    where: {
+      jobId: job.id,
+      status: JobOfferStatus.OFFERED,
+      expiresAt: { lte: now },
+    },
+    select: { id: true },
+  });
+  for (const row of staleOpen) {
+    try {
+      await persistOfferedRowExpired(prisma, row.id, now);
+    } catch (err) {
+      if (!uniqueViolation(err)) {
+        console.error('[createJobOffer] failed to persist stale expiry', row.id, err);
+      }
+    }
   }
 
   const cleaner = await assertCleanerEligible(
@@ -291,6 +328,13 @@ export async function cancelJobOffer(input: {
   if (!offer || offer.jobId !== input.jobId) {
     throw new DispatchError('Offer not found', 'OFFER_NOT_FOUND', 404);
   }
+  if (shouldRejectMutationAsExpired(offer, new Date())) {
+    if (offer.status === JobOfferStatus.OFFERED) {
+      const expired = await persistOfferedRowExpired(prisma, offer.id, new Date());
+      return expired;
+    }
+    throw new DispatchError('This offer has expired', 'OFFER_EXPIRED', 409);
+  }
   if (offer.status !== JobOfferStatus.OFFERED) {
     throw new DispatchError(
       `Offer cannot be cancelled from ${offer.status}`,
@@ -329,7 +373,11 @@ export async function cancelOpenOffersForJob(
   adminId?: string | null
 ): Promise<number> {
   const open = await prisma.jobOffer.findMany({
-    where: { jobId, status: JobOfferStatus.OFFERED },
+    where: {
+      jobId,
+      status: JobOfferStatus.OFFERED,
+      expiresAt: { gt: new Date() },
+    },
     select: { id: true },
   });
   for (const row of open) {
@@ -396,15 +444,18 @@ export async function acceptJobOffer(input: {
           409
         );
       }
+      if (shouldRejectMutationAsExpired(offer, now)) {
+        if (offer.status === JobOfferStatus.OFFERED) {
+          await persistOfferedRowExpired(tx, offer.id, now);
+        }
+        throw new DispatchError('This offer has expired', 'OFFER_EXPIRED', 409);
+      }
       if (offer.status !== JobOfferStatus.OFFERED) {
         throw new DispatchError(
           `Offer is ${offer.status} and cannot be accepted`,
           'INVALID_OFFER_STATUS',
           409
         );
-      }
-      if (offer.expiresAt.getTime() <= now.getTime()) {
-        throw new DispatchError('This offer has expired', 'OFFER_EXPIRED', 409);
       }
 
       const accepted = await tx.jobOffer.update({
@@ -526,6 +577,12 @@ export async function declineJobOffer(input: {
   if (!offer) throw new DispatchError('Offer not found', 'OFFER_NOT_FOUND', 404);
   if (offer.cleanerId !== input.cleanerId) {
     throw new DispatchError('This offer is not for your account', 'OFFER_NOT_YOURS', 403);
+  }
+  if (shouldRejectMutationAsExpired(offer, now)) {
+    if (offer.status === JobOfferStatus.OFFERED) {
+      await persistOfferedRowExpired(prisma, offer.id, now);
+    }
+    throw new DispatchError('This offer has expired', 'OFFER_EXPIRED', 409);
   }
   if (offer.status !== JobOfferStatus.OFFERED) {
     throw new DispatchError(

@@ -2,7 +2,6 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { JobOfferStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
@@ -11,6 +10,7 @@ import { createJobOffer } from '@/lib/dispatch/jobOffer';
 import { isDispatchError } from '@/lib/dispatch/errors';
 import { previewCompensationFromOperationalTotal } from '@/lib/dispatch/compensation';
 import { deriveDispatchUiState } from '@/lib/dispatch/dispatchState';
+import { effectiveOfferStatus, isEffectivelyOpen } from '@/lib/dispatch/offerExpiry';
 
 export async function GET(
   request: NextRequest,
@@ -44,34 +44,39 @@ export async function GET(
       },
     });
 
-    const mapped = offers.map((o) => ({
-      id: o.id,
-      status: o.status,
-      cleanerId: o.cleanerId,
-      cleanerName: o.Cleaner.name,
-      cleanerEmail: o.Cleaner.email,
-      offeredAt: o.offeredAt.toISOString(),
-      expiresAt: o.expiresAt.toISOString(),
-      respondedAt: o.respondedAt?.toISOString() ?? null,
-      declineReason: o.declineReason,
-      compensationAmount: Number(o.compensationAmount),
-      compensationCurrency: o.compensationCurrency,
-      compensationBasis: o.compensationBasis,
-      estimatedDurationMins: o.estimatedDurationMins,
-      operationalNotes: o.operationalNotes,
-      channel: o.channel,
-    }));
+    const mapped = offers.map((o) => {
+      const storedStatus = o.status;
+      const effective = effectiveOfferStatus(o);
+      return {
+        id: o.id,
+        status: storedStatus,
+        effectiveStatus: effective,
+        cleanerId: o.cleanerId,
+        cleanerName: o.Cleaner.name,
+        cleanerEmail: o.Cleaner.email,
+        offeredAt: o.offeredAt.toISOString(),
+        expiresAt: o.expiresAt.toISOString(),
+        respondedAt: o.respondedAt?.toISOString() ?? null,
+        declineReason: o.declineReason,
+        compensationAmount: Number(o.compensationAmount),
+        compensationCurrency: o.compensationCurrency,
+        compensationBasis: o.compensationBasis,
+        estimatedDurationMins: o.estimatedDurationMins,
+        operationalNotes: o.operationalNotes,
+        channel: o.channel,
+      };
+    });
 
-    const open = mapped.find((o) => o.status === JobOfferStatus.OFFERED) ?? null;
+    const open = mapped.find((o) => isEffectivelyOpen(o)) ?? null;
     const latestTerminal =
-      mapped.find((o) => o.status !== JobOfferStatus.OFFERED) ?? null;
+      mapped.find((o) => !isEffectivelyOpen(o)) ?? null;
     const ui = deriveDispatchUiState({
       assignedCleanerId: job.assignedCleanerId,
       assignedCleanerName: job.User?.name ?? null,
       openOffer: open
         ? {
             id: open.id,
-            status: open.status,
+            status: open.effectiveStatus,
             cleanerName: open.cleanerName,
             expiresAt: open.expiresAt,
             compensationAmount: open.compensationAmount,
@@ -80,7 +85,7 @@ export async function GET(
       latestTerminalOffer: latestTerminal
         ? {
             id: latestTerminal.id,
-            status: latestTerminal.status,
+            status: latestTerminal.effectiveStatus,
             cleanerName: latestTerminal.cleanerName,
             expiresAt: latestTerminal.expiresAt,
             compensationAmount: latestTerminal.compensationAmount,

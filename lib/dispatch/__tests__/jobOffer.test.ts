@@ -52,7 +52,7 @@ vi.mock('@/lib/notifications/adminNotificationCenter', () => ({
   adminNotificationHelpers: { adminJobLink: (id: string) => `/admin/jobs/${id}` },
 }));
 
-import { acceptJobOffer, createJobOffer, expireOpenOffers } from '../jobOffer';
+import { acceptJobOffer, createJobOffer, declineJobOffer, expireOpenOffers } from '../jobOffer';
 import { DispatchError } from '../errors';
 import { awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
 
@@ -97,6 +97,7 @@ describe('createJobOffer', () => {
     userFindUnique.mockResolvedValue(cleanerRow());
     applicationFindFirst.mockResolvedValue({ id: 'app-1' });
     offerFindFirst.mockResolvedValue(null);
+    offerFindMany.mockResolvedValue([]);
     offerCreate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
       id: 'offer-1',
       ...data,
@@ -163,6 +164,28 @@ describe('createJobOffer', () => {
         compensationAmount: 300,
       })
     ).rejects.toThrow(/quoted total/i);
+  });
+
+  it('allows a new cleaner offer when a stored OFFERED row is past expiresAt (cron never ran)', async () => {
+    jobFindUnique.mockResolvedValue(baseJob());
+    offerFindFirst.mockResolvedValue(null);
+    offerFindMany.mockResolvedValue([{ id: 'stale-offer' }]);
+    offerUpdate.mockResolvedValue({ id: 'stale-offer', status: JobOfferStatus.EXPIRED });
+
+    const offer = await createJobOffer({
+      jobId: 'job-1',
+      cleanerId: 'cleaner-1',
+      compensationAmount: 90,
+    });
+
+    expect(offerUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'stale-offer' },
+        data: expect.objectContaining({ status: JobOfferStatus.EXPIRED }),
+      })
+    );
+    expect(offerCreate).toHaveBeenCalled();
+    expect(offer.status).toBe(JobOfferStatus.OFFERED);
   });
 });
 
@@ -260,8 +283,33 @@ describe('acceptJobOffer', () => {
   });
 });
 
+describe('declineJobOffer', () => {
+  it('returns 409 when expiresAt has passed even if stored status is still OFFERED', async () => {
+    vi.setSystemTime(new Date('2026-08-28T16:40:00.000Z'));
+    offerFindUnique.mockResolvedValue({
+      id: 'offer-1',
+      cleanerId: 'cleaner-1',
+      jobId: 'job-1',
+      status: JobOfferStatus.OFFERED,
+      expiresAt: new Date('2026-08-28T16:10:00.000Z'),
+      Job: { id: 'job-1', branchId: 'branch-vt', jobReference: 'VM-TEST-1' },
+    });
+    offerUpdate.mockResolvedValue({ id: 'offer-1', status: JobOfferStatus.EXPIRED });
+
+    await expect(
+      declineJobOffer({ offerId: 'offer-1', cleanerId: 'cleaner-1' })
+    ).rejects.toMatchObject({ code: 'OFFER_EXPIRED', status: 409 });
+    expect(offerUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: JobOfferStatus.EXPIRED }),
+      })
+    );
+    vi.useRealTimers();
+  });
+});
+
 describe('expireOpenOffers', () => {
-  it('marks OFFERED rows EXPIRED and does not assign the job', async () => {
+  it('daily cron later persists stale OFFERED rows to EXPIRED without assigning', async () => {
     offerFindMany.mockResolvedValue([
       { id: 'offer-1', jobId: 'job-1', Job: { jobReference: 'VM-TEST-1' } },
     ]);

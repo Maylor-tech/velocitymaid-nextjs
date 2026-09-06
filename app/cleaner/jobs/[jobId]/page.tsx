@@ -9,6 +9,7 @@ import { formatServiceDate } from "@/lib/dates/serviceDate";
 import { JobTimer } from "@/components/cleaner/JobTimer";
 import { JobPhotoCapture } from "@/components/cleaner/JobPhotoCapture";
 import { EscalateIssueCard } from "@/components/cleaner/EscalateIssueCard";
+import { isOfferExpiredByTimestamp } from "@/lib/dispatch/offerExpiry";
 
 interface CustomerInfo {
   id: string;
@@ -119,6 +120,12 @@ export default function CleanerJobDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     if (jobId) {
@@ -400,6 +407,7 @@ export default function CleanerJobDetailPage() {
       job.status === "COMPLETED");
 
   if (access === "OFFER" && offer) {
+    const offerExpired = isOfferExpiredByTimestamp(offer, new Date(nowMs));
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-4xl mx-auto">
@@ -409,9 +417,13 @@ export default function CleanerJobDetailPage() {
           >
             ← Back to Jobs
           </Link>
-          <h1 className="text-2xl font-semibold mb-2">Job offer</h1>
+          <h1 className="text-2xl font-semibold mb-2">
+            {offerExpired ? "Offer expired" : "Job offer"}
+          </h1>
           <p className="text-vm-muted mb-6">
-            Accept to be assigned. Access codes and full address are shown after you accept.
+            {offerExpired
+              ? "This offer has expired. You can no longer accept or decline it."
+              : "Accept to be assigned. Access codes and full address are shown after you accept."}
           </p>
           <div className="bg-white rounded-lg shadow p-6 mb-6 space-y-3">
             <p><span className="text-vm-muted">Service:</span> {offer.serviceType || "Cleaning"}</p>
@@ -430,11 +442,19 @@ export default function CleanerJobDetailPage() {
                 ? ` (${offer.compensation.basisLabel})`
                 : ""}
             </p>
-            <p><span className="text-vm-muted">Respond by:</span> {new Date(offer.expiresAt).toLocaleString()}</p>
+            <p>
+              <span className="text-vm-muted">
+                {offerExpired ? "Expired at:" : "Respond by:"}
+              </span>{" "}
+              {new Date(offer.expiresAt).toLocaleString()}
+            </p>
             {offer.operationalNotes && (
               <p className="whitespace-pre-wrap"><span className="text-vm-muted">Notes:</span> {offer.operationalNotes}</p>
             )}
           </div>
+          {offerExpired ? (
+            <p className="font-medium text-red-700">Expired</p>
+          ) : (
           <div className="flex flex-wrap gap-3">
             <button
               onClick={handleAcceptOffer}
@@ -451,6 +471,7 @@ export default function CleanerJobDetailPage() {
               Decline
             </button>
           </div>
+          )}
         </div>
       </div>
     );

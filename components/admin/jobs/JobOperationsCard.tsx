@@ -24,6 +24,7 @@ import {
   priorityLabel,
   type JobOperationsInput,
 } from '@/lib/admin/jobsOperations';
+import { effectiveOfferStatus, isEffectivelyOpen } from '@/lib/dispatch/offerExpiry';
 
 export interface AdminJobListItem extends JobOperationsInput {
   id: string;
@@ -123,14 +124,29 @@ export function JobOperationsCard({
                 {job.dispatchUrgency.replace('_', ' ')}
               </span>
             )}
-            {!job.assignedCleanerId && job.openOffer?.status === 'OFFERED' && (
+            {!job.assignedCleanerId && isEffectivelyOpen(job.openOffer) && (
               <span className="rounded-full bg-vm-cyan-tint px-2 py-0.5 text-xs font-medium text-vm-navy">
-                {job.openOffer.cleanerName
+                {job.openOffer?.cleanerName
                   ? `Awaiting ${job.openOffer.cleanerName}`
                   : 'Offer sent'}
               </span>
             )}
+            {!job.assignedCleanerId &&
+              job.openOffer &&
+              effectiveOfferStatus(job.openOffer) === 'EXPIRED' && (
+              <span className="rounded-full bg-vm-warning-bg px-2 py-0.5 text-xs font-medium text-vm-warning">
+                Expired
+              </span>
+            )}
             {!job.assignedCleanerId && !job.openOffer && (
+              <span className="rounded-full bg-vm-warning-bg px-2 py-0.5 text-xs font-medium text-vm-warning">
+                Cleaner needed
+              </span>
+            )}
+            {!job.assignedCleanerId &&
+              job.openOffer &&
+              !isEffectivelyOpen(job.openOffer) &&
+              effectiveOfferStatus(job.openOffer) !== 'EXPIRED' && (
               <span className="rounded-full bg-vm-warning-bg px-2 py-0.5 text-xs font-medium text-vm-warning">
                 Cleaner needed
               </span>

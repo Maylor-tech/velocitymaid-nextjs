@@ -4,6 +4,7 @@
  */
 
 import { formatServiceDate } from '@/lib/dates/serviceDate';
+import { isEffectivelyOpen, effectiveOfferStatus } from '@/lib/dispatch/offerExpiry';
 
 export type JobPriority = 'urgent' | 'high' | 'medium' | 'normal';
 
@@ -590,11 +591,18 @@ export function getPrimaryAction(job: JobOperationsInput & { id: string }): {
     (job.status === 'CONFIRMED' || job.status === 'RECEIVED') &&
     !job.assignedCleanerId
   ) {
-    if (job.openOffer?.status === 'OFFERED') {
+    if (isEffectivelyOpen(job.openOffer)) {
       return {
-        label: job.openOffer.cleanerName
+        label: job.openOffer?.cleanerName
           ? `Awaiting ${job.openOffer.cleanerName}`
           : 'Awaiting offer response',
+        href: `/admin/jobs/${job.id}`,
+        actionable: true,
+      };
+    }
+    if (job.openOffer && effectiveOfferStatus(job.openOffer) === 'EXPIRED') {
+      return {
+        label: 'Expired — cleaner needed',
         href: `/admin/jobs/${job.id}`,
         actionable: true,
       };
