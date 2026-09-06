@@ -22,12 +22,16 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { PayoutTransferStatus, TaxProfileStatus } from "@prisma/client";
+import { PayoutTransferStatus } from "@prisma/client";
 import {
   getW9ReminderEmailSubject,
   getW9ReminderEmailHTML,
   getW9ReminderEmailText,
 } from "@/lib/tax/w9ReminderEmail";
+import {
+  getCleanerTaxProfileDelegate,
+  TAX_PROFILE_STATUS,
+} from "@/app/api/cron/_shared/prismaDelegates";
 
 /**
  * Get 1099 threshold for current year
@@ -174,15 +178,29 @@ export async function POST(req: NextRequest) {
     }
 
     // 4️⃣ Fetch tax profiles for eligible cleaners
-    const taxProfiles = await prisma.cleanerTaxProfile.findMany({
+    // 4️⃣ Fetch tax profiles for eligible cleaners
+    const taxProfileDb = getCleanerTaxProfileDelegate();
+    if (!taxProfileDb) {
+      console.log(
+        "[CRON_W9_REMINDERS] Skipping — CleanerTaxProfile is not in the Prisma schema"
+      );
+      return NextResponse.json({
+        success: true,
+        skipped: true,
+        reason: "CleanerTaxProfile model is not in the Prisma schema",
+        remindersSent: 0,
+      });
+    }
+
+    const taxProfiles = await taxProfileDb.findMany({
       where: {
         cleanerId: { in: eligibleCleanerIds },
         status: {
-          not: TaxProfileStatus.VERIFIED, // Only non-verified profiles
+          not: TAX_PROFILE_STATUS.VERIFIED,
         },
       },
       select: {
-        id: true, // Need id for update
+        id: true,
         cleanerId: true,
         status: true,
         lastReminderSentAt: true,
@@ -281,7 +299,7 @@ export async function POST(req: NextRequest) {
         });
 
         // Update tax profile with reminder tracking
-        await prisma.cleanerTaxProfile.update({
+        await taxProfileDb.update({
           where: { id: profile.id },
           data: {
             lastReminderSentAt: new Date(),
@@ -293,7 +311,7 @@ export async function POST(req: NextRequest) {
           `[CRON_W9_REMINDERS] Sent reminder #${reminderNumber} to ${cleaner.cleanerEmail} (cleaner ${profile.cleanerId})`
         );
         remindersSent++;
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(
           `[CRON_W9_REMINDERS] Failed to send reminder to ${cleaner.cleanerEmail}:`,
           error
@@ -314,15 +332,15 @@ export async function POST(req: NextRequest) {
       remindersFailed,
       dryRun,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[CRON_W9_REMINDERS] Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Failed to process W-9 reminders",
+        error: (error instanceof Error ? error.message : undefined) || "Failed to process W-9 reminders",
         details:
-          process.env.NODE_ENV === "development" ? error.stack : undefined,
+          process.env.NODE_ENV === "development" ? (error instanceof Error ? error.stack : undefined) : undefined,
       },
       { status: 500 }
     );

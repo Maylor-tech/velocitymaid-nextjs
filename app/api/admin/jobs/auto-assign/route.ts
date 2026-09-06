@@ -39,12 +39,12 @@ export async function POST(request: NextRequest) {
       cleanerName: result.cleanerName,
       reason: result.reason,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in auto-assign endpoint:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

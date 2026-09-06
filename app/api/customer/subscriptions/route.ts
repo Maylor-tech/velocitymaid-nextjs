@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic'
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { findCustomerById } from '@/utils/customerData';
 import { getSubscriptionByCustomerId } from '@/utils/subscriptionData';
-import stripe from '@/utils/stripe';
+import { getStripe } from '@/utils/stripe';
 import Stripe from 'stripe';
 
 /**
@@ -14,7 +14,7 @@ import Stripe from 'stripe';
  * 
  * Returns current subscription for the customer
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const cookieStore = await cookies();
     const customerId = cookieStore.get('customerId')?.value;
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Sync status from Stripe
+    const stripe = getStripe();
     let stripeSubscription: Stripe.Subscription | null = null;
     try {
       const retrieved = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
@@ -70,10 +70,10 @@ export async function GET(request: NextRequest) {
           : subscription.nextBillingDate,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Get subscriptions error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch subscriptions' },
+      { success: false, error: error instanceof Error ? error.message : 'Failed to fetch subscriptions' },
       { status: 500 }
     );
   }

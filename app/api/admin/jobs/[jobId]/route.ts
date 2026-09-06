@@ -273,13 +273,13 @@ export async function GET(
       success: true,
       job: formattedJob,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     console.error('Error fetching job details:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch job details',
+        error: error instanceof Error ? error.message : 'Failed to fetch job details',
       },
       { status: 500 }
     );

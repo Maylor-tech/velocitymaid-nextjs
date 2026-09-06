@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     const jobs = await prisma.job.findMany({
       where: {
-        status: 'completed',
+        status: 'COMPLETED',
         completedAt: {
           gte: threeDaysAgo,
           lte: new Date(threeDaysAgo.getTime() + 24 * 60 * 60 * 1000), // Within 24 hours of 3 days ago
@@ -36,14 +36,14 @@ export async function GET(request: NextRequest) {
         },
       },
       include: {
-        customer: true,
+        Customer: true,
       },
     });
 
     let sentCount = 0;
 
     for (const job of jobs) {
-      if (!job.customer || !job.appliedReferralCode) continue;
+      if (!job.Customer || !job.appliedReferralCode) continue;
 
       // Check if reminder already sent
       const reminderSent = await prisma.referralEvent.findFirst({
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            customerId: job.customer.id,
+            customerId: job.Customer.id,
             messageType: 'reminder',
             jobId: job.id,
           }),
@@ -77,10 +77,10 @@ export async function GET(request: NextRequest) {
       message: `Sent ${sentCount} reminder messages`,
       jobsProcessed: jobs.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Send referral reminders error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to send reminders' },
+      { success: false, error: error instanceof Error ? error.message : 'Failed to send reminders' },
       { status: 500 }
     );
   }

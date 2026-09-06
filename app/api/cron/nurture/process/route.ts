@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';
 import { getNurtureMessage, shouldStopSequence } from '@/utils/nurtureMessages';
@@ -31,9 +32,9 @@ export async function GET(request: NextRequest) {
         isActive: true,
       },
       include: {
-        customer: {
+        Customer: {
           include: {
-            branch: true,
+            Branch: true,
           },
         },
       },
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     for (const sequence of sequences) {
       // Check if sequence should be stopped
-      if (shouldStopSequence(false, sequence.customer.leadStatus)) {
+      if (shouldStopSequence(false, sequence.Customer.leadStatus)) {
         await prisma.nurtureSequence.update({
           where: { id: sequence.id },
           data: {
@@ -88,19 +89,20 @@ export async function GET(request: NextRequest) {
       // Generate message
       const message = getNurtureMessage(
         targetDay.day,
-        sequence.customer.firstName,
+        sequence.Customer.firstName,
         sequence.referralCode || undefined,
-        sequence.customer.branch?.slug || 'new-jersey'
+        sequence.Customer.Branch?.slug || 'new-jersey'
       );
 
       // Create history record
       const history = await prisma.nurtureHistory.create({
         data: {
+          id: randomUUID(),
           customerId: sequence.customerId,
           nurtureSequenceId: sequence.id,
           day: targetDay.day,
           message,
-          channel: sequence.customer.whatsappOptIn ? 'WHATSAPP' : 'SMS',
+          channel: sequence.Customer.whatsappOptIn ? 'WHATSAPP' : 'SMS',
           status: 'PENDING',
         },
       });
@@ -109,17 +111,17 @@ export async function GET(request: NextRequest) {
       let messageId: string | undefined;
       let error: string | undefined;
 
-      if (sequence.customer.whatsappOptIn && sequence.customer.phone) {
-        const result = await sendWhatsAppMessage(sequence.customer.phone, message);
+      if (sequence.Customer.whatsappOptIn && sequence.Customer.phone) {
+        const result = await sendWhatsAppMessage(sequence.Customer.phone, message);
         if (result.success) {
           messageId = result.messageId;
         } else {
           error = result.error;
         }
-      } else if (sequence.customer.phone) {
+      } else if (sequence.Customer.phone) {
         // SMS sending would go here
         console.log('SMS message (would send):', {
-          to: sequence.customer.phone,
+          to: sequence.Customer.phone,
           message,
         });
       }
@@ -163,10 +165,10 @@ export async function GET(request: NextRequest) {
       processed: processedCount,
       sequencesChecked: sequences.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Process nurture messages error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to process nurture messages' },
+      { success: false, error: error instanceof Error ? error.message : 'Failed to process nurture messages' },
       { status: 500 }
     );
   }

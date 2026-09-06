@@ -66,12 +66,12 @@ export async function GET(request: NextRequest) {
         : undefined,
       message: `Processed ${result.result?.createdPayouts || 0} payout(s) for ${result.period.weekLabel}`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[WEEKLY_PAYOUTS_CRON] Unexpected error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Unexpected error processing weekly payouts",
+        error: (error instanceof Error ? error.message : undefined) || "Unexpected error processing weekly payouts",
       },
       { status: 500 }
     );

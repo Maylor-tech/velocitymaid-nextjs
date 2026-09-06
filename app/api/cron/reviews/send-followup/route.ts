@@ -25,32 +25,32 @@ export async function GET(request: NextRequest) {
 
     const jobs = await prisma.job.findMany({
       where: {
-        status: 'completed',
+        status: 'COMPLETED',
         completedAt: {
           gte: twentyFourHoursAgo,
           lte: new Date(twentyFourHoursAgo.getTime() + 60 * 60 * 1000), // Within 1 hour window
         },
-        branch: {
+        Branch: {
           slug: 'new-jersey', // Branch-aware: Only NJ
         },
       },
       include: {
-        customer: true,
-        branch: true,
+        Customer: true,
+        Branch: true,
       },
     });
 
     let sentCount = 0;
 
     for (const job of jobs) {
-      if (!job.customer || !job.customer.phone) continue;
+      if (!job.Customer || !job.Customer.phone) continue;
 
       // Check if review already requested (would need to track this)
       // For now, send to all completed jobs
 
       // Send follow-up review request
       try {
-        const channel = job.customer.whatsappOptIn ? 'whatsapp' : 'sms';
+        const channel = job.Customer.whatsappOptIn ? 'whatsapp' : 'sms';
         const endpoint = channel === 'whatsapp'
           ? '/api/automations/reviews/send-whatsapp'
           : '/api/automations/reviews/send-sms';
@@ -59,10 +59,10 @@ export async function GET(request: NextRequest) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            customerId: job.customer.id,
+            customerId: job.Customer.id,
             jobId: job.id,
             messageType: 'followup',
-            branchSlug: job.branch.slug,
+            branchSlug: job.Branch.slug,
           }),
         });
         sentCount++;
@@ -76,10 +76,10 @@ export async function GET(request: NextRequest) {
       message: `Sent ${sentCount} follow-up review requests`,
       jobsProcessed: jobs.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Send follow-up review requests error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to send follow-up requests' },
+      { success: false, error: error instanceof Error ? error.message : 'Failed to send follow-up requests' },
       { status: 500 }
     );
   }

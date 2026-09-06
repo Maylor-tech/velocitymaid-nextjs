@@ -3,7 +3,6 @@ import { loadJobTeamMembers } from '@/lib/cleaners/internalCleanerService';
 import {
   nextInvoiceNumber,
   decimalToNumber,
-  computeBalanceDue,
   formatUsd,
 } from '@/lib/invoices/invoiceUtils';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
@@ -14,10 +13,8 @@ import { logAuditEntry } from '@/lib/audit';
 import type { InvoicePaymentMethod } from '@prisma/client';
 import { nextReportNumber, ensureJobReference } from './numbering';
 import { serializeCompletionReport, type ReportPhoto } from './serializeCompletionReport';
-import { serializeReceipt } from './serializeReceipt';
 import {
   sendCompletionReportEmail,
-  sendReceiptDocumentEmail,
   sendReviewRequestAfterPayment,
 } from './billingEmails';
 import { onInvoicePaymentRecorded, scheduleReviewRequestForJob } from './jobCompletionWorkflow';

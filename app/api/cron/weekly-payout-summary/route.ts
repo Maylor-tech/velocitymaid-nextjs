@@ -18,8 +18,8 @@ import {
   getWeeklyPayoutSummaryText,
 } from "@/lib/email/templates/weeklyPayoutSummary";
 import { resend, getResendFromEmail } from "@/lib/email/resendClient";
-import { prisma } from "@/lib/prisma";
 import { randomUUID } from "crypto";
+import { getWeeklyEmailLogDelegate } from "@/app/api/cron/_shared/prismaDelegates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,10 +81,22 @@ export async function GET(request: NextRequest) {
     const dateToStr = sunday.toISOString().split("T")[0];
     const jobKey = `weekly-summary:${dateFromStr}:${dateToStr}`;
 
+    const weeklyEmailLog = getWeeklyEmailLogDelegate();
+    if (!weeklyEmailLog) {
+      console.log(
+        "[WEEKLY_PAYOUT_SUMMARY_CRON] Skipping — WeeklyEmailLog is not in the Prisma schema"
+      );
+      return NextResponse.json({
+        success: true,
+        skipped: true,
+        reason: "WeeklyEmailLog model is not in the Prisma schema",
+      });
+    }
+
     // Idempotency check: attempt to create WeeklyEmailLog
-    let emailLog;
+    let emailLog: { id: string };
     try {
-      emailLog = await prisma.weeklyEmailLog.create({
+      emailLog = await weeklyEmailLog.create({
         data: {
           id: randomUUID(),
           jobKey,
@@ -96,9 +108,13 @@ export async function GET(request: NextRequest) {
           failureCount: 0,
         },
       });
-    } catch (error: any) {
-      // If unique constraint violation, job already ran
-      if (error.code === "P2002" || error.message?.includes("Unique constraint")) {
+    } catch (error: unknown) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? String((error as { code?: unknown }).code)
+          : "";
+      const message = error instanceof Error ? error.message : "";
+      if (code === "P2002" || message.includes("Unique constraint")) {
         console.log(`[WEEKLY_PAYOUT_SUMMARY_CRON] Job already executed for ${jobKey}, skipping`);
         return NextResponse.json({
           success: true,
@@ -106,7 +122,7 @@ export async function GET(request: NextRequest) {
           message: `Weekly summary for ${dateFromStr} to ${dateToStr} already sent`,
         });
       }
-      throw error; // Re-throw if it's a different error
+      throw error;
     }
 
     // Build payout summaries
@@ -117,7 +133,7 @@ export async function GET(request: NextRequest) {
 
     if (summaryResult.summaries.length === 0) {
       // Update log with no payouts found
-      await prisma.weeklyEmailLog.update({
+      await weeklyEmailLog.update({
         where: { id: emailLog.id },
         data: {
           skippedNoPayoutsCount: summaryResult.totalCleaners,
@@ -172,12 +188,12 @@ export async function GET(request: NextRequest) {
         console.log(
           `[WEEKLY_PAYOUT_SUMMARY_CRON] Email sent to ${summary.cleanerEmail} (${summary.cleanerId})`
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Individual email failure doesn't stop the batch
         results.failures.push({
           cleanerId: summary.cleanerId,
           email: summary.cleanerEmail,
-          error: error.message || "Failed to send email",
+          error: (error instanceof Error ? error.message : undefined) || "Failed to send email",
         });
         console.error(
           `[WEEKLY_PAYOUT_SUMMARY_CRON] Failed to send email to ${summary.cleanerEmail}:`,
@@ -187,7 +203,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Update email log with results
-    await prisma.weeklyEmailLog.update({
+    await weeklyEmailLog.update({
       where: { id: emailLog.id },
       data: {
         sentCount: results.sentCount,
@@ -213,12 +229,12 @@ export async function GET(request: NextRequest) {
       dateFrom: dateFromStr,
       dateTo: dateToStr,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[WEEKLY_PAYOUT_SUMMARY_CRON] Error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to send weekly payout summaries",
+        error: (error instanceof Error ? error.message : undefined) || "Failed to send weekly payout summaries",
       },
       { status: 500 }
     );

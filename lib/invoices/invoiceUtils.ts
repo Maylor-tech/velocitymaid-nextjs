@@ -1,5 +1,4 @@
 import type { InvoiceStatus } from '@prisma/client';
-import { prisma } from '@/lib/prisma';
 import { nextVmReference } from '@/lib/billing/numbering';
 
 export interface InvoiceLineInput {

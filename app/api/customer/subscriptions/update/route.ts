@@ -3,9 +3,9 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { findCustomerById } from '@/utils/customerData';
-import { getSubscriptionByCustomerId, updateSubscription } from '@/utils/subscriptionData';
+import { getSubscriptionByCustomerId, updateSubscription, type SubscriptionStatus } from '@/utils/subscriptionData';
 import { sendServicePauseNotice } from '@/lib/notifications/servicePauseNotice';
-import stripe from '@/utils/stripe';
+import { getStripe } from '@/utils/stripe';
 
 /**
  * Update Subscription API
@@ -70,7 +70,7 @@ export async function PATCH(request: NextRequest) {
       });
     }
 
-    // Update in Stripe
+    const stripe = getStripe();
     let updatedStripeSubscription;
     try {
       if (action === 'cancel') {
@@ -102,21 +102,21 @@ export async function PATCH(request: NextRequest) {
           }
         );
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating Stripe subscription:', error);
       return NextResponse.json(
-        { success: false, error: error.message || 'Failed to update subscription in Stripe' },
+        { success: false, error: error instanceof Error ? error.message : 'Failed to update subscription in Stripe' },
         { status: 500 }
       );
     }
 
     // Update local subscription
-    const newStatus = action === 'cancel' ? 'canceled' : 
-                     action === 'pause' ? 'paused' : 
+    const newStatus: SubscriptionStatus = action === 'cancel' ? 'canceled' :
+                     action === 'pause' ? 'paused' :
                      'active';
 
     const updated = updateSubscription(subscription.id, {
-      status: newStatus as any,
+      status: newStatus,
       nextBillingDate: updatedStripeSubscription && 'current_period_end' in updatedStripeSubscription && typeof updatedStripeSubscription.current_period_end === 'number'
         ? new Date(updatedStripeSubscription.current_period_end * 1000).toISOString()
         : subscription.nextBillingDate,
@@ -142,10 +142,10 @@ export async function PATCH(request: NextRequest) {
       subscription: updated,
       message: `Subscription ${action}ed successfully`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Update subscription error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to update subscription' },
+      { success: false, error: error instanceof Error ? error.message : 'Failed to update subscription' },
       { status: 500 }
     );
   }

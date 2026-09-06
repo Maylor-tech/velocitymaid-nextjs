@@ -1,0 +1,40 @@
+{
+  "date": "2026-09-04",
+  "commitSha": "207fd7adf43f5bf0cf9a2aee903af05a196532a6",
+  "branch": "chore/platform-reliability-phase2",
+  "base": "origin/main",
+  "tsErrorCount": 957,
+  "tsFileCount": 249,
+  "lintErrorCount": 1301,
+  "warningCount": 49,
+  "lintFileCount": 554,
+  "testCount": 377,
+  "testFileCount": 60,
+  "buildStatus": "success",
+  "topTsCodes": [
+    { "code": "TS2339", "count": 293 },
+    { "code": "TS2551", "count": 196 },
+    { "code": "TS2322", "count": 120 },
+    { "code": "TS2353", "count": 105 },
+    { "code": "TS2561", "count": 69 },
+    { "code": "TS2820", "count": 56 },
+    { "code": "TS2345", "count": 30 },
+    { "code": "TS2367", "count": 22 },
+    { "code": "TS2304", "count": 19 },
+    { "code": "TS2305", "count": 19 }
+  ],
+  "topDirectories": [
+    { "directory": "app/api", "count": 713 },
+    { "directory": "lib/pricing", "count": 27 },
+    { "directory": "lib/cleaner-assignment.ts", "count": 20 },
+    { "directory": "scripts/seed-demo-data.ts", "count": 17 },
+    { "directory": "lib/pilot", "count": 15 },
+    { "directory": "app/services", "count": 15 },
+    { "directory": "lib/auth", "count": 11 },
+    { "directory": "utils/jobAssignment.ts", "count": 10 },
+    { "directory": "lib/workers", "count": 9 },
+    { "directory": "workers/payoutShadowBacktest.ts", "count": 7 }
+  ],
+  "targetModuleTsErrorCount": 102,
+  "notes": "Whole-repo tsc/lint remain dirty. Next.js ignoreBuildErrors and ignoreDuringBuilds were left unchanged. Target-module cleanup in this branch is scoped to lib/billing, lib/invoices, lib/auth, lib/dates, lib/audit.ts, app/api/admin/jobs, and app/api/cron."
+}

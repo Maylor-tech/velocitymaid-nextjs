@@ -1,7 +1,8 @@
 /**
  * Authentication utility for SaaS multi-tenancy
- * 
- * Gets the authenticated user and their associated tenant
+ *
+ * Gets the authenticated user and their associated tenant.
+ * Tenant id lives on the SaaS JWT payload — User has no tenantId column.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -19,47 +20,42 @@ export interface AuthContext {
 
 /**
  * Get authenticated user and their tenant
- * 
+ *
  * This function checks for admin authentication via cookies/headers
  * and returns the user along with their tenantId
- * 
+ *
  * @param request - NextRequest object
  * @returns AuthContext with user info and tenantId
  * @throws NextResponse with 401 if not authenticated
  */
 export async function requireAuth(request?: NextRequest): Promise<AuthContext> {
   const cookieStore = await cookies();
-  const adminSession = cookieStore.get("admin_session")?.value;
-  const saasUserId = cookieStore.get("saas_user_id")?.value;
-  const adminId = 
-    cookieStore.get("adminId")?.value || 
-    cookieStore.get("adminSession")?.value ||
-    (request?.headers.get("x-admin-id")) ||
-    (request?.headers.get("authorization")?.replace("Bearer ", ""));
-  
+  const adminSession = cookieStore.get('admin_session')?.value;
+  const saasUserId = cookieStore.get('saas_user_id')?.value;
+  const adminId =
+    cookieStore.get('adminId')?.value ||
+    cookieStore.get('adminSession')?.value ||
+    request?.headers.get('x-admin-id') ||
+    request?.headers.get('authorization')?.replace('Bearer ', '');
+
   // Legacy dev-only bypass — disabled in production
   if (isLegacyAdminSession(adminSession) && allowLegacyAdminBypass()) {
-    const defaultTenant = await prisma.tenant.findFirst({
-      where: { name: "Default Tenant" },
-    });
-
     return {
-      userId: "local-admin",
-      email: process.env.ADMIN_EMAIL || "dev-admin@localhost",
-      tenantId: defaultTenant?.id || null,
+      userId: 'local-admin',
+      email: process.env.ADMIN_EMAIL || 'dev-admin@localhost',
+      tenantId: null,
       role: UserRole.ADMIN,
     };
   }
-  
+
   // Check for SaaS JWT token (new method)
-  const saasToken = cookieStore.get("saas_token")?.value;
+  const saasToken = cookieStore.get('saas_token')?.value;
   if (saasToken) {
     try {
       const { verifyToken } = await import('@/lib/auth/jwt');
       const payload = await verifyToken(saasToken);
-      
+
       if (payload && payload.tenantId) {
-        // Verify user still exists and is active
         const user = await prisma.user.findUnique({
           where: {
             id: payload.userId,
@@ -69,21 +65,19 @@ export async function requireAuth(request?: NextRequest): Promise<AuthContext> {
             id: true,
             email: true,
             role: true,
-            tenantId: true,
           },
         });
 
-        if (user && user.tenantId === payload.tenantId) {
+        if (user) {
           return {
             userId: user.id,
             email: user.email,
-            tenantId: user.tenantId,
+            tenantId: payload.tenantId,
             role: user.role,
           };
         }
       }
-    } catch (jwtError) {
-      // JWT verification failed, fall through to legacy check
+    } catch {
       console.warn('JWT verification failed, trying legacy auth');
     }
   }
@@ -99,23 +93,22 @@ export async function requireAuth(request?: NextRequest): Promise<AuthContext> {
         id: true,
         email: true,
         role: true,
-        tenantId: true,
       },
     });
 
-    if (user && user.tenantId) {
+    if (user) {
       return {
         userId: user.id,
         email: user.email,
-        tenantId: user.tenantId,
+        tenantId: null,
         role: user.role,
       };
     }
   }
-  
+
   if (!adminId) {
     const response = NextResponse.json(
-      { error: "Unauthorized" },
+      { error: 'Unauthorized' },
       { status: 401 }
     );
     throw response;
@@ -130,13 +123,12 @@ export async function requireAuth(request?: NextRequest): Promise<AuthContext> {
       id: true,
       email: true,
       role: true,
-      tenantId: true,
     },
   });
 
   if (!user) {
     const response = NextResponse.json(
-      { error: "Unauthorized" },
+      { error: 'Unauthorized' },
       { status: 401 }
     );
     throw response;
@@ -145,8 +137,7 @@ export async function requireAuth(request?: NextRequest): Promise<AuthContext> {
   return {
     userId: user.id,
     email: user.email,
-    tenantId: user.tenantId,
+    tenantId: null,
     role: user.role,
   };
 }
-

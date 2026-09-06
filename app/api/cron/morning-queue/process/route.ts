@@ -90,9 +90,9 @@ export async function GET(request: NextRequest) {
 
         // Rate limiting: Wait 1 second between messages
         await new Promise((resolve) => setTimeout(resolve, 1000));
-      } catch (error: any) {
+      } catch (error: unknown) {
         results.failed++;
-        results.errors.push(`Lead ${lead.id}: ${error.message || 'Unknown error'}`);
+        results.errors.push(`Lead ${lead.id}: ${(error instanceof Error ? error.message : undefined) || 'Unknown error'}`);
         console.error(`Error processing lead ${lead.id}:`, error);
       }
     }
@@ -102,10 +102,10 @@ export async function GET(request: NextRequest) {
       message: `Processed ${results.sent} of ${results.total} leads`,
       results,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Morning queue processing error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to process morning queue' },
+      { success: false, error: (error instanceof Error ? error.message : undefined) || 'Failed to process morning queue' },
       { status: 500 }
     );
   }

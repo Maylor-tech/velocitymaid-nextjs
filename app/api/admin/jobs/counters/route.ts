@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       upcoming: upcomingCount,
       attention: attentionCount,
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to load counters' },
       { status: 401 }

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
         startDate: { lte: now },
         endDate: { gte: now },
       },
-      include: { branch: true },
+      include: { Branch: true },
     });
 
     let totalSent = 0;
@@ -88,10 +88,10 @@ export async function GET(request: NextRequest) {
       totalFailed,
       promosProcessed: promos.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Monthly promo scheduler error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to process monthly promos' },
+      { success: false, error: (error instanceof Error ? error.message : undefined) || 'Failed to process monthly promos' },
       { status: 500 }
     );
   }

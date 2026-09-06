@@ -4,7 +4,7 @@
  * Ensures a customer has a Stripe customer ID
  */
 
-import stripe from './stripe';
+import { getStripe } from './stripe';
 import { findCustomerById, updateCustomerStripeId, type Customer } from './customerData';
 
 /**
@@ -17,12 +17,14 @@ export async function getOrCreateStripeCustomerForCustomer(
   customer: Customer
 ): Promise<string> {
   // If customer already has a Stripe customer ID, return it
+  const stripe = getStripe();
+
   if (customer.stripeCustomerId) {
     try {
       // Verify the Stripe customer still exists
       await stripe.customers.retrieve(customer.stripeCustomerId);
       return customer.stripeCustomerId;
-    } catch (error) {
+    } catch {
       // If customer doesn't exist in Stripe, create a new one
       console.warn(`Stripe customer ${customer.stripeCustomerId} not found, creating new one`);
     }

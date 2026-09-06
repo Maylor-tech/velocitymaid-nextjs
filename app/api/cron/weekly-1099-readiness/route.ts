@@ -17,13 +17,17 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { PayoutTransferStatus, TaxProfileStatus, UserRole } from "@prisma/client";
+import { PayoutTransferStatus, UserRole } from "@prisma/client";
 import {
   getWeekly1099ReadinessEmailSubject,
   getWeekly1099ReadinessEmailHTML,
   getWeekly1099ReadinessEmailText,
   getReadinessStatusBand,
 } from "@/lib/tax/weekly1099ReadinessEmail";
+import {
+  getCleanerTaxProfileDelegate,
+  TAX_PROFILE_STATUS,
+} from "@/app/api/cron/_shared/prismaDelegates";
 
 export async function POST(req: NextRequest) {
   try {
@@ -146,19 +150,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch tax profiles for eligible cleaners
-    const taxProfiles = await prisma.cleanerTaxProfile.findMany({
-      where: {
-        cleanerId: { in: eligibleCleanerIds },
-      },
-      select: {
-        cleanerId: true,
-        status: true,
-        addressLine1: true,
-        city: true,
-        state: true,
-        zipCode: true,
-      },
-    });
+    const taxProfileDb = getCleanerTaxProfileDelegate();
+    const taxProfiles = taxProfileDb
+      ? await taxProfileDb.findMany({
+          where: {
+            cleanerId: { in: eligibleCleanerIds },
+          },
+          select: {
+            cleanerId: true,
+            status: true,
+            addressLine1: true,
+            city: true,
+            state: true,
+            zipCode: true,
+          },
+        })
+      : [];
 
     const taxProfileMap = new Map(
       taxProfiles.map((profile) => [profile.cleanerId, profile])
@@ -186,7 +193,7 @@ export async function POST(req: NextRequest) {
       .map((cleaner) => {
         const taxProfile = taxProfileMap.get(cleaner.cleanerId);
 
-        const w9Verified = taxProfile?.status === TaxProfileStatus.VERIFIED;
+        const w9Verified = taxProfile?.status === TAX_PROFILE_STATUS.VERIFIED;
         const addressComplete =
           !!taxProfile?.addressLine1 &&
           !!taxProfile?.city &&
@@ -350,7 +357,7 @@ export async function POST(req: NextRequest) {
           `[CRON_WEEKLY_1099_READINESS] Sent readiness report to ${admin.email}`
         );
         emailsSent++;
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(
           `[CRON_WEEKLY_1099_READINESS] Failed to send email to ${admin.email}:`,
           error
@@ -373,15 +380,15 @@ export async function POST(req: NextRequest) {
       emailsFailed,
       dryRun,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[CRON_WEEKLY_1099_READINESS] Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Failed to process weekly readiness report",
+        error: (error instanceof Error ? error.message : undefined) || "Failed to process weekly readiness report",
         details:
-          process.env.NODE_ENV === "development" ? error.stack : undefined,
+          process.env.NODE_ENV === "development" ? (error instanceof Error ? error.stack : undefined) : undefined,
       },
       { status: 500 }
     );

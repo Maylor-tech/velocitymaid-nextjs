@@ -68,13 +68,7 @@ export async function POST(request: NextRequest) {
     const cleaner = await prisma.user.findUnique({
       where: { id: cleanerId, role: 'CLEANER' },
       include: {
-        primaryBranch: {
-          select: {
-            country: true,
-            slug: true,
-          },
-        },
-        trainingStatus: {
+        TrainingStatus: {
           select: {
             overallStatus: true,
           },
@@ -99,7 +93,7 @@ export async function POST(request: NextRequest) {
       job.Branch.slug === 'port-antonio';
 
     if (isJamaicaBranch) {
-      if (cleaner.trainingStatus?.overallStatus !== 'PASSED') {
+      if (cleaner.TrainingStatus?.overallStatus !== 'PASSED') {
         return NextResponse.json(
           {
             success: false,
@@ -116,7 +110,9 @@ export async function POST(request: NextRequest) {
       where: { id: jobId },
       data: {
         assignedCleanerId: cleanerId,
-        status: job.status === 'pending' ? 'assigned' : job.status,
+        // Legacy lowercase pending/assigned never matched JobStatus, so this
+        // kept the current status at runtime. Preserve that.
+        status: job.status,
         assignedAt: new Date(),
       },
       include: {
@@ -188,13 +184,13 @@ export async function POST(request: NextRequest) {
       },
       message: 'Cleaner assignment updated successfully',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     console.error('Error changing cleaner assignment:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to change cleaner assignment',
+        error: error instanceof Error ? error.message : 'Failed to change cleaner assignment',
       },
       { status: 500 }
     );

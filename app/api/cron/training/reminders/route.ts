@@ -29,26 +29,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all cleaners in Jamaica branch who haven't started training
+    const jamaicaBranches = await prisma.branch.findMany({
+      where: {
+        country: { in: ['Jamaica', 'JM'] },
+      },
+      select: { id: true },
+    });
+    const jamaicaBranchIds = jamaicaBranches.map((b) => b.id);
+
     const cleaners = await prisma.user.findMany({
       where: {
         role: 'CLEANER',
-        primaryBranch: {
-          country: { in: ['Jamaica', 'JM'] },
-        },
-        trainingStatus: {
-          OR: [
-            { overallStatus: 'NOT_STARTED' },
-          ],
+        primaryBranchId: { in: jamaicaBranchIds },
+        TrainingStatus: {
+          overallStatus: 'NOT_STARTED',
         },
       },
       include: {
-        primaryBranch: {
-          select: {
-            country: true,
-            slug: true,
-          },
-        },
-        trainingStatus: true,
+        TrainingStatus: true,
       },
     });
 
@@ -72,10 +70,10 @@ export async function GET(request: NextRequest) {
       remindersSent,
       errors,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Training reminders cron error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to process reminders' },
+      { success: false, error: (error instanceof Error ? error.message : undefined) || 'Failed to process reminders' },
       { status: 500 }
     );
   }

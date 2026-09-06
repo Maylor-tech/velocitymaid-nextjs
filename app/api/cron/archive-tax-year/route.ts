@@ -18,7 +18,11 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { PayoutTransferStatus, TaxProfileStatus } from "@prisma/client";
+import { PayoutTransferStatus } from "@prisma/client";
+import {
+  getCleanerTaxProfileDelegate,
+  TAX_PROFILE_STATUS,
+} from "@/app/api/cron/_shared/prismaDelegates";
 
 /**
  * Get 1099 threshold for a given year
@@ -96,19 +100,22 @@ async function get1099Readiness(year: number): Promise<{
     .map((cleaner) => cleaner.cleanerId);
 
   // Fetch tax profiles
-  const taxProfiles = await prisma.cleanerTaxProfile.findMany({
-    where: {
-      cleanerId: { in: eligibleCleanerIds },
-    },
-    select: {
-      cleanerId: true,
-      status: true,
-      addressLine1: true,
-      city: true,
-      state: true,
-      zipCode: true,
-    },
-  });
+  const taxProfileDb = getCleanerTaxProfileDelegate();
+  const taxProfiles = taxProfileDb
+    ? await taxProfileDb.findMany({
+        where: {
+          cleanerId: { in: eligibleCleanerIds },
+        },
+        select: {
+          cleanerId: true,
+          status: true,
+          addressLine1: true,
+          city: true,
+          state: true,
+          zipCode: true,
+        },
+      })
+    : [];
 
   const taxProfileMap = new Map(
     taxProfiles.map((profile) => [profile.cleanerId, profile])
@@ -136,7 +143,7 @@ async function get1099Readiness(year: number): Promise<{
     .map((cleaner) => {
       const taxProfile = taxProfileMap.get(cleaner.cleanerId);
 
-      const w9Verified = taxProfile?.status === TaxProfileStatus.VERIFIED;
+      const w9Verified = taxProfile?.status === TAX_PROFILE_STATUS.VERIFIED;
       const addressComplete =
         !!taxProfile?.addressLine1 &&
         !!taxProfile?.city &&
@@ -319,15 +326,15 @@ export async function POST(req: NextRequest) {
       status: readiness.status,
       summary: readiness.summary,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[CRON_ARCHIVE_TAX_YEAR] Error:", error);
 
     return NextResponse.json(
       {
         ok: false,
-        error: error?.message || "Failed to archive tax year",
+        error: (error instanceof Error ? error.message : undefined) || "Failed to archive tax year",
         details:
-          process.env.NODE_ENV === "development" ? error.stack : undefined,
+          process.env.NODE_ENV === "development" ? (error instanceof Error ? error.stack : undefined) : undefined,
       },
       { status: 500 }
     );
