@@ -3,6 +3,7 @@
  * 
  * Handles sending WhatsApp messages via Meta's WhatsApp Cloud API
  */
+import { resolveSafeWhatsAppRecipient } from '@/lib/notifications/outboundSafety';
 
 interface WhatsAppMessageParams {
   phoneNumberId: string;
@@ -32,6 +33,14 @@ export async function sendWhatsAppTemplate(
     return {
       success: false,
       error: 'Missing required parameters: phoneNumberId, accessToken, to, and templateName are required',
+    };
+  }
+
+  const safety = resolveSafeWhatsAppRecipient(to);
+  if (!safety.allowed) {
+    return {
+      success: false,
+      error: `outbound_blocked:${safety.reason}`,
     };
   }
 
@@ -99,11 +108,11 @@ export async function sendWhatsAppTemplate(
       success: true,
       messageId: data.messages?.[0]?.id,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('WhatsApp API Request Error:', error);
     return {
       success: false,
-      error: error.message || 'Failed to send WhatsApp message',
+      error: error instanceof Error ? error.message : 'Failed to send WhatsApp message',
     };
   }
 }
@@ -207,7 +216,7 @@ function formatDate(dateString: string): string {
       month: 'long',
       day: 'numeric',
     });
-  } catch (error) {
+  } catch {
     return dateString; // Return original on error
   }
 }
