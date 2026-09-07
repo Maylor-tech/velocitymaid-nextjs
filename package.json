@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "quality:changed": "node scripts/check-changed-file-quality.mjs"
+    "quality:changed": "node scripts/check-changed-file-quality.mjs",
+    "dispatch:staging-verify": "npx tsx scripts/verify-dispatch-staging-schema.ts",
+    "dispatch:staging-seed": "npx tsx scripts/seed-dispatch-staging.ts"
   },
   "dependencies": {
     "@next/third-parties": "^16.0.3",

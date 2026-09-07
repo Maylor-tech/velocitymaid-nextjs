@@ -2,14 +2,13 @@
  * Cleaner job-offer email. Copy is an offer with expiry — not an assignment.
  * Never includes customer invoice totals or property access credentials.
  */
-import { Resend } from 'resend';
 import { colors } from '@/lib/brand/colors';
-import { getResendFromEmail } from '@/lib/email/resendClient';
+import { getGuardedResend, getResendFromEmail } from '@/lib/email/resendClient';
 import { compensationBasisLabel, parseCompensationBasis } from '@/lib/dispatch/compensation';
+import { resolveSafeEmailRecipient } from '@/lib/notifications/outboundSafety';
 
-function getResend(): Resend | null {
-  if (!process.env.RESEND_API_KEY) return null;
-  return new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  return getGuardedResend();
 }
 
 function escapeHtml(value: string): string {
@@ -72,7 +71,10 @@ export async function sendCleanerOfferEmail(
 ): Promise<{ sent: boolean; id?: string; error?: string }> {
   const resend = getResend();
   if (!resend) return { sent: false, error: 'RESEND_API_KEY not configured' };
-  if (!params.cleanerEmail) return { sent: false, error: 'Missing cleaner email' };
+  const safety = resolveSafeEmailRecipient(params.cleanerEmail);
+  if (!safety.allowed || !safety.to) {
+    return { sent: false, error: safety.reason };
+  }
 
   const reference = params.jobReference || params.jobId;
   const portalLink = cleanerPortalLink(params.jobId);
@@ -127,7 +129,7 @@ export async function sendCleanerOfferEmail(
   try {
     const { data, error } = await resend.emails.send({
       from: getResendFromEmail(),
-      to: params.cleanerEmail,
+      to: safety.to,
       subject: `Job offer — ${params.serviceType} on ${params.scheduledDate}`,
       html,
       text,

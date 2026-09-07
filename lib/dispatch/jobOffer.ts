@@ -30,6 +30,10 @@ import { computeExpiresAt, resolveOfferTtlMinutes } from '@/lib/dispatch/offerTt
 import { notifyCleanerOfOffer } from '@/lib/dispatch/notifyOffer';
 import type { DispatchUrgencyValue } from '@/lib/dispatch/offerTtl';
 import {
+  canMutateDispatchOffers,
+  dispatchMutationBlockReason,
+} from '@/lib/dispatch/environmentSafety';
+import {
   shouldRejectMutationAsExpired,
 } from '@/lib/dispatch/offerExpiry';
 
@@ -146,6 +150,13 @@ async function assertCleanerEligible(
 }
 
 export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer> {
+  if (!canMutateDispatchOffers()) {
+    throw new DispatchError(
+      dispatchMutationBlockReason() || 'Dispatch is blocked in this environment',
+      'STAGING_DB_REQUIRED',
+      409
+    );
+  }
   if (!input.cleanerId) {
     throw new DispatchError('cleanerId is required', 'CLEANER_REQUIRED', 400);
   }

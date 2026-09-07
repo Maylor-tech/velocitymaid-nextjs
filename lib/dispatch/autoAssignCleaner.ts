@@ -217,7 +217,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AutoAssignResult
     });
 
     // 7. Update job
-    const updatedJob = await prisma.job.update({
+    await prisma.job.update({
       where: { id: jobId },
       data: {
         assignedCleanerId: selectedCleaner.id,
@@ -230,24 +230,31 @@ export async function autoAssignCleaner(jobId: string): Promise<AutoAssignResult
     if (selectedCleaner.email && process.env.RESEND_API_KEY) {
       // Lazy import to prevent build-time errors if Resend is not configured
       try {
-        const { Resend } = await import('resend');
-        const { getResendFromEmail } = await import('@/lib/email/resendClient');
-        const resend = new Resend(process.env.RESEND_API_KEY);
-        const formattedDate = job.preferredDate
-          ? new Date(job.preferredDate).toLocaleDateString("en-US", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })
-          : "TBD";
+        const { getGuardedResend, getResendFromEmail } = await import('@/lib/email/resendClient');
+        const { resolveSafeEmailRecipient } = await import('@/lib/notifications/outboundSafety');
+        const resend = getGuardedResend();
+        if (!resend) {
+          throw new Error('RESEND_API_KEY not configured');
+        }
+        const safety = resolveSafeEmailRecipient(selectedCleaner.email);
+        if (!safety.allowed || !safety.to) {
+          console.warn('[AUTO_ASSIGN] outbound email blocked', safety.reason);
+        } else {
+          const formattedDate = job.preferredDate
+            ? new Date(job.preferredDate).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
+            : "TBD";
 
-        resend.emails
-          .send({
-            from: getResendFromEmail(),
-            to: selectedCleaner.email,
-            subject: "🧹 New Job Assigned (Auto)",
-            html: `
+          resend.emails
+            .send({
+              from: getResendFromEmail(),
+              to: safety.to,
+              subject: "🧹 New Job Assigned (Auto)",
+              html: `
               <h2>You've been auto-assigned a new job</h2>
               <p><strong>Customer:</strong> ${job.customerName || "N/A"}</p>
               <p><strong>Date:</strong> ${formattedDate}</p>
@@ -257,10 +264,11 @@ export async function autoAssignCleaner(jobId: string): Promise<AutoAssignResult
               <p>Please accept or decline in your dashboard.</p>
               <p>Thank you,<br>VelocityMaid Operations</p>
             `,
-          })
-          .catch((err) => {
-            console.error("[AUTO_ASSIGN] Failed to send cleaner email:", err);
-          });
+            })
+            .catch((err) => {
+              console.error("[AUTO_ASSIGN] Failed to send cleaner email:", err);
+            });
+        }
       } catch (err) {
         console.error("[AUTO_ASSIGN] Failed to initialize Resend:", err);
       }
@@ -289,11 +297,11 @@ export async function autoAssignCleaner(jobId: string): Promise<AutoAssignResult
       cleanerId: selectedCleaner.id,
       cleanerName: selectedCleaner.name || undefined,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[AUTO_ASSIGN] Error:", err);
     return {
       success: false,
-      error: err?.message || "Failed to auto-assign cleaner",
+      error: err instanceof Error ? err.message : "Failed to auto-assign cleaner",
     };
   }
 }

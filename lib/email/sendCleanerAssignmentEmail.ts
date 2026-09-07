@@ -8,13 +8,12 @@
  * needs to do the job (no gate codes / access notes — those stay in the
  * cleaner portal itself, not in email).
  */
-import { Resend } from 'resend';
 import { colors } from '@/lib/brand/colors';
-import { getResendFromEmail } from '@/lib/email/resendClient';
+import { getGuardedResend, getResendFromEmail } from '@/lib/email/resendClient';
+import { resolveSafeEmailRecipient } from '@/lib/notifications/outboundSafety';
 
-function getResend(): Resend | null {
-  if (!process.env.RESEND_API_KEY) return null;
-  return new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  return getGuardedResend();
 }
 
 function escapeHtml(value: string): string {
@@ -56,6 +55,10 @@ export async function sendCleanerAssignmentEmail(
   const resend = getResend();
   if (!resend) return { sent: false, error: 'RESEND_API_KEY not configured' };
   if (!params.cleanerEmail) return { sent: false, error: 'Missing cleaner email' };
+  const safety = resolveSafeEmailRecipient(params.cleanerEmail);
+  if (!safety.allowed || !safety.to) {
+    return { sent: false, error: safety.reason };
+  }
 
   const reference = params.jobReference || params.jobId;
   const portalLink = cleanerPortalLink(params.jobId);
@@ -108,7 +111,7 @@ export async function sendCleanerAssignmentEmail(
   try {
     const { data, error } = await resend.emails.send({
       from: getResendFromEmail(),
-      to: params.cleanerEmail,
+      to: safety.to,
       subject: `New job assigned — ${params.serviceType} on ${params.scheduledDate}`,
       html,
       text,

@@ -6,6 +6,10 @@ import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
 import { isDispatchOffersEnabledForBranch } from '@/lib/dispatch/featureFlags';
+import {
+  canMutateDispatchOffers,
+  dispatchMutationBlockReason,
+} from '@/lib/dispatch/environmentSafety';
 import { createJobOffer } from '@/lib/dispatch/jobOffer';
 import { isDispatchError } from '@/lib/dispatch/errors';
 import { previewCompensationFromOperationalTotal } from '@/lib/dispatch/compensation';
@@ -130,6 +134,16 @@ export async function POST(
           success: false,
           error: 'Offer dispatcher is not enabled for this branch',
           code: 'DISPATCH_OFFERS_DISABLED',
+        },
+        { status: 409 }
+      );
+    }
+    if (!canMutateDispatchOffers()) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: dispatchMutationBlockReason(),
+          code: 'STAGING_DB_REQUIRED',
         },
         { status: 409 }
       );

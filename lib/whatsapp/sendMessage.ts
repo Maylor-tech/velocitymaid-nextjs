@@ -1,6 +1,9 @@
+import { resolveSafeWhatsAppRecipient } from '@/lib/notifications/outboundSafety';
+
 /**
  * Send a free-form WhatsApp text message via Meta Cloud API.
  * Silently skips if env is not configured; never throws.
+ * Preview/staging is blocked unless the number is allowlisted.
  */
 export async function sendWhatsAppMessage({
   to,
@@ -13,6 +16,12 @@ export async function sendWhatsAppMessage({
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
   if (!token || !phoneId) {
+    return;
+  }
+
+  const safety = resolveSafeWhatsAppRecipient(to);
+  if (!safety.allowed) {
+    console.warn('[WHATSAPP] outbound blocked', safety.reason);
     return;
   }
 
