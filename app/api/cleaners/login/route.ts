@@ -1,24 +1,65 @@
 /**
- * Cleaner Login API (Simplified - No DB Lookup)
- * 
- * POST /api/cleaners/login
- * 
- * Body: { identifier: string } // phone or email
- * 
- * Returns: { ok: true }
- * 
- * Creates deterministic cleanerId from identifier hash
- * Sets cookie for authentication
- * No database lookup during login (fast, safe for demo/launch)
+ * Cleaner login. Session cookie cleanerId is always a real User.id.
+ *
+ * POST /api/cleaners/login  Body: { identifier: string } // email or phone
+ * DELETE /api/cleaners/login  Logout
  */
 
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
+import {
+  isEmailIdentifier,
+  normalizePhoneDigits,
+  phonesMatch,
+} from '@/lib/cleaners/phoneIdentity';
+
+const NOT_FOUND_EMAIL = 'No active cleaner account found for that email';
+const NOT_FOUND_PHONE = 'No active cleaner account found for that phone';
+
+async function setCleanerSessionCookie(cleanerId: string) {
+  const cookieStore = await cookies();
+  cookieStore.set('cleanerId', cleanerId, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/',
+  });
+}
+
+async function resolveCleanerByEmail(email: string): Promise<string | null> {
+  const cleaner = await prisma.user.findFirst({
+    where: {
+      email,
+      role: UserRole.CLEANER,
+      isActive: true,
+    },
+    select: { id: true },
+  });
+  return cleaner?.id ?? null;
+}
+
+async function resolveCleanerByPhone(input: string): Promise<string | null> {
+  const inputDigits = normalizePhoneDigits(input);
+  if (inputDigits.length < 10) return null;
+
+  const candidates = await prisma.user.findMany({
+    where: {
+      role: UserRole.CLEANER,
+      isActive: true,
+      phone: { not: null },
+    },
+    select: { id: true, phone: true },
+  });
+
+  const matches = candidates.filter((row) => phonesMatch(row.phone, input));
+  if (matches.length !== 1) return null;
+  return matches[0].id;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,42 +83,21 @@ export async function POST(req: NextRequest) {
     }
 
     const normalized = identifier.trim().toLowerCase();
-    let cleanerId = crypto
-      .createHash('sha256')
-      .update(normalized)
-      .digest('hex')
-      .substring(0, 32);
+    let cleanerId: string | null = null;
 
-    // Email login must resolve to the real User.id so assignedCleanerId matches the session cookie.
-    if (normalized.includes('@')) {
-      const cleaner = await prisma.user.findFirst({
-        where: {
-          email: normalized,
-          role: UserRole.CLEANER,
-          isActive: true,
-        },
-        select: { id: true },
-      });
-      if (cleaner) {
-        cleanerId = cleaner.id;
-      } else {
-        return NextResponse.json(
-          { error: 'No active cleaner account found for that email' },
-          { status: 404 }
-        );
+    if (isEmailIdentifier(normalized)) {
+      cleanerId = await resolveCleanerByEmail(normalized);
+      if (!cleanerId) {
+        return NextResponse.json({ error: NOT_FOUND_EMAIL }, { status: 404 });
+      }
+    } else {
+      cleanerId = await resolveCleanerByPhone(identifier.trim());
+      if (!cleanerId) {
+        return NextResponse.json({ error: NOT_FOUND_PHONE }, { status: 404 });
       }
     }
 
-    // Set HTTP-only cookie with cleaner ID
-    const cookieStore = await cookies();
-    cookieStore.set('cleanerId', cleanerId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    });
-
+    await setCleanerSessionCookie(cleanerId);
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     console.error('[CLEANER_LOGIN] Error:', err);
@@ -89,20 +109,13 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/**
- * Logout - Clear cookie
- */
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
     const cookieStore = await cookies();
     cookieStore.delete('cleanerId');
-    
     return NextResponse.json({ success: true, message: 'Logged out' });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || 'Logout failed' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Logout failed';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
-

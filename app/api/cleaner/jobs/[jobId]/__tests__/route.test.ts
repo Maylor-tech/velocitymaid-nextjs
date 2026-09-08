@@ -274,6 +274,84 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     expect(json.job).toBeUndefined();
   });
 
+  it('returns 403 when a live offer exists for User.id but the session cookie is a phone-login hash', async () => {
+    requireRole.mockResolvedValue({
+      userId: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      role: 'CLEANER',
+    });
+    findUnique.mockResolvedValue({
+      id: JOB_ID,
+      status: 'RECEIVED',
+      assignedCleanerId: null,
+      Property: propertyRow(),
+      propertyId: 'prop-1',
+      Branch: null,
+      Customer: null,
+      preferredDate: null,
+      assignedAt: null,
+      onTheWayAt: null,
+      startedAt: null,
+      completedAt: null,
+      JobOffer: [],
+      jobReference: null,
+      serviceType: null,
+      preferredTime: null,
+      serviceLocation: null,
+      internalNotes: null,
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/cleaner/jobs/' + JOB_ID), {
+      params: { jobId: JOB_ID },
+    });
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toMatch(/not assigned/i);
+  });
+
+  it('returns 403 for a timestamp-expired own OFFERED row so Decline is unreachable from the job page', async () => {
+    // Phase 6B / UX: expired own offer currently 403 (not an expired-offer view).
+    // Decline after expiry is OFFER_EXPIRED. TTL is unchanged in the identity hotfix.
+    findUnique.mockResolvedValue({
+      id: JOB_ID,
+      status: 'RECEIVED',
+      assignedCleanerId: null,
+      Property: propertyRow(),
+      propertyId: 'prop-1',
+      Branch: { id: 'branch-vt', name: 'Vermont' },
+      Customer: null,
+      preferredDate: new Date('2026-09-09'),
+      preferredTime: '10:00 AM',
+      assignedAt: null,
+      onTheWayAt: null,
+      startedAt: null,
+      completedAt: null,
+      JobOffer: [
+        {
+          id: 'offer-stale',
+          jobId: JOB_ID,
+          cleanerId: CLEANER_ID,
+          status: 'OFFERED',
+          compensationAmount: 172.25,
+          compensationCurrency: 'USD',
+          compensationBasis: 'FLAT',
+          estimatedDurationMins: 180,
+          operationalNotes: null,
+          expiresAt: new Date('2020-01-01T00:00:00.000Z'),
+          offeredAt: new Date(),
+        },
+      ],
+      jobReference: 'VM-LIVE-1',
+      serviceType: 'Vacation Rental Turnover',
+      serviceLocation: 'Ludlow',
+      internalNotes: null,
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/cleaner/jobs/' + JOB_ID), {
+      params: { jobId: JOB_ID },
+    });
+    expect(res.status).toBe(403);
+  });
+
   it('blocks unauthorized cleaner before job load when requireRole rejects', async () => {
     requireRole.mockRejectedValue(
       NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
