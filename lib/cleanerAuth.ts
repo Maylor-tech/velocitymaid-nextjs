@@ -1,7 +1,6 @@
 /**
- * Cleaner Authentication Helper
- * 
- * Validates cleaner identity from cookies or signed tokens
+ * Cleaner authentication. Session cookie cleanerId must be a real active
+ * CLEANER User.id. Hash / arbitrary cookies do not authenticate.
  */
 
 import { cookies } from "next/headers";
@@ -19,83 +18,59 @@ export interface CleanerAuthResult {
   error?: string;
 }
 
-/**
- * Get authenticated cleaner from cookie or token
- * 
- * @param req - NextRequest (optional, for token extraction)
- * @returns CleanerAuthResult
- */
+type CookieReader = { get(name: string): { value: string } | undefined };
+
+function readCleanerIdCookie(
+  cookieStore: CookieReader,
+  req?: { cookies?: CookieReader; headers: { get: (name: string) => string | null } }
+): string | undefined {
+  return cookieStore.get("cleanerId")?.value || req?.cookies?.get("cleanerId")?.value;
+}
+
+async function loadActiveCleaner(id: string) {
+  return prisma.user.findUnique({
+    where: {
+      id,
+      role: UserRole.CLEANER,
+      isActive: true,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
+}
+
 export async function getAuthenticatedCleaner(
-  req?: { headers: { get: (name: string) => string | null } }
+  req?: { headers: { get: (name: string) => string | null }; cookies?: CookieReader }
 ): Promise<CleanerAuthResult> {
   try {
-    // Method 1: Check cookie (existing cleaner session)
     const cookieStore = await cookies();
-    const cleanerIdFromCookie = cookieStore.get("cleanerId")?.value;
+    const cleanerIdFromCookie = readCleanerIdCookie(cookieStore, req);
 
     if (cleanerIdFromCookie) {
-      // Try database first (optional - for production with real user records)
-      try {
-        const cleaner = await prisma.user.findUnique({
-          where: {
-            id: cleanerIdFromCookie,
-            role: UserRole.CLEANER,
-            isActive: true,
-          },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        });
-
-        if (cleaner) {
-          return {
-            success: true,
-            cleanerId: cleaner.id,
-            cleaner,
-          };
-        }
-      } catch (dbError) {
-        // Database lookup failed (e.g., connection issue) - continue to cookie-based auth
-        console.warn("[CLEANER_AUTH] DB lookup failed, using cookie-based auth:", dbError);
+      const cleaner = await loadActiveCleaner(cleanerIdFromCookie);
+      if (cleaner) {
+        return {
+          success: true,
+          cleanerId: cleaner.id,
+          cleaner,
+        };
       }
-
-      // Fallback: Accept cookie-based auth (for demo/launch - no DB dependency)
-      // Cookie existence is sufficient for authentication
-      // This allows hash-based cleanerIds from login to work without DB lookup
       return {
-        success: true,
-        cleanerId: cleanerIdFromCookie,
-        cleaner: {
-          id: cleanerIdFromCookie,
-          name: null,
-          email: "", // Will be empty for hash-based IDs
-        },
+        success: false,
+        error: "Not authenticated as cleaner",
       };
     }
 
-    // Method 2: Check signed token (for email links, etc.)
     if (req) {
       const authHeader = req.headers.get("Authorization");
-      const token = authHeader?.replace("Bearer ", "") || 
-                   req.headers.get("cleanerToken");
+      const token =
+        authHeader?.replace("Bearer ", "") || req.headers.get("cleanerToken");
 
       if (token) {
-        // For now, treat token as cleanerId (can be enhanced with JWT later)
-        const cleaner = await prisma.user.findUnique({
-          where: {
-            id: token,
-            role: UserRole.CLEANER,
-            isActive: true,
-          },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        });
-
+        const cleaner = await loadActiveCleaner(token);
         if (cleaner) {
           return {
             success: true,
@@ -110,15 +85,11 @@ export async function getAuthenticatedCleaner(
       success: false,
       error: "Not authenticated as cleaner",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[CLEANER_AUTH] Error:", error);
     return {
       success: false,
-      error: error?.message || "Authentication failed",
+      error: error instanceof Error ? error.message : "Authentication failed",
     };
   }
 }
-
-
-
-

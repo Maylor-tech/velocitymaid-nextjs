@@ -248,6 +248,58 @@ describe('acceptJobOffer', () => {
     vi.useRealTimers();
   });
 
+  it('phone-login session (User.id) can accept its own live offer', async () => {
+    const now = new Date('2026-08-28T16:10:00.000Z');
+    vi.setSystemTime(now);
+    const offer = {
+      id: 'offer-1',
+      jobId: 'job-1',
+      cleanerId: 'user-dorottya',
+      status: JobOfferStatus.OFFERED,
+      expiresAt: new Date('2026-08-28T16:30:00.000Z'),
+      Job: {
+        id: 'job-1',
+        status: JobStatus.RECEIVED,
+        paymentStatus: 'PENDING',
+        reviewStatus: 'PENDING',
+        assignedCleanerId: null,
+        branchId: 'branch-vt',
+        jobReference: 'VM-TEST-1',
+      },
+    };
+    transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+      const tx = {
+        jobOffer: {
+          findUnique: vi.fn().mockResolvedValue(offer),
+          update: vi.fn().mockResolvedValue({ ...offer, status: JobOfferStatus.ACCEPTED }),
+        },
+        job: {
+          findUnique: vi.fn().mockResolvedValue({ ...offer.Job }),
+          update: vi.fn().mockResolvedValue({
+            id: 'job-1',
+            paymentStatus: 'PENDING',
+            reviewStatus: 'PENDING',
+            assignedCleanerId: 'user-dorottya',
+            status: JobStatus.ASSIGNED,
+          }),
+        },
+        $queryRaw: vi.fn().mockResolvedValue([{ id: 'job-1' }]),
+        jobTeamMember: { deleteMany: vi.fn(), create: vi.fn() },
+        assignmentLog: { create: vi.fn() },
+        auditLog: { create: vi.fn() },
+      };
+      return fn(tx);
+    });
+
+    const result = await acceptJobOffer({
+      offerId: 'offer-1',
+      cleanerId: 'user-dorottya',
+    });
+    expect(result.jobId).toBe('job-1');
+    expect(result.paymentStatus).toBe('PENDING');
+    vi.useRealTimers();
+  });
+
   it('returns 409 when another accept already assigned the job', async () => {
     transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       const tx = {
@@ -305,6 +357,50 @@ describe('declineJobOffer', () => {
       })
     );
     vi.useRealTimers();
+  });
+
+  it('returns 403 OFFER_NOT_YOURS when session cleanerId is not JobOffer.cleanerId (phone-hash cookie)', async () => {
+    offerFindUnique.mockResolvedValue({
+      id: 'offer-1',
+      cleanerId: 'user-dorottya',
+      jobId: 'job-1',
+      status: JobOfferStatus.OFFERED,
+      expiresAt: new Date('2099-01-01'),
+      Job: { id: 'job-1', branchId: 'branch-vt', jobReference: 'VM-TEST-1' },
+    });
+
+    await expect(
+      declineJobOffer({
+        offerId: 'offer-1',
+        cleanerId: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      })
+    ).rejects.toMatchObject({ code: 'OFFER_NOT_YOURS', status: 403 });
+  });
+
+  it('phone-login session (User.id) can decline its own live offer', async () => {
+    offerFindUnique.mockResolvedValue({
+      id: 'offer-1',
+      cleanerId: 'user-dorottya',
+      jobId: 'job-1',
+      status: JobOfferStatus.OFFERED,
+      expiresAt: new Date('2099-01-01'),
+      Job: { id: 'job-1', branchId: 'branch-vt', jobReference: 'VM-TEST-1' },
+    });
+    transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+      const tx = {
+        jobOffer: { update: vi.fn() },
+        assignmentLog: { create: vi.fn() },
+        auditLog: { create: vi.fn() },
+      };
+      return fn(tx);
+    });
+
+    const result = await declineJobOffer({
+      offerId: 'offer-1',
+      cleanerId: 'user-dorottya',
+    });
+    expect(result.jobId).toBe('job-1');
+    expect(transaction).toHaveBeenCalled();
   });
 });
 
