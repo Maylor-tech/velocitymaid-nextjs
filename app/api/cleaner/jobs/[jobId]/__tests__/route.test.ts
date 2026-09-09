@@ -308,9 +308,7 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     expect(json.error).toMatch(/not assigned/i);
   });
 
-  it('returns 403 for a timestamp-expired own OFFERED row so Decline is unreachable from the job page', async () => {
-    // Phase 6B / UX: expired own offer currently 403 (not an expired-offer view).
-    // Decline after expiry is OFFER_EXPIRED. TTL is unchanged in the identity hotfix.
+  it('returns Expired access for the offer owner when the offer is past expiresAt', async () => {
     findUnique.mockResolvedValue({
       id: JOB_ID,
       status: 'RECEIVED',
@@ -319,7 +317,7 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
       propertyId: 'prop-1',
       Branch: { id: 'branch-vt', name: 'Vermont' },
       Customer: null,
-      preferredDate: new Date('2026-09-09'),
+      preferredDate: new Date('2026-09-09T00:00:00.000Z'),
       preferredTime: '10:00 AM',
       assignedAt: null,
       onTheWayAt: null,
@@ -335,7 +333,7 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
           compensationCurrency: 'USD',
           compensationBasis: 'FLAT',
           estimatedDurationMins: 180,
-          operationalNotes: null,
+          operationalNotes: 'Garage code 9999',
           expiresAt: new Date('2020-01-01T00:00:00.000Z'),
           offeredAt: new Date(),
         },
@@ -349,7 +347,45 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     const res = await GET(new NextRequest('http://localhost/api/cleaner/jobs/' + JOB_ID), {
       params: { jobId: JOB_ID },
     });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.access).toBe('EXPIRED');
+    expect(json.offer.status).toBe('EXPIRED');
+    expect(json.job.property).toBeUndefined();
+    expect(json.job.address).toBeUndefined();
+    expect(JSON.stringify(json)).not.toMatch(/LOCKBOX-9999|Garage code 9999|111 Thomson/);
+  });
+
+  it('returns 403 OFFER_NOT_YOURS when another cleaner opens the expired offer job', async () => {
+    requireRole.mockResolvedValue({ userId: 'other-cleaner', role: 'CLEANER' });
+    findUnique.mockResolvedValue({
+      id: JOB_ID,
+      status: 'RECEIVED',
+      assignedCleanerId: null,
+      Property: propertyRow(),
+      propertyId: 'prop-1',
+      Branch: { id: 'branch-vt', name: 'Vermont' },
+      Customer: null,
+      preferredDate: new Date('2026-09-09T00:00:00.000Z'),
+      preferredTime: '10:00 AM',
+      assignedAt: null,
+      onTheWayAt: null,
+      startedAt: null,
+      completedAt: null,
+      JobOffer: [],
+      jobReference: 'VM-LIVE-1',
+      serviceType: 'Vacation Rental Turnover',
+      serviceLocation: 'Ludlow',
+      internalNotes: null,
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/cleaner/jobs/' + JOB_ID), {
+      params: { jobId: JOB_ID },
+    });
     expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.code).toBe('OFFER_NOT_YOURS');
+    expect(json.job).toBeUndefined();
   });
 
   it('blocks unauthorized cleaner before job load when requireRole rejects', async () => {

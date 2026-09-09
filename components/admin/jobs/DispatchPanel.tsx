@@ -32,6 +32,13 @@ type DispatchPayload = {
   compensationPreview: number | null;
   ui: { state: string; label: string };
   offerNotification?: OfferNotificationView;
+  ttl?: {
+    defaultMinutes: number;
+    defaultLabel: string;
+    source: string;
+    overrideUsed: boolean;
+    expiresAt: string | null;
+  };
   offers: OfferRow[];
 };
 
@@ -324,9 +331,19 @@ export function DispatchPanel({
               min="1"
               value={ttlMinutes}
               onChange={(e) => setTtlMinutes(e.target.value)}
-              placeholder="Uses env default for this urgency"
+              placeholder={
+                data?.ttl
+                  ? `Default ${data.ttl.defaultMinutes} min`
+                  : 'Uses service-aware default'
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
+            {data?.ttl && (
+              <p className="text-xs text-vm-muted mt-1">
+                Service-aware default: {data.ttl.defaultLabel}
+                {ttlMinutes.trim() ? ' · Custom override will be used (still clamped before service).' : ''}
+              </p>
+            )}
           </div>
 
           {openOffer && (
@@ -341,6 +358,16 @@ export function DispatchPanel({
                   : ''}{' '}
                 · <Countdown expiresAt={openOffer.expiresAt} />
               </p>
+              <p className="text-sm text-vm-text mt-2">
+                Expires {formatNotificationTime(openOffer.expiresAt) || openOffer.expiresAt}
+              </p>
+              {data?.ttl && (
+                <p className="text-xs text-vm-muted mt-1">
+                  {data.ttl.overrideUsed
+                    ? 'Custom TTL override is in effect.'
+                    : data.ttl.defaultLabel}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => void handleCancel()}

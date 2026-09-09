@@ -26,9 +26,8 @@ import {
   parseCompensationBasis,
 } from '@/lib/dispatch/compensation';
 import { DispatchError } from '@/lib/dispatch/errors';
-import { computeExpiresAt, resolveOfferTtlMinutes } from '@/lib/dispatch/offerTtl';
+import { resolveOfferExpiration, type DispatchUrgencyValue } from '@/lib/dispatch/offerTtl';
 import { notifyCleanerOfOffer } from '@/lib/dispatch/notifyOffer';
-import type { DispatchUrgencyValue } from '@/lib/dispatch/offerTtl';
 import {
   canMutateDispatchOffers,
   dispatchMutationBlockReason,
@@ -52,6 +51,8 @@ const OFFER_JOB_SELECT = {
   estimatedDurationMins: true,
   internalNotes: true,
   dispatchUrgency: true,
+  preferredDate: true,
+  preferredTime: true,
   Customer: { select: { billingPolicy: true } },
   Branch: { select: { id: true, slug: true, country: true } },
 } as const;
@@ -266,11 +267,15 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
   );
 
   const offeredAt = new Date();
-  const ttlMinutes = resolveOfferTtlMinutes({
+  const ttl = resolveOfferExpiration({
     urgency: job.dispatchUrgency as DispatchUrgencyValue,
     ttlMinutes: input.ttlMinutes,
+    preferredDate: job.preferredDate,
+    preferredTime: job.preferredTime,
+    offeredAt,
   });
-  const expiresAt = computeExpiresAt(offeredAt, ttlMinutes);
+  const ttlMinutes = ttl.ttlMinutes;
+  const expiresAt = ttl.expiresAt;
 
   const adminId =
     input.createdByAdminId && input.createdByAdminId !== 'local-admin'
@@ -321,6 +326,9 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
       compensationBasis,
       expiresAt: expiresAt.toISOString(),
       ttlMinutes,
+      ttlSource: ttl.source,
+      ttlOverrideUsed: ttl.overrideUsed,
+      ttlClampedToSafetyCutoff: ttl.clampedToSafetyCutoff,
       paymentStatusUnchanged: job.paymentStatus,
       reviewStatusUnchanged: job.reviewStatus,
     },

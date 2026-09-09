@@ -19,6 +19,11 @@ import {
   SEND_CLEANER_OFFER_EMAIL,
   toOfferNotificationView,
 } from '@/lib/dispatch/offerNotification';
+import {
+  inferOverrideUsed,
+  resolveOfferExpiration,
+  type DispatchUrgencyValue,
+} from '@/lib/dispatch/offerTtl';
 
 export async function GET(
   request: NextRequest,
@@ -36,6 +41,8 @@ export async function GET(
         operationalTotal: true,
         dispatchUrgency: true,
         estimatedDurationMins: true,
+        preferredDate: true,
+        preferredTime: true,
         Branch: { select: { slug: true } },
         User: { select: { name: true } },
       },
@@ -108,6 +115,13 @@ export async function GET(
         : null,
     });
 
+    const ttlPreview = resolveOfferExpiration({
+      urgency: job.dispatchUrgency as DispatchUrgencyValue,
+      preferredDate: job.preferredDate,
+      preferredTime: job.preferredTime,
+    });
+    const openForTtl = mapped.find((o) => isEffectivelyOpen(o)) ?? null;
+
     return NextResponse.json({
       success: true,
       dispatchOffersEnabled: isDispatchOffersEnabledForBranch(job.Branch?.slug),
@@ -116,6 +130,15 @@ export async function GET(
       compensationPreview: previewCompensationFromOperationalTotal(job.operationalTotal),
       ui,
       offerNotification: toOfferNotificationView(latestOfferEmail),
+      ttl: {
+        defaultMinutes: ttlPreview.defaultMinutes,
+        defaultLabel: ttlPreview.defaultLabel,
+        source: ttlPreview.source,
+        overrideUsed: openForTtl
+          ? inferOverrideUsed(openForTtl.offeredAt, openForTtl.expiresAt, ttlPreview.defaultMinutes)
+          : false,
+        expiresAt: openForTtl?.expiresAt ?? null,
+      },
       offers: mapped,
     });
   } catch (err) {
