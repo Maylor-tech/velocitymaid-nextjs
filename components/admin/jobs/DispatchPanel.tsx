@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from 'react';
-import { CheckCircle, Clock, Loader2, XCircle } from 'lucide-react';
+import { CheckCircle, Clock, Loader2, Mail, XCircle } from 'lucide-react';
 import { isEffectivelyOpen, effectiveOfferStatus } from '@/lib/dispatch/offerExpiry';
 import {
   offerNotificationLabel,
@@ -108,6 +108,7 @@ export function DispatchPanel({
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [compensation, setCompensation] = useState('');
   const [compensationBasis, setCompensationBasis] = useState<'FLAT' | 'HOURLY' | 'OTHER'>('FLAT');
@@ -199,6 +200,28 @@ export function DispatchPanel({
     }
   };
 
+  const handleResend = async () => {
+    if (!openOffer) return;
+    setResending(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/admin/jobs/${jobId}/offers/${openOffer.id}/resend`,
+        { method: 'POST' }
+      );
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to resend notification');
+      }
+      await load();
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to resend notification');
+    } finally {
+      setResending(false);
+    }
+  };
+
   const handleCancel = async () => {
     if (!openOffer) return;
     if (!confirm('Cancel this outstanding offer? The job will return to Cleaner needed.')) {
@@ -254,6 +277,11 @@ export function DispatchPanel({
           {offerNotificationLabel(data.offerNotification.status)}
           {formatNotificationTime(data.offerNotification.recordedAt)
             ? ` · ${formatNotificationTime(data.offerNotification.recordedAt)}`
+            : ''}
+          {data.offerNotification.attemptCount > 0
+            ? ` · ${data.offerNotification.attemptCount} attempt${
+                data.offerNotification.attemptCount === 1 ? '' : 's'
+              }`
             : ''}
         </div>
       )}
@@ -368,15 +396,29 @@ export function DispatchPanel({
                     : data.ttl.defaultLabel}
                 </p>
               )}
-              <button
-                type="button"
-                onClick={() => void handleCancel()}
-                disabled={cancelling}
-                className="mt-3 inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-red-200 text-red-700 hover:bg-red-50"
-              >
-                {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                Cancel offer
-              </button>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleResend()}
+                  disabled={resending || cancelling}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-vm-navy/30 text-vm-navy hover:bg-vm-navy/10 disabled:opacity-50"
+                >
+                  {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                  Resend notification
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleCancel()}
+                  disabled={cancelling || resending}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50"
+                >
+                  {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                  Cancel offer
+                </button>
+              </div>
+              <p className="text-xs text-vm-muted mt-2">
+                Resend notification only when this offer is still live. It does not create a new offer or change pay or expiry.
+              </p>
             </div>
           )}
 

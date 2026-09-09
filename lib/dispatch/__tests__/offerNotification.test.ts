@@ -13,8 +13,15 @@ describe('toOfferNotificationView', () => {
     expect(view).toEqual({
       status: 'SENT',
       recordedAt: '2026-09-08T13:40:00.000Z',
+      attemptCount: 0,
     });
     expect(offerNotificationLabel(view.status)).toBe('Sent');
+    expect(
+      toOfferNotificationView(
+        { status: 'SUCCESS', createdAt: new Date('2026-09-08T13:40:00.000Z') },
+        4
+      ).attemptCount
+    ).toBe(4);
   });
 
   it('maps FAILED to Failed with timestamp', () => {
@@ -31,6 +38,12 @@ describe('toOfferNotificationView', () => {
     expect(toOfferNotificationView(null)).toEqual({
       status: 'NOT_RECORDED',
       recordedAt: null,
+      attemptCount: 0,
+    });
+    expect(toOfferNotificationView(null, 3)).toEqual({
+      status: 'NOT_RECORDED',
+      recordedAt: null,
+      attemptCount: 3,
     });
     expect(offerNotificationLabel('NOT_RECORDED')).toBe('Not recorded');
   });

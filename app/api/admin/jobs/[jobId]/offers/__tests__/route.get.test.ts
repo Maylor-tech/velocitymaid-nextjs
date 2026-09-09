@@ -5,6 +5,7 @@ const requireRole = vi.fn();
 const jobFindUnique = vi.fn();
 const offerFindMany = vi.fn();
 const logFindFirst = vi.fn();
+const logCount = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...args: unknown[]) => requireRole(...args),
@@ -21,6 +22,7 @@ vi.mock('@/lib/prisma', () => ({
     jobOffer: { findMany: (...args: unknown[]) => offerFindMany(...args) },
     integrationEventLog: {
       findFirst: (...args: unknown[]) => logFindFirst(...args),
+      count: (...args: unknown[]) => logCount(...args),
     },
   },
 }));
@@ -51,6 +53,7 @@ describe('GET /api/admin/jobs/[jobId]/offers notification status', () => {
       User: null,
     });
     offerFindMany.mockResolvedValue([]);
+    logCount.mockResolvedValue(0);
   });
 
   it('includes latest SEND_CLEANER_OFFER_EMAIL as Sent', async () => {
@@ -58,6 +61,7 @@ describe('GET /api/admin/jobs/[jobId]/offers notification status', () => {
       status: 'SUCCESS',
       createdAt: new Date('2026-09-08T13:40:00.000Z'),
     });
+    logCount.mockResolvedValue(2);
 
     const res = await GET(getReq(), { params: { jobId: 'job-1' } });
     expect(res.status).toBe(200);
@@ -65,6 +69,7 @@ describe('GET /api/admin/jobs/[jobId]/offers notification status', () => {
     expect(json.offerNotification).toEqual({
       status: 'SENT',
       recordedAt: '2026-09-08T13:40:00.000Z',
+      attemptCount: 2,
     });
     expect(json.offerNotification).not.toHaveProperty('errorSummary');
     expect(JSON.stringify(json)).not.toMatch(/api[_-]?key|payload|resend/i);
@@ -73,6 +78,9 @@ describe('GET /api/admin/jobs/[jobId]/offers notification status', () => {
         where: { jobId: 'job-1', action: 'SEND_CLEANER_OFFER_EMAIL' },
       })
     );
+    expect(logCount).toHaveBeenCalledWith({
+      where: { jobId: 'job-1', action: 'SEND_CLEANER_OFFER_EMAIL' },
+    });
   });
 
   it('includes Failed when the latest email log failed', async () => {
@@ -93,6 +101,7 @@ describe('GET /api/admin/jobs/[jobId]/offers notification status', () => {
     expect(json.offerNotification).toEqual({
       status: 'NOT_RECORDED',
       recordedAt: null,
+      attemptCount: 0,
     });
   });
 
