@@ -16,6 +16,7 @@ import { toCleanerOfferLocationView } from "@/lib/dispatch/cleanerViews";
 import { serializeCleanerOffer } from "@/lib/dispatch/serializeCleanerOffer";
 import { toCleanerCompensationView } from "@/lib/dispatch/compensation";
 import { assertNoCustomerFinancials } from "@/lib/dispatch/cleanerFinancialGuard";
+import { isEffectivelyOpen } from "@/lib/dispatch/offerExpiry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,7 +67,13 @@ export async function GET(
         JobOffer: {
           where: {
             cleanerId: auth.userId,
-            status: { in: [JobOfferStatus.OFFERED, JobOfferStatus.ACCEPTED] },
+            status: {
+              in: [
+                JobOfferStatus.OFFERED,
+                JobOfferStatus.ACCEPTED,
+                JobOfferStatus.EXPIRED,
+              ],
+            },
           },
           orderBy: { offeredAt: "desc" },
           take: 1,
@@ -84,20 +91,64 @@ export async function GET(
     const assigned = job.assignedCleanerId === auth.userId;
     const offerRow = job.JobOffer[0] ?? null;
     const openOffer =
+      offerRow && isEffectivelyOpen(offerRow) ? offerRow : null;
+    const expiredOwnOffer =
       offerRow &&
-      offerRow.status === JobOfferStatus.OFFERED &&
-      offerRow.expiresAt.getTime() > Date.now()
+      offerRow.status !== JobOfferStatus.ACCEPTED &&
+      !isEffectivelyOpen(offerRow)
         ? offerRow
         : null;
 
-    if (!assigned && !openOffer) {
+    if (!assigned && !openOffer && !expiredOwnOffer) {
       return NextResponse.json(
         {
           success: false,
           error: "This job is not assigned to your cleaner account.",
+          code: "OFFER_NOT_YOURS",
         },
         { status: 403 }
       );
+    }
+
+    if (!assigned && expiredOwnOffer) {
+      const offer = serializeCleanerOffer({
+        ...expiredOwnOffer,
+        operationalNotes: null,
+        Job: {
+          jobReference: job.jobReference,
+          serviceType: job.serviceType,
+          preferredDate: job.preferredDate,
+          preferredTime: job.preferredTime,
+          serviceLocation: job.serviceLocation,
+          Property: job.Property
+            ? { city: job.Property.city, state: job.Property.state }
+            : null,
+        },
+      });
+      const body = {
+        success: true,
+        access: "EXPIRED",
+        offer,
+        job: {
+          id: job.id,
+          status: job.status,
+          jobReference: job.jobReference,
+          serviceType: job.serviceType,
+          preferredDate: job.preferredDate?.toISOString() ?? null,
+          preferredTime: job.preferredTime,
+          location: toCleanerOfferLocationView({
+            serviceLocation: job.serviceLocation,
+            property: job.Property,
+          }),
+          estimatedDurationMins: expiredOwnOffer.estimatedDurationMins,
+          compensation: offer.compensation,
+          compensationAmount: offer.compensationAmount,
+          compensationCurrency: offer.compensationCurrency,
+          compensationBasis: offer.compensationBasis,
+        },
+      };
+      assertNoCustomerFinancials(body, "cleaner expired offer GET");
+      return NextResponse.json(body);
     }
 
     if (!assigned && openOffer) {

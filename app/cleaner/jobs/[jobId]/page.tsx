@@ -101,7 +101,7 @@ function authMessage(status: number, error?: string): string {
     return "Please log in at /cleaners/login with your cleaner email to view this job.";
   }
   if (status === 403) {
-    return error || "This job is not assigned to your cleaner account. Log in with the assigned cleaner's email.";
+    return error || "This offer is not for your account.";
   }
   if (status === 404) {
     return "Job not found. It may have been removed or reassigned.";
@@ -116,9 +116,11 @@ export default function CleanerJobDetailPage() {
 
   const [job, setJob] = useState<Job | null>(null);
   const [offer, setOffer] = useState<OfferPayload | null>(null);
-  const [access, setAccess] = useState<"OFFER" | "ASSIGNED" | null>(null);
+  const [access, setAccess] = useState<"OFFER" | "ASSIGNED" | "EXPIRED" | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [declineReason, setDeclineReason] = useState("");
   const [processing, setProcessing] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -150,7 +152,13 @@ export default function CleanerJobDetailPage() {
       }
 
       setJob(data.job);
-      setAccess(data.access === "OFFER" ? "OFFER" : "ASSIGNED");
+      setAccess(
+        data.access === "EXPIRED"
+          ? "EXPIRED"
+          : data.access === "OFFER"
+            ? "OFFER"
+            : "ASSIGNED"
+      );
       setOffer(data.offer ?? null);
     } catch (err: unknown) {
       console.error("Failed to fetch job:", err);
@@ -161,10 +169,10 @@ export default function CleanerJobDetailPage() {
   };
 
   const handleAcceptOffer = async () => {
-    if (!offer || !confirm("Accept this offer? You will be assigned and receive access details.")) {
-      return;
-    }
+    if (!offer) return;
     setProcessing(true);
+    setFeedback(null);
+    setError(null);
     try {
       const res = await fetch(`/api/cleaner/offers/${offer.offerId}/accept`, {
         method: "POST",
@@ -174,30 +182,33 @@ export default function CleanerJobDetailPage() {
         throw new Error(data.error || "Failed to accept offer");
       }
       await fetchJob();
+      setFeedback(data.message || "Offer accepted. This job is now assigned to you.");
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to accept offer");
+      setError(err instanceof Error ? err.message : "Failed to accept offer");
     } finally {
       setProcessing(false);
     }
   };
 
   const handleDeclineOffer = async () => {
-    if (!offer || !confirm("Decline this offer?")) return;
-    const reason = window.prompt("Optional reason:") || "";
+    if (!offer) return;
     setProcessing(true);
+    setFeedback(null);
+    setError(null);
     try {
       const res = await fetch(`/api/cleaner/offers/${offer.offerId}/decline`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ reason: declineReason.trim() }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Failed to decline offer");
       }
-      router.push("/cleaner/jobs");
+      setFeedback("Offer declined. Ops can send another offer if needed.");
+      setTimeout(() => router.push("/cleaner/jobs"), 1600);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to decline offer");
+      setError(err instanceof Error ? err.message : "Failed to decline offer");
     } finally {
       setProcessing(false);
     }
@@ -406,8 +417,9 @@ export default function CleanerJobDetailPage() {
       job.status === "AWAITING_QC" ||
       job.status === "COMPLETED");
 
-  if (access === "OFFER" && offer) {
-    const offerExpired = isOfferExpiredByTimestamp(offer, new Date(nowMs));
+  if ((access === "OFFER" || access === "EXPIRED") && offer) {
+    const offerExpired =
+      access === "EXPIRED" || isOfferExpiredByTimestamp(offer, new Date(nowMs));
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-4xl mx-auto">
@@ -422,9 +434,19 @@ export default function CleanerJobDetailPage() {
           </h1>
           <p className="text-vm-muted mb-6">
             {offerExpired
-              ? "This offer has expired. You can no longer accept or decline it."
+              ? "This offer has expired. Accept and Decline are disabled. Ops may send you another offer."
               : "Accept to be assigned. Access codes and full address are shown after you accept."}
           </p>
+          {error && (
+            <div className="mb-4 bg-vm-danger-bg border border-red-300 text-red-800 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+          {feedback && (
+            <div className="mb-4 bg-vm-success-bg border border-vm-success/30 text-vm-success px-4 py-3 rounded">
+              {feedback}
+            </div>
+          )}
           <div className="bg-white rounded-lg shadow p-6 mb-6 space-y-3">
             <p><span className="text-vm-muted">Service:</span> {offer.serviceType || "Cleaning"}</p>
             <p><span className="text-vm-muted">Date:</span> {offer.serviceDate} {offer.preferredTime ? `at ${offer.preferredTime}` : ""}</p>
@@ -453,23 +475,55 @@ export default function CleanerJobDetailPage() {
             )}
           </div>
           {offerExpired ? (
-            <p className="font-medium text-red-700">Expired</p>
+            <div className="space-y-3">
+              <p className="font-medium text-red-700">Expired — you cannot accept or decline this offer.</p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  disabled
+                  className="px-6 py-3 rounded-lg font-semibold text-white bg-gray-400 cursor-not-allowed"
+                >
+                  Accept offer
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  className="px-6 py-3 rounded-lg font-semibold text-white bg-gray-400 cursor-not-allowed"
+                >
+                  Decline
+                </button>
+              </div>
+            </div>
           ) : (
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={handleAcceptOffer}
-              disabled={processing}
-              className="px-6 py-3 rounded-lg font-semibold text-white bg-vm-success disabled:bg-gray-400"
-            >
-              {processing ? "Processing..." : "Accept offer"}
-            </button>
-            <button
-              onClick={handleDeclineOffer}
-              disabled={processing}
-              className="px-6 py-3 rounded-lg font-semibold text-white bg-vm-danger disabled:bg-gray-400"
-            >
-              Decline
-            </button>
+          <div className="space-y-3">
+            <label className="block text-sm text-vm-muted">
+              Optional decline reason
+              <input
+                type="text"
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-vm-text"
+                placeholder="Not needed if you accept"
+              />
+            </label>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => void handleAcceptOffer()}
+                disabled={processing}
+                className="px-6 py-3 rounded-lg font-semibold text-white bg-vm-success disabled:bg-gray-400"
+              >
+                {processing ? "Processing..." : "Accept offer"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDeclineOffer()}
+                disabled={processing}
+                className="px-6 py-3 rounded-lg font-semibold text-white bg-vm-danger disabled:bg-gray-400"
+              >
+                Decline
+              </button>
+            </div>
           </div>
           )}
         </div>
@@ -503,6 +557,12 @@ export default function CleanerJobDetailPage() {
             </span>
           </div>
         </div>
+
+        {feedback && (
+          <div className="mb-6 bg-vm-success-bg border border-vm-success/30 text-vm-success px-4 py-3 rounded">
+            {feedback}
+          </div>
+        )}
 
         {(canAccept || canStart || canComplete || canDecline) && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">

@@ -45,6 +45,8 @@ describe('GET /api/admin/jobs/[jobId]/offers notification status', () => {
       operationalTotal: 200,
       dispatchUrgency: 'STANDARD',
       estimatedDurationMins: 180,
+      preferredDate: new Date('2099-01-15T00:00:00.000Z'),
+      preferredTime: '10:00 AM',
       Branch: { slug: 'vermont' },
       User: null,
     });
@@ -92,5 +94,15 @@ describe('GET /api/admin/jobs/[jobId]/offers notification status', () => {
       status: 'NOT_RECORDED',
       recordedAt: null,
     });
+  });
+
+  it('includes service-aware TTL preview for a far-future service date', async () => {
+    logFindFirst.mockResolvedValue(null);
+    const res = await GET(getReq(), { params: { jobId: 'job-1' } });
+    const json = await res.json();
+    expect(json.ttl.defaultMinutes).toBe(24 * 60);
+    expect(json.ttl.defaultLabel).toMatch(/more than 48 hours/i);
+    expect(json.ttl.overrideUsed).toBe(false);
+    expect(json.ttl.expiresAt).toBeNull();
   });
 });
