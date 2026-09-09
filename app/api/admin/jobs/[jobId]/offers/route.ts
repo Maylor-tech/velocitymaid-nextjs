@@ -15,6 +15,10 @@ import { isDispatchError } from '@/lib/dispatch/errors';
 import { previewCompensationFromOperationalTotal } from '@/lib/dispatch/compensation';
 import { deriveDispatchUiState } from '@/lib/dispatch/dispatchState';
 import { effectiveOfferStatus, isEffectivelyOpen } from '@/lib/dispatch/offerExpiry';
+import {
+  SEND_CLEANER_OFFER_EMAIL,
+  toOfferNotificationView,
+} from '@/lib/dispatch/offerNotification';
 
 export async function GET(
   request: NextRequest,
@@ -40,13 +44,20 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
     }
 
-    const offers = await prisma.jobOffer.findMany({
-      where: { jobId },
-      orderBy: { offeredAt: 'desc' },
-      include: {
-        Cleaner: { select: { id: true, name: true, email: true } },
-      },
-    });
+    const [offers, latestOfferEmail] = await Promise.all([
+      prisma.jobOffer.findMany({
+        where: { jobId },
+        orderBy: { offeredAt: 'desc' },
+        include: {
+          Cleaner: { select: { id: true, name: true, email: true } },
+        },
+      }),
+      prisma.integrationEventLog.findFirst({
+        where: { jobId, action: SEND_CLEANER_OFFER_EMAIL },
+        orderBy: { createdAt: 'desc' },
+        select: { status: true, createdAt: true },
+      }),
+    ]);
 
     const mapped = offers.map((o) => {
       const storedStatus = o.status;
@@ -104,6 +115,7 @@ export async function GET(
       estimatedDurationMins: job.estimatedDurationMins,
       compensationPreview: previewCompensationFromOperationalTotal(job.operationalTotal),
       ui,
+      offerNotification: toOfferNotificationView(latestOfferEmail),
       offers: mapped,
     });
   } catch (err) {

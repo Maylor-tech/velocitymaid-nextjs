@@ -49,9 +49,7 @@ export function deriveDispatchUiState(
   if (open && openEffective === 'OFFERED') {
     return {
       state: 'OFFER_SENT',
-      label: open.cleanerName
-        ? `Offer sent to ${open.cleanerName}`
-        : 'Awaiting response',
+      label: 'Awaiting cleaner response',
       offer: open,
     };
   }
@@ -63,17 +61,17 @@ export function deriveDispatchUiState(
   const terminal = expiredOpen ?? input.latestTerminalOffer;
 
   if (terminal?.status === 'DECLINED') {
-    return { state: 'DECLINED', label: 'Declined — cleaner needed', offer: terminal };
+    return { state: 'DECLINED', label: 'Cleaner declined', offer: terminal };
   }
   if (terminal?.status === 'EXPIRED' || openEffective === 'EXPIRED') {
     return {
       state: 'EXPIRED',
-      label: 'Expired — cleaner needed',
+      label: 'Offer expired',
       offer: terminal,
     };
   }
   if (terminal?.status === 'CANCELLED') {
-    return { state: 'CANCELLED', label: 'Cancelled — cleaner needed', offer: terminal };
+    return { state: 'CANCELLED', label: 'Cleaner needed', offer: terminal };
   }
   return { state: 'CLEANER_NEEDED', label: 'Cleaner needed', offer: null };
 }

@@ -77,6 +77,6 @@ describe('deriveDispatchUiState expiry', () => {
       },
     }, NOW);
     expect(ui.state).toBe('OFFER_SENT');
-    expect(ui.label).toBe('Offer sent to Brian');
+    expect(ui.label).toBe('Awaiting cleaner response');
   });
 });

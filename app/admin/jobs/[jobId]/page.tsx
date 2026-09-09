@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Loader2, User, Calendar, MapPin, DollarSign, CheckCircle, XCircle, AlertCircle, Clock, FileText } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { ArrowLeft, Loader2, DollarSign, CheckCircle, XCircle, AlertCircle, Clock, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 import { JobBillingWorkflowPanel } from '@/components/admin/jobs/JobBillingWorkflowPanel';
@@ -14,6 +14,7 @@ import { getJobLoopProgress } from '@/lib/booking/jobLoopProgress';
 import { formatServiceDate } from '@/lib/dates/serviceDate';
 import { isJobAssignable as isJobAssignableByPolicy } from '@/lib/billing/billingPolicy';
 import { DispatchPanel } from '@/components/admin/jobs/DispatchPanel';
+import type { DispatchUiState } from '@/lib/dispatch/dispatchState';
 
 interface Job {
   id: string;
@@ -98,6 +99,7 @@ interface Job {
     standingInstructions: string | null;
   } | null;
   dispatchOffersEnabled?: boolean;
+  dispatchUi?: { state: string; label: string };
   dispatchUrgency?: string;
   startedAt?: string | null;
   estimatedDurationMins?: number | null;
@@ -121,7 +123,6 @@ interface AuditLog {
 }
 
 export default function AdminJobDetailPage() {
-  const router = useRouter();
   const params = useParams();
   const jobId = params.jobId as string;
   const { isBranchScoped } = useAdminShell();
@@ -241,9 +242,9 @@ export default function AdminJobDetailPage() {
       } else {
         throw new Error(data.error || 'Failed to fetch job');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching job:', err);
-      setError(err.message || 'Failed to load job');
+      setError(err instanceof Error ? err.message : 'Failed to load job');
     } finally {
       setLoading(false);
     }
@@ -602,8 +603,8 @@ export default function AdminJobDetailPage() {
           throw new Error(data.error || 'Failed to assign cleaner');
         }
       }
-    } catch (err: any) {
-      setToastMessage(err.message || 'Failed to assign cleaner');
+    } catch (err: unknown) {
+      setToastMessage(err instanceof Error ? err.message : 'Failed to assign cleaner');
       setToastType('error');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -775,6 +776,8 @@ export default function AdminJobDetailPage() {
         assignedCleanerId: job.assignedCleanerId,
         balanceDue: job.balanceDue,
         billingPolicy: job.billingPolicy,
+        dispatchOffersEnabled: job.dispatchOffersEnabled,
+        dispatchState: (job.dispatchUi?.state as DispatchUiState | undefined) ?? null,
       })
     : null;
 
@@ -1619,7 +1622,9 @@ export default function AdminJobDetailPage() {
         {/* Assignment: PREPAY still requires payment; invoice-after-service does not */}
         {isPaymentBlocked ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-vm-text mb-4">Assign Cleaner</h2>
+            <h2 className="text-xl font-semibold text-vm-text mb-4">
+              {job.dispatchOffersEnabled ? 'Send offer' : 'Assign Cleaner'}
+            </h2>
             
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
               <div className="flex items-start gap-3">
@@ -1781,7 +1786,7 @@ export default function AdminJobDetailPage() {
           ) : (
             <div className="space-y-4">
               {/* Phase 2B: Display audit logs in chronological order (most recent first) */}
-              {auditLogs.map((log, index) => (
+              {auditLogs.map((log) => (
                 <div
                   key={log.id}
                   className="flex gap-4 pb-4 border-b border-gray-100 last:border-0"

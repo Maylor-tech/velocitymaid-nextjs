@@ -102,6 +102,21 @@ describe('dispatch UI state', () => {
     ).toBe('CLEANER_NEEDED');
   });
 
+  it('is cleaner declined then cleaner-needed after a declined offer', () => {
+    expect(
+      deriveDispatchUiState({
+        assignedCleanerId: null,
+        latestTerminalOffer: {
+          id: 'o1',
+          status: 'DECLINED',
+          cleanerName: 'Brian',
+          expiresAt: '2099-01-01T00:00:00.000Z',
+          compensationAmount: 195,
+        },
+      }).label
+    ).toBe('Cleaner declined');
+  });
+
   it('shows offer sent while OFFERED and still within TTL', () => {
     expect(
       deriveDispatchUiState({
@@ -114,6 +129,6 @@ describe('dispatch UI state', () => {
           compensationAmount: 195,
         },
       }).label
-    ).toBe('Offer sent to Brian');
+    ).toBe('Awaiting cleaner response');
   });
 });

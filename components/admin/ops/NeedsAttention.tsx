@@ -15,6 +15,9 @@ function visibleExceptionItems(
     .filter((item) => item.count > 0)
     .filter((item) => !branchScoped || item.branchScopedVisible)
     .sort((a, b) => {
+      const rankA = a.priority ?? 1000 + urgencyRank[a.urgency];
+      const rankB = b.priority ?? 1000 + urgencyRank[b.urgency];
+      if (rankA !== rankB) return rankA - rankB;
       const u = urgencyRank[a.urgency] - urgencyRank[b.urgency];
       if (u !== 0) return u;
       return b.count - a.count;

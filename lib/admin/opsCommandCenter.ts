@@ -19,6 +19,12 @@ import {
 } from '@/lib/admin/dateRanges';
 import { getBillingDashboardKpis } from '@/lib/billing/jobCompletionWorkflow';
 import { formatUsd } from '@/lib/invoices/invoiceUtils';
+import { businessDateKey, parseServiceDateInput } from '@/lib/dates/serviceDate';
+import {
+  classifyDispatchException,
+  groupDispatchExceptionItems,
+} from '@/lib/dispatch/dispatchExceptions';
+import { SEND_CLEANER_OFFER_EMAIL } from '@/lib/dispatch/offerNotification';
 
 const CANCELLED: JobStatus[] = [JobStatus.CANCELLED, JobStatus.CANCELLED_EMERGENCY];
 const ACTIVE_JOB: JobStatus[] = Object.values(JobStatus).filter(
@@ -64,6 +70,8 @@ export type ActionItem = {
   cta: string;
   /** When false, branch-scoped admins never see this row (no dead links). */
   branchScopedVisible: boolean;
+  /** Lower number first. Dispatch exceptions use 10–60; others omit. */
+  priority?: number;
   /** Up to a few concrete entities for inline actions. */
   entities?: ExceptionEntity[];
 };
@@ -187,6 +195,9 @@ export function visibleExceptionItems(
     .filter((item) => item.count > 0)
     .filter((item) => !branchScoped || item.branchScopedVisible)
     .sort((a, b) => {
+      const rankA = a.priority ?? 1000 + urgencyRank[a.urgency];
+      const rankB = b.priority ?? 1000 + urgencyRank[b.urgency];
+      if (rankA !== rankB) return rankA - rankB;
       const u = urgencyRank[a.urgency] - urgencyRank[b.urgency];
       if (u !== 0) return u;
       return b.count - a.count;
@@ -904,28 +915,68 @@ export async function getOpsCommandCenter(
   const unassignedTodayJobs = todayJobs.filter((j) => !j.assignedCleanerId);
   const arDueCount = overdueMap.size + dueToday.length;
 
-  /** Exception desk only — vanity counts (coverage, 24h watch list, training) stay off home. */
-  const actionCenter: ActionItem[] = [
-    {
-      id: 'unassigned',
-      label: 'Unassigned jobs',
-      count: unassignedJobs,
-      href: '/admin/jobs?filter=needs',
-      urgency: unassignedJobs > 0 ? 'danger' : 'normal',
-      reason: 'No cleaner assigned — schedule will slip without a decision.',
-      cta: 'Assign',
-      branchScopedVisible: true,
-      entities: unassignedTodayJobs.slice(0, 5).map((j) => ({
+  const todayKey = businessDateKey(now);
+  const todayServiceUtc = todayKey ? parseServiceDateInput(todayKey) : todayStart;
+  const dispatchCandidateJobs = await prisma.job.findMany({
+    where: {
+      ...activeJobWhere,
+      assignedCleanerId: null,
+      preferredDate: { gte: todayServiceUtc ?? todayStart },
+    },
+    select: {
+      id: true,
+      status: true,
+      assignedCleanerId: true,
+      preferredDate: true,
+      customerName: true,
+      address: true,
+      Customer: { select: { firstName: true, lastName: true } },
+      JobOffer: {
+        orderBy: { offeredAt: 'desc' },
+        take: 8,
+        select: { status: true, expiresAt: true },
+      },
+      IntegrationEventLog: {
+        where: { action: SEND_CLEANER_OFFER_EMAIL },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: { status: true },
+      },
+    },
+    take: 120,
+  });
+
+  const classifiedDispatchJobs = dispatchCandidateJobs
+    .map((j) => {
+      const kind = classifyDispatchException(
+        {
+          assignedCleanerId: j.assignedCleanerId,
+          preferredDate: j.preferredDate,
+          status: j.status,
+          offers: j.JobOffer,
+          latestOfferEmailStatus: j.IntegrationEventLog[0]?.status ?? null,
+        },
+        now
+      );
+      if (!kind) return null;
+      return {
         id: j.id,
         name:
           j.customerName ||
           [j.Customer?.firstName, j.Customer?.lastName].filter(Boolean).join(' ') ||
           j.address ||
           'Job',
-        href: `/admin/jobs/${j.id}`,
-        action: 'open' as const,
-      })),
-    },
+        kind,
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => row != null);
+
+  const dispatchExceptionItems = groupDispatchExceptionItems(classifiedDispatchJobs);
+  const dispatchExceptionCount = dispatchExceptionItems.filter((i) => i.count > 0).length;
+
+  /** Exception desk only — vanity counts (coverage, 24h watch list, training) stay off home. */
+  const actionCenter: ActionItem[] = [
+    ...dispatchExceptionItems,
     {
       id: 'property-alerts',
       label: 'Property exceptions',
@@ -999,14 +1050,14 @@ export async function getOpsCommandCenter(
   ];
 
   const hqExceptionCount =
-    (unassignedJobs > 0 ? 1 : 0) +
+    dispatchExceptionCount +
     (propertyAlerts.length > 0 ? 1 : 0) +
     (arDueCount > 0 ? 1 : 0) +
     (newLeads > 0 ? 1 : 0) +
     (quoteFollowUps > 0 ? 1 : 0) +
     (invitedNeverLoggedIn.length > 0 ? 1 : 0);
   const branchExceptionCount =
-    (unassignedJobs > 0 ? 1 : 0) + (propertyAlerts.length > 0 ? 1 : 0);
+    dispatchExceptionCount + (propertyAlerts.length > 0 ? 1 : 0);
   const exceptionCount = branchId ? branchExceptionCount : hqExceptionCount;
 
   const recentActivity: OpsCommandCenterPayload['recentActivity'] = [];

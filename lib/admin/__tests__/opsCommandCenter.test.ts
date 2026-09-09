@@ -219,4 +219,40 @@ describe('visibleExceptionItems', () => {
       'unassigned',
     ]);
   });
+
+  it('sorts explicit dispatch priority ahead of generic urgency', () => {
+    const items: ActionItem[] = [
+      {
+        ...base,
+        id: 'awaiting',
+        label: 'Awaiting',
+        count: 9,
+        urgency: 'normal',
+        priority: 50,
+        branchScopedVisible: true,
+      },
+      {
+        ...base,
+        id: 'tomorrow',
+        label: 'Tomorrow',
+        count: 1,
+        urgency: 'danger',
+        priority: 20,
+        branchScopedVisible: true,
+      },
+      {
+        ...base,
+        id: 'property',
+        label: 'Property',
+        count: 4,
+        urgency: 'warning',
+        branchScopedVisible: true,
+      },
+    ];
+    expect(visibleExceptionItems(items, false).map((i) => i.id)).toEqual([
+      'tomorrow',
+      'awaiting',
+      'property',
+    ]);
+  });
 });

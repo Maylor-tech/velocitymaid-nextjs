@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle, Clock, Loader2, XCircle } from 'lucide-react';
 import { isEffectivelyOpen, effectiveOfferStatus } from '@/lib/dispatch/offerExpiry';
+import {
+  offerNotificationLabel,
+  type OfferNotificationView,
+} from '@/lib/dispatch/offerNotification';
 
 type OfferRow = {
   id: string;
@@ -27,8 +31,22 @@ type DispatchPayload = {
   estimatedDurationMins: number | null;
   compensationPreview: number | null;
   ui: { state: string; label: string };
+  offerNotification?: OfferNotificationView;
   offers: OfferRow[];
 };
+
+function formatNotificationTime(iso: string | null): string | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
 
 interface CleanerOption {
   id: string;
@@ -214,6 +232,24 @@ export function DispatchPanel({
           </span>
         )}
       </div>
+
+      {data?.offerNotification && (
+        <div
+          className={`mb-4 rounded-lg border px-3 py-2 text-sm ${
+            data.offerNotification.status === 'FAILED'
+              ? 'border-red-200 bg-red-50 text-red-800'
+              : data.offerNotification.status === 'SENT'
+                ? 'border-vm-success/30 bg-vm-success-bg text-vm-success'
+                : 'border-gray-200 bg-gray-50 text-vm-muted'
+          }`}
+        >
+          <span className="font-medium">Offer email: </span>
+          {offerNotificationLabel(data.offerNotification.status)}
+          {formatNotificationTime(data.offerNotification.recordedAt)
+            ? ` · ${formatNotificationTime(data.offerNotification.recordedAt)}`
+            : ''}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center gap-2 text-vm-muted">
