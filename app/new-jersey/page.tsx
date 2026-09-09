@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { NewJerseyBookingMockup } from "@/components/marketing/MarketingPageSections";
+import { pageSocialMetadata } from "@/lib/seo/socialImages";
+
+const title = "New Jersey Cleaning Services | VelocityMaid";
+const description =
+  "Reliable, background-checked cleaners in New Jersey. Starting-at pricing, professional teams, and convenient online booking for recurring, deep, and move-in or move-out cleaning.";
 
 export const metadata: Metadata = {
-  title: "New Jersey Cleaning Services | VelocityMaid",
-  description:
-    "Reliable, background-checked cleaners in New Jersey. Starting-at pricing, professional teams, and convenient online booking for recurring, deep, and move-in or move-out cleaning.",
+  title,
+  description,
   keywords:
     "house cleaning New Jersey, professional cleaners NJ, cleaning service Newark, Jersey City cleaning, recurring cleaning NJ",
   alternates: { canonical: "https://velocitymaid.com/new-jersey" },
-  openGraph: {
-    title: "New Jersey Cleaning Services | VelocityMaid",
+  ...pageSocialMetadata({
+    title,
     description:
       "Reliable residential cleaning for homeowners, apartment residents, and busy professionals across New Jersey.",
-    url: "https://velocitymaid.com/new-jersey",
-    siteName: "VelocityMaid",
-    type: "website",
-  },
+    path: "/new-jersey",
+    image: "default",
+  }),
 };
 
 export const dynamic = "force-dynamic";

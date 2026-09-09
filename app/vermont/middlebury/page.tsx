@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import VermontClusterLanding from "@/components/vermont/VermontClusterLanding";
 import { VERMONT_CLUSTERS } from "@/lib/vermont/clusters";
-import { MIDDLEBURY_PHOTO_PATHS } from "@/lib/vermont/middleburyPhotos";
+import { pageSocialMetadata } from "@/lib/seo/socialImages";
 
 const cluster = VERMONT_CLUSTERS.middlebury;
 
@@ -9,18 +9,12 @@ export const metadata: Metadata = {
   title: cluster.metadata.title,
   description: cluster.metadata.description,
   keywords: cluster.metadata.keywords,
-  openGraph: {
+  ...pageSocialMetadata({
     title: cluster.metadata.title,
     description: cluster.metadata.openGraphDescription,
-    images: [
-      {
-        url: MIDDLEBURY_PHOTO_PATHS.exteriorHero,
-        width: 1200,
-        height: 630,
-        alt: cluster.heroImageAlt,
-      },
-    ],
-  },
+    path: "/vermont/middlebury",
+    image: "vermont",
+  }),
 };
 
 export default function MiddleburyPage() {

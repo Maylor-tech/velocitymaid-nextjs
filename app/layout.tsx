@@ -10,6 +10,12 @@ import Script from "next/script";
 import WhatsAppButton from "../components/WhatsAppButton";
 import { DemoModeBanner } from "../components/DemoModeBanner";
 import { BUSINESS_ADDRESS } from "@/lib/company/businessAddress";
+import {
+  SITE_ORIGIN,
+  SOCIAL_IMAGES,
+  socialImageAbsoluteUrl,
+  socialImageMeta,
+} from "@/lib/seo/socialImages";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,7 +41,10 @@ const plusJakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+const defaultSocialImage = socialImageMeta("default");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(`${SITE_ORIGIN}/`),
   title: "VelocityMaid | Professional Cleaning Services in New Jersey & Vermont",
   description:
     "VelocityMaid offers professional cleaning services in New Jersey and Vermont. Home and apartment cleaning for NJ families. Turnover cleaning for Vermont Airbnbs and short-term rentals. Book online in minutes.",
@@ -50,21 +59,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "VelocityMaid",
-    url: "https://velocitymaid.com",
-    images: [
-      {
-        url: '/images/home/modern-kitchen.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'VelocityMaid Professional Cleaning Services',
-      },
-    ],
+    url: SITE_ORIGIN,
+    images: [defaultSocialImage],
   },
   twitter: {
     card: "summary_large_image",
     title: "VelocityMaid | Professional Cleaning Services",
     description: "VelocityMaid provides reliable home and apartment cleaning services across New Jersey and Vermont.",
-    images: ['/images/home/modern-kitchen.jpg'],
+    images: [SOCIAL_IMAGES.default.path],
   },
   robots: {
     index: true,
@@ -105,7 +107,7 @@ export default function RootLayout({
       "@type": "LocalBusiness",
       "name": "VelocityMaid - New Jersey",
       "alternateName": "VelocityMaid Cleaning Services New Jersey",
-      "image": "https://velocitymaid.com/images/home/modern-kitchen.jpg",
+      "image": socialImageAbsoluteUrl("default"),
       "description": "VelocityMaid provides reliable home and apartment cleaning services across New Jersey, specializing in move-in/out cleaning, deep cleaning, and maintenance cleaning.",
       "address": {
         "@type": "PostalAddress",
@@ -168,7 +170,7 @@ export default function RootLayout({
       "@type": "LocalBusiness",
       "name": "VelocityMaid - Vermont",
       "alternateName": "VelocityMaid Cleaning Services Vermont",
-      "image": "https://velocitymaid.com/images/home/modern-kitchen.jpg",
+      "image": socialImageAbsoluteUrl("default"),
       "description": "VelocityMaid provides reliable home and apartment cleaning services in Vermont, specializing in move-in/out cleaning, deep cleaning, and maintenance cleaning.",
       "address": {
         "@type": "PostalAddress",

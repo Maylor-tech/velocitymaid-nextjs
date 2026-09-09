@@ -21,9 +21,7 @@ import { Suspense } from 'react';
 import { BrandLogo } from '@/components/brand';
 import BranchLandingNav from '@/components/layout/BranchLandingNav';
 import FAQAccordion from './components/FAQAccordion';
-import BeforeAfterGallery, {
-  NJ_SHOWCASE_IMAGE,
-} from './components/BeforeAfterGallery';
+import BeforeAfterGallery from './components/BeforeAfterGallery';
 
 export const metadata: Metadata = {
   title: 'New Jersey Cleaning Services | VelocityMaid',
@@ -37,50 +35,6 @@ export const metadata: Metadata = {
     type: 'website',
   },
 };
-
-
-  const faqs = [
-    {
-      question: 'What areas in New Jersey do you serve?',
-      answer: 'We serve Newark, Jersey City, Elizabeth, Union, Hoboken, East Orange, Rahway, Linden, Irvington, and surrounding areas in Essex, Union, and Hudson Counties. Contact us to confirm service in your specific area.',
-    },
-    {
-      question: 'How much does house cleaning cost in New Jersey?',
-      answer: 'Our pricing is transparent and flat-rate. Basic cleaning starts at $120 for 1 bedroom, $150 for 2 bedrooms, and $180 for 3 bedrooms. Deep cleaning and move-in/out services are priced separately. All pricing is upfront with no hidden fees.',
-    },
-    {
-      question: 'Are your cleaners background checked?',
-      answer: 'Yes, all VelocityMaid cleaners undergo thorough background checks before being hired. We also ensure they are insured and bonded for your peace of mind.',
-    },
-    {
-      question: 'Do I need to provide cleaning supplies?',
-      answer: 'No, we bring all our own professional-grade, eco-friendly cleaning supplies and equipment. You don\'t need to provide anything - just let us in and we\'ll handle the rest.',
-    },
-    {
-      question: 'How do I book a cleaning service?',
-      answer: 'Booking is easy! Simply click "Book Now" on our website, select your service type and preferred date/time, and complete your booking. You can also call us directly for same-day or urgent cleaning needs.',
-    },
-    {
-      question: 'What is included in a basic cleaning?',
-      answer: 'Our basic cleaning includes dusting all surfaces, vacuuming and mopping floors, cleaning and sanitizing bathrooms, kitchen cleaning (countertops, appliances, sink), trash removal, and basic tidying. Deep cleaning includes additional services like inside appliances, baseboards, and light fixtures.',
-    },
-    {
-      question: 'Can I schedule recurring cleanings?',
-      answer: 'Absolutely! We offer weekly, bi-weekly, and monthly cleaning plans with discounted rates. Recurring customers also get priority scheduling and consistent cleaner assignments when available.',
-    },
-    {
-      question: 'What if I\'m not satisfied with the cleaning?',
-      answer: 'We offer a 100% satisfaction guarantee. If you\'re not happy with any aspect of the cleaning, contact us within 24 hours and we\'ll return to fix it at no additional charge.',
-    },
-    {
-      question: 'How far in advance should I book?',
-      answer: 'We recommend booking at least 2-3 days in advance for best availability, though we can often accommodate same-day or next-day requests depending on our schedule. Recurring customers get priority scheduling.',
-    },
-    {
-      question: 'Do you offer move-in or move-out cleaning?',
-      answer: 'Yes! We offer comprehensive move-in and move-out cleaning services. This includes deep cleaning of all rooms, inside cabinets and appliances, window cleaning, and final inspection. Contact us for a custom quote based on your property size.',
-    },
-  ];
 
 
 
@@ -221,7 +175,6 @@ export default async function NewJerseyLandingPage() {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: 'VelocityMaid New Jersey',
-    image: NJ_SHOWCASE_IMAGE,
     '@id': 'https://velocitymaid.com/new-jersey',
     url: 'https://velocitymaid.com/new-jersey',
     telephone: `+1${VERMONT_SUPPORT.phoneTel}`,
@@ -670,7 +623,7 @@ export default async function NewJerseyLandingPage() {
                 <h3 className="font-heading font-bold text-vm-navy text-xl mb-2">
                   100% Satisfaction Guarantee
                 </h3>
-                <p className="text-vm-muted font-body">Not happy? We'll come back and fix it - FREE</p>
+                <p className="text-vm-muted font-body">Not happy? We&apos;ll come back and fix it - FREE</p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 bg-vm-navy/5 border border-vm-navy/10 rounded-full flex items-center justify-center mx-auto mb-4">

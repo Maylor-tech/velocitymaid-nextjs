@@ -5,7 +5,6 @@ import BranchLandingNav from "@/components/layout/BranchLandingNav";
 import VermontGallery from "@/components/home/VermontGallery";
 import { ServiceImageCard, TrustBadge } from "@/components/vermont/shared";
 import type { VermontClusterConfig } from "@/lib/vermont/clusters";
-import { MIDDLEBURY_PHOTO_PATHS } from "@/lib/vermont/middleburyPhotos";
 import {
   Home,
   BedDouble,
@@ -102,8 +101,8 @@ export default function VermontClusterLanding({
         <section className="grid md:grid-cols-2 gap-8 items-center">
           <div className="relative rounded-xl overflow-hidden border border-vm-border aspect-[4/3]">
             <Image
-              src={MIDDLEBURY_PHOTO_PATHS.frontEntry}
-              alt="VelocityMaid property care at Vermont rental front entry"
+              src={cluster.contentImages.propertyCare.src}
+              alt={cluster.contentImages.propertyCare.alt}
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 500px"
@@ -124,7 +123,7 @@ export default function VermontClusterLanding({
           </div>
         </section>
 
-        <ServicesSection />
+        <ServicesSection cluster={cluster} />
 
         <section className="grid md:grid-cols-2 gap-8 items-center">
           <div className="order-2 md:order-1">
@@ -142,8 +141,8 @@ export default function VermontClusterLanding({
           </div>
           <div className="relative rounded-xl overflow-hidden border border-vm-border aspect-[4/3] order-1 md:order-2">
             <Image
-              src={MIDDLEBURY_PHOTO_PATHS.sideEntry}
-              alt="VelocityMaid property readiness service at Vermont rental side entry"
+              src={cluster.contentImages.hostReadiness.src}
+              alt={cluster.contentImages.hostReadiness.alt}
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 500px"
@@ -152,6 +151,7 @@ export default function VermontClusterLanding({
         </section>
 
         <VermontGallery
+          photos={cluster.galleryPhotos}
           regionLabel={cluster.galleryRegionLabel}
           headline={cluster.galleryHeadline}
           subheadline={cluster.gallerySubheadline}
@@ -202,7 +202,7 @@ export default function VermontClusterLanding({
   );
 }
 
-function ServicesSection() {
+function ServicesSection({ cluster }: { cluster: VermontClusterConfig }) {
   return (
     <section>
       <p className="text-vm-cyan text-xs font-semibold uppercase tracking-widest font-body mb-2">
@@ -218,8 +218,8 @@ function ServicesSection() {
       </p>
       <div className="grid md:grid-cols-3 gap-5">
         <ServiceImageCard
-          imageSrc={MIDDLEBURY_PHOTO_PATHS.bedroomMain}
-          imageAlt="VelocityMaid bedroom turnover service in Vermont"
+          imageSrc={cluster.contentImages.turnover.src}
+          imageAlt={cluster.contentImages.turnover.alt}
         >
           <ServiceCardHeader icon={<Home className="w-5 h-5 text-vm-cyan" />}>
             Rental Turnover Cleaning
@@ -236,8 +236,8 @@ function ServicesSection() {
         </ServiceImageCard>
 
         <ServiceImageCard
-          imageSrc={MIDDLEBURY_PHOTO_PATHS.bathroomMain}
-          imageAlt="VelocityMaid bathroom deep cleaning in Vermont"
+          imageSrc={cluster.contentImages.seasonal.src}
+          imageAlt={cluster.contentImages.seasonal.alt}
         >
           <ServiceCardHeader icon={<Snowflake className="w-5 h-5 text-vm-cyan" />}>
             Deep Winter / Seasonal Cleans
@@ -254,8 +254,8 @@ function ServicesSection() {
         </ServiceImageCard>
 
         <ServiceImageCard
-          imageSrc={MIDDLEBURY_PHOTO_PATHS.homeRefresh}
-          imageAlt="VelocityMaid property readiness service for Vermont second homes"
+          imageSrc={cluster.contentImages.refresh.src}
+          imageAlt={cluster.contentImages.refresh.alt}
         >
           <ServiceCardHeader icon={<BedDouble className="w-5 h-5 text-vm-cyan" />}>
             Second Home & Condo Care
