@@ -81,12 +81,15 @@ describe('POST /api/jobs/[jobId]/photos/sign auth', () => {
     expect(createCleanPhotoSignedUpload).not.toHaveBeenCalled();
   });
 
-  it('allows a cleaner with an accepted offer', async () => {
-    requirePhotoUploadAccess.mockResolvedValue({
-      role: 'CLEANER',
-      userId: 'cleaner-offer',
-    });
+  it('rejects a former cleaner after assignment release', async () => {
+    requirePhotoUploadAccess.mockRejectedValue(
+      NextResponse.json(
+        { error: 'Forbidden: you may only upload photos for jobs assigned to you' },
+        { status: 403 }
+      )
+    );
     const res = await POST(signRequest(), { params: { jobId: JOB_ID } });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(403);
+    expect(createCleanPhotoSignedUpload).not.toHaveBeenCalled();
   });
 });

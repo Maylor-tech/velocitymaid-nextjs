@@ -105,4 +105,21 @@ describe('PATCH /api/cleaner/jobs/[jobId]/complete', () => {
     const updateData = update.mock.calls[0][0].data as Record<string, unknown>;
     expect(updateData).not.toHaveProperty('completedAt');
   });
+
+  it('does not let a released former cleaner finish the job', async () => {
+    requireCleanerJobAssignment.mockRejectedValue(
+      NextResponse.json(
+        { success: false, error: 'Forbidden: You can only access jobs assigned to you' },
+        { status: 403 }
+      )
+    );
+    const res = await PATCH(
+      new NextRequest(`http://localhost/api/cleaner/jobs/${JOB_ID}/complete`, {
+        method: 'PATCH',
+      }),
+      { params: { jobId: JOB_ID } }
+    );
+    expect(res.status).toBe(403);
+    expect(update).not.toHaveBeenCalled();
+  });
 });

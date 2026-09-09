@@ -6,6 +6,7 @@ const jobFindUnique = vi.fn();
 const offerFindMany = vi.fn();
 const logFindFirst = vi.fn();
 const logCount = vi.fn();
+const assignmentLogFindFirst = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...args: unknown[]) => requireRole(...args),
@@ -23,6 +24,9 @@ vi.mock('@/lib/prisma', () => ({
     integrationEventLog: {
       findFirst: (...args: unknown[]) => logFindFirst(...args),
       count: (...args: unknown[]) => logCount(...args),
+    },
+    assignmentLog: {
+      findFirst: (...args: unknown[]) => assignmentLogFindFirst(...args),
     },
   },
 }));
@@ -54,6 +58,7 @@ describe('GET /api/admin/jobs/[jobId]/offers notification status', () => {
     });
     offerFindMany.mockResolvedValue([]);
     logCount.mockResolvedValue(0);
+    assignmentLogFindFirst.mockResolvedValue(null);
   });
 
   it('includes latest SEND_CLEANER_OFFER_EMAIL as Sent', async () => {
