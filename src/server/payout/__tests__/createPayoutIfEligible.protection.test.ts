@@ -69,4 +69,22 @@ describe('createPayoutIfEligible processing protection', () => {
     expect(data.grossAmount).toBe(365);
     expect(data.cleanerAmount).toBe(calcPayout(365).cleanerAmount);
   });
+
+  it('does not pay a historical ACCEPTED offer after the cleaner was released', async () => {
+    mocks.findUniqueJob.mockResolvedValue({
+      id: 'job-oct4',
+      status: 'COMPLETED',
+      paymentStatus: 'PAID',
+      totalPrice: 265,
+      quotedTotal: 265,
+      operationalTotal: 200,
+      branchId: 'b1',
+      assignedCleanerId: null,
+      currency: 'USD',
+    });
+
+    const result = await createPayoutIfEligible('job-oct4');
+    expect(result).toEqual({ ok: false, reason: 'NO_CLEANER' });
+    expect(mocks.createPayout).not.toHaveBeenCalled();
+  });
 });

@@ -19,6 +19,7 @@ import {
   SEND_CLEANER_OFFER_EMAIL,
   toOfferNotificationView,
 } from '@/lib/dispatch/offerNotification';
+import { ASSIGNMENT_RELEASED } from '@/lib/dispatch/releaseReasons';
 import {
   inferOverrideUsed,
   resolveOfferExpiration,
@@ -51,7 +52,7 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
     }
 
-    const [offers, latestOfferEmail, emailAttemptCount] = await Promise.all([
+    const [offers, latestOfferEmail, emailAttemptCount, latestRelease] = await Promise.all([
       prisma.jobOffer.findMany({
         where: { jobId },
         orderBy: { offeredAt: 'desc' },
@@ -66,6 +67,16 @@ export async function GET(
       }),
       prisma.integrationEventLog.count({
         where: { jobId, action: SEND_CLEANER_OFFER_EMAIL },
+      }),
+      prisma.assignmentLog.findFirst({
+        where: { jobId, outcome: ASSIGNMENT_RELEASED },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          cleanerId: true,
+          reason: true,
+          details: true,
+          createdAt: true,
+        },
       }),
     ]);
 
@@ -124,6 +135,11 @@ export async function GET(
       preferredTime: job.preferredTime,
     });
     const openForTtl = mapped.find((o) => isEffectivelyOpen(o)) ?? null;
+    const releaseDetails =
+      latestRelease?.details && typeof latestRelease.details === 'object'
+        ? (latestRelease.details as Record<string, unknown>)
+        : {};
+    const releasedOffer = mapped.find((o) => o.id === releaseDetails.offerId) ?? null;
 
     return NextResponse.json({
       success: true,
@@ -131,7 +147,20 @@ export async function GET(
       dispatchUrgency: job.dispatchUrgency,
       estimatedDurationMins: job.estimatedDurationMins,
       compensationPreview: previewCompensationFromOperationalTotal(job.operationalTotal),
+      assignedCleanerId: job.assignedCleanerId,
+      assignedCleanerName: job.User?.name ?? null,
       ui,
+      latestRelease: latestRelease
+        ? {
+            cleanerId: latestRelease.cleanerId,
+            cleanerName: releasedOffer?.cleanerName ?? null,
+            reason: latestRelease.reason,
+            reasonCode: typeof releaseDetails.reasonCode === 'string' ? releaseDetails.reasonCode : null,
+            notes: typeof releaseDetails.notes === 'string' ? releaseDetails.notes : null,
+            offerId: typeof releaseDetails.offerId === 'string' ? releaseDetails.offerId : null,
+            createdAt: latestRelease.createdAt.toISOString(),
+          }
+        : null,
       offerNotification: toOfferNotificationView(latestOfferEmail, emailAttemptCount),
       ttl: {
         defaultMinutes: ttlPreview.defaultMinutes,

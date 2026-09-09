@@ -356,6 +356,54 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     expect(JSON.stringify(json)).not.toMatch(/LOCKBOX-9999|Garage code 9999|111 Thomson/);
   });
 
+  it('returns RELEASED access without property credentials after assignment release', async () => {
+    findUnique.mockResolvedValue({
+      id: JOB_ID,
+      status: 'CONFIRMED',
+      assignedCleanerId: null,
+      Property: propertyRow(),
+      propertyId: 'prop-1',
+      Branch: { id: 'branch-vt', name: 'Vermont' },
+      Customer: { id: 'cust-1', firstName: 'Tiffany', lastName: 'Mayo', email: 't@example.com', phone: null },
+      preferredDate: new Date('2026-10-04T00:00:00.000Z'),
+      preferredTime: 'anytime after 11',
+      assignedAt: null,
+      onTheWayAt: null,
+      startedAt: null,
+      completedAt: null,
+      JobOffer: [
+        {
+          id: 'offer-accepted-1',
+          jobId: JOB_ID,
+          cleanerId: CLEANER_ID,
+          status: 'ACCEPTED',
+          compensationAmount: 172.25,
+          compensationCurrency: 'USD',
+          compensationBasis: 'FLAT',
+          estimatedDurationMins: 180,
+          operationalNotes: 'Garage code 9999',
+          expiresAt: new Date('2026-09-08T16:02:42.691Z'),
+          offeredAt: new Date('2026-09-08T14:02:42.691Z'),
+        },
+      ],
+      jobReference: 'VM-2026-0028',
+      serviceType: 'Vacation Rental Turnover',
+      serviceLocation: 'Ludlow',
+      internalNotes: null,
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/cleaner/jobs/' + JOB_ID), {
+      params: { jobId: JOB_ID },
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.access).toBe('RELEASED');
+    expect(json.offer.status).toBe('ACCEPTED');
+    expect(json.job.property).toBeUndefined();
+    expect(json.job.address).toBeUndefined();
+    expect(JSON.stringify(json)).not.toMatch(/LOCKBOX-9999|Garage code 9999|111 Thomson/);
+  });
+
   it('returns 403 OFFER_NOT_YOURS when another cleaner opens the expired offer job', async () => {
     requireRole.mockResolvedValue({ userId: 'other-cleaner', role: 'CLEANER' });
     findUnique.mockResolvedValue({

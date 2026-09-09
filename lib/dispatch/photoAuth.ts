@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { JobOfferStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 
@@ -9,9 +8,8 @@ export type PhotoActor = {
 };
 
 /**
- * Photo sign/register require an authenticated admin, or a cleaner who is
- * assigned to the job (or has an ACCEPTED offer). Unauthenticated uploads
- * are rejected.
+ * Photo sign/register require an authenticated admin, or the cleaner currently
+ * assigned to the job. A historical ACCEPTED JobOffer is not enough after release.
  */
 export async function requirePhotoUploadAccess(
   request: NextRequest,
@@ -34,18 +32,6 @@ export async function requirePhotoUploadAccess(
   }
 
   if (job.assignedCleanerId === cleaner.userId) {
-    return { role: 'CLEANER', userId: cleaner.userId };
-  }
-
-  const accepted = await prisma.jobOffer.findFirst({
-    where: {
-      jobId,
-      cleanerId: cleaner.userId,
-      status: JobOfferStatus.ACCEPTED,
-    },
-    select: { id: true },
-  });
-  if (accepted) {
     return { role: 'CLEANER', userId: cleaner.userId };
   }
 

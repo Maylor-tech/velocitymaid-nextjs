@@ -98,8 +98,10 @@ export async function GET(
       !isEffectivelyOpen(offerRow)
         ? offerRow
         : null;
+    const releasedOwnOffer =
+      !assigned && offerRow?.status === JobOfferStatus.ACCEPTED ? offerRow : null;
 
-    if (!assigned && !openOffer && !expiredOwnOffer) {
+    if (!assigned && !openOffer && !expiredOwnOffer && !releasedOwnOffer) {
       return NextResponse.json(
         {
           success: false,
@@ -108,6 +110,47 @@ export async function GET(
         },
         { status: 403 }
       );
+    }
+
+    if (!assigned && releasedOwnOffer) {
+      const offer = serializeCleanerOffer({
+        ...releasedOwnOffer,
+        operationalNotes: null,
+        Job: {
+          jobReference: job.jobReference,
+          serviceType: job.serviceType,
+          preferredDate: job.preferredDate,
+          preferredTime: job.preferredTime,
+          serviceLocation: job.serviceLocation,
+          Property: job.Property
+            ? { city: job.Property.city, state: job.Property.state }
+            : null,
+        },
+      });
+      const body = {
+        success: true,
+        access: "RELEASED",
+        offer,
+        job: {
+          id: job.id,
+          status: job.status,
+          jobReference: job.jobReference,
+          serviceType: job.serviceType,
+          preferredDate: job.preferredDate?.toISOString() ?? null,
+          preferredTime: job.preferredTime,
+          location: toCleanerOfferLocationView({
+            serviceLocation: job.serviceLocation,
+            property: job.Property,
+          }),
+          estimatedDurationMins: releasedOwnOffer.estimatedDurationMins,
+          compensation: offer.compensation,
+          compensationAmount: offer.compensationAmount,
+          compensationCurrency: offer.compensationCurrency,
+          compensationBasis: offer.compensationBasis,
+        },
+      };
+      assertNoCustomerFinancials(body, "cleaner released offer GET");
+      return NextResponse.json(body);
     }
 
     if (!assigned && expiredOwnOffer) {

@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const requireRole = vi.fn();
 const findUnique = vi.fn();
-const offerFindFirst = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...args: unknown[]) => requireRole(...args),
@@ -12,7 +11,6 @@ vi.mock('@/lib/auth/requireRole', () => ({
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     job: { findUnique: (...args: unknown[]) => findUnique(...args) },
-    jobOffer: { findFirst: (...args: unknown[]) => offerFindFirst(...args) },
   },
 }));
 
@@ -21,7 +19,6 @@ import { requirePhotoUploadAccess } from '../photoAuth';
 describe('photo upload auth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    offerFindFirst.mockResolvedValue(null);
   });
 
   it('rejects unauthenticated callers', async () => {
@@ -75,16 +72,20 @@ describe('photo upload auth', () => {
     }
   });
 
-  it('allows a cleaner with an ACCEPTED offer', async () => {
+  it('forbids a former cleaner whose ACCEPTED offer is historical after release', async () => {
     requireRole
       .mockRejectedValueOnce(NextResponse.json({ error: 'no admin' }, { status: 401 }))
       .mockResolvedValueOnce({ userId: 'cleaner-offer', role: 'CLEANER' });
-    findUnique.mockResolvedValue({ id: 'job-1', assignedCleanerId: 'someone-else' });
-    offerFindFirst.mockResolvedValue({ id: 'offer-accepted' });
+    findUnique.mockResolvedValue({ id: 'job-1', assignedCleanerId: null });
     const req = new NextRequest('http://localhost/api/jobs/job-1/photos/sign', {
       method: 'POST',
     });
-    const actor = await requirePhotoUploadAccess(req, 'job-1');
-    expect(actor).toEqual({ role: 'CLEANER', userId: 'cleaner-offer' });
+    try {
+      await requirePhotoUploadAccess(req, 'job-1');
+      expect.fail('expected forbidden');
+    } catch (err) {
+      expect(err).toBeInstanceOf(NextResponse);
+      expect((err as NextResponse).status).toBe(403);
+    }
   });
 });

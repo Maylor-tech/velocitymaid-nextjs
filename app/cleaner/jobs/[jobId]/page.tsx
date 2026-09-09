@@ -116,7 +116,7 @@ export default function CleanerJobDetailPage() {
 
   const [job, setJob] = useState<Job | null>(null);
   const [offer, setOffer] = useState<OfferPayload | null>(null);
-  const [access, setAccess] = useState<"OFFER" | "ASSIGNED" | "EXPIRED" | null>(null);
+  const [access, setAccess] = useState<"OFFER" | "ASSIGNED" | "EXPIRED" | "RELEASED" | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -155,6 +155,8 @@ export default function CleanerJobDetailPage() {
       setAccess(
         data.access === "EXPIRED"
           ? "EXPIRED"
+          : data.access === "RELEASED"
+            ? "RELEASED"
           : data.access === "OFFER"
             ? "OFFER"
             : "ASSIGNED"
@@ -416,6 +418,38 @@ export default function CleanerJobDetailPage() {
       job.status === "IN_PROGRESS" ||
       job.status === "AWAITING_QC" ||
       job.status === "COMPLETED");
+
+  if (access === "RELEASED" && offer) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-4xl mx-auto">
+          <Link
+            href="/cleaner/jobs"
+            className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+          >
+            ← Back to Jobs
+          </Link>
+          <h1 className="text-2xl font-semibold mb-2">No longer assigned</h1>
+          <p className="text-vm-muted mb-6">
+            Ops released this assignment. You are not the current cleaner for this job.
+            Access codes and start/finish controls are not available.
+          </p>
+          <div className="bg-white rounded-lg shadow p-6 mb-6 space-y-3">
+            <p><span className="text-vm-muted">Service:</span> {offer.serviceType || "Cleaning"}</p>
+            <p><span className="text-vm-muted">Date:</span> {offer.serviceDate} {offer.preferredTime ? `at ${offer.preferredTime}` : ""}</p>
+            <p><span className="text-vm-muted">Area:</span> {offer.location.areaLabel || "See cleaner portal"}</p>
+            <p>
+              <span className="text-vm-muted">Your accepted pay (historical):</span>{" "}
+              {formatPrice(
+                offer.compensation?.amount ?? offer.compensationAmount,
+                offer.compensation?.currency || offer.compensationCurrency
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if ((access === "OFFER" || access === "EXPIRED") && offer) {
     const offerExpired =

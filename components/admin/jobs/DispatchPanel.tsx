@@ -1,12 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from 'react';
-import { CheckCircle, Clock, Loader2, Mail, XCircle } from 'lucide-react';
+import { CheckCircle, Clock, Loader2, Mail, UserMinus, XCircle } from 'lucide-react';
 import { isEffectivelyOpen, effectiveOfferStatus } from '@/lib/dispatch/offerExpiry';
 import {
   offerNotificationLabel,
   type OfferNotificationView,
 } from '@/lib/dispatch/offerNotification';
+import {
+  RELEASE_REASON_CODES,
+  RELEASE_REASON_LABELS,
+  type ReleaseReasonCode,
+} from '@/lib/dispatch/releaseReasons';
 
 type OfferRow = {
   id: string;
@@ -30,7 +35,18 @@ type DispatchPayload = {
   dispatchUrgency: 'STANDARD' | 'SAME_DAY' | 'URGENT';
   estimatedDurationMins: number | null;
   compensationPreview: number | null;
+  assignedCleanerId?: string | null;
+  assignedCleanerName?: string | null;
   ui: { state: string; label: string };
+  latestRelease?: {
+    cleanerId: string | null;
+    cleanerName: string | null;
+    reason: string | null;
+    reasonCode: string | null;
+    notes: string | null;
+    offerId: string | null;
+    createdAt: string;
+  } | null;
   offerNotification?: OfferNotificationView;
   ttl?: {
     defaultMinutes: number;
@@ -109,6 +125,9 @@ export function DispatchPanel({
   const [sending, setSending] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [resending, setResending] = useState(false);
+  const [releasing, setReleasing] = useState(false);
+  const [releaseReason, setReleaseReason] = useState<ReleaseReasonCode>('CLEANER_UNAVAILABLE');
+  const [releaseNotes, setReleaseNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [compensation, setCompensation] = useState('');
   const [compensationBasis, setCompensationBasis] = useState<'FLAT' | 'HOURLY' | 'OTHER'>('FLAT');
@@ -197,6 +216,41 @@ export function DispatchPanel({
       setError(err instanceof Error ? err.message : 'Failed to send offer');
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleRelease = async () => {
+    if (!data?.assignedCleanerId) return;
+    if (
+      !confirm(
+        'This removes the cleaner from the job but preserves the accepted offer and assignment history. The job will return to Cleaner Needed.'
+      )
+    ) {
+      return;
+    }
+    setReleasing(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/jobs/${jobId}/release-cleaner`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expectedCleanerId: data.assignedCleanerId,
+          reason: releaseReason,
+          notes: releaseNotes.trim() || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to release cleaner');
+      }
+      setReleaseNotes('');
+      await load();
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to release cleaner');
+    } finally {
+      setReleasing(false);
     }
   };
 
@@ -373,6 +427,72 @@ export function DispatchPanel({
               </p>
             )}
           </div>
+
+          {data?.assignedCleanerId && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <p className="font-medium text-vm-text">
+                Assigned to {data.assignedCleanerName || 'cleaner'}
+              </p>
+              <p className="text-sm text-vm-muted mt-1">
+                Release cleaner is a recovery action. It does not rewrite the accepted offer, compensation, or customer price.
+              </p>
+              <label className="block text-sm font-medium text-vm-text mt-3 mb-1">
+                Release reason
+              </label>
+              <select
+                value={releaseReason}
+                onChange={(e) => setReleaseReason(e.target.value as ReleaseReasonCode)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+                disabled={releasing}
+              >
+                {RELEASE_REASON_CODES.map((code) => (
+                  <option key={code} value={code}>
+                    {RELEASE_REASON_LABELS[code]}
+                  </option>
+                ))}
+              </select>
+              <label className="block text-sm font-medium text-vm-text mt-3 mb-1">
+                Notes {releaseReason === 'OTHER' ? '(required)' : '(optional)'}
+              </label>
+              <textarea
+                value={releaseNotes}
+                onChange={(e) => setReleaseNotes(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                rows={2}
+                disabled={releasing}
+              />
+              <button
+                type="button"
+                onClick={() => void handleRelease()}
+                disabled={releasing}
+                className="mt-3 inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-amber-300 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+              >
+                {releasing ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserMinus className="h-4 w-4" />}
+                Release cleaner
+              </button>
+            </div>
+          )}
+
+          {!data?.assignedCleanerId && data?.latestRelease && (
+            <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p className="font-medium text-vm-text">Cleaner needed</p>
+              <p className="text-sm text-vm-muted mt-1">
+                Previous assignment:{' '}
+                {data.latestRelease.cleanerName || 'Cleaner'} — Accepted → Released
+              </p>
+              <p className="text-sm text-vm-text mt-1">
+                Reason: {data.latestRelease.reason || data.latestRelease.reasonCode}
+              </p>
+              {formatNotificationTime(data.latestRelease.createdAt) && (
+                <p className="text-sm text-vm-muted mt-1">
+                  {formatNotificationTime(data.latestRelease.createdAt)}
+                </p>
+              )}
+              {data.latestRelease.notes && (
+                <p className="text-sm text-vm-muted mt-1">{data.latestRelease.notes}</p>
+              )}
+            </div>
+          )}
 
           {openOffer && (
             <div className="mb-4 rounded-lg border border-vm-navy/20 bg-vm-navy/5 p-4">

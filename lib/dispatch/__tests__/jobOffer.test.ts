@@ -187,6 +187,44 @@ describe('createJobOffer', () => {
     expect(offerCreate).toHaveBeenCalled();
     expect(offer.status).toBe(JobOfferStatus.OFFERED);
   });
+
+  it('blocks a new offer while a cleaner is still assigned', async () => {
+    jobFindUnique.mockResolvedValue(baseJob({ assignedCleanerId: 'user-dorottya', status: JobStatus.ASSIGNED }));
+    await expect(
+      createJobOffer({
+        jobId: 'job-1',
+        cleanerId: 'cleaner-1',
+        compensationAmount: 180,
+      })
+    ).rejects.toMatchObject({ code: 'ALREADY_ASSIGNED', status: 409 });
+    expect(offerCreate).not.toHaveBeenCalled();
+  });
+
+  it('creates a new offer id after release with independent compensation', async () => {
+    jobFindUnique.mockResolvedValue(
+      baseJob({
+        assignedCleanerId: null,
+        status: JobStatus.CONFIRMED,
+      })
+    );
+    offerFindFirst.mockResolvedValue(null);
+    offerFindMany.mockResolvedValue([]);
+    offerCreate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
+      id: 'offer-new-2',
+      ...data,
+    }));
+
+    const offer = await createJobOffer({
+      jobId: 'job-1',
+      cleanerId: 'cleaner-1',
+      compensationAmount: 190,
+    });
+
+    expect(offer.id).toBe('offer-new-2');
+    expect(offer.id).not.toBe('offer-accepted-1');
+    expect(offerCreate.mock.calls[0][0].data.compensationAmount).toBe(190);
+    expect(offerCreate.mock.calls[0][0].data.compensationAmount).not.toBe(172.25);
+  });
 });
 
 describe('acceptJobOffer', () => {
