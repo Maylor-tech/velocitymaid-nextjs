@@ -51,7 +51,7 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
     }
 
-    const [offers, latestOfferEmail] = await Promise.all([
+    const [offers, latestOfferEmail, emailAttemptCount] = await Promise.all([
       prisma.jobOffer.findMany({
         where: { jobId },
         orderBy: { offeredAt: 'desc' },
@@ -63,6 +63,9 @@ export async function GET(
         where: { jobId, action: SEND_CLEANER_OFFER_EMAIL },
         orderBy: { createdAt: 'desc' },
         select: { status: true, createdAt: true },
+      }),
+      prisma.integrationEventLog.count({
+        where: { jobId, action: SEND_CLEANER_OFFER_EMAIL },
       }),
     ]);
 
@@ -129,7 +132,7 @@ export async function GET(
       estimatedDurationMins: job.estimatedDurationMins,
       compensationPreview: previewCompensationFromOperationalTotal(job.operationalTotal),
       ui,
-      offerNotification: toOfferNotificationView(latestOfferEmail),
+      offerNotification: toOfferNotificationView(latestOfferEmail, emailAttemptCount),
       ttl: {
         defaultMinutes: ttlPreview.defaultMinutes,
         defaultLabel: ttlPreview.defaultLabel,
