@@ -3,32 +3,29 @@ import Image from "next/image";
 import Link from "next/link";
 import BranchLandingNav from "@/components/layout/BranchLandingNav";
 import { VERMONT_CLUSTER_LIST } from "@/lib/vermont/clusters";
-import { MIDDLEBURY_PHOTO_PATHS } from "@/lib/vermont/middleburyPhotos";
+import { pageSocialMetadata } from "@/lib/seo/socialImages";
 import { ArrowRight, MapPin, Snowflake } from "lucide-react";
 import {
   VERMONT_OPERATIONS_SUPPORT_LINE1,
   VERMONT_OPERATIONS_SUPPORT_LINE2,
 } from "@/lib/company/businessAddress";
 
+const title = "Vermont Cleaning Services | VelocityMaid — Okemo Valley & Middlebury";
+const description =
+  "VelocityMaid offers turnover cleaning, deep cleans, and property readiness across Vermont — Okemo Valley vacation rentals and Middlebury property readiness in Addison County.";
+
 export const metadata: Metadata = {
-  title: "Vermont Cleaning Services | VelocityMaid — Okemo Valley & Middlebury",
-  description:
-    "VelocityMaid offers turnover cleaning, deep cleans, and property readiness across Vermont — Okemo Valley vacation rentals and Middlebury property readiness in Addison County.",
+  title,
+  description,
   keywords:
     "Vermont cleaning services, Okemo Valley cleaning, Middlebury cleaning, vacation rental cleaning Vermont, Airbnb turnover Vermont, property readiness Vermont",
-  openGraph: {
+  ...pageSocialMetadata({
     title: "Vermont Cleaning Services | VelocityMaid",
     description:
       "Professional cleaning for Okemo Valley ski rentals and Middlebury vacation properties.",
-    images: [
-      {
-        url: MIDDLEBURY_PHOTO_PATHS.exteriorHero,
-        width: 1200,
-        height: 630,
-        alt: "VelocityMaid Vermont vacation rental exterior",
-      },
-    ],
-  },
+    path: "/vermont",
+    image: "vermont",
+  }),
 };
 
 export default function VermontOverviewPage() {

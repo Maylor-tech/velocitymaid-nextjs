@@ -17,6 +17,27 @@ import {
 } from 'lucide-react';
 import { getCityDisplayName, getZipsForCity, getAllNJCities } from '@/utils/cityRouting';
 import FAQAccordion from '../../new-jersey/components/FAQAccordion';
+import { isBrandSafePublicImage } from '@/lib/seo/socialImages';
+
+type CityLandingContent = {
+  seoTitle?: string;
+  seoDescription?: string;
+  headline?: string;
+  subheadline?: string;
+  heroImageUrl?: string;
+  testimonials?: Array<{
+    name?: string;
+    location?: string;
+    rating?: number;
+    text?: string;
+  }>;
+  faqs?: Array<{ question: string; answer: string }>;
+};
+
+function cityContentMap(value: unknown): Record<string, CityLandingContent> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return value as Record<string, CityLandingContent>;
+}
 
 interface PageProps {
   params: { city: string };
@@ -40,8 +61,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
   });
 
-  const cityContent = branch?.BranchLandingContent?.cityContent as any;
-  const cityData = cityContent?.[citySlug];
+  const cityContent = cityContentMap(branch?.BranchLandingContent?.cityContent);
+  const cityData = cityContent[citySlug];
 
   const seoTitle = cityData?.seoTitle || `Professional House Cleaning in ${cityName}, NJ | VelocityMaid`;
   const seoDescription = cityData?.seoDescription || `Reliable, background-checked cleaners in ${cityName}, New Jersey. Flat-rate pricing, eco-friendly supplies, 100% satisfaction guarantee.`;
@@ -86,8 +107,8 @@ export default async function CityLandingPage({ params }: PageProps) {
   }
 
   // Get city-specific content
-  const cityContent = branch.BranchLandingContent?.cityContent as any;
-  const cityData = cityContent?.[citySlug] || {};
+  const cityContent = cityContentMap(branch.BranchLandingContent?.cityContent);
+  const cityData = cityContent[citySlug] || {};
 
   // Default pricing
   const defaultPricing = {
@@ -138,17 +159,18 @@ export default async function CityLandingPage({ params }: PageProps) {
   // Hero content
   const headline = cityData.headline || `Professional House Cleaning in ${cityName}, New Jersey`;
   const subheadline = cityData.subheadline || `Reliable, background-checked cleaners in ${cityName}. Flat-rate pricing, eco-friendly supplies, 100% satisfaction guarantee.`;
-  const heroImageUrl =
-    cityData.heroImageUrl ||
-    branch.BranchLandingContent?.heroImageUrl ||
-    'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1200&q=80';
+  const configuredHero =
+    cityData.heroImageUrl || branch.BranchLandingContent?.heroImageUrl || null;
+  const heroImageUrl = isBrandSafePublicImage(configuredHero)
+    ? configuredHero
+    : undefined;
 
   // Structured Data
-  const localBusinessSchema = {
+  const localBusinessSchema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: `VelocityMaid ${cityName}`,
-    image: heroImageUrl,
+    ...(heroImageUrl ? { image: heroImageUrl } : {}),
     '@id': `https://velocitymaid.com/locations/new-jersey/${citySlug}`,
     url: `https://velocitymaid.com/locations/new-jersey/${citySlug}`,
     telephone: branch.primaryPhone || '(555) 123-4567',
@@ -302,14 +324,14 @@ export default async function CityLandingPage({ params }: PageProps) {
               What {cityName} Customers Say
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
-              {testimonials.map((testimonial: any, index: number) => (
+              {testimonials.map((testimonial, index) => (
                 <div key={index} className="bg-vm-surface rounded-xl p-6 border border-vm-navy/10">
                   <div className="flex items-center gap-1 mb-4">
                     {[...Array(testimonial.rating || 5)].map((_, i) => (
                       <Star key={i} className="w-5 h-5 text-vm-cyan fill-vm-cyan" />
                     ))}
                   </div>
-                  <p className="text-vm-text font-body mb-4 italic">"{testimonial.text}"</p>
+                  <p className="text-vm-text font-body mb-4 italic">&ldquo;{testimonial.text}&rdquo;</p>
                   <div className="flex items-center justify-between">
                     <span className="font-heading font-semibold text-vm-navy">{testimonial.name}</span>
                     <span className="text-sm text-vm-muted font-body">{testimonial.location}</span>

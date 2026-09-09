@@ -1,4 +1,15 @@
-import { MIDDLEBURY_PHOTO_PATHS } from "@/lib/vermont/middleburyPhotos";
+import {
+  LUDLOW_GALLERY_PHOTOS,
+  LUDLOW_PHOTO_PATHS,
+  MIDDLEBURY_GALLERY_PHOTOS,
+  MIDDLEBURY_PHOTO_PATHS,
+  type VermontGalleryPhoto,
+} from "@/lib/vermont/middleburyPhotos";
+
+type ClusterContentImage = {
+  src: string;
+  alt: string;
+};
 
 export type VermontClusterSlug = "okemo" | "middlebury";
 
@@ -20,6 +31,14 @@ export interface VermontClusterConfig {
   galleryHeadline: string;
   gallerySubheadline: string;
   galleryTrustLine: string;
+  galleryPhotos: readonly VermontGalleryPhoto[];
+  contentImages: {
+    propertyCare: ClusterContentImage;
+    hostReadiness: ClusterContentImage;
+    turnover: ClusterContentImage;
+    seasonal: ClusterContentImage;
+    refresh: ClusterContentImage;
+  };
   metadata: {
     title: string;
     description: string;
@@ -37,9 +56,9 @@ export const VERMONT_CLUSTERS: Record<VermontClusterSlug, VermontClusterConfig> 
     headline: "Okemo Valley's Vacation Rental Cleaning Specialists",
     heroDescription:
       "Turnover-ready cleans for ski rentals, Airbnbs, and second homes across the Okemo Valley. VelocityMaid helps remote owners manage confidently — from deep cleans to between-guest turnovers.",
-    heroImage: MIDDLEBURY_PHOTO_PATHS.bedroomLoft,
+    heroImage: LUDLOW_PHOTO_PATHS.exteriorHero,
     heroImageAlt:
-      "VelocityMaid vacation rental bedroom turnover in the Okemo Valley",
+      "VelocityMaid vacation rental exterior in the Okemo Valley",
     heroLocationLabel: "Okemo Valley, Vermont",
     heroLocationSub: "Ski rental · Vacation turnover",
     serviceAreaIntro:
@@ -58,6 +77,29 @@ export const VERMONT_CLUSTERS: Record<VermontClusterSlug, VermontClusterConfig> 
     gallerySubheadline:
       "From ski-season turnovers to deep cleans between bookings, VelocityMaid prepares Okemo Valley properties for every arrival.",
     galleryTrustLine: "Okemo Valley · Turnover · Vacation Rental Cleaning",
+    galleryPhotos: LUDLOW_GALLERY_PHOTOS,
+    contentImages: {
+      propertyCare: {
+        src: LUDLOW_PHOTO_PATHS.livingRoom,
+        alt: "VelocityMaid property care in an Okemo Valley vacation rental living room",
+      },
+      hostReadiness: {
+        src: LUDLOW_PHOTO_PATHS.kitchen,
+        alt: "VelocityMaid guest-ready kitchen reset in Ludlow, Vermont",
+      },
+      turnover: {
+        src: LUDLOW_PHOTO_PATHS.bedroomMain,
+        alt: "VelocityMaid bedroom turnover service in the Okemo Valley",
+      },
+      seasonal: {
+        src: LUDLOW_PHOTO_PATHS.bathroomMain,
+        alt: "VelocityMaid bathroom deep cleaning in Ludlow, Vermont",
+      },
+      refresh: {
+        src: LUDLOW_PHOTO_PATHS.kitchen,
+        alt: "VelocityMaid property readiness service for Okemo Valley rentals",
+      },
+    },
     metadata: {
       title:
         "Okemo Valley Vacation Rental Cleaning | VelocityMaid — Ludlow & Ludlow Area",
@@ -98,6 +140,29 @@ export const VERMONT_CLUSTERS: Record<VermontClusterSlug, VermontClusterConfig> 
     gallerySubheadline:
       "From deep cleans to vacation rental turnovers, VelocityMaid helps Vermont homeowners and hosts prepare clean, welcoming spaces with professional care.",
     galleryTrustLine: "Middlebury, Vermont · Deep Clean · Property Readiness",
+    galleryPhotos: MIDDLEBURY_GALLERY_PHOTOS,
+    contentImages: {
+      propertyCare: {
+        src: MIDDLEBURY_PHOTO_PATHS.frontEntry,
+        alt: "VelocityMaid property care at Vermont rental front entry",
+      },
+      hostReadiness: {
+        src: MIDDLEBURY_PHOTO_PATHS.sideEntry,
+        alt: "VelocityMaid property readiness service at Vermont rental side entry",
+      },
+      turnover: {
+        src: MIDDLEBURY_PHOTO_PATHS.bedroomMain,
+        alt: "VelocityMaid bedroom turnover service in Vermont",
+      },
+      seasonal: {
+        src: MIDDLEBURY_PHOTO_PATHS.bathroomMain,
+        alt: "VelocityMaid bathroom deep cleaning in Vermont",
+      },
+      refresh: {
+        src: MIDDLEBURY_PHOTO_PATHS.homeRefresh,
+        alt: "VelocityMaid property readiness service for Vermont second homes",
+      },
+    },
     metadata: {
       title:
         "Middlebury Property Readiness & Cleaning | VelocityMaid — Addison County",

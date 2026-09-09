@@ -69,54 +69,6 @@ const galleryImages = [
     category: 'Living Room',
     location: 'Newark, NJ'
   },
-  {
-    src: '/images/gallery/bathroom-sink-02.jpg',
-    alt: 'Bathroom sink cleaning',
-    category: 'Bathroom',
-    location: 'New Jersey'
-  },
-  {
-    src: '/images/gallery/bathroom-window-01.jpg',
-    alt: 'Bathroom window cleaning',
-    category: 'Bathroom',
-    location: 'New Jersey'
-  },
-  {
-    src: '/images/gallery/bedroom-canopy-01.jpg',
-    alt: 'Bedroom canopy cleaning',
-    category: 'Bedroom',
-    location: 'New Jersey'
-  },
-  {
-    src: '/images/gallery/bedroom-gray-01.jpg',
-    alt: 'Bedroom cleaning',
-    category: 'Bedroom',
-    location: 'New Jersey'
-  },
-  {
-    src: '/images/gallery/dining-rustic-01.jpg',
-    alt: 'Dining room cleaning',
-    category: 'Living Room',
-    location: 'New Jersey'
-  },
-  {
-    src: '/images/gallery/kitchen-cabin-01.jpg',
-    alt: 'Kitchen cabin cleaning',
-    category: 'Kitchen',
-    location: 'New Jersey'
-  },
-  {
-    src: '/images/gallery/kitchen-cabin-02.jpg',
-    alt: 'Kitchen cabin cleaning',
-    category: 'Kitchen',
-    location: 'New Jersey'
-  },
-  {
-    src: '/images/gallery/loft-blue-chair-01.jpg',
-    alt: 'Loft living space cleaning',
-    category: 'Living Room',
-    location: 'New Jersey'
-  },
 ];
 
 const categories = ['All', 'Kitchen', 'Bathroom', 'Bedroom', 'Living Room', 'Closet'];

@@ -202,6 +202,16 @@ export const VERMONT_GALLERY_PHOTOS: VermontGalleryPhoto[] = [
   },
 ];
 
+export const LUDLOW_GALLERY_PHOTOS: VermontGalleryPhoto[] =
+  VERMONT_GALLERY_PHOTOS.filter((photo) => photo.location === "Ludlow, VT");
+
+export const MIDDLEBURY_GALLERY_PHOTOS: VermontGalleryPhoto[] =
+  VERMONT_GALLERY_PHOTOS.filter(
+    (photo) =>
+      photo.src.startsWith("/images/vermont/") &&
+      photo.src.includes("middlebury")
+  );
+
 export const VERMONT_GALLERY_HEADLINE = "Real Vermont Properties. Guest-Ready Results.";
 
 export const VERMONT_GALLERY_SUBHEADLINE =

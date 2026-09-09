@@ -8,6 +8,7 @@ import {
   VERMONT_GALLERY_HEADLINE,
   VERMONT_GALLERY_SUBHEADLINE,
   VERMONT_GALLERY_TRUST_LINE,
+  type VermontGalleryPhoto,
 } from "@/lib/vermont/middleburyPhotos";
 
 /** Set to true once photos are in public/images/vermont/ */
@@ -28,6 +29,7 @@ function PhotoFallback() {
 }
 
 export interface VermontGalleryProps {
+  photos?: readonly VermontGalleryPhoto[];
   regionLabel?: string;
   headline?: string;
   subheadline?: string;
@@ -35,6 +37,7 @@ export interface VermontGalleryProps {
 }
 
 export default function VermontGallery({
+  photos = VERMONT_GALLERY_PHOTOS,
   regionLabel = "Middlebury, Vermont",
   headline = VERMONT_GALLERY_HEADLINE,
   subheadline = VERMONT_GALLERY_SUBHEADLINE,
@@ -51,8 +54,10 @@ export default function VermontGallery({
     setImgErrors((prev) => ({ ...prev, [index]: true }));
   };
 
-  const photos = VERMONT_GALLERY_PHOTOS;
   const current = photos[active];
+  if (!current) {
+    return null;
+  }
 
   return (
     <section className="py-20 px-6 bg-white border-t border-vm-border">
