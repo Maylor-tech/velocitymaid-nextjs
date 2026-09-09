@@ -17,6 +17,8 @@ import type { JobStatus } from '@prisma/client';
 import { awaitJobCalendarCancel, awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
 import { isDispatchOffersEnabledForBranch } from '@/lib/dispatch/featureFlags';
 import { cancelOpenOffersForJob } from '@/lib/dispatch/jobOffer';
+import { deriveDispatchUiState } from '@/lib/dispatch/dispatchState';
+import { isEffectivelyOpen, effectiveOfferStatus } from '@/lib/dispatch/offerExpiry';
 
 export async function GET(
   request: NextRequest,
@@ -143,6 +145,17 @@ export async function GET(
             standingInstructions: true,
           },
         },
+        JobOffer: {
+          orderBy: { offeredAt: 'desc' },
+          take: 8,
+          select: {
+            id: true,
+            status: true,
+            expiresAt: true,
+            compensationAmount: true,
+            Cleaner: { select: { name: true } },
+          },
+        },
       },
     });
 
@@ -184,6 +197,27 @@ export async function GET(
           policyEvalDetails: job.JobPayout.policyEvalDetails,
         }
       : null;
+
+    const openOfferRow = job.JobOffer.find((o) => isEffectivelyOpen(o)) ?? null;
+    const terminalOfferRow = job.JobOffer.find((o) => !isEffectivelyOpen(o)) ?? null;
+    const toOfferSummary = (
+      row: (typeof job.JobOffer)[number] | null
+    ) =>
+      row
+        ? {
+            id: row.id,
+            status: effectiveOfferStatus(row),
+            cleanerName: row.Cleaner.name,
+            expiresAt: row.expiresAt.toISOString(),
+            compensationAmount: Number(row.compensationAmount),
+          }
+        : null;
+    const dispatchUi = deriveDispatchUiState({
+      assignedCleanerId: job.assignedCleanerId,
+      assignedCleanerName: job.User?.name ?? null,
+      openOffer: toOfferSummary(openOfferRow),
+      latestTerminalOffer: toOfferSummary(terminalOfferRow),
+    });
 
     // Format job for response
     const formattedJob = {
@@ -267,6 +301,7 @@ export async function GET(
         JobPayout: formattedPayout,
       }),
       dispatchOffersEnabled: isDispatchOffersEnabledForBranch(job.Branch?.slug),
+      dispatchUi,
     };
 
     return NextResponse.json({

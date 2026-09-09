@@ -1,4 +1,5 @@
 import { isJobAssignable } from '@/lib/billing/billingPolicy';
+import type { DispatchUiState } from '@/lib/dispatch/dispatchState';
 
 export type JobLoopStep =
   | 'DEPOSIT_PAID'
@@ -17,6 +18,8 @@ export type JobLoopInput = {
   assignedCleanerId?: string | null;
   balanceDue?: number | null;
   billingPolicy?: string | null;
+  dispatchOffersEnabled?: boolean;
+  dispatchState?: DispatchUiState | null;
 };
 
 export type JobLoopProgress = {
@@ -132,7 +135,9 @@ export function getJobLoopProgress(
     return {
       step: 'REVIEW_PENDING',
       label: 'Awaiting admin review',
-      nextAction: 'Approve this booking, then assign a cleaner.',
+      nextAction: job.dispatchOffersEnabled
+        ? 'Approve this booking, then send an offer.'
+        : 'Approve this booking, then assign a cleaner.',
       cleanerJobUrl: null,
       customerJobUrl: null,
       steps,
@@ -142,6 +147,42 @@ export function getJobLoopProgress(
   if (isJobAssignableForLoop(job) && !hasCleaner) {
     markDone(['deposit', 'review']);
     steps.find((s) => s.id === 'assign')!.current = true;
+    if (job.dispatchOffersEnabled) {
+      if (job.dispatchState === 'OFFER_SENT') {
+        return {
+          step: 'READY_TO_ASSIGN',
+          label: 'Awaiting cleaner response',
+          nextAction:
+            'An offer is outstanding. Wait for the cleaner or cancel it from Dispatch.',
+          cleanerJobUrl: null,
+          customerJobUrl: null,
+          steps,
+        };
+      }
+      if (
+        job.dispatchState === 'DECLINED' ||
+        job.dispatchState === 'EXPIRED' ||
+        job.dispatchState === 'CANCELLED'
+      ) {
+        return {
+          step: 'READY_TO_ASSIGN',
+          label: 'Cleaner needed',
+          nextAction:
+            'The previous offer ended. Select a cleaner and send a new offer.',
+          cleanerJobUrl: null,
+          customerJobUrl: null,
+          steps,
+        };
+      }
+      return {
+        step: 'READY_TO_ASSIGN',
+        label: 'Cleaner needed',
+        nextAction: 'Select a cleaner below and click Send offer.',
+        cleanerJobUrl: null,
+        customerJobUrl: null,
+        steps,
+      };
+    }
     return {
       step: 'READY_TO_ASSIGN',
       label: 'Ready to assign',
