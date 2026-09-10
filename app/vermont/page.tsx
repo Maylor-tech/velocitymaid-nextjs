@@ -9,6 +9,8 @@ import {
   VERMONT_OPERATIONS_SUPPORT_LINE1,
   VERMONT_OPERATIONS_SUPPORT_LINE2,
 } from "@/lib/company/businessAddress";
+import { EditorialProof } from "@/components/marketing/EditorialProof";
+import { VERMONT_PROOF } from "@/lib/marketing/portfolio";
 
 const title = "Vermont Cleaning Services | VelocityMaid — Okemo Valley & Middlebury";
 const description =
@@ -68,7 +70,8 @@ export default function VermontOverviewPage() {
         </div>
       </section>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 space-y-16">
+      <main>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 space-y-16">
         <section>
           <p className="text-vm-cyan text-xs font-semibold uppercase tracking-widest font-body mb-2">
             Service areas
@@ -132,7 +135,27 @@ export default function VermontOverviewPage() {
             ))}
           </div>
         </section>
+      </div>
 
+      <EditorialProof
+        id="vermont-proof"
+        tone="navy"
+        eyebrow="Vermont property care"
+        heading="Property Care Built for Vermont Homes."
+        copy="Guest-ready interiors, outdoor living spaces, and careful resets for vacation rentals and second homes — prepared without exposing private property details."
+        featured={VERMONT_PROOF.featured}
+        supporting={VERMONT_PROOF.supporting}
+        actions={
+          <Link
+            href="/gallery"
+            className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+          >
+            View Our Work
+          </Link>
+        }
+      />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 space-y-16">
         <section className="rounded-xl border border-vm-border bg-vm-surface/50 p-6 sm:p-8">
           <h2 className="font-heading font-bold text-vm-navy text-xl mb-2">
             Not sure which cluster fits?
@@ -169,6 +192,7 @@ export default function VermontOverviewPage() {
             Middlebury / Addison County.
           </p>
         </section>
+      </div>
       </main>
     </div>
   );

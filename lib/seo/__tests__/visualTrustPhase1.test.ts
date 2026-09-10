@@ -122,10 +122,13 @@ describe("visual trust phase 1 wiring", () => {
       expect(gallery).not.toContain(file);
     }
 
-    const gallerySrcs = [...gallery.matchAll(/src:\s*'(\/images\/gallery\/[^']+)'/g)].map(
-      (match) => match[1]
-    );
-    expect(gallerySrcs.length).toBeGreaterThan(0);
+    expect(gallery).toContain("@/lib/marketing/portfolio");
+    expect(gallery).toContain("GALLERY_IMAGES");
+    expect(gallery).not.toContain("/images/gallery/");
+
+    const gallerySrcs = [
+      ...gallery.matchAll(/src:\s*['"](\/images\/(?:gallery|portfolio)\/[^'"]+)['"]/g),
+    ].map((match) => match[1]);
     for (const src of gallerySrcs) {
       const diskPath = path.join(repoRoot, "public", src.slice(1));
       expect(fs.existsSync(diskPath), src).toBe(true);

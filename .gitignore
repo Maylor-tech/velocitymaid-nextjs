@@ -48,3 +48,6 @@ Thumbs.db
 
 # accidental Windows npm cache paths
 %AppData%/
+
+# local photo ingest — never commit camera originals
+/_incoming/
