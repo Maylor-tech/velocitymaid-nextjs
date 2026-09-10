@@ -16,6 +16,8 @@ import {
   VERMONT_OPERATIONS_SUPPORT_LINE1,
   VERMONT_OPERATIONS_SUPPORT_LINE2,
 } from "@/lib/company/businessAddress";
+import { EditorialProof } from "@/components/marketing/EditorialProof";
+import { MIDDLEBURY_PROOF, TURNOVER_PROOF } from "@/lib/marketing/portfolio";
 
 export interface VermontClusterLandingProps {
   cluster: VermontClusterConfig;
@@ -124,6 +126,30 @@ export default function VermontClusterLanding({
         </section>
 
         <ServicesSection cluster={cluster} />
+
+        {cluster.slug === "middlebury" ? (
+          <EditorialProof
+            id="middlebury-proof"
+            contained
+            tone="light"
+            eyebrow="Middlebury property care"
+            heading="Real Vermont Properties. Guest-Ready Results."
+            copy="Property readiness for Middlebury homes and vacation rentals — interiors and outdoor living prepared for arriving guests."
+            featured={MIDDLEBURY_PROOF.featured}
+            supporting={MIDDLEBURY_PROOF.supporting}
+          />
+        ) : null}
+
+        <EditorialProof
+          id="turnover-proof"
+          contained
+          tone="navy"
+          eyebrow="Guest-ready resets"
+          heading="Prepared room by room for the next arrival."
+          copy="Guest-ready resets, presentation standards, and careful room-by-room preparation between stays — so the property is ready when guests walk in."
+          featured={TURNOVER_PROOF.featured}
+          supporting={TURNOVER_PROOF.supporting}
+        />
 
         <section className="grid md:grid-cols-2 gap-8 items-center">
           <div className="order-2 md:order-1">

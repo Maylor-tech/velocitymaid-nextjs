@@ -167,6 +167,25 @@ export function NewJerseyBookingMockup({
 
         <ValueStrip items={values} />
 
+        <section id="nj-proof" className="bg-vm-navy px-5 py-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="mb-3 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-vm-cyan">
+              New Jersey
+            </p>
+            <h2 className="font-heading text-3xl font-bold text-white">
+              Real VelocityMaid work in New Jersey.
+            </h2>
+            <p className="mt-4 font-body text-sm leading-relaxed text-white/65">
+              Residential cleaning for homes and apartments across Newark, Jersey
+              City, and Paterson — prepared with the same care and consistency we
+              bring to every visit.
+            </p>
+            <Link href="/book?branch=new-jersey" className={`${primaryButton} mt-8`}>
+              Book cleaning
+            </Link>
+          </div>
+        </section>
+
         <section className="bg-vm-surface px-5 py-16 text-center">
           <Eyebrow>Recurring plans</Eyebrow>
           <h2 className="font-heading text-3xl font-bold text-vm-navy">Set It and Forget It</h2>

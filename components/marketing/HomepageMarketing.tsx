@@ -3,6 +3,7 @@ import { CalendarDays, CheckCircle2, Clock3, ShieldCheck } from "lucide-react";
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import { PropertyGalleryPreview } from "@/components/marketing/PropertyGalleryPreview";
+import { EditorialProof } from "@/components/marketing/EditorialProof";
 import { MarketingTestimonials } from "@/components/marketing/MarketingTestimonials";
 import {
   LUDLOW_CARD_IMAGES,
@@ -10,6 +11,7 @@ import {
   PERKINSVILLE_CARD_IMAGES,
 } from "@/lib/vermont/middleburyPhotos";
 import { HOMEPAGE_TESTIMONIALS } from "@/lib/marketing/testimonials";
+import { HOMEPAGE_PROOF } from "@/lib/marketing/portfolio";
 
 const primaryButton =
   "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
@@ -158,6 +160,25 @@ export function HomepageMarketing() {
             </div>
           </div>
         </section>
+
+        <EditorialProof
+          id="our-work"
+          eyebrow="Proof of work"
+          heading="Real Homes. Guest-Ready Results."
+          copy="From vacation-rental turnovers to detailed residential cleaning, VelocityMaid prepares homes with the care, consistency and attention to detail owners and guests expect."
+          featured={HOMEPAGE_PROOF.featured}
+          supporting={HOMEPAGE_PROOF.supporting}
+          actions={
+            <>
+              <Link href="/gallery" className={primaryButton}>
+                View Our Work
+              </Link>
+              <Link href="/vermont/host-intake" className={outlineButton}>
+                Book Property Care
+              </Link>
+            </>
+          }
+        />
 
         <PropertyGalleryPreview
           items={[
