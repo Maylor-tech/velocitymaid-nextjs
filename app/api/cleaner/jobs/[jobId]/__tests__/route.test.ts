@@ -207,6 +207,9 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     expect(blob).not.toContain('LOCKBOX-9999');
     expect(blob).not.toContain('111 Thomson Drive');
     expect(blob).not.toMatch(/quotedTotal|totalPrice|operationalTotal|337|platformFee|paymentStatus/);
+    // Property / access instructions stay gated until acceptance (ASSIGNED access).
+    expect(json.job).not.toHaveProperty('property');
+    expect(json.job).not.toHaveProperty('address');
   });
 
   it('works when Job has no propertyId', async () => {

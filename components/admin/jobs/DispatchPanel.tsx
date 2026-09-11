@@ -81,6 +81,8 @@ interface DispatchPanelProps {
   jobId: string;
   enabled: boolean;
   canSend: boolean;
+  /** When false, preserve offer history but hide Send/Cancel/Resend/Release CTAs. */
+  mutationsAllowed?: boolean;
   cleaners: CleanerOption[];
   selectedCleanerId: string;
   onSelectCleaner: (id: string) => void;
@@ -115,6 +117,7 @@ export function DispatchPanel({
   jobId,
   enabled,
   canSend,
+  mutationsAllowed = true,
   cleaners,
   selectedCleanerId,
   onSelectCleaner,
@@ -428,7 +431,7 @@ export function DispatchPanel({
             )}
           </div>
 
-          {data?.assignedCleanerId && (
+          {data?.assignedCleanerId && mutationsAllowed && (
             <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
               <p className="font-medium text-vm-text">
                 Assigned to {data.assignedCleanerName || 'cleaner'}
@@ -473,7 +476,18 @@ export function DispatchPanel({
             </div>
           )}
 
-          {!data?.assignedCleanerId && data?.latestRelease && (
+          {data?.assignedCleanerId && !mutationsAllowed && (
+            <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p className="font-medium text-vm-text">
+                Assigned to {data.assignedCleanerName || 'cleaner'}
+              </p>
+              <p className="text-sm text-vm-muted mt-1">
+                Dispatch mutations are closed for this job. Accepted offer compensation is preserved.
+              </p>
+            </div>
+          )}
+
+          {!data?.assignedCleanerId && data?.latestRelease && mutationsAllowed && (
             <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
               <p className="font-medium text-vm-text">Cleaner needed</p>
               <p className="text-sm text-vm-muted mt-1">
@@ -491,6 +505,14 @@ export function DispatchPanel({
               {data.latestRelease.notes && (
                 <p className="text-sm text-vm-muted mt-1">{data.latestRelease.notes}</p>
               )}
+            </div>
+          )}
+
+          {!mutationsAllowed && (
+            <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+              <p className="text-sm text-vm-muted">
+                Dispatch is closed for this job. Offer history below is preserved; no new offers or assignment changes.
+              </p>
             </div>
           )}
 
@@ -516,33 +538,37 @@ export function DispatchPanel({
                     : data.ttl.defaultLabel}
                 </p>
               )}
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => void handleResend()}
-                  disabled={resending || cancelling}
-                  className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-vm-navy/30 text-vm-navy hover:bg-vm-navy/10 disabled:opacity-50"
-                >
-                  {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  Resend notification
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleCancel()}
-                  disabled={cancelling || resending}
-                  className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50"
-                >
-                  {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                  Cancel offer
-                </button>
-              </div>
-              <p className="text-xs text-vm-muted mt-2">
-                Resend notification only when this offer is still live. It does not create a new offer or change pay or expiry.
-              </p>
+              {mutationsAllowed && (
+                <>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleResend()}
+                      disabled={resending || cancelling}
+                      className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-vm-navy/30 text-vm-navy hover:bg-vm-navy/10 disabled:opacity-50"
+                    >
+                      {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                      Resend notification
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleCancel()}
+                      disabled={cancelling || resending}
+                      className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                      Cancel offer
+                    </button>
+                  </div>
+                  <p className="text-xs text-vm-muted mt-2">
+                    Resend notification only when this offer is still live. It does not create a new offer or change pay or expiry.
+                  </p>
+                </>
+              )}
             </div>
           )}
 
-          {canSend && !openOffer && (
+          {canSend && mutationsAllowed && !openOffer && (
             <div className="space-y-3">
               <label className="block text-sm font-medium text-vm-text">Select cleaner</label>
               <select

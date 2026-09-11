@@ -13,6 +13,13 @@ import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
 import { getJobLoopProgress } from '@/lib/booking/jobLoopProgress';
 import { formatServiceDate } from '@/lib/dates/serviceDate';
 import { isJobAssignable as isJobAssignableByPolicy } from '@/lib/billing/billingPolicy';
+import {
+  formatCommercialMoney,
+  moneyOrNull,
+  resolveCommercialAmount,
+  resolveDepositPaidDisplay,
+} from '@/lib/billing/commercialAmount';
+import { isTerminalStatus } from '@/lib/jobStatus';
 import { DispatchPanel } from '@/components/admin/jobs/DispatchPanel';
 import type { DispatchUiState } from '@/lib/dispatch/dispatchState';
 
@@ -730,15 +737,8 @@ export default function AdminJobDetailPage() {
     });
   };
 
-  const formatCurrency = (amount: number | null, currency: string | null) => {
-    if (!amount) return 'N/A';
-    const curr = currency || 'USD';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: curr,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+  const formatCurrency = (amount: number | null | undefined, currency: string | null) => {
+    return formatCommercialMoney(amount, currency, 'N/A');
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -760,13 +760,35 @@ export default function AdminJobDetailPage() {
       reviewStatus: job.reviewStatus,
       billingPolicy: job.billingPolicy,
     });
-  const canAssign =
+  const staffableStatus =
     job &&
-    isJobAssignable &&
-    (job.status === 'CONFIRMED' || job.status === 'RECEIVED' || !job.assignedCleanerId);
+    (job.status === 'CONFIRMED' ||
+      job.status === 'RECEIVED' ||
+      job.status === 'REASSIGN_PENDING');
+  const canAssign =
+    Boolean(job && isJobAssignable && staffableStatus && !job.assignedCleanerId);
+  const dispatchMutationsAllowed = Boolean(
+    job && !isTerminalStatus(job.status) && job.status !== 'AWAITING_QC'
+  );
   const isPaymentBlocked = job && !isJobAssignable;
   const needsReview =
     job?.paymentStatus === 'DEPOSIT_PAID' && job?.reviewStatus === 'PENDING';
+
+  const commercialTotal = job
+    ? resolveCommercialAmount({
+        totalPrice: job.totalPrice,
+        quotedTotal: job.quotedTotal,
+      })
+    : null;
+  const depositPaidDisplay = job
+    ? resolveDepositPaidDisplay({
+        billingPolicy: job.billingPolicy,
+        paymentStatus: job.paymentStatus,
+        depositAmount: job.depositAmount,
+        amountPaid: job.amountPaid,
+      })
+    : null;
+  const balanceDueAmount = job ? moneyOrNull(job.balanceDue) : null;
 
   const loopProgress = job
     ? getJobLoopProgress(job.id, {
@@ -925,7 +947,7 @@ export default function AdminJobDetailPage() {
             {job.assignedCleaner && loopProgress.step === 'ASSIGNED' && (
               <p className="mt-3 text-xs text-vm-muted">
                 Log in as <strong>{job.assignedCleaner.email}</strong> at /cleaners/login, then
-                open the cleaner job link above → Accept → Start → Complete.
+                open the cleaner job link above → On the Way → Start Service → Submit for QC.
               </p>
             )}
           </div>
@@ -966,17 +988,18 @@ export default function AdminJobDetailPage() {
                 <div className="flex justify-between gap-4 sm:block">
                   <dt className="text-vm-muted">Customer price</dt>
                   <dd className="font-semibold text-vm-text">
-                    {formatCurrency(job.quotedTotal ?? job.totalPrice, job.currency)}
+                    {formatCurrency(commercialTotal, job.currency)}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-4 sm:block">
                   <dt className="text-vm-muted">Estimated net</dt>
                   <dd className="font-semibold text-vm-text">
-                    {formatCurrency(
-                      (job.quotedTotal ?? job.totalPrice ?? 0) -
-                        (job.processingAllowanceEstimated ?? 0),
-                      job.currency
-                    )}
+                    {commercialTotal == null
+                      ? 'N/A'
+                      : formatCurrency(
+                          commercialTotal - (job.processingAllowanceEstimated ?? 0),
+                          job.currency
+                        )}
                   </dd>
                 </div>
                 {job.pricingPolicyVersion && (
@@ -996,25 +1019,29 @@ export default function AdminJobDetailPage() {
             <div className="rounded-lg bg-gray-50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">Quoted Total</p>
               <p className="mt-1 text-lg font-semibold text-vm-text">
-                {formatCurrency(job.quotedTotal ?? job.totalPrice, job.currency)}
+                {formatCurrency(commercialTotal, job.currency)}
               </p>
             </div>
             <div className="rounded-lg bg-gray-50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">Deposit Paid</p>
               <p className="mt-1 text-lg font-semibold text-vm-text">
-                {formatCurrency(job.depositAmount ?? job.amountPaid, job.currency)}
+                {depositPaidDisplay?.kind === 'amount'
+                  ? formatCurrency(depositPaidDisplay.amount, job.currency)
+                  : depositPaidDisplay?.label ?? 'N/A'}
               </p>
             </div>
             <div className="rounded-lg bg-gray-50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">Paid to Date</p>
               <p className="mt-1 text-lg font-semibold text-vm-success">
-                {formatCurrency(job.amountPaid, job.currency)}
+                {formatCurrency(moneyOrNull(job.amountPaid), job.currency)}
               </p>
             </div>
             <div className="rounded-lg bg-gray-50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-vm-muted">Balance Due</p>
-              <p className={`mt-1 text-lg font-semibold ${(job.balanceDue ?? 0) > 0 ? 'text-orange-700' : 'text-vm-text'}`}>
-                {formatCurrency(job.balanceDue ?? 0, job.currency)}
+              <p className={`mt-1 text-lg font-semibold ${(balanceDueAmount ?? 0) > 0 ? 'text-orange-700' : 'text-vm-text'}`}>
+                {balanceDueAmount == null && commercialTotal == null
+                  ? 'N/A'
+                  : formatCurrency(balanceDueAmount ?? 0, job.currency)}
               </p>
             </div>
             <div className="rounded-lg bg-gray-50 p-4 col-span-2 md:col-span-1">
@@ -1443,7 +1470,7 @@ export default function AdminJobDetailPage() {
             <div>
               <p className="text-sm text-vm-muted">Quoted Total</p>
               <p className="text-vm-text font-semibold">
-                {formatCurrency(job.quotedTotal ?? job.totalPrice, job.currency)}
+                {formatCurrency(commercialTotal, job.currency)}
               </p>
             </div>
             {(job.depositAmount != null || job.amountPaid != null) && (
@@ -1451,13 +1478,15 @@ export default function AdminJobDetailPage() {
                 <div>
                   <p className="text-sm text-vm-muted">Deposit / Paid</p>
                   <p className="text-vm-text">
-                    {formatCurrency(job.amountPaid ?? job.depositAmount, job.currency)}
+                    {formatCurrency(moneyOrNull(job.amountPaid ?? job.depositAmount), job.currency)}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-vm-muted">Balance Due</p>
                   <p className="text-vm-text">
-                    {formatCurrency(job.balanceDue ?? 0, job.currency)}
+                    {balanceDueAmount == null && commercialTotal == null
+                      ? 'N/A'
+                      : formatCurrency(balanceDueAmount ?? 0, job.currency)}
                   </p>
                 </div>
               </>
@@ -1671,6 +1700,7 @@ export default function AdminJobDetailPage() {
             jobId={jobId}
             enabled={true}
             canSend={Boolean(canAssign)}
+            mutationsAllowed={dispatchMutationsAllowed}
             cleaners={cleaners}
             selectedCleanerId={selectedCleanerId}
             onSelectCleaner={setSelectedCleanerId}

@@ -108,4 +108,63 @@ describe('generateInvoiceFromJob service date', () => {
     const jobDate = invoiceCreate.mock.calls[0][0].data.jobDate as Date;
     expect(jobDate.toISOString()).toBe('2026-08-26T00:00:00.000Z');
   });
+
+  it('refuses to create a silent $0 invoice when customer pricing is missing', async () => {
+    jobFindUnique.mockResolvedValue({
+      id: 'job-no-price',
+      jobReference: 'VM-2026-0099',
+      customerId: 'cust1',
+      customerName: 'Host',
+      address: 'Property',
+      serviceType: 'Turnover clean',
+      totalPrice: null,
+      quotedTotal: null,
+      preferredDate: new Date('2026-10-04T00:00:00.000Z'),
+      completedAt: new Date('2026-10-04T18:00:00.000Z'),
+      Customer: {
+        id: 'cust1',
+        firstName: 'Host',
+        lastName: 'User',
+        email: 'h@x.com',
+        phone: null,
+      },
+      Invoice: null,
+      CompletionReport: null,
+      photos: [],
+    });
+
+    await expect(generateInvoiceFromJob('job-no-price')).rejects.toThrow(
+      /pricing is not set/i
+    );
+    expect(invoiceCreate).not.toHaveBeenCalled();
+  });
+
+  it('allows a genuine $0 commercial amount when explicitly set', async () => {
+    jobFindUnique.mockResolvedValue({
+      id: 'job-zero',
+      jobReference: 'VM-2026-0100',
+      customerId: 'cust1',
+      customerName: 'Comp',
+      address: 'Property',
+      serviceType: 'Courtesy clean',
+      totalPrice: 0,
+      quotedTotal: 0,
+      preferredDate: new Date('2026-10-04T00:00:00.000Z'),
+      completedAt: new Date('2026-10-04T18:00:00.000Z'),
+      Customer: {
+        id: 'cust1',
+        firstName: 'Comp',
+        lastName: 'Job',
+        email: 'c@x.com',
+        phone: null,
+      },
+      Invoice: null,
+      CompletionReport: null,
+      photos: [],
+    });
+
+    await generateInvoiceFromJob('job-zero');
+    expect(invoiceCreate).toHaveBeenCalledTimes(1);
+    expect(invoiceCreate.mock.calls[0][0].data.total).toBe(0);
+  });
 });

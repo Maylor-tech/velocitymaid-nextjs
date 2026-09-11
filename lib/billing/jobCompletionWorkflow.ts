@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { loadJobTeamMembers } from '@/lib/cleaners/internalCleanerService';
 import { nextInvoiceNumber, decimalToNumber, computeBalanceDue } from '@/lib/invoices/invoiceUtils';
+import { resolveCommercialAmount } from '@/lib/billing/commercialAmount';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
 import { nextReportNumber, nextReceiptNumber, ensureJobReference } from './numbering';
 import { createAdminNotification, adminNotificationHelpers } from '@/lib/notifications/adminNotificationCenter';
@@ -138,57 +139,64 @@ export async function runJobCompletionBillingWorkflow(
 
   let invoice = job.Invoice;
   if (!invoice) {
-    const totalPrice = decimalToNumber(job.totalPrice ?? job.quotedTotal);
-    const amountPaid = decimalToNumber(job.amountPaid);
-    const balanceDue = computeBalanceDue(totalPrice, amountPaid);
-    const jobReference = await ensureJobReference(job.id, job.jobReference);
-    const invoiceNumber = await nextInvoiceNumber(jobReference);
-    const dueDate = new Date(input.completedAt);
-    dueDate.setDate(dueDate.getDate() + 7);
-
-    invoice = await prisma.invoice.create({
-      data: {
-        invoiceNumber,
-        jobId: job.id,
-        customerId: job.customerId,
-        clientName,
-        clientEmail,
-        clientPhone: job.Customer?.phone ?? null,
-        propertyAddress,
-        serviceType,
-        jobDate: invoiceServiceDateFromJob(job.preferredDate, input.completedAt),
-        dueDate,
-        subtotal: totalPrice,
-        tax: 0,
-        discount: 0,
-        total: totalPrice,
-        amountPaid,
-        balanceDue,
-        // Incident #001 (P4/P5): job completion NEVER auto-sends an invoice.
-        // Create a DRAFT for ops review; a genuinely prepaid ($0 balance)
-        // invoice may be PAID immediately (no collection email needed) since its
-        // accounting is already settled. It is never created as SENT here.
-        status: balanceDue <= 0 ? 'PAID' : 'DRAFT',
-        sentAt: null,
-        notes: `Generated from job ${job.id}`,
-        items: {
-          create: [
-            {
-              description: serviceType,
-              quantity: 1,
-              unitPrice: totalPrice,
-              lineTotal: totalPrice,
-              sortOrder: 0,
-            },
-          ],
-        },
-      },
-      include: { items: true, payments: true },
+    const totalPrice = resolveCommercialAmount({
+      totalPrice: job.totalPrice,
+      quotedTotal: job.quotedTotal,
     });
+    // Missing commercial amount must not become a silent $0 invoice.
+    if (totalPrice != null) {
+      const amountPaid = decimalToNumber(job.amountPaid);
+      const balanceDue = computeBalanceDue(totalPrice, amountPaid);
+      const jobReference = await ensureJobReference(job.id, job.jobReference);
+      const invoiceNumber = await nextInvoiceNumber(jobReference);
+      const dueDate = new Date(input.completedAt);
+      dueDate.setDate(dueDate.getDate() + 7);
+
+      invoice = await prisma.invoice.create({
+        data: {
+          invoiceNumber,
+          jobId: job.id,
+          customerId: job.customerId,
+          clientName,
+          clientEmail,
+          clientPhone: job.Customer?.phone ?? null,
+          propertyAddress,
+          serviceType,
+          jobDate: invoiceServiceDateFromJob(job.preferredDate, input.completedAt),
+          dueDate,
+          subtotal: totalPrice,
+          tax: 0,
+          discount: 0,
+          total: totalPrice,
+          amountPaid,
+          balanceDue,
+          // Incident #001 (P4/P5): job completion NEVER auto-sends an invoice.
+          // Create a DRAFT for ops review; a genuinely prepaid ($0 balance)
+          // invoice may be PAID immediately (no collection email needed) since its
+          // accounting is already settled. It is never created as SENT here.
+          status: balanceDue <= 0 ? 'PAID' : 'DRAFT',
+          sentAt: null,
+          notes: `Generated from job ${job.id}`,
+          items: {
+            create: [
+              {
+                description: serviceType,
+                quantity: 1,
+                unitPrice: totalPrice,
+                lineTotal: totalPrice,
+                sortOrder: 0,
+              },
+            ],
+          },
+        },
+        include: { items: true, payments: true },
+      });
+    }
   }
 
-  const serializedInvoice = serializeInvoice(invoice);
-  const invoiceSendDeferred = invoice.status === 'DRAFT';
+  const serializedInvoice = invoice ? serializeInvoice(invoice) : null;
+  const invoiceSendDeferred = invoice?.status === 'DRAFT';
+  const pricingMissing = !invoice && !job.Invoice;
   const emailResults: Record<string, { sent: boolean; skippedReason?: string }> =
     {};
 
@@ -214,6 +222,12 @@ export async function runJobCompletionBillingWorkflow(
         sent: false,
         skippedReason: 'Invoice draft created — review reimbursements and send from Invoices.',
       };
+    } else if (pricingMissing) {
+      emailResults.invoice = {
+        sent: false,
+        skippedReason:
+          'Customer pricing is not set — invoice was not created. Set quoted/total price, then Generate invoice.',
+      };
     }
   }
 
@@ -222,7 +236,9 @@ export async function runJobCompletionBillingWorkflow(
     severity: 'INFO',
     message: invoiceSendDeferred
       ? `Job ${job.jobReference || job.id} completed for ${clientName} — invoice draft created, add reimbursements and send from Invoices`
-      : `Job ${job.jobReference || job.id} completed for ${clientName}`,
+      : pricingMissing
+        ? `Job ${job.jobReference || job.id} completed for ${clientName} — customer pricing missing; set price before generating an invoice`
+        : `Job ${job.jobReference || job.id} completed for ${clientName}`,
     jobId: job.id,
     actionUrl: adminNotificationHelpers.adminJobLink(job.id),
   }).catch(() => {});
@@ -231,6 +247,7 @@ export async function runJobCompletionBillingWorkflow(
     report: serializedReport,
     invoice: serializedInvoice,
     invoiceSendDeferred,
+    pricingMissing,
     emailResults,
   };
 }
