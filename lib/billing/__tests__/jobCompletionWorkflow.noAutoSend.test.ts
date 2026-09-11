@@ -117,6 +117,41 @@ describe('runJobCompletionBillingWorkflow', () => {
     expect(sendCompletionReportEmail).toHaveBeenCalledTimes(1);
     expect(result.invoiceSendDeferred).toBe(true);
     expect(result.emailResults.invoice?.sent).toBe(false);
+    expect(result.emailResults.invoice?.skippedReason).toMatch(/draft/i);
+  });
+
+  it('does not silently create a $0 invoice when customer pricing is missing', async () => {
+    jobFindUnique.mockResolvedValue({
+      id: 'job-no-price',
+      jobReference: 'VM-2026-0099',
+      customerId: 'cust1',
+      customerName: 'Host',
+      address: 'Property',
+      serviceType: 'Turnover clean',
+      totalPrice: null,
+      quotedTotal: null,
+      amountPaid: null,
+      photos: [],
+      Customer: { id: 'cust1', firstName: 'Host', lastName: 'User', email: 'h@x.com', phone: null },
+      Invoice: null,
+      CompletionReport: null,
+      paymentStatus: 'PENDING',
+      billingPolicy: 'INVOICE_AFTER_SERVICE',
+      preferredDate: new Date('2026-10-04T00:00:00.000Z'),
+    });
+
+    const result = await runJobCompletionBillingWorkflow({
+      jobId: 'job-no-price',
+      completedAt: new Date('2026-10-04T18:00:00.000Z'),
+      completedBy: 'Admin',
+      sendEmails: true,
+    });
+
+    expect(invoiceCreate).not.toHaveBeenCalled();
+    expect(result.invoice).toBeNull();
+    expect(result.pricingMissing).toBe(true);
+    expect(result.invoiceSendDeferred).toBeFalsy();
+    expect(result.emailResults.invoice?.skippedReason).toMatch(/pricing is not set/i);
   });
 
   it('invoice-after-service completion still yields one DRAFT billable service and does not mark the Job paid', async () => {

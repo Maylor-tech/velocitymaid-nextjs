@@ -5,6 +5,7 @@ import {
   decimalToNumber,
   formatUsd,
 } from '@/lib/invoices/invoiceUtils';
+import { requireCommercialAmount } from '@/lib/billing/commercialAmount';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
 import { sendInvoiceSentEmail } from '@/lib/email/invoiceEmails';
 import { recordInvoicePayment } from '@/lib/invoices/invoiceService';
@@ -290,7 +291,11 @@ export async function generateInvoiceFromJob(jobId: string) {
     job.customerName ||
     [job.Customer?.firstName, job.Customer?.lastName].filter(Boolean).join(' ') ||
     'Client';
-  const totalPrice = decimalToNumber(job.totalPrice ?? job.quotedTotal);
+  // Missing pricing must never coerce to $0 — refuse silent zero invoices.
+  const totalPrice = requireCommercialAmount({
+    totalPrice: job.totalPrice,
+    quotedTotal: job.quotedTotal,
+  });
   const completedAt = job.completedAt ?? new Date();
   const dueDate = new Date(completedAt);
   dueDate.setDate(dueDate.getDate() + 7);

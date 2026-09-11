@@ -320,8 +320,8 @@ export default function JobDetailDrawer({
               <JobInfoRow
                 label="Total Price"
                 value={
-                  job.totalPrice
-                    ? `${job.currency === 'JMD' ? 'J$' : '$'}${job.totalPrice.toFixed(2)}`
+                  job.totalPrice != null
+                    ? `${job.currency === 'JMD' ? 'J$' : '$'}${Number(job.totalPrice).toFixed(2)}`
                     : '—'
                 }
               />

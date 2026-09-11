@@ -1,4 +1,6 @@
+import { resolveDepositMilestone } from '@/lib/billing/commercialAmount';
 import { isJobAssignable } from '@/lib/billing/billingPolicy';
+import { isTerminalStatus } from '@/lib/jobStatus';
 import type { DispatchUiState } from '@/lib/dispatch/dispatchState';
 
 export type JobLoopStep =
@@ -40,9 +42,13 @@ export function getJobLoopProgress(
   const review = (job.reviewStatus || 'PENDING').toUpperCase();
   const hasCleaner = Boolean(job.assignedCleanerId);
   const balanceDue = job.balanceDue ?? 0;
+  const deposit = resolveDepositMilestone({
+    billingPolicy: job.billingPolicy,
+    paymentStatus: job.paymentStatus,
+  });
 
   const steps = [
-    { id: 'deposit', label: 'Deposit paid', done: false, current: false },
+    { id: 'deposit', label: deposit.label, done: false, current: false },
     { id: 'review', label: 'Admin approved', done: false, current: false },
     { id: 'assign', label: 'Cleaner assigned', done: false, current: false },
     { id: 'complete', label: 'Service completed', done: false, current: false },
@@ -52,9 +58,27 @@ export function getJobLoopProgress(
 
   const markDone = (ids: string[]) => {
     for (const s of steps) {
-      if (ids.includes(s.id)) s.done = true;
+      if (!ids.includes(s.id)) continue;
+      if (s.id === 'deposit' && !deposit.satisfied) continue;
+      s.done = true;
     }
   };
+
+  // Cancelled jobs are operationally closed — no staffing/dispatch CTAs.
+  if (status === 'CANCELLED' || status === 'CANCELLED_EMERGENCY') {
+    if (deposit.satisfied) markDone(['deposit']);
+    if (review === 'APPROVED' || hasCleaner) markDone(['review']);
+    if (hasCleaner) markDone(['assign']);
+    return {
+      step: 'OTHER',
+      label: 'Cancelled',
+      nextAction:
+        'Job cancelled. No dispatch or assignment actions. Historical offers and assignment records are preserved.',
+      cleanerJobUrl: null,
+      customerJobUrl: `/customer/jobs/${jobId}`,
+      steps,
+    };
+  }
 
   if (payment === 'PAID' && status === 'COMPLETED') {
     markDone(['deposit', 'review', 'assign', 'complete', 'balance', 'payout']);
@@ -104,9 +128,9 @@ export function getJobLoopProgress(
       step: 'IN_FIELD',
       label: 'Cleaner in field',
       nextAction:
-        'Cleaner completes service at /cleaner/jobs/' +
-        jobId +
-        ' (Start Service → Complete Job).',
+        status === 'ON_THE_WAY'
+          ? `Cleaner is on the way. Next at /cleaner/jobs/${jobId}: Start Service → Submit for QC.`
+          : `Cleaner is in progress. Next at /cleaner/jobs/${jobId}: Submit for QC (Finish Job).`,
       cleanerJobUrl: `/cleaner/jobs/${jobId}`,
       customerJobUrl: null,
       steps,
@@ -120,9 +144,7 @@ export function getJobLoopProgress(
       step: 'ASSIGNED',
       label: 'Assigned to cleaner',
       nextAction:
-        'Cleaner completes service at /cleaner/jobs/' +
-        jobId +
-        ' (Accept → Start Service → Complete Job).',
+        `Cleaner is assigned. Next at /cleaner/jobs/${jobId}: On the Way → Start Service → Submit for QC.`,
       cleanerJobUrl: `/cleaner/jobs/${jobId}`,
       customerJobUrl: null,
       steps,
@@ -144,7 +166,14 @@ export function getJobLoopProgress(
     };
   }
 
-  if (isJobAssignableForLoop(job) && !hasCleaner) {
+  if (
+    isJobAssignableForLoop(job) &&
+    !hasCleaner &&
+    !isTerminalStatus(status) &&
+    status !== 'AWAITING_QC' &&
+    status !== 'ON_THE_WAY' &&
+    status !== 'IN_PROGRESS'
+  ) {
     markDone(['deposit', 'review']);
     steps.find((s) => s.id === 'assign')!.current = true;
     if (job.dispatchOffersEnabled) {
@@ -193,7 +222,7 @@ export function getJobLoopProgress(
     };
   }
 
-  if (payment === 'DEPOSIT_PAID') {
+  if (deposit.satisfied) {
     markDone(['deposit']);
   }
 
