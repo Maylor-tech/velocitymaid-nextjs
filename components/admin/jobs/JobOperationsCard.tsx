@@ -16,6 +16,7 @@ import {
   formatJobDate,
   formatUsdDetailed,
   getJobPriority,
+  getOpsListStaffingBadge,
   getPaymentBadge,
   getPhotoStatus,
   getPrimaryAction,
@@ -24,7 +25,7 @@ import {
   priorityLabel,
   type JobOperationsInput,
 } from '@/lib/admin/jobsOperations';
-import { effectiveOfferStatus, isEffectivelyOpen } from '@/lib/dispatch/offerExpiry';
+import { isTerminalStatus } from '@/lib/jobStatus';
 
 export interface AdminJobListItem extends JobOperationsInput {
   id: string;
@@ -81,6 +82,7 @@ export function JobOperationsCard({
   const action = getPrimaryAction(job);
   const statusBadge = getStatusBadge(job.status);
   const paymentBadge = getPaymentBadge(job.paymentStatus);
+  const staffingBadge = getOpsListStaffingBadge(job);
   const priority = getJobPriority(job);
   const photo = getPhotoStatus(job.photoCount ?? 0, job.serviceType, job.status);
   const workflow = buildWorkflowSteps(job);
@@ -88,6 +90,7 @@ export function JobOperationsCard({
   const archived = !!job.archivedAt;
   const isVermont = job.branch?.slug === 'vermont';
   const doneSteps = workflow.filter((s) => s.done).length;
+  const showActiveDispatchBadges = !isTerminalStatus(job.status);
 
   return (
     <li
@@ -119,36 +122,16 @@ export function JobOperationsCard({
             >
               {job.branch?.name || '—'}
             </span>
-            {job.dispatchUrgency && job.dispatchUrgency !== 'STANDARD' && (
+            {showActiveDispatchBadges &&
+              job.dispatchUrgency &&
+              job.dispatchUrgency !== 'STANDARD' && (
               <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
                 {job.dispatchUrgency.replace('_', ' ')}
               </span>
             )}
-            {!job.assignedCleanerId && isEffectivelyOpen(job.openOffer) && (
-              <span className="rounded-full bg-vm-cyan-tint px-2 py-0.5 text-xs font-medium text-vm-navy">
-                {job.openOffer?.cleanerName
-                  ? `Awaiting ${job.openOffer.cleanerName}`
-                  : 'Offer sent'}
-              </span>
-            )}
-            {!job.assignedCleanerId &&
-              job.openOffer &&
-              effectiveOfferStatus(job.openOffer) === 'EXPIRED' && (
-              <span className="rounded-full bg-vm-warning-bg px-2 py-0.5 text-xs font-medium text-vm-warning">
-                Expired
-              </span>
-            )}
-            {!job.assignedCleanerId && !job.openOffer && (
-              <span className="rounded-full bg-vm-warning-bg px-2 py-0.5 text-xs font-medium text-vm-warning">
-                Cleaner needed
-              </span>
-            )}
-            {!job.assignedCleanerId &&
-              job.openOffer &&
-              !isEffectivelyOpen(job.openOffer) &&
-              effectiveOfferStatus(job.openOffer) !== 'EXPIRED' && (
-              <span className="rounded-full bg-vm-warning-bg px-2 py-0.5 text-xs font-medium text-vm-warning">
-                Cleaner needed
+            {staffingBadge && (
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${staffingBadge.cls}`}>
+                {staffingBadge.label}
               </span>
             )}
           </div>

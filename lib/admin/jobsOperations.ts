@@ -557,6 +557,57 @@ export function getPaymentBadge(status: string): { label: string; cls: string } 
   }
 }
 
+export type OpsListStaffingBadge = {
+  kind: 'awaiting' | 'expired' | 'cleaner_needed';
+  label: string;
+  cls: string;
+};
+
+/**
+ * Active staffing/dispatch badges for the admin jobs list card.
+ * Terminal jobs (cancelled / completed) keep status history but never show
+ * Cleaner needed / Awaiting / Expired staffing prompts.
+ */
+export function getOpsListStaffingBadge(
+  job: Pick<JobOperationsInput, 'status' | 'assignedCleanerId' | 'openOffer'>
+): OpsListStaffingBadge | null {
+  if (TERMINAL_STATUSES.has(job.status)) return null;
+  if (job.assignedCleanerId) return null;
+
+  if (isEffectivelyOpen(job.openOffer)) {
+    return {
+      kind: 'awaiting',
+      label: job.openOffer?.cleanerName
+        ? `Awaiting ${job.openOffer.cleanerName}`
+        : 'Offer sent',
+      cls: 'bg-vm-cyan-tint text-vm-navy',
+    };
+  }
+
+  if (job.openOffer && effectiveOfferStatus(job.openOffer) === 'EXPIRED') {
+    return {
+      kind: 'expired',
+      label: 'Expired',
+      cls: 'bg-vm-warning-bg text-vm-warning',
+    };
+  }
+
+  // No open offer, or a closed non-expired offer (declined/cancelled) → still needs staffing.
+  if (
+    !job.openOffer ||
+    (!isEffectivelyOpen(job.openOffer) &&
+      effectiveOfferStatus(job.openOffer) !== 'EXPIRED')
+  ) {
+    return {
+      kind: 'cleaner_needed',
+      label: 'Cleaner needed',
+      cls: 'bg-vm-warning-bg text-vm-warning',
+    };
+  }
+
+  return null;
+}
+
 export function getPrimaryAction(job: JobOperationsInput & { id: string }): {
   label: string;
   href: string;
