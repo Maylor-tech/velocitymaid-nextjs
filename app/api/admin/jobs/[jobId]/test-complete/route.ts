@@ -6,6 +6,7 @@ import { JobStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 import { resolveCompletionPaymentUpdate } from '@/lib/booking/jobPayment';
+import { maybeCreatePayoutAfterTransition } from '@/lib/booking/maybeCreatePayoutAfterTransition';
 
 /**
  * POST /api/admin/jobs/[jobId]/test-complete
@@ -62,7 +63,7 @@ export async function POST(
       );
     }
 
-    const payout = await prisma.jobPayout.findUnique({
+    const existingPayout = await prisma.jobPayout.findUnique({
       where: { jobId },
       select: { status: true },
     });
@@ -74,7 +75,7 @@ export async function POST(
         totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
         amountPaid: job.amountPaid ? Number(job.amountPaid) : null,
       },
-      { payoutStatus: payout?.status ?? null }
+      { payoutStatus: existingPayout?.status ?? null }
     );
 
     const updated = await prisma.job.update({
@@ -86,12 +87,15 @@ export async function POST(
       },
     });
 
+    const payout = await maybeCreatePayoutAfterTransition(jobId);
+
     return NextResponse.json({
       success: true,
       message: paymentUpdate
         ? 'Job marked COMPLETED with BALANCE_DUE (dev test shortcut)'
         : 'Job marked COMPLETED (dev test shortcut)',
       job: updated,
+      payout,
     });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;

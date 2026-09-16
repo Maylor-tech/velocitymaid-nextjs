@@ -12,6 +12,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 import { computePayoutEligibility } from '@/lib/booking/payoutEligibility';
+import { resolveCompletionPaymentUpdate } from '@/lib/booking/jobPayment';
+import { maybeCreatePayoutAfterTransition } from '@/lib/booking/maybeCreatePayoutAfterTransition';
 import { logAuditEntry } from '@/lib/audit';
 import type { JobStatus } from '@prisma/client';
 import { awaitJobCalendarCancel, awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
@@ -358,7 +360,10 @@ export async function PATCH(
         status: true,
         totalPrice: true,
         quotedTotal: true,
+        amountPaid: true,
+        paymentStatus: true,
         assignedCleanerId: true,
+        JobPayout: { select: { status: true } },
       },
     });
 
@@ -394,6 +399,24 @@ export async function PATCH(
       data.status = body.status as JobStatus;
       if (body.status === 'COMPLETED' && !body.completedAt) {
         data.completedAt = new Date();
+      }
+      if (body.status === 'COMPLETED' && existing.status !== 'COMPLETED') {
+        const paymentUpdate = resolveCompletionPaymentUpdate(
+          existing.paymentStatus,
+          {
+            quotedTotal:
+              existing.quotedTotal != null ? Number(existing.quotedTotal) : null,
+            totalPrice:
+              existing.totalPrice != null ? Number(existing.totalPrice) : null,
+            amountPaid:
+              existing.amountPaid != null ? Number(existing.amountPaid) : null,
+          },
+          { payoutStatus: existing.JobPayout?.status ?? null }
+        );
+        if (paymentUpdate) {
+          data.paymentStatus = paymentUpdate.paymentStatus;
+          data.balanceDue = paymentUpdate.balanceDue;
+        }
       }
     }
     if (body.totalPrice !== undefined) {
@@ -494,6 +517,12 @@ export async function PATCH(
       await awaitJobCalendarSync(jobId);
     }
 
+    let payout: Awaited<ReturnType<typeof maybeCreatePayoutAfterTransition>> | null =
+      null;
+    if (updated.status === 'COMPLETED' && existing.status !== 'COMPLETED') {
+      payout = await maybeCreatePayoutAfterTransition(jobId);
+    }
+
     return NextResponse.json({
       success: true,
       job: {
@@ -504,9 +533,12 @@ export async function PATCH(
         address: updated.address,
         serviceType: updated.serviceType,
         status: updated.status,
+        paymentStatus: updated.paymentStatus,
+        balanceDue: updated.balanceDue != null ? Number(updated.balanceDue) : null,
         totalPrice: updated.totalPrice ? Number(updated.totalPrice) : null,
         assignedCleanerId: updated.assignedCleanerId,
       },
+      payout,
     });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;

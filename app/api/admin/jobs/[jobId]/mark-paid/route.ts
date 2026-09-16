@@ -9,24 +9,28 @@ export const dynamic = "force-dynamic";
  *
  * Used when payment is collected outside Stripe (PayPal, cash, etc.). Sets the
  * job's paymentStatus to PAID, records amount + method + reference, zeroes the
- * balance, and stamps paidAt. Does NOT touch Stripe or the cleaner payout flow.
+ * balance, and stamps paidAt. Does NOT transfer money to cleaners.
  *
- * Only allowed when the current paymentStatus is PENDING or DEPOSIT_PAID.
+ * If the job is already COMPLETED, evaluates createPayoutIfEligible (ledger only).
+ *
+ * Allowed from: PENDING | DEPOSIT_PAID | BALANCE_DUE.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
+import { logAuditEntry } from "@/lib/audit";
+import { maybeCreatePayoutAfterTransition } from "@/lib/booking/maybeCreatePayoutAfterTransition";
 
 const ALLOWED_METHODS = ["PayPal", "Cash", "Stripe", "Other"];
-const ALLOWED_FROM_STATUS = ["PENDING", "DEPOSIT_PAID"];
+const ALLOWED_FROM_STATUS = ["PENDING", "DEPOSIT_PAID", "BALANCE_DUE"];
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(request, "ADMIN");
+    const auth = await requireRole(request, "ADMIN");
     const { jobId } = params;
 
     if (!jobId) {
@@ -60,10 +64,23 @@ export async function POST(
 
     const job = await prisma.job.findUnique({
       where: { id: jobId },
-      select: { id: true, paymentStatus: true, currency: true },
+      select: {
+        id: true,
+        branchId: true,
+        paymentStatus: true,
+        status: true,
+        currency: true,
+      },
     });
 
     if (!job) {
+      return NextResponse.json(
+        { success: false, error: "Job not found" },
+        { status: 404 }
+      );
+    }
+
+    if (auth.branchId && job.branchId !== auth.branchId) {
       return NextResponse.json(
         { success: false, error: "Job not found" },
         { status: 404 }
@@ -81,6 +98,7 @@ export async function POST(
     }
 
     const paidAt = new Date();
+    const previousPaymentStatus = job.paymentStatus;
     const updated = await prisma.job.update({
       where: { id: jobId },
       data: {
@@ -93,6 +111,7 @@ export async function POST(
       },
       select: {
         id: true,
+        status: true,
         paymentStatus: true,
         amountPaid: true,
         balanceDue: true,
@@ -103,11 +122,32 @@ export async function POST(
       },
     });
 
+    await logAuditEntry({
+      actorId: auth.userId,
+      actorRole: "ADMIN",
+      action: "JOB_MARK_PAID",
+      entityType: "Job",
+      entityId: jobId,
+      description: `Job payment marked PAID via ${method}`,
+      changes: {
+        previousPaymentStatus,
+        paymentStatus: "PAID",
+        amount,
+        method,
+        reference,
+        paidAt: paidAt.toISOString(),
+      },
+    });
+
+    // PAID + already COMPLETED → evaluate ledger create. Incomplete jobs wait.
+    const payoutResult = await maybeCreatePayoutAfterTransition(jobId);
+
     return NextResponse.json({
       success: true,
       message: `Payment of ${formatAmount(amount, updated.currency)} recorded via ${method}`,
       job: {
         id: updated.id,
+        status: updated.status,
         paymentStatus: updated.paymentStatus,
         amountPaid: updated.amountPaid != null ? Number(updated.amountPaid) : null,
         balanceDue: updated.balanceDue != null ? Number(updated.balanceDue) : null,
@@ -115,6 +155,7 @@ export async function POST(
         paymentReference: updated.paymentReference,
         paidAt: updated.paidAt?.toISOString() || null,
       },
+      payout: payoutResult,
     });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;

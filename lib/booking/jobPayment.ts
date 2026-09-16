@@ -116,15 +116,23 @@ export type CompletionPaymentFields = {
   amountPaid: number | null;
 };
 
+export type CompletionPaymentUpdate = {
+  paymentStatus: PaymentStatus;
+  balanceDue: number;
+};
+
 /**
  * Payment fields to apply when marking a job COMPLETED.
  * Returns null when payment status must not change (already PAID, payout PAID, etc.).
+ *
+ * DEPOSIT_PAID → BALANCE_DUE when remainder > 0.
+ * DEPOSIT_PAID → PAID when remainder is 0 (deposit covered full quote).
  */
 export function resolveCompletionPaymentUpdate(
   paymentStatus: PaymentStatus,
   job: CompletionPaymentFields,
   options?: { payoutStatus?: string | null }
-): { paymentStatus: PaymentStatus.BALANCE_DUE; balanceDue: number } | null {
+): CompletionPaymentUpdate | null {
   if (paymentStatus === PaymentStatus.PAID) {
     return null;
   }
@@ -134,9 +142,16 @@ export function resolveCompletionPaymentUpdate(
   if (!shouldTransitionDepositToBalanceDue(paymentStatus)) {
     return null;
   }
+  const balanceDue = computeBalanceDueAfterCompletion(job);
+  if (balanceDue <= 0) {
+    return {
+      paymentStatus: PaymentStatus.PAID,
+      balanceDue: 0,
+    };
+  }
   return {
     paymentStatus: PaymentStatus.BALANCE_DUE,
-    balanceDue: computeBalanceDueAfterCompletion(job),
+    balanceDue,
   };
 }
 
