@@ -13,6 +13,7 @@ import {
   generateReceiptForLatestPayment,
   sendReviewRequestForJob,
 } from '@/lib/billing/jobBillingSteps';
+import { GoogleReviewUrlError } from '@/lib/reviews/googleReviewUrl';
 
 export async function GET(
   request: NextRequest,
@@ -110,6 +111,13 @@ export async function POST(
     }
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
+    if (error instanceof GoogleReviewUrlError) {
+      console.error('[job billing] Google review config:', error.code, error.message);
+      return NextResponse.json(
+        { success: false, error: error.message, code: error.code },
+        { status: 400 }
+      );
+    }
     const message = error instanceof Error ? error.message : 'Billing action failed';
     console.error('[job billing]', message);
     return NextResponse.json({ success: false, error: message }, { status: 500 });
