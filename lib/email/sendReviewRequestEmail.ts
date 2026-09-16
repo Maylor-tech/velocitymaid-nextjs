@@ -1,5 +1,4 @@
 import { resend, getResendFromEmail } from "./resendClient";
-import { getGoogleReviewUrl } from "@/lib/reviews/googleReviewUrl";
 import { logIntegrationEvent } from "@/lib/google/integrationLog";
 
 export { DEFAULT_GOOGLE_REVIEW_URL } from "@/lib/reviews/googleReviewUrl";
@@ -7,8 +6,8 @@ export { DEFAULT_GOOGLE_REVIEW_URL } from "@/lib/reviews/googleReviewUrl";
 export interface SendReviewRequestEmailParams {
   toEmail: string;
   toName: string;
-  /** Google Business Profile review link. */
-  reviewUrl?: string;
+  /** Required: branch-resolved Google Business Profile review link. */
+  reviewUrl: string;
 }
 
 export interface SendReviewRequestEmailResult {
@@ -43,22 +42,28 @@ function escapeHtml(value: string): string {
 const LOGO_SVG = `<svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="${CYAN}" fill-rule="evenodd" d="M8,42 L50,10 L92,42 L92,92 L8,92 Z M39,64 L61,64 L61,92 L39,92 Z" /></svg>`;
 
 function buildHtml(params: SendReviewRequestEmailParams): string {
-  const safeName = escapeHtml(params.toName?.trim() || "there");
-  const reviewUrl = escapeHtml(params.reviewUrl || getGoogleReviewUrl());
+  const safeName = escapeHtml(
+    (params.toName?.trim() || "there").split(/\s+/)[0] || "there"
+  );
+  const reviewUrl = escapeHtml(params.reviewUrl || "");
+  if (!params.reviewUrl) {
+    throw new Error(
+      "sendReviewRequestEmail requires an explicit reviewUrl (branch-resolved Google review link)."
+    );
+  }
 
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>How did we do?</title>
+    <title>Thank you for choosing VelocityMaid</title>
   </head>
   <body style="margin:0;padding:0;background:${SURFACE};font-family:${FONT};">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SURFACE};padding:24px 0;">
       <tr>
         <td align="center">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;">
-            <!-- Top banner -->
             <tr>
               <td style="background:${NAVY};padding:28px 40px;text-align:center;">
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
@@ -70,26 +75,37 @@ function buildHtml(params: SendReviewRequestEmailParams): string {
               </td>
             </tr>
 
-            <!-- Message -->
             <tr>
-              <td style="padding:32px 40px 8px;text-align:center;">
-                <h1 style="margin:0;color:${NAVY};font-size:24px;font-family:${FONT};">How did we do?</h1>
+              <td style="padding:32px 40px 8px;">
+                <p style="margin:0;color:${NAVY};font-size:15px;font-family:${FONT};line-height:1.6;">
+                  Hi ${safeName},
+                </p>
                 <p style="margin:16px 0 0;color:${MUTED};font-size:15px;font-family:${FONT};line-height:1.6;">
-                  Hi ${safeName}, we hope your home is feeling fresh! If you were happy
-                  with your VelocityMaid clean, a quick Google review helps us enormously.
+                  Thank you for choosing VelocityMaid. We appreciate the opportunity to care for your property.
+                </p>
+                <p style="margin:16px 0 0;color:${MUTED};font-size:15px;font-family:${FONT};line-height:1.6;">
+                  If you have a moment, we&apos;d appreciate your feedback about your recent cleaning experience. You can leave us a Google review using the button below.
                 </p>
               </td>
             </tr>
 
-            <!-- CTA -->
             <tr>
-              <td style="padding:24px 40px 36px;text-align:center;">
+              <td style="padding:24px 40px 16px;text-align:center;">
                 <a href="${reviewUrl}" style="display:inline-block;background:${CYAN};color:${NAVY};font-weight:700;font-family:${FONT};font-size:16px;text-decoration:none;padding:14px 32px;border-radius:8px;">Leave a Google Review</a>
-                <p style="margin:16px 0 0;color:${MUTED};font-size:13px;font-family:${FONT};">It only takes a moment — thank you for supporting our small team.</p>
               </td>
             </tr>
 
-            <!-- Footer -->
+            <tr>
+              <td style="padding:8px 40px 32px;">
+                <p style="margin:0;color:${MUTED};font-size:15px;font-family:${FONT};line-height:1.6;">
+                  Thank you for trusting VelocityMaid.
+                </p>
+                <p style="margin:12px 0 0;color:${MUTED};font-size:14px;font-family:${FONT};line-height:1.6;">
+                  — The VelocityMaid Team
+                </p>
+              </td>
+            </tr>
+
             <tr>
               <td style="background:${NAVY};padding:24px 40px;text-align:center;">
                 <div style="color:#ffffff;font-size:15px;font-weight:600;font-family:${FONT};">Thank you for choosing VelocityMaid.</div>
@@ -121,7 +137,7 @@ export async function sendReviewRequestEmail(
     return { sent: false, skippedReason: "Missing recipient email" };
   }
 
-  const subject = "How did we do? — VelocityMaid";
+  const subject = "Thank you for choosing VelocityMaid";
   const html = buildHtml(params);
 
   try {

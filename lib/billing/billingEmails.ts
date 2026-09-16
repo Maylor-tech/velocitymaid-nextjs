@@ -3,7 +3,7 @@ import type { SerializedCompletionReport } from './serializeCompletionReport';
 import type { SerializedReceipt } from './serializeReceipt';
 import type { SerializedInvoice } from '@/lib/invoices/serializeInvoice';
 import { escapeHtml, brandHtmlBlock } from '@/lib/billing/emailBrand';
-import { getGoogleReviewUrl } from '@/lib/reviews/googleReviewUrl';
+import { requireGoogleReviewUrl } from '@/lib/reviews/googleReviewUrl';
 
 function appBaseUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || 'https://velocitymaid.com';
@@ -11,6 +11,12 @@ function appBaseUrl(): string {
 
 function brandHtml(title: string, body: string): string {
   return brandHtmlBlock(title, body);
+}
+
+function firstNameFrom(clientName: string): string {
+  const trimmed = clientName.trim();
+  if (!trimmed) return 'there';
+  return trimmed.split(/\s+/)[0] || 'there';
 }
 
 export async function sendCompletionReportEmail(
@@ -72,24 +78,34 @@ export async function sendReviewRequestAfterPayment(params: {
   clientName: string;
   propertyAddress: string;
   jobId: string;
-}): Promise<{ sent: boolean; skippedReason?: string }> {
+  branchSlug?: string | null;
+  serviceLocation?: string | null;
+}): Promise<{ sent: boolean; skippedReason?: string; reviewUrl?: string; market?: string }> {
   if (!resend) return { sent: false, skippedReason: 'RESEND_API_KEY not configured' };
 
-  const googleReviewUrl = getGoogleReviewUrl();
+  const { market, url: googleReviewUrl } = requireGoogleReviewUrl({
+    branchSlug: params.branchSlug,
+    serviceLocation: params.serviceLocation,
+    jobId: params.jobId,
+  });
+
+  const firstName = firstNameFrom(params.clientName);
 
   const html = brandHtml(
     'How did we do?',
-    `<h1 style="margin:0 0 12px;font-size:22px;color:#0F1C2E;">We'd love your feedback</h1>
-     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#0F1C2E;">Hi ${escapeHtml(params.clientName)},</p>
-     <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#0F1C2E;">Thank you for your payment for service at <strong>${escapeHtml(params.propertyAddress)}</strong>. If you have a moment, a Google review helps other families find trusted cleaning.</p>
-     <a href="${escapeHtml(googleReviewUrl)}" style="display:inline-block;background:#0F1C2E;color:#fff;text-decoration:none;padding:12px 22px;border-radius:6px;font-weight:600;font-size:14px;">Leave a Google Review</a>`
+    `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#0F1C2E;">Hi ${escapeHtml(firstName)},</p>
+     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#0F1C2E;">Thank you for choosing VelocityMaid. We appreciate the opportunity to care for your property.</p>
+     <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#0F1C2E;">If you have a moment, we&apos;d appreciate your feedback about your recent cleaning experience. You can leave us a Google review using the button below.</p>
+     <a href="${escapeHtml(googleReviewUrl)}" style="display:inline-block;background:#0F1C2E;color:#fff;text-decoration:none;padding:12px 22px;border-radius:6px;font-weight:600;font-size:14px;">Leave a Google Review</a>
+     <p style="margin:20px 0 0;font-size:15px;line-height:1.6;color:#0F1C2E;">Thank you for trusting VelocityMaid.</p>
+     <p style="margin:12px 0 0;font-size:14px;line-height:1.6;color:#6B7280;">— The VelocityMaid Team</p>`
   );
 
   await resend.emails.send({
     from: getResendFromEmail(),
     to: params.toEmail,
-    subject: 'How was your VelocityMaid service?',
+    subject: 'Thank you for choosing VelocityMaid',
     html,
   });
-  return { sent: true };
+  return { sent: true, reviewUrl: googleReviewUrl, market };
 }

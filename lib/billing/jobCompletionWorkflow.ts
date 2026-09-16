@@ -284,7 +284,17 @@ export async function onInvoicePaymentRecorded(params: {
 
   const invoice = await prisma.invoice.findUnique({
     where: { id: params.invoiceId },
-    include: { items: true, payments: true, Job: true },
+    include: {
+      items: true,
+      payments: true,
+      Job: {
+        select: {
+          id: true,
+          serviceLocation: true,
+          Branch: { select: { slug: true } },
+        },
+      },
+    },
   });
   if (!invoice) return null;
 
@@ -334,12 +344,21 @@ export async function onInvoicePaymentRecorded(params: {
     const balance = decimalToNumber(invoice.balanceDue);
     if (balance <= 0 && invoice.clientEmail && invoice.jobId) {
       await scheduleReviewRequestForJob(invoice.jobId, invoice.clientEmail);
-      await sendReviewRequestAfterPayment({
-        toEmail: invoice.clientEmail,
-        clientName: invoice.clientName,
-        propertyAddress: invoice.propertyAddress,
-        jobId: invoice.jobId,
-      });
+      try {
+        await sendReviewRequestAfterPayment({
+          toEmail: invoice.clientEmail,
+          clientName: invoice.clientName,
+          propertyAddress: invoice.propertyAddress,
+          jobId: invoice.jobId,
+          branchSlug: invoice.Job?.Branch?.slug ?? null,
+          serviceLocation: invoice.Job?.serviceLocation ?? null,
+        });
+      } catch (err) {
+        console.error(
+          '[onInvoicePaymentRecorded] Google review request skipped:',
+          err instanceof Error ? err.message : err
+        );
+      }
     }
   }
 

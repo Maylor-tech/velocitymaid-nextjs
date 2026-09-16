@@ -49,6 +49,7 @@ async function loadJobBillingContext(jobId: string) {
       },
       Invoice: { include: { items: true, payments: { include: { Receipt: true } } } },
       CompletionReport: true,
+      Branch: { select: { id: true, slug: true, name: true } },
     },
   });
   if (!job) throw new Error('Job not found');
@@ -510,6 +511,7 @@ export async function sendReviewRequestForJob(jobId: string) {
   if (!email) throw new Error('No client email on file');
 
   const clientName =
+    job.Customer?.firstName ||
     job.customerName ||
     [job.Customer?.firstName, job.Customer?.lastName].filter(Boolean).join(' ') ||
     'Client';
@@ -520,6 +522,8 @@ export async function sendReviewRequestForJob(jobId: string) {
     clientName,
     propertyAddress: job.address || 'your property',
     jobId,
+    branchSlug: job.Branch?.slug ?? null,
+    serviceLocation: job.serviceLocation,
   });
 
   const review = await prisma.reviewRequest.findFirst({

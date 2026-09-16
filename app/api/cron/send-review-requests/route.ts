@@ -11,12 +11,18 @@ export const runtime = "nodejs";
  *
  * Auth: Bearer CRON_SECRET (enforced only when CRON_SECRET is set).
  * Manual test: GET with Authorization: Bearer <CRON_SECRET>.
+ *
+ * Google review URL is resolved per job branch (Vermont vs New Jersey).
+ * Unresolved branch or missing env fails that row safely — never guesses market.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendReviewRequestEmail } from "@/lib/email/sendReviewRequestEmail";
-import { getGoogleReviewUrl } from "@/lib/reviews/googleReviewUrl";
+import {
+  GoogleReviewUrlError,
+  requireGoogleReviewUrl,
+} from "@/lib/reviews/googleReviewUrl";
 
 const MAX_PER_RUN = 200;
 
@@ -39,40 +45,70 @@ export async function GET(request: NextRequest) {
     });
 
     if (due.length === 0) {
-      return NextResponse.json({ success: true, processed: 0, sent: 0, failed: 0 });
+      return NextResponse.json({
+        success: true,
+        processed: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+      });
     }
 
-    // Resolve client names from the linked jobs in one query.
     const jobIds = Array.from(new Set(due.map((r) => r.jobId)));
     const jobs = await prisma.job.findMany({
       where: { id: { in: jobIds } },
       select: {
         id: true,
         customerName: true,
+        serviceLocation: true,
         Customer: { select: { firstName: true, lastName: true } },
+        Branch: { select: { slug: true } },
       },
     });
-    const nameByJobId = new Map<string, string>();
-    for (const job of jobs) {
-      const name =
-        job.customerName ||
-        [job.Customer?.firstName, job.Customer?.lastName]
+    const jobById = new Map(jobs.map((j) => [j.id, j]));
+
+    let sent = 0;
+    let failed = 0;
+    let skipped = 0;
+    const errors: Array<{ jobId: string; email: string; reason: string }> = [];
+
+    for (const req of due) {
+      const job = jobById.get(req.jobId);
+      const toName =
+        job?.Customer?.firstName ||
+        job?.customerName ||
+        [job?.Customer?.firstName, job?.Customer?.lastName]
           .filter(Boolean)
           .join(" ")
           .trim() ||
         "there";
-      nameByJobId.set(job.id, name);
-    }
 
-    const reviewUrl = getGoogleReviewUrl();
+      let reviewUrl: string;
+      try {
+        ({ url: reviewUrl } = requireGoogleReviewUrl({
+          branchSlug: job?.Branch?.slug ?? null,
+          serviceLocation: job?.serviceLocation ?? null,
+          jobId: req.jobId,
+        }));
+      } catch (err) {
+        const reason =
+          err instanceof GoogleReviewUrlError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "Google review URL resolution failed";
+        console.error(
+          `[send-review-requests] Skipping Google review for ${req.clientEmail}:`,
+          reason
+        );
+        errors.push({ jobId: req.jobId, email: req.clientEmail, reason });
+        skipped++;
+        continue;
+      }
 
-    let sent = 0;
-    let failed = 0;
-
-    for (const req of due) {
       const result = await sendReviewRequestEmail({
         toEmail: req.clientEmail,
-        toName: nameByJobId.get(req.jobId) || "there",
+        toName,
         reviewUrl,
       });
 
@@ -96,6 +132,8 @@ export async function GET(request: NextRequest) {
       processed: due.length,
       sent,
       failed,
+      skipped,
+      errors: errors.length ? errors : undefined,
     });
   } catch (error: unknown) {
     const message =
