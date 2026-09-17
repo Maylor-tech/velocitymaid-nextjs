@@ -2,17 +2,16 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getStripe } from '@/lib/stripe';
-import { prisma } from '@/lib/prisma';
 import {
   createTipIntent,
   parseTipAmountToCents,
   TipBeneficiaryError,
 } from '@/lib/tips/createTipIntent';
+import { getVelocityMaidZelleDestination } from '@/lib/tips/zelleDestination';
 
 /**
- * POST /api/tip/create-payment-intent
- * Job-bound Stripe tip intent. Freezes beneficiary. Persists guest fields.
+ * POST /api/tip/create-zelle-intent
+ * Job-bound Zelle tip intent (manual reconciliation). No network transfer.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -22,10 +21,7 @@ export async function POST(request: NextRequest) {
       guestName?: string;
       guestMessage?: string;
       market?: string;
-      /** Rejected — beneficiary is server-derived only */
       cleanerId?: unknown;
-      cleanerName?: unknown;
-      propertyAddress?: unknown;
     };
 
     if (!body.jobId || typeof body.jobId !== 'string') {
@@ -34,9 +30,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Reject client-supplied cleaner / address tampering
-    if (body.cleanerId != null || body.cleanerName != null) {
+    if (body.cleanerId != null) {
       return NextResponse.json(
         { error: 'Cleaner cannot be supplied by the client.', code: 'FORBIDDEN_FIELD' },
         { status: 400 }
@@ -61,7 +55,7 @@ export async function POST(request: NextRequest) {
       intent = await createTipIntent({
         jobId: body.jobId,
         amountCents,
-        paymentMethod: 'STRIPE',
+        paymentMethod: 'ZELLE',
         guestName: body.guestName,
         guestMessage: body.guestMessage,
         market: body.market,
@@ -84,42 +78,27 @@ export async function POST(request: NextRequest) {
       throw e;
     }
 
-    const stripe = getStripe();
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: intent.amountCents,
-      currency: intent.currency,
-      automatic_payment_methods: { enabled: true },
-      metadata: {
-        type: 'cleaner_tip',
-        tipId: intent.tipId,
-        jobId: intent.jobId,
-        beneficiaryCleanerId: intent.beneficiaryCleanerId,
-      },
-      description: `VelocityMaid tip ${intent.internalReference}`,
-    });
-
-    await prisma.tip.update({
-      where: { id: intent.tipId },
-      data: { stripePaymentIntentId: paymentIntent.id },
-    });
-
-    if (!paymentIntent.client_secret) {
-      return NextResponse.json(
-        { error: 'Failed to initialize payment.' },
-        { status: 500 }
-      );
-    }
+    const zelle = getVelocityMaidZelleDestination();
 
     return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
       tipId: intent.tipId,
-      internalReference: intent.internalReference,
+      status: intent.status,
       amountCents: intent.amountCents,
+      currency: intent.currency,
+      internalReference: intent.internalReference,
+      paymentMethod: 'ZELLE',
+      zelle: {
+        label: zelle.label,
+        handle: zelle.handle,
+        instructions: zelle.instructions,
+      },
+      // Explicit: guest cannot self-confirm
+      guestCanConfirm: false,
     });
   } catch (error) {
-    console.error('[tip/create-payment-intent]', error);
+    console.error('[tip/create-zelle-intent]', error);
     const message =
-      error instanceof Error ? error.message : 'Failed to create payment intent';
+      error instanceof Error ? error.message : 'Failed to create Zelle tip intent';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
