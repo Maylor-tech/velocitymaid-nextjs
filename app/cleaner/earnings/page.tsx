@@ -30,12 +30,31 @@ interface Job {
   payoutPaidAt?: string | null;
 }
 
+interface TipItem {
+  id: string;
+  jobId: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  receivedAt: string | null;
+  paidOutAt: string | null;
+  createdAt: string;
+}
+
 interface EarningsData {
   jobs: Job[];
   totals: {
     lifetimeTotal: number;
     monthTotal: number;
     weekTotal: number;
+    serviceEarnings?: number;
+    tips?: number;
+    total?: number;
+  };
+  tips?: {
+    receivedTotal: number;
+    paidOutTotal: number;
+    items: TipItem[];
   };
   payouts?: {
     readyTotal: number;
@@ -73,9 +92,9 @@ export default function CleanerEarningsPage() {
       } else {
         throw new Error(result.error || 'Failed to load earnings');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching earnings:', err);
-      setError(err.message || 'Failed to load earnings');
+      setError(err instanceof Error ? err.message : 'Failed to load earnings');
     } finally {
       setLoading(false);
     }
@@ -206,22 +225,53 @@ export default function CleanerEarningsPage() {
           <PayoutStatusCard />
         </div>
 
-        {/* Totals */}
+        {/* Service | Tips | Total */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-2">
               <DollarSign className="w-6 h-6 text-blue-600" />
-              <h3 className="text-sm font-medium text-vm-muted">Lifetime Total</h3>
+              <h3 className="text-sm font-medium text-vm-muted">Service earnings</h3>
             </div>
             <p className="text-2xl font-bold text-vm-text">
-              {formatCurrency(data.totals.lifetimeTotal)}
+              {formatCurrency(
+                data.totals.serviceEarnings ?? data.totals.lifetimeTotal
+              )}
             </p>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-2">
+              <DollarSign className="w-6 h-6 text-vm-success" />
+              <h3 className="text-sm font-medium text-vm-muted">Tips</h3>
+            </div>
+            <p className="text-2xl font-bold text-vm-text">
+              {formatCurrency(data.totals.tips ?? data.tips?.receivedTotal ?? 0)}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <CheckCircle className="w-6 h-6 text-vm-text" />
+              <h3 className="text-sm font-medium text-vm-muted">Total</h3>
+            </div>
+            <p className="text-2xl font-bold text-vm-text">
+              {formatCurrency(
+                data.totals.total ??
+                  (data.totals.serviceEarnings ?? data.totals.lifetimeTotal) +
+                    (data.totals.tips ?? data.tips?.receivedTotal ?? 0)
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Period snapshots (service payouts only) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-2">
               <Calendar className="w-6 h-6 text-vm-success" />
-              <h3 className="text-sm font-medium text-vm-muted">This Month</h3>
+              <h3 className="text-sm font-medium text-vm-muted">
+                Service — this month
+              </h3>
             </div>
             <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.totals.monthTotal)}
@@ -230,14 +280,60 @@ export default function CleanerEarningsPage() {
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-2">
-              <Clock className="w-6 h-6 text-purple-600" />
-              <h3 className="text-sm font-medium text-vm-muted">Last 7 Days</h3>
+              <Clock className="w-6 h-6 text-vm-muted" />
+              <h3 className="text-sm font-medium text-vm-muted">
+                Service — last 7 days
+              </h3>
             </div>
             <p className="text-2xl font-bold text-vm-text">
               {formatCurrency(data.totals.weekTotal)}
             </p>
           </div>
         </div>
+
+        {/* Tips list */}
+        {data.tips && data.tips.items.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-vm-text">Tips</h2>
+              <p className="text-sm text-vm-muted mt-1">
+                Guest tips owed to you (RECEIVED / PAID_OUT only)
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {data.tips.items.map((tip) => (
+                    <tr key={tip.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-text">
+                        {formatDate(tip.receivedAt || tip.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-vm-text">
+                        {formatCurrency(tip.amount, tip.currency)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-text">
+                        {tip.status === 'PAID_OUT' ? 'PAID_OUT' : 'RECEIVED'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Jobs Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -268,10 +364,7 @@ export default function CleanerEarningsPage() {
                       Service Type
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
-                      Payout
+                      Service payout
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
                       Payment Status
@@ -287,16 +380,15 @@ export default function CleanerEarningsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-text">
                         {job.serviceType || 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-vm-text">
-                        {formatCurrency(job.totalPrice, job.currency)}
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-vm-text">
-                        {job.payoutStatus ? (
+                        {job.payoutAmount != null ? (
                           <span className="inline-flex flex-col gap-0.5">
-                            <span>{job.payoutStatus}</span>
-                            {job.payoutAmount != null && (
+                            <span className="font-medium">
+                              {formatCurrency(job.payoutAmount, job.currency)}
+                            </span>
+                            {job.payoutStatus && (
                               <span className="text-xs text-vm-muted">
-                                {formatCurrency(job.payoutAmount, job.currency)}
+                                {job.payoutStatus}
                               </span>
                             )}
                           </span>

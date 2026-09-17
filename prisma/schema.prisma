@@ -352,6 +352,7 @@ model Property {
   updatedAt              DateTime @updatedAt
   Customer               Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   Job                    Job[]
+  Tip                    Tip[]
 
   @@index([customerId])
   @@index([customerId, address])
@@ -507,6 +508,7 @@ model Job {
   Property                 Property?                  @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   JobPayout                JobPayout?
   JobOffer                 JobOffer[]
+  Tip                      Tip[]
 
   @@index([appliedReferralCode])
   @@index([assignedCleanerId])
@@ -1073,6 +1075,9 @@ model User {
   CleanerProfile                      CleanerProfile?
   JobTeamMember                       JobTeamMember[]
   TransactionLedger                   TransactionLedger[]
+  TipsAsBeneficiary                   Tip[]                  @relation("TipBeneficiary")
+  TipsConfirmed                       Tip[]                  @relation("TipConfirmedBy")
+  TipsPaidOut                         Tip[]                  @relation("TipPaidOutBy")
   Branch_User_primaryBranchIdToBranch Branch?                @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
   UserBranch                          UserBranch[]
 
@@ -1631,19 +1636,49 @@ enum CleanPhotoCategory {
 }
 
 model Tip {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   amount                Int
-  currency              String   @default("usd")
+  currency              String    @default("usd")
   guestName             String?
   guestMessage          String?
+  /// Legacy free-text display only. Never used for beneficiary resolution.
   cleanerName           String?
+  /// Legacy free-text. Never exposed on public tip surfaces for new flows.
   propertyAddress       String?
-  stripePaymentIntentId String?  @unique
-  status                String   @default("pending")
+  stripePaymentIntentId String?   @unique
+  /// Canonical: PENDING | RECEIVED | RECEIVED_UNATTRIBUTED | PAID_OUT | CANCELLED | FAILED | REFUNDED
+  /// Legacy rows may still use pending | succeeded | failed.
+  status                String    @default("PENDING")
   market                String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  jobId                 String?
+  propertyId            String?
+  /// Frozen at tip-intent creation. Immutable after create.
+  beneficiaryCleanerId  String?
+  /// STRIPE | ZELLE | MANUAL
+  paymentMethod         String?
+  internalReference     String?   @unique
+  providerReference     String?
+  stripeEventId         String?   @unique
+  receivedAt            DateTime?
+  confirmedByAdminId    String?
+  confirmedAt           DateTime?
+  paidOutAt             DateTime?
+  payoutReference       String?
+  paidOutByAdminId      String?
+  paidOutMethod         String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  Job                   Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  Property              Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  Beneficiary           User?     @relation("TipBeneficiary", fields: [beneficiaryCleanerId], references: [id], onDelete: SetNull)
+  ConfirmedByAdmin      User?     @relation("TipConfirmedBy", fields: [confirmedByAdminId], references: [id], onDelete: SetNull)
+  PaidOutByAdmin        User?     @relation("TipPaidOutBy", fields: [paidOutByAdminId], references: [id], onDelete: SetNull)
 
+  @@index([jobId])
+  @@index([propertyId])
+  @@index([beneficiaryCleanerId])
+  @@index([status])
+  @@index([paymentMethod])
   @@map("tips")
 }
 

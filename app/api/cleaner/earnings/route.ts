@@ -18,9 +18,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
-import { PHASE_LOCK } from '@/lib/phaseLock';
 
-// 🔒 Phase 2C locked — read-only earnings
+// Read-only earnings (+ tips for authenticated cleaner only)
 
 export async function GET(request: NextRequest) {
   try {
@@ -72,12 +71,46 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
+    const tips = await prisma.tip.findMany({
+      where: {
+        beneficiaryCleanerId: cleanerId,
+        status: { in: ['RECEIVED', 'PAID_OUT', 'succeeded'] },
+      },
+      select: {
+        id: true,
+        jobId: true,
+        amount: true,
+        currency: true,
+        status: true,
+        receivedAt: true,
+        paidOutAt: true,
+        createdAt: true,
+        internalReference: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
     let readyPayoutTotal = 0;
     let paidPayoutTotal = 0;
+    let serviceEarningsTotal = 0;
     for (const payout of jobPayouts) {
       const amount = Number(payout.cleanerAmount);
+      serviceEarningsTotal += amount;
       if (payout.status === 'READY') readyPayoutTotal += amount;
       if (payout.status === 'PAID') paidPayoutTotal += amount;
+    }
+
+    let tipsReceivedTotal = 0;
+    let tipsPaidOutTotal = 0;
+    for (const tip of tips) {
+      const dollars = tip.amount / 100;
+      const upper = tip.status.toUpperCase();
+      const st = upper === 'SUCCEEDED' ? 'RECEIVED' : upper;
+      if (st === 'RECEIVED') tipsReceivedTotal += dollars;
+      if (st === 'PAID_OUT') {
+        tipsPaidOutTotal += dollars;
+        tipsReceivedTotal += dollars;
+      }
     }
 
     // Phase 2C: Calculate totals
@@ -90,29 +123,33 @@ export async function GET(request: NextRequest) {
     monthStart.setMonth(now.getMonth() - 1);
     monthStart.setHours(0, 0, 0, 0);
 
+    // Service earnings from JobPayout only — never customer totalPrice.
     let lifetimeTotal = 0;
     let monthTotal = 0;
     let weekTotal = 0;
 
     const jobs = completedJobs.map((job) => {
-      const price = job.totalPrice ? Number(job.totalPrice) : 0;
+      const payoutAmount = job.JobPayout
+        ? Number(job.JobPayout.cleanerAmount)
+        : 0;
       const jobDate = new Date(job.createdAt);
 
-      lifetimeTotal += price;
+      lifetimeTotal += payoutAmount;
 
       if (jobDate >= monthStart) {
-        monthTotal += price;
+        monthTotal += payoutAmount;
       }
 
       if (jobDate >= weekStart) {
-        weekTotal += price;
+        weekTotal += payoutAmount;
       }
 
       return {
         id: job.id,
         createdAt: job.createdAt.toISOString(),
         serviceType: job.serviceType,
-        totalPrice: price,
+        /** @deprecated customer invoice — do not treat as cleaner pay */
+        totalPrice: job.totalPrice ? Number(job.totalPrice) : 0,
         paymentStatus: job.paymentStatus,
         currency: job.currency || 'USD',
         payoutStatus: job.JobPayout?.status ?? null,
@@ -128,6 +165,26 @@ export async function GET(request: NextRequest) {
         lifetimeTotal,
         monthTotal,
         weekTotal,
+        serviceEarnings: serviceEarningsTotal,
+        tips: tipsReceivedTotal,
+        total: serviceEarningsTotal + tipsReceivedTotal,
+      },
+      tips: {
+        receivedTotal: tipsReceivedTotal,
+        paidOutTotal: tipsPaidOutTotal,
+        items: tips.map((t) => ({
+          id: t.id,
+          jobId: t.jobId,
+          amount: t.amount / 100,
+          amountCents: t.amount,
+          currency: t.currency,
+          status:
+            t.status.toUpperCase() === 'SUCCEEDED' ? 'RECEIVED' : t.status,
+          receivedAt: t.receivedAt?.toISOString() ?? null,
+          paidOutAt: t.paidOutAt?.toISOString() ?? null,
+          createdAt: t.createdAt.toISOString(),
+          internalReference: t.internalReference,
+        })),
       },
       payouts: {
         readyTotal: readyPayoutTotal,
@@ -143,15 +200,17 @@ export async function GET(request: NextRequest) {
         })),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     console.error('[CLEANER_EARNINGS] Error:', error);
+    const message =
+      error instanceof Error ? error.message : 'Failed to fetch earnings';
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch earnings',
+        error: message,
       },
-      { status: error.status || 500 }
+      { status: 500 }
     );
   }
 }
