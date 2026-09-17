@@ -16,7 +16,8 @@ import { isDepositBookingMode } from '@/lib/booking/paymentConfig';
 import { computeJobPaymentFromSession } from '@/lib/booking/jobPayment';
 import { upsertJobFromCheckoutSession } from '@/lib/booking/upsertJobFromCheckoutSession';
 import { PaymentStatus } from '@prisma/client';
-import { createPayoutIfEligible } from '@/src/server/payout/createPayoutIfEligible';
+import { maybeCreatePayoutAfterTransition } from '@/lib/booking/maybeCreatePayoutAfterTransition';
+import { verifyStripeWebhookEvent } from '@/lib/stripe/verifyWebhookEvent';
 
 /**
  * Stripe Webhook Handler
@@ -26,36 +27,10 @@ import { createPayoutIfEligible } from '@/src/server/payout/createPayoutIfEligib
  * - invoice.payment_succeeded (subscription renewals)
  * - refund.created / charge.refunded (refund confirmation WhatsApp)
  * - account.updated (Stripe Connect)
+ *
+ * Trust boundary: only the Stripe.Event returned by constructEvent is processed
+ * (or documented unsigned parse in non-production when secret is unset).
  */
-
-/**
- * Verify Stripe webhook signature
- */
-async function verifyWebhookSignature(
-  request: NextRequest,
-  body: string
-): Promise<boolean> {
-  const stripe = getStripe();
-  const signature = request.headers.get('stripe-signature');
-
-  if (!signature) {
-    return false;
-  }
-
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!webhookSecret) {
-    console.warn('STRIPE_WEBHOOK_SECRET not set - skipping signature verification');
-    return true; // Allow in development if secret not set
-  }
-
-  try {
-    stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    return true;
-  } catch (error: any) {
-    console.error('Webhook signature verification failed:', error.message);
-    return false;
-  }
-}
 
 /**
  * Handle checkout.session.completed event
@@ -115,7 +90,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       },
     });
 
-    const payoutResult = await createPayoutIfEligible(metadata.jobId);
+    const payoutResult = await maybeCreatePayoutAfterTransition(metadata.jobId);
     console.log(
       `Balance payment recorded for job ${metadata.jobId}; payout:`,
       payoutResult
@@ -203,8 +178,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         },
       });
       console.log(`Confirmation sent successfully for session ${session.id}`);
-    } catch (error: any) {
-      console.error(`Error updating Stripe metadata for session ${session.id}:`, error.message);
+    } catch (error: unknown) {
+      console.error(`Error updating Stripe metadata for session ${session.id}:`, (error instanceof Error ? error.message : String(error)));
       // Don't fail the webhook if metadata update fails
     }
   }
@@ -267,8 +242,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           }
 
           customerId = customer.id;
-        } catch (customerError: any) {
-          console.error(`Error creating/finding customer for session ${session.id} (non-fatal):`, customerError.message);
+        } catch (customerError: unknown) {
+          console.error(
+            `Error creating/finding customer for session ${session.id} (non-fatal):`,
+            customerError instanceof Error ? customerError.message : String(customerError)
+          );
           // Continue without customerId - job can still be created
         }
       }
@@ -291,13 +269,19 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           const assignmentResult = await autoAssignCleaner(job.id);
           console.log('Auto-assignment result:', assignmentResult);
         } catch (assignError: unknown) {
-          const msg = assignError instanceof Error ? assignError.message : String(assignError);
+          const msg =
+            assignError instanceof Error
+              ? assignError.message
+              : String(assignError);
           console.error('Auto-assignment error (non-fatal):', msg);
         }
       }
     }
-  } catch (jobError: any) {
-    console.error(`Error creating/finding job for session ${session.id} (non-fatal):`, jobError.message || jobError);
+  } catch (jobError: unknown) {
+    console.error(
+      `Error creating/finding job for session ${session.id} (non-fatal):`,
+      jobError instanceof Error ? jobError.message : String(jobError)
+    );
     // Don't fail the webhook if job creation fails
   }
 
@@ -351,9 +335,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     } else {
       console.warn('WhatsApp credentials not configured - skipping admin notification');
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Log error but don't block the webhook
-    console.error(`Error in admin notification process for session ${session.id}:`, error.message);
+    console.error(`Error in admin notification process for session ${session.id}:`, (error instanceof Error ? error.message : String(error)));
   }
 
   // Send invoice receipt once per payment (audit guard prevents duplicates)
@@ -370,8 +354,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       customerPhone: metadata.phone || null,
     });
     if (sent) console.log(`Invoice receipt sent for session ${session.id}`);
-  } catch (err: any) {
-    console.error(`Error sending invoice receipt for session ${session.id}:`, err?.message);
+  } catch (err: unknown) {
+    console.error(
+      `Error sending invoice receipt for session ${session.id}:`,
+      err instanceof Error ? err.message : String(err)
+    );
   }
 
   return result;
@@ -429,11 +416,11 @@ async function handleAccountUpdated(account: Stripe.Account) {
       cleanerId: cleaner.id,
       status,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[ACCOUNT_UPDATED] Error:', error);
     return {
       success: false,
-      error: error.message || 'Failed to update account status',
+      error: (error instanceof Error ? error.message : String(error)) || 'Failed to update account status',
     };
   }
 }
@@ -451,19 +438,39 @@ export async function POST(request: NextRequest) {
     
     log.push(`[${new Date().toISOString()}] Stripe webhook received`);
 
-    // Verify webhook signature
-    const isValid = await verifyWebhookSignature(request, body);
-    if (!isValid) {
-      log.push('ERROR: Invalid webhook signature');
+    const stripe = getStripe();
+    const verified = verifyStripeWebhookEvent({
+      body,
+      signature: request.headers.get('stripe-signature'),
+      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+      constructEvent: (payload, header, secret) =>
+        stripe.webhooks.constructEvent(payload, header, secret),
+    });
+
+    if (verified.ok) {
+      if (verified.mode === 'dev_unsigned') {
+        console.warn(
+          '[stripe webhook] STRIPE_WEBHOOK_SECRET unset — accepting unsigned event (non-production only)'
+        );
+        log.push('WARN: unsigned event accepted (dev_unsigned)');
+      }
+    } else {
+      const failure = verified as Extract<
+        ReturnType<typeof verifyStripeWebhookEvent>,
+        { ok: false }
+      >;
+      log.push(`ERROR: ${failure.error}`);
+      if (failure.status === 500) {
+        console.error('[stripe webhook]', failure.error);
+      }
       return NextResponse.json(
-        { error: 'Invalid signature', log },
-        { status: 401 }
+        { error: failure.error, log },
+        { status: failure.status }
       );
     }
 
-    // Parse webhook event
-    const stripe = getStripe();
-    const event = JSON.parse(body) as Stripe.Event;
+    // Only the verified (or explicitly documented dev_unsigned) event object is trusted
+    const event = verified.event;
 
     log.push(`Event type: ${event.type}`);
     log.push(`Event ID: ${event.id}`);
@@ -489,8 +496,10 @@ export async function POST(request: NextRequest) {
           if (!tenantId) {
             log.push(`WARNING: No tenantId in session metadata`);
           } else {
-            // Update subscription record
-            await prisma.subscription.update({
+            // Update subscription record (SaaS model; cast avoids legacy prisma typing gap)
+            await (prisma as unknown as {
+              subscription: { update: (args: unknown) => Promise<unknown> };
+            }).subscription.update({
               where: {
                 stripeCustomerId: subscription.customer as string,
               },
@@ -498,15 +507,16 @@ export async function POST(request: NextRequest) {
                 stripeSubscriptionId: subscription.id,
                 stripePriceId: subscription.items.data[0]?.price.id || null,
                 stripeCurrentPeriodEnd: new Date(
-                  subscription.current_period_end * 1000
+                  (subscription as unknown as { current_period_end: number })
+                    .current_period_end * 1000
                 ),
               },
             });
 
             log.push(`SUCCESS: Subscription updated for tenant ${tenantId}`);
           }
-        } catch (error: any) {
-          log.push(`ERROR: Failed to update subscription: ${error.message}`);
+        } catch (error: unknown) {
+          log.push(`ERROR: Failed to update subscription: ${(error instanceof Error ? error.message : String(error))}`);
           console.error('Subscription update error:', error);
         }
 
@@ -524,11 +534,22 @@ export async function POST(request: NextRequest) {
       // Only process if payment is successful
       if (session.payment_status === 'paid') {
         const result = await handleCheckoutCompleted(session);
-        
-        if (result.success) {
-          log.push(`SUCCESS: WhatsApp confirmation sent${result.messageId ? ` (Message ID: ${result.messageId})` : ''}`);
+        const checkoutResult = result as {
+          success: boolean;
+          messageId?: string;
+          error?: string;
+        };
+
+        if (checkoutResult.success) {
+          log.push(
+            `SUCCESS: WhatsApp confirmation sent${
+              checkoutResult.messageId
+                ? ` (Message ID: ${checkoutResult.messageId})`
+                : ''
+            }`
+          );
         } else {
-          log.push(`FAILED: ${result.error || 'Unknown error'}`);
+          log.push(`FAILED: ${checkoutResult.error || 'Unknown error'}`);
         }
 
         const duration = Date.now() - startTime;
@@ -537,8 +558,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           received: true,
           eventType: event.type,
-          success: result.success,
-          messageId: result.messageId,
+          success: checkoutResult.success,
+          messageId: checkoutResult.messageId,
           log,
           duration: `${duration}ms`,
         });
@@ -573,22 +594,25 @@ export async function POST(request: NextRequest) {
         try {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
-          // Update subscription record
-          await prisma.subscription.update({
+          // Update subscription record (SaaS model; cast avoids legacy prisma typing gap)
+          await (prisma as unknown as {
+            subscription: { update: (args: unknown) => Promise<unknown> };
+          }).subscription.update({
             where: {
               stripeSubscriptionId: subscription.id,
             },
             data: {
               stripePriceId: subscription.items.data[0]?.price.id || null,
               stripeCurrentPeriodEnd: new Date(
-                subscription.current_period_end * 1000
+                (subscription as unknown as { current_period_end: number })
+                  .current_period_end * 1000
               ),
             },
           });
 
           log.push(`SUCCESS: Subscription updated for ${subscription.id}`);
-        } catch (error: any) {
-          log.push(`ERROR: Failed to update subscription: ${error.message}`);
+        } catch (error: unknown) {
+          log.push(`ERROR: Failed to update subscription: ${(error instanceof Error ? error.message : String(error))}`);
           console.error('Subscription update error:', error);
         }
       }
@@ -615,8 +639,12 @@ export async function POST(request: NextRequest) {
           customerPhone,
         });
         if (sent) log.push('SUCCESS: Invoice receipt WhatsApp sent');
-      } catch (receiptErr: any) {
-        log.push(`Invoice receipt skip/error: ${receiptErr?.message || receiptErr}`);
+      } catch (receiptErr: unknown) {
+        log.push(
+          `Invoice receipt skip/error: ${
+            receiptErr instanceof Error ? receiptErr.message : String(receiptErr)
+          }`
+        );
       }
 
       const duration = Date.now() - startTime;
@@ -671,8 +699,12 @@ export async function POST(request: NextRequest) {
         });
         if (sent) log.push('SUCCESS: Refund confirmation WhatsApp sent');
         else log.push('SKIP: Refund notice not sent (no phone or already sent)');
-      } catch (refundErr: any) {
-        log.push(`Refund confirmation error: ${refundErr?.message || refundErr}`);
+      } catch (refundErr: unknown) {
+        log.push(
+          `Refund confirmation error: ${
+            refundErr instanceof Error ? refundErr.message : String(refundErr)
+          }`
+        );
       }
 
       const duration = Date.now() - startTime;
@@ -727,8 +759,12 @@ export async function POST(request: NextRequest) {
           if (sent) log.push('SUCCESS: Refund confirmation WhatsApp sent');
           else log.push('SKIP: Refund notice not sent (no phone or already sent)');
         }
-      } catch (refundErr: any) {
-        log.push(`Refund confirmation error: ${refundErr?.message || refundErr}`);
+      } catch (refundErr: unknown) {
+        log.push(
+          `Refund confirmation error: ${
+            refundErr instanceof Error ? refundErr.message : String(refundErr)
+          }`
+        );
       }
 
       const duration = Date.now() - startTime;
@@ -777,16 +813,16 @@ export async function POST(request: NextRequest) {
       log,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
-    log.push(`ERROR: ${error.message}`);
+    log.push(`ERROR: ${(error instanceof Error ? error.message : String(error))}`);
     log.push(`Failed after ${duration}ms`);
 
     console.error('Stripe webhook error:', error);
 
     return NextResponse.json(
       {
-        error: error.message,
+        error: (error instanceof Error ? error.message : String(error)),
         log,
         duration: `${duration}ms`,
       },
@@ -796,7 +832,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Support GET for webhook verification (Stripe may use this)
-export async function GET(request: NextRequest) {
+export async function GET() {
   return NextResponse.json({
     message: 'Stripe webhook endpoint is active',
     timestamp: new Date().toISOString(),

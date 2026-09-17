@@ -16,6 +16,8 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
 import { sendCleanCompleteEmail } from "@/lib/email/sendCleanCompleteEmail";
 import { runJobCompletionBillingWorkflow } from "@/lib/billing/jobCompletionWorkflow";
+import { resolveCompletionPaymentUpdate } from "@/lib/booking/jobPayment";
+import { maybeCreatePayoutAfterTransition } from "@/lib/booking/maybeCreatePayoutAfterTransition";
 
 interface CompleteBody {
   completedBy?: string;
@@ -84,10 +86,15 @@ export async function POST(
         customerName: true,
         balanceDue: true,
         marketLabel: true,
+        paymentStatus: true,
+        quotedTotal: true,
+        totalPrice: true,
+        amountPaid: true,
         Customer: {
           select: { firstName: true, lastName: true, email: true },
         },
         Branch: { select: { state: true } },
+        JobPayout: { select: { status: true } },
         photos: {
           select: { url: true, caption: true },
           orderBy: { uploadedAt: "asc" },
@@ -107,7 +114,17 @@ export async function POST(
 
     const completedAt = new Date();
 
-    await prisma.job.update({
+    const paymentUpdate = resolveCompletionPaymentUpdate(
+      job.paymentStatus,
+      {
+        quotedTotal: job.quotedTotal != null ? Number(job.quotedTotal) : null,
+        totalPrice: job.totalPrice != null ? Number(job.totalPrice) : null,
+        amountPaid: job.amountPaid != null ? Number(job.amountPaid) : null,
+      },
+      { payoutStatus: job.JobPayout?.status ?? null }
+    );
+
+    const updatedJob = await prisma.job.update({
       where: { id: jobId },
       data: {
         completedAt,
@@ -115,8 +132,23 @@ export async function POST(
         cleanDurationMins,
         internalNotes: body.internalNotes?.trim() || null,
         status: JobStatus.COMPLETED,
+        ...(paymentUpdate ?? {}),
+      },
+      select: {
+        id: true,
+        paymentStatus: true,
+        balanceDue: true,
       },
     });
+
+    // COMPLETED + PAID (e.g. full prepay) → evaluate ledger create. Idempotent.
+    // Deposit → BALANCE_DUE skips until fully paid.
+    const payoutResult = await maybeCreatePayoutAfterTransition(jobId);
+    if (!payoutResult.ok && payoutResult.reason !== "NOT_FULLY_PAID") {
+      console.log(
+        `[job complete] payout evaluate job=${jobId} reason=${payoutResult.reason}`
+      );
+    }
 
     let billingWorkflow: Awaited<ReturnType<typeof runJobCompletionBillingWorkflow>> | null =
       null;
@@ -151,7 +183,7 @@ export async function POST(
         "there";
       const propertyAddress = job.address || "your property";
       const balanceDue =
-        job.balanceDue != null ? Number(job.balanceDue) : null;
+        updatedJob.balanceDue != null ? Number(updatedJob.balanceDue) : null;
       const invoiceAmount =
         balanceDue != null && balanceDue > 0 ? balanceDue : undefined;
       const market = resolveMarket(job.marketLabel, job.Branch?.state ?? null);
@@ -194,6 +226,10 @@ export async function POST(
       success: true,
       notifiedAt: notifiedAt ? notifiedAt.toISOString() : null,
       email: emailResult,
+      paymentStatus: updatedJob.paymentStatus,
+      balanceDue:
+        updatedJob.balanceDue != null ? Number(updatedJob.balanceDue) : null,
+      payout: payoutResult,
       billing: billingWorkflow
         ? {
             reportNumber: billingWorkflow.report.reportNumber,
