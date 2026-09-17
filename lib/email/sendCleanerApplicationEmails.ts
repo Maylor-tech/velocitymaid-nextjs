@@ -179,7 +179,7 @@ export async function sendCleanerApprovalEmail(params: {
      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:${NAVY};"><strong>Your next steps:</strong></p>
      <ol style="margin:0 0 20px;padding-left:20px;font-size:15px;line-height:1.7;color:${NAVY};">
        <li>Review the handbook</li>
-       <li>Complete your W-9 and direct deposit form (Brian will send these separately)</li>
+       <li>Complete any tax or payment forms Brian sends separately</li>
        <li>Log in to your cleaner portal: <a href="${loginUrl}" style="color:${CYAN};">${loginUrl}</a></li>
      </ol>
      <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:${NAVY};">Welcome to the team.</p>
@@ -203,7 +203,7 @@ ${getCleanerHandbookUrl()}
 
 Your next steps:
 1. Review the handbook
-2. Complete your W-9 and direct deposit form (Brian will send these separately)
+2. Complete any tax or payment forms Brian sends separately
 3. Log in to your cleaner portal: ${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || 'https://velocitymaid.com'}/cleaners/login
 
 Welcome to the team.

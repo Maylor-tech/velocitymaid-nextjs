@@ -94,7 +94,7 @@ export function validateCleanerApply(
   }
 
   if (!agreements.independentContractor) {
-    return 'Please confirm you understand this is an independent contractor position.';
+    return 'Please confirm you understand VelocityMaid will confirm your working relationship and required forms separately.';
   }
   if (!agreements.professionalConduct) {
     return 'Please confirm you understand VelocityMaid professional conduct requirements.';

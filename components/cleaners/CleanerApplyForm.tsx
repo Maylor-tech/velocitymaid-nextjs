@@ -782,7 +782,7 @@ export default function CleanerApplyForm() {
                     independentContractor: checked,
                   })
                 }
-                label="I understand this is an independent contractor position. I am responsible for my own taxes and transportation."
+                label="I understand VelocityMaid will confirm my working relationship and any required tax or payment forms separately. I am responsible for my own transportation."
               />
               <AgreementCheckbox
                 checked={form.agreements.professionalConduct}

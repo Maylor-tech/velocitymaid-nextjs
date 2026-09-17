@@ -584,12 +584,75 @@ model CleanerProfile {
   certificationLabel  String   @default("PENDING")
   internalNotes       String?
   isInternalTeam      Boolean  @default(false)
+  /// Legal / ops identity (optional). Never auto-filled from application checkboxes.
+  legalFirstName      String?
+  legalLastName       String?
+  mailingAddressLine1 String?
+  mailingAddressLine2 String?
+  mailingCity         String?
+  mailingState        String?
+  mailingPostalCode   String?
+  /// Optional ISO country; leave null until verified (no migration backfill).
+  mailingCountry      String?
+  /// Factual start date only when verified. Do not invent from User.createdAt in migration.
+  startDate           DateTime?
+  inactiveDate        DateTime?
+  /// UNRESOLVED | EMPLOYEE | INDEPENDENT_CONTRACTOR — never inferred automatically.
+  classificationStatus String  @default("UNRESOLVED")
+  /// ZELLE | CHECK | ACH_PROVIDER | STRIPE_CONNECT | OTHER | null — preference enum only, no credentials.
+  paymentPreference   String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([memberStatus])
   @@index([isInternalTeam])
+  @@index([classificationStatus])
+}
+
+/// Metadata for worker agreements. Does not store PDF bytes. Never fabricate SIGNED rows.
+model WorkerAgreement {
+  id                String    @id @default(cuid())
+  cleanerId         String
+  agreementType     String
+  agreementVersion  String
+  /// PENDING | SIGNED | SUPERSEDED | VOID
+  status            String    @default("PENDING")
+  issuedAt          DateTime?
+  signedAt          DateTime?
+  documentReference String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  Cleaner           User      @relation("WorkerAgreementCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
+
+  @@index([cleanerId])
+  @@index([status])
+  @@index([agreementType])
+}
+
+/// Document metadata only. Never store SSN/TIN/bank credentials here.
+model WorkerDocument {
+  id                        String    @id @default(cuid())
+  cleanerId                 String
+  /// e.g. W9_META | AGREEMENT_PACKET | OTHER
+  documentType              String
+  /// NOT_REQUESTED | REQUESTED | RECEIVED | REJECTED | EXPIRED
+  status                    String    @default("NOT_REQUESTED")
+  receivedAt                DateTime?
+  expiresAt                 DateTime?
+  /// Opaque provider key only (bounded). Not a document binary and not a TIN.
+  externalProviderReference String?
+  /// Opaque storage key / URL id only. Not file bytes; not tax credentials.
+  documentReference         String?
+  /// Reserved; not writable via Phase 7D-2 APIs (avoid free-text sensitive dumps).
+  notes                     String?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  Cleaner                   User      @relation("WorkerDocumentCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
+
+  @@index([cleanerId])
+  @@index([documentType])
+  @@index([status])
 }
 
 model JobTeamMember {
@@ -1078,6 +1141,8 @@ model User {
   TipsAsBeneficiary                   Tip[]                  @relation("TipBeneficiary")
   TipsConfirmed                       Tip[]                  @relation("TipConfirmedBy")
   TipsPaidOut                         Tip[]                  @relation("TipPaidOutBy")
+  WorkerAgreements                    WorkerAgreement[]      @relation("WorkerAgreementCleaner")
+  WorkerDocuments                     WorkerDocument[]       @relation("WorkerDocumentCleaner")
   Branch_User_primaryBranchIdToBranch Branch?                @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
   UserBranch                          UserBranch[]
 
