@@ -623,7 +623,7 @@ model WorkerAgreement {
   documentReference String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
-  Cleaner           User      @relation("WorkerAgreementCleaner", fields: [cleanerId], references: [id], onDelete: Cascade)
+  Cleaner           User      @relation("WorkerAgreementCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
 
   @@index([cleanerId])
   @@index([status])
@@ -648,7 +648,7 @@ model WorkerDocument {
   notes                     String?
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
-  Cleaner                   User      @relation("WorkerDocumentCleaner", fields: [cleanerId], references: [id], onDelete: Cascade)
+  Cleaner                   User      @relation("WorkerDocumentCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
 
   @@index([cleanerId])
   @@index([documentType])

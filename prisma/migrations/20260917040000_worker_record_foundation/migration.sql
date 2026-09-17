@@ -43,7 +43,7 @@ CREATE INDEX IF NOT EXISTS "WorkerAgreement_agreementType_idx" ON "WorkerAgreeme
 
 DO $$ BEGIN
   ALTER TABLE "WorkerAgreement" ADD CONSTRAINT "WorkerAgreement_cleanerId_fkey"
-    FOREIGN KEY ("cleanerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    FOREIGN KEY ("cleanerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -68,6 +68,6 @@ CREATE INDEX IF NOT EXISTS "WorkerDocument_status_idx" ON "WorkerDocument"("stat
 
 DO $$ BEGIN
   ALTER TABLE "WorkerDocument" ADD CONSTRAINT "WorkerDocument_cleanerId_fkey"
-    FOREIGN KEY ("cleanerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    FOREIGN KEY ("cleanerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
