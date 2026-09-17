@@ -108,6 +108,12 @@ export default function AdminCleanersPage() {
                   {m.isInternalTeam && (
                     <span className="rounded-full bg-vm-cyan-tint px-2 py-0.5 font-body text-xs text-vm-navy">Internal</span>
                   )}
+                  <Link
+                    href={`/admin/cleaners/${m.id}/worker-record`}
+                    className="rounded-lg border border-vm-border px-3 py-1 font-body text-xs font-semibold text-vm-navy hover:bg-vm-surface"
+                  >
+                    Worker record
+                  </Link>
                 </div>
               </li>
             ))}
