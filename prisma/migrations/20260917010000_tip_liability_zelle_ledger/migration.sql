@@ -36,7 +36,7 @@ END $$;
 
 DO $$ BEGIN
   ALTER TABLE "tips" ADD CONSTRAINT "tips_propertyId_fkey"
-    FOREIGN KEY ("propertyId") REFERENCES "Property"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+    FOREIGN KEY ("propertyId") REFERENCES "properties"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
