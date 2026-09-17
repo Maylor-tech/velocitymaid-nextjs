@@ -1,12 +1,11 @@
 /**
- * Canonical orchestration for the COMPLETED + PAID → JobPayout invariant.
+ * Canonical orchestration for COMPLETED → JobPayout (READY) payable creation.
  *
- * Call this after any state transition that may have produced:
- *   - Job.status === COMPLETED, and/or
- *   - Job.paymentStatus === PAID
+ * Call after any transition that may have produced Job.status === COMPLETED
+ * (and optionally after customer payment — still idempotent).
  *
- * Does not calculate payout amounts, transfer money, change compensation, or touch tips.
- * createPayoutIfEligible remains the sole eligibility + ledger-create gate (idempotent).
+ * Customer PAID is NOT required to record cleaner payable.
+ * Does not transfer money, change tips, or settle payouts.
  */
 
 import {

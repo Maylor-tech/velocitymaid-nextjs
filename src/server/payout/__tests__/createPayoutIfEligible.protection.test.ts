@@ -4,6 +4,7 @@ import { calcPayout } from '@/lib/payoutRules';
 const mocks = vi.hoisted(() => ({
   findUniqueJob: vi.fn(),
   findUniquePayout: vi.fn(),
+  findFirstOffer: vi.fn(),
   createPayout: vi.fn(),
   createAudit: vi.fn(),
 }));
@@ -15,17 +16,27 @@ vi.mock('@/lib/prisma', () => ({
       findUnique: (...a: unknown[]) => mocks.findUniquePayout(...a),
       create: (...a: unknown[]) => mocks.createPayout(...a),
     },
+    jobOffer: {
+      findFirst: (...a: unknown[]) => mocks.findFirstOffer(...a),
+    },
     auditLog: { create: (...a: unknown[]) => mocks.createAudit(...a) },
   },
 }));
 
 import { createPayoutIfEligible } from '@/src/server/payout/createPayoutIfEligible';
 
+/**
+ * Retained processing-protection cases (legacy CALCULATED_FALLBACK).
+ * Offer-based cases live in createPayoutIfEligible.ledgerIntegrity.test.ts.
+ */
 describe('createPayoutIfEligible processing protection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.findUniquePayout.mockResolvedValue(null);
-    mocks.createPayout.mockImplementation(async ({ data }: { data: { id: string } }) => data);
+    mocks.findFirstOffer.mockResolvedValue(null);
+    mocks.createPayout.mockImplementation(
+      async ({ data }: { data: { id: string } }) => data
+    );
     mocks.createAudit.mockResolvedValue({});
   });
 
@@ -49,13 +60,16 @@ describe('createPayoutIfEligible processing protection', () => {
     expect(data.grossAmount).toBe(350);
     expect(data.cleanerAmount).toBe(227.5);
     expect(data.cleanerAmount).not.toBe(calcPayout(365).cleanerAmount);
+    expect(data.policyEvalDetails.compensationSource).toBe(
+      'CALCULATED_FALLBACK'
+    );
   });
 
   it('legacy payout fallback unchanged when operationalTotal is null', async () => {
     mocks.findUniqueJob.mockResolvedValue({
       id: 'job-legacy',
       status: 'COMPLETED',
-      paymentStatus: 'PAID',
+      paymentStatus: 'PENDING',
       totalPrice: 200,
       quotedTotal: 365,
       operationalTotal: null,

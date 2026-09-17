@@ -141,10 +141,10 @@ export async function POST(
       },
     });
 
-    // COMPLETED + PAID (e.g. full prepay) → evaluate ledger create. Idempotent.
-    // Deposit → BALANCE_DUE skips until fully paid.
+    // COMPLETED → evaluate cleaner payable (READY). Customer payment independent.
+    // Idempotent; does not transfer money.
     const payoutResult = await maybeCreatePayoutAfterTransition(jobId);
-    if (!payoutResult.ok && payoutResult.reason !== "NOT_FULLY_PAID") {
+    if (!payoutResult.ok) {
       console.log(
         `[job complete] payout evaluate job=${jobId} reason=${payoutResult.reason}`
       );

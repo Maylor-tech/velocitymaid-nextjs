@@ -4,6 +4,7 @@ import { JobStatus, PaymentStatus } from '@prisma/client';
 const mocks = vi.hoisted(() => ({
   findUniqueJob: vi.fn(),
   findUniquePayout: vi.fn(),
+  findFirstOffer: vi.fn(),
   createPayout: vi.fn(),
   createAudit: vi.fn(),
 }));
@@ -14,6 +15,9 @@ vi.mock('@/lib/prisma', () => ({
     jobPayout: {
       findUnique: (...a: unknown[]) => mocks.findUniquePayout(...a),
       create: (...a: unknown[]) => mocks.createPayout(...a),
+    },
+    jobOffer: {
+      findFirst: (...a: unknown[]) => mocks.findFirstOffer(...a),
     },
     auditLog: { create: (...a: unknown[]) => mocks.createAudit(...a) },
   },
@@ -37,18 +41,25 @@ function baseJob(overrides: Record<string, unknown> = {}) {
   };
 }
 
-describe('COMPLETED + PAID payout orchestration (Phase 7B)', () => {
+describe('COMPLETED → JobPayout orchestration (Phase 7D-1)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.findUniquePayout.mockResolvedValue(null);
-    mocks.createPayout.mockImplementation(async ({ data }: { data: { id: string } }) => data);
+    mocks.findFirstOffer.mockResolvedValue(null);
+    mocks.createPayout.mockImplementation(
+      async ({ data }: { data: { id: string } }) => data
+    );
     mocks.createAudit.mockResolvedValue({});
   });
 
   it('full-prepaid completed job -> one JobPayout created', async () => {
     mocks.findUniqueJob.mockResolvedValue(baseJob());
     const result = await maybeCreatePayoutAfterTransition('job-1');
-    expect(result).toEqual({ ok: true, reason: 'CREATED', payoutId: expect.any(String) });
+    expect(result).toEqual({
+      ok: true,
+      reason: 'CREATED',
+      payoutId: expect.any(String),
+    });
     expect(mocks.createPayout).toHaveBeenCalledTimes(1);
   });
 
@@ -70,16 +81,17 @@ describe('COMPLETED + PAID payout orchestration (Phase 7B)', () => {
     expect(mocks.createPayout).toHaveBeenCalledTimes(1);
   });
 
-  it('unpaid completed job -> no payout', async () => {
+  it('unpaid completed job -> READY payable (customer payment independent)', async () => {
     mocks.findUniqueJob.mockResolvedValue(
       baseJob({ paymentStatus: PaymentStatus.BALANCE_DUE })
     );
     const result = await maybeCreatePayoutAfterTransition('job-1');
-    expect(result).toEqual({ ok: false, reason: 'NOT_FULLY_PAID' });
-    expect(mocks.createPayout).not.toHaveBeenCalled();
+    expect(result.ok && result.reason === 'CREATED').toBe(true);
+    expect(mocks.createPayout).toHaveBeenCalledTimes(1);
+    expect(mocks.createPayout.mock.calls[0][0].data.status).toBe('READY');
   });
 
-  it('unassigned completed+paid job -> no payout', async () => {
+  it('unassigned completed job -> no payout', async () => {
     mocks.findUniqueJob.mockResolvedValue(baseJob({ assignedCleanerId: null }));
     const result = await maybeCreatePayoutAfterTransition('job-1');
     expect(result).toEqual({ ok: false, reason: 'NO_CLEANER' });

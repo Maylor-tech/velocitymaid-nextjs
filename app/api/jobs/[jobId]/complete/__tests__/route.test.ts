@@ -58,8 +58,9 @@ describe('POST /api/jobs/[jobId]/complete (Phase 7B)', () => {
       emailResults: { completionReport: { sent: true } },
     });
     mocks.maybeCreatePayoutAfterTransition.mockResolvedValue({
-      ok: false,
-      reason: 'NOT_FULLY_PAID',
+      ok: true,
+      reason: 'CREATED',
+      payoutId: 'payout-pending-customer',
     });
   });
 
