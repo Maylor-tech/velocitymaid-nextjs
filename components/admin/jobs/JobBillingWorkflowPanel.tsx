@@ -33,6 +33,7 @@ const STEP_ORDER: StepKey[] = [
   'invoice',
   'payment',
   'receipt',
+  'serviceFeedback',
   'reviewRequest',
 ];
 
@@ -41,7 +42,8 @@ const STEP_LABELS: Record<StepKey, string> = {
   invoice: 'Invoice',
   payment: 'Payment recorded',
   receipt: 'Receipt',
-  reviewRequest: 'Review request',
+  serviceFeedback: 'Private feedback',
+  reviewRequest: 'Google review',
 };
 
 function stateIcon(state: string) {
@@ -206,12 +208,34 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted, jobStatus }: JobB
                 )}
                 {key === 'reviewRequest' && s.reviewRequest.sentAt && (
                   <p className="font-body text-xs text-vm-muted">
-                    Review requested on{' '}
+                    Google review requested on{' '}
                     {new Date(s.reviewRequest.sentAt).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
                     })}
+                  </p>
+                )}
+                {key === 'serviceFeedback' && s.serviceFeedback.requestedAt && (
+                  <p className="font-body text-xs text-vm-muted">
+                    {s.serviceFeedback.submittedAt
+                      ? `Submitted${
+                          s.serviceFeedback.overallRating != null
+                            ? ` · ${s.serviceFeedback.overallRating}/5`
+                            : ''
+                        }`
+                      : 'Request sent — awaiting customer'}
+                    {s.serviceFeedback.feedbackId ? (
+                      <>
+                        {' · '}
+                        <Link
+                          href={`/admin/feedback/${s.serviceFeedback.feedbackId}`}
+                          className="text-vm-cyan-dark hover:underline"
+                        >
+                          Open
+                        </Link>
+                      </>
+                    ) : null}
                   </p>
                 )}
               </div>
@@ -260,18 +284,52 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted, jobStatus }: JobB
           label="Generate receipt"
           onClick={() => runAction('generate_receipt', { sendEmail: true })}
         />
+        {jobStatus === 'COMPLETED' && !s.serviceFeedback.requestedAt ? (
+          <ActionButton
+            busy={busy === 'send_feedback'}
+            disabled={!!busy}
+            icon={<Star className="h-4 w-4" />}
+            label="Send private feedback"
+            onClick={() => runAction('send_feedback')}
+          />
+        ) : s.serviceFeedback.requestedAt && !s.serviceFeedback.submittedAt ? (
+          <span className="inline-flex items-center gap-2 rounded-lg border border-vm-cyan/30 bg-vm-cyan-tint px-3 py-2 font-body text-sm text-vm-cyan-dark">
+            <CheckCircle2 className="h-4 w-4" />
+            Private feedback requested
+          </span>
+        ) : s.serviceFeedback.submittedAt ? (
+          <span className="inline-flex items-center gap-2 rounded-lg border border-vm-success/30 bg-vm-success-bg px-3 py-2 font-body text-sm text-vm-success">
+            <CheckCircle2 className="h-4 w-4" />
+            Private feedback received
+            {s.serviceFeedback.overallRating != null
+              ? ` (${s.serviceFeedback.overallRating}/5)`
+              : ''}
+            {s.serviceFeedback.overallRating != null &&
+            s.serviceFeedback.overallRating >= 4 &&
+            !s.reviewRequest.sentAt ? (
+              <button
+                type="button"
+                className="ml-2 underline"
+                disabled={!!busy}
+                onClick={() => runAction('send_review')}
+              >
+                Offer Google review
+              </button>
+            ) : null}
+          </span>
+        ) : null}
         {jobStatus === 'COMPLETED' && !s.reviewRequest.sentAt ? (
           <ActionButton
             busy={busy === 'send_review'}
             disabled={!!busy}
             icon={<Star className="h-4 w-4" />}
-            label="Send review request"
+            label="Send Google review request"
             onClick={() => runAction('send_review')}
           />
         ) : s.reviewRequest.sentAt ? (
           <span className="inline-flex items-center gap-2 rounded-lg border border-vm-success/30 bg-vm-success-bg px-3 py-2 font-body text-sm text-vm-success">
             <CheckCircle2 className="h-4 w-4" />
-            Review requested
+            Google review requested
           </span>
         ) : null}
       </div>

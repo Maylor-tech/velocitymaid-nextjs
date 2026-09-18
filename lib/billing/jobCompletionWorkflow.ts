@@ -343,21 +343,28 @@ export async function onInvoicePaymentRecorded(params: {
 
     const balance = decimalToNumber(invoice.balanceDue);
     if (balance <= 0 && invoice.clientEmail && invoice.jobId) {
-      await scheduleReviewRequestForJob(invoice.jobId, invoice.clientEmail);
-      try {
-        await sendReviewRequestAfterPayment({
-          toEmail: invoice.clientEmail,
-          clientName: invoice.clientName,
-          propertyAddress: invoice.propertyAddress,
-          jobId: invoice.jobId,
-          branchSlug: invoice.Job?.Branch?.slug ?? null,
-          serviceLocation: invoice.Job?.serviceLocation ?? null,
-        });
-      } catch (err) {
-        console.error(
-          '[onInvoicePaymentRecorded] Google review request skipped:',
-          err instanceof Error ? err.message : err
-        );
+      const { wasGoogleReviewRequestSent, stampGoogleReviewRequestSent } =
+        await import('@/lib/billing/reviewRequestSendState');
+      if (!(await wasGoogleReviewRequestSent(invoice.jobId))) {
+        await scheduleReviewRequestForJob(invoice.jobId, invoice.clientEmail);
+        try {
+          const reviewEmail = await sendReviewRequestAfterPayment({
+            toEmail: invoice.clientEmail,
+            clientName: invoice.clientName,
+            propertyAddress: invoice.propertyAddress,
+            jobId: invoice.jobId,
+            branchSlug: invoice.Job?.Branch?.slug ?? null,
+            serviceLocation: invoice.Job?.serviceLocation ?? null,
+          });
+          if (reviewEmail.sent) {
+            await stampGoogleReviewRequestSent(invoice.jobId);
+          }
+        } catch (err) {
+          console.error(
+            '[onInvoicePaymentRecorded] Google review request skipped:',
+            err instanceof Error ? err.message : err
+          );
+        }
       }
     }
   }

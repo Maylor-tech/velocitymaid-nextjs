@@ -9,6 +9,7 @@ import {
   Settings,
   Target,
   Bell,
+  Star,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -37,6 +38,12 @@ export const ADMIN_NAV: AdminNavItem[] = [
     label: 'Jobs',
     icon: Calendar,
     match: (p) => p.startsWith('/admin/jobs'),
+  },
+  {
+    href: '/admin/feedback',
+    label: 'Feedback',
+    icon: Star,
+    match: (p) => p.startsWith('/admin/feedback'),
   },
   {
     href: '/admin/customers',

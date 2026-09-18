@@ -20,6 +20,16 @@ import {
 } from './billingEmails';
 import { onInvoicePaymentRecorded, scheduleReviewRequestForJob } from './jobCompletionWorkflow';
 import { invoiceServiceDateFromJob } from '@/lib/dates/serviceDate';
+import {
+  stampGoogleReviewRequestSent,
+  wasGoogleReviewRequestSent,
+} from '@/lib/billing/reviewRequestSendState';
+import {
+  getFeedbackWorkflowState,
+  requestServiceFeedbackForJob,
+  feedbackPublicUrl,
+} from '@/lib/feedback/serviceFeedback';
+import { sendServiceFeedbackRequestEmail } from '@/lib/feedback/sendServiceFeedbackEmail';
 
 function splitPhotos(
   photos: Array<{ url: string; caption: string | null }>
@@ -101,6 +111,15 @@ export interface JobBillingWorkflowStatus {
       scheduledFor: string | null;
       sentAt: string | null;
     };
+    serviceFeedback: {
+      state: WorkflowStepState;
+      requestedAt: string | null;
+      submittedAt: string | null;
+      reminderSentAt: string | null;
+      status: string | null;
+      overallRating: number | null;
+      feedbackId: string | null;
+    };
   };
 }
 
@@ -115,6 +134,7 @@ export async function getJobBillingWorkflowStatus(
     where: { jobId },
     orderBy: { createdAt: 'desc' },
   });
+  const serviceFeedback = await getFeedbackWorkflowState(jobId);
 
   const report = job.CompletionReport;
   const invoice = job.Invoice;
@@ -211,6 +231,21 @@ export async function getJobBillingWorkflowStatus(
             : 'pending',
         scheduledFor: review?.scheduledFor?.toISOString() ?? null,
         sentAt: review?.sentAt?.toISOString() ?? null,
+      },
+      serviceFeedback: {
+        state: !isCompleted
+          ? 'pending'
+          : serviceFeedback.state === 'done'
+            ? 'done'
+            : serviceFeedback.requestedAt
+              ? 'ready'
+              : 'ready',
+        requestedAt: serviceFeedback.requestedAt,
+        submittedAt: serviceFeedback.submittedAt,
+        reminderSentAt: serviceFeedback.reminderSentAt,
+        status: serviceFeedback.status,
+        overallRating: serviceFeedback.overallRating,
+        feedbackId: serviceFeedback.feedbackId,
       },
     },
   };
@@ -516,6 +551,16 @@ export async function sendReviewRequestForJob(jobId: string) {
     [job.Customer?.firstName, job.Customer?.lastName].filter(Boolean).join(' ') ||
     'Client';
 
+  if (await wasGoogleReviewRequestSent(jobId)) {
+    return {
+      email: {
+        sent: false,
+        skippedReason: 'Google review request already sent for this job',
+      },
+      alreadySent: true,
+    };
+  }
+
   await scheduleReviewRequestForJob(jobId, email);
   const emailResult = await sendReviewRequestAfterPayment({
     toEmail: email,
@@ -526,16 +571,79 @@ export async function sendReviewRequestForJob(jobId: string) {
     serviceLocation: job.serviceLocation,
   });
 
-  const review = await prisma.reviewRequest.findFirst({
-    where: { jobId },
-    orderBy: { createdAt: 'desc' },
-  });
-  if (review && emailResult.sent) {
-    await prisma.reviewRequest.update({
-      where: { id: review.id },
-      data: { sentAt: new Date() },
-    });
+  if (emailResult.sent) {
+    await stampGoogleReviewRequestSent(jobId);
   }
 
-  return { email: emailResult };
+  return { email: emailResult, alreadySent: false };
+}
+
+/**
+ * Private ServiceFeedback request — distinct from Google send_review.
+ * Allowed after COMPLETED without requiring PAID (invoice-after-service hosts).
+ * Never creates/sends invoices.
+ */
+export async function sendServiceFeedbackRequestForJob(
+  jobId: string,
+  actorId?: string | null
+) {
+  const job = await loadJobBillingContext(jobId);
+  if (job.status !== 'COMPLETED') {
+    throw new Error('Private feedback requires job status COMPLETED');
+  }
+
+  const email = job.Customer?.email ?? job.Invoice?.clientEmail;
+  if (!email) throw new Error('No client email on file');
+
+  const clientName =
+    job.Customer?.firstName ||
+    job.customerName ||
+    [job.Customer?.firstName, job.Customer?.lastName].filter(Boolean).join(' ') ||
+    'Client';
+
+  const propertyLabel =
+    job.address || job.Invoice?.propertyAddress || 'your property';
+
+  const result = await requestServiceFeedbackForJob(jobId, actorId);
+
+  if (result.alreadyExists && result.feedback.submittedAt) {
+    return {
+      feedback: result.feedback,
+      feedbackUrl: result.feedbackUrl,
+      email: {
+        sent: false,
+        skippedReason: 'Feedback already submitted for this job',
+      },
+      alreadyExists: true,
+    };
+  }
+
+  if (result.alreadyExists && result.feedback.requestedAt) {
+    // Duplicate request prevention — do not re-email unless still REQUESTED and never emailed?
+    // Spec: prevent duplicate requests. Return existing without re-send.
+    return {
+      feedback: result.feedback,
+      feedbackUrl: feedbackPublicUrl(result.feedback.publicToken),
+      email: {
+        sent: false,
+        skippedReason: 'Private feedback already requested for this job',
+      },
+      alreadyExists: true,
+    };
+  }
+
+  const emailResult = await sendServiceFeedbackRequestEmail({
+    toEmail: email,
+    clientName,
+    propertyLabel,
+    publicToken: result.feedback.publicToken,
+    isReminder: false,
+  });
+
+  return {
+    feedback: result.feedback,
+    feedbackUrl: result.feedbackUrl,
+    email: emailResult,
+    alreadyExists: false,
+  };
 }
