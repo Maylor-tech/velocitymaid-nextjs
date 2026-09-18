@@ -61,9 +61,6 @@ CREATE INDEX "service_feedback_submittedAt_idx" ON "service_feedback"("submitted
 -- CreateIndex
 CREATE INDEX "service_feedback_requestedAt_idx" ON "service_feedback"("requestedAt");
 
--- CreateIndex
-CREATE INDEX "service_feedback_publicToken_idx" ON "service_feedback"("publicToken");
-
 -- AddForeignKey
 ALTER TABLE "service_feedback" ADD CONSTRAINT "service_feedback_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
