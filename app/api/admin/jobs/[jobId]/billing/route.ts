@@ -12,6 +12,7 @@ import {
   recordPaymentForJobInvoice,
   generateReceiptForLatestPayment,
   sendReviewRequestForJob,
+  sendServiceFeedbackRequestForJob,
 } from '@/lib/billing/jobBillingSteps';
 import { GoogleReviewUrlError } from '@/lib/reviews/googleReviewUrl';
 
@@ -104,6 +105,13 @@ export async function POST(
       }
       case 'send_review': {
         const result = await sendReviewRequestForJob(params.jobId);
+        return NextResponse.json({ success: true, ...result });
+      }
+      case 'send_feedback': {
+        const result = await sendServiceFeedbackRequestForJob(
+          params.jobId,
+          auth.userId
+        );
         return NextResponse.json({ success: true, ...result });
       }
       default:

@@ -291,6 +291,7 @@ model Customer {
   /// PREPAY = Stripe/deposit before assignment. INVOICE_AFTER_SERVICE = authorized post-service billing.
   billingPolicy                                            BillingPolicy              @default(PREPAY)
   CleanerRating                                            CleanerRating[]
+  ServiceFeedback                                          ServiceFeedback[]
   Branch                                                   Branch?                    @relation(fields: [branchId], references: [id])
   CustomerJobChangeRequest                                 CustomerJobChangeRequest[]
   CustomerLoginToken                                       CustomerLoginToken[]
@@ -353,6 +354,7 @@ model Property {
   Customer               Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   Job                    Job[]
   Tip                    Tip[]
+  ServiceFeedback        ServiceFeedback[]
 
   @@index([customerId])
   @@index([customerId, address])
@@ -492,6 +494,7 @@ model Job {
   photos                   CleanPhoto[]
   CleanerBalanceLedger     CleanerBalanceLedger[]
   CleanerRating            CleanerRating?
+  ServiceFeedback          ServiceFeedback?
   ComplianceIssue          ComplianceIssue[]
   CustomerJobChangeRequest CustomerJobChangeRequest[]
   JobChecklistItem         JobChecklistItem[]
@@ -1119,6 +1122,7 @@ model User {
   CleanerPaymentMethod                CleanerPaymentMethod[]
   CleanerPayout                       CleanerPayout[]
   CleanerRating                       CleanerRating[]
+  ServiceFeedbackAsCleaner            ServiceFeedback[]       @relation("ServiceFeedbackCleaner")
   CleanerTrainingProgress             CleanerTrainingProgress[]
   ComplianceIssue                     ComplianceIssue[]
   JamaicaPaymentMethod                JamaicaPaymentMethod?
@@ -1852,6 +1856,69 @@ model CompletionReport {
   @@index([status])
   @@index([publicToken])
   @@map("completion_reports")
+}
+
+/// Private VelocityMaid service-experience feedback (not Google reviews; not CleanerRating).
+/// One authorized customer feedback response per job. Never mutates payout/invoice.
+enum ServiceFeedbackStatus {
+  REQUESTED
+  SUBMITTED
+  UNDER_REVIEW
+  RELEASED
+  RESOLVED
+}
+
+enum ServiceFeedbackDisposition {
+  SERVICE_QUALITY
+  CLEANER_PERFORMANCE
+  ACCESS
+  PROPERTY_CONDITION
+  SUPPLIES_LINENS
+  MAINTENANCE
+  SCHEDULING_TIMING
+  CUSTOMER_EXPECTATION
+  OTHER
+}
+
+model ServiceFeedback {
+  id                  String                       @id @default(cuid())
+  publicToken         String                       @unique @default(cuid())
+  jobId               String                       @unique
+  customerId          String
+  cleanerId           String?
+  propertyId          String?
+  overallRating       Int?
+  cleanlinessRating   Int?
+  communicationRating Int?
+  timelinessRating    Int?
+  comment             String?
+  status              ServiceFeedbackStatus        @default(REQUESTED)
+  requestedAt         DateTime                     @default(now())
+  submittedAt         DateTime?
+  reminderSentAt      DateTime?
+  reviewedAt          DateTime?
+  releasedAt          DateTime?
+  resolvedAt          DateTime?
+  dispositionCategory ServiceFeedbackDisposition?
+  adminNotes          String?
+  cleanerResponse     String?
+  cleanerRespondedAt  DateTime?
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
+  Job                 Job                          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Customer            Customer                     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  Cleaner             User?                        @relation("ServiceFeedbackCleaner", fields: [cleanerId], references: [id], onDelete: SetNull)
+  Property            Property?                    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([customerId])
+  @@index([cleanerId])
+  @@index([propertyId])
+  @@index([overallRating])
+  @@index([submittedAt])
+  @@index([requestedAt])
+  @@index([publicToken])
+  @@map("service_feedback")
 }
 
 model Receipt {
