@@ -128,7 +128,12 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-6 lg:gap-10">
               <Link href="/customer/jobs" className="shrink-0">
-                <BrandLogo theme="dark" size="portal" showTagline={false} />
+                <BrandLogo
+                  theme="dark"
+                  size="portal"
+                  showTagline={false}
+                  responsiveMark
+                />
               </Link>
               <nav className="hidden md:flex items-center gap-1">
                 {NAV_ITEMS.map((item) => {
@@ -224,7 +229,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
                 }`}
               >
                 <Icon className={`h-5 w-5 ${isActive ? 'text-vm-cyan-dark' : ''}`} />
-                {item.label === 'My Bookings' ? 'Bookings' : item.label}
+                {item.label}
               </Link>
             );
           })}

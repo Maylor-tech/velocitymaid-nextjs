@@ -1,8 +1,18 @@
-const NAVY = '#0F1C2E';
-const CYAN = '#00C2CB';
-const SURFACE = '#F4F6F9';
-const MUTED = '#6B7280';
+import { brandAssets } from '@/lib/brand/assets';
+import { colors } from '@/lib/brand/colors';
+
+const NAVY = colors.primaryNavy;
+const CYAN = colors.primaryCyan;
+const SURFACE = colors.surface;
+const MUTED = colors.muted;
 const FONT = "'Helvetica Neue', Arial, sans-serif";
+
+function appOrigin(): string {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
+    'https://www.velocitymaid.com'
+  );
+}
 
 export function escapeHtml(value: string): string {
   return value
@@ -28,8 +38,7 @@ export function brandedDocumentShell(title: string, body: string): string {
   body { margin: 0; padding: 32px 16px; background: ${SURFACE}; font-family: ${FONT}; color: ${NAVY}; }
   .doc { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 12px; border: 1px solid #E2E8F0; overflow: hidden; }
   .header { background: ${NAVY}; padding: 28px 32px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-  .brand { font-size: 22px; font-weight: 700; color: #fff; margin: 0; }
-  .tagline { margin: 6px 0 0; font-size: 13px; color: ${CYAN}; }
+  .brand-logo { display: block; width: 200px; height: auto; max-width: 100%; border: 0; }
   .doc-type { text-align: right; color: #fff; }
   .doc-type h2 { margin: 0; font-size: 18px; letter-spacing: 0.04em; }
   .doc-type p { margin: 4px 0 0; font-size: 13px; opacity: 0.85; }
@@ -64,10 +73,10 @@ export function brandedDocumentShell(title: string, body: string): string {
 }
 
 export function documentHeader(docType: string, docNumber: string): string {
+  const logoUrl = `${appOrigin()}${brandAssets.reversedPlate}`;
   return `<div class="header">
     <div>
-      <p class="brand">VelocityMaid</p>
-      <p class="tagline">Come Home to Clean</p>
+      <img class="brand-logo" src="${escapeHtml(logoUrl)}" alt="VelocityMaid — COME HOME TO CLEAN" width="200" height="69" />
     </div>
     <div class="doc-type">
       <h2>${escapeHtml(docType)}</h2>

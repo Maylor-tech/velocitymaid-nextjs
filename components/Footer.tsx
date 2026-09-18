@@ -14,9 +14,9 @@ export default function Footer() {
       <div className="mx-auto max-w-marketing px-4 py-20 sm:px-6 lg:px-8">
         <div className="grid gap-8 md:grid-cols-3">
           <div>
-            <BrandLogo variant="ivory" size="portal" showTagline={false} />
+            <BrandLogo theme="dark" size="portal" showTagline={false} />
             <p className="mt-2 text-vm-cyan font-heading uppercase tracking-widest text-xs">
-              Come home to clean.
+              COME HOME TO CLEAN
             </p>
             <p className="mt-3 text-sm font-body text-white/60 leading-relaxed">
               Serving New Jersey and Vermont. Trusted since 2024.

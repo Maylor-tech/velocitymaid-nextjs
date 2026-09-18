@@ -23,7 +23,7 @@ export default function TipSuccessPage({ searchParams }: TipSuccessPageProps) {
     <div className="min-h-screen bg-vm-navy">
       <header className="py-5 px-6">
         <Link href="/">
-          <BrandLogo variant="ivory" size="header" showTagline={false} />
+          <BrandLogo theme="dark" size="header" showTagline={false} />
         </Link>
       </header>
       <main className="flex flex-col items-center justify-center px-4 py-12">

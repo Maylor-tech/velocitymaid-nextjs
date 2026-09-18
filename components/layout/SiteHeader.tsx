@@ -78,8 +78,14 @@ export default function SiteHeader({
     >
       <div className="mx-auto max-w-marketing px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="shrink-0 min-w-0">
-            <BrandLogo variant="ivory" size="header" showTagline={false} />
+          <Link href="/" className="shrink-0 min-w-0" aria-label="VelocityMaid home">
+            <BrandLogo
+              theme="dark"
+              size="header"
+              showTagline={false}
+              responsiveMark
+              priority
+            />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6" aria-label="Main">

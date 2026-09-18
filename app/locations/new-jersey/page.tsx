@@ -783,7 +783,7 @@ export default async function NewJerseyLandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-3 gap-8">
               <div>
-                <BrandLogo variant="ivory" size="header" className="mb-4" />
+                <BrandLogo theme="dark" size="header" showTagline={false} className="mb-4" />
                 <p className="text-vm-white/70 font-body text-sm">Professional cleaning services in New Jersey</p>
               </div>
               <div>

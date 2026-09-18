@@ -2,6 +2,7 @@
 
 import type { SerializedInvoice } from '@/lib/invoices/serializeInvoice';
 import { INVOICE_STATUS_CLASSES } from '@/lib/invoices/invoiceUtils';
+import { BrandLogo } from '@/components/brand';
 
 interface InvoiceDocumentProps {
   invoice: SerializedInvoice;
@@ -13,9 +14,8 @@ export function InvoiceDocument({ invoice, showStatus = true }: InvoiceDocumentP
     <div className="invoice-document mx-auto max-w-3xl rounded-2xl border border-vm-border bg-vm-white shadow-sm print:shadow-none">
       <div className="rounded-t-2xl bg-vm-navy px-8 py-6 print:rounded-none">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="font-heading text-2xl font-bold text-vm-white">VelocityMaid</p>
-            <p className="mt-1 font-body text-sm text-vm-cyan">Come Home to Clean</p>
+          <div className="min-w-0">
+            <BrandLogo theme="dark" size="header" showTagline={false} />
           </div>
           <div className="text-right">
             <p className="font-heading text-lg font-bold text-vm-white">INVOICE</p>

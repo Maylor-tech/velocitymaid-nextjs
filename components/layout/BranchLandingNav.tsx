@@ -48,7 +48,13 @@ export default function BranchLandingNav({
         className={`${maxWidthClass} mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4`}
       >
         <Link href="/" className="shrink-0 min-w-0">
-          <BrandLogo variant="ivory" size="header" showTagline={false} />
+          <BrandLogo
+            theme="dark"
+            size="header"
+            showTagline={false}
+            responsiveMark
+            priority
+          />
         </Link>
 
         {/* Desktop nav */}

@@ -1,19 +1,13 @@
 import { resend, getResendFromEmail } from './resendClient';
 import { formatServiceDate } from '@/lib/dates/serviceDate';
+import {
+  brandEmailHeaderRow,
+  escapeHtml,
+  NAVY,
+  SURFACE,
+} from '@/lib/billing/emailBrand';
 
-const NAVY = '#0F1C2E';
-const CYAN = '#00C2CB';
-const SURFACE = '#F4F6F9';
 const FONT = "'Helvetica Neue', Arial, sans-serif";
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 export type HostRequestReceivedInput = {
   to: string;
@@ -71,10 +65,7 @@ export async function sendHostRequestReceivedEmail(
   <table width="100%" cellpadding="0" cellspacing="0" style="background:${SURFACE};padding:32px 16px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;border:1px solid #E2E8F0;overflow:hidden;">
-        <tr><td style="background:${NAVY};padding:24px 28px;">
-          <p style="margin:0;font-size:20px;font-weight:700;color:#fff;">VelocityMaid</p>
-          <p style="margin:6px 0 0;font-size:13px;color:${CYAN};">Come home to clean.</p>
-        </td></tr>
+        ${brandEmailHeaderRow()}
         <tr><td style="padding:28px;">
           <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${NAVY};">
             Hi ${firstName}, we received your cleaning request.

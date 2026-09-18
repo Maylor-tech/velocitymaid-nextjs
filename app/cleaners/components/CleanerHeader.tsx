@@ -19,7 +19,7 @@ export default function CleanerHeader({ name, region, branchName, branchSlug, on
     <div className="bg-vm-navy text-vm-white py-6 px-6 rounded-xl shadow-lg mb-6 border border-vm-navy/20">
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <BrandLogo variant="ivory" size="portal" className="mb-3" />
+          <BrandLogo theme="dark" size="portal" showTagline={false} className="mb-3" />
           <h1 className="text-xl font-heading font-bold mb-1">Welcome, {name}</h1>
           <div className="flex items-center gap-2">
             {displayLocation && (

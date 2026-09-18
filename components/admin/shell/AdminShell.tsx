@@ -54,7 +54,7 @@ export function AdminShell({
     <div className="flex min-h-screen bg-vm-surface">
       <aside className="flex w-[232px] shrink-0 flex-col bg-vm-navy px-3.5 py-5">
         <div className="px-2.5 pb-6">
-          <Link href={homeHref} aria-label="VelocityMaid Admin home">
+          <Link href={homeHref} aria-label="VelocityMaid Admin home" className="block max-w-[200px]">
             <BrandLogo theme="dark" size="sm" showTagline={false} />
           </Link>
           {branchName && (
