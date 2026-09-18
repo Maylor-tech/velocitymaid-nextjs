@@ -357,7 +357,10 @@ describe('acceptJobOffer', () => {
             assignedCleanerId: 'other-cleaner',
             paymentStatus: 'PENDING',
             reviewStatus: 'PENDING',
-            status: JobStatus.ASSIGNED,
+            // Still CONFIRMED would be unusual; ASSIGNED is the real race winner.
+            // Status gate runs before ALREADY_ASSIGNED — use CONFIRMED so the
+            // cleaner-id check remains the asserted failure mode here.
+            status: JobStatus.CONFIRMED,
             branchId: 'branch-vt',
             jobReference: 'VM-TEST-1',
           }),
@@ -370,6 +373,109 @@ describe('acceptJobOffer', () => {
     await expect(
       acceptJobOffer({ offerId: 'offer-1', cleanerId: 'cleaner-1' })
     ).rejects.toMatchObject({ code: 'ALREADY_ASSIGNED', status: 409 });
+  });
+
+  it('rejects accept after customer cancel won the Job row (CANCELLED + no assign mutation)', async () => {
+    const jobUpdate = vi.fn();
+    const offerUpdate = vi.fn();
+    const teamCreate = vi.fn();
+    const assignmentLogCreate = vi.fn();
+
+    transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+      const tx = {
+        jobOffer: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: 'offer-1',
+            jobId: 'job-1',
+            cleanerId: 'cleaner-1',
+            // Stale client still thinks offer is OFFERED; cancel TX already
+            // cancelled the row in the happy path, but also cover the case
+            // where only Job.status flipped first.
+            status: JobOfferStatus.OFFERED,
+            expiresAt: new Date(Date.now() + 60_000),
+            Job: { id: 'job-1' },
+          }),
+          update: offerUpdate,
+        },
+        job: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: 'job-1',
+            status: JobStatus.CANCELLED,
+            paymentStatus: 'PENDING',
+            reviewStatus: 'PENDING',
+            assignedCleanerId: null,
+            branchId: 'branch-vt',
+            jobReference: 'VM-TEST-1',
+          }),
+          update: jobUpdate,
+        },
+        $queryRaw: vi.fn().mockResolvedValue([{ id: 'job-1' }]),
+        jobTeamMember: { deleteMany: vi.fn(), create: teamCreate },
+        assignmentLog: { create: assignmentLogCreate },
+        auditLog: { create: vi.fn() },
+      };
+      return fn(tx);
+    });
+
+    await expect(
+      acceptJobOffer({ offerId: 'offer-1', cleanerId: 'cleaner-1' })
+    ).rejects.toMatchObject({ code: 'JOB_NOT_ASSIGNABLE', status: 409 });
+
+    expect(jobUpdate).not.toHaveBeenCalled();
+    expect(offerUpdate).not.toHaveBeenCalled();
+    expect(teamCreate).not.toHaveBeenCalled();
+    expect(assignmentLogCreate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    JobStatus.CANCELLED_EMERGENCY,
+    JobStatus.COMPLETED,
+    JobStatus.ON_THE_WAY,
+    JobStatus.IN_PROGRESS,
+    JobStatus.AWAITING_QC,
+    JobStatus.ASSIGNED,
+  ])('rejects accept when locked Job.status is %s', async (status) => {
+    const jobUpdate = vi.fn();
+    const offerUpdate = vi.fn();
+
+    transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+      const tx = {
+        jobOffer: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: 'offer-1',
+            jobId: 'job-1',
+            cleanerId: 'cleaner-1',
+            status: JobOfferStatus.OFFERED,
+            expiresAt: new Date(Date.now() + 60_000),
+            Job: { id: 'job-1' },
+          }),
+          update: offerUpdate,
+        },
+        job: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: 'job-1',
+            status,
+            paymentStatus: 'PENDING',
+            reviewStatus: 'PENDING',
+            assignedCleanerId: null,
+            branchId: 'branch-vt',
+            jobReference: 'VM-TEST-1',
+          }),
+          update: jobUpdate,
+        },
+        $queryRaw: vi.fn().mockResolvedValue([{ id: 'job-1' }]),
+        jobTeamMember: { deleteMany: vi.fn(), create: vi.fn() },
+        assignmentLog: { create: vi.fn() },
+        auditLog: { create: vi.fn() },
+      };
+      return fn(tx);
+    });
+
+    await expect(
+      acceptJobOffer({ offerId: 'offer-1', cleanerId: 'cleaner-1' })
+    ).rejects.toMatchObject({ code: 'JOB_NOT_ASSIGNABLE', status: 409 });
+    expect(jobUpdate).not.toHaveBeenCalled();
+    expect(offerUpdate).not.toHaveBeenCalled();
   });
 });
 

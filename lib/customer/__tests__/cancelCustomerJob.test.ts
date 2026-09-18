@@ -143,6 +143,9 @@ describe('cancelCustomerJob — ASSIGNED integrity', () => {
   });
 
   it('cancels an ASSIGNED future job, clears assignment, preserves ACCEPTED offer + pay', async () => {
+    // Reverse concurrency: cleaner accept won first (job is ASSIGNED + ACCEPTED
+    // offer exists). Customer cancel must still end CANCELLED with no active
+    // assignment while preserving ACCEPTED history.
     const {
       tx,
       jobUpdateMany,

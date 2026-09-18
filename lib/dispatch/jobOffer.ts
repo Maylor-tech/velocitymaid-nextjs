@@ -456,6 +456,17 @@ export async function acceptJobOffer(input: {
       });
       if (!job) throw new DispatchError('Job not found', 'JOB_NOT_FOUND', 404);
 
+      // Locked-row service-status gate. Mirrors createJobOffer allowlist
+      // (RECEIVED | CONFIRMED). A cancelled / in-service / completed job must
+      // never become ASSIGNED via a stale OFFERED accept.
+      if (job.status !== JobStatus.RECEIVED && job.status !== JobStatus.CONFIRMED) {
+        throw new DispatchError(
+          `Job status ${job.status} does not allow assignment`,
+          'JOB_NOT_ASSIGNABLE',
+          409
+        );
+      }
+
       if (job.assignedCleanerId) {
         throw new DispatchError(
           'This job was already accepted by another cleaner',
