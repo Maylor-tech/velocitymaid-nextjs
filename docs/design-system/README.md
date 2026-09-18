@@ -1,6 +1,6 @@
 # VelocityMaid Design System — v1.0 (locked)
 
-**Status: v1.0 — canonical, locked.** The tokens, components, and the **digital filled-house logo** are the approved brand system. Treat them as frozen: extend by adding new components/screens that consume these tokens, never by forking colors, type, or the mark. Changes to tokens or the logo require an explicit version bump (v1.1+).
+**Status: v1.0 — canonical, locked.** The tokens, components, and the **Final Approval Pack logo family** are the approved brand system. Treat them as frozen: extend by adding new components/screens that consume these tokens, never by forking colors, type, or the mark. Changes to tokens or the logo require an explicit version bump (v1.1+).
 
 The permanent source of truth for VelocityMaid's brand and product UI — web, mobile, marketing, Canva templates, uniforms, vehicles, and operations tooling. Every future page and asset should inherit from this system rather than re-deriving styles.
 
@@ -10,7 +10,7 @@ The permanent source of truth for VelocityMaid's brand and product UI — web, m
 
 ## 1. Company context
 
-**VelocityMaid** is a premium residential cleaning and short-term-rental (STR) turnover company operating in **New Jersey** and **Vermont**, built to scale into additional states without diluting the brand. The positioning is *luxury hospitality*, not discount cleaning — calm, trustworthy, fast, and detail-obsessed. Tagline: **"Come home to clean."**
+**VelocityMaid** is a premium residential cleaning and short-term-rental (STR) turnover company operating in **New Jersey** and **Vermont**, built to scale into additional states without diluting the brand. The positioning is *luxury hospitality*, not discount cleaning — calm, trustworthy, fast, and detail-obsessed. Tagline: **COME HOME TO CLEAN**
 
 Products / surfaces represented in this system:
 
@@ -76,28 +76,25 @@ Products / surfaces represented in this system:
 - **In static HTML / cards / Canva exports:** pull individual SVGs from the CDN, e.g. `https://unpkg.com/lucide-static@0.460.0/icons/home.svg`. To recolor an `<img>` icon to a brand color, render it as a CSS `mask` over a brand-colored background (see the `ic()` helper used throughout the UI kits) rather than relying on the SVG's own fill. In React product code, use `lucide-react` components directly.
 - **Common icons in use:** `home, sparkles, calendar, clock, check, check-circle, star, map-pin, user, users, truck, bed-double, bell, message-circle, shield-check, leaf, dollar-sign, plus, arrow-right`.
 - **Emoji as icons:** no (one friendly 👋 in a personal greeting is the only exception). **Unicode glyphs as icons:** avoid — use Lucide.
-- **Logo mark** is its own asset, never an "icon": house + 4-point sparkle, in `assets/logo/` (see Logo usage).
+- **Logo mark** is its own asset, never an "icon": use Final Approval Pack masters in `/public/brand/velocitymaid/` (see Logo usage).
 
 ---
 
 ## 5. Logo usage
 
-The approved mark (`velocitymaid-logo-system-v1`) is a **house** silhouette with a small **4-point sparkle** accent. Recreated faithfully from `components/brand/BrandLogo.tsx`.
+The approved digital identity is the **VelocityMaid Final Approval Pack** (PNG masters). Do **not** recreate the lockup with HTML/CSS/SVG approximations.
 
-- **Light backgrounds:** navy house, **cyan** sparkle, white center dot. (`assets/logo/mark-navy.svg`, or `<BrandLogo theme="light" />`)
-- **Navy/dark backgrounds:** **cyan** house, white sparkle, navy dot. (`assets/logo/mark-white.svg`, or `<BrandLogo theme="dark" />`)
-- **Sparkle-drop rule (§2.3):** at icon sizes **≤32px**, drop the sparkle — the house alone holds down to 16px. (`mark-*-sm.svg`, handled automatically by `BrandLogo`.)
-- **Wordmark:** "VELOCITYMAID" in Space Grotesk 700, uppercase, slight tracking, with optional "COME HOME TO CLEAN." tagline beneath.
-- **Don'ts:** never recolor outside navy/cyan/white, never stretch/rotate/shadow the mark, and never use the **retired V-chevron wordmark** (`VelocityMaidWordmark.tsx` is deprecated) or the old forest/gold palette.
-- Assets: `assets/logo/{mark-navy, mark-white, mark-cyan, mark-mono-navy, mark-mono-white, mark-navy-sm, mark-white-sm, favicon}.svg`.
+Canonical runtime path: `/public/brand/velocitymaid/` (see that folder’s README). Docs cards and `BrandLogo.jsx` reference those masters.
+
+- **Light backgrounds:** `velocitymaid-primary.png` / `velocitymaid-mark.png` (`<BrandLogo theme="light" />`)
+- **Navy/dark backgrounds:** `velocitymaid-reversed-clear.png` / `velocitymaid-mark-white.png` (`<BrandLogo theme="dark" />`)
+- **Compact / favicon:** VM service mark (`velocitymaid-mark-*.png`, `favicon-32.png`)
+- **Tagline (verbatim):** **COME HOME TO CLEAN**
+- **Don'ts:** never recolor outside navy/cyan/white, never stretch/rotate/shadow the mark, never hand-draw the wordmark, and never use retired house-SVG or V-chevron approximations.
 
 ### Production / logo adaptations — Embroidery / Uniform Icon (secondary)
 
-For physical workwear the digital filled mark is replaced by an **outlined** house + sparkle adaptation that stitches cleanly on knit fabric. This is a **secondary, production-only variant** — it never substitutes for the digital logo in web/app/marketing/Canva contexts.
-
-- **Form:** same house + 4-point sparkle, but the house is an **open outline** (satin-stitch edge) rather than a solid fill; the door reads as a gap. Icon only — **no wordmark**.
-- **Dark workwear (navy polos/tees/fleece/caps):** cyan outline house, **white** sparkle. `assets/logo/embroidery-mark.svg` (transparent).
-- **Light fabric:** one-color **navy** outline + navy sparkle. `assets/logo/embroidery-mark-navy.svg`.
+Embroidery adaptations are **production-only** and never substitute for the digital logo in web/app/marketing contexts. Reference files remain under `assets/logo/embroidery-mark*.svg` for stitch/print workflows only.
 - **Stitch spec (per uniform kit):** **2.5″ wide** left-chest; threads **Isacord 4071 (cyan)** + **white** (star). On-fabric preview: `assets/logo/embroidery-mark-on-navy.svg`.
 - **Where it applies:** left-chest embroidery, hats, polos, fleece, name badges, and other workwear. Vehicle magnets / business cards / QR cards use the **digital** mark, not the embroidery variant.
 - See the **Embroidery / Uniform Mark** card in the Design System → Brand group.

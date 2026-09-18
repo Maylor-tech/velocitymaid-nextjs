@@ -19,7 +19,7 @@ export const approvedType = {
   /**
    * Tagline — Space Grotesk/Inter 9–11px, +3 tracking, ALL CAPS,
    * 38–45% opacity. Always render the approved copy verbatim:
-   * "COME HOME TO CLEAN."
+   * "COME HOME TO CLEAN"
    */
   tagline:
     "font-body font-normal uppercase tracking-[0.15em] text-[10px] text-vm-muted opacity-40",

@@ -150,7 +150,7 @@ VelocityMaid
 (802) 733-5348
 hello@velocitymaid.com
 
-COME HOME TO CLEAN.`;
+COME HOME TO CLEAN`;
 
   const html = `
 <div style="font-family:Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0F1C2E;">
@@ -169,7 +169,7 @@ COME HOME TO CLEAN.`;
     <p style="font-size:15px;line-height:1.6;">You're all squared up. Thank you for choosing VelocityMaid.</p>
     ${params.nextJobDate ? `<p style="font-size:14px;line-height:1.6;color:#374151;">Your next scheduled service is <strong>${params.nextJobDate}</strong> — we'll see you then.</p>` : ''}
     <p style="font-size:14px;line-height:1.6;margin-top:20px;">Brian Maylor<br/>VelocityMaid<br/>(802) 733-5348<br/>hello@velocitymaid.com</p>
-    <p style="font-size:11px;font-weight:bold;letter-spacing:2px;color:#00C2CB;margin-top:16px;">COME HOME TO CLEAN.</p>
+    <p style="font-size:11px;font-weight:bold;letter-spacing:2px;color:#00C2CB;margin-top:16px;">COME HOME TO CLEAN</p>
   </div>
 </div>`;
 

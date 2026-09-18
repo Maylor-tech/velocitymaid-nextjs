@@ -1,4 +1,6 @@
-The single source of truth for the VelocityMaid logo. Never hand-draw or recolor the mark.
+The single source of truth for the VelocityMaid logo. Never hand-draw or approximate the mark.
+
+Canonical masters: `/public/brand/velocitymaid/` (Final Approval Pack).
 
 ```jsx
 <BrandLogo theme="dark" iconSize={28} />              {/* navy header */}
@@ -6,4 +8,4 @@ The single source of truth for the VelocityMaid logo. Never hand-draw or recolor
 <BrandLogo iconOnly iconSize={24} />                    {/* compact / favicon */}
 ```
 
-`theme`: `light` (navy house, cyan sparkle — for light backgrounds) or `dark` (cyan house, white sparkle — for navy/dark). The sparkle accent auto-drops at `iconSize <= 32`. Standalone SVG marks also live in `assets/logo/`.
+`theme`: `light` (primary wordmark / transparent mark) or `dark` (reversed wordmark / white mark on navy). Standalone assets also live under `assets/logo/` as pointers to the same masters.

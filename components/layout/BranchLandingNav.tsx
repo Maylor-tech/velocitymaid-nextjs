@@ -17,7 +17,7 @@ export interface BranchLandingNavProps {
   maxWidthClass?: string;
   /**
    * @deprecated No longer rendered. The approved brand system uses one
-   * fixed tagline ("Come home to clean.") everywhere — there is no
+   * fixed tagline ("COME HOME TO CLEAN") everywhere — there is no
    * market-specific variant. Prop kept so existing callers compile
    * unchanged.
    */

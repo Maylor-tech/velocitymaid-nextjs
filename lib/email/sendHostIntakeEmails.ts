@@ -47,7 +47,7 @@ export async function sendHostIntakeConfirmationEmail(
        </a>
      </p>
      <p style="margin:0;font-size:15px;line-height:1.6;color:${NAVY};">
-       Come Home to Clean.<br/>
+       COME HOME TO CLEAN<br/>
        VelocityMaid Team
      </p>`
   );
@@ -57,7 +57,7 @@ export async function sendHostIntakeConfirmationEmail(
 In the meantime, here's everything you need to know about working with VelocityMaid:
 Host Welcome Packet: ${HOST_WELCOME_PACKET_URL}
 
-Come Home to Clean.
+COME HOME TO CLEAN
 VelocityMaid Team`;
 
   await resend.emails.send({

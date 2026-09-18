@@ -1,18 +1,18 @@
 import * as React from "react";
 
 /**
- * Approved VelocityMaid logo lockup (house + sparkle mark + wordmark).
+ * Approved VelocityMaid logo lockup (Final Approval Pack PNG masters).
  * Use `theme="dark"` on navy backgrounds, `theme="light"` on light ones.
- * Do not recolor, restretch, or substitute the mark.
+ * Do not recolor, restretch, or approximate the mark with HTML/CSS/SVG.
  *
  * @startingPoint section="Brand" subtitle="Approved logo lockup" viewport="700x160"
  */
 export interface BrandLogoProps {
   theme?: "light" | "dark";
-  /** Render only the house+sparkle mark, no wordmark. */
+  /** Render only the VM service mark, no wordmark. */
   iconOnly?: boolean;
   showTagline?: boolean;
-  /** Icon size in px; sparkle drops at <=32px per brand §2.3. */
+  /** Visual size hint in px (maps to image height). */
   iconSize?: number;
   style?: React.CSSProperties;
 }

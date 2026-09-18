@@ -165,7 +165,7 @@ export async function sendCleanerApprovalEmail(params: {
        (802) 733-5348<br/>
        hello@velocitymaid.com
      </p>
-     <p style="margin:20px 0 0;font-size:12px;font-weight:700;letter-spacing:0.08em;color:${MUTED};">COME HOME TO CLEAN.</p>`
+     <p style="margin:20px 0 0;font-size:12px;font-weight:700;letter-spacing:0.08em;color:${MUTED};">COME HOME TO CLEAN</p>`
   );
 
   const text = `Hi ${params.firstName.trim() || 'there'},
@@ -189,7 +189,7 @@ Founder, VelocityMaid
 (802) 733-5348
 hello@velocitymaid.com
 
-COME HOME TO CLEAN.`;
+COME HOME TO CLEAN`;
 
   await resend.emails.send({
     from: getResendFromEmail(),

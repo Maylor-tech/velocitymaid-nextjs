@@ -229,7 +229,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
                 }`}
               >
                 <Icon className={`h-5 w-5 ${isActive ? 'text-vm-cyan-dark' : ''}`} />
-                {item.label}
+                {(item.label as string) === 'My Bookings' ? 'Bookings' : item.label}
               </Link>
             );
           })}

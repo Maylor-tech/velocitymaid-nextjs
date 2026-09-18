@@ -156,7 +156,7 @@ export function renderQuoteEmail(data: QuoteEmailData): string {
                 </td>
                 <td valign="middle">
                   <div style="font-family:${FONT};font-size:20px;font-weight:bold;letter-spacing:1px;color:#FFFFFF;line-height:1;">VELOCITYMAID</div>
-                  <div style="font-family:${FONT};font-size:9px;font-weight:bold;letter-spacing:2.5px;color:${CYAN};line-height:1;padding-top:5px;">COME HOME TO CLEAN.</div>
+                  <div style="font-family:${FONT};font-size:9px;font-weight:bold;letter-spacing:2.5px;color:${CYAN};line-height:1;padding-top:5px;">COME HOME TO CLEAN</div>
                 </td>
               </tr>
             </table>
@@ -254,7 +254,7 @@ export function renderQuoteEmail(data: QuoteEmailData): string {
 
         <tr>
           <td align="center" style="background-color:${NAVY};padding:20px 32px;">
-            <div style="font-family:${FONT};font-size:11px;font-weight:bold;letter-spacing:2px;color:${CYAN};">COME HOME TO CLEAN.</div>
+            <div style="font-family:${FONT};font-size:11px;font-weight:bold;letter-spacing:2px;color:${CYAN};">COME HOME TO CLEAN</div>
             <div style="font-family:${FONT};font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;line-height:1.5;">VelocityMaid &middot; Premium Cleaning &amp; Property Readiness &middot; Vermont &amp; New Jersey</div>
           </td>
         </tr>
