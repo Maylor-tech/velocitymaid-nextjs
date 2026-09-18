@@ -188,7 +188,7 @@ function MarketingFooter() {
       <div style={{ maxWidth: "var(--container-marketing)", margin: "0 auto", padding: "48px 24px", display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", gap: 32 }}>
         <div>
           <BrandLogo theme="dark" iconSize={24} showTagline={false} />
-          <p style={{ fontFamily: "var(--font-heading)", textTransform: "uppercase", letterSpacing: "0.2em", fontSize: 11, color: "var(--vm-cyan)", marginTop: 12 }}>Come home to clean.</p>
+          <p style={{ fontFamily: "var(--font-heading)", textTransform: "uppercase", letterSpacing: "0.2em", fontSize: 11, color: "var(--vm-cyan)", marginTop: 12 }}>COME HOME TO CLEAN</p>
           <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 12, lineHeight: 1.6 }}>Serving New Jersey and Vermont. Trusted since 2024.</p>
         </div>
         {[["Resources", ["Partners", "Investor Materials", "Pricing"]], ["Contact", ["New Jersey — (973) 280-9190", "Vermont — (802) 733-5348", "hello@velocitymaid.com"]]].map(([h, items]) => (

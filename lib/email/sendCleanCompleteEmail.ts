@@ -276,7 +276,7 @@ function buildHtml(params: SendCleanCompleteEmailParams): string {
               <td style="background:${NAVY};padding:24px 40px;text-align:center;">
                 <div style="color:#ffffff;font-size:15px;font-weight:600;font-family:${FONT};">Thank you for choosing VelocityMaid.</div>
                 <div style="color:rgba(255,255,255,0.5);font-size:13px;font-family:${FONT};margin-top:8px;">(802) 733-5348 &middot; hello@velocitymaid.com &middot; velocitymaid.com</div>
-                <div style="color:${CYAN};font-size:13px;font-weight:700;font-family:${FONT};margin-top:12px;letter-spacing:1px;">COME HOME TO CLEAN.</div>
+                <div style="color:${CYAN};font-size:13px;font-weight:700;font-family:${FONT};margin-top:12px;letter-spacing:1px;">COME HOME TO CLEAN</div>
               </td>
             </tr>
           </table>

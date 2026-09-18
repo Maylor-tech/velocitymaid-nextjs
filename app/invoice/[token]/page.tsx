@@ -101,7 +101,7 @@ export default function PublicInvoicePage() {
         )}
 
         <p className="mt-8 text-center font-body text-xs text-vm-white/60 print:hidden">
-          VelocityMaid · Come Home to Clean
+          VelocityMaid · COME HOME TO CLEAN
         </p>
       </div>
     </div>

@@ -16,6 +16,11 @@
   --vm-white: 255 255 255;      /* #FFFFFF */
   --vm-border: 226 232 240;     /* #E2E8F0 */
 
+  /* Canonical aliases (Brand Deployment Pass v1.0) — same channels as --vm-* */
+  --velocity-navy: #0F1C2E;
+  --velocity-cyan: #00C2CB;
+  --velocity-white: #FFFFFF;
+
   /* Semantic status tints (calm — never neon) */
   --vm-cyan-tint:   230 250 251; /* #E6FAFB */
   --vm-success:     31 138 91;   /* #1F8A5B */

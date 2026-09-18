@@ -1,141 +1,164 @@
-import React from "react";
-import { colors } from "@/lib/brand/colors";
+'use client';
+
+import React from 'react';
+import Image from 'next/image';
+import {
+  brandAssets,
+  brandAssetSize,
+  BRAND_NAME,
+  BRAND_TAGLINE,
+} from '@/lib/brand/assets';
 
 /** Semantic logo sizes — use consistently across header, auth, portal, and mobile. */
 export type BrandLogoSize =
-  | "xs"
-  | "sm"
-  | "md"
-  | "lg"
-  | "header"
-  | "auth"
-  | "portal"
-  | "mobile";
+  | 'xs'
+  | 'sm'
+  | 'md'
+  | 'lg'
+  | 'header'
+  | 'auth'
+  | 'portal'
+  | 'mobile';
 
 export interface BrandLogoProps {
   /**
    * @deprecated Legacy naming from the retired forest/gold/ivory system.
-   * Kept so existing call sites don't break. "forest" now renders the
-   * approved Navy (vm-navy) treatment for light backgrounds; "ivory" now
-   * renders the approved White (vm-white) treatment for dark/navy
-   * backgrounds. Both map internally to standardized VelocityMaid
-   * Navy/Cyan/White colors — this is a token swap, not a redesign.
+   * "forest" → light-background primary; "ivory" → dark-background reversed.
    */
-  variant?: "forest" | "ivory";
+  variant?: 'forest' | 'ivory';
   /**
-   * Preferred API. "light" = light background (navy house mark + cyan
-   * sparkle); "dark" = dark/navy background (cyan house mark + white
-   * sparkle). When set, takes precedence over the legacy `variant`.
+   * Preferred API. "light" = light background (primary navy/cyan);
+   * "dark" = dark/navy background (reversed white/cyan).
    */
-  theme?: "light" | "dark";
-  /** @deprecated Prefer semantic sizes: header, auth, portal, mobile */
+  theme?: 'light' | 'dark';
   size?: BrandLogoSize;
+  /** Use VM service mark only (compact / mobile / favicon-style). */
   iconOnly?: boolean;
+  /**
+   * When false, uses cropped horizontal masters without the tagline band.
+   * When true, uses full approved lockup including COME HOME TO CLEAN.
+   */
   showTagline?: boolean;
+  /**
+   * When true, shows the service mark below `md` breakpoints and the
+   * horizontal wordmark from `md` up. Ignored when iconOnly is set.
+   */
+  responsiveMark?: boolean;
   className?: string;
+  priority?: boolean;
 }
 
-/**
- * `px` is the rendered icon size in pixels for each Tailwind height/width
- * class below — used to apply the approved sparkle-drop rule (brand
- * guidelines §2.3: "drop the sparkle accent at 32px and below; the house
- * mark alone holds clearly down to 16px").
- */
-const SIZE_MAP: Record<
-  BrandLogoSize,
-  { icon: string; px: number; text: string; sub: string; gap: string }
-> = {
-  /** Mobile nav — icon-forward, compact wordmark */
-  mobile: { icon: "h-5 w-5", px: 20, text: "text-sm", sub: "text-[7px]", gap: "gap-2" },
-  xs: { icon: "h-4 w-4", px: 16, text: "text-xs", sub: "text-[7px]", gap: "gap-1.5" },
-  /** Portal nav, footer */
-  sm: { icon: "h-5 w-5", px: 20, text: "text-sm", sub: "text-[8px]", gap: "gap-2" },
-  portal: { icon: "h-5 w-5", px: 20, text: "text-sm", sub: "text-[8px]", gap: "gap-2" },
-  /** Marketing / branch headers */
-  header: { icon: "h-6 w-6", px: 24, text: "text-base", sub: "text-[8px]", gap: "gap-2.5" },
-  /** Login pages — proportional, above-the-fold friendly */
-  auth: { icon: "h-5 w-5", px: 20, text: "text-sm", sub: "text-[7px]", gap: "gap-2" },
-  md: { icon: "h-7 w-7", px: 28, text: "text-lg", sub: "text-[9px]", gap: "gap-2.5" },
-  lg: { icon: "h-10 w-10", px: 40, text: "text-2xl", sub: "text-[11px]", gap: "gap-3" },
+const HEIGHT_PX: Record<BrandLogoSize, number> = {
+  mobile: 28,
+  xs: 24,
+  sm: 28,
+  portal: 28,
+  header: 36,
+  auth: 40,
+  md: 44,
+  lg: 64,
 };
 
-/** Brand guidelines §2.3: drop the sparkle accent at 32px and below. */
-const SPARKLE_MIN_PX = 32;
+const MARK_PX: Record<BrandLogoSize, number> = {
+  mobile: 32,
+  xs: 28,
+  sm: 32,
+  portal: 32,
+  header: 36,
+  auth: 40,
+  md: 44,
+  lg: 56,
+};
 
 export default function BrandLogo({
   variant,
   theme,
-  size = "header",
+  size = 'header',
   iconOnly = false,
   showTagline = true,
-  className = "",
+  responsiveMark = false,
+  className = '',
+  priority = false,
 }: BrandLogoProps) {
-  // Resolve the treatment: the preferred `theme` prop wins; otherwise fall
-  // back to the legacy `variant` (forest -> light, ivory -> dark). Neither
-  // set defaults to "light" (the prior `variant="forest"` default), so all
-  // existing call sites render an identical mark.
-  const resolvedTheme = theme ?? (variant === "ivory" ? "dark" : "light");
-  // light background -> approved Navy treatment: navy house mark, cyan sparkle.
-  // dark/navy background -> approved White treatment: cyan house mark, white sparkle.
-  const isNavyTreatment = resolvedTheme === "light";
-  const logoColor = isNavyTreatment ? "text-vm-navy" : "text-vm-white";
-  const sizeClasses = SIZE_MAP[size];
-  const showSparkle = sizeClasses.px > SPARKLE_MIN_PX;
+  const resolvedTheme = theme ?? (variant === 'ivory' ? 'dark' : 'light');
+  const isDarkBg = resolvedTheme === 'dark';
 
-  // Per the approved logo system (velocitymaid-logo-system-v1): the house mark
-  // and sparkle swap which one carries the cyan accent depending on
-  // background, and the small center dot always matches the surface it sits
-  // on so it reads as a tiny punch-through highlight.
-  const houseFill = isNavyTreatment ? "currentColor" : colors.primaryCyan;
-  const sparkleFill = isNavyTreatment ? colors.primaryCyan : "currentColor";
-  const dotFill = isNavyTreatment ? colors.white : colors.primaryNavy;
+  const wordmarkSrc = isDarkBg
+    ? showTagline
+      ? brandAssets.reversed
+      : brandAssets.reversedNoTag
+    : showTagline
+      ? brandAssets.primary
+      : brandAssets.primaryNoTag;
+
+  const markSrc = isDarkBg ? brandAssets.markWhite : brandAssets.mark;
+
+  const h = HEIGHT_PX[size];
+  const markH = MARK_PX[size];
+  const wordAspect = showTagline
+    ? brandAssetSize.horizontal.width / brandAssetSize.horizontal.height
+    : brandAssetSize.horizontalNoTag.width /
+      brandAssetSize.horizontalNoTag.height;
+  const wordW = Math.round(h * wordAspect);
+
+  const alt = showTagline
+    ? `${BRAND_NAME} — ${BRAND_TAGLINE}`
+    : BRAND_NAME;
+
+  if (iconOnly) {
+    return (
+      <span
+        className={`inline-flex shrink-0 items-center ${className}`}
+        style={{ height: markH, width: markH }}
+      >
+        <Image
+          src={markSrc}
+          alt={BRAND_NAME}
+          width={markH}
+          height={markH}
+          className="h-full w-full object-contain"
+          priority={priority}
+        />
+      </span>
+    );
+  }
+
+  if (responsiveMark) {
+    return (
+      <span className={`inline-flex shrink-0 items-center ${className}`}>
+        <Image
+          src={markSrc}
+          alt={alt}
+          width={markH}
+          height={markH}
+          className="h-8 w-8 object-contain md:hidden"
+          priority={priority}
+        />
+        <Image
+          src={wordmarkSrc}
+          alt={alt}
+          width={wordW}
+          height={h}
+          className="hidden h-9 w-auto max-w-[200px] object-contain object-left md:block lg:max-w-[240px]"
+          priority={priority}
+        />
+      </span>
+    );
+  }
 
   return (
-    <div
-      className={`flex items-center ${sizeClasses.gap} ${logoColor} ${className}`}
+    <span
+      className={`inline-flex shrink-0 items-center ${className}`}
+      style={{ height: h, maxWidth: Math.min(wordW, size === 'sm' || size === 'portal' ? 180 : 260) }}
     >
-      <svg
-        className={`${sizeClasses.icon} shrink-0`}
-        viewBox="0 0 100 100"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden
-      >
-        {/* "V-home" mark — approved icon, velocitymaid-logo-system-v1 */}
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M8,42 L50,10 L92,42 L92,92 L8,92 Z M39,64 L61,64 L61,92 L39,92 Z"
-          fill={houseFill}
-        />
-        {showSparkle && (
-          <>
-            <path
-              d="M74,14 L75.56,18.44 L80,20 L75.56,21.56 L74,26 L72.44,21.56 L68,20 L72.44,18.44 Z"
-              fill={sparkleFill}
-            />
-            <circle cx="74" cy="20" r="1.5" fill={dotFill} />
-          </>
-        )}
-      </svg>
-
-      {!iconOnly && (
-        <div className="flex flex-col text-left min-w-0">
-          <span
-            className={`font-heading font-bold tracking-widest uppercase leading-none whitespace-nowrap ${sizeClasses.text}`}
-          >
-            VelocityMaid
-          </span>
-          {showTagline && (
-            <span
-              className={`font-body font-bold uppercase tracking-[0.2em] leading-none mt-0.5 ${
-                isNavyTreatment ? "text-vm-muted" : "text-vm-white/40"
-              } ${sizeClasses.sub}`}
-            >
-              Come home to clean.
-            </span>
-          )}
-        </div>
-      )}
-    </div>
+      <Image
+        src={wordmarkSrc}
+        alt={alt}
+        width={wordW}
+        height={h}
+        className="h-full w-auto max-w-full object-contain object-left"
+        priority={priority}
+      />
+    </span>
   );
 }

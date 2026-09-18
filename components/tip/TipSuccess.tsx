@@ -37,7 +37,7 @@ export default function TipSuccess({ amountDollars, guestName }: TipSuccessProps
         Leave us a Google review
       </a>
       <p className="text-vm-cyan/40 font-heading text-xs tracking-widest text-center mt-12 uppercase">
-        Come home to clean.
+        COME HOME TO CLEAN
       </p>
     </div>
   );

@@ -64,7 +64,7 @@ export default function PublicReportPage({ params }: { params: { token: string }
         </div>
 
         <p className="mt-8 text-center font-body text-xs text-vm-muted">
-          <Link href="/" className="text-vm-cyan-dark hover:underline">VelocityMaid</Link> · Come Home to Clean
+          <Link href="/" className="text-vm-cyan-dark hover:underline">VelocityMaid</Link> · COME HOME TO CLEAN
         </p>
       </div>
     </div>

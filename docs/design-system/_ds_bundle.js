@@ -227,14 +227,10 @@ Object.assign(__ds_scope, { IconButton });
 // components/brand/BrandLogo.jsx
 try { (() => {
 /**
- * BrandLogo — the approved VelocityMaid lockup (velocitymaid-logo-system-v1).
- * House + sparkle mark with optional wordmark and "COME HOME TO CLEAN." tagline.
- * `theme="light"` = navy mark for light backgrounds; `theme="dark"` = cyan mark
- * for navy/dark backgrounds. Sparkle is dropped at <=32px icon size per §2.3.
- * Never recolor, restretch, or substitute the mark.
+ * BrandLogo — approved Final Approval Pack lockups (PNG masters).
+ * Canonical: /public/brand/velocitymaid/
  */
-const HOUSE = "M8,42 L50,10 L92,42 L92,92 L8,92 Z M39,64 L61,64 L61,92 L39,92 Z";
-const SPARKLE = "M74,14 L75.56,18.44 L80,20 L75.56,21.56 L74,26 L72.44,21.56 L68,20 L72.44,18.44 Z";
+const ASSET_BASE = "../../../public/brand/velocitymaid";
 function BrandLogo({
   theme = "light",
   iconOnly = false,
@@ -242,71 +238,58 @@ function BrandLogo({
   iconSize = 28,
   style = {}
 }) {
-  const isLight = theme === "light";
-  const houseFill = isLight ? "var(--vm-navy)" : "var(--vm-cyan)";
-  const sparkleFill = isLight ? "var(--vm-cyan)" : "var(--vm-white)";
-  const dotFill = isLight ? "var(--vm-white)" : "var(--vm-navy)";
-  const textColor = isLight ? "var(--vm-navy)" : "var(--vm-white)";
-  const subColor = isLight ? "var(--vm-muted)" : "rgba(255,255,255,0.45)";
-  const showSparkle = iconSize > 32;
-  return /*#__PURE__*/React.createElement("div", {
+  const isDark = theme === "dark";
+  const markSrc = isDark ? `${ASSET_BASE}/velocitymaid-mark-white.png` : `${ASSET_BASE}/velocitymaid-mark.png`;
+  const wordmarkSrc = isDark ? showTagline ? `${ASSET_BASE}/velocitymaid-reversed-clear.png` : `${ASSET_BASE}/velocitymaid-reversed-notag.png` : showTagline ? `${ASSET_BASE}/velocitymaid-primary.png` : `${ASSET_BASE}/velocitymaid-primary-notag.png`;
+  const alt = showTagline ? "VelocityMaid — COME HOME TO CLEAN" : "VelocityMaid";
+  if (iconOnly) {
+    return /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "inline-flex",
+        alignItems: "center",
+        height: iconSize,
+        width: iconSize,
+        flexShrink: 0,
+        ...style
+      }
+    }, /*#__PURE__*/React.createElement("img", {
+      src: markSrc,
+      alt: "VelocityMaid",
+      width: iconSize,
+      height: iconSize,
+      style: {
+        display: "block",
+        width: "100%",
+        height: "100%",
+        objectFit: "contain"
+      }
+    }));
+  }
+  const wordHeight = Math.round(iconSize * 1.15);
+  const wordWidth = Math.round(wordHeight * (showTagline ? 1024 / 352 : 1024 / 246));
+  return /*#__PURE__*/React.createElement("span", {
     style: {
       display: "inline-flex",
       alignItems: "center",
-      gap: Math.round(iconSize * 0.35),
+      height: wordHeight,
+      maxWidth: wordWidth,
+      flexShrink: 0,
       ...style
     }
-  }, /*#__PURE__*/React.createElement("svg", {
-    width: iconSize,
-    height: iconSize,
-    viewBox: "0 0 100 100",
+  }, /*#__PURE__*/React.createElement("img", {
+    src: wordmarkSrc,
+    alt: alt,
+    width: wordWidth,
+    height: wordHeight,
     style: {
-      flexShrink: 0,
-      overflow: "visible"
-    },
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("path", {
-    fillRule: "evenodd",
-    clipRule: "evenodd",
-    d: HOUSE,
-    fill: houseFill
-  }), showSparkle && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
-    d: SPARKLE,
-    fill: sparkleFill
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "74",
-    cy: "20",
-    r: "1.5",
-    fill: dotFill
-  }))), !iconOnly && /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      lineHeight: 1,
-      minWidth: 0
+      display: "block",
+      height: "100%",
+      width: "auto",
+      maxWidth: "100%",
+      objectFit: "contain",
+      objectPosition: "left center"
     }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "var(--font-heading)",
-      fontWeight: "var(--fw-bold)",
-      textTransform: "uppercase",
-      letterSpacing: "0.04em",
-      fontSize: Math.round(iconSize * 0.64),
-      color: textColor,
-      whiteSpace: "nowrap"
-    }
-  }, "VelocityMaid"), showTagline && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "var(--font-body)",
-      fontWeight: "var(--fw-bold)",
-      textTransform: "uppercase",
-      letterSpacing: "var(--tracking-widest)",
-      fontSize: Math.max(7, Math.round(iconSize * 0.26)),
-      color: subColor,
-      marginTop: 3,
-      whiteSpace: "nowrap"
-    }
-  }, "Come home to clean.")));
+  }));
 }
 Object.assign(__ds_scope, { BrandLogo });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/brand/BrandLogo.jsx", error: String((e && e.message) || e) }); }
@@ -4179,7 +4162,7 @@ function MarketingFooter() {
       color: "var(--vm-cyan)",
       marginTop: 12
     }
-  }, "Come home to clean."), /*#__PURE__*/React.createElement("p", {
+  }, "COME HOME TO CLEAN"), /*#__PURE__*/React.createElement("p", {
     style: {
       fontFamily: "var(--font-body)",
       fontSize: 14,

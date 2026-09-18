@@ -6,43 +6,18 @@ import {
   formatHostIntakeText,
 } from "@/lib/hostIntake/formatSubmission";
 import type { HostIntakePayload } from "@/lib/hostIntake/types";
+import {
+  brandHtmlBlock,
+  escapeHtml,
+  NAVY,
+  CYAN,
+} from "@/lib/billing/emailBrand";
 
 const NOTIFICATION_EMAIL =
   process.env.CONTACT_NOTIFICATIONS_EMAIL || "hello@velocitymaid.com";
 
-const NAVY = "#0F1C2E";
-const CYAN = "#00C2CB";
-const SURFACE = "#F4F6F9";
-const MUTED = "#6B7280";
-const FONT = "'Helvetica Neue', Arial, sans-serif";
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 function brandHtml(title: string, body: string): string {
-  return `<!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>${escapeHtml(title)}</title></head>
-<body style="margin:0;padding:0;background:${SURFACE};font-family:${FONT};">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:${SURFACE};padding:32px 16px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;border:1px solid #E2E8F0;overflow:hidden;">
-        <tr><td style="background:${NAVY};padding:24px 28px;">
-          <p style="margin:0;font-size:20px;font-weight:700;color:#fff;">VelocityMaid</p>
-          <p style="margin:6px 0 0;font-size:13px;color:${CYAN};">Come home to clean.</p>
-        </td></tr>
-        <tr><td style="padding:28px;">${body}</td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`;
+  return brandHtmlBlock(title, body);
 }
 
 export async function sendHostIntakeConfirmationEmail(
@@ -72,7 +47,7 @@ export async function sendHostIntakeConfirmationEmail(
        </a>
      </p>
      <p style="margin:0;font-size:15px;line-height:1.6;color:${NAVY};">
-       Come Home to Clean.<br/>
+       COME HOME TO CLEAN<br/>
        VelocityMaid Team
      </p>`
   );
@@ -82,7 +57,7 @@ export async function sendHostIntakeConfirmationEmail(
 In the meantime, here's everything you need to know about working with VelocityMaid:
 Host Welcome Packet: ${HOST_WELCOME_PACKET_URL}
 
-Come Home to Clean.
+COME HOME TO CLEAN
 VelocityMaid Team`;
 
   await resend.emails.send({

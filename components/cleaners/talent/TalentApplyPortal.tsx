@@ -113,7 +113,7 @@ export default function TalentApplyPortal() {
         throw new Error(json.error || 'Failed to submit application');
       }
       trackEvent('cleaner_applied', {
-        market: data.serviceAreas.join(',') || 'unknown',
+        market: data.serviceAreas.areas.join(',') || 'unknown',
       });
       router.push('/cleaners/apply/success');
     } catch (err) {
@@ -150,7 +150,7 @@ export default function TalentApplyPortal() {
               VelocityMaid professionals are held to hospitality-grade standards — punctual,
               detail-obsessed, and trusted in guests&apos; homes. We invest in training,
               certification, and ongoing support so every clean reflects our brand promise:
-              come home to clean.
+              COME HOME TO CLEAN
             </p>
             <button
               type="button"

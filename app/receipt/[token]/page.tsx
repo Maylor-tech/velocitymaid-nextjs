@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Download, Loader2 } from 'lucide-react';
+import { BrandLogo } from '@/components/brand';
 
 interface ReceiptView {
   receiptNumber: string;
@@ -50,8 +51,8 @@ export default function PublicReceiptPage({ params }: { params: { token: string 
       <div className="mx-auto max-w-lg">
         <div className="rounded-2xl border border-vm-border bg-vm-white shadow-sm overflow-hidden">
           <div className="bg-vm-navy px-6 py-5">
-            <p className="font-heading text-xl font-bold text-white">VelocityMaid</p>
-            <p className="font-body text-sm text-vm-cyan">Payment Receipt</p>
+            <BrandLogo theme="dark" size="portal" showTagline={false} />
+            <p className="mt-2 font-body text-sm text-vm-cyan">Payment Receipt</p>
           </div>
           <div className="p-6 space-y-4">
             <p className="font-body text-sm text-vm-muted">Receipt #{receipt.receiptNumber}</p>
