@@ -24,7 +24,11 @@ export function isBranchScopedAdmin(
   return branchCount === 1;
 }
 
-const BRANCH_SCOPED_PAGE_PREFIXES = ['/admin/jobs', '/admin/feedback'];
+const BRANCH_SCOPED_PAGE_PREFIXES = [
+  '/admin/jobs',
+  '/admin/feedback',
+  '/admin/profitability',
+];
 
 export function isPathAllowedForBranchScopedAdmin(pathname: string): boolean {
   if (pathname === '/admin/login' || pathname.startsWith('/admin/login/')) {
@@ -50,6 +54,12 @@ export function isPathAllowedForBranchScopedAdminApi(pathname: string): boolean 
   if (
     pathname === '/api/admin/feedback' ||
     pathname.startsWith('/api/admin/feedback/')
+  ) {
+    return true;
+  }
+  if (
+    pathname === '/api/admin/finance/owner-profitability' ||
+    pathname.startsWith('/api/admin/finance/owner-profitability/')
   ) {
     return true;
   }
