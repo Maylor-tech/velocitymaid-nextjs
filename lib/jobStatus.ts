@@ -19,6 +19,30 @@ export const CANCELLED_JOB_STATUS_EXCLUDE: PrismaJobStatus[] = [
   PrismaJobStatus.CANCELLED_EMERGENCY,
 ];
 
+/**
+ * Pre-service statuses a customer may cancel from the portal (≥2h window).
+ * Canonical Prisma JobStatus values only — no legacy mixed-case aliases.
+ */
+export const CUSTOMER_CANCELLABLE_STATUSES: PrismaJobStatus[] = [
+  PrismaJobStatus.RECEIVED,
+  PrismaJobStatus.CONFIRMED,
+  PrismaJobStatus.ASSIGNED,
+];
+
+export function isCustomerCancellableStatus(status: string): boolean {
+  return CUSTOMER_CANCELLABLE_STATUSES.includes(
+    status.toUpperCase() as PrismaJobStatus
+  );
+}
+
+export function isCancelledStatus(status: string): boolean {
+  const upper = status.toUpperCase();
+  return (
+    upper === PrismaJobStatus.CANCELLED ||
+    upper === PrismaJobStatus.CANCELLED_EMERGENCY
+  );
+}
+
 export const JOB_STATUSES = [
   "RECEIVED",
   "CONFIRMED",
@@ -113,4 +137,3 @@ export function isSubmittedForQc(status: string): boolean {
 export function isFinalServiceCompletion(status: string): boolean {
   return status === "COMPLETED";
 }
-

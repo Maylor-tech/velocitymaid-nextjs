@@ -1,15 +1,13 @@
 import { JobStatus, JobOfferStatus } from '@prisma/client';
-import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { DispatchError } from '@/lib/dispatch/errors';
 import { awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
 import {
-  ASSIGNMENT_RELEASED,
-  JOB_ASSIGNMENT_RELEASED,
   isReleaseReasonCode,
   releaseReasonLabel,
   type ReleaseReasonCode,
 } from '@/lib/dispatch/releaseReasons';
+import { clearCurrentAssignmentInTx } from '@/lib/dispatch/clearAssignmentInTx';
 
 const TERMINAL_STATUSES: JobStatus[] = [
   JobStatus.COMPLETED,
@@ -51,6 +49,7 @@ export type ReleaseAssignmentResult = {
 /**
  * Admin recovery: clear current assignment without rewriting the accepted JobOffer.
  * Current responsibility is Job.assignedCleanerId. Historical accept stays ACCEPTED.
+ * Resulting service status is CONFIRMED (not CANCELLED).
  */
 export async function releaseAssignedCleaner(input: {
   jobId: string;
@@ -151,90 +150,30 @@ export async function releaseAssignedCleaner(input: {
   const adminId =
     input.adminId && input.adminId !== 'local-admin' ? input.adminId : null;
   const now = new Date();
+  const quotedTotalUnchanged =
+    job.quotedTotal != null ? Number(job.quotedTotal) : null;
+  const totalPriceUnchanged =
+    job.totalPrice != null ? Number(job.totalPrice) : null;
 
   const updated = await prisma.$transaction(async (tx) => {
-    const moved = await tx.job.updateMany({
-      where: {
-        id: job.id,
-        assignedCleanerId: expectedCleanerId,
-      },
-      data: {
-        assignedCleanerId: null,
-        assignedAt: null,
-        status: JobStatus.CONFIRMED,
-      },
+    return clearCurrentAssignmentInTx(tx, {
+      jobId: job.id,
+      expectedCleanerId,
+      previousStatus: job.status,
+      nextStatus: JobStatus.CONFIRMED,
+      branchId: job.branchId,
+      jobReference: job.jobReference,
+      acceptedOffer,
+      actorId: adminId,
+      actorRole: 'ADMIN',
+      reasonLabel: releaseReasonLabel(reason),
+      reasonCode: reason,
+      notes: notes || null,
+      now,
+      paymentStatusUnchanged: job.paymentStatus,
+      quotedTotalUnchanged,
+      totalPriceUnchanged,
     });
-    if (moved.count !== 1) {
-      throw new DispatchError(
-        'Assignment changed before release could complete',
-        'CONCURRENT_ASSIGNMENT_CHANGE',
-        409
-      );
-    }
-
-    const next = await tx.job.findUnique({
-      where: { id: job.id },
-      select: {
-        id: true,
-        status: true,
-        assignedCleanerId: true,
-        paymentStatus: true,
-        quotedTotal: true,
-        totalPrice: true,
-        operationalTotal: true,
-      },
-    });
-    if (!next) throw new DispatchError('Job not found', 'JOB_NOT_FOUND', 404);
-
-    await tx.jobTeamMember.deleteMany({ where: { jobId: job.id } });
-
-    await tx.assignmentLog.create({
-      data: {
-        jobId: job.id,
-        cleanerId: expectedCleanerId,
-        branchId: job.branchId,
-        outcome: ASSIGNMENT_RELEASED,
-        reason: releaseReasonLabel(reason),
-        details: {
-          reasonCode: reason,
-          notes: notes || null,
-          offerId: acceptedOffer?.id ?? null,
-          previousStatus: job.status,
-          newStatus: next.status,
-          releasedAt: now.toISOString(),
-          releasedByAdminId: adminId,
-          compensationAmount: acceptedOffer ? Number(acceptedOffer.compensationAmount) : null,
-          compensationBasis: acceptedOffer?.compensationBasis ?? null,
-          paymentStatusUnchanged: next.paymentStatus,
-          quotedTotalUnchanged:
-            next.quotedTotal != null ? Number(next.quotedTotal) : null,
-          totalPriceUnchanged: next.totalPrice != null ? Number(next.totalPrice) : null,
-        },
-      },
-    });
-
-    await tx.auditLog.create({
-      data: {
-        id: randomUUID(),
-        actorId: adminId,
-        actorRole: 'ADMIN',
-        action: JOB_ASSIGNMENT_RELEASED,
-        entityType: 'Job',
-        entityId: job.id,
-        description: `Cleaner released from ${job.jobReference || job.id}. Accepted offer preserved.`,
-        changes: {
-          from: expectedCleanerId,
-          to: null,
-          offerId: acceptedOffer?.id ?? null,
-          offerStatusUnchanged: acceptedOffer?.status ?? null,
-          reason,
-          notes: notes || null,
-          paymentStatusUnchanged: next.paymentStatus,
-        },
-      },
-    });
-
-    return next;
   });
 
   await awaitJobCalendarSync(job.id);
