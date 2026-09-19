@@ -4,19 +4,55 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+type CalendarEventBound = {
+  date?: string;
+  dateTime?: string;
+};
+
+type CalendarEventBody = {
+  summary?: string;
+  description?: string;
+  status?: string;
+  start?: CalendarEventBound;
+  end?: CalendarEventBound;
+};
+
+type CalendarPatchCall = {
+  eventId: string;
+  requestBody: CalendarEventBody;
+};
+
+type JobUpdateData = {
+  calendarEventId?: string;
+  calendarEventStatus?: string;
+};
+
+type JobUpdateArgs = {
+  data: JobUpdateData;
+};
+
+type CalendarInsertArgs = {
+  requestBody: CalendarEventBody;
+};
+
+type CalendarPatchArgs = {
+  eventId: string;
+  requestBody: CalendarEventBody;
+};
+
 const { calendarMock, jobUpdates } = vi.hoisted(() => ({
   calendarMock: {
-    inserted: [] as any[],
-    patched: [] as any[],
+    inserted: [] as CalendarEventBody[],
+    patched: [] as CalendarPatchCall[],
     shouldThrow: false,
   },
-  jobUpdates: [] as any[],
+  jobUpdates: [] as JobUpdateData[],
 }));
 
 vi.mock('../../prisma', () => ({
   prisma: {
     job: {
-      update: vi.fn(async ({ data }: any) => {
+      update: vi.fn(async ({ data }: JobUpdateArgs) => {
         jobUpdates.push(data);
         return data;
       }),
@@ -41,11 +77,11 @@ vi.mock('../client', () => ({
     }
     return {
       events: {
-        insert: vi.fn(async ({ requestBody }: any) => {
+        insert: vi.fn(async ({ requestBody }: CalendarInsertArgs) => {
           calendarMock.inserted.push(requestBody);
           return { data: { id: `event-${calendarMock.inserted.length}` } };
         }),
-        patch: vi.fn(async ({ eventId, requestBody }: any) => {
+        patch: vi.fn(async ({ eventId, requestBody }: CalendarPatchArgs) => {
           calendarMock.patched.push({ eventId, requestBody });
           return { data: { id: eventId } };
         }),
