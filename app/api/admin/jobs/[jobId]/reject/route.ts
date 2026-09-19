@@ -9,6 +9,7 @@ import { logAuditEntry } from '@/lib/audit';
 import { refundDepositForRejectedJob } from '@/lib/booking/depositRefund';
 import { awaitJobCalendarCancel } from '@/lib/google/jobGoogleSync';
 import { cancelOpenOffersForJob } from '@/lib/dispatch/jobOffer';
+import { notifyCleanerOfJobCancellation } from '@/lib/notifications/cleanerCancellationEmail';
 
 /**
  * POST /api/admin/jobs/[jobId]/reject
@@ -40,6 +41,8 @@ export async function POST(
       );
     }
 
+    const releasedCleanerId = job.assignedCleanerId;
+
     const updated = await prisma.job.update({
       where: { id: jobId },
       data: {
@@ -66,6 +69,14 @@ export async function POST(
     });
 
     await awaitJobCalendarCancel(jobId);
+
+    if (releasedCleanerId) {
+      await notifyCleanerOfJobCancellation({
+        jobId,
+        cleanerId: releasedCleanerId,
+        triggeredBy: 'admin',
+      }).catch(() => {});
+    }
 
     const jobAfterRefund = await prisma.job.findUnique({ where: { id: jobId } });
 

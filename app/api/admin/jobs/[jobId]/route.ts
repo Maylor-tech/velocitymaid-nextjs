@@ -21,6 +21,7 @@ import { isDispatchOffersEnabledForBranch } from '@/lib/dispatch/featureFlags';
 import { cancelOpenOffersForJob } from '@/lib/dispatch/jobOffer';
 import { deriveDispatchUiState } from '@/lib/dispatch/dispatchState';
 import { isEffectivelyOpen, effectiveOfferStatus } from '@/lib/dispatch/offerExpiry';
+import { notifyCleanerOfJobCancellation } from '@/lib/notifications/cleanerCancellationEmail';
 
 export async function GET(
   request: NextRequest,
@@ -513,6 +514,13 @@ export async function PATCH(
     if (becameCancelled) {
       await cancelOpenOffersForJob(jobId, auth.userId);
       await awaitJobCalendarCancel(jobId);
+      if (existing.assignedCleanerId) {
+        await notifyCleanerOfJobCancellation({
+          jobId,
+          cleanerId: existing.assignedCleanerId,
+          triggeredBy: 'admin',
+        }).catch(() => {});
+      }
     } else if (scheduleOrCleanerChanged) {
       await awaitJobCalendarSync(jobId);
     }

@@ -12,6 +12,7 @@ import {
   cancelOpenOfferedRowsInTx,
   clearCurrentAssignmentInTx,
 } from '@/lib/dispatch/clearAssignmentInTx';
+import { notifyCleanerOfJobCancellation } from '@/lib/notifications/cleanerCancellationEmail';
 
 const IN_SERVICE_STATUSES: JobStatus[] = [
   JobStatus.ON_THE_WAY,
@@ -295,6 +296,16 @@ export async function cancelCustomerJob(input: {
 
   // Calendar cancel only — never sync/recreate after a terminal cancel.
   await awaitJobCalendarCancel(job.id);
+
+  // Email is best-effort and must never undo cancellation. Use the
+  // pre-clear releasedCleanerId — Job.assignedCleanerId is already null.
+  if (releasedCleanerId) {
+    await notifyCleanerOfJobCancellation({
+      jobId: job.id,
+      cleanerId: releasedCleanerId,
+      triggeredBy: 'system',
+    }).catch(() => {});
+  }
 
   return {
     job: {

@@ -14,6 +14,7 @@ import { prisma } from '@/lib/prisma';
 import { JobStatus } from '@prisma/client';
 import { awaitJobCalendarCancel } from '@/lib/google/jobGoogleSync';
 import { cancelOpenOffersForJob } from '@/lib/dispatch/jobOffer';
+import { notifyCleanerOfJobCancellation } from '@/lib/notifications/cleanerCancellationEmail';
 
 export async function POST(
   request: NextRequest,
@@ -28,7 +29,7 @@ export async function POST(
 
     const job = await prisma.job.findUnique({
       where: { id: jobId },
-      select: { id: true, status: true },
+      select: { id: true, status: true, assignedCleanerId: true },
     });
     if (!job) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
@@ -46,6 +47,8 @@ export async function POST(
       );
     }
 
+    const releasedCleanerId = job.assignedCleanerId;
+
     await prisma.job.update({
       where: { id: jobId },
       data: {
@@ -59,6 +62,14 @@ export async function POST(
 
     // Await Calendar cancel in this request — emergency cancel already committed.
     await awaitJobCalendarCancel(jobId);
+
+    if (releasedCleanerId) {
+      await notifyCleanerOfJobCancellation({
+        jobId,
+        cleanerId: releasedCleanerId,
+        triggeredBy: 'admin',
+      }).catch(() => {});
+    }
 
     const sent = await sendEmergencyCancelNoticeForJob(jobId);
     return NextResponse.json({ ok: true, sent });
