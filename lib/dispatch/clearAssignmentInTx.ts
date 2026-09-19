@@ -34,7 +34,7 @@ export async function clearCurrentAssignmentInTx(
     notes: string | null;
     now: Date;
     /** Extra Job fields applied in the same updateMany (e.g. cancellation). */
-    extraJobData?: Prisma.JobUpdateManyMutationInput;
+    extraJobData?: Prisma.JobUncheckedUpdateManyInput;
     paymentStatusUnchanged: string;
     quotedTotalUnchanged: number | null;
     totalPriceUnchanged: number | null;

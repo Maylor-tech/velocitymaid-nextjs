@@ -18,10 +18,12 @@ import { logAuditEntry } from '@/lib/audit';
 import type { JobStatus } from '@prisma/client';
 import { awaitJobCalendarCancel, awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
 import { isDispatchOffersEnabledForBranch } from '@/lib/dispatch/featureFlags';
-import { cancelOpenOffersForJob } from '@/lib/dispatch/jobOffer';
 import { deriveDispatchUiState } from '@/lib/dispatch/dispatchState';
 import { isEffectivelyOpen, effectiveOfferStatus } from '@/lib/dispatch/offerExpiry';
 import { notifyCleanerOfJobCancellation } from '@/lib/notifications/cleanerCancellationEmail';
+import { applyAdminTerminalCancellation } from '@/lib/admin/applyAdminTerminalCancellation';
+import { isDispatchError } from '@/lib/dispatch/errors';
+import type { Prisma } from '@prisma/client';
 
 export async function GET(
   request: NextRequest,
@@ -466,6 +468,117 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: 'No fields to update' }, { status: 400 });
     }
 
+    const nextStatus = data.status as JobStatus | undefined;
+    const becomingCancelled =
+      (nextStatus === 'CANCELLED' || nextStatus === 'CANCELLED_EMERGENCY') &&
+      existing.status !== nextStatus;
+
+    if (becomingCancelled && nextStatus) {
+      // Terminal cancel + assignment clear must be atomic. Do not leave an
+      // orphaned assignedCleanerId / assignedAt / JobTeamMember row.
+      const otherFields: Prisma.JobUncheckedUpdateManyInput = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (key === 'status' || key === 'assignedCleanerId' || key === 'assignedAt') {
+          continue;
+        }
+        (otherFields as Record<string, unknown>)[key] = value;
+      }
+      const now = new Date();
+      const extraJobData: Prisma.JobUncheckedUpdateManyInput = {
+        cancelledAt: now,
+        ...otherFields,
+      };
+
+      const cancelResult = await applyAdminTerminalCancellation({
+        jobId,
+        adminId: auth.userId,
+        nextStatus,
+        reasonLabel: 'Admin cancelled job',
+        reasonCode: 'ADMIN_CANCELLED',
+        notes: null,
+        extraJobData,
+        unassignedUpdateData: otherFields,
+      });
+
+      const refreshed = await prisma.job.findUnique({
+        where: { id: jobId },
+        select: {
+          id: true,
+          preferredDate: true,
+          preferredTime: true,
+          internalNotes: true,
+          address: true,
+          serviceType: true,
+          status: true,
+          paymentStatus: true,
+          balanceDue: true,
+          totalPrice: true,
+          assignedCleanerId: true,
+          assignedAt: true,
+        },
+      });
+
+      await logAuditEntry({
+        actorId: auth.userId,
+        actorRole: auth.role,
+        action: 'JOB_UPDATED',
+        entityType: 'Job',
+        entityId: jobId,
+        description: 'Admin edited job details',
+        changes: {
+          before: {
+            preferredDate: existing.preferredDate?.toISOString() ?? null,
+            preferredTime: existing.preferredTime,
+            internalNotes: existing.internalNotes,
+            address: existing.address,
+            serviceType: existing.serviceType,
+            status: existing.status,
+            totalPrice: existing.totalPrice ? Number(existing.totalPrice) : null,
+            assignedCleanerId: existing.assignedCleanerId,
+          },
+          after: {
+            preferredDate: refreshed?.preferredDate?.toISOString() ?? null,
+            preferredTime: refreshed?.preferredTime ?? null,
+            internalNotes: refreshed?.internalNotes ?? null,
+            address: refreshed?.address ?? null,
+            serviceType: refreshed?.serviceType ?? null,
+            status: cancelResult.job.status,
+            totalPrice: cancelResult.job.totalPrice,
+            assignedCleanerId: cancelResult.job.assignedCleanerId,
+          },
+        },
+      });
+
+      await awaitJobCalendarCancel(jobId);
+
+      if (cancelResult.releasedCleanerId) {
+        await notifyCleanerOfJobCancellation({
+          jobId,
+          cleanerId: cancelResult.releasedCleanerId,
+          triggeredBy: 'admin',
+        }).catch(() => {});
+      }
+
+      return NextResponse.json({
+        success: true,
+        job: {
+          id: jobId,
+          preferredDate: refreshed?.preferredDate?.toISOString() ?? null,
+          preferredTime: refreshed?.preferredTime ?? null,
+          internalNotes: refreshed?.internalNotes ?? null,
+          address: refreshed?.address ?? null,
+          serviceType: refreshed?.serviceType ?? null,
+          status: cancelResult.job.status,
+          paymentStatus: cancelResult.job.paymentStatus,
+          balanceDue:
+            refreshed?.balanceDue != null ? Number(refreshed.balanceDue) : null,
+          totalPrice: cancelResult.job.totalPrice,
+          assignedCleanerId: cancelResult.job.assignedCleanerId,
+        },
+        payout: null,
+      });
+    }
+
     const updated = await prisma.job.update({
       where: { id: jobId },
       data,
@@ -502,26 +615,13 @@ export async function PATCH(
       },
     });
 
-    const becameCancelled =
-      (updated.status === 'CANCELLED' || updated.status === 'CANCELLED_EMERGENCY') &&
-      existing.status !== updated.status;
     const scheduleOrCleanerChanged =
       data.preferredDate !== undefined ||
       data.preferredTime !== undefined ||
       data.assignedCleanerId !== undefined ||
       data.serviceType !== undefined;
 
-    if (becameCancelled) {
-      await cancelOpenOffersForJob(jobId, auth.userId);
-      await awaitJobCalendarCancel(jobId);
-      if (existing.assignedCleanerId) {
-        await notifyCleanerOfJobCancellation({
-          jobId,
-          cleanerId: existing.assignedCleanerId,
-          triggeredBy: 'admin',
-        }).catch(() => {});
-      }
-    } else if (scheduleOrCleanerChanged) {
+    if (scheduleOrCleanerChanged) {
       await awaitJobCalendarSync(jobId);
     }
 
@@ -550,6 +650,12 @@ export async function PATCH(
     });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
+    if (isDispatchError(error)) {
+      return NextResponse.json(
+        { success: false, error: error.message, code: error.code },
+        { status: error.status }
+      );
+    }
     const message = error instanceof Error ? error.message : 'Failed to update job';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

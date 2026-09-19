@@ -8,12 +8,15 @@ import { requireRole } from '@/lib/auth/requireRole';
 import { logAuditEntry } from '@/lib/audit';
 import { refundDepositForRejectedJob } from '@/lib/booking/depositRefund';
 import { awaitJobCalendarCancel } from '@/lib/google/jobGoogleSync';
-import { cancelOpenOffersForJob } from '@/lib/dispatch/jobOffer';
 import { notifyCleanerOfJobCancellation } from '@/lib/notifications/cleanerCancellationEmail';
+import { applyAdminTerminalCancellation } from '@/lib/admin/applyAdminTerminalCancellation';
+import { isDispatchError } from '@/lib/dispatch/errors';
 
 /**
  * POST /api/admin/jobs/[jobId]/reject
  * Reject a deposit-paid booking and refund the deposit when possible.
+ * Terminal cancel + assignment clear commit before refund so a refund
+ * failure cannot leave an orphaned assignment on a cancelled job.
  */
 export async function POST(
   request: NextRequest,
@@ -41,22 +44,26 @@ export async function POST(
       );
     }
 
-    const releasedCleanerId = job.assignedCleanerId;
+    const now = new Date();
+    const cancelReason = reason || 'Rejected by admin during booking review';
 
-    const updated = await prisma.job.update({
-      where: { id: jobId },
-      data: {
+    const cancelResult = await applyAdminTerminalCancellation({
+      jobId,
+      adminId: auth.userId,
+      nextStatus: JobStatus.CANCELLED,
+      reasonLabel: 'Admin rejected booking',
+      reasonCode: 'ADMIN_REJECTED',
+      notes: reason,
+      extraJobData: {
         reviewStatus: JobReviewStatus.REJECTED,
-        status: JobStatus.CANCELLED,
-        cancellationReason: reason || 'Rejected by admin during booking review',
-        cancelledAt: new Date(),
+        cancellationReason: cancelReason,
+        cancelledAt: now,
         approvedById: auth.userId,
-        approvedAt: new Date(),
+        approvedAt: now,
       },
     });
 
     const refund = await refundDepositForRejectedJob(jobId, auth.userId);
-    await cancelOpenOffersForJob(jobId, auth.userId);
 
     await logAuditEntry({
       actorId: auth.userId,
@@ -65,15 +72,19 @@ export async function POST(
       entityType: 'Job',
       entityId: jobId,
       description: reason || 'Deposit booking rejected',
-      changes: { refund },
+      changes: {
+        refund,
+        releasedCleanerId: cancelResult.releasedCleanerId,
+        acceptedOfferId: cancelResult.acceptedOffer?.id ?? null,
+      },
     });
 
     await awaitJobCalendarCancel(jobId);
 
-    if (releasedCleanerId) {
+    if (cancelResult.releasedCleanerId) {
       await notifyCleanerOfJobCancellation({
         jobId,
-        cleanerId: releasedCleanerId,
+        cleanerId: cancelResult.releasedCleanerId,
         triggeredBy: 'admin',
       }).catch(() => {});
     }
@@ -89,12 +100,21 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      job: jobAfterRefund ?? updated,
+      job: jobAfterRefund ?? {
+        ...cancelResult.job,
+        id: jobId,
+      },
       refund,
       warning: refundWarning,
     });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
+    if (isDispatchError(error)) {
+      return NextResponse.json(
+        { success: false, error: error.message, code: error.code },
+        { status: error.status }
+      );
+    }
     console.error('[JOB REJECT]', error);
     const message = error instanceof Error ? error.message : 'Failed to reject booking';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
