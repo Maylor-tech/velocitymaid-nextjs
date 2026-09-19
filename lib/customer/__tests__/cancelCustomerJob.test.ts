@@ -8,6 +8,10 @@ const transaction = vi.fn();
 const awaitJobCalendarCancel = vi.fn();
 const awaitJobCalendarSync = vi.fn();
 
+const { notifyCleanerOfJobCancellation } = vi.hoisted(() => ({
+  notifyCleanerOfJobCancellation: vi.fn(),
+}));
+
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     job: { findUnique: (...a: unknown[]) => jobFindUnique(...a) },
@@ -20,6 +24,11 @@ vi.mock('@/lib/prisma', () => ({
 vi.mock('@/lib/google/jobGoogleSync', () => ({
   awaitJobCalendarCancel: (...a: unknown[]) => awaitJobCalendarCancel(...a),
   awaitJobCalendarSync: (...a: unknown[]) => awaitJobCalendarSync(...a),
+}));
+
+vi.mock('@/lib/notifications/cleanerCancellationEmail', () => ({
+  notifyCleanerOfJobCancellation: (...a: unknown[]) =>
+    notifyCleanerOfJobCancellation(...a),
 }));
 
 import { cancelCustomerJob } from '../cancelCustomerJob';
@@ -138,6 +147,7 @@ describe('cancelCustomerJob — ASSIGNED integrity', () => {
     vi.clearAllMocks();
     payoutFindUnique.mockResolvedValue(null);
     awaitJobCalendarCancel.mockResolvedValue(undefined);
+    notifyCleanerOfJobCancellation.mockResolvedValue({ sent: true });
     jobFindUnique.mockResolvedValue(assignedJob());
     offerFindFirst.mockResolvedValue(acceptedOffer());
   });
@@ -206,6 +216,12 @@ describe('cancelCustomerJob — ASSIGNED integrity', () => {
     );
     expect(awaitJobCalendarCancel).toHaveBeenCalledWith('job-oct4');
     expect(awaitJobCalendarSync).not.toHaveBeenCalled();
+    expect(notifyCleanerOfJobCancellation).toHaveBeenCalledWith({
+      jobId: 'job-oct4',
+      cleanerId: 'user-dorottya',
+      triggeredBy: 'system',
+    });
+    expect(notifyCleanerOfJobCancellation).toHaveBeenCalledTimes(1);
   });
 
   it('cancels outstanding OFFERED rows without rewriting ACCEPTED history', async () => {
@@ -257,6 +273,25 @@ describe('cancelCustomerJob — ASSIGNED integrity', () => {
     );
     expect(assignmentLogCreate).not.toHaveBeenCalled();
     expect(teamDeleteMany).not.toHaveBeenCalled();
+    expect(notifyCleanerOfJobCancellation).not.toHaveBeenCalled();
+  });
+
+  it('keeps cancellation successful when cleaner email notify fails', async () => {
+    notifyCleanerOfJobCancellation.mockRejectedValue(new Error('notify boom'));
+    const { tx } = txMocks();
+    transaction.mockImplementation(async (fn: (t: unknown) => Promise<unknown>) =>
+      fn(tx)
+    );
+
+    const result = await cancelCustomerJob({
+      jobId: 'job-oct4',
+      customerId: 'cust-tiffany',
+      reason: 'Guest cancelled reservation',
+    });
+
+    expect(result.job.status).toBe(JobStatus.CANCELLED);
+    expect(result.job.assignedCleanerId).toBeNull();
+    expect(result.acceptedOffer?.status).toBe('ACCEPTED');
   });
 
   it('rejects another customer cancelling the job', async () => {
