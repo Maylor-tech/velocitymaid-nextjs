@@ -54,8 +54,6 @@ export async function applyAdminTerminalCancellation(input: {
   unassignedUpdateData?: Prisma.JobUncheckedUpdateManyInput;
   auditAction?: string;
   auditDescription?: string;
-  /** When true, refuse COMPLETED jobs (emergency-cancel). */
-  blockCompleted?: boolean;
 }): Promise<ApplyAdminTerminalCancellationResult> {
   const job = await prisma.job.findUnique({
     where: { id: input.jobId },
@@ -82,7 +80,8 @@ export async function applyAdminTerminalCancellation(input: {
     throw new DispatchError('Job is already cancelled', 'JOB_ALREADY_CANCELLED', 400);
   }
 
-  if (input.blockCompleted && job.status === JobStatus.COMPLETED) {
+  // COMPLETED is terminal service history — ordinary cancel must not rewrite it.
+  if (job.status === JobStatus.COMPLETED) {
     throw new DispatchError(
       'Cannot cancel a completed job',
       'JOB_COMPLETED',

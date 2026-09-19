@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { JobStatus } from '@prisma/client';
+import { DispatchError } from '@/lib/dispatch/errors';
 
 const requireRole = vi.fn();
 const applyAdminTerminalCancellation = vi.fn();
@@ -131,7 +132,6 @@ describe('admin cancellation routes — assignment integrity + notify order', ()
         jobId: 'job-oct4',
         nextStatus: JobStatus.CANCELLED_EMERGENCY,
         reasonCode: 'EMERGENCY',
-        blockCompleted: true,
       })
     );
     expect(awaitJobCalendarCancel).toHaveBeenCalledWith('job-oct4');
@@ -309,5 +309,127 @@ describe('admin cancellation routes — assignment integrity + notify order', ()
     expect(res.status).toBe(200);
     expect(applyAdminTerminalCancellation).toHaveBeenCalled();
     expect(notifyCleanerOfJobCancellation).not.toHaveBeenCalled();
+  });
+
+  it('COMPLETED → PATCH CANCELLED returns 400 JOB_COMPLETED and skips notify', async () => {
+    jobFindUnique.mockResolvedValueOnce({
+      id: 'job-oct4',
+      branchId: 'branch-vt',
+      preferredDate: null,
+      preferredTime: null,
+      internalNotes: null,
+      address: null,
+      serviceType: 'Turnover clean',
+      status: JobStatus.COMPLETED,
+      totalPrice: 265,
+      quotedTotal: 265,
+      amountPaid: 265,
+      paymentStatus: 'PAID',
+      assignedCleanerId: 'user-dorottya',
+      JobPayout: { status: 'PENDING' },
+    });
+    applyAdminTerminalCancellation.mockRejectedValue(
+      new DispatchError('Cannot cancel a completed job', 'JOB_COMPLETED', 400)
+    );
+
+    const res = await patchJob(
+      new NextRequest('http://localhost/api/admin/jobs/job-oct4', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED' }),
+      }),
+      { params: { jobId: 'job-oct4' } }
+    );
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.code).toBe('JOB_COMPLETED');
+    expect(notifyCleanerOfJobCancellation).not.toHaveBeenCalled();
+    expect(awaitJobCalendarCancel).not.toHaveBeenCalled();
+    expect(refundDepositForRejectedJob).not.toHaveBeenCalled();
+  });
+
+  it('COMPLETED → PATCH CANCELLED_EMERGENCY returns 400 JOB_COMPLETED', async () => {
+    jobFindUnique.mockResolvedValueOnce({
+      id: 'job-oct4',
+      branchId: 'branch-vt',
+      preferredDate: null,
+      preferredTime: null,
+      internalNotes: null,
+      address: null,
+      serviceType: 'Turnover clean',
+      status: JobStatus.COMPLETED,
+      totalPrice: 265,
+      quotedTotal: 265,
+      amountPaid: 265,
+      paymentStatus: 'PAID',
+      assignedCleanerId: null,
+      JobPayout: null,
+    });
+    applyAdminTerminalCancellation.mockRejectedValue(
+      new DispatchError('Cannot cancel a completed job', 'JOB_COMPLETED', 400)
+    );
+
+    const res = await patchJob(
+      new NextRequest('http://localhost/api/admin/jobs/job-oct4', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED_EMERGENCY' }),
+      }),
+      { params: { jobId: 'job-oct4' } }
+    );
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.code).toBe('JOB_COMPLETED');
+    expect(notifyCleanerOfJobCancellation).not.toHaveBeenCalled();
+  });
+
+  it('COMPLETED → emergency-cancel returns 400 JOB_COMPLETED', async () => {
+    applyAdminTerminalCancellation.mockRejectedValue(
+      new DispatchError('Cannot cancel a completed job', 'JOB_COMPLETED', 400)
+    );
+
+    const res = await emergencyCancel(
+      new NextRequest('http://localhost/api/admin/jobs/job-oct4/emergency-cancel', {
+        method: 'POST',
+      }),
+      { params: { jobId: 'job-oct4' } }
+    );
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.code).toBe('JOB_COMPLETED');
+    expect(notifyCleanerOfJobCancellation).not.toHaveBeenCalled();
+    expect(sendEmergencyCancelNoticeForJob).not.toHaveBeenCalled();
+  });
+
+  it('COMPLETED → reject returns 400 JOB_COMPLETED and skips refund/notify', async () => {
+    jobFindUnique.mockResolvedValueOnce({
+      id: 'job-oct4',
+      paymentStatus: 'DEPOSIT_PAID',
+      assignedCleanerId: 'user-dorottya',
+      status: JobStatus.COMPLETED,
+    });
+    applyAdminTerminalCancellation.mockRejectedValue(
+      new DispatchError('Cannot cancel a completed job', 'JOB_COMPLETED', 400)
+    );
+
+    const res = await rejectBooking(
+      new NextRequest('http://localhost/api/admin/jobs/job-oct4/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'Should not cancel completed' }),
+      }),
+      { params: { jobId: 'job-oct4' } }
+    );
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.code).toBe('JOB_COMPLETED');
+    expect(refundDepositForRejectedJob).not.toHaveBeenCalled();
+    expect(notifyCleanerOfJobCancellation).not.toHaveBeenCalled();
+    expect(awaitJobCalendarCancel).not.toHaveBeenCalled();
+    expect(logAuditEntry).not.toHaveBeenCalled();
   });
 });

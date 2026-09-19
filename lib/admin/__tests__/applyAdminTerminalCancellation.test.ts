@@ -188,7 +188,6 @@ describe('applyAdminTerminalCancellation', () => {
       nextStatus: JobStatus.CANCELLED_EMERGENCY,
       reasonLabel: 'Emergency cancellation',
       reasonCode: 'EMERGENCY',
-      blockCompleted: true,
       extraJobData: {
         cancelledAt: new Date(),
         cancellationReason: 'Emergency cancellation',
@@ -256,7 +255,30 @@ describe('applyAdminTerminalCancellation', () => {
     expect(transaction).not.toHaveBeenCalled();
   });
 
-  it('blocks completed jobs when blockCompleted is set', async () => {
+  it('blocks COMPLETED → CANCELLED by default with no mutation', async () => {
+    jobFindUnique.mockResolvedValue(
+      assignedJob({
+        status: JobStatus.COMPLETED,
+        assignedCleanerId: 'user-dorottya',
+        paymentStatus: 'PAID',
+      })
+    );
+
+    await expect(
+      applyAdminTerminalCancellation({
+        jobId: 'job-oct4',
+        adminId: 'admin-1',
+        nextStatus: JobStatus.CANCELLED,
+        reasonLabel: 'Admin cancelled job',
+        reasonCode: 'ADMIN_CANCELLED',
+      })
+    ).rejects.toMatchObject({ code: 'JOB_COMPLETED', status: 400 });
+
+    expect(offerFindFirst).not.toHaveBeenCalled();
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it('blocks COMPLETED → CANCELLED_EMERGENCY by default', async () => {
     jobFindUnique.mockResolvedValue(
       assignedJob({ status: JobStatus.COMPLETED, assignedCleanerId: null })
     );
@@ -268,8 +290,9 @@ describe('applyAdminTerminalCancellation', () => {
         nextStatus: JobStatus.CANCELLED_EMERGENCY,
         reasonLabel: 'Emergency cancellation',
         reasonCode: 'EMERGENCY',
-        blockCompleted: true,
       })
-    ).rejects.toMatchObject({ code: 'JOB_COMPLETED' });
+    ).rejects.toMatchObject({ code: 'JOB_COMPLETED', status: 400 });
+
+    expect(transaction).not.toHaveBeenCalled();
   });
 });

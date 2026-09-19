@@ -38,7 +38,6 @@ export async function POST(
       reasonLabel: 'Emergency cancellation',
       reasonCode: 'EMERGENCY',
       notes: null,
-      blockCompleted: true,
       extraJobData: {
         cancelledAt: now,
         cancellationReason: 'Emergency cancellation',
