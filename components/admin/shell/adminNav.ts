@@ -79,6 +79,12 @@ export const ADMIN_NAV: AdminNavItem[] = [
       p.startsWith('/admin/invoices'),
   },
   {
+    href: '/admin/profitability',
+    label: 'Profitability',
+    icon: DollarSign,
+    match: (p) => p.startsWith('/admin/profitability'),
+  },
+  {
     href: '/admin/notifications',
     label: 'Notifications',
     icon: Bell,
