@@ -33,12 +33,14 @@ interface MapProperty {
   longitude: number;
   statusCategory: 'active' | 'lead' | 'inactive';
   jobsCompleted: number;
-  totalRevenue: number;
+  /** Sum of completed Job.totalPrice — not collected payments. */
+  completedJobValue: number;
   distanceFromHqMiles: number | null;
 }
 
 interface MapSummary {
   totalProperties: number;
+  missingLocationCount: number;
   avgDistanceFromHqMiles: number | null;
   zoneBreakdown: {
     ZONE_A: number;
@@ -180,6 +182,13 @@ export function CustomerMapView() {
       <div className="border-b border-vm-border bg-vm-white px-4 py-3">
         <div className="mx-auto flex max-w-7xl flex-wrap gap-4">
           <Stat label="Properties on map" value={String(filteredSummary.total)} />
+          {summary && (
+            <Stat
+              label="Missing location"
+              value={String(summary.missingLocationCount)}
+              accent={summary.missingLocationCount > 0 ? '#ef4444' : undefined}
+            />
+          )}
           <Stat
             label="Avg distance from HQ (VT)"
             value={
@@ -323,7 +332,7 @@ export function CustomerMapView() {
                   )}
                   <p className="mt-1 text-xs">
                     {selected.jobsCompleted} job(s) completed · $
-                    {selected.totalRevenue.toFixed(0)} revenue
+                    {selected.completedJobValue.toFixed(0)} Completed Job Value
                   </p>
                   <Link
                     href={`/admin/jobs?customerId=${selected.id}`}

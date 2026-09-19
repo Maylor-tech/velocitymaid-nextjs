@@ -165,16 +165,53 @@ describe('upsertJobCalendarEvent', () => {
       preferredDate: new Date('2026-09-15T00:00:00.000Z'),
       preferredTime: '10:00 AM',
     });
-    expect(calendarMock.inserted[0].start.dateTime).toBe('2026-09-15T10:00:00.000Z');
+    // 10:00 AM America/New_York (EDT) = 14:00Z — not setUTCHours(10)
+    expect(calendarMock.inserted[0].start.dateTime).toBe('2026-09-15T14:00:00.000Z');
+    expect(calendarMock.inserted[0].end.dateTime).toBe('2026-09-15T16:00:00.000Z');
   });
 
-  it('applies preferredTime onto the event start when parseable', async () => {
+  it('applies preferredTime as Eastern wall time (EDT), not UTC hours', async () => {
     await upsertJobCalendarEvent({
       ...baseJob,
       preferredDate: new Date('2026-08-01T00:00:00Z'),
       preferredTime: '10:00 AM',
     });
-    expect(calendarMock.inserted[0].start.dateTime).toBe('2026-08-01T10:00:00.000Z');
+    expect(calendarMock.inserted[0].start.dateTime).toBe('2026-08-01T14:00:00.000Z');
+  });
+
+  it('VM-2026-0038: range 12:00 - 15:30 uses Eastern bounds, not 08:00 EDT', async () => {
+    await upsertJobCalendarEvent({
+      ...baseJob,
+      jobReference: 'VM-2026-0038',
+      preferredDate: new Date('2026-09-20T00:00:00.000Z'),
+      preferredTime: '12:00 - 15:30',
+    });
+    expect(calendarMock.inserted[0].start.dateTime).toBe('2026-09-20T16:00:00.000Z');
+    expect(calendarMock.inserted[0].end.dateTime).toBe('2026-09-20T19:30:00.000Z');
+  });
+
+  it('uses EST offset in winter for the same wall clock', async () => {
+    await upsertJobCalendarEvent({
+      ...baseJob,
+      preferredDate: new Date('2026-01-15T00:00:00.000Z'),
+      preferredTime: '12:00',
+    });
+    expect(calendarMock.inserted[0].start.dateTime).toBe('2026-01-15T17:00:00.000Z');
+    expect(calendarMock.inserted[0].end.dateTime).toBe('2026-01-15T19:00:00.000Z');
+  });
+
+  it('Morning creates an all-day event (not midnight–2am), keeps Window label', async () => {
+    await upsertJobCalendarEvent({
+      ...baseJob,
+      preferredDate: new Date('2026-09-22T00:00:00.000Z'),
+      preferredTime: 'Morning',
+    });
+    const body = calendarMock.inserted[0];
+    expect(body.start).toEqual({ date: '2026-09-22' });
+    expect(body.end).toEqual({ date: '2026-09-23' });
+    expect(body.start.dateTime).toBeUndefined();
+    expect(body.end.dateTime).toBeUndefined();
+    expect(body.description).toContain('Window: Morning');
   });
 
   it('creates one event on first sync, then patches the SAME event on subsequent syncs (idempotent)', async () => {

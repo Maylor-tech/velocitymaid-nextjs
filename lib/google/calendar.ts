@@ -17,11 +17,12 @@ import { getCalendarClient } from './client';
 import { readGoogleEnvConfig, isCalendarEnabled, recordSyncError } from './config';
 import { prisma } from '@/lib/prisma';
 import { logIntegrationEvent } from './integrationLog';
-import { parsePreferredClockTime } from '@/lib/dates/preferredClock';
+import {
+  nextServiceDateKey,
+  resolveServiceWindow,
+} from '@/lib/dates/preferredClock';
 
 export { parsePreferredClockTime } from '@/lib/dates/preferredClock';
-
-const DEFAULT_EVENT_DURATION_MS = 2 * 60 * 60 * 1000;
 
 export interface CalendarJobInput {
   id: string;
@@ -48,16 +49,25 @@ function adminLinkFor(jobId: string): string {
   return `${base}/admin/jobs/${jobId}`;
 }
 
+/**
+ * Calendar bounds via the shared America/New_York scheduling contract.
+ * Parseable clocks → timed dateTime bounds. Dayparts / empty time → all-day
+ * date-only event (preserves the service day; no midnight–2am fabrication).
+ */
 function resolveEventBounds(preferredDate: Date, preferredTime: string | null) {
-  const start = new Date(preferredDate);
-  const clock = parsePreferredClockTime(preferredTime);
-  if (clock) {
-    start.setUTCHours(clock.hours, clock.minutes, 0, 0);
+  const window = resolveServiceWindow(preferredDate, preferredTime);
+  if (!window) {
+    return {};
   }
-  const end = new Date(start.getTime() + DEFAULT_EVENT_DURATION_MS);
+  if (window.allDay || !window.hasParsedClock || !window.start || !window.end) {
+    return {
+      start: { date: window.serviceDateKey },
+      end: { date: nextServiceDateKey(window.serviceDateKey) },
+    };
+  }
   return {
-    start: { dateTime: start.toISOString() },
-    end: { dateTime: end.toISOString() },
+    start: { dateTime: window.start.toISOString() },
+    end: { dateTime: window.end.toISOString() },
   };
 }
 

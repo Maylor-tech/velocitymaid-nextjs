@@ -1,7 +1,7 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { JobStatus } from '@prisma/client';
+import { JobStatus, Prisma } from '@prisma/client';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import { formatCustomerAddress } from '@/lib/geocoding/customerAddress';
@@ -9,42 +9,60 @@ import { distanceMiles, VM_HQ } from '@/lib/geocoding/distance';
 import { customerMapStatusCategory } from '@/lib/geocoding/customerMapStatus';
 import { TRAVEL_ZONE_SHORT_LABEL } from '@/lib/vermont/travelZone';
 
+function branchScopeWhere(
+  authBranchId: string | null | undefined,
+  branchFilter: string
+): Prisma.CustomerWhereInput {
+  return {
+    ...(authBranchId ? { branchId: authBranchId } : {}),
+    ...(branchFilter === 'vermont'
+      ? { Branch: { slug: 'vermont' } }
+      : branchFilter === 'new-jersey'
+        ? { Branch: { slug: 'new-jersey' } }
+        : {}),
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireRole(request, 'ADMIN');
 
     const branchFilter = request.nextUrl.searchParams.get('branch') || 'all';
+    const scopeWhere = branchScopeWhere(auth.branchId, branchFilter);
 
-    const customers = await prisma.customer.findMany({
-      where: {
-        latitude: { not: null },
-        longitude: { not: null },
-        ...(auth.branchId ? { branchId: auth.branchId } : {}),
-        ...(branchFilter === 'vermont'
-          ? { Branch: { slug: 'vermont' } }
-          : branchFilter === 'new-jersey'
-            ? { Branch: { slug: 'new-jersey' } }
-            : {}),
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        leadStatus: true,
-        isBlocked: true,
-        travelZone: true,
-        latitude: true,
-        longitude: true,
-        defaultAddress: true,
-        addressLine1: true,
-        addressLine2: true,
-        city: true,
-        state: true,
-        postalCode: true,
-        Branch: { select: { name: true, slug: true } },
-      },
-    });
+    const [customers, missingLocationCount] = await Promise.all([
+      prisma.customer.findMany({
+        where: {
+          latitude: { not: null },
+          longitude: { not: null },
+          ...scopeWhere,
+        },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          leadStatus: true,
+          isBlocked: true,
+          travelZone: true,
+          latitude: true,
+          longitude: true,
+          defaultAddress: true,
+          addressLine1: true,
+          addressLine2: true,
+          city: true,
+          state: true,
+          postalCode: true,
+          Branch: { select: { name: true, slug: true } },
+        },
+      }),
+      prisma.customer.count({
+        where: {
+          ...scopeWhere,
+          OR: [{ latitude: null }, { longitude: null }],
+        },
+      }),
+    ]);
 
     const customerIds = customers.map((c) => c.id);
 
@@ -68,7 +86,8 @@ export async function GET(request: NextRequest) {
           s.customerId!,
           {
             jobsCompleted: s._count.id,
-            totalRevenue: Number(s._sum.totalPrice ?? 0),
+            // Sum of completed Job.totalPrice — not collected payments.
+            completedJobValue: Number(s._sum.totalPrice ?? 0),
           },
         ])
     );
@@ -96,7 +115,7 @@ export async function GET(request: NextRequest) {
         longitude: lng,
         statusCategory: customerMapStatusCategory(c.leadStatus, c.isBlocked),
         jobsCompleted: statsByCustomer.get(c.id)?.jobsCompleted ?? 0,
-        totalRevenue: statsByCustomer.get(c.id)?.totalRevenue ?? 0,
+        completedJobValue: statsByCustomer.get(c.id)?.completedJobValue ?? 0,
         distanceFromHqMiles: distanceFromHq,
       };
     });
@@ -126,6 +145,7 @@ export async function GET(request: NextRequest) {
       hq: VM_HQ,
       summary: {
         totalProperties: properties.length,
+        missingLocationCount,
         avgDistanceFromHqMiles: avgDistanceFromHq,
         zoneBreakdown,
       },
