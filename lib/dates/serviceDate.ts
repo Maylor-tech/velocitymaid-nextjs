@@ -2,7 +2,8 @@
  * Job.preferredDate is a date-only business value stored in a DateTime column.
  *
  * Convention: calendar day encoded as UTC midnight (YYYY-MM-DDT00:00:00.000Z).
- * preferredTime is a separate string; Calendar overlays it with setUTCHours.
+ * preferredTime is a separate string; clock overlays use America/New_York
+ * wall time via lib/dates/preferredClock.ts (not UTC hours).
  *
  * Never format preferredDate with default local timezone — US locales shift
  * UTC midnight to the previous calendar day (e.g. Sep 15 → Sep 14 in Vermont).

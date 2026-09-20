@@ -75,7 +75,8 @@ describe('service-date-aware STANDARD TTL', () => {
     const ttl = resolveOfferExpiration({
       urgency: 'STANDARD',
       preferredDate: new Date('2026-09-10T00:00:00.000Z'),
-      preferredTime: '10:00 AM',
+      // 8:00 AM EDT = 12:00Z → exactly 48h from OFFERED_AT (mid band)
+      preferredTime: '8:00 AM',
       offeredAt: OFFERED_AT,
       env: {},
     });
@@ -133,7 +134,7 @@ describe('service-date-aware STANDARD TTL', () => {
     expect(ttl.defaultMinutes).toBe(24 * 60);
   });
 
-  it('reads 10:00 AM on a UTC-midnight service date without local-day shift', () => {
+  it('reads 10:00 AM as Eastern wall time on a UTC-midnight service date', () => {
     const ttl = resolveOfferExpiration({
       urgency: 'STANDARD',
       preferredDate: '2026-09-15T00:00:00.000Z',
@@ -141,7 +142,8 @@ describe('service-date-aware STANDARD TTL', () => {
       offeredAt: OFFERED_AT,
       env: {},
     });
-    expect(ttl.hoursUntilService).toBeCloseTo(166, 0);
+    // Sep 8 12:00Z → Sep 15 14:00Z (10:00 AM EDT) = 170h
+    expect(ttl.hoursUntilService).toBeCloseTo(170, 0);
   });
 
   it('never lets expiry run past the safety cutoff before service', () => {
@@ -154,9 +156,10 @@ describe('service-date-aware STANDARD TTL', () => {
       env: {},
     });
     expect(ttl.clampedToSafetyCutoff).toBe(true);
-    expect(ttl.expiresAt.toISOString()).toBe('2026-09-09T09:00:00.000Z');
+    // 10:00 AM EDT = 14:00Z; safety cutoff is 60 minutes earlier
+    expect(ttl.expiresAt.toISOString()).toBe('2026-09-09T13:00:00.000Z');
     expect(ttl.expiresAt.getTime()).toBeLessThan(
-      new Date('2026-09-09T10:00:00.000Z').getTime()
+      new Date('2026-09-09T14:00:00.000Z').getTime()
     );
   });
 
@@ -175,5 +178,20 @@ describe('service-date-aware STANDARD TTL', () => {
         1440
       )
     ).toBe(false);
+  });
+
+  it('Morning still gets date-aware STANDARD TTL without inventing a start clock', () => {
+    const ttl = resolveOfferExpiration({
+      urgency: 'STANDARD',
+      preferredDate: new Date('2026-09-15T00:00:00.000Z'),
+      preferredTime: 'Morning',
+      offeredAt: OFFERED_AT,
+      env: {},
+    });
+    // Day-level horizon (~160h) → far band; no precise safety cutoff
+    expect(ttl.hoursUntilService).toBeGreaterThan(48);
+    expect(ttl.defaultMinutes).toBe(24 * 60);
+    expect(ttl.source).toBe('SERVICE_AWARE');
+    expect(ttl.clampedToSafetyCutoff).toBe(false);
   });
 });
