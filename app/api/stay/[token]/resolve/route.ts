@@ -60,6 +60,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       feedbackUrl: result.feedbackUrl,
       tipGrantToken: result.tipGrantToken,
       tipUrl: result.tipUrl,
+      tipGrantStatus: result.tipGrantStatus,
       propertyLabel: result.propertyLabel,
       serviceDate: result.serviceDate,
     });

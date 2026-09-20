@@ -50,6 +50,10 @@ import {
 import { GET as guestAccessGet, POST as guestAccessPost } from '@/app/api/customer/properties/[propertyId]/guest-access/route';
 import { POST as stayResolvePost } from '@/app/api/stay/[token]/resolve/route';
 
+vi.mock('@/lib/audit', () => ({
+  logAuditEntry: vi.fn().mockResolvedValue('audit-1'),
+}));
+
 describe('GET guest-access is strictly read-only', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -62,6 +66,8 @@ describe('GET guest-access is strictly read-only', () => {
       guestAccessToken: null,
       guestAccessRevokedAt: null,
       guestDisplayName: null,
+      guestAccessTokenCreatedAt: null,
+      Customer: { archivedAt: null },
     });
 
     const res = await guestAccessGet(
@@ -84,6 +90,8 @@ describe('GET guest-access is strictly read-only', () => {
       guestAccessToken: 'old-token-still-present',
       guestAccessRevokedAt: new Date('2026-09-01T00:00:00.000Z'),
       guestDisplayName: 'Cabin',
+      guestAccessTokenCreatedAt: new Date('2026-08-01T00:00:00.000Z'),
+      Customer: { archivedAt: null },
     });
 
     const state = await getPropertyGuestAccessState('prop-1');
@@ -104,10 +112,16 @@ describe('GET guest-access is strictly read-only', () => {
     mocks.propertyFindUnique.mockResolvedValue({
       guestAccessToken: 'old-token',
       guestAccessRevokedAt: new Date('2026-09-01T00:00:00.000Z'),
+      guestDisplayName: 'Cabin',
+      Customer: { archivedAt: null },
     });
     mocks.propertyUpdate.mockResolvedValue({});
 
-    const ensured = await ensurePropertyGuestAccessToken('prop-1');
+    const ensured = await ensurePropertyGuestAccessToken(
+      'prop-1',
+      { actorRole: 'CUSTOMER', actorId: 'cust-1' },
+      { guestDisplayName: 'Cabin' }
+    );
     expect(ensured.created).toBe(true);
     expect(ensured.stayUrl).toMatch(/\/stay\//);
     expect(mocks.propertyUpdate).toHaveBeenCalledWith(
@@ -124,6 +138,8 @@ describe('GET guest-access is strictly read-only', () => {
     mocks.propertyFindUnique.mockResolvedValue({
       guestAccessToken: null,
       guestAccessRevokedAt: null,
+      guestDisplayName: null,
+      Customer: { archivedAt: null },
     });
 
     const res = await guestAccessPost(
@@ -131,7 +147,10 @@ describe('GET guest-access is strictly read-only', () => {
         'http://localhost/api/customer/properties/prop-1/guest-access',
         {
           method: 'POST',
-          body: JSON.stringify({ action: 'ensure' }),
+          body: JSON.stringify({
+            action: 'ensure',
+            guestDisplayName: 'Cabin',
+          }),
           headers: { 'Content-Type': 'application/json' },
         }
       ),

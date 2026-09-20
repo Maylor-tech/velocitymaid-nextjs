@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   feedbackCreate: vi.fn(),
   feedbackUpdateMany: vi.fn(),
   grantCreate: vi.fn(),
+  grantFindMany: vi.fn(),
   logAuditEntry: vi.fn(),
 }));
 
@@ -32,6 +33,7 @@ vi.mock('@/lib/prisma', () => ({
     },
     guestTipAuthorization: {
       create: mocks.grantCreate,
+      findMany: mocks.grantFindMany,
     },
   },
 }));
@@ -62,6 +64,7 @@ describe('Phase 1B guest stay resolve', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.logAuditEntry.mockResolvedValue('audit-1');
+    mocks.grantFindMany.mockResolvedValue([]);
     mocks.grantCreate.mockResolvedValue({ id: 'grant-1' });
   });
 

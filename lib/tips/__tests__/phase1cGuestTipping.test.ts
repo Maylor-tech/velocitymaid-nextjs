@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   tipUpdate: vi.fn(),
   tipUpdateMany: vi.fn(),
   grantFindUnique: vi.fn(),
+  grantFindMany: vi.fn(),
   grantCreate: vi.fn(),
   grantUpdate: vi.fn(),
   rateCreate: vi.fn(),
@@ -47,6 +48,7 @@ vi.mock('@/lib/prisma', () => ({
     },
     guestTipAuthorization: {
       findUnique: (...a: unknown[]) => mocks.grantFindUnique(...a),
+      findMany: (...a: unknown[]) => mocks.grantFindMany(...a),
       create: (...a: unknown[]) => mocks.grantCreate(...a),
       update: (...a: unknown[]) => mocks.grantUpdate(...a),
     },
@@ -153,6 +155,7 @@ function mockCompletedEarner(cleanerId = 'cleaner-1') {
 describe('GuestTipAuthorization hash-at-rest', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.grantFindMany.mockResolvedValue([]);
   });
 
   it('stores hash not raw token on mint', async () => {
@@ -164,6 +167,8 @@ describe('GuestTipAuthorization hash-at-rest', () => {
       jobId: 'job-1',
       propertyId: 'prop-1',
     });
+    expect(minted.status).toBe('MINTED');
+    if (minted.status !== 'MINTED') throw new Error('expected MINTED');
     expect(minted.grantToken.length).toBeGreaterThan(40);
     expect(mocks.grantCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -221,6 +226,7 @@ describe('Stay resolve mints tip grant', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.logAuditEntry.mockResolvedValue('a1');
+    mocks.grantFindMany.mockResolvedValue([]);
     mocks.grantCreate.mockResolvedValue({ id: 'grant-1' });
   });
 
