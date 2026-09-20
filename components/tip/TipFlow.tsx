@@ -148,14 +148,11 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
   const [jobContext, setJobContext] = useState<TipContextView | null>(null);
   const [contextLoading, setContextLoading] = useState(Boolean(resolvedJobId));
   const [contextError, setContextError] = useState<string | null>(null);
-  /** Guest tip links may lack a customer session; create APIs stay job-bound. */
-  const [contextSkippedUnauth, setContextSkippedUnauth] = useState(false);
 
   useEffect(() => {
     if (!resolvedJobId) {
       setJobContext(null);
       setContextError(null);
-      setContextSkippedUnauth(false);
       setContextLoading(false);
       return;
     }
@@ -163,7 +160,6 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
     let cancelled = false;
     setContextLoading(true);
     setContextError(null);
-    setContextSkippedUnauth(false);
 
     (async () => {
       try {
@@ -175,16 +171,15 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
         if (cancelled) return;
 
         if (res.status === 401) {
-          // Guest tip link without customer session — allow tip create without display metadata.
           setJobContext(null);
-          setContextSkippedUnauth(true);
-          setContextError(null);
+          setContextError(
+            'Please sign in and open the completed cleaning from My Jobs to leave a tip.'
+          );
           return;
         }
 
         if (!res.ok || !data.success || !data.context) {
           setJobContext(null);
-          setContextSkippedUnauth(false);
           setContextError(
             data.error ||
               'This job is not available for tipping. Open a completed job from your portal.'
@@ -198,12 +193,10 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
           serviceDate: data.context.serviceDate,
           jobReference: data.context.jobReference,
         });
-        setContextSkippedUnauth(false);
         setContextError(null);
       } catch {
         if (!cancelled) {
           setJobContext(null);
-          setContextSkippedUnauth(false);
           setContextError(
             'Could not load this cleaning. Please try again from your jobs list.'
           );
@@ -227,7 +220,7 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
     Boolean(resolvedJobId) &&
     !contextLoading &&
     !contextError &&
-    (Boolean(jobContext) || contextSkippedUnauth) &&
+    Boolean(jobContext) &&
     amountDollars >= 1 &&
     amountDollars <= 200 &&
     !Number.isNaN(amountDollars);
@@ -386,15 +379,14 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
       {!resolvedJobId ? (
         <div className="mt-6 rounded-lg border border-amber-400/30 bg-amber-400/10 p-4">
           <p className="text-sm text-amber-200 font-body">
-            A completed cleaning is required to leave a tip. Open a completed job
-            from your VelocityMaid portal, then use Leave a tip — you do not need
-            to enter a job ID.
+            Please sign in and open the completed cleaning from My Jobs to leave
+            a tip.
           </p>
           <a
-            href="/customer/jobs"
+            href="/customer/login?redirect=/customer/jobs"
             className="mt-3 inline-block text-sm font-heading font-semibold text-vm-cyan hover:underline"
           >
-            Go to My Jobs →
+            Sign in →
           </a>
         </div>
       ) : null}
@@ -407,10 +399,14 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
         <div className="mt-6 rounded-lg border border-amber-400/30 bg-amber-400/10 p-4">
           <p className="text-sm text-amber-200 font-body">{contextError}</p>
           <a
-            href="/customer/jobs"
+            href={
+              /sign in/i.test(contextError)
+                ? '/customer/login?redirect=/customer/jobs'
+                : '/customer/jobs'
+            }
             className="mt-3 inline-block text-sm font-heading font-semibold text-vm-cyan hover:underline"
           >
-            Back to My Jobs →
+            {/sign in/i.test(contextError) ? 'Sign in →' : 'Back to My Jobs →'}
           </a>
         </div>
       ) : null}

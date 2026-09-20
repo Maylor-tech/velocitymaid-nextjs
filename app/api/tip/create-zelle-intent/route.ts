@@ -8,10 +8,12 @@ import {
   TipBeneficiaryError,
 } from '@/lib/tips/createTipIntent';
 import { getVelocityMaidZelleDestination } from '@/lib/tips/zelleDestination';
+import { requireCustomerTipJobAccess } from '@/lib/tips/requireCustomerTipJobAccess';
 
 /**
  * POST /api/tip/create-zelle-intent
- * Job-bound Zelle tip intent (manual reconciliation). No network transfer.
+ * Authenticated host tip — CUSTOMER + job ownership required.
+ * Manual reconciliation. Guest-by-raw-Job.id is unsupported.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -36,6 +38,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    await requireCustomerTipJobAccess(request, body.jobId);
 
     let amountCents: number;
     try {
@@ -96,6 +100,7 @@ export async function POST(request: NextRequest) {
       guestCanConfirm: false,
     });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error('[tip/create-zelle-intent]', error);
     const message =
       error instanceof Error ? error.message : 'Failed to create Zelle tip intent';

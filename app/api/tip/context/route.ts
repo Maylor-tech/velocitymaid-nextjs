@@ -2,11 +2,9 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth/requireRole';
-import { getCustomerSession } from '@/lib/customerSession';
-import { prisma } from '@/lib/prisma';
 import { getTipJobDisplayContext } from '@/lib/tips/tipJobContext';
 import { TipBeneficiaryError } from '@/lib/tips/beneficiary';
+import { requireCustomerTipJobAccess } from '@/lib/tips/requireCustomerTipJobAccess';
 
 /**
  * GET /api/tip/context?jobId=
@@ -15,18 +13,11 @@ import { TipBeneficiaryError } from '@/lib/tips/beneficiary';
  * Ownership is verified before eligibility / metadata are returned.
  * Response omits jobId (client already has it). No owner PII, access codes,
  * cleaner contact info, or other jobs.
+ *
+ * Guest tipping by raw Job.id is intentionally unsupported (Phase 1B: stay token).
  */
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(request, 'CUSTOMER');
-    const session = await getCustomerSession();
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized: Customer authentication required' },
-        { status: 401 }
-      );
-    }
-
     const jobId = request.nextUrl.searchParams.get('jobId')?.trim();
     if (!jobId) {
       return NextResponse.json(
@@ -35,19 +26,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const ownership = await prisma.job.findUnique({
-      where: { id: jobId },
-      select: { id: true, customerId: true },
-    });
-
-    // Fail closed: do not confirm existence of another customer's job.
-    if (!ownership || ownership.customerId !== session.customerId) {
-      return NextResponse.json(
-        { success: false, error: 'Job not found', code: 'JOB_NOT_FOUND' },
-        { status: 404 }
-      );
-    }
-
+    await requireCustomerTipJobAccess(request, jobId);
     const context = await getTipJobDisplayContext(jobId);
     return NextResponse.json({ success: true, context });
   } catch (e) {

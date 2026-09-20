@@ -99,12 +99,10 @@ describe('GET /api/tip/context authorization', () => {
       customerId: 'cust-1',
       email: 'host@example.com',
     });
-    // ownership check
     jobFindUnique.mockResolvedValueOnce({
       id: 'job-1',
       customerId: 'cust-1',
     });
-    // resolveTipServiceEarner
     jobFindUnique.mockResolvedValueOnce({
       id: 'job-1',
       status: JobStatus.ASSIGNED,
@@ -128,12 +126,10 @@ describe('GET /api/tip/context authorization', () => {
       customerId: 'cust-1',
       email: 'host@example.com',
     });
-    // ownership
     jobFindUnique.mockResolvedValueOnce({
       id: 'job-1',
       customerId: 'cust-1',
     });
-    // resolveTipServiceEarner
     jobFindUnique.mockResolvedValueOnce({
       id: 'job-1',
       status: JobStatus.COMPLETED,
@@ -144,7 +140,6 @@ describe('GET /api/tip/context authorization', () => {
       completedAt: new Date(),
     });
     userFindFirst.mockResolvedValue({ id: 'cleaner-1' });
-    // getTipJobDisplayContext second job load
     jobFindUnique.mockResolvedValueOnce({
       id: 'job-1',
       status: JobStatus.COMPLETED,
