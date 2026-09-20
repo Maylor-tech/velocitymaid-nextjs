@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import CustomerLayout from '../components/CustomerLayout';
-import { Heart, DollarSign, Calendar, MapPin, CheckCircle } from 'lucide-react';
+import { Heart, Calendar, MapPin, CheckCircle } from 'lucide-react';
+import { tipUrlForJob } from '@/lib/tips/tipLinks';
 
 interface EligibleJob {
   jobId: string;
@@ -16,6 +18,10 @@ interface EligibleJob {
   tipAmount: number | null;
 }
 
+/**
+ * Host tip picker — lists recent jobs and deep-links into the canonical
+ * /tip?jobId= flow (Stripe + Zelle). Does not use the legacy Checkout path.
+ */
 export default function TipsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -23,11 +29,6 @@ export default function TipsPage() {
 
   const [jobs, setJobs] = useState<EligibleJob[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedJob, setSelectedJob] = useState<EligibleJob | null>(null);
-  const [tipAmount, setTipAmount] = useState<number | null>(null);
-  const [customAmount, setCustomAmount] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [showTipModal, setShowTipModal] = useState(false);
 
   useEffect(() => {
     fetchEligibleJobs();
@@ -46,71 +47,6 @@ export default function TipsPage() {
       console.error('Error fetching eligible jobs:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleTipClick = (job: EligibleJob) => {
-    if (job.alreadyTipped) {
-      return; // Don't allow re-tipping
-    }
-    setSelectedJob(job);
-    setTipAmount(null);
-    setCustomAmount('');
-    setShowTipModal(true);
-  };
-
-  const handleTipAmountSelect = (amount: number) => {
-    setTipAmount(amount);
-    setCustomAmount('');
-  };
-
-  const handleCustomAmount = (value: string) => {
-    setCustomAmount(value);
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue) && numValue > 0) {
-      setTipAmount(numValue);
-    } else {
-      setTipAmount(null);
-    }
-  };
-
-  const handleSubmitTip = async () => {
-    if (!selectedJob || !tipAmount || tipAmount <= 0) {
-      alert('Please select a tip amount');
-      return;
-    }
-
-    if (!selectedJob.cleanerId) {
-      alert('Cleaner information not available for this job');
-      return;
-    }
-
-    try {
-      setCreating(true);
-      const response = await fetch('/api/customer/tips/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jobId: selectedJob.jobId,
-          cleanerId: selectedJob.cleanerId,
-          tipAmount,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || 'Failed to create tip payment');
-      }
-    } catch (error) {
-      console.error('Error creating tip:', error);
-      alert('Failed to create tip payment');
-    } finally {
-      setCreating(false);
     }
   };
 
@@ -146,49 +82,57 @@ export default function TipsPage() {
     <CustomerLayout>
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-vm-text mb-2">Tips</h1>
-        <p className="text-vm-muted">Thank you for supporting your cleaners!</p>
+        <p className="text-vm-muted">
+          Thank your cleaner for a completed cleaning. You will not need a job ID.
+        </p>
       </div>
 
       {status === 'success' && (
-        <div className="bg-vm-success-bg border border-vm-success/30 rounded-xl p-4 mb-6">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-vm-success" />
-            <p className="text-vm-success font-medium">Tip payment successful! Thank you for your generosity.</p>
-          </div>
+        <div className="mb-6 bg-vm-success-bg border border-vm-success/30 rounded-lg p-4">
+          <p className="text-vm-success font-medium">
+            Tip payment successful! Thank you for your generosity.
+          </p>
         </div>
       )}
 
       {status === 'cancel' && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
-          <p className="text-yellow-600">Tip payment was cancelled.</p>
+        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <p className="text-amber-800">Tip payment was cancelled.</p>
         </div>
       )}
 
       {jobs.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-md p-12 text-center">
-          <Heart className="w-12 h-12 text-vm-muted mx-auto mb-4" />
-          <p className="text-vm-muted font-medium mb-2">No completed jobs yet</p>
-          <p className="text-sm text-vm-muted">
-            Once you have completed cleanings, you'll be able to tip your cleaners here.
+        <div className="text-center py-12 bg-vm-surface rounded-lg">
+          <Heart className="w-16 h-16 text-vm-muted mx-auto mb-4" />
+          <p className="text-vm-muted mb-4">No tippable jobs yet.</p>
+          <p className="text-sm text-vm-muted mb-4">
+            Once you have completed cleanings, you can tip from here or from the job
+            detail page.
           </p>
+          <Link
+            href="/customer/jobs"
+            className="inline-block px-4 py-2 bg-vm-navy text-white rounded-lg font-medium"
+          >
+            Go to My Jobs
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">
           {jobs.map((job) => (
             <div
               key={job.jobId}
-              className={`bg-white rounded-xl shadow-md p-6 ${
-                job.alreadyTipped ? 'opacity-75' : 'hover:shadow-lg transition-shadow'
+              className={`bg-white rounded-lg shadow p-6 ${
+                job.alreadyTipped ? 'opacity-75' : ''
               }`}
             >
-              <div className="flex items-start justify-between">
+              <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-lg font-semibold text-vm-text">
                       {formatServiceType(job.serviceType)}
                     </h3>
                     {job.alreadyTipped && (
-                      <span className="px-2 py-1 bg-vm-success-bg text-vm-success rounded-full text-xs font-medium flex items-center gap-1">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-vm-success-bg text-vm-success text-xs rounded-full">
                         <CheckCircle className="w-3 h-3" />
                         Tipped ${job.tipAmount?.toFixed(2)}
                       </span>
@@ -201,25 +145,22 @@ export default function TipsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4" />
-                      <span className="truncate">{job.address}</span>
+                      <span>{job.address}</span>
                     </div>
-                    <p className="text-vm-text font-medium">Cleaner: {job.cleanerName}</p>
+                    {job.cleanerName && (
+                      <p className="text-vm-muted">Cleaner: {job.cleanerName}</p>
+                    )}
                   </div>
                 </div>
                 <div>
                   {job.alreadyTipped ? (
-                    <button
-                      disabled
-                      className="px-4 py-2 bg-gray-200 text-vm-muted rounded-lg font-medium cursor-not-allowed"
-                    >
-                      Already Tipped
-                    </button>
+                    <span className="text-sm text-vm-muted">Already tipped</span>
                   ) : (
                     <button
-                      onClick={() => handleTipClick(job)}
-                      className="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors font-semibold flex items-center gap-2"
+                      type="button"
+                      onClick={() => router.push(tipUrlForJob(job.jobId))}
+                      className="px-4 py-2 bg-vm-cyan text-vm-navy rounded-lg hover:bg-vm-cyan/90 transition-colors font-medium"
                     >
-                      <Heart className="w-4 h-4" />
                       Tip Cleaner
                     </button>
                   )}
@@ -229,88 +170,6 @@ export default function TipsPage() {
           ))}
         </div>
       )}
-
-      {/* Tip Modal */}
-      {showTipModal && selectedJob && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold text-vm-text mb-4">Tip Your Cleaner</h2>
-            
-            <div className="mb-6">
-              <p className="text-sm text-vm-muted mb-2">Service: {formatServiceType(selectedJob.serviceType)}</p>
-              <p className="text-sm text-vm-muted mb-2">Cleaner: {selectedJob.cleanerName}</p>
-              <p className="text-sm text-vm-muted">Date: {formatDate(selectedJob.date)}</p>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-sm font-medium text-vm-text mb-3">Select Tip Amount</p>
-              <div className="grid grid-cols-3 gap-3 mb-3">
-                {[5, 10, 20].map((amount) => (
-                  <button
-                    key={amount}
-                    onClick={() => handleTipAmountSelect(amount)}
-                    className={`px-4 py-3 rounded-lg font-semibold transition-colors ${
-                      tipAmount === amount
-                        ? 'bg-pink-600 text-white'
-                        : 'bg-gray-200 text-vm-text hover:bg-gray-300'
-                    }`}
-                  >
-                    ${amount}
-                  </button>
-                ))}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-vm-text mb-2">Custom Amount</label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-vm-muted" />
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="1"
-                    max="1000"
-                    value={customAmount}
-                    onChange={(e) => handleCustomAmount(e.target.value)}
-                    placeholder="Enter amount"
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {tipAmount && (
-              <div className="mb-6 p-4 bg-pink-50 border border-pink-200 rounded-lg">
-                <p className="text-sm text-vm-muted mb-1">Tip Amount</p>
-                <p className="text-2xl font-bold text-pink-600">${tipAmount.toFixed(2)}</p>
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleSubmitTip}
-                disabled={!tipAmount || tipAmount <= 0 || creating}
-                className="flex-1 bg-pink-600 text-white py-3 rounded-lg font-semibold hover:bg-pink-700 transition-colors disabled:bg-gray-400"
-              >
-                {creating ? 'Processing...' : 'Pay Tip Securely'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowTipModal(false);
-                  setSelectedJob(null);
-                  setTipAmount(null);
-                  setCustomAmount('');
-                }}
-                className="px-6 py-3 bg-gray-200 text-vm-text rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </CustomerLayout>
   );
 }
-
-
-
-

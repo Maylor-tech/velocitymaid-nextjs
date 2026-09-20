@@ -19,6 +19,7 @@ import {
   primarySupportHref,
 } from '@/lib/customer/marketSupport';
 import { formatServiceDate, serviceDateKey } from '@/lib/dates/serviceDate';
+import { isCompletedCustomerJob, tipUrlForJob } from '@/lib/tips/tipLinks';
 
 interface CustomerJob {
   id: string;
@@ -209,8 +210,17 @@ function CustomerJobsPage() {
   }, [upcomingJobs]);
 
   const lastJob = pastJobs[0] ?? upcomingJobs[upcomingJobs.length - 1] ?? null;
+  const tippableJob = useMemo(() => {
+    const completed = pastJobs.filter((j) => isCompletedCustomerJob(j));
+    return completed[0] ?? null;
+  }, [pastJobs]);
+  const tipHint = searchParams.get('needTipJob') === '1';
   const jobs = activeTab === 'upcoming' ? upcomingJobs : pastJobs;
   const countdown = countdownLabel(nextJob?.scheduledDate);
+
+  useEffect(() => {
+    if (tipHint) setActiveTab('past');
+  }, [tipHint]);
 
   if (loading) {
     return (
@@ -233,6 +243,15 @@ function CustomerJobsPage() {
         <div className="rounded-xl border border-vm-success/30 bg-vm-success-bg p-4">
           <p className="text-sm font-body text-vm-success">
             Request received. It is listed under My Jobs — we will confirm the schedule shortly.
+          </p>
+        </div>
+      )}
+
+      {tipHint && !tippableJob && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-body text-amber-900">
+            Open a completed cleaning below, then use Leave a tip. Tips are only
+            available after a job is completed.
           </p>
         </div>
       )}
@@ -417,11 +436,23 @@ function CustomerJobsPage() {
           <span className="font-heading text-sm font-semibold text-vm-navy">Rebook last</span>
         </Link>
         <Link
-          href="/tip"
+          href={
+            tippableJob ? tipUrlForJob(tippableJob.id) : '/customer/jobs?needTipJob=1'
+          }
           className="flex flex-col items-start gap-3 rounded-xl border border-vm-border bg-vm-white p-5 hover:shadow-sm transition-shadow"
         >
           <Star className="h-5 w-5 text-vm-cyan" />
           <span className="font-heading text-sm font-semibold text-vm-navy">Leave a tip</span>
+          {tippableJob ? (
+            <span className="text-xs text-vm-muted font-body line-clamp-2">
+              {tippableJob.address}
+              {tippableJob.serviceType ? ` · ${tippableJob.serviceType}` : ''}
+            </span>
+          ) : (
+            <span className="text-xs text-vm-muted font-body">
+              Choose a completed job first
+            </span>
+          )}
         </Link>
         <a
           href={primarySupportHref(support)}

@@ -9,10 +9,12 @@ import {
   parseTipAmountToCents,
   TipBeneficiaryError,
 } from '@/lib/tips/createTipIntent';
+import { requireCustomerTipJobAccess } from '@/lib/tips/requireCustomerTipJobAccess';
 
 /**
  * POST /api/tip/create-payment-intent
- * Job-bound Stripe tip intent. Freezes beneficiary. Persists guest fields.
+ * Authenticated host tip — CUSTOMER + job ownership required.
+ * Freezes beneficiary server-side. Guest-by-raw-Job.id is unsupported.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -42,6 +44,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    await requireCustomerTipJobAccess(request, body.jobId);
 
     let amountCents: number;
     try {
@@ -117,6 +121,7 @@ export async function POST(request: NextRequest) {
       amountCents: intent.amountCents,
     });
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error('[tip/create-payment-intent]', error);
     const message =
       error instanceof Error ? error.message : 'Failed to create payment intent';
