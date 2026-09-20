@@ -14,7 +14,20 @@ import {
   touchGrantAfterTipCreate,
 } from '@/lib/tips/authorizeTipJobAccess';
 import { checkTipCreateRateLimit } from '@/lib/tips/tipCreateRateLimit';
-import { abandonUnattachedStripeTip } from '@/lib/tips/abandonUnattachedStripeTip';
+import {
+  abandonUnattachedStripeTip,
+  reconcileFailedStripeTipInit,
+} from '@/lib/tips/abandonUnattachedStripeTip';
+
+const GUEST_SAFE_INIT_ERROR =
+  'Failed to initialize payment. Please try again.';
+
+function stripeInitErrorResponse(code: string) {
+  return NextResponse.json(
+    { error: GUEST_SAFE_INIT_ERROR, code },
+    { status: 500 }
+  );
+}
 
 /**
  * POST /api/tip/create-payment-intent
@@ -22,7 +35,8 @@ import { abandonUnattachedStripeTip } from '@/lib/tips/abandonUnattachedStripeTi
  * Freezes beneficiary server-side. Never accepts client cleanerId.
  *
  * Order: Tip row → Stripe PI → attach PI id → touch grant.
- * Stripe failure abandons the PENDING tip (FAILED); grant use is not recorded.
+ * If PI exists but init cannot finish: cancel PI, then FAIL tip only if cancel OK.
+ * Grant use is recorded only after successful attach.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -108,8 +122,10 @@ export async function POST(request: NextRequest) {
       throw e;
     }
 
+    const stripe = getStripe();
+    let paymentIntentId: string | null = null;
+
     try {
-      const stripe = getStripe();
       const paymentIntent = await stripe.paymentIntents.create({
         amount: intent.amountCents,
         currency: intent.currency,
@@ -123,21 +139,60 @@ export async function POST(request: NextRequest) {
         },
         description: `VelocityMaid tip ${intent.internalReference}`,
       });
+      paymentIntentId = paymentIntent.id;
 
       if (!paymentIntent.client_secret) {
-        await abandonUnattachedStripeTip(intent.tipId);
-        return NextResponse.json(
-          { error: 'Failed to initialize payment.', code: 'STRIPE_INIT_FAILED' },
-          { status: 500 }
-        );
+        const reconcile = await reconcileFailedStripeTipInit({
+          tipId: intent.tipId,
+          paymentIntentId: paymentIntent.id,
+          cancelPaymentIntent: (id) => stripe.paymentIntents.cancel(id),
+        });
+        if (reconcile.outcome === 'NEEDS_RECONCILE') {
+          console.error(
+            '[tip/create-payment-intent] missing client_secret; cancel uncertain',
+            {
+              tipId: reconcile.tipId,
+              paymentIntentId: reconcile.paymentIntentId,
+            }
+          );
+          return stripeInitErrorResponse('STRIPE_RECONCILE_REQUIRED');
+        }
+        return stripeInitErrorResponse('STRIPE_INIT_FAILED');
       }
 
-      await prisma.tip.update({
-        where: { id: intent.tipId },
-        data: { stripePaymentIntentId: paymentIntent.id },
-      });
+      try {
+        await prisma.tip.update({
+          where: { id: intent.tipId },
+          data: { stripePaymentIntentId: paymentIntent.id },
+        });
+      } catch (attachError) {
+        console.error('[tip/create-payment-intent] attach PI id failed', {
+          tipId: intent.tipId,
+          paymentIntentId: paymentIntent.id,
+          error:
+            attachError instanceof Error
+              ? attachError.message
+              : String(attachError),
+        });
+        const reconcile = await reconcileFailedStripeTipInit({
+          tipId: intent.tipId,
+          paymentIntentId: paymentIntent.id,
+          cancelPaymentIntent: (id) => stripe.paymentIntents.cancel(id),
+        });
+        if (reconcile.outcome === 'NEEDS_RECONCILE') {
+          console.error(
+            '[tip/create-payment-intent] attach failed; cancel uncertain',
+            {
+              tipId: reconcile.tipId,
+              paymentIntentId: reconcile.paymentIntentId,
+            }
+          );
+          return stripeInitErrorResponse('STRIPE_RECONCILE_REQUIRED');
+        }
+        return stripeInitErrorResponse('STRIPE_ATTACH_FAILED');
+      }
 
-      // Only after PI is created and attached — never on Stripe failure.
+      // Only after PI is created and attached — never on init failure.
       await touchGrantAfterTipCreate(auth);
 
       return NextResponse.json({
@@ -147,24 +202,38 @@ export async function POST(request: NextRequest) {
         amountCents: intent.amountCents,
       });
     } catch (stripeError) {
+      if (paymentIntentId) {
+        // Unexpected error after PI create — cancel before failing tip.
+        const reconcile = await reconcileFailedStripeTipInit({
+          tipId: intent.tipId,
+          paymentIntentId,
+          cancelPaymentIntent: (id) => stripe.paymentIntents.cancel(id),
+        });
+        if (reconcile.outcome === 'NEEDS_RECONCILE') {
+          console.error(
+            '[tip/create-payment-intent] post-create error; cancel uncertain',
+            {
+              tipId: reconcile.tipId,
+              paymentIntentId: reconcile.paymentIntentId,
+            }
+          );
+          return stripeInitErrorResponse('STRIPE_RECONCILE_REQUIRED');
+        }
+        return stripeInitErrorResponse('STRIPE_INIT_FAILED');
+      }
+
+      // Create threw before a PI existed — safe to fail the local tip.
       try {
         await abandonUnattachedStripeTip(intent.tipId);
       } catch (abandonError) {
         console.error(
-          '[tip/create-payment-intent] abandon after Stripe failure',
+          '[tip/create-payment-intent] abandon after create failure',
           abandonError
         );
       }
       if (stripeError instanceof Response) return stripeError;
-      console.error('[tip/create-payment-intent] Stripe', stripeError);
-      const message =
-        stripeError instanceof Error
-          ? stripeError.message
-          : 'Failed to create payment intent';
-      return NextResponse.json(
-        { error: message, code: 'STRIPE_CREATE_FAILED' },
-        { status: 500 }
-      );
+      console.error('[tip/create-payment-intent] Stripe create', stripeError);
+      return stripeInitErrorResponse('STRIPE_CREATE_FAILED');
     }
   } catch (error) {
     if (error instanceof Response) return error;

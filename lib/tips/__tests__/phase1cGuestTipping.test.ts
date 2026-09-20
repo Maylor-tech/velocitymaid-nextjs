@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   rateCreate: vi.fn(),
   rateUpdateMany: vi.fn(),
   paymentIntentsCreate: vi.fn(),
+  paymentIntentsCancel: vi.fn(),
   propertyFindFirst: vi.fn(),
   jobFindMany: vi.fn(),
   feedbackFindUnique: vi.fn(),
@@ -71,6 +72,7 @@ vi.mock('@/lib/stripe', () => ({
   getStripe: () => ({
     paymentIntents: {
       create: (...a: unknown[]) => mocks.paymentIntentsCreate(...a),
+      cancel: (...a: unknown[]) => mocks.paymentIntentsCancel(...a),
     },
   }),
 }));
@@ -373,6 +375,7 @@ describe('Guest tip create dual-auth', () => {
     expect(res.status).toBe(200);
     expect(mocks.tipCreate).toHaveBeenCalledTimes(1);
     expect(mocks.paymentIntentsCreate).toHaveBeenCalledTimes(1);
+    expect(mocks.paymentIntentsCancel).not.toHaveBeenCalled();
     expect(mocks.tipUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'tip-g' },
@@ -386,7 +389,7 @@ describe('Guest tip create dual-auth', () => {
     expect(tipUpdateOrder).toBeLessThan(grantOrder);
   });
 
-  it('Stripe create throws: abandons PENDING tip and does not touch grant', async () => {
+  it('Stripe create throws before PI exists → Tip FAILED, no grant touch', async () => {
     mocks.grantFindUnique.mockResolvedValue(activeGrantRow());
     mocks.jobFindUnique.mockResolvedValue({
       id: 'job-1',
@@ -403,8 +406,11 @@ describe('Guest tip create dual-auth', () => {
 
     const res = await postStripe(postBody({ grantToken: RAW_GRANT, amount: 20 }));
     expect(res.status).toBe(500);
-    expect((await res.json()).code).toBe('STRIPE_CREATE_FAILED');
+    const body = await res.json();
+    expect(body.code).toBe('STRIPE_CREATE_FAILED');
+    expect(body.error).not.toMatch(/tip-g|pi_/);
     expect(mocks.tipCreate).toHaveBeenCalledTimes(1);
+    expect(mocks.paymentIntentsCancel).not.toHaveBeenCalled();
     expect(mocks.tipUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -420,7 +426,121 @@ describe('Guest tip create dual-auth', () => {
     expect(mocks.tipUpdate).not.toHaveBeenCalled();
   });
 
-  it('retry after Stripe throw yields one usable Tip/PI pair; failed tip not PENDING', async () => {
+  it('Stripe PI ok + DB attach throws + cancel succeeds → Tip FAILED, no grant touch', async () => {
+    mocks.grantFindUnique.mockResolvedValue(activeGrantRow());
+    mocks.jobFindUnique.mockResolvedValue({
+      id: 'job-1',
+      status: JobStatus.COMPLETED,
+      assignedCleanerId: 'cleaner-1',
+      propertyId: 'prop-1',
+      branchId: 'b1',
+      marketLabel: null,
+      completedAt: new Date(),
+    });
+    mocks.userFindFirst.mockResolvedValue({ id: 'cleaner-1' });
+    mocks.paymentIntentsCreate.mockResolvedValue({
+      id: 'pi_attach_fail',
+      client_secret: 'sec_attach',
+    });
+    mocks.tipUpdate.mockRejectedValue(new Error('db_attach_failed'));
+    mocks.paymentIntentsCancel.mockResolvedValue({ id: 'pi_attach_fail', status: 'canceled' });
+    mocks.tipUpdateMany.mockResolvedValue({ count: 1 });
+
+    const res = await postStripe(postBody({ grantToken: RAW_GRANT, amount: 20 }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.code).toBe('STRIPE_ATTACH_FAILED');
+    expect(body.error).not.toMatch(/tip-g|pi_attach/);
+    expect(mocks.paymentIntentsCancel).toHaveBeenCalledWith('pi_attach_fail');
+    expect(mocks.tipUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: 'tip-g',
+          stripePaymentIntentId: null,
+        }),
+        data: { status: 'FAILED' },
+      })
+    );
+    expect(mocks.grantUpdate).not.toHaveBeenCalled();
+  });
+
+  it('Stripe PI ok + missing client_secret + cancel succeeds → Tip FAILED', async () => {
+    mocks.grantFindUnique.mockResolvedValue(activeGrantRow());
+    mocks.jobFindUnique.mockResolvedValue({
+      id: 'job-1',
+      status: JobStatus.COMPLETED,
+      assignedCleanerId: 'cleaner-1',
+      propertyId: 'prop-1',
+      branchId: 'b1',
+      marketLabel: null,
+      completedAt: new Date(),
+    });
+    mocks.userFindFirst.mockResolvedValue({ id: 'cleaner-1' });
+    mocks.paymentIntentsCreate.mockResolvedValue({
+      id: 'pi_no_secret',
+      client_secret: null,
+    });
+    mocks.paymentIntentsCancel.mockResolvedValue({ id: 'pi_no_secret', status: 'canceled' });
+    mocks.tipUpdateMany.mockResolvedValue({ count: 1 });
+
+    const res = await postStripe(postBody({ grantToken: RAW_GRANT, amount: 20 }));
+    expect(res.status).toBe(500);
+    expect((await res.json()).code).toBe('STRIPE_INIT_FAILED');
+    expect(mocks.paymentIntentsCancel).toHaveBeenCalledWith('pi_no_secret');
+    expect(mocks.tipUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { status: 'FAILED' },
+      })
+    );
+    expect(mocks.grantUpdate).not.toHaveBeenCalled();
+  });
+
+  it('Stripe PI ok + DB attach throws + cancel fails → Tip not falsely FAILED', async () => {
+    mocks.grantFindUnique.mockResolvedValue(activeGrantRow());
+    mocks.jobFindUnique.mockResolvedValue({
+      id: 'job-1',
+      status: JobStatus.COMPLETED,
+      assignedCleanerId: 'cleaner-1',
+      propertyId: 'prop-1',
+      branchId: 'b1',
+      marketLabel: null,
+      completedAt: new Date(),
+    });
+    mocks.userFindFirst.mockResolvedValue({ id: 'cleaner-1' });
+    mocks.paymentIntentsCreate.mockResolvedValue({
+      id: 'pi_live',
+      client_secret: 'sec_live',
+    });
+    mocks.tipUpdate.mockRejectedValue(new Error('db_attach_failed'));
+    mocks.paymentIntentsCancel.mockRejectedValue(new Error('cancel_failed'));
+    mocks.tipUpdateMany.mockResolvedValue({ count: 1 });
+
+    const res = await postStripe(postBody({ grantToken: RAW_GRANT, amount: 20 }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.code).toBe('STRIPE_RECONCILE_REQUIRED');
+    expect(JSON.stringify(body)).not.toMatch(/tip-g|pi_live/);
+    expect(mocks.paymentIntentsCancel).toHaveBeenCalledWith('pi_live');
+    // Linked for reconcile — not marked FAILED
+    expect(mocks.tipUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: 'tip-g',
+          status: 'PENDING',
+          stripePaymentIntentId: null,
+        }),
+        data: { stripePaymentIntentId: 'pi_live' },
+      })
+    );
+    expect(mocks.tipUpdateMany).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { status: 'FAILED' },
+      })
+    );
+    expect(mocks.grantUpdate).not.toHaveBeenCalled();
+  });
+
+  it('retry after Stripe create throw yields one usable Tip/PI pair', async () => {
     mocks.grantFindUnique.mockResolvedValue(activeGrantRow());
     mocks.jobFindUnique.mockResolvedValue({
       id: 'job-1',
@@ -448,6 +568,7 @@ describe('Guest tip create dual-auth', () => {
     const fail = await postStripe(postBody({ grantToken: RAW_GRANT, amount: 20 }));
     expect(fail.status).toBe(500);
     expect(mocks.grantUpdate).not.toHaveBeenCalled();
+    expect(mocks.paymentIntentsCancel).not.toHaveBeenCalled();
     expect(mocks.tipUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ id: 'tip-retry-1' }),

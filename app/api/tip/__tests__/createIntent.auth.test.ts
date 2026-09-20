@@ -10,6 +10,7 @@ const tipCreate = vi.fn();
 const tipUpdate = vi.fn();
 const tipUpdateMany = vi.fn();
 const paymentIntentsCreate = vi.fn();
+const paymentIntentsCancel = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...a: unknown[]) => requireRole(...a),
@@ -39,6 +40,7 @@ vi.mock('@/lib/stripe', () => ({
   getStripe: () => ({
     paymentIntents: {
       create: (...a: unknown[]) => paymentIntentsCreate(...a),
+      cancel: (...a: unknown[]) => paymentIntentsCancel(...a),
     },
   }),
 }));
@@ -227,7 +229,7 @@ describe('POST tip create STRIPE compensation (host path)', () => {
     vi.clearAllMocks();
   });
 
-  it('host Stripe failure abandons PENDING tip (no orphan liability)', async () => {
+  it('host Stripe create throws → Tip FAILED, no cancel', async () => {
     mockOwnerSession();
     mockOwnedCompletedJob();
     paymentIntentsCreate.mockRejectedValue(new Error('stripe_unavailable'));
@@ -237,6 +239,7 @@ describe('POST tip create STRIPE compensation (host path)', () => {
     expect(res.status).toBe(500);
     expect((await res.json()).code).toBe('STRIPE_CREATE_FAILED');
     expect(tipCreate).toHaveBeenCalledTimes(1);
+    expect(paymentIntentsCancel).not.toHaveBeenCalled();
     expect(tipUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -266,6 +269,55 @@ describe('POST tip create STRIPE compensation (host path)', () => {
         data: { stripePaymentIntentId: 'pi_host' },
       })
     );
+    expect(paymentIntentsCancel).not.toHaveBeenCalled();
     expect(tipUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('host attach fails + cancel succeeds → Tip FAILED', async () => {
+    mockOwnerSession();
+    mockOwnedCompletedJob();
+    paymentIntentsCreate.mockResolvedValue({
+      id: 'pi_host_attach',
+      client_secret: 'sec_host',
+    });
+    tipUpdate.mockRejectedValue(new Error('db_down'));
+    paymentIntentsCancel.mockResolvedValue({ id: 'pi_host_attach', status: 'canceled' });
+    tipUpdateMany.mockResolvedValue({ count: 1 });
+
+    const res = await postStripe(postRequest({ jobId: 'job-1', amount: 25 }));
+    expect(res.status).toBe(500);
+    expect((await res.json()).code).toBe('STRIPE_ATTACH_FAILED');
+    expect(paymentIntentsCancel).toHaveBeenCalledWith('pi_host_attach');
+    expect(tipUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: 'FAILED' } })
+    );
+  });
+
+  it('host attach fails + cancel fails → Tip not falsely FAILED', async () => {
+    mockOwnerSession();
+    mockOwnedCompletedJob();
+    paymentIntentsCreate.mockResolvedValue({
+      id: 'pi_host_live',
+      client_secret: 'sec_host',
+    });
+    tipUpdate.mockRejectedValue(new Error('db_down'));
+    paymentIntentsCancel.mockRejectedValue(new Error('cancel_down'));
+    tipUpdateMany.mockResolvedValue({ count: 1 });
+
+    const res = await postStripe(postRequest({ jobId: 'job-1', amount: 25 }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.code).toBe('STRIPE_RECONCILE_REQUIRED');
+    expect(JSON.stringify(body)).not.toMatch(/tip-1|pi_host_live/);
+    expect(tipUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { stripePaymentIntentId: 'pi_host_live' },
+      })
+    );
+    expect(tipUpdateMany).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { status: 'FAILED' },
+      })
+    );
   });
 });
