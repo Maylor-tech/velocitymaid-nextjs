@@ -23,6 +23,25 @@ function branchScopeWhere(
   };
 }
 
+const customerSelect = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  leadStatus: true,
+  isBlocked: true,
+  travelZone: true,
+  latitude: true,
+  longitude: true,
+  defaultAddress: true,
+  addressLine1: true,
+  addressLine2: true,
+  city: true,
+  state: true,
+  postalCode: true,
+  Branch: { select: { name: true, slug: true } },
+} satisfies Prisma.CustomerSelect;
+
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireRole(request, 'ADMIN');
@@ -30,31 +49,23 @@ export async function GET(request: NextRequest) {
     const branchFilter = request.nextUrl.searchParams.get('branch') || 'all';
     const scopeWhere = branchScopeWhere(auth.branchId, branchFilter);
 
-    const [customers, missingLocationCount] = await Promise.all([
+    const [customers, missingCustomers, missingLocationCount] = await Promise.all([
       prisma.customer.findMany({
         where: {
           latitude: { not: null },
           longitude: { not: null },
           ...scopeWhere,
         },
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          leadStatus: true,
-          isBlocked: true,
-          travelZone: true,
-          latitude: true,
-          longitude: true,
-          defaultAddress: true,
-          addressLine1: true,
-          addressLine2: true,
-          city: true,
-          state: true,
-          postalCode: true,
-          Branch: { select: { name: true, slug: true } },
+        select: customerSelect,
+      }),
+      prisma.customer.findMany({
+        where: {
+          ...scopeWhere,
+          OR: [{ latitude: null }, { longitude: null }],
         },
+        select: customerSelect,
+        orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+        take: 100,
       }),
       prisma.customer.count({
         where: {
@@ -120,6 +131,24 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    const missingLocations = missingCustomers.map((c) => {
+      const address = formatCustomerAddress(c);
+      const branchSlug = c.Branch?.slug ?? null;
+      return {
+        id: c.id,
+        name: `${c.firstName} ${c.lastName}`.trim(),
+        email: c.email,
+        address: address || null,
+        hasAddress: Boolean(address),
+        city: c.city,
+        state: c.state,
+        branchName: c.Branch?.name ?? null,
+        branchSlug,
+        statusCategory: customerMapStatusCategory(c.leadStatus, c.isBlocked),
+        canGeocode: Boolean(address),
+      };
+    });
+
     const vermontWithDistance = properties.filter(
       (p) => p.distanceFromHqMiles != null
     );
@@ -140,16 +169,25 @@ export async function GET(request: NextRequest) {
       newJersey: properties.filter((p) => p.branchSlug === 'new-jersey').length,
     };
 
+    const statusBreakdown = {
+      active: properties.filter((p) => p.statusCategory === 'active').length,
+      lead: properties.filter((p) => p.statusCategory === 'lead').length,
+      inactive: properties.filter((p) => p.statusCategory === 'inactive').length,
+    };
+
     return NextResponse.json({
       success: true,
       hq: VM_HQ,
       summary: {
         totalProperties: properties.length,
         missingLocationCount,
+        missingLocationsTruncated: missingLocationCount > missingLocations.length,
         avgDistanceFromHqMiles: avgDistanceFromHq,
         zoneBreakdown,
+        statusBreakdown,
       },
       properties,
+      missingLocations,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to load map data';
