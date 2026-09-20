@@ -14,11 +14,15 @@ import {
   touchGrantAfterTipCreate,
 } from '@/lib/tips/authorizeTipJobAccess';
 import { checkTipCreateRateLimit } from '@/lib/tips/tipCreateRateLimit';
+import { abandonUnattachedStripeTip } from '@/lib/tips/abandonUnattachedStripeTip';
 
 /**
  * POST /api/tip/create-payment-intent
  * Trusted path: CUSTOMER + owned jobId, OR valid guest grantToken.
  * Freezes beneficiary server-side. Never accepts client cleanerId.
+ *
+ * Order: Tip row → Stripe PI → attach PI id → touch grant.
+ * Stripe failure abandons the PENDING tip (FAILED); grant use is not recorded.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -104,41 +108,64 @@ export async function POST(request: NextRequest) {
       throw e;
     }
 
-    await touchGrantAfterTipCreate(auth);
+    try {
+      const stripe = getStripe();
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: intent.amountCents,
+        currency: intent.currency,
+        automatic_payment_methods: { enabled: true },
+        metadata: {
+          type: 'cleaner_tip',
+          tipId: intent.tipId,
+          jobId: intent.jobId,
+          beneficiaryCleanerId: intent.beneficiaryCleanerId,
+          authMode: auth.mode,
+        },
+        description: `VelocityMaid tip ${intent.internalReference}`,
+      });
 
-    const stripe = getStripe();
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: intent.amountCents,
-      currency: intent.currency,
-      automatic_payment_methods: { enabled: true },
-      metadata: {
-        type: 'cleaner_tip',
+      if (!paymentIntent.client_secret) {
+        await abandonUnattachedStripeTip(intent.tipId);
+        return NextResponse.json(
+          { error: 'Failed to initialize payment.', code: 'STRIPE_INIT_FAILED' },
+          { status: 500 }
+        );
+      }
+
+      await prisma.tip.update({
+        where: { id: intent.tipId },
+        data: { stripePaymentIntentId: paymentIntent.id },
+      });
+
+      // Only after PI is created and attached — never on Stripe failure.
+      await touchGrantAfterTipCreate(auth);
+
+      return NextResponse.json({
+        clientSecret: paymentIntent.client_secret,
         tipId: intent.tipId,
-        jobId: intent.jobId,
-        beneficiaryCleanerId: intent.beneficiaryCleanerId,
-        authMode: auth.mode,
-      },
-      description: `VelocityMaid tip ${intent.internalReference}`,
-    });
-
-    await prisma.tip.update({
-      where: { id: intent.tipId },
-      data: { stripePaymentIntentId: paymentIntent.id },
-    });
-
-    if (!paymentIntent.client_secret) {
+        internalReference: intent.internalReference,
+        amountCents: intent.amountCents,
+      });
+    } catch (stripeError) {
+      try {
+        await abandonUnattachedStripeTip(intent.tipId);
+      } catch (abandonError) {
+        console.error(
+          '[tip/create-payment-intent] abandon after Stripe failure',
+          abandonError
+        );
+      }
+      if (stripeError instanceof Response) return stripeError;
+      console.error('[tip/create-payment-intent] Stripe', stripeError);
+      const message =
+        stripeError instanceof Error
+          ? stripeError.message
+          : 'Failed to create payment intent';
       return NextResponse.json(
-        { error: 'Failed to initialize payment.' },
+        { error: message, code: 'STRIPE_CREATE_FAILED' },
         { status: 500 }
       );
     }
-
-    return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
-      tipId: intent.tipId,
-      internalReference: intent.internalReference,
-      amountCents: intent.amountCents,
-    });
   } catch (error) {
     if (error instanceof Response) return error;
     console.error('[tip/create-payment-intent]', error);

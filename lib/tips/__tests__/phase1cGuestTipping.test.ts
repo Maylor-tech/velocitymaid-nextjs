@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   userFindFirst: vi.fn(),
   tipCreate: vi.fn(),
   tipUpdate: vi.fn(),
+  tipUpdateMany: vi.fn(),
   grantFindUnique: vi.fn(),
   grantCreate: vi.fn(),
   grantUpdate: vi.fn(),
@@ -41,6 +42,7 @@ vi.mock('@/lib/prisma', () => ({
     tip: {
       create: (...a: unknown[]) => mocks.tipCreate(...a),
       update: (...a: unknown[]) => mocks.tipUpdate(...a),
+      updateMany: (...a: unknown[]) => mocks.tipUpdateMany(...a),
     },
     guestTipAuthorization: {
       findUnique: (...a: unknown[]) => mocks.grantFindUnique(...a),
@@ -344,8 +346,129 @@ describe('Guest tip create dual-auth', () => {
     const created = mocks.tipCreate.mock.calls[0][0].data;
     expect(created.beneficiaryCleanerId).toBe('cleaner-dorottya');
     expect(created.jobId).toBe('job-1');
-    expect(mocks.grantUpdate).toHaveBeenCalled(); // useCount touch
+    expect(mocks.grantUpdate).toHaveBeenCalled(); // useCount touch after PI
     expect(mocks.requireRole).not.toHaveBeenCalled();
+    expect(mocks.tipUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('Stripe create succeeds: attaches PI then records grant use', async () => {
+    mocks.grantFindUnique.mockResolvedValue(activeGrantRow());
+    mocks.jobFindUnique.mockResolvedValue({
+      id: 'job-1',
+      status: JobStatus.COMPLETED,
+      assignedCleanerId: 'cleaner-1',
+      propertyId: 'prop-1',
+      branchId: 'b1',
+      marketLabel: null,
+      completedAt: new Date(),
+    });
+    mocks.userFindFirst.mockResolvedValue({ id: 'cleaner-1' });
+    mocks.paymentIntentsCreate.mockResolvedValue({
+      id: 'pi_ok',
+      client_secret: 'sec_ok',
+    });
+    mocks.tipUpdate.mockResolvedValue({});
+
+    const res = await postStripe(postBody({ grantToken: RAW_GRANT, amount: 20 }));
+    expect(res.status).toBe(200);
+    expect(mocks.tipCreate).toHaveBeenCalledTimes(1);
+    expect(mocks.paymentIntentsCreate).toHaveBeenCalledTimes(1);
+    expect(mocks.tipUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'tip-g' },
+        data: { stripePaymentIntentId: 'pi_ok' },
+      })
+    );
+    expect(mocks.grantUpdate).toHaveBeenCalledTimes(1);
+    // grant touch after tip PI attach (call order)
+    const tipUpdateOrder = mocks.tipUpdate.mock.invocationCallOrder[0]!;
+    const grantOrder = mocks.grantUpdate.mock.invocationCallOrder[0]!;
+    expect(tipUpdateOrder).toBeLessThan(grantOrder);
+  });
+
+  it('Stripe create throws: abandons PENDING tip and does not touch grant', async () => {
+    mocks.grantFindUnique.mockResolvedValue(activeGrantRow());
+    mocks.jobFindUnique.mockResolvedValue({
+      id: 'job-1',
+      status: JobStatus.COMPLETED,
+      assignedCleanerId: 'cleaner-1',
+      propertyId: 'prop-1',
+      branchId: 'b1',
+      marketLabel: null,
+      completedAt: new Date(),
+    });
+    mocks.userFindFirst.mockResolvedValue({ id: 'cleaner-1' });
+    mocks.paymentIntentsCreate.mockRejectedValue(new Error('stripe_down'));
+    mocks.tipUpdateMany.mockResolvedValue({ count: 1 });
+
+    const res = await postStripe(postBody({ grantToken: RAW_GRANT, amount: 20 }));
+    expect(res.status).toBe(500);
+    expect((await res.json()).code).toBe('STRIPE_CREATE_FAILED');
+    expect(mocks.tipCreate).toHaveBeenCalledTimes(1);
+    expect(mocks.tipUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: 'tip-g',
+          status: 'PENDING',
+          stripePaymentIntentId: null,
+          paymentMethod: 'STRIPE',
+        }),
+        data: { status: 'FAILED' },
+      })
+    );
+    expect(mocks.grantUpdate).not.toHaveBeenCalled();
+    expect(mocks.tipUpdate).not.toHaveBeenCalled();
+  });
+
+  it('retry after Stripe throw yields one usable Tip/PI pair; failed tip not PENDING', async () => {
+    mocks.grantFindUnique.mockResolvedValue(activeGrantRow());
+    mocks.jobFindUnique.mockResolvedValue({
+      id: 'job-1',
+      status: JobStatus.COMPLETED,
+      assignedCleanerId: 'cleaner-1',
+      propertyId: 'prop-1',
+      branchId: 'b1',
+      marketLabel: null,
+      completedAt: new Date(),
+    });
+    mocks.userFindFirst.mockResolvedValue({ id: 'cleaner-1' });
+
+    let tipSeq = 0;
+    mocks.tipCreate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
+      tipSeq += 1;
+      return { id: `tip-retry-${tipSeq}`, ...data };
+    });
+
+    mocks.paymentIntentsCreate
+      .mockRejectedValueOnce(new Error('stripe_down'))
+      .mockResolvedValueOnce({ id: 'pi_retry', client_secret: 'sec_retry' });
+    mocks.tipUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.tipUpdate.mockResolvedValue({});
+
+    const fail = await postStripe(postBody({ grantToken: RAW_GRANT, amount: 20 }));
+    expect(fail.status).toBe(500);
+    expect(mocks.grantUpdate).not.toHaveBeenCalled();
+    expect(mocks.tipUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: 'tip-retry-1' }),
+        data: { status: 'FAILED' },
+      })
+    );
+
+    const ok = await postStripe(postBody({ grantToken: RAW_GRANT, amount: 20 }));
+    expect(ok.status).toBe(200);
+    const body = await ok.json();
+    expect(body.tipId).toBe('tip-retry-2');
+    expect(body.clientSecret).toBe('sec_retry');
+    expect(mocks.tipCreate).toHaveBeenCalledTimes(2);
+    expect(mocks.paymentIntentsCreate).toHaveBeenCalledTimes(2);
+    expect(mocks.grantUpdate).toHaveBeenCalledTimes(1);
+    expect(mocks.tipUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'tip-retry-2' },
+        data: { stripePaymentIntentId: 'pi_retry' },
+      })
+    );
   });
 
   it('guest Zelle intent via grant works without CUSTOMER session', async () => {

@@ -8,6 +8,7 @@ const jobFindUnique = vi.fn();
 const userFindFirst = vi.fn();
 const tipCreate = vi.fn();
 const tipUpdate = vi.fn();
+const tipUpdateMany = vi.fn();
 const paymentIntentsCreate = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
@@ -25,6 +26,7 @@ vi.mock('@/lib/prisma', () => ({
     tip: {
       create: (...a: unknown[]) => tipCreate(...a),
       update: (...a: unknown[]) => tipUpdate(...a),
+      updateMany: (...a: unknown[]) => tipUpdateMany(...a),
     },
   },
 }));
@@ -211,10 +213,59 @@ describe.each([
       expect(paymentIntentsCreate).toHaveBeenCalled();
       const meta = paymentIntentsCreate.mock.calls[0][0].metadata;
       expect(meta.beneficiaryCleanerId).toBe('cleaner-dorottya');
+      expect(tipUpdateMany).not.toHaveBeenCalled();
     } else {
       expect(body.paymentMethod).toBe('ZELLE');
       expect(body.internalReference).toBe('VM-TIP-AUTH01');
       expect(body.zelle.handle).toBeTruthy();
     }
+  });
+});
+
+describe('POST tip create STRIPE compensation (host path)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('host Stripe failure abandons PENDING tip (no orphan liability)', async () => {
+    mockOwnerSession();
+    mockOwnedCompletedJob();
+    paymentIntentsCreate.mockRejectedValue(new Error('stripe_unavailable'));
+    tipUpdateMany.mockResolvedValue({ count: 1 });
+
+    const res = await postStripe(postRequest({ jobId: 'job-1', amount: 25 }));
+    expect(res.status).toBe(500);
+    expect((await res.json()).code).toBe('STRIPE_CREATE_FAILED');
+    expect(tipCreate).toHaveBeenCalledTimes(1);
+    expect(tipUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: 'tip-1',
+          status: 'PENDING',
+          stripePaymentIntentId: null,
+        }),
+        data: { status: 'FAILED' },
+      })
+    );
+    expect(tipUpdate).not.toHaveBeenCalled();
+  });
+
+  it('host Stripe success attaches PI without abandon', async () => {
+    mockOwnerSession();
+    mockOwnedCompletedJob();
+    paymentIntentsCreate.mockResolvedValue({
+      id: 'pi_host',
+      client_secret: 'sec_host',
+    });
+    tipUpdate.mockResolvedValue({ id: 'tip-1' });
+
+    const res = await postStripe(postRequest({ jobId: 'job-1', amount: 25 }));
+    expect(res.status).toBe(200);
+    expect(tipUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { stripePaymentIntentId: 'pi_host' },
+      })
+    );
+    expect(tipUpdateMany).not.toHaveBeenCalled();
   });
 });
