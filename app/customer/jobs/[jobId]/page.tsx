@@ -17,10 +17,13 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
+  Heart,
 } from 'lucide-react';
+import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 import { canShowPayBalance } from '@/lib/booking/payBalanceVisibility';
 import { formatServiceDate } from '@/lib/dates/serviceDate';
+import { tipUrlForJob } from '@/lib/tips/tipLinks';
 
 interface JobDetails {
   id: string;
@@ -364,6 +367,21 @@ function JobDetailsContent() {
           onRequestChange={() => setShowRequestChangeModal(true)}
           onCancel={() => setShowCancelModal(true)}
         />
+        {job.status.toUpperCase() === 'COMPLETED' ? (
+          <div className="mt-4">
+            <Link
+              href={tipUrlForJob(job.id)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-vm-cyan text-vm-navy rounded-lg hover:bg-vm-cyan/90 transition-colors font-heading font-semibold"
+            >
+              <Heart className="w-4 h-4" />
+              Leave a tip
+            </Link>
+            <p className="mt-2 text-xs text-vm-muted font-body">
+              Optional thank-you for this completed cleaning
+              {job.address ? ` at ${job.address}` : ''}.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       {showRequestChangeModal && (

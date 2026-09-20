@@ -35,10 +35,10 @@ export default function TipSuccessPage({ searchParams }: TipSuccessPageProps) {
               We&apos;re confirming your tip. If you completed payment, thank you!
             </p>
             <Link
-              href="/tip"
+              href="/customer/jobs"
               className="mt-6 inline-block text-vm-cyan hover:text-vm-cyan-dark font-heading text-sm"
             >
-              Leave another tip
+              Back to My Jobs
             </Link>
           </div>
         )}

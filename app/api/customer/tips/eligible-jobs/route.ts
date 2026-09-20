@@ -1,72 +1,107 @@
-export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { findCustomerById } from '@/utils/customerData';
-import { getBookingHistory } from '@/utils/customerBookings';
-import { getTipByJobId } from '@/utils/tipData';
+import { JobStatus } from '@prisma/client';
+import { getCustomerSession } from '@/lib/customerSession';
+import { requireRole } from '@/lib/auth/requireRole';
+import { prisma } from '@/lib/prisma';
+import { isTipPaidOut, isTipPending, isTipReceived } from '@/lib/tips/statuses';
+import { memberDisplayName } from '@/lib/cleaners/teamDisplay';
 
 /**
- * Get Eligible Jobs for Tips API
- * 
  * GET /api/customer/tips/eligible-jobs
- * 
- * Returns last 5 completed bookings that can be tipped
+ *
+ * Last completed Prisma jobs for the authenticated host/customer that can open
+ * the canonical /tip?jobId= flow. Uses Job.id (not Stripe session ids).
  */
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const customerId = cookieStore.get('customerId')?.value;
-
-    if (!customerId) {
+    await requireRole(request, 'CUSTOMER');
+    const session = await getCustomerSession();
+    if (!session) {
       return NextResponse.json(
-        { success: false, error: 'Not authenticated' },
+        { success: false, error: 'Session not found after authentication' },
         { status: 401 }
       );
     }
 
-    const customer = findCustomerById(customerId);
-    if (!customer) {
-      return NextResponse.json(
-        { success: false, error: 'Customer not found' },
-        { status: 404 }
-      );
-    }
+    const jobs = await prisma.job.findMany({
+      where: {
+        customerId: session.customerId,
+        status: JobStatus.COMPLETED,
+        archivedAt: null,
+      },
+      select: {
+        id: true,
+        preferredDate: true,
+        serviceType: true,
+        address: true,
+        assignedCleanerId: true,
+        User: {
+          select: {
+            id: true,
+            name: true,
+            CleanerProfile: { select: { publicDisplayName: true } },
+          },
+        },
+        Property: { select: { name: true, address: true } },
+        Tip: {
+          select: { amount: true, status: true },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+      },
+      orderBy: { preferredDate: 'desc' },
+      take: 10,
+    });
 
-    // Get completed bookings
-    const bookings = await getBookingHistory(customer.email);
-    
-    // Filter to only completed jobs (last 5)
-    const eligibleJobs = bookings
-      .filter(booking => booking.status === 'completed')
-      .slice(0, 5)
-      .map(booking => {
-        // Check if already tipped
-        const existingTip = getTipByJobId(booking.id);
-        
-        return {
-          jobId: booking.id,
-          date: booking.preferredDate,
-          serviceType: booking.serviceType,
-          cleanerName: booking.assignedCleanerName || 'Cleaner',
-          cleanerId: booking.assignedCleanerId || null,
-          address: booking.address,
-          alreadyTipped: existingTip !== null,
-          tipAmount: existingTip?.tipAmount || null,
-        };
-      });
+    const eligibleJobs = jobs.map((job) => {
+      const settled = job.Tip.find(
+        (t) =>
+          isTipReceived(t.status) ||
+          isTipPaidOut(t.status) ||
+          isTipPending(t.status)
+      );
+      const cleanerName = job.User
+        ? memberDisplayName({
+            id: job.User.id,
+            name: job.User.name,
+            publicDisplayName: job.User.CleanerProfile?.publicDisplayName,
+          })
+        : 'Cleaner';
+
+      return {
+        jobId: job.id,
+        date: job.preferredDate?.toISOString() || '',
+        serviceType: job.serviceType || 'Cleaning',
+        cleanerName,
+        cleanerId: job.assignedCleanerId,
+        address:
+          job.Property?.name ||
+          job.Property?.address ||
+          job.address ||
+          'Address not provided',
+        alreadyTipped: Boolean(settled),
+        tipAmount: settled ? settled.amount / 100 : null,
+      };
+    });
 
     return NextResponse.json({
       success: true,
       jobs: eligibleJobs,
       count: eligibleJobs.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
     console.error('Get eligible jobs error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch eligible jobs' },
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'Failed to fetch eligible jobs',
+      },
       { status: 500 }
     );
   }
 }
-

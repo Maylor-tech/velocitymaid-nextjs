@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, FormEvent } from 'react';
+import { useEffect, useMemo, useState, FormEvent } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -100,6 +100,26 @@ function TipPaymentForm({
   );
 }
 
+type TipContextView = {
+  propertyLabel: string;
+  serviceType: string | null;
+  serviceDate: string | null;
+  jobReference: string | null;
+};
+
+function formatTipServiceDate(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 export default function TipFlow({ jobId }: { jobId?: string | null }) {
   const resolvedJobId = useMemo(() => {
     if (jobId) return jobId;
@@ -125,6 +145,57 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [jobContext, setJobContext] = useState<TipContextView | null>(null);
+  const [contextLoading, setContextLoading] = useState(Boolean(resolvedJobId));
+  const [contextError, setContextError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!resolvedJobId) {
+      setJobContext(null);
+      setContextError(null);
+      setContextLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setContextLoading(true);
+    setContextError(null);
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/tip/context?jobId=${encodeURIComponent(resolvedJobId)}`
+        );
+        const data = await res.json();
+        if (cancelled) return;
+        if (!res.ok || !data.success || !data.context) {
+          setJobContext(null);
+          setContextError(
+            data.error ||
+              'This job is not available for tipping. Open a completed job from your portal.'
+          );
+          return;
+        }
+        setJobContext({
+          propertyLabel: data.context.propertyLabel,
+          serviceType: data.context.serviceType,
+          serviceDate: data.context.serviceDate,
+          jobReference: data.context.jobReference,
+        });
+      } catch {
+        if (!cancelled) {
+          setJobContext(null);
+          setContextError('Could not load this cleaning. Please try again from your jobs list.');
+        }
+      } finally {
+        if (!cancelled) setContextLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [resolvedJobId]);
 
   const amountDollars =
     selectedPreset === 'custom'
@@ -133,6 +204,8 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
 
   const canContinue =
     Boolean(resolvedJobId) &&
+    Boolean(jobContext) &&
+    !contextError &&
     amountDollars >= 1 &&
     amountDollars <= 200 &&
     !Number.isNaN(amountDollars);
@@ -289,10 +362,52 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
       </div>
 
       {!resolvedJobId ? (
-        <p className="mt-6 text-sm text-amber-300 font-body">
-          A completed job link is required to leave a tip. Please use the tip link
-          from your confirmation message.
-        </p>
+        <div className="mt-6 rounded-lg border border-amber-400/30 bg-amber-400/10 p-4">
+          <p className="text-sm text-amber-200 font-body">
+            A completed cleaning is required to leave a tip. Open a completed job
+            from your VelocityMaid portal, then use Leave a tip — you do not need
+            to enter a job ID.
+          </p>
+          <a
+            href="/customer/jobs"
+            className="mt-3 inline-block text-sm font-heading font-semibold text-vm-cyan hover:underline"
+          >
+            Go to My Jobs →
+          </a>
+        </div>
+      ) : null}
+
+      {resolvedJobId && contextLoading ? (
+        <p className="mt-6 text-sm text-white/50 font-body">Loading cleaning details…</p>
+      ) : null}
+
+      {resolvedJobId && contextError ? (
+        <div className="mt-6 rounded-lg border border-amber-400/30 bg-amber-400/10 p-4">
+          <p className="text-sm text-amber-200 font-body">{contextError}</p>
+          <a
+            href="/customer/jobs"
+            className="mt-3 inline-block text-sm font-heading font-semibold text-vm-cyan hover:underline"
+          >
+            Back to My Jobs →
+          </a>
+        </div>
+      ) : null}
+
+      {jobContext ? (
+        <div className="mt-6 rounded-lg border border-white/15 bg-white/5 p-4 font-body text-sm text-white/85">
+          <p className="font-heading font-semibold text-white">
+            {jobContext.propertyLabel}
+          </p>
+          <p className="mt-1 text-white/55">
+            {[
+              jobContext.serviceType,
+              formatTipServiceDate(jobContext.serviceDate),
+              jobContext.jobReference,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        </div>
       ) : null}
 
       <div className="mt-8 grid grid-cols-3 gap-3">
