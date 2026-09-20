@@ -68,6 +68,10 @@ function CustomerPropertyDetailPageInner() {
   const [showCreatedBanner, setShowCreatedBanner] = useState(Boolean(createdJobId));
   const [stayUrl, setStayUrl] = useState<string | null>(null);
   const [guestDisplayName, setGuestDisplayName] = useState('');
+  const [qrReady, setQrReady] = useState(false);
+  const [printedCardWarning, setPrintedCardWarning] = useState(
+    'Rotating or revoking this guest-access token will make existing printed QR cards stop working and require replacement.'
+  );
   const [stayBusy, setStayBusy] = useState(false);
   const [stayMessage, setStayMessage] = useState<string | null>(null);
 
@@ -91,6 +95,10 @@ function CustomerPropertyDetailPageInner() {
       if (stayRes.ok && stayData?.success) {
         setStayUrl(stayData.stayUrl ?? null);
         setGuestDisplayName(stayData.guestDisplayName ?? '');
+        setQrReady(Boolean(stayData.qrReady));
+        if (typeof stayData.printedCardWarning === 'string') {
+          setPrintedCardWarning(stayData.printedCardWarning);
+        }
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load property');
@@ -121,6 +129,16 @@ function CustomerPropertyDetailPageInner() {
   );
 
   const handleStayAction = async (action: 'ensure' | 'rotate' | 'revoke') => {
+    if (action === 'rotate' || action === 'revoke') {
+      const confirmed = window.confirm(
+        `${printedCardWarning}\n\nType OK in the next step only if you intend to ${action} this link.`
+      );
+      if (!confirmed) {
+        setStayMessage(`${action} cancelled — printed cards remain valid.`);
+        return;
+      }
+    }
+
     setStayBusy(true);
     setStayMessage(null);
     try {
@@ -132,6 +150,7 @@ function CustomerPropertyDetailPageInner() {
           body: JSON.stringify({
             action,
             guestDisplayName,
+            confirm: action === 'rotate' || action === 'revoke' ? true : undefined,
           }),
         }
       );
@@ -140,12 +159,18 @@ function CustomerPropertyDetailPageInner() {
         throw new Error(data.error || 'Could not update guest stay link');
       }
       setStayUrl(data.stayUrl ?? null);
+      setQrReady(Boolean(data.qrReady));
+      if (typeof data.printedCardWarning === 'string') {
+        setPrintedCardWarning(data.printedCardWarning);
+      }
       setStayMessage(
         action === 'rotate'
-          ? 'Stay link rotated. Update any printed cards.'
+          ? 'Stay link rotated. Existing printed QR cards no longer work — reprint required.'
           : action === 'revoke'
-            ? 'Stay link revoked.'
-            : 'Stay link ready.'
+            ? 'Stay link revoked. Existing printed QR cards no longer work.'
+            : data.qrReady
+              ? 'Stay link ready.'
+              : 'Guest display name required before this property is QR-ready.'
       );
     } catch (err: unknown) {
       setStayMessage(err instanceof Error ? err.message : 'Stay link update failed');
@@ -550,8 +575,11 @@ function CustomerPropertyDetailPageInner() {
           Guests can leave private service feedback after checkout without logging
           in. Print this URL on a property card later — no QR artwork yet.
         </p>
+        <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-50 px-3 py-2 font-body text-xs text-amber-900">
+          {printedCardWarning}
+        </p>
         <label className="mt-4 block font-body text-sm text-vm-muted">
-          Guest-facing display name
+          Guest-facing display name (required for QR readiness — never use the street address)
           <input
             className={inputClass}
             value={guestDisplayName}
@@ -559,6 +587,14 @@ function CustomerPropertyDetailPageInner() {
             placeholder="e.g. Lakeside Cottage"
           />
         </label>
+        <p className="mt-2 font-body text-xs text-vm-muted">
+          Status:{' '}
+          {qrReady
+            ? 'QR-ready (active link + display name)'
+            : stayUrl
+              ? 'Link active but not QR-ready — set a guest display name'
+              : 'No active guest-access link'}
+        </p>
         {stayUrl && (
           <div className="mt-3 break-all rounded-lg border border-vm-navy/10 bg-vm-surface px-3 py-2 font-mono text-xs text-vm-navy">
             {stayUrl}

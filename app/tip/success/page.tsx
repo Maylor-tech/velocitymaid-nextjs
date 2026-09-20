@@ -9,6 +9,7 @@ interface TipSuccessPageProps {
     amount?: string;
     guestName?: string;
     redirect_status?: string;
+    mode?: string;
   };
 }
 
@@ -16,6 +17,7 @@ export default function TipSuccessPage({ searchParams }: TipSuccessPageProps) {
   const amountParam = searchParams.amount;
   const amountDollars = amountParam ? parseFloat(amountParam) : 0;
   const guestName = searchParams.guestName;
+  const isGuest = searchParams.mode === "guest";
   const showSuccess =
     searchParams.redirect_status === "succeeded" || Boolean(searchParams.payment_intent);
 
@@ -34,12 +36,21 @@ export default function TipSuccessPage({ searchParams }: TipSuccessPageProps) {
             <p className="font-body text-white/70">
               We&apos;re confirming your tip. If you completed payment, thank you!
             </p>
-            <Link
-              href="/customer/jobs"
-              className="mt-6 inline-block text-vm-cyan hover:text-vm-cyan-dark font-heading text-sm"
-            >
-              Back to My Jobs
-            </Link>
+            {isGuest ? (
+              <Link
+                href="/"
+                className="mt-6 inline-block text-vm-cyan hover:text-vm-cyan-dark font-heading text-sm"
+              >
+                Back to VelocityMaid
+              </Link>
+            ) : (
+              <Link
+                href="/customer/jobs"
+                className="mt-6 inline-block text-vm-cyan hover:text-vm-cyan-dark font-heading text-sm"
+              >
+                Back to My Jobs
+              </Link>
+            )}
           </div>
         )}
       </main>

@@ -11,11 +11,12 @@ const mocks = vi.hoisted(() => ({
   feedbackCreate: vi.fn(),
   feedbackUpdateMany: vi.fn(),
   grantCreate: vi.fn(),
+  grantFindMany: vi.fn(),
   logAuditEntry: vi.fn(),
 }));
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
+vi.mock('@/lib/prisma', () => {
+  const prisma = {
     property: {
       findFirst: mocks.propertyFindFirst,
       findUnique: mocks.propertyFindUnique,
@@ -32,9 +33,14 @@ vi.mock('@/lib/prisma', () => ({
     },
     guestTipAuthorization: {
       create: mocks.grantCreate,
+      findMany: mocks.grantFindMany,
     },
-  },
-}));
+    $queryRaw: vi.fn().mockResolvedValue([{ id: 'job-1' }]),
+    $transaction: async (fn: (tx: typeof prisma) => Promise<unknown>) =>
+      fn(prisma),
+  };
+  return { prisma };
+});
 
 vi.mock('@/lib/audit', () => ({
   logAuditEntry: mocks.logAuditEntry,
@@ -62,6 +68,7 @@ describe('Phase 1B guest stay resolve', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.logAuditEntry.mockResolvedValue('audit-1');
+    mocks.grantFindMany.mockResolvedValue([]);
     mocks.grantCreate.mockResolvedValue({ id: 'grant-1' });
   });
 

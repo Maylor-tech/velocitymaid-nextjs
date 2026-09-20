@@ -3,27 +3,67 @@ import { JobStatus, ServiceFeedbackSource } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { createHash } from 'crypto';
 
-const mocks = vi.hoisted(() => ({
-  requireRole: vi.fn(),
-  getCustomerSession: vi.fn(),
-  jobFindUnique: vi.fn(),
-  userFindFirst: vi.fn(),
-  tipCreate: vi.fn(),
-  tipUpdate: vi.fn(),
-  tipUpdateMany: vi.fn(),
-  grantFindUnique: vi.fn(),
-  grantCreate: vi.fn(),
-  grantUpdate: vi.fn(),
-  rateCreate: vi.fn(),
-  rateUpdateMany: vi.fn(),
-  paymentIntentsCreate: vi.fn(),
-  paymentIntentsCancel: vi.fn(),
-  propertyFindFirst: vi.fn(),
-  jobFindMany: vi.fn(),
-  feedbackFindUnique: vi.fn(),
-  feedbackCreate: vi.fn(),
-  logAuditEntry: vi.fn(),
-}));
+const mocks = vi.hoisted(() => {
+  const m = {
+    requireRole: vi.fn(),
+    getCustomerSession: vi.fn(),
+    jobFindUnique: vi.fn(),
+    userFindFirst: vi.fn(),
+    tipCreate: vi.fn(),
+    tipUpdate: vi.fn(),
+    tipUpdateMany: vi.fn(),
+    grantFindUnique: vi.fn(),
+    grantFindMany: vi.fn(),
+    grantCreate: vi.fn(),
+    grantUpdate: vi.fn(),
+    queryRaw: vi.fn(),
+    transaction: vi.fn(),
+    rateCreate: vi.fn(),
+    rateUpdateMany: vi.fn(),
+    paymentIntentsCreate: vi.fn(),
+    paymentIntentsCancel: vi.fn(),
+    propertyFindFirst: vi.fn(),
+    jobFindMany: vi.fn(),
+    feedbackFindUnique: vi.fn(),
+    feedbackCreate: vi.fn(),
+    logAuditEntry: vi.fn(),
+  };
+
+  const prismaMock = {
+    job: {
+      findUnique: (...a: unknown[]) => m.jobFindUnique(...a),
+      findMany: (...a: unknown[]) => m.jobFindMany(...a),
+    },
+    user: { findFirst: (...a: unknown[]) => m.userFindFirst(...a) },
+    tip: {
+      create: (...a: unknown[]) => m.tipCreate(...a),
+      update: (...a: unknown[]) => m.tipUpdate(...a),
+      updateMany: (...a: unknown[]) => m.tipUpdateMany(...a),
+    },
+    guestTipAuthorization: {
+      findUnique: (...a: unknown[]) => m.grantFindUnique(...a),
+      findMany: (...a: unknown[]) => m.grantFindMany(...a),
+      create: (...a: unknown[]) => m.grantCreate(...a),
+      update: (...a: unknown[]) => m.grantUpdate(...a),
+    },
+    apiRateLimitBucket: {
+      create: (...a: unknown[]) => m.rateCreate(...a),
+      updateMany: (...a: unknown[]) => m.rateUpdateMany(...a),
+    },
+    property: {
+      findFirst: (...a: unknown[]) => m.propertyFindFirst(...a),
+    },
+    serviceFeedback: {
+      findUnique: (...a: unknown[]) => m.feedbackFindUnique(...a),
+      create: (...a: unknown[]) => m.feedbackCreate(...a),
+    },
+    $queryRaw: (...a: unknown[]) => m.queryRaw(...a),
+    $transaction: (fn: (tx: typeof prismaMock) => Promise<unknown>) =>
+      m.transaction(fn),
+  };
+
+  return { ...m, prismaMock };
+});
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...a: unknown[]) => mocks.requireRole(...a),
@@ -34,34 +74,7 @@ vi.mock('@/lib/customerSession', () => ({
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    job: {
-      findUnique: (...a: unknown[]) => mocks.jobFindUnique(...a),
-      findMany: (...a: unknown[]) => mocks.jobFindMany(...a),
-    },
-    user: { findFirst: (...a: unknown[]) => mocks.userFindFirst(...a) },
-    tip: {
-      create: (...a: unknown[]) => mocks.tipCreate(...a),
-      update: (...a: unknown[]) => mocks.tipUpdate(...a),
-      updateMany: (...a: unknown[]) => mocks.tipUpdateMany(...a),
-    },
-    guestTipAuthorization: {
-      findUnique: (...a: unknown[]) => mocks.grantFindUnique(...a),
-      create: (...a: unknown[]) => mocks.grantCreate(...a),
-      update: (...a: unknown[]) => mocks.grantUpdate(...a),
-    },
-    apiRateLimitBucket: {
-      create: (...a: unknown[]) => mocks.rateCreate(...a),
-      updateMany: (...a: unknown[]) => mocks.rateUpdateMany(...a),
-    },
-    property: {
-      findFirst: (...a: unknown[]) => mocks.propertyFindFirst(...a),
-    },
-    serviceFeedback: {
-      findUnique: (...a: unknown[]) => mocks.feedbackFindUnique(...a),
-      create: (...a: unknown[]) => mocks.feedbackCreate(...a),
-    },
-  },
+  prisma: mocks.prismaMock,
 }));
 
 vi.mock('@/lib/tips/references', () => ({
@@ -153,6 +166,13 @@ function mockCompletedEarner(cleanerId = 'cleaner-1') {
 describe('GuestTipAuthorization hash-at-rest', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.grantFindMany.mockResolvedValue([]);
+    mocks.queryRaw.mockResolvedValue([{ id: 'job-1' }]);
+    // Default: run interactive transaction callback with the same prisma mock as tx
+    mocks.transaction.mockImplementation(
+      async (fn: (tx: typeof mocks.prismaMock) => Promise<unknown>) =>
+        fn(mocks.prismaMock)
+    );
   });
 
   it('stores hash not raw token on mint', async () => {
@@ -164,6 +184,8 @@ describe('GuestTipAuthorization hash-at-rest', () => {
       jobId: 'job-1',
       propertyId: 'prop-1',
     });
+    expect(minted.status).toBe('MINTED');
+    if (minted.status !== 'MINTED') throw new Error('expected MINTED');
     expect(minted.grantToken.length).toBeGreaterThan(40);
     expect(mocks.grantCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -221,7 +243,75 @@ describe('Stay resolve mints tip grant', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.logAuditEntry.mockResolvedValue('a1');
+    mocks.grantFindMany.mockResolvedValue([]);
     mocks.grantCreate.mockResolvedValue({ id: 'grant-1' });
+    mocks.queryRaw.mockResolvedValue([{ id: 'job-1' }]);
+    mocks.transaction.mockImplementation(
+      async (fn: (tx: typeof mocks.prismaMock) => Promise<unknown>) =>
+        fn(mocks.prismaMock)
+    );
+  });
+
+  it('concurrent mint attempts yield one MINTED and one ALREADY_ACTIVE', async () => {
+    type ActiveRow = { id: string; expiresAt: Date };
+    const rows: ActiveRow[] = [];
+    let lockHeld = false;
+    const waitQueue: Array<() => void> = [];
+
+    const acquire = async () => {
+      while (lockHeld) {
+        await new Promise<void>((resolve) => waitQueue.push(resolve));
+      }
+      lockHeld = true;
+    };
+    const release = () => {
+      lockHeld = false;
+      const next = waitQueue.shift();
+      if (next) next();
+    };
+
+    mocks.transaction.mockImplementation(
+      async (fn: (tx: typeof mocks.prismaMock) => Promise<unknown>) => {
+        await acquire();
+        try {
+          return await fn(mocks.prismaMock);
+        } finally {
+          release();
+        }
+      }
+    );
+    mocks.queryRaw.mockResolvedValue([{ id: 'job-1' }]);
+    mocks.grantFindMany.mockImplementation(async () => [...rows]);
+    mocks.grantCreate.mockImplementation(
+      async ({ data }: { data: { expiresAt: Date } }) => {
+        // Yield so the second concurrent caller can reach the lock wait
+        await new Promise((r) => setTimeout(r, 5));
+        const row = {
+          id: `g-${rows.length + 1}`,
+          expiresAt: data.expiresAt,
+        };
+        rows.push(row);
+        return row;
+      }
+    );
+
+    const [a, b] = await Promise.all([
+      mintGuestTipAuthorization({ jobId: 'job-1', propertyId: 'prop-1' }),
+      mintGuestTipAuthorization({ jobId: 'job-1', propertyId: 'prop-1' }),
+    ]);
+
+    const statuses = [a.status, b.status].sort();
+    expect(statuses).toEqual(['ALREADY_ACTIVE', 'MINTED']);
+    expect(rows).toHaveLength(1);
+    const minted = a.status === 'MINTED' ? a : b;
+    const bound = a.status === 'ALREADY_ACTIVE' ? a : b;
+    expect(minted.status).toBe('MINTED');
+    expect(bound.status).toBe('ALREADY_ACTIVE');
+    if (minted.status === 'MINTED' && bound.status === 'ALREADY_ACTIVE') {
+      expect(bound.grantId).toBe(minted.grantId);
+      expect(bound.grantId).toBe(rows[0]!.id);
+    }
+    expect(mocks.grantCreate).toHaveBeenCalledTimes(1);
   });
 
   it('exact stay returns tipGrantToken without Job.id', async () => {

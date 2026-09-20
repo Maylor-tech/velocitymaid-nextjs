@@ -5,6 +5,7 @@ import {
   DELETE_BLOCKED_MESSAGE,
   type CustomerListFilter,
 } from '@/lib/admin/customerListTypes';
+import { revokeGuestAccessForCustomerProperties } from '@/lib/stay/propertyGuestAccess';
 
 export type { CustomerListFilter };
 export { DELETE_BLOCKED_MESSAGE };
@@ -155,6 +156,14 @@ export async function archiveCustomer(params: {
     },
   });
 
+  const guestAccess = await revokeGuestAccessForCustomerProperties(
+    params.customerId,
+    {
+      actorId: params.actorId ?? null,
+      actorRole: 'ADMIN',
+    }
+  );
+
   await logAuditEntry({
     actorId: params.actorId,
     actorRole: 'ADMIN',
@@ -166,6 +175,7 @@ export async function archiveCustomer(params: {
       archivedAt: archivedAt.toISOString(),
       archivedBy: updated.archivedBy,
       adminEmail: params.actorEmail ?? null,
+      guestAccessTokensRevoked: guestAccess.revokedCount,
     },
   });
 

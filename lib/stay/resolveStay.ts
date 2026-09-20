@@ -29,8 +29,9 @@ export type StayResolveResult =
       ok: true;
       feedbackToken: string;
       feedbackUrl: string;
-      tipGrantToken: string;
-      tipUrl: string;
+      tipGrantToken: string | null;
+      tipUrl: string | null;
+      tipGrantStatus: 'MINTED' | 'ALREADY_ISSUED';
       propertyLabel: string;
       serviceDate: string;
     }
@@ -136,12 +137,26 @@ export async function resolveStayToGuestFeedback(
   });
   const propertyLabel = guestFacingDisplayName(property.guestDisplayName);
 
+  if (tipGrant.status === 'ALREADY_ACTIVE') {
+    return {
+      ok: true,
+      feedbackToken: ensured.feedbackToken,
+      feedbackUrl: ensured.feedbackUrl || feedbackPublicUrl(ensured.feedbackToken),
+      tipGrantToken: null,
+      tipUrl: null,
+      tipGrantStatus: 'ALREADY_ISSUED',
+      propertyLabel,
+      serviceDate: matched.dayKey,
+    };
+  }
+
   return {
     ok: true,
     feedbackToken: ensured.feedbackToken,
     feedbackUrl: ensured.feedbackUrl || feedbackPublicUrl(ensured.feedbackToken),
     tipGrantToken: tipGrant.grantToken,
     tipUrl: tipGrant.tipUrl,
+    tipGrantStatus: 'MINTED',
     propertyLabel,
     serviceDate: matched.dayKey,
   };

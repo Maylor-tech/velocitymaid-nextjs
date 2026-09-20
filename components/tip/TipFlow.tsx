@@ -22,11 +22,13 @@ type PayMethod = 'ZELLE' | 'STRIPE';
 function TipPaymentForm({
   amountDollars,
   guestName,
+  guestMode,
   onBack,
   onSuccess,
 }: {
   amountDollars: number;
   guestName: string;
+  guestMode: boolean;
   onBack: () => void;
   onSuccess: () => void;
 }) {
@@ -51,7 +53,7 @@ function TipPaymentForm({
       confirmParams: {
         return_url: `${window.location.origin}/tip/success?amount=${amountDollars}${
           guestName ? `&guestName=${encodeURIComponent(guestName)}` : ''
-        }`,
+        }${guestMode ? '&mode=guest' : ''}`,
         payment_method_data: {
           billing_details: {
             name: guestName || undefined,
@@ -389,6 +391,7 @@ export default function TipFlow({
           <TipPaymentForm
             amountDollars={amountDollars}
             guestName={guestName}
+            guestMode={authMode === 'GUEST_GRANT'}
             onBack={() => {
               setClientSecret(null);
               setStep('amount');

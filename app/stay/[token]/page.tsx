@@ -17,8 +17,9 @@ type PageState =
       displayName: string;
       serviceDate: string;
       feedbackToken: string;
-      tipGrantToken: string;
-      tipUrl: string;
+      tipGrantToken: string | null;
+      tipUrl: string | null;
+      tipGrantStatus: 'MINTED' | 'ALREADY_ISSUED';
     };
 
 export default function GuestStayPage() {
@@ -65,22 +66,27 @@ export default function GuestStayPage() {
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Could not match this stay');
       }
-      if (!data.feedbackToken || !data.tipGrantToken) {
+      if (!data.feedbackToken) {
         throw new Error('Could not open guest actions for this stay');
       }
 
-      try {
-        sessionStorage.setItem(
-          TIP_GRANT_STORAGE_KEY,
-          JSON.stringify({
-            tipGrantToken: data.tipGrantToken,
-            tipUrl: data.tipUrl,
-            propertyLabel: data.propertyLabel,
-            serviceDate: data.serviceDate,
-          })
-        );
-      } catch {
-        /* ignore storage failures */
+      const tipGrantStatus =
+        data.tipGrantStatus === 'ALREADY_ISSUED' ? 'ALREADY_ISSUED' : 'MINTED';
+
+      if (data.tipGrantToken) {
+        try {
+          sessionStorage.setItem(
+            TIP_GRANT_STORAGE_KEY,
+            JSON.stringify({
+              tipGrantToken: data.tipGrantToken,
+              tipUrl: data.tipUrl,
+              propertyLabel: data.propertyLabel,
+              serviceDate: data.serviceDate,
+            })
+          );
+        } catch {
+          /* ignore storage failures */
+        }
       }
 
       setView({
@@ -88,8 +94,9 @@ export default function GuestStayPage() {
         displayName: data.propertyLabel || 'this property',
         serviceDate: data.serviceDate,
         feedbackToken: data.feedbackToken,
-        tipGrantToken: data.tipGrantToken,
-        tipUrl: data.tipUrl || `/tip?grant=${encodeURIComponent(data.tipGrantToken)}`,
+        tipGrantToken: data.tipGrantToken ?? null,
+        tipUrl: data.tipUrl ?? null,
+        tipGrantStatus,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not match this stay');
@@ -188,12 +195,20 @@ export default function GuestStayPage() {
               >
                 Leave private feedback
               </Link>
-              <Link
-                href={view.tipUrl}
-                className="flex w-full items-center justify-center rounded-lg border border-vm-navy/15 px-4 py-3 font-heading text-sm font-semibold text-vm-navy"
-              >
-                Leave a tip
-              </Link>
+              {view.tipGrantToken && view.tipUrl ? (
+                <Link
+                  href={view.tipUrl}
+                  className="flex w-full items-center justify-center rounded-lg border border-vm-navy/15 px-4 py-3 font-heading text-sm font-semibold text-vm-navy"
+                >
+                  Leave a tip
+                </Link>
+              ) : (
+                <p className="rounded-lg border border-vm-navy/10 bg-vm-surface px-3 py-3 font-body text-sm text-vm-muted">
+                  A tip link was already issued for this stay and is still active.
+                  Use the tip page from your earlier session if you still have it —
+                  we cannot re-issue the same private tip link.
+                </p>
+              )}
             </div>
           </div>
         )}
