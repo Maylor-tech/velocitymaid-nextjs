@@ -14,6 +14,11 @@ export const GUEST_TIP_GRANT_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
  * Bound minting: at most one unexpired, unrevoked grant per job.
  * Re-resolve while active → ALREADY_ACTIVE (no new raw token).
  * Multi-tip on that grant remains allowed until expiry/revoke.
+ *
+ * Concurrency: mint runs in a transaction that takes `SELECT … FOR UPDATE`
+ * on the Job row before the active-grant check + create. That serializes
+ * concurrent/replayed stay resolves for the same job so a pre-check alone
+ * cannot mint two active grants (read-then-create race).
  */
 export const MAX_ACTIVE_GRANTS_PER_JOB = 1;
 const TOKEN_BYTES = 32;
@@ -54,55 +59,65 @@ export type GuestTipMintResult = MintedGuestTipGrant | BoundGuestTipGrant;
 /**
  * Mint a tip grant for a verified stay job, or refuse when an active grant
  * already exists (hash-at-rest cannot reconstruct the prior raw token).
+ *
+ * Safe under concurrency: locks the Job row (`FOR UPDATE`) inside a
+ * transaction, then re-checks active grants before create.
  */
 export async function mintGuestTipAuthorization(input: {
   jobId: string;
   propertyId: string;
   ttlMs?: number;
 }): Promise<GuestTipMintResult> {
-  const active = await prisma.guestTipAuthorization.findMany({
-    where: {
-      jobId: input.jobId,
-      propertyId: input.propertyId,
-      revokedAt: null,
-      expiresAt: { gt: new Date() },
-    },
-    orderBy: { createdAt: 'desc' },
-    take: MAX_ACTIVE_GRANTS_PER_JOB,
-    select: { id: true, expiresAt: true },
-  });
+  return prisma.$transaction(async (tx) => {
+    // Serialize concurrent mint attempts for this job (existing Job row —
+    // no partial unique index / migration required). Same pattern as
+    // lib/dispatch/jobOffer.ts accept path.
+    await tx.$queryRaw`SELECT id FROM "Job" WHERE id = ${input.jobId} FOR UPDATE`;
 
-  if (active.length >= MAX_ACTIVE_GRANTS_PER_JOB) {
-    const existing = active[0]!;
+    const active = await tx.guestTipAuthorization.findMany({
+      where: {
+        jobId: input.jobId,
+        propertyId: input.propertyId,
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: MAX_ACTIVE_GRANTS_PER_JOB,
+      select: { id: true, expiresAt: true },
+    });
+
+    if (active.length >= MAX_ACTIVE_GRANTS_PER_JOB) {
+      const existing = active[0]!;
+      return {
+        status: 'ALREADY_ACTIVE',
+        grantId: existing.id,
+        expiresAt: existing.expiresAt,
+      };
+    }
+
+    const raw = randomBytes(TOKEN_BYTES).toString('base64url');
+    const tokenHash = hashGuestTipGrantToken(raw);
+    const expiresAt = new Date(
+      Date.now() + (input.ttlMs ?? GUEST_TIP_GRANT_TTL_MS)
+    );
+
+    const row = await tx.guestTipAuthorization.create({
+      data: {
+        tokenHash,
+        jobId: input.jobId,
+        propertyId: input.propertyId,
+        expiresAt,
+      },
+    });
+
     return {
-      status: 'ALREADY_ACTIVE',
-      grantId: existing.id,
-      expiresAt: existing.expiresAt,
-    };
-  }
-
-  const raw = randomBytes(TOKEN_BYTES).toString('base64url');
-  const tokenHash = hashGuestTipGrantToken(raw);
-  const expiresAt = new Date(
-    Date.now() + (input.ttlMs ?? GUEST_TIP_GRANT_TTL_MS)
-  );
-
-  const row = await prisma.guestTipAuthorization.create({
-    data: {
-      tokenHash,
-      jobId: input.jobId,
-      propertyId: input.propertyId,
+      status: 'MINTED',
+      grantToken: raw,
+      tipUrl: tipPublicUrlForGrant(raw),
       expiresAt,
-    },
+      grantId: row.id,
+    };
   });
-
-  return {
-    status: 'MINTED',
-    grantToken: raw,
-    tipUrl: tipPublicUrlForGrant(raw),
-    expiresAt,
-    grantId: row.id,
-  };
 }
 
 export type VerifiedGuestTipGrant = {

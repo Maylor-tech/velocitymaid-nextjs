@@ -43,8 +43,8 @@ vi.mock('@/lib/audit', () => ({
   logAuditEntry: (...a: unknown[]) => mocks.logAuditEntry(...a),
 }));
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
+vi.mock('@/lib/prisma', () => {
+  const prisma = {
     property: {
       findUnique: (...a: unknown[]) => mocks.propertyFindUnique(...a),
       findFirst: (...a: unknown[]) => mocks.propertyFindFirst(...a),
@@ -70,8 +70,12 @@ vi.mock('@/lib/prisma', () => ({
       create: (...a: unknown[]) => mocks.grantCreate(...a),
       findUnique: (...a: unknown[]) => mocks.grantFindUnique(...a),
     },
-  },
-}));
+    $queryRaw: vi.fn().mockResolvedValue([{ id: 'job-1' }]),
+    $transaction: async (fn: (tx: typeof prisma) => Promise<unknown>) =>
+      fn(prisma),
+  };
+  return { prisma };
+});
 
 import {
   GET as customerGet,

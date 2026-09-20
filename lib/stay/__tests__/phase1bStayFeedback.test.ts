@@ -15,8 +15,8 @@ const mocks = vi.hoisted(() => ({
   logAuditEntry: vi.fn(),
 }));
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
+vi.mock('@/lib/prisma', () => {
+  const prisma = {
     property: {
       findFirst: mocks.propertyFindFirst,
       findUnique: mocks.propertyFindUnique,
@@ -35,8 +35,12 @@ vi.mock('@/lib/prisma', () => ({
       create: mocks.grantCreate,
       findMany: mocks.grantFindMany,
     },
-  },
-}));
+    $queryRaw: vi.fn().mockResolvedValue([{ id: 'job-1' }]),
+    $transaction: async (fn: (tx: typeof prisma) => Promise<unknown>) =>
+      fn(prisma),
+  };
+  return { prisma };
+});
 
 vi.mock('@/lib/audit', () => ({
   logAuditEntry: mocks.logAuditEntry,
