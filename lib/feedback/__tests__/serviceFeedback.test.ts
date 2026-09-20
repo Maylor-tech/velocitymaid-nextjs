@@ -94,16 +94,46 @@ describe('ServiceFeedback public token flow', () => {
       publicToken: 'tok-1',
       status: ServiceFeedbackStatus.REQUESTED,
       submittedAt: null,
+      source: 'HOST',
       Job: {
-        preferredDate: new Date('2026-10-04'),
+        preferredDate: new Date('2026-10-04T00:00:00.000Z'),
         address: '111 Thomson',
-        Property: { name: "Lou Lou's Landing", address: '111 Thomson' },
+        Property: {
+          name: "Lou Lou's Landing",
+          address: '111 Thomson',
+          guestDisplayName: null,
+        },
       },
     });
     const view = await getPublicFeedbackByToken('tok-1');
     expect(view.state).toBe('ready');
     if (view.state === 'ready') {
       expect(view.propertyLabel).toContain('Lou Lou');
+      expect(view.serviceDate).toMatch(/October/);
+    }
+  });
+
+  it('guest public label never uses street address', async () => {
+    mocks.findUnique.mockResolvedValue({
+      publicToken: 'tok-g',
+      status: ServiceFeedbackStatus.REQUESTED,
+      submittedAt: null,
+      source: 'GUEST',
+      Job: {
+        preferredDate: new Date('2026-10-04T00:00:00.000Z'),
+        address: '111 Thomson Secret',
+        Property: {
+          name: 'Smith Family Home',
+          address: '111 Thomson Secret',
+          guestDisplayName: null,
+        },
+      },
+    });
+    const view = await getPublicFeedbackByToken('tok-g');
+    expect(view.state).toBe('ready');
+    if (view.state === 'ready') {
+      expect(view.propertyLabel).toBe('this property');
+      expect(view.propertyLabel).not.toMatch(/Thomson|Smith/i);
     }
   });
 
@@ -125,6 +155,7 @@ describe('ServiceFeedback public token flow', () => {
       publicToken: 'tok-1',
       status: ServiceFeedbackStatus.REQUESTED,
       submittedAt: null,
+      source: 'HOST',
     });
     mocks.updateMany.mockResolvedValue({ count: 1 });
 
@@ -152,6 +183,41 @@ describe('ServiceFeedback public token flow', () => {
         }),
       })
     );
+    expect(mocks.logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorRole: 'CUSTOMER',
+        changes: expect.objectContaining({ source: 'HOST' }),
+      })
+    );
+  });
+
+  it('GUEST submission audit is GUEST not CUSTOMER', async () => {
+    mocks.findUnique.mockResolvedValue({
+      id: 'fb-g',
+      publicToken: 'tok-g',
+      status: ServiceFeedbackStatus.REQUESTED,
+      submittedAt: null,
+      source: 'GUEST',
+    });
+    mocks.updateMany.mockResolvedValue({ count: 1 });
+
+    await submitPublicFeedback('tok-g', {
+      overallRating: 5,
+      cleanlinessRating: 5,
+      communicationRating: 5,
+      timelinessRating: 5,
+    });
+
+    expect(mocks.logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorRole: 'GUEST',
+        description: expect.stringMatching(/Guest submitted/i),
+        changes: expect.objectContaining({ source: 'GUEST' }),
+      })
+    );
+    expect(mocks.logAuditEntry).not.toHaveBeenCalledWith(
+      expect.objectContaining({ actorRole: 'CUSTOMER' })
+    );
   });
 
   it('high rating does not enter UNDER_REVIEW', async () => {
@@ -160,6 +226,7 @@ describe('ServiceFeedback public token flow', () => {
       publicToken: 'tok-2',
       status: ServiceFeedbackStatus.REQUESTED,
       submittedAt: null,
+      source: 'HOST',
     });
     mocks.updateMany.mockResolvedValue({ count: 1 });
 
@@ -173,6 +240,9 @@ describe('ServiceFeedback public token flow', () => {
     if (result.ok) {
       expect(result.status).toBe(ServiceFeedbackStatus.SUBMITTED);
     }
+    expect(mocks.logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ actorRole: 'CUSTOMER' })
+    );
   });
 
   it('duplicate submit does not overwrite', async () => {
@@ -199,7 +269,7 @@ describe('ServiceFeedback public token flow', () => {
     if (result.ok) expect(result.alreadySubmitted).toBe(true);
   });
 
-  it('request is one per job', async () => {
+  it('request is one per job for HOST source only', async () => {
     mocks.jobFindUnique.mockResolvedValue({
       id: 'job-1',
       status: 'COMPLETED',
@@ -212,6 +282,7 @@ describe('ServiceFeedback public token flow', () => {
       id: 'existing',
       publicToken: 'tok',
       jobId: 'job-1',
+      source: 'HOST',
       submittedAt: null,
       requestedAt: new Date(),
     });
@@ -219,6 +290,11 @@ describe('ServiceFeedback public token flow', () => {
     const result = await requestServiceFeedbackForJob('job-1', 'admin-1');
     expect(result.alreadyExists).toBe(true);
     expect(mocks.create).not.toHaveBeenCalled();
+    expect(mocks.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { jobId_source: { jobId: 'job-1', source: 'HOST' } },
+      })
+    );
   });
 });
 
@@ -310,6 +386,7 @@ describe('Admin branch query filter + reminder claim', () => {
     expect(mocks.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
+          source: 'HOST',
           status: ServiceFeedbackStatus.REQUESTED,
           submittedAt: null,
           reminderSentAt: null,

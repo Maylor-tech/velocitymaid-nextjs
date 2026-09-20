@@ -349,6 +349,13 @@ model Property {
   standingInstructions   String?
   /// Null = inherit Customer.billingPolicy.
   billingPolicy          BillingPolicy?
+  /// Opaque guest stay QR token. Not Property.id. Rotatable / revocable.
+  guestAccessToken            String?   @unique
+  guestAccessTokenCreatedAt   DateTime?
+  /// Null = token active when guestAccessToken is set.
+  guestAccessRevokedAt        DateTime?
+  /// Safe public nickname for guest stay / feedback surfaces. Prefer over Property.name.
+  guestDisplayName            String?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   Customer               Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
@@ -494,7 +501,7 @@ model Job {
   photos                   CleanPhoto[]
   CleanerBalanceLedger     CleanerBalanceLedger[]
   CleanerRating            CleanerRating?
-  ServiceFeedback          ServiceFeedback?
+  ServiceFeedback          ServiceFeedback[]
   ComplianceIssue          ComplianceIssue[]
   CustomerJobChangeRequest CustomerJobChangeRequest[]
   JobChecklistItem         JobChecklistItem[]
@@ -1859,13 +1866,19 @@ model CompletionReport {
 }
 
 /// Private VelocityMaid service-experience feedback (not Google reviews; not CleanerRating).
-/// One authorized customer feedback response per job. Never mutates payout/invoice.
+/// At most one row per (jobId, source). HOST = owner/customer path; GUEST = stay QR.
+/// Never mutates payout/invoice.
 enum ServiceFeedbackStatus {
   REQUESTED
   SUBMITTED
   UNDER_REVIEW
   RELEASED
   RESOLVED
+}
+
+enum ServiceFeedbackSource {
+  HOST
+  GUEST
 }
 
 enum ServiceFeedbackDisposition {
@@ -1883,7 +1896,9 @@ enum ServiceFeedbackDisposition {
 model ServiceFeedback {
   id                  String                       @id @default(cuid())
   publicToken         String                       @unique @default(cuid())
-  jobId               String                       @unique
+  jobId               String
+  /// HOST = existing customer/host email workflow; GUEST = stay-QR respondent.
+  source              ServiceFeedbackSource        @default(HOST)
   customerId          String
   cleanerId           String?
   propertyId          String?
@@ -1910,7 +1925,9 @@ model ServiceFeedback {
   Cleaner             User?                        @relation("ServiceFeedbackCleaner", fields: [cleanerId], references: [id], onDelete: SetNull)
   Property            Property?                    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
+  @@unique([jobId, source])
   @@index([status])
+  @@index([source])
   @@index([customerId])
   @@index([cleanerId])
   @@index([propertyId])
@@ -2094,4 +2111,18 @@ model AdminNotification {
   @@index([status])
   @@index([severity])
   @@index([createdAt])
+}
+
+/// Durable fixed-window rate-limit buckets for serverless (shared via Postgres).
+/// Used by public stay resolve and other multi-instance sensitive endpoints.
+model ApiRateLimitBucket {
+  id        String   @id @default(cuid())
+  bucketKey String   @unique
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+  @@map("api_rate_limit_buckets")
 }

@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 
 type Item = {
   id: string;
+  source?: string;
   status: string;
   overallRating: number | null;
   submittedAt: string | null;
@@ -97,6 +98,7 @@ export default function AdminFeedbackListPage() {
             <thead className="bg-vm-surface text-xs uppercase tracking-wide text-vm-muted">
               <tr>
                 <th className="px-4 py-3">Submitted</th>
+                <th className="px-4 py-3">Source</th>
                 <th className="px-4 py-3">Rating</th>
                 <th className="px-4 py-3">Customer</th>
                 <th className="px-4 py-3">Property</th>
@@ -119,6 +121,9 @@ export default function AdminFeedbackListPage() {
                     <div className="text-xs text-vm-muted">
                       {item.job.jobReference || item.job.preferredDate?.slice(0, 10)}
                     </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-vm-muted">
+                    {item.source || 'HOST'}
                   </td>
                   <td className="px-4 py-3">
                     {item.overallRating != null ? (

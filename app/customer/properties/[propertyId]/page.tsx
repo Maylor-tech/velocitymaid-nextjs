@@ -66,6 +66,10 @@ function CustomerPropertyDetailPageInner() {
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [showCreatedBanner, setShowCreatedBanner] = useState(Boolean(createdJobId));
+  const [stayUrl, setStayUrl] = useState<string | null>(null);
+  const [guestDisplayName, setGuestDisplayName] = useState('');
+  const [stayBusy, setStayBusy] = useState(false);
+  const [stayMessage, setStayMessage] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -79,6 +83,15 @@ function CustomerPropertyDetailPageInner() {
       setProperty(data.property);
       setForm(data.property);
       setUpcomingJobs(data.upcomingJobs || []);
+
+      const stayRes = await fetch(
+        `/api/customer/properties/${propertyId}/guest-access`
+      );
+      const stayData = await stayRes.json().catch(() => null);
+      if (stayRes.ok && stayData?.success) {
+        setStayUrl(stayData.stayUrl ?? null);
+        setGuestDisplayName(stayData.guestDisplayName ?? '');
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load property');
       setProperty(null);
@@ -106,6 +119,40 @@ function CustomerPropertyDetailPageInner() {
     () => parseHostCleaningNotes(createdJob?.internalNotes),
     [createdJob]
   );
+
+  const handleStayAction = async (action: 'ensure' | 'rotate' | 'revoke') => {
+    setStayBusy(true);
+    setStayMessage(null);
+    try {
+      const res = await fetch(
+        `/api/customer/properties/${propertyId}/guest-access`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action,
+            guestDisplayName,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Could not update guest stay link');
+      }
+      setStayUrl(data.stayUrl ?? null);
+      setStayMessage(
+        action === 'rotate'
+          ? 'Stay link rotated. Update any printed cards.'
+          : action === 'revoke'
+            ? 'Stay link revoked.'
+            : 'Stay link ready.'
+      );
+    } catch (err: unknown) {
+      setStayMessage(err instanceof Error ? err.message : 'Stay link update failed');
+    } finally {
+      setStayBusy(false);
+    }
+  };
 
   const dismissCreatedBanner = () => {
     setShowCreatedBanner(false);
@@ -494,6 +541,70 @@ function CustomerPropertyDetailPageInner() {
           Save property profile
         </button>
       </form>
+
+      <section className="rounded-xl border border-vm-navy/10 bg-vm-white p-6 shadow-sm">
+        <h2 className="font-heading text-lg font-semibold text-vm-navy">
+          Guest stay feedback link
+        </h2>
+        <p className="mt-1 font-body text-sm text-vm-muted">
+          Guests can leave private service feedback after checkout without logging
+          in. Print this URL on a property card later — no QR artwork yet.
+        </p>
+        <label className="mt-4 block font-body text-sm text-vm-muted">
+          Guest-facing display name
+          <input
+            className={inputClass}
+            value={guestDisplayName}
+            onChange={(e) => setGuestDisplayName(e.target.value)}
+            placeholder="e.g. Lakeside Cottage"
+          />
+        </label>
+        {stayUrl && (
+          <div className="mt-3 break-all rounded-lg border border-vm-navy/10 bg-vm-surface px-3 py-2 font-mono text-xs text-vm-navy">
+            {stayUrl}
+          </div>
+        )}
+        {stayMessage && (
+          <p className="mt-2 font-body text-sm text-vm-muted">{stayMessage}</p>
+        )}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={stayBusy}
+            onClick={() => void handleStayAction('ensure')}
+            className="rounded-lg bg-vm-cyan px-3 py-2 font-heading text-xs font-semibold text-vm-navy disabled:opacity-60"
+          >
+            Save / enable link
+          </button>
+          <button
+            type="button"
+            disabled={stayBusy || !stayUrl}
+            onClick={() => {
+              if (stayUrl) void navigator.clipboard.writeText(stayUrl);
+              setStayMessage('Copied stay URL');
+            }}
+            className="rounded-lg border border-vm-navy/15 px-3 py-2 font-heading text-xs font-semibold text-vm-navy disabled:opacity-60"
+          >
+            Copy URL
+          </button>
+          <button
+            type="button"
+            disabled={stayBusy}
+            onClick={() => void handleStayAction('rotate')}
+            className="rounded-lg border border-vm-navy/15 px-3 py-2 font-heading text-xs font-semibold text-vm-navy disabled:opacity-60"
+          >
+            Rotate
+          </button>
+          <button
+            type="button"
+            disabled={stayBusy}
+            onClick={() => void handleStayAction('revoke')}
+            className="rounded-lg border border-vm-danger/30 px-3 py-2 font-heading text-xs font-semibold text-vm-danger disabled:opacity-60"
+          >
+            Revoke
+          </button>
+        </div>
+      </section>
 
       <section className="rounded-xl border border-vm-navy/10 bg-vm-white p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">

@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
       success: true,
       items: rows.map((r) => ({
         id: r.id,
+        source: r.source,
         status: r.status,
         overallRating: r.overallRating,
         cleanlinessRating: r.cleanlinessRating,
