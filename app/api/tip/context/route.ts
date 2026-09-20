@@ -2,33 +2,37 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getTipJobDisplayContext } from '@/lib/tips/tipJobContext';
 import { TipBeneficiaryError } from '@/lib/tips/beneficiary';
-import { requireCustomerTipJobAccess } from '@/lib/tips/requireCustomerTipJobAccess';
+import { authorizeTipJobAccess } from '@/lib/tips/authorizeTipJobAccess';
+import {
+  getGuestTipDisplayContext,
+  getTipJobDisplayContext,
+} from '@/lib/tips/tipJobContext';
 
 /**
- * GET /api/tip/context?jobId=
+ * GET /api/tip/context?jobId=  (host) OR ?grant=  (guest)
  *
- * Authenticated CUSTOMER tip display context for the host portal.
- * Ownership is verified before eligibility / metadata are returned.
- * Response omits jobId (client already has it). No owner PII, access codes,
- * cleaner contact info, or other jobs.
- *
- * Guest tipping by raw Job.id is intentionally unsupported (Phase 1B: stay token).
+ * Exactly one auth path. Guest grant returns privacy-strict context (no jobReference).
+ * Never returns Job.id.
  */
 export async function GET(request: NextRequest) {
   try {
-    const jobId = request.nextUrl.searchParams.get('jobId')?.trim();
-    if (!jobId) {
-      return NextResponse.json(
-        { success: false, error: 'jobId is required.', code: 'JOB_REQUIRED' },
-        { status: 400 }
-      );
-    }
+    const jobId = request.nextUrl.searchParams.get('jobId')?.trim() || null;
+    const grantToken =
+      request.nextUrl.searchParams.get('grant')?.trim() || null;
 
-    await requireCustomerTipJobAccess(request, jobId);
-    const context = await getTipJobDisplayContext(jobId);
-    return NextResponse.json({ success: true, context });
+    const auth = await authorizeTipJobAccess(request, { jobId, grantToken });
+
+    const context =
+      auth.mode === 'GUEST_GRANT'
+        ? await getGuestTipDisplayContext(auth.jobId)
+        : await getTipJobDisplayContext(auth.jobId);
+
+    return NextResponse.json({
+      success: true,
+      authMode: auth.mode,
+      context,
+    });
   } catch (e) {
     if (e instanceof Response) return e;
     if (e instanceof TipBeneficiaryError) {

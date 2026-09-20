@@ -362,6 +362,7 @@ model Property {
   Job                    Job[]
   Tip                    Tip[]
   ServiceFeedback        ServiceFeedback[]
+  GuestTipAuthorization  GuestTipAuthorization[]
 
   @@index([customerId])
   @@index([customerId, address])
@@ -522,6 +523,7 @@ model Job {
   JobPayout                JobPayout?
   JobOffer                 JobOffer[]
   Tip                      Tip[]
+  GuestTipAuthorization    GuestTipAuthorization[]
 
   @@index([appliedReferralCode])
   @@index([assignedCleanerId])
@@ -2138,4 +2140,26 @@ model ApiRateLimitBucket {
 
   @@index([resetAt])
   @@map("api_rate_limit_buckets")
+}
+
+/// Phase 1C — opaque guest tip grant minted after fail-closed stay resolve.
+/// Stores token hash only. Never embeds owner/cleaner PII. Multi-tip until expiry.
+model GuestTipAuthorization {
+  id         String    @id @default(cuid())
+  /// SHA-256 hex of the raw grant token presented to the guest.
+  tokenHash  String    @unique
+  jobId      String
+  propertyId String
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+  useCount   Int       @default(0)
+  createdAt  DateTime  @default(now())
+  Job        Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([propertyId])
+  @@index([expiresAt])
+  @@map("guest_tip_authorizations")
 }

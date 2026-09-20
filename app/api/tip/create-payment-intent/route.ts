@@ -9,35 +9,31 @@ import {
   parseTipAmountToCents,
   TipBeneficiaryError,
 } from '@/lib/tips/createTipIntent';
-import { requireCustomerTipJobAccess } from '@/lib/tips/requireCustomerTipJobAccess';
+import {
+  authorizeTipJobAccess,
+  touchGrantAfterTipCreate,
+} from '@/lib/tips/authorizeTipJobAccess';
+import { checkTipCreateRateLimit } from '@/lib/tips/tipCreateRateLimit';
 
 /**
  * POST /api/tip/create-payment-intent
- * Authenticated host tip — CUSTOMER + job ownership required.
- * Freezes beneficiary server-side. Guest-by-raw-Job.id is unsupported.
+ * Trusted path: CUSTOMER + owned jobId, OR valid guest grantToken.
+ * Freezes beneficiary server-side. Never accepts client cleanerId.
  */
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
       amount?: number;
       jobId?: string;
+      grantToken?: string;
       guestName?: string;
       guestMessage?: string;
       market?: string;
-      /** Rejected — beneficiary is server-derived only */
       cleanerId?: unknown;
       cleanerName?: unknown;
       propertyAddress?: unknown;
     };
 
-    if (!body.jobId || typeof body.jobId !== 'string') {
-      return NextResponse.json(
-        { error: 'jobId is required.', code: 'JOB_REQUIRED' },
-        { status: 400 }
-      );
-    }
-
-    // Reject client-supplied cleaner / address tampering
     if (body.cleanerId != null || body.cleanerName != null) {
       return NextResponse.json(
         { error: 'Cleaner cannot be supplied by the client.', code: 'FORBIDDEN_FIELD' },
@@ -45,7 +41,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await requireCustomerTipJobAccess(request, body.jobId);
+    const auth = await authorizeTipJobAccess(request, {
+      jobId: body.jobId,
+      grantToken: body.grantToken,
+    });
+
+    if (auth.mode === 'GUEST_GRANT') {
+      const ip =
+        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        request.headers.get('x-real-ip') ||
+        'unknown';
+      const rateKey = `${ip}:${auth.grantId.slice(0, 12)}`;
+      if (!(await checkTipCreateRateLimit(rateKey))) {
+        return NextResponse.json(
+          {
+            error: 'Too many tip attempts. Please try again later.',
+            code: 'RATE_LIMITED',
+          },
+          { status: 429 }
+        );
+      }
+    }
 
     let amountCents: number;
     try {
@@ -63,7 +79,7 @@ export async function POST(request: NextRequest) {
     let intent;
     try {
       intent = await createTipIntent({
-        jobId: body.jobId,
+        jobId: auth.jobId,
         amountCents,
         paymentMethod: 'STRIPE',
         guestName: body.guestName,
@@ -88,6 +104,8 @@ export async function POST(request: NextRequest) {
       throw e;
     }
 
+    await touchGrantAfterTipCreate(auth);
+
     const stripe = getStripe();
     const paymentIntent = await stripe.paymentIntents.create({
       amount: intent.amountCents,
@@ -98,6 +116,7 @@ export async function POST(request: NextRequest) {
         tipId: intent.tipId,
         jobId: intent.jobId,
         beneficiaryCleanerId: intent.beneficiaryCleanerId,
+        authMode: auth.mode,
       },
       description: `VelocityMaid tip ${intent.internalReference}`,
     });

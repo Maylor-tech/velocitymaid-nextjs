@@ -15,6 +15,7 @@ import {
   findActivePropertyByGuestToken,
   guestFacingDisplayName,
 } from '@/lib/stay/propertyGuestAccess';
+import { mintGuestTipAuthorization } from '@/lib/tips/guestTipAuthorization';
 
 export type StayResolveFailureCode =
   | 'INVALID_TOKEN'
@@ -28,6 +29,8 @@ export type StayResolveResult =
       ok: true;
       feedbackToken: string;
       feedbackUrl: string;
+      tipGrantToken: string;
+      tipUrl: string;
       propertyLabel: string;
       serviceDate: string;
     }
@@ -127,12 +130,18 @@ export async function resolveStayToGuestFeedback(
 
   const job = matched.jobs[0]!;
   const ensured = await ensureGuestServiceFeedbackForJob(job.id);
+  const tipGrant = await mintGuestTipAuthorization({
+    jobId: job.id,
+    propertyId: property.id,
+  });
   const propertyLabel = guestFacingDisplayName(property.guestDisplayName);
 
   return {
     ok: true,
     feedbackToken: ensured.feedbackToken,
     feedbackUrl: ensured.feedbackUrl || feedbackPublicUrl(ensured.feedbackToken),
+    tipGrantToken: tipGrant.grantToken,
+    tipUrl: tipGrant.tipUrl,
     propertyLabel,
     serviceDate: matched.dayKey,
   };

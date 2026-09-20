@@ -105,12 +105,17 @@ type TipContextView = {
   serviceType: string | null;
   serviceDate: string | null;
   jobReference: string | null;
+  serviceAcknowledgement?: string | null;
 };
 
-function formatTipServiceDate(iso: string | null): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
+function formatTipServiceDate(isoOrLabel: string | null): string | null {
+  if (!isoOrLabel) return null;
+  // Guest context may already return a formatted calendar label
+  if (!/^\d{4}-\d{2}-\d{2}/.test(isoOrLabel) && !isoOrLabel.includes('T')) {
+    return isoOrLabel;
+  }
+  const d = new Date(isoOrLabel);
+  if (Number.isNaN(d.getTime())) return isoOrLabel;
   return d.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
@@ -120,12 +125,30 @@ function formatTipServiceDate(iso: string | null): string | null {
   });
 }
 
-export default function TipFlow({ jobId }: { jobId?: string | null }) {
+export default function TipFlow({
+  jobId,
+  grantToken,
+}: {
+  jobId?: string | null;
+  grantToken?: string | null;
+}) {
   const resolvedJobId = useMemo(() => {
     if (jobId) return jobId;
     if (typeof window === 'undefined') return null;
     return new URLSearchParams(window.location.search).get('jobId');
   }, [jobId]);
+
+  const resolvedGrant = useMemo(() => {
+    if (grantToken) return grantToken;
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('grant');
+  }, [grantToken]);
+
+  const authMode: 'CUSTOMER' | 'GUEST_GRANT' | null = resolvedGrant
+    ? 'GUEST_GRANT'
+    : resolvedJobId
+      ? 'CUSTOMER'
+      : null;
 
   const [step, setStep] = useState<Step>('amount');
   const [selectedPreset, setSelectedPreset] = useState<
@@ -146,11 +169,13 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jobContext, setJobContext] = useState<TipContextView | null>(null);
-  const [contextLoading, setContextLoading] = useState(Boolean(resolvedJobId));
+  const [contextLoading, setContextLoading] = useState(
+    Boolean(resolvedJobId || resolvedGrant)
+  );
   const [contextError, setContextError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!resolvedJobId) {
+    if (!resolvedJobId && !resolvedGrant) {
       setJobContext(null);
       setContextError(null);
       setContextLoading(false);
@@ -163,14 +188,16 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
 
     (async () => {
       try {
-        const res = await fetch(
-          `/api/tip/context?jobId=${encodeURIComponent(resolvedJobId)}`,
-          { credentials: 'same-origin' }
-        );
+        const qs = resolvedGrant
+          ? `grant=${encodeURIComponent(resolvedGrant)}`
+          : `jobId=${encodeURIComponent(resolvedJobId!)}`;
+        const res = await fetch(`/api/tip/context?${qs}`, {
+          credentials: 'same-origin',
+        });
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
 
-        if (res.status === 401) {
+        if (res.status === 401 && !resolvedGrant) {
           setJobContext(null);
           setContextError(
             'Please sign in and open the completed cleaning from My Jobs to leave a tip.'
@@ -182,7 +209,9 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
           setJobContext(null);
           setContextError(
             data.error ||
-              'This job is not available for tipping. Open a completed job from your portal.'
+              (resolvedGrant
+                ? 'This tip link is invalid or expired. Scan the property card again.'
+                : 'This job is not available for tipping. Open a completed job from your portal.')
           );
           return;
         }
@@ -192,13 +221,14 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
           serviceType: data.context.serviceType,
           serviceDate: data.context.serviceDate,
           jobReference: data.context.jobReference,
+          serviceAcknowledgement: data.context.serviceAcknowledgement,
         });
         setContextError(null);
       } catch {
         if (!cancelled) {
           setJobContext(null);
           setContextError(
-            'Could not load this cleaning. Please try again from your jobs list.'
+            'Could not load tip context. Please try again.'
           );
         }
       } finally {
@@ -209,7 +239,7 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
     return () => {
       cancelled = true;
     };
-  }, [resolvedJobId]);
+  }, [resolvedJobId, resolvedGrant]);
 
   const amountDollars =
     selectedPreset === 'custom'
@@ -217,7 +247,7 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
       : selectedPreset ?? 0;
 
   const canContinue =
-    Boolean(resolvedJobId) &&
+    Boolean(authMode) &&
     !contextLoading &&
     !contextError &&
     Boolean(jobContext) &&
@@ -226,10 +256,15 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
     !Number.isNaN(amountDollars);
 
   const handleContinue = async () => {
-    if (!canContinue || !resolvedJobId) return;
+    if (!canContinue || !authMode) return;
 
     setLoading(true);
     setError(null);
+
+    const authBody =
+      authMode === 'GUEST_GRANT'
+        ? { grantToken: resolvedGrant }
+        : { jobId: resolvedJobId };
 
     try {
       if (payMethod === 'ZELLE') {
@@ -238,7 +273,7 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amount: amountDollars,
-            jobId: resolvedJobId,
+            ...authBody,
             guestName: guestName || undefined,
             guestMessage: guestMessage || undefined,
           }),
@@ -263,7 +298,7 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: amountDollars,
-          jobId: resolvedJobId,
+          ...authBody,
           guestName: guestName || undefined,
           guestMessage: guestMessage || undefined,
         }),
@@ -376,11 +411,11 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
         </p>
       </div>
 
-      {!resolvedJobId ? (
+      {!authMode ? (
         <div className="mt-6 rounded-lg border border-amber-400/30 bg-amber-400/10 p-4">
           <p className="text-sm text-amber-200 font-body">
             Please sign in and open the completed cleaning from My Jobs to leave
-            a tip.
+            a tip — or use the tip link from your property stay card.
           </p>
           <a
             href="/customer/login?redirect=/customer/jobs"
@@ -391,23 +426,25 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
         </div>
       ) : null}
 
-      {resolvedJobId && contextLoading ? (
+      {authMode && contextLoading ? (
         <p className="mt-6 text-sm text-white/50 font-body">Loading cleaning details…</p>
       ) : null}
 
-      {resolvedJobId && contextError ? (
+      {authMode && contextError ? (
         <div className="mt-6 rounded-lg border border-amber-400/30 bg-amber-400/10 p-4">
           <p className="text-sm text-amber-200 font-body">{contextError}</p>
-          <a
-            href={
-              /sign in/i.test(contextError)
-                ? '/customer/login?redirect=/customer/jobs'
-                : '/customer/jobs'
-            }
-            className="mt-3 inline-block text-sm font-heading font-semibold text-vm-cyan hover:underline"
-          >
-            {/sign in/i.test(contextError) ? 'Sign in →' : 'Back to My Jobs →'}
-          </a>
+          {authMode === 'CUSTOMER' ? (
+            <a
+              href={
+                /sign in/i.test(contextError)
+                  ? '/customer/login?redirect=/customer/jobs'
+                  : '/customer/jobs'
+              }
+              className="mt-3 inline-block text-sm font-heading font-semibold text-vm-cyan hover:underline"
+            >
+              {/sign in/i.test(contextError) ? 'Sign in →' : 'Back to My Jobs →'}
+            </a>
+          ) : null}
         </div>
       ) : null}
 
@@ -425,6 +462,11 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
               .filter(Boolean)
               .join(' · ')}
           </p>
+          {jobContext.serviceAcknowledgement ? (
+            <p className="mt-2 text-white/45 text-xs">
+              {jobContext.serviceAcknowledgement}
+            </p>
+          ) : null}
         </div>
       ) : null}
 

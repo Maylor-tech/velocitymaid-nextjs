@@ -1,18 +1,17 @@
 /**
- * TipFlow authorization UX: context 401 must block payment continue.
- * Pure logic mirror of canContinue gating (avoids full React mount).
+ * TipFlow authorization UX: context failure must block payment continue.
  */
 import { describe, expect, it } from 'vitest';
 
 function tipCanContinue(input: {
-  resolvedJobId: string | null;
+  authMode: 'CUSTOMER' | 'GUEST_GRANT' | null;
   contextLoading: boolean;
   contextError: string | null;
   jobContext: { propertyLabel: string } | null;
   amountDollars: number;
 }): boolean {
   return (
-    Boolean(input.resolvedJobId) &&
+    Boolean(input.authMode) &&
     !input.contextLoading &&
     !input.contextError &&
     Boolean(input.jobContext) &&
@@ -26,7 +25,7 @@ describe('TipFlow canContinue after context auth', () => {
   it('blocks continue when context returned 401 (sign-in required)', () => {
     expect(
       tipCanContinue({
-        resolvedJobId: 'job-1',
+        authMode: 'CUSTOMER',
         contextLoading: false,
         contextError:
           'Please sign in and open the completed cleaning from My Jobs to leave a tip.',
@@ -39,22 +38,34 @@ describe('TipFlow canContinue after context auth', () => {
   it('allows continue only with authorized loaded context', () => {
     expect(
       tipCanContinue({
-        resolvedJobId: 'job-1',
+        authMode: 'CUSTOMER',
         contextLoading: false,
         contextError: null,
-        jobContext: { propertyLabel: 'Maple Cabin' },
+        jobContext: { propertyLabel: 'Lake House' },
         amountDollars: 20,
       })
     ).toBe(true);
   });
 
-  it('does not allow unauthenticated bypass without jobContext', () => {
+  it('allows guest grant mode with loaded context', () => {
     expect(
       tipCanContinue({
-        resolvedJobId: 'job-1',
+        authMode: 'GUEST_GRANT',
         contextLoading: false,
         contextError: null,
-        jobContext: null,
+        jobContext: { propertyLabel: 'this property' },
+        amountDollars: 15,
+      })
+    ).toBe(true);
+  });
+
+  it('blocks when no auth mode', () => {
+    expect(
+      tipCanContinue({
+        authMode: null,
+        contextLoading: false,
+        contextError: null,
+        jobContext: { propertyLabel: 'X' },
         amountDollars: 20,
       })
     ).toBe(false);
