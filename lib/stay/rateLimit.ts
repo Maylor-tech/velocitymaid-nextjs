@@ -1,33 +1,74 @@
 /**
- * In-memory rate limit for public stay resolve (IP + token).
- * Same pattern as customer-magic-link; suitable for single-instance / Preview.
+ * Durable stay-resolve rate limit via Postgres (shared across Vercel instances).
+ * No Redis/Upstash in this repo — Prisma/Postgres is the existing shared store.
+ *
+ * Semantics: fixed 1-hour window, max 10 attempts per key (IP + token prefix).
  */
 
-type Bucket = { count: number; resetAt: number };
+import { prisma } from '@/lib/prisma';
 
-const buckets = new Map<string, Bucket>();
+export const STAY_RESOLVE_WINDOW_MS = 60 * 60 * 1000;
+export const STAY_RESOLVE_MAX_PER_WINDOW = 10;
 
-const WINDOW_MS = 60 * 60 * 1000;
-const MAX_PER_WINDOW = 10;
+const KEY_PREFIX = 'stay-resolve:';
 
-export function checkStayResolveRateLimit(key: string): boolean {
-  const now = Date.now();
-  const record = buckets.get(key);
+function scopedKey(key: string): string {
+  return `${KEY_PREFIX}${key}`;
+}
 
-  if (!record || now > record.resetAt) {
-    buckets.set(key, { count: 1, resetAt: now + WINDOW_MS });
+/**
+ * Returns true if the request is allowed; false when over limit (429).
+ * Atomic enough for serverless: conditional updateMany increments under the cap.
+ */
+export async function checkStayResolveRateLimit(key: string): Promise<boolean> {
+  const bucketKey = scopedKey(key);
+  const now = new Date();
+  const resetAt = new Date(now.getTime() + STAY_RESOLVE_WINDOW_MS);
+
+  try {
+    await prisma.apiRateLimitBucket.create({
+      data: {
+        bucketKey,
+        count: 1,
+        resetAt,
+      },
+    });
+    return true;
+  } catch {
+    // Unique conflict — bucket already exists
+  }
+
+  const reset = await prisma.apiRateLimitBucket.updateMany({
+    where: {
+      bucketKey,
+      resetAt: { lte: now },
+    },
+    data: {
+      count: 1,
+      resetAt,
+    },
+  });
+  if (reset.count === 1) {
     return true;
   }
 
-  if (record.count >= MAX_PER_WINDOW) {
-    return false;
-  }
+  const inc = await prisma.apiRateLimitBucket.updateMany({
+    where: {
+      bucketKey,
+      resetAt: { gt: now },
+      count: { lt: STAY_RESOLVE_MAX_PER_WINDOW },
+    },
+    data: {
+      count: { increment: 1 },
+    },
+  });
 
-  record.count += 1;
-  return true;
+  return inc.count === 1;
 }
 
-/** Test helper */
-export function _resetStayResolveRateLimitForTests(): void {
-  buckets.clear();
+/** Test helper — clears stay-resolve buckets (and only those). */
+export async function _resetStayResolveRateLimitForTests(): Promise<void> {
+  await prisma.apiRateLimitBucket.deleteMany({
+    where: { bucketKey: { startsWith: KEY_PREFIX } },
+  });
 }

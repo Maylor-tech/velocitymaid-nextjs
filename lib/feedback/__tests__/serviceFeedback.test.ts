@@ -155,6 +155,7 @@ describe('ServiceFeedback public token flow', () => {
       publicToken: 'tok-1',
       status: ServiceFeedbackStatus.REQUESTED,
       submittedAt: null,
+      source: 'HOST',
     });
     mocks.updateMany.mockResolvedValue({ count: 1 });
 
@@ -182,6 +183,41 @@ describe('ServiceFeedback public token flow', () => {
         }),
       })
     );
+    expect(mocks.logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorRole: 'CUSTOMER',
+        changes: expect.objectContaining({ source: 'HOST' }),
+      })
+    );
+  });
+
+  it('GUEST submission audit is GUEST not CUSTOMER', async () => {
+    mocks.findUnique.mockResolvedValue({
+      id: 'fb-g',
+      publicToken: 'tok-g',
+      status: ServiceFeedbackStatus.REQUESTED,
+      submittedAt: null,
+      source: 'GUEST',
+    });
+    mocks.updateMany.mockResolvedValue({ count: 1 });
+
+    await submitPublicFeedback('tok-g', {
+      overallRating: 5,
+      cleanlinessRating: 5,
+      communicationRating: 5,
+      timelinessRating: 5,
+    });
+
+    expect(mocks.logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorRole: 'GUEST',
+        description: expect.stringMatching(/Guest submitted/i),
+        changes: expect.objectContaining({ source: 'GUEST' }),
+      })
+    );
+    expect(mocks.logAuditEntry).not.toHaveBeenCalledWith(
+      expect.objectContaining({ actorRole: 'CUSTOMER' })
+    );
   });
 
   it('high rating does not enter UNDER_REVIEW', async () => {
@@ -190,6 +226,7 @@ describe('ServiceFeedback public token flow', () => {
       publicToken: 'tok-2',
       status: ServiceFeedbackStatus.REQUESTED,
       submittedAt: null,
+      source: 'HOST',
     });
     mocks.updateMany.mockResolvedValue({ count: 1 });
 
@@ -203,6 +240,9 @@ describe('ServiceFeedback public token flow', () => {
     if (result.ok) {
       expect(result.status).toBe(ServiceFeedbackStatus.SUBMITTED);
     }
+    expect(mocks.logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ actorRole: 'CUSTOMER' })
+    );
   });
 
   it('duplicate submit does not overwrite', async () => {

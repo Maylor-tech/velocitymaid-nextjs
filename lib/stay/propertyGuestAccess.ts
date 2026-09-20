@@ -59,6 +59,37 @@ export function guestFacingDisplayName(
   return trimmed && trimmed.length > 0 ? trimmed : 'this property';
 }
 
+/** Read-only guest-access state. Never creates, rotates, or reactivates tokens. */
+export async function getPropertyGuestAccessState(propertyId: string): Promise<{
+  stayUrl: string | null;
+  guestDisplayName: string | null;
+  active: boolean;
+  token: string | null;
+}> {
+  const property = await prisma.property.findUnique({
+    where: { id: propertyId },
+    select: {
+      guestAccessToken: true,
+      guestAccessRevokedAt: true,
+      guestDisplayName: true,
+    },
+  });
+
+  if (!property) {
+    throw new Error('Property not found');
+  }
+
+  const active =
+    property.guestAccessToken != null && property.guestAccessRevokedAt == null;
+
+  return {
+    stayUrl: active ? stayPublicUrl(property.guestAccessToken!) : null,
+    guestDisplayName: property.guestDisplayName,
+    active,
+    token: active ? property.guestAccessToken : null,
+  };
+}
+
 /** Ensure an active token exists for a host-owned property (idempotent). */
 export async function ensurePropertyGuestAccessToken(propertyId: string): Promise<{
   token: string;

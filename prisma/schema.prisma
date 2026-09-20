@@ -2112,3 +2112,17 @@ model AdminNotification {
   @@index([severity])
   @@index([createdAt])
 }
+
+/// Durable fixed-window rate-limit buckets for serverless (shared via Postgres).
+/// Used by public stay resolve and other multi-instance sensitive endpoints.
+model ApiRateLimitBucket {
+  id        String   @id @default(cuid())
+  bucketKey String   @unique
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+  @@map("api_rate_limit_buckets")
+}

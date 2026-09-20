@@ -420,16 +420,21 @@ export async function submitPublicFeedback(
     };
   }
 
+  const isGuest = row.source === ServiceFeedbackSource.GUEST;
+
   await logAuditEntry({
-    actorRole: 'CUSTOMER',
+    actorRole: isGuest ? 'GUEST' : 'CUSTOMER',
     action: FEEDBACK_AUDIT.SUBMITTED,
     entityType: 'ServiceFeedback',
     entityId: row.id,
-    description: `Customer submitted private service feedback`,
+    description: isGuest
+      ? 'Guest submitted private service feedback'
+      : 'Customer submitted private service feedback',
     changes: {
       overallRating: input.overallRating,
       status: nextStatus,
       lowRating: input.overallRating <= LOW_OVERALL_MAX,
+      source: row.source,
     },
   });
 

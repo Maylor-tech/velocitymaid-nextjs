@@ -20,7 +20,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       'unknown';
     const rateKey = `${ip}:${params.token?.slice(0, 12) ?? ''}`;
 
-    if (!checkStayResolveRateLimit(rateKey)) {
+    if (!(await checkStayResolveRateLimit(rateKey))) {
       return NextResponse.json(
         {
           success: false,

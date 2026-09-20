@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { loadOwnedProperty } from '@/lib/properties/propertyService';
 import {
   ensurePropertyGuestAccessToken,
+  getPropertyGuestAccessState,
   revokePropertyGuestAccessToken,
   rotatePropertyGuestAccessToken,
 } from '@/lib/stay/propertyGuestAccess';
@@ -19,7 +20,7 @@ async function requireOwnedProperty(propertyId: string, customerId: string) {
 
 /**
  * GET /api/customer/properties/[propertyId]/guest-access
- * Host-only: stay URL + display name (ensures token if missing).
+ * Host-only, strictly read-only. Never creates/rotates/reactivates tokens.
  */
 export async function GET(_request: NextRequest, { params }: RouteContext) {
   try {
@@ -42,21 +43,13 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const ensured = await ensurePropertyGuestAccessToken(property.id);
-    const fresh = await prisma.property.findUnique({
-      where: { id: property.id },
-      select: {
-        guestDisplayName: true,
-        guestAccessRevokedAt: true,
-        guestAccessToken: true,
-      },
-    });
+    const state = await getPropertyGuestAccessState(property.id);
 
     return NextResponse.json({
       success: true,
-      stayUrl: ensured.stayUrl,
-      guestDisplayName: fresh?.guestDisplayName ?? null,
-      active: fresh?.guestAccessToken != null && fresh.guestAccessRevokedAt == null,
+      stayUrl: state.stayUrl,
+      guestDisplayName: state.guestDisplayName,
+      active: state.active,
     });
   } catch (error: unknown) {
     const message =
