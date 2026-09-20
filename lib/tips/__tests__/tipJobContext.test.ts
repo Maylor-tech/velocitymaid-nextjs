@@ -14,7 +14,7 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
-import { getTipJobContext } from '@/lib/tips/tipJobContext';
+import { getTipJobDisplayContext } from '@/lib/tips/tipJobContext';
 import { TipBeneficiaryError } from '@/lib/tips/beneficiary';
 
 describe('tipUrlForJob', () => {
@@ -35,12 +35,12 @@ describe('isCompletedCustomerJob', () => {
   });
 });
 
-describe('getTipJobContext', () => {
+describe('getTipJobDisplayContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('returns property label for tip-eligible completed job', async () => {
+  it('returns property label without jobId for tip-eligible completed job', async () => {
     mocks.jobFindUnique
       .mockResolvedValueOnce({
         id: 'job-1',
@@ -62,11 +62,12 @@ describe('getTipJobContext', () => {
       });
     mocks.userFindFirst.mockResolvedValue({ id: 'cleaner-1' });
 
-    const ctx = await getTipJobContext('job-1');
+    const ctx = await getTipJobDisplayContext('job-1');
     expect(ctx.propertyLabel).toBe('Maple Cabin');
     expect(ctx.jobReference).toBe('VM-2026-0040');
     expect(ctx.serviceType).toBe('Turnover');
     expect(ctx.eligible).toBe(true);
+    expect(ctx).not.toHaveProperty('jobId');
   });
 
   it('rejects incomplete jobs', async () => {
@@ -80,7 +81,7 @@ describe('getTipJobContext', () => {
       completedAt: null,
     });
 
-    await expect(getTipJobContext('job-2')).rejects.toBeInstanceOf(
+    await expect(getTipJobDisplayContext('job-2')).rejects.toBeInstanceOf(
       TipBeneficiaryError
     );
   });

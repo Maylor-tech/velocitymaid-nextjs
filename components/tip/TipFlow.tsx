@@ -148,11 +148,14 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
   const [jobContext, setJobContext] = useState<TipContextView | null>(null);
   const [contextLoading, setContextLoading] = useState(Boolean(resolvedJobId));
   const [contextError, setContextError] = useState<string | null>(null);
+  /** Guest tip links may lack a customer session; create APIs stay job-bound. */
+  const [contextSkippedUnauth, setContextSkippedUnauth] = useState(false);
 
   useEffect(() => {
     if (!resolvedJobId) {
       setJobContext(null);
       setContextError(null);
+      setContextSkippedUnauth(false);
       setContextLoading(false);
       return;
     }
@@ -160,32 +163,50 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
     let cancelled = false;
     setContextLoading(true);
     setContextError(null);
+    setContextSkippedUnauth(false);
 
     (async () => {
       try {
         const res = await fetch(
-          `/api/tip/context?jobId=${encodeURIComponent(resolvedJobId)}`
+          `/api/tip/context?jobId=${encodeURIComponent(resolvedJobId)}`,
+          { credentials: 'same-origin' }
         );
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (cancelled) return;
+
+        if (res.status === 401) {
+          // Guest tip link without customer session — allow tip create without display metadata.
+          setJobContext(null);
+          setContextSkippedUnauth(true);
+          setContextError(null);
+          return;
+        }
+
         if (!res.ok || !data.success || !data.context) {
           setJobContext(null);
+          setContextSkippedUnauth(false);
           setContextError(
             data.error ||
               'This job is not available for tipping. Open a completed job from your portal.'
           );
           return;
         }
+
         setJobContext({
           propertyLabel: data.context.propertyLabel,
           serviceType: data.context.serviceType,
           serviceDate: data.context.serviceDate,
           jobReference: data.context.jobReference,
         });
+        setContextSkippedUnauth(false);
+        setContextError(null);
       } catch {
         if (!cancelled) {
           setJobContext(null);
-          setContextError('Could not load this cleaning. Please try again from your jobs list.');
+          setContextSkippedUnauth(false);
+          setContextError(
+            'Could not load this cleaning. Please try again from your jobs list.'
+          );
         }
       } finally {
         if (!cancelled) setContextLoading(false);
@@ -204,8 +225,9 @@ export default function TipFlow({ jobId }: { jobId?: string | null }) {
 
   const canContinue =
     Boolean(resolvedJobId) &&
-    Boolean(jobContext) &&
+    !contextLoading &&
     !contextError &&
+    (Boolean(jobContext) || contextSkippedUnauth) &&
     amountDollars >= 1 &&
     amountDollars <= 200 &&
     !Number.isNaN(amountDollars);

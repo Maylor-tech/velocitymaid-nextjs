@@ -2,19 +2,31 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  getTipJobContext,
-} from '@/lib/tips/tipJobContext';
+import { requireRole } from '@/lib/auth/requireRole';
+import { getCustomerSession } from '@/lib/customerSession';
+import { prisma } from '@/lib/prisma';
+import { getTipJobDisplayContext } from '@/lib/tips/tipJobContext';
 import { TipBeneficiaryError } from '@/lib/tips/beneficiary';
 
 /**
  * GET /api/tip/context?jobId=
  *
- * Public, job-scoped tip display context. Same eligibility as tip create.
- * Does not expose owner identity, access codes, cleaner PII, or other jobs.
+ * Authenticated CUSTOMER tip display context for the host portal.
+ * Ownership is verified before eligibility / metadata are returned.
+ * Response omits jobId (client already has it). No owner PII, access codes,
+ * cleaner contact info, or other jobs.
  */
 export async function GET(request: NextRequest) {
   try {
+    await requireRole(request, 'CUSTOMER');
+    const session = await getCustomerSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Customer authentication required' },
+        { status: 401 }
+      );
+    }
+
     const jobId = request.nextUrl.searchParams.get('jobId')?.trim();
     if (!jobId) {
       return NextResponse.json(
@@ -23,9 +35,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const context = await getTipJobContext(jobId);
+    const ownership = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: { id: true, customerId: true },
+    });
+
+    // Fail closed: do not confirm existence of another customer's job.
+    if (!ownership || ownership.customerId !== session.customerId) {
+      return NextResponse.json(
+        { success: false, error: 'Job not found', code: 'JOB_NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+
+    const context = await getTipJobDisplayContext(jobId);
     return NextResponse.json({ success: true, context });
   } catch (e) {
+    if (e instanceof Response) return e;
     if (e instanceof TipBeneficiaryError) {
       const status =
         e.code === 'JOB_NOT_FOUND'

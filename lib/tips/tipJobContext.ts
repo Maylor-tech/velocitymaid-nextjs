@@ -2,8 +2,8 @@ import { JobStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { resolveTipServiceEarner, TipBeneficiaryError } from '@/lib/tips/beneficiary';
 
-export type TipJobContext = {
-  jobId: string;
+/** Display-only tip context — no jobId (client already has it). */
+export type TipJobDisplayContext = {
   eligible: true;
   /** Human-readable property / service location — never access codes */
   propertyLabel: string;
@@ -16,10 +16,12 @@ export type TipJobContext = {
 
 /**
  * Safe tip-page display context for a known jobId.
- * Reuses tip eligibility (COMPLETED + assigned cleaner). Exposes no owner PII,
- * access notes, cleaner contact info, or other jobs.
+ * Caller must verify customer ownership before invoking.
+ * Reuses tip eligibility (COMPLETED + assigned cleaner).
  */
-export async function getTipJobContext(jobId: string): Promise<TipJobContext> {
+export async function getTipJobDisplayContext(
+  jobId: string
+): Promise<TipJobDisplayContext> {
   await resolveTipServiceEarner(jobId);
 
   const job = await prisma.job.findUnique({
@@ -49,7 +51,6 @@ export async function getTipJobContext(jobId: string): Promise<TipJobContext> {
     'Completed cleaning';
 
   return {
-    jobId: job.id,
     eligible: true,
     propertyLabel,
     serviceType: job.serviceType?.trim() || null,
@@ -57,3 +58,6 @@ export async function getTipJobContext(jobId: string): Promise<TipJobContext> {
     jobReference: job.jobReference?.trim() || null,
   };
 }
+
+/** @deprecated Use getTipJobDisplayContext */
+export const getTipJobContext = getTipJobDisplayContext;
