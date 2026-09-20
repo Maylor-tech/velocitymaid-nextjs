@@ -482,6 +482,9 @@ model Job {
   /// Ops estimate; copied onto JobOffer at send time.
   estimatedDurationMins    Int?
   dispatchUrgency          DispatchUrgency            @default(STANDARD)
+  /// Explicit ops waiver. Required for $0 final completion on a billable host job.
+  /// Null + missing quote must never silently invoice as $0 PAID.
+  noChargeReason           NoChargeReason?
   currency                 String?                    @default("USD")
   paymentMethod            String?
   jobQualityScore          Int?
@@ -1685,6 +1688,16 @@ enum DispatchUrgency {
   STANDARD
   SAME_DAY
   URGENT
+}
+
+/// Ops-declared reason a billable job may complete with a $0 invoice.
+/// Absence of a quote is not a reason.
+enum NoChargeReason {
+  COMPLIMENTARY
+  SERVICE_RECOVERY
+  WARRANTY_RECLEAN
+  INTERNAL_TEST
+  OTHER
 }
 
 enum JobOfferStatus {
