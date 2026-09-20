@@ -6,12 +6,14 @@
 import {
   JobStatus,
   ServiceFeedbackDisposition,
+  ServiceFeedbackSource,
   ServiceFeedbackStatus,
   type Prisma,
   type ServiceFeedback,
 } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
+import { formatServiceDate } from '@/lib/dates/serviceDate';
 
 export const FEEDBACK_AUDIT = {
   REQUESTED: 'FEEDBACK_REQUESTED',
@@ -21,6 +23,10 @@ export const FEEDBACK_AUDIT = {
   RESOLVED: 'FEEDBACK_RESOLVED',
   REMINDER_SENT: 'FEEDBACK_REMINDER_SENT',
 } as const;
+
+/** Historical customer/host email path — never GUEST. */
+export const HOST_FEEDBACK_SOURCE = ServiceFeedbackSource.HOST;
+export const GUEST_FEEDBACK_SOURCE = ServiceFeedbackSource.GUEST;
 
 export const DISPOSITION_CATEGORIES: ServiceFeedbackDisposition[] = [
   'SERVICE_QUALITY',
@@ -132,7 +138,9 @@ export async function requestServiceFeedbackForJob(
   }
 
   const existing = await prisma.serviceFeedback.findUnique({
-    where: { jobId },
+    where: {
+      jobId_source: { jobId, source: HOST_FEEDBACK_SOURCE },
+    },
   });
   if (existing) {
     return {
@@ -146,6 +154,7 @@ export async function requestServiceFeedbackForJob(
   const feedback = await prisma.serviceFeedback.create({
     data: {
       jobId,
+      source: HOST_FEEDBACK_SOURCE,
       customerId: job.customerId,
       cleanerId: job.assignedCleanerId,
       propertyId: job.propertyId,
@@ -161,7 +170,11 @@ export async function requestServiceFeedbackForJob(
     entityType: 'ServiceFeedback',
     entityId: feedback.id,
     description: `Private feedback requested for job ${jobId}`,
-    changes: { jobId, publicToken: feedback.publicToken },
+    changes: {
+      jobId,
+      source: HOST_FEEDBACK_SOURCE,
+      publicToken: feedback.publicToken,
+    },
   });
 
   return {
@@ -169,6 +182,92 @@ export async function requestServiceFeedbackForJob(
     created: true,
     alreadyExists: false,
     feedbackUrl: feedbackPublicUrl(feedback.publicToken),
+  };
+}
+
+/**
+ * Guest stay path only. Creates/reuses GUEST ServiceFeedback for a COMPLETED job.
+ * Never emails. Never touches the HOST row.
+ */
+export async function ensureGuestServiceFeedbackForJob(
+  jobId: string
+): Promise<{
+  feedback: ServiceFeedback;
+  created: boolean;
+  alreadyExists: boolean;
+  feedbackUrl: string;
+  feedbackToken: string;
+}> {
+  const job = await prisma.job.findUnique({
+    where: { id: jobId },
+    select: {
+      id: true,
+      status: true,
+      archivedAt: true,
+      customerId: true,
+      assignedCleanerId: true,
+      propertyId: true,
+    },
+  });
+
+  if (!job) throw new Error('Job not found');
+  if (job.status !== JobStatus.COMPLETED) {
+    throw new Error('Guest feedback requires a COMPLETED job');
+  }
+  if (job.archivedAt) {
+    throw new Error('Guest feedback is not available for archived jobs');
+  }
+  if (!job.customerId) {
+    throw new Error('Job has no customer on file');
+  }
+
+  const existing = await prisma.serviceFeedback.findUnique({
+    where: {
+      jobId_source: { jobId, source: GUEST_FEEDBACK_SOURCE },
+    },
+  });
+  if (existing) {
+    return {
+      feedback: existing,
+      created: false,
+      alreadyExists: true,
+      feedbackUrl: feedbackPublicUrl(existing.publicToken),
+      feedbackToken: existing.publicToken,
+    };
+  }
+
+  const feedback = await prisma.serviceFeedback.create({
+    data: {
+      jobId,
+      source: GUEST_FEEDBACK_SOURCE,
+      customerId: job.customerId,
+      cleanerId: job.assignedCleanerId,
+      propertyId: job.propertyId,
+      status: ServiceFeedbackStatus.REQUESTED,
+      requestedAt: new Date(),
+    },
+  });
+
+  await logAuditEntry({
+    actorId: null,
+    actorRole: 'SYSTEM',
+    action: FEEDBACK_AUDIT.REQUESTED,
+    entityType: 'ServiceFeedback',
+    entityId: feedback.id,
+    description: `Guest stay feedback ensured for job ${jobId}`,
+    changes: {
+      jobId,
+      source: GUEST_FEEDBACK_SOURCE,
+      publicToken: feedback.publicToken,
+    },
+  });
+
+  return {
+    feedback,
+    created: true,
+    alreadyExists: false,
+    feedbackUrl: feedbackPublicUrl(feedback.publicToken),
+    feedbackToken: feedback.publicToken,
   };
 }
 
@@ -198,7 +297,13 @@ export async function getPublicFeedbackByToken(
         select: {
           preferredDate: true,
           address: true,
-          Property: { select: { name: true, address: true } },
+          Property: {
+            select: {
+              name: true,
+              address: true,
+              guestDisplayName: true,
+            },
+          },
         },
       },
     },
@@ -214,18 +319,45 @@ export async function getPublicFeedbackByToken(
     };
   }
 
-  const propertyLabel =
-    row.Job.Property?.name ||
-    row.Job.Property?.address ||
-    row.Job.address ||
-    null;
+  const propertyLabel = publicPropertyLabelForFeedback(row.source, row.Job);
+  const serviceDate = row.Job.preferredDate
+    ? formatServiceDate(row.Job.preferredDate, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : null;
 
   return {
     state: 'ready',
     token: row.publicToken,
     propertyLabel,
-    serviceDate: row.Job.preferredDate?.toISOString() ?? null,
+    serviceDate,
   };
+}
+
+/** Guest-facing label never uses street address or owner-identifying fallbacks. */
+export function publicPropertyLabelForFeedback(
+  source: ServiceFeedbackSource,
+  job: {
+    address: string | null;
+    Property: {
+      name: string;
+      address: string;
+      guestDisplayName: string | null;
+    } | null;
+  }
+): string | null {
+  if (source === ServiceFeedbackSource.GUEST) {
+    const display = job.Property?.guestDisplayName?.trim();
+    return display && display.length > 0 ? display : 'this property';
+  }
+  return (
+    job.Property?.name ||
+    job.Property?.address ||
+    job.address ||
+    null
+  );
 }
 
 export async function submitPublicFeedback(
@@ -680,6 +812,7 @@ export async function claimFeedbackReminders(limit = 50): Promise<ServiceFeedbac
 
   const candidates = await prisma.serviceFeedback.findMany({
     where: {
+      source: HOST_FEEDBACK_SOURCE,
       status: ServiceFeedbackStatus.REQUESTED,
       submittedAt: null,
       reminderSentAt: null,
@@ -711,7 +844,11 @@ export async function claimFeedbackReminders(limit = 50): Promise<ServiceFeedbac
 }
 
 export async function getFeedbackWorkflowState(jobId: string) {
-  const row = await prisma.serviceFeedback.findUnique({ where: { jobId } });
+  const row = await prisma.serviceFeedback.findUnique({
+    where: {
+      jobId_source: { jobId, source: HOST_FEEDBACK_SOURCE },
+    },
+  });
   if (!row) {
     return {
       state: 'pending' as const,
