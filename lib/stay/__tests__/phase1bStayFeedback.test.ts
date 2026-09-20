@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   feedbackFindUnique: vi.fn(),
   feedbackCreate: vi.fn(),
   feedbackUpdateMany: vi.fn(),
+  grantCreate: vi.fn(),
   logAuditEntry: vi.fn(),
 }));
 
@@ -28,6 +29,9 @@ vi.mock('@/lib/prisma', () => ({
       findUnique: mocks.feedbackFindUnique,
       create: mocks.feedbackCreate,
       updateMany: mocks.feedbackUpdateMany,
+    },
+    guestTipAuthorization: {
+      create: mocks.grantCreate,
     },
   },
 }));
@@ -58,6 +62,7 @@ describe('Phase 1B guest stay resolve', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.logAuditEntry.mockResolvedValue('audit-1');
+    mocks.grantCreate.mockResolvedValue({ id: 'grant-1' });
   });
 
   it('generates high-entropy opaque tokens (not cuid-like short ids)', () => {
@@ -98,10 +103,13 @@ describe('Phase 1B guest stay resolve', () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.feedbackToken).toBe('guest-tok');
+      expect(result.tipGrantToken).toBeTruthy();
+      expect(result.tipUrl).toMatch(/\/tip\?grant=/);
       expect(result.propertyLabel).toBe('Lakeside Cottage');
       expect(result.serviceDate).toBe(DAY);
       expect(JSON.stringify(result)).not.toMatch(/job-1|cust-1|cleaner/);
     }
+    expect(mocks.grantCreate).toHaveBeenCalled();
     expect(mocks.feedbackCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -235,8 +243,10 @@ describe('Phase 1B guest stay resolve', () => {
     if (first.ok && second.ok) {
       expect(first.feedbackToken).toBe('same-guest-tok');
       expect(second.feedbackToken).toBe('same-guest-tok');
+      expect(first.tipGrantToken).not.toEqual(second.tipGrantToken);
     }
     expect(mocks.feedbackCreate).not.toHaveBeenCalled();
+    expect(mocks.grantCreate).toHaveBeenCalledTimes(2);
   });
 
   it('rate limit eventually blocks (durable Postgres buckets)', async () => {

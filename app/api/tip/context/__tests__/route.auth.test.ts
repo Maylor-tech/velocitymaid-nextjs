@@ -50,7 +50,7 @@ describe('GET /api/tip/context authorization', () => {
     expect(body.success).toBe(false);
   });
 
-  it('returns 400 when jobId missing', async () => {
+  it('returns 400 when jobId and grant missing', async () => {
     requireRole.mockResolvedValue({ userId: 'cust-1', role: 'CUSTOMER' });
     getCustomerSession.mockResolvedValue({
       customerId: 'cust-1',
@@ -60,7 +60,7 @@ describe('GET /api/tip/context authorization', () => {
     const res = await GET(contextRequest());
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.code).toBe('JOB_REQUIRED');
+    expect(body.code).toBe('AUTH_REQUIRED');
   });
 
   it('returns 404 for another customer completed job (fail closed)', async () => {

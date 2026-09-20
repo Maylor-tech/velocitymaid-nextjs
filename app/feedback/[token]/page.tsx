@@ -5,6 +5,40 @@ import Link from 'next/link';
 import { BrandLogo } from '@/components/brand';
 import { Loader2, Star } from 'lucide-react';
 
+const TIP_GRANT_STORAGE_KEY = 'vm_guest_tip_grant';
+
+function GuestTipCta() {
+  const [tipHref, setTipHref] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(TIP_GRANT_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { tipUrl?: string; tipGrantToken?: string };
+      if (parsed.tipUrl) {
+        setTipHref(parsed.tipUrl);
+      } else if (parsed.tipGrantToken) {
+        setTipHref(`/tip?grant=${encodeURIComponent(parsed.tipGrantToken)}`);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  if (!tipHref) return null;
+  return (
+    <div className="mt-6">
+      <p className="font-body text-sm text-vm-muted">
+        Optional — tipping is independent of your feedback rating.
+      </p>
+      <Link
+        href={tipHref}
+        className="mt-3 inline-flex rounded-lg border border-vm-navy/15 px-4 py-2.5 font-heading text-sm font-semibold text-vm-navy"
+      >
+        Leave a tip
+      </Link>
+    </div>
+  );
+}
+
 type ViewState =
   | { kind: 'loading' }
   | { kind: 'invalid' }
@@ -121,6 +155,7 @@ export default function PublicFeedbackPage({
                 ? 'We already received your feedback for this visit.'
                 : 'We received your feedback. It helps us keep every VelocityMaid experience guest-ready.'}
             </p>
+            <GuestTipCta />
             <Link href="/" className="mt-6 inline-block text-sm text-vm-cyan-dark hover:underline">
               Back to VelocityMaid
             </Link>

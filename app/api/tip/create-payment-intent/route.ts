@@ -9,35 +9,49 @@ import {
   parseTipAmountToCents,
   TipBeneficiaryError,
 } from '@/lib/tips/createTipIntent';
-import { requireCustomerTipJobAccess } from '@/lib/tips/requireCustomerTipJobAccess';
+import {
+  authorizeTipJobAccess,
+  touchGrantAfterTipCreate,
+} from '@/lib/tips/authorizeTipJobAccess';
+import { checkTipCreateRateLimit } from '@/lib/tips/tipCreateRateLimit';
+import {
+  abandonUnattachedStripeTip,
+  reconcileFailedStripeTipInit,
+} from '@/lib/tips/abandonUnattachedStripeTip';
+
+const GUEST_SAFE_INIT_ERROR =
+  'Failed to initialize payment. Please try again.';
+
+function stripeInitErrorResponse(code: string) {
+  return NextResponse.json(
+    { error: GUEST_SAFE_INIT_ERROR, code },
+    { status: 500 }
+  );
+}
 
 /**
  * POST /api/tip/create-payment-intent
- * Authenticated host tip — CUSTOMER + job ownership required.
- * Freezes beneficiary server-side. Guest-by-raw-Job.id is unsupported.
+ * Trusted path: CUSTOMER + owned jobId, OR valid guest grantToken.
+ * Freezes beneficiary server-side. Never accepts client cleanerId.
+ *
+ * Order: Tip row → Stripe PI → attach PI id → touch grant.
+ * If PI exists but init cannot finish: cancel PI, then FAIL tip only if cancel OK.
+ * Grant use is recorded only after successful attach.
  */
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
       amount?: number;
       jobId?: string;
+      grantToken?: string;
       guestName?: string;
       guestMessage?: string;
       market?: string;
-      /** Rejected — beneficiary is server-derived only */
       cleanerId?: unknown;
       cleanerName?: unknown;
       propertyAddress?: unknown;
     };
 
-    if (!body.jobId || typeof body.jobId !== 'string') {
-      return NextResponse.json(
-        { error: 'jobId is required.', code: 'JOB_REQUIRED' },
-        { status: 400 }
-      );
-    }
-
-    // Reject client-supplied cleaner / address tampering
     if (body.cleanerId != null || body.cleanerName != null) {
       return NextResponse.json(
         { error: 'Cleaner cannot be supplied by the client.', code: 'FORBIDDEN_FIELD' },
@@ -45,7 +59,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await requireCustomerTipJobAccess(request, body.jobId);
+    const auth = await authorizeTipJobAccess(request, {
+      jobId: body.jobId,
+      grantToken: body.grantToken,
+    });
+
+    if (auth.mode === 'GUEST_GRANT') {
+      const ip =
+        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        request.headers.get('x-real-ip') ||
+        'unknown';
+      const rateKey = `${ip}:${auth.grantId.slice(0, 12)}`;
+      if (!(await checkTipCreateRateLimit(rateKey))) {
+        return NextResponse.json(
+          {
+            error: 'Too many tip attempts. Please try again later.',
+            code: 'RATE_LIMITED',
+          },
+          { status: 429 }
+        );
+      }
+    }
 
     let amountCents: number;
     try {
@@ -63,7 +97,7 @@ export async function POST(request: NextRequest) {
     let intent;
     try {
       intent = await createTipIntent({
-        jobId: body.jobId,
+        jobId: auth.jobId,
         amountCents,
         paymentMethod: 'STRIPE',
         guestName: body.guestName,
@@ -89,37 +123,118 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = getStripe();
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: intent.amountCents,
-      currency: intent.currency,
-      automatic_payment_methods: { enabled: true },
-      metadata: {
-        type: 'cleaner_tip',
+    let paymentIntentId: string | null = null;
+
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: intent.amountCents,
+        currency: intent.currency,
+        automatic_payment_methods: { enabled: true },
+        metadata: {
+          type: 'cleaner_tip',
+          tipId: intent.tipId,
+          jobId: intent.jobId,
+          beneficiaryCleanerId: intent.beneficiaryCleanerId,
+          authMode: auth.mode,
+        },
+        description: `VelocityMaid tip ${intent.internalReference}`,
+      });
+      paymentIntentId = paymentIntent.id;
+
+      if (!paymentIntent.client_secret) {
+        const reconcile = await reconcileFailedStripeTipInit({
+          tipId: intent.tipId,
+          paymentIntentId: paymentIntent.id,
+          cancelPaymentIntent: (id) => stripe.paymentIntents.cancel(id),
+        });
+        if (reconcile.outcome === 'NEEDS_RECONCILE') {
+          console.error(
+            '[tip/create-payment-intent] missing client_secret; cancel uncertain',
+            {
+              tipId: reconcile.tipId,
+              paymentIntentId: reconcile.paymentIntentId,
+            }
+          );
+          return stripeInitErrorResponse('STRIPE_RECONCILE_REQUIRED');
+        }
+        return stripeInitErrorResponse('STRIPE_INIT_FAILED');
+      }
+
+      try {
+        await prisma.tip.update({
+          where: { id: intent.tipId },
+          data: { stripePaymentIntentId: paymentIntent.id },
+        });
+      } catch (attachError) {
+        console.error('[tip/create-payment-intent] attach PI id failed', {
+          tipId: intent.tipId,
+          paymentIntentId: paymentIntent.id,
+          error:
+            attachError instanceof Error
+              ? attachError.message
+              : String(attachError),
+        });
+        const reconcile = await reconcileFailedStripeTipInit({
+          tipId: intent.tipId,
+          paymentIntentId: paymentIntent.id,
+          cancelPaymentIntent: (id) => stripe.paymentIntents.cancel(id),
+        });
+        if (reconcile.outcome === 'NEEDS_RECONCILE') {
+          console.error(
+            '[tip/create-payment-intent] attach failed; cancel uncertain',
+            {
+              tipId: reconcile.tipId,
+              paymentIntentId: reconcile.paymentIntentId,
+            }
+          );
+          return stripeInitErrorResponse('STRIPE_RECONCILE_REQUIRED');
+        }
+        return stripeInitErrorResponse('STRIPE_ATTACH_FAILED');
+      }
+
+      // Only after PI is created and attached — never on init failure.
+      await touchGrantAfterTipCreate(auth);
+
+      return NextResponse.json({
+        clientSecret: paymentIntent.client_secret,
         tipId: intent.tipId,
-        jobId: intent.jobId,
-        beneficiaryCleanerId: intent.beneficiaryCleanerId,
-      },
-      description: `VelocityMaid tip ${intent.internalReference}`,
-    });
+        internalReference: intent.internalReference,
+        amountCents: intent.amountCents,
+      });
+    } catch (stripeError) {
+      if (paymentIntentId) {
+        // Unexpected error after PI create — cancel before failing tip.
+        const reconcile = await reconcileFailedStripeTipInit({
+          tipId: intent.tipId,
+          paymentIntentId,
+          cancelPaymentIntent: (id) => stripe.paymentIntents.cancel(id),
+        });
+        if (reconcile.outcome === 'NEEDS_RECONCILE') {
+          console.error(
+            '[tip/create-payment-intent] post-create error; cancel uncertain',
+            {
+              tipId: reconcile.tipId,
+              paymentIntentId: reconcile.paymentIntentId,
+            }
+          );
+          return stripeInitErrorResponse('STRIPE_RECONCILE_REQUIRED');
+        }
+        return stripeInitErrorResponse('STRIPE_INIT_FAILED');
+      }
 
-    await prisma.tip.update({
-      where: { id: intent.tipId },
-      data: { stripePaymentIntentId: paymentIntent.id },
-    });
-
-    if (!paymentIntent.client_secret) {
-      return NextResponse.json(
-        { error: 'Failed to initialize payment.' },
-        { status: 500 }
-      );
+      // Create threw before a PI existed — safe to fail the local tip.
+      try {
+        await abandonUnattachedStripeTip(intent.tipId);
+      } catch (abandonError) {
+        console.error(
+          '[tip/create-payment-intent] abandon after create failure',
+          abandonError
+        );
+      }
+      if (stripeError instanceof Response) return stripeError;
+      console.error('[tip/create-payment-intent] Stripe create', stripeError);
+      return stripeInitErrorResponse('STRIPE_CREATE_FAILED');
     }
-
-    return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
-      tipId: intent.tipId,
-      internalReference: intent.internalReference,
-      amountCents: intent.amountCents,
-    });
   } catch (error) {
     if (error instanceof Response) return error;
     console.error('[tip/create-payment-intent]', error);

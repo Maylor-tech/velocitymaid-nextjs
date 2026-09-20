@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function TipPage({
   searchParams,
 }: {
-  searchParams: { jobId?: string };
+  searchParams: { jobId?: string; grant?: string };
 }) {
   return (
     <div className="min-h-screen bg-vm-navy">
@@ -18,7 +18,10 @@ export default function TipPage({
         <BrandLogo theme="dark" size="header" showTagline={false} />
       </header>
       <main className="flex flex-col items-center justify-center px-4 py-12">
-        <TipFlow jobId={searchParams.jobId ?? null} />
+        <TipFlow
+          jobId={searchParams.jobId ?? null}
+          grantToken={searchParams.grant ?? null}
+        />
       </main>
     </div>
   );

@@ -58,6 +58,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       success: true,
       feedbackToken: result.feedbackToken,
       feedbackUrl: result.feedbackUrl,
+      tipGrantToken: result.tipGrantToken,
+      tipUrl: result.tipUrl,
       propertyLabel: result.propertyLabel,
       serviceDate: result.serviceDate,
     });

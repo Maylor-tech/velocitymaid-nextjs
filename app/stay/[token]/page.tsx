@@ -1,19 +1,28 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { BrandLogo } from '@/components/brand';
 import { Loader2 } from 'lucide-react';
+
+const TIP_GRANT_STORAGE_KEY = 'vm_guest_tip_grant';
 
 type PageState =
   | { kind: 'loading' }
   | { kind: 'invalid' }
   | { kind: 'ready'; displayName: string }
-  | { kind: 'resolving' };
+  | {
+      kind: 'actions';
+      displayName: string;
+      serviceDate: string;
+      feedbackToken: string;
+      tipGrantToken: string;
+      tipUrl: string;
+    };
 
 export default function GuestStayPage() {
   const params = useParams();
-  const router = useRouter();
   const token = params.token as string;
 
   const [view, setView] = useState<PageState>({ kind: 'loading' });
@@ -56,11 +65,32 @@ export default function GuestStayPage() {
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Could not match this stay');
       }
-      if (data.feedbackToken) {
-        router.push(`/feedback/${data.feedbackToken}`);
-        return;
+      if (!data.feedbackToken || !data.tipGrantToken) {
+        throw new Error('Could not open guest actions for this stay');
       }
-      throw new Error('Could not open feedback form');
+
+      try {
+        sessionStorage.setItem(
+          TIP_GRANT_STORAGE_KEY,
+          JSON.stringify({
+            tipGrantToken: data.tipGrantToken,
+            tipUrl: data.tipUrl,
+            propertyLabel: data.propertyLabel,
+            serviceDate: data.serviceDate,
+          })
+        );
+      } catch {
+        /* ignore storage failures */
+      }
+
+      setView({
+        kind: 'actions',
+        displayName: data.propertyLabel || 'this property',
+        serviceDate: data.serviceDate,
+        feedbackToken: data.feedbackToken,
+        tipGrantToken: data.tipGrantToken,
+        tipUrl: data.tipUrl || `/tip?grant=${encodeURIComponent(data.tipGrantToken)}`,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not match this stay');
     } finally {
@@ -96,12 +126,12 @@ export default function GuestStayPage() {
         {view.kind === 'ready' && (
           <div className="rounded-2xl border border-vm-border bg-white p-8 shadow-sm">
             <h1 className="font-heading text-2xl font-bold text-vm-navy">
-              How was your clean?
+              How was your stay?
             </h1>
             <p className="mt-2 font-body text-sm text-vm-muted">
-              Private feedback for{' '}
+              For{' '}
               <span className="font-semibold text-vm-navy">{view.displayName}</span>.
-              Enter your checkout date so we can match your stay.
+              Enter your checkout date so we can match your completed clean.
             </p>
 
             <form onSubmit={onSubmit} className="mt-6 space-y-4">
@@ -133,13 +163,43 @@ export default function GuestStayPage() {
                     Matching stay…
                   </>
                 ) : (
-                  'Continue to feedback'
+                  'Continue'
                 )}
               </button>
             </form>
+          </div>
+        )}
+
+        {view.kind === 'actions' && (
+          <div className="rounded-2xl border border-vm-border bg-white p-8 shadow-sm">
+            <h1 className="font-heading text-2xl font-bold text-vm-navy">
+              Thanks for staying
+            </h1>
+            <p className="mt-2 font-body text-sm text-vm-muted">
+              Matched clean for{' '}
+              <span className="font-semibold text-vm-navy">{view.displayName}</span>
+              {view.serviceDate ? ` on ${view.serviceDate}` : ''}. Feedback and tipping
+              are optional and independent.
+            </p>
+            <div className="mt-6 space-y-3">
+              <Link
+                href={`/feedback/${view.feedbackToken}`}
+                className="flex w-full items-center justify-center rounded-lg bg-vm-cyan px-4 py-3 font-heading text-sm font-semibold text-vm-navy"
+              >
+                Leave private feedback
+              </Link>
+              <Link
+                href={view.tipUrl}
+                className="flex w-full items-center justify-center rounded-lg border border-vm-navy/15 px-4 py-3 font-heading text-sm font-semibold text-vm-navy"
+              >
+                Leave a tip
+              </Link>
+            </div>
           </div>
         )}
       </main>
     </div>
   );
 }
+
+export { TIP_GRANT_STORAGE_KEY };

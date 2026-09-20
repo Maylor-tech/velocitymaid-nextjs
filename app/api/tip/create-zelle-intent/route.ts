@@ -8,30 +8,28 @@ import {
   TipBeneficiaryError,
 } from '@/lib/tips/createTipIntent';
 import { getVelocityMaidZelleDestination } from '@/lib/tips/zelleDestination';
-import { requireCustomerTipJobAccess } from '@/lib/tips/requireCustomerTipJobAccess';
+import {
+  authorizeTipJobAccess,
+  touchGrantAfterTipCreate,
+} from '@/lib/tips/authorizeTipJobAccess';
+import { checkTipCreateRateLimit } from '@/lib/tips/tipCreateRateLimit';
 
 /**
  * POST /api/tip/create-zelle-intent
- * Authenticated host tip — CUSTOMER + job ownership required.
- * Manual reconciliation. Guest-by-raw-Job.id is unsupported.
+ * Trusted path: CUSTOMER + owned jobId, OR valid guest grantToken.
  */
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
       amount?: number;
       jobId?: string;
+      grantToken?: string;
       guestName?: string;
       guestMessage?: string;
       market?: string;
       cleanerId?: unknown;
     };
 
-    if (!body.jobId || typeof body.jobId !== 'string') {
-      return NextResponse.json(
-        { error: 'jobId is required.', code: 'JOB_REQUIRED' },
-        { status: 400 }
-      );
-    }
     if (body.cleanerId != null) {
       return NextResponse.json(
         { error: 'Cleaner cannot be supplied by the client.', code: 'FORBIDDEN_FIELD' },
@@ -39,7 +37,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await requireCustomerTipJobAccess(request, body.jobId);
+    const auth = await authorizeTipJobAccess(request, {
+      jobId: body.jobId,
+      grantToken: body.grantToken,
+    });
+
+    if (auth.mode === 'GUEST_GRANT') {
+      const ip =
+        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        request.headers.get('x-real-ip') ||
+        'unknown';
+      const rateKey = `${ip}:${auth.grantId.slice(0, 12)}`;
+      if (!(await checkTipCreateRateLimit(rateKey))) {
+        return NextResponse.json(
+          {
+            error: 'Too many tip attempts. Please try again later.',
+            code: 'RATE_LIMITED',
+          },
+          { status: 429 }
+        );
+      }
+    }
 
     let amountCents: number;
     try {
@@ -57,7 +75,7 @@ export async function POST(request: NextRequest) {
     let intent;
     try {
       intent = await createTipIntent({
-        jobId: body.jobId,
+        jobId: auth.jobId,
         amountCents,
         paymentMethod: 'ZELLE',
         guestName: body.guestName,
@@ -82,6 +100,8 @@ export async function POST(request: NextRequest) {
       throw e;
     }
 
+    await touchGrantAfterTipCreate(auth);
+
     const zelle = getVelocityMaidZelleDestination();
 
     return NextResponse.json({
@@ -96,7 +116,6 @@ export async function POST(request: NextRequest) {
         handle: zelle.handle,
         instructions: zelle.instructions,
       },
-      // Explicit: guest cannot self-confirm
       guestCanConfirm: false,
     });
   } catch (error) {
