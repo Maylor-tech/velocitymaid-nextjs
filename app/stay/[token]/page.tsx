@@ -11,16 +11,33 @@ const TIP_GRANT_STORAGE_KEY = 'vm_guest_tip_grant';
 type PageState =
   | { kind: 'loading' }
   | { kind: 'invalid' }
-  | { kind: 'ready'; displayName: string }
+  | {
+      kind: 'ready';
+      displayName: string;
+      recentCheckoutDates: string[];
+    }
   | {
       kind: 'actions';
       displayName: string;
       serviceDate: string;
       feedbackToken: string;
-      tipGrantToken: string | null;
-      tipUrl: string | null;
-      tipGrantStatus: 'MINTED' | 'ALREADY_ISSUED';
+      tipGrantToken: string;
+      tipUrl: string;
+      tipGrantStatus: 'MINTED' | 'REISSUED';
     };
+
+function formatStayDateLabel(isoDay: string): string {
+  const [y, m, d] = isoDay.split('-').map(Number);
+  if (!y || !m || !d) return isoDay;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
 
 export default function GuestStayPage() {
   const params = useParams();
@@ -28,6 +45,7 @@ export default function GuestStayPage() {
 
   const [view, setView] = useState<PageState>({ kind: 'loading' });
   const [checkoutDate, setCheckoutDate] = useState('');
+  const [useOtherDate, setUseOtherDate] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -43,10 +61,22 @@ export default function GuestStayPage() {
           setView({ kind: 'invalid' });
           return;
         }
+        const dates: string[] = Array.isArray(data.recentCheckoutDates)
+          ? data.recentCheckoutDates.filter(
+              (d: unknown): d is string => typeof d === 'string'
+            )
+          : [];
         setView({
           kind: 'ready',
           displayName: data.displayName || 'this property',
+          recentCheckoutDates: dates,
         });
+        if (dates.length === 1) {
+          setCheckoutDate(dates[0]!);
+          setUseOtherDate(false);
+        } else if (dates.length === 0) {
+          setUseOtherDate(true);
+        }
       })
       .catch(() => setView({ kind: 'invalid' }));
   }, [token]);
@@ -69,24 +99,27 @@ export default function GuestStayPage() {
       if (!data.feedbackToken) {
         throw new Error('Could not open guest actions for this stay');
       }
+      if (!data.tipGrantToken || !data.tipUrl) {
+        throw new Error(
+          'We matched your stay but could not open tipping. Please try again.'
+        );
+      }
 
       const tipGrantStatus =
-        data.tipGrantStatus === 'ALREADY_ISSUED' ? 'ALREADY_ISSUED' : 'MINTED';
+        data.tipGrantStatus === 'REISSUED' ? 'REISSUED' : 'MINTED';
 
-      if (data.tipGrantToken) {
-        try {
-          sessionStorage.setItem(
-            TIP_GRANT_STORAGE_KEY,
-            JSON.stringify({
-              tipGrantToken: data.tipGrantToken,
-              tipUrl: data.tipUrl,
-              propertyLabel: data.propertyLabel,
-              serviceDate: data.serviceDate,
-            })
-          );
-        } catch {
-          /* ignore storage failures */
-        }
+      try {
+        sessionStorage.setItem(
+          TIP_GRANT_STORAGE_KEY,
+          JSON.stringify({
+            tipGrantToken: data.tipGrantToken,
+            tipUrl: data.tipUrl,
+            propertyLabel: data.propertyLabel,
+            serviceDate: data.serviceDate,
+          })
+        );
+      } catch {
+        /* ignore storage failures */
       }
 
       setView({
@@ -94,8 +127,8 @@ export default function GuestStayPage() {
         displayName: data.propertyLabel || 'this property',
         serviceDate: data.serviceDate,
         feedbackToken: data.feedbackToken,
-        tipGrantToken: data.tipGrantToken ?? null,
-        tipUrl: data.tipUrl ?? null,
+        tipGrantToken: data.tipGrantToken,
+        tipUrl: data.tipUrl,
         tipGrantStatus,
       });
     } catch (err) {
@@ -138,20 +171,85 @@ export default function GuestStayPage() {
             <p className="mt-2 font-body text-sm text-vm-muted">
               For{' '}
               <span className="font-semibold text-vm-navy">{view.displayName}</span>.
-              Enter your checkout date so we can match your completed clean.
+              Choose the checkout date that matches your completed clean, then you
+              can leave optional private feedback or a tip.
             </p>
 
             <form onSubmit={onSubmit} className="mt-6 space-y-4">
-              <label className="block font-body text-sm text-vm-navy">
-                Checkout / service date
-                <input
-                  type="date"
-                  required
-                  value={checkoutDate}
-                  onChange={(e) => setCheckoutDate(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-vm-navy/15 px-3 py-2 font-body text-sm text-vm-navy focus:outline-none focus:ring-2 focus:ring-vm-cyan"
-                />
-              </label>
+              {view.recentCheckoutDates.length > 0 ? (
+                <fieldset className="space-y-2">
+                  <legend className="font-body text-sm font-semibold text-vm-navy">
+                    Checkout / service date
+                  </legend>
+                  <div className="space-y-2">
+                    {view.recentCheckoutDates.map((day) => (
+                      <label
+                        key={day}
+                        className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 font-body text-sm ${
+                          !useOtherDate && checkoutDate === day
+                            ? 'border-vm-cyan bg-vm-cyan/10 text-vm-navy'
+                            : 'border-vm-navy/15 text-vm-navy'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="checkoutDate"
+                          className="accent-vm-navy"
+                          checked={!useOtherDate && checkoutDate === day}
+                          onChange={() => {
+                            setUseOtherDate(false);
+                            setCheckoutDate(day);
+                          }}
+                        />
+                        <span>{formatStayDateLabel(day)}</span>
+                      </label>
+                    ))}
+                    <label
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 font-body text-sm ${
+                        useOtherDate
+                          ? 'border-vm-cyan bg-vm-cyan/10 text-vm-navy'
+                          : 'border-vm-navy/15 text-vm-navy'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="checkoutDate"
+                        className="accent-vm-navy"
+                        checked={useOtherDate}
+                        onChange={() => {
+                          setUseOtherDate(true);
+                          setCheckoutDate('');
+                        }}
+                      />
+                      <span>Other date…</span>
+                    </label>
+                  </div>
+                  {useOtherDate ? (
+                    <input
+                      type="date"
+                      required
+                      value={checkoutDate}
+                      onChange={(e) => setCheckoutDate(e.target.value)}
+                      className="mt-2 w-full rounded-lg border border-vm-navy/15 px-3 py-2 font-body text-sm text-vm-navy focus:outline-none focus:ring-2 focus:ring-vm-cyan"
+                    />
+                  ) : null}
+                </fieldset>
+              ) : (
+                <label className="block font-body text-sm text-vm-navy">
+                  Checkout / service date
+                  <input
+                    type="date"
+                    required
+                    value={checkoutDate}
+                    onChange={(e) => setCheckoutDate(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-vm-navy/15 px-3 py-2 font-body text-sm text-vm-navy focus:outline-none focus:ring-2 focus:ring-vm-cyan"
+                  />
+                  <span className="mt-1 block font-body text-xs text-vm-muted">
+                    No completed cleans are listed yet for this property. Enter the
+                    date of your completed clean if you have it.
+                  </span>
+                </label>
+              )}
 
               {error && (
                 <p className="rounded-lg border border-vm-danger/20 bg-vm-danger-bg px-3 py-2 text-sm text-vm-danger">
@@ -170,7 +268,7 @@ export default function GuestStayPage() {
                     Matching stay…
                   </>
                 ) : (
-                  'Continue'
+                  'Continue to feedback & tip'
                 )}
               </button>
             </form>
@@ -185,30 +283,23 @@ export default function GuestStayPage() {
             <p className="mt-2 font-body text-sm text-vm-muted">
               Matched clean for{' '}
               <span className="font-semibold text-vm-navy">{view.displayName}</span>
-              {view.serviceDate ? ` on ${view.serviceDate}` : ''}. Feedback and tipping
-              are optional and independent.
+              {view.serviceDate ? ` on ${formatStayDateLabel(view.serviceDate)}` : ''}
+              . Feedback and tipping are optional and independent — you can tip
+              without leaving feedback.
             </p>
             <div className="mt-6 space-y-3">
               <Link
                 href={`/feedback/${view.feedbackToken}`}
-                className="flex w-full items-center justify-center rounded-lg bg-vm-cyan px-4 py-3 font-heading text-sm font-semibold text-vm-navy"
+                className="flex w-full items-center justify-center rounded-lg border border-vm-navy/15 px-4 py-3 font-heading text-sm font-semibold text-vm-navy"
               >
                 Leave private feedback
               </Link>
-              {view.tipGrantToken && view.tipUrl ? (
-                <Link
-                  href={view.tipUrl}
-                  className="flex w-full items-center justify-center rounded-lg border border-vm-navy/15 px-4 py-3 font-heading text-sm font-semibold text-vm-navy"
-                >
-                  Leave a tip
-                </Link>
-              ) : (
-                <p className="rounded-lg border border-vm-navy/10 bg-vm-surface px-3 py-3 font-body text-sm text-vm-muted">
-                  A tip link was already issued for this stay and is still active.
-                  Use the tip page from your earlier session if you still have it —
-                  we cannot re-issue the same private tip link.
-                </p>
-              )}
+              <Link
+                href={view.tipUrl}
+                className="flex w-full items-center justify-center rounded-lg bg-vm-cyan px-4 py-3 font-heading text-sm font-semibold text-vm-navy"
+              >
+                Leave a tip
+              </Link>
             </div>
           </div>
         )}
