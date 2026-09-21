@@ -87,6 +87,9 @@ describe('Phase 1D-B stay QR download', () => {
     expect(res.headers.get('Cache-Control')).toBe(
       STAY_QR_CACHE_HEADERS['Cache-Control']
     );
+    expect(res.headers.get('X-Robots-Tag')).toBe(
+      STAY_QR_CACHE_HEADERS['X-Robots-Tag']
+    );
     const buf = Buffer.from(await res.arrayBuffer());
     expect(buf.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
     expect(decodePngQr(buf)).toBe(STAY_URL_A);

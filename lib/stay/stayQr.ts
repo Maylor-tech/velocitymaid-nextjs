@@ -89,9 +89,14 @@ export async function renderStayQr(
   };
 }
 
-/** Cache headers: never serve a stale QR after rotate/revoke. */
+/**
+ * Response headers for downloadable stay QR (capability-bearing artifact).
+ * no-store: never serve a stale QR after rotate/revoke.
+ * X-Robots-Tag: keep opaque stay URLs out of search indexes/archives.
+ */
 export const STAY_QR_CACHE_HEADERS = {
   'Cache-Control': 'private, no-store, no-cache, must-revalidate',
   Pragma: 'no-cache',
   Expires: '0',
+  'X-Robots-Tag': 'noindex, nofollow, noarchive',
 } as const;

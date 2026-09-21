@@ -68,6 +68,9 @@ describe('Admin property guest-access QR API', () => {
       expect.anything(),
       'ADMIN'
     );
+    expect(res.headers.get('X-Robots-Tag')).toBe(
+      'noindex, nofollow, noarchive'
+    );
     const buf = Buffer.from(await res.arrayBuffer());
     expect(decodePngQr(buf)).toBe(STAY_URL);
   });
