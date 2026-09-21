@@ -223,7 +223,32 @@ export default function AdminPropertyGuestAccessPage() {
               </p>
             )}
 
+            {guestAccess.qrReady ? (
+              <p className="text-xs text-vm-muted">
+                Download QR for printing. Rotate/revoke invalidates previously
+                printed cards — reprint required.
+              </p>
+            ) : null}
+
             <div className="flex flex-wrap gap-2 pt-2">
+              {guestAccess.qrReady ? (
+                <>
+                  <a
+                    href={`/api/admin/properties/${propertyId}/guest-access/qr?format=png`}
+                    className="rounded-lg border border-vm-navy/15 px-3 py-2 font-heading text-xs font-semibold text-vm-navy"
+                    download
+                  >
+                    Download QR (PNG)
+                  </a>
+                  <a
+                    href={`/api/admin/properties/${propertyId}/guest-access/qr?format=svg`}
+                    className="rounded-lg border border-vm-navy/15 px-3 py-2 font-heading text-xs font-semibold text-vm-navy"
+                    download
+                  >
+                    Download QR (SVG)
+                  </a>
+                </>
+              ) : null}
               <button
                 type="button"
                 disabled={busy || !guestAccess.active}

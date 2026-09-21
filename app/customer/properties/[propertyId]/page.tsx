@@ -595,6 +595,12 @@ function CustomerPropertyDetailPageInner() {
               ? 'Link active but not QR-ready — set a guest display name'
               : 'No active guest-access link'}
         </p>
+        {qrReady && (
+          <p className="mt-2 font-body text-xs text-vm-muted">
+            Download QR for printing. Rotating or revoking this link invalidates
+            any previously printed cards — reprint required.
+          </p>
+        )}
         {stayUrl && (
           <div className="mt-3 break-all rounded-lg border border-vm-navy/10 bg-vm-surface px-3 py-2 font-mono text-xs text-vm-navy">
             {stayUrl}
@@ -623,6 +629,24 @@ function CustomerPropertyDetailPageInner() {
           >
             Copy URL
           </button>
+          {qrReady ? (
+            <>
+              <a
+                href={`/api/customer/properties/${propertyId}/guest-access/qr?format=png`}
+                className="rounded-lg border border-vm-navy/15 px-3 py-2 font-heading text-xs font-semibold text-vm-navy"
+                download
+              >
+                Download QR (PNG)
+              </a>
+              <a
+                href={`/api/customer/properties/${propertyId}/guest-access/qr?format=svg`}
+                className="rounded-lg border border-vm-navy/15 px-3 py-2 font-heading text-xs font-semibold text-vm-navy"
+                download
+              >
+                Download QR (SVG)
+              </a>
+            </>
+          ) : null}
           <button
             type="button"
             disabled={stayBusy}
