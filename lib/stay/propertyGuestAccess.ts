@@ -7,6 +7,7 @@ import { randomBytes } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { appBaseUrl } from '@/lib/feedback/serviceFeedback';
 import { logAuditEntry } from '@/lib/audit';
+import type { Prisma } from '@prisma/client';
 
 const TOKEN_BYTES = 32;
 
@@ -20,9 +21,81 @@ export const PRINTED_CARD_WARNING =
   'Rotating or revoking this guest-access token will make existing printed QR cards stop working and require replacement.';
 
 export type GuestAccessActor = {
-  actorId?: string | null;
   actorRole: 'CUSTOMER' | 'ADMIN';
+  /**
+   * User.id only. AuditLog.actorId has an optional FK to User —
+   * never pass Customer.id here (FK insert fails and is swallowed).
+   */
+  actorId?: string | null;
+  /**
+   * Customer.id for CUSTOMER-role actions. Stored in audit `changes`
+   * metadata only — never as AuditLog.actorId.
+   */
+  customerId?: string | null;
 };
+
+/**
+ * Resolve AuditLog.actorId for the User FK constraint.
+ * CUSTOMER identity lives in changes.customerId, not actorId.
+ */
+export function resolveGuestAccessAuditActorId(
+  actor: GuestAccessActor
+): string | null {
+  if (actor.actorRole === 'ADMIN') {
+    return actor.actorId ?? null;
+  }
+  return null;
+}
+
+export function buildGuestAccessAuditChanges(
+  propertyId: string,
+  actor: GuestAccessActor,
+  extra?: Record<string, unknown>
+): Record<string, unknown> {
+  const changes: Record<string, unknown> = {
+    propertyId,
+    ...extra,
+  };
+  if (actor.actorRole === 'CUSTOMER' && actor.customerId) {
+    changes.customerId = actor.customerId;
+  }
+  // Never include raw guestAccessToken / stayUrl / PII
+  return changes;
+}
+
+async function auditGuestAccess(
+  action: string,
+  propertyId: string,
+  actor: GuestAccessActor,
+  extra?: Record<string, unknown>
+): Promise<boolean> {
+  const auditId = await logAuditEntry({
+    actorId: resolveGuestAccessAuditActorId(actor),
+    actorRole: actor.actorRole,
+    action,
+    entityType: 'Property',
+    entityId: propertyId,
+    description: `Property guest access ${action.replace('GUEST_ACCESS_', '').toLowerCase()}`,
+    changes: buildGuestAccessAuditChanges(
+      propertyId,
+      actor,
+      extra
+    ) as Prisma.InputJsonValue,
+  });
+
+  if (!auditId) {
+    console.error('[GUEST_ACCESS_AUDIT_PERSIST_FAILED]', {
+      action,
+      propertyId,
+      actorRole: actor.actorRole,
+      // customerId is non-secret stable metadata for ops correlation
+      customerId: actor.customerId ?? null,
+      adminActorId: actor.actorRole === 'ADMIN' ? actor.actorId ?? null : null,
+    });
+    return false;
+  }
+  return true;
+}
 
 export function generateGuestAccessToken(): string {
   return randomBytes(TOKEN_BYTES).toString('base64url');
@@ -127,27 +200,6 @@ export async function getPropertyGuestAccessState(
     revokedAt: property.guestAccessRevokedAt?.toISOString() ?? null,
     printedCardWarning: PRINTED_CARD_WARNING,
   };
-}
-
-async function auditGuestAccess(
-  action: string,
-  propertyId: string,
-  actor: GuestAccessActor,
-  extra?: Record<string, unknown>
-): Promise<void> {
-  await logAuditEntry({
-    actorId: actor.actorId ?? null,
-    actorRole: actor.actorRole,
-    action,
-    entityType: 'Property',
-    entityId: propertyId,
-    description: `Property guest access ${action.replace('GUEST_ACCESS_', '').toLowerCase()}`,
-    changes: {
-      propertyId,
-      ...extra,
-      // Never include raw guestAccessToken
-    },
-  });
 }
 
 export function normalizeGuestDisplayName(
