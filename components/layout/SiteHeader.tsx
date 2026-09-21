@@ -18,7 +18,12 @@ export interface SiteHeaderProps {
   /** Use hash links for homepage sections */
   homeAnchors?: boolean;
   bookingHref?: string;
-  bookingLabel?: "Book Now" | "Host Intake" | "Book Cleaning";
+  bookingLabel?:
+    | "Book Now"
+    | "Host Intake"
+    | "Book Cleaning"
+    | "Request a Quote"
+    | "Request a Walkthrough";
 }
 
 function isNavActive(href: string, pathname: string): boolean {

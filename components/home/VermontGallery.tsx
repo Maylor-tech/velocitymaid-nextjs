@@ -15,9 +15,9 @@ import {
 export const VERMONT_GALLERY_ENABLED = true;
 
 const TRUST = [
-  "Photo report after every clean",
+  "Completion photos when included in the property service standard",
   "Locally operated in Vermont's Okemo Valley, serving Ludlow, Middlebury, and surrounding towns.",
-  "Turnover-ready in time for check-in",
+  "Turnovers planned around checkout and check-in windows",
 ];
 
 function PhotoFallback() {

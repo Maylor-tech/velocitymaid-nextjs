@@ -1,39 +1,39 @@
-export default function PricingFAQ() {
-  const items = [
-    {
-      q: "What is an active contractor?",
-      a: "An active contractor is any contractor onboarded in VelocityMaid whose compliance is tracked during the billing period. Archived or inactive contractors are not billed.",
-    },
-    {
-      q: "Are there setup fees or seat licenses?",
-      a: "No. VelocityMaid does not charge setup fees, per-seat fees, or per-report fees. Pricing is aligned with operational usage, not headcount overhead.",
-    },
-    {
-      q: "Is there a pilot option?",
-      a: "Yes. Most partners begin with a 30–60 day pilot, often free or offered at a small flat fee. Pilots run in parallel with existing operations.",
-    },
-    {
-      q: "Are payments required?",
-      a: "No. VelocityMaid begins with compliance infrastructure. Payment rails are optional and added later, only when appropriate.",
-    },
-    {
-      q: "Are long-term contracts required?",
-      a: "No long-term commitment is required to get started. Enterprise organizations may opt into custom agreements.",
-    },
-  ];
+const items = [
+  {
+    q: "Are these prices fixed?",
+    a: "No. Website prices are starting points. Final pricing is confirmed after reviewing the property, service scope, schedule, condition, and requested services.",
+  },
+  {
+    q: "How do Vermont and New Jersey pricing differ?",
+    a: "Vermont service focuses on vacation-rental turnovers and property readiness, typically starting from $225. New Jersey service focuses on residential cleaning for homes and apartments, typically starting from $120.",
+  },
+  {
+    q: "How do I get a Vermont quote?",
+    a: "Request a walkthrough or quote, call or text (802) 733-5348, email hello@velocitymaid.com, or complete the Vermont host intake form so we can review your property details.",
+  },
+  {
+    q: "Can I book New Jersey cleaning online?",
+    a: "Yes. New Jersey residential cleaning can be booked online. Scope and final price are confirmed for your home before service.",
+  },
+  {
+    q: "What affects the final price?",
+    a: "Property size, condition, occupancy, laundry/linen needs, add-on services, access timing, and whether the visit is a standard turnover or a deeper reset.",
+  },
+];
 
+export default function PricingFAQ() {
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="mx-auto max-w-3xl space-y-3">
       {items.map((item) => (
-        <div
+        <details
           key={item.q}
-          className="rounded-xl border border-vm-border bg-white p-6 shadow-sm"
+          className="group rounded-xl border border-vm-border bg-white p-5 shadow-sm"
         >
-          <h4 className="font-heading font-semibold text-vm-navy">{item.q}</h4>
-          <p className="mt-2 text-vm-muted font-sans text-sm leading-relaxed">
-            {item.a}
-          </p>
-        </div>
+          <summary className="cursor-pointer list-none font-heading text-sm font-bold text-vm-navy">
+            {item.q}
+          </summary>
+          <p className="mt-3 font-body text-sm leading-relaxed text-vm-muted">{item.a}</p>
+        </details>
       ))}
     </div>
   );

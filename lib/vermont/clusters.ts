@@ -53,9 +53,9 @@ export const VERMONT_CLUSTERS: Record<VermontClusterSlug, VermontClusterConfig> 
     path: "/vermont/okemo",
     navLabel: "Okemo Valley",
     eyebrow: "Okemo Valley · Vermont",
-    headline: "Okemo Valley's Vacation Rental Cleaning Specialists",
+    headline: "Okemo Valley vacation-rental turnovers",
     heroDescription:
-      "Turnover-ready cleans for ski rentals, Airbnbs, and second homes across the Okemo Valley. VelocityMaid helps remote owners manage confidently — from deep cleans to between-guest turnovers.",
+      "Guest-ready resets for ski rentals, short-term stays, and remote-owned homes across the Okemo Valley. VelocityMaid supports ski-season scheduling, property-specific standards, and local operational support between stays.",
     heroImage: LUDLOW_PHOTO_PATHS.exteriorHero,
     heroImageAlt:
       "VelocityMaid vacation rental exterior in the Okemo Valley",
@@ -116,9 +116,9 @@ export const VERMONT_CLUSTERS: Record<VermontClusterSlug, VermontClusterConfig> 
     path: "/vermont/middlebury",
     navLabel: "Middlebury",
     eyebrow: "Middlebury · Addison County · Vermont",
-    headline: "Middlebury's Trusted Property Readiness Partner",
+    headline: "Middlebury & Addison County property readiness",
     heroDescription:
-      "Real properties. Guest-ready results. VelocityMaid helps Middlebury hosts and homeowners prepare clean, welcoming spaces — from deep cleans to between-guest turnovers.",
+      "Vacation-rental turnovers, deep cleaning, and second-home care for Middlebury and Addison County. VelocityMaid pairs property readiness with clear host communication so homes stay guest-ready between stays.",
     heroImage: MIDDLEBURY_PHOTO_PATHS.exteriorHero,
     heroImageAlt:
       "VelocityMaid Vermont vacation rental exterior in Middlebury",
