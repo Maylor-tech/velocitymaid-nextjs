@@ -5,7 +5,7 @@ import { pageSocialMetadata } from "@/lib/seo/socialImages";
 
 const title = "Get a Quote | VelocityMaid Vermont";
 const description =
-  "Tell us about your Vermont rental property and we'll send you a custom cleaning quote within 24 hours.";
+  "Tell us about your Vermont rental property to request a walkthrough or custom cleaning quote.";
 
 export const metadata: Metadata = {
   title,
