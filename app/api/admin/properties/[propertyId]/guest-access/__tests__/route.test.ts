@@ -119,4 +119,42 @@ describe('Admin property guest-access API', () => {
     );
     expect(res.status).toBe(401);
   });
+
+  it('ADMIN rotate: actorId remains valid User.id; no raw token', async () => {
+    mocks.propertyFindUnique
+      .mockResolvedValueOnce({ id: 'prop-1' })
+      .mockResolvedValueOnce({
+        guestAccessToken: TOKEN,
+        guestAccessTokenCreatedAt: new Date('2026-09-01T00:00:00.000Z'),
+        guestAccessRevokedAt: null,
+        guestDisplayName: 'Birch',
+        Customer: { archivedAt: null },
+      });
+
+    const res = await adminPost(
+      new NextRequest('http://localhost/api/admin/properties/prop-1/guest-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'rotate',
+          confirm: true,
+          guestDisplayName: 'Birch',
+        }),
+      }),
+      { params: { propertyId: 'prop-1' } }
+    );
+    expect(res.status).toBe(200);
+    expect(mocks.logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: GUEST_ACCESS_AUDIT.ROTATED,
+        actorRole: 'ADMIN',
+        actorId: 'admin-1',
+      })
+    );
+    const payload = JSON.stringify(mocks.logAuditEntry.mock.calls[0][0]);
+    expect(payload).not.toContain(TOKEN);
+    expect(mocks.logAuditEntry.mock.calls[0][0].changes).not.toHaveProperty(
+      'customerId'
+    );
+  });
 });

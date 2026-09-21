@@ -141,7 +141,11 @@ describe('CUSTOMER guest-access authorization', () => {
       expect.objectContaining({
         action: GUEST_ACCESS_AUDIT.ENSURED,
         actorRole: 'CUSTOMER',
+        actorId: null,
         entityId: 'prop-1',
+        changes: expect.objectContaining({
+          customerId: 'cust-1',
+        }),
       })
     );
     const auditPayload = JSON.stringify(mocks.logAuditEntry.mock.calls[0][0]);
@@ -232,6 +236,10 @@ describe('CUSTOMER guest-access authorization', () => {
       expect.objectContaining({
         action: GUEST_ACCESS_AUDIT.ROTATED,
         actorRole: 'CUSTOMER',
+        actorId: null,
+        changes: expect.objectContaining({
+          customerId: 'cust-1',
+        }),
       })
     );
     expect(JSON.stringify(mocks.logAuditEntry.mock.calls)).not.toContain(TOKEN);
@@ -516,7 +524,10 @@ describe('guestDisplayName gate', () => {
       activePropertyRow({ guestAccessToken: null, guestDisplayName: null })
     );
     await expect(
-      ensurePropertyGuestAccessToken('prop-1', { actorRole: 'CUSTOMER', actorId: 'c1' })
+      ensurePropertyGuestAccessToken('prop-1', {
+        actorRole: 'CUSTOMER',
+        customerId: 'c1',
+      })
     ).rejects.toThrow(/display name/i);
   });
 

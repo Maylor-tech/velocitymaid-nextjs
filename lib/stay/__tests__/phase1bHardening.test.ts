@@ -119,7 +119,7 @@ describe('GET guest-access is strictly read-only', () => {
 
     const ensured = await ensurePropertyGuestAccessToken(
       'prop-1',
-      { actorRole: 'CUSTOMER', actorId: 'cust-1' },
+      { actorRole: 'CUSTOMER', customerId: 'cust-1' },
       { guestDisplayName: 'Cabin' }
     );
     expect(ensured.created).toBe(true);

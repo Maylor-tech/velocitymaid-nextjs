@@ -106,7 +106,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     const confirm = body.confirm === true;
     const guestDisplayName = normalizeGuestDisplayName(body.guestDisplayName);
     const actor = {
-      actorId: session.customerId,
+      customerId: session.customerId,
       actorRole: 'CUSTOMER' as const,
     };
 
