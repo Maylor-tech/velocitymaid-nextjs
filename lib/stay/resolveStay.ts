@@ -29,9 +29,9 @@ export type StayResolveResult =
       ok: true;
       feedbackToken: string;
       feedbackUrl: string;
-      tipGrantToken: string | null;
-      tipUrl: string | null;
-      tipGrantStatus: 'MINTED' | 'ALREADY_ISSUED';
+      tipGrantToken: string;
+      tipUrl: string;
+      tipGrantStatus: 'MINTED' | 'REISSUED';
       propertyLabel: string;
       serviceDate: string;
     }
@@ -47,6 +47,45 @@ function utcDayRange(day: Date): { gte: Date; lt: Date } {
   );
   const lt = new Date(gte.getTime() + 24 * 60 * 60 * 1000);
   return { gte, lt };
+}
+
+/**
+ * Recent completed service/checkout dates for guest selection.
+ * Returns opaque YYYY-MM-DD keys only — never Job IDs or addresses.
+ */
+export async function listRecentCompletedStayDates(
+  propertyId: string,
+  options?: { limit?: number; lookbackDays?: number }
+): Promise<string[]> {
+  const limit = Math.min(Math.max(options?.limit ?? 12, 1), 30);
+  const lookbackDays = Math.min(Math.max(options?.lookbackDays ?? 120, 1), 366);
+  const since = new Date();
+  since.setUTCDate(since.getUTCDate() - lookbackDays);
+  since.setUTCHours(0, 0, 0, 0);
+
+  const jobs = await prisma.job.findMany({
+    where: {
+      propertyId,
+      status: JobStatus.COMPLETED,
+      archivedAt: null,
+      preferredDate: { gte: since, not: null },
+    },
+    select: { preferredDate: true },
+    orderBy: { preferredDate: 'desc' },
+    take: limit * 3,
+  });
+
+  const seen = new Set<string>();
+  const dates: string[] = [];
+  for (const j of jobs) {
+    if (!j.preferredDate) continue;
+    const key = serviceDateKey(j.preferredDate);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    dates.push(key);
+    if (dates.length >= limit) break;
+  }
+  return dates;
 }
 
 /**
@@ -112,11 +151,17 @@ export async function resolveStayToGuestFeedback(
   }
 
   if (matched.jobs.length === 0) {
+    const recent = await listRecentCompletedStayDates(property.id, {
+      limit: 8,
+    });
+    const hint =
+      recent.length > 0
+        ? ` Available completed dates: ${recent.join(', ')}.`
+        : ' If your clean has not been marked completed yet, please try again later or contact VelocityMaid.';
     return {
       ok: false,
       code: 'NO_MATCH',
-      message:
-        'We couldn’t match a completed clean for that date. Double-check the checkout date or contact VelocityMaid.',
+      message: `We couldn’t match a completed clean for that date.${hint}`,
     };
   }
 
@@ -131,22 +176,23 @@ export async function resolveStayToGuestFeedback(
 
   const job = matched.jobs[0]!;
   const ensured = await ensureGuestServiceFeedbackForJob(job.id);
+
+  // Always mint a usable tip URL after a successful match. If an active grant
+  // already exists, replace it (hash-at-rest cannot re-return the prior raw token).
   const tipGrant = await mintGuestTipAuthorization({
     jobId: job.id,
     propertyId: property.id,
+    replaceActive: true,
   });
   const propertyLabel = guestFacingDisplayName(property.guestDisplayName);
 
-  if (tipGrant.status === 'ALREADY_ACTIVE') {
+  if (tipGrant.status !== 'MINTED' && tipGrant.status !== 'REISSUED') {
+    // replaceActive should always yield MINTED/REISSUED; fail closed rather than tip-less UX
     return {
-      ok: true,
-      feedbackToken: ensured.feedbackToken,
-      feedbackUrl: ensured.feedbackUrl || feedbackPublicUrl(ensured.feedbackToken),
-      tipGrantToken: null,
-      tipUrl: null,
-      tipGrantStatus: 'ALREADY_ISSUED',
-      propertyLabel,
-      serviceDate: matched.dayKey,
+      ok: false,
+      code: 'NO_MATCH',
+      message:
+        'We matched your stay but could not open tipping right now. Please try again or contact VelocityMaid.',
     };
   }
 
@@ -156,7 +202,7 @@ export async function resolveStayToGuestFeedback(
     feedbackUrl: ensured.feedbackUrl || feedbackPublicUrl(ensured.feedbackToken),
     tipGrantToken: tipGrant.grantToken,
     tipUrl: tipGrant.tipUrl,
-    tipGrantStatus: 'MINTED',
+    tipGrantStatus: tipGrant.status,
     propertyLabel,
     serviceDate: matched.dayKey,
   };

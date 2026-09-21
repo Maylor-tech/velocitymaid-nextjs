@@ -22,8 +22,10 @@ const mocks = vi.hoisted(() => ({
   feedbackCreate: vi.fn(),
   feedbackUpdateMany: vi.fn(),
   grantFindMany: vi.fn(),
+  grantFindFirst: vi.fn(),
   grantCreate: vi.fn(),
   grantFindUnique: vi.fn(),
+  grantUpdate: vi.fn(),
   logAuditEntry: vi.fn(),
 }));
 
@@ -67,8 +69,10 @@ vi.mock('@/lib/prisma', () => {
     },
     guestTipAuthorization: {
       findMany: (...a: unknown[]) => mocks.grantFindMany(...a),
+      findFirst: (...a: unknown[]) => mocks.grantFindFirst(...a),
       create: (...a: unknown[]) => mocks.grantCreate(...a),
       findUnique: (...a: unknown[]) => mocks.grantFindUnique(...a),
+      update: (...a: unknown[]) => mocks.grantUpdate(...a),
     },
     $queryRaw: vi.fn().mockResolvedValue([{ id: 'job-1' }]),
     $transaction: async (fn: (tx: typeof prisma) => Promise<unknown>) =>
@@ -338,13 +342,15 @@ describe('Bounded tip-grant mint', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.grantFindMany.mockResolvedValue([]);
+    mocks.grantFindFirst.mockResolvedValue(null);
+    mocks.grantUpdate.mockResolvedValue({});
     mocks.grantCreate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
       id: 'g-new',
       ...data,
     }));
   });
 
-  it('repeated correct-date resolve returns ALREADY_ISSUED without new mint', async () => {
+  it('repeated correct-date resolve remints tip URL (replaceActive)', async () => {
     mocks.propertyFindFirst.mockResolvedValue({
       id: 'prop-1',
       guestDisplayName: 'Birch',
@@ -364,19 +370,26 @@ describe('Bounded tip-grant mint', () => {
       id: 'fb1',
       source: ServiceFeedbackSource.GUEST,
     });
+    mocks.grantFindFirst.mockResolvedValue({ id: 'grant-existing' });
     mocks.grantFindMany.mockResolvedValue([
       { id: 'grant-existing', expiresAt: new Date(Date.now() + 60 * 60 * 1000) },
     ]);
+    mocks.grantUpdate.mockResolvedValue({});
+    mocks.grantCreate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
+      id: 'g-reissued',
+      ...data,
+    }));
 
     const result = await resolveStayToGuestFeedback(TOKEN, DAY);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.tipGrantStatus).toBe('ALREADY_ISSUED');
-      expect(result.tipGrantToken).toBeNull();
-      expect(result.tipUrl).toBeNull();
+      expect(result.tipGrantStatus).toBe('REISSUED');
+      expect(result.tipGrantToken).toBeTruthy();
+      expect(result.tipUrl).toMatch(/\/tip\?grant=/);
       expect(result.feedbackToken).toBe('fb-tok');
     }
-    expect(mocks.grantCreate).not.toHaveBeenCalled();
+    expect(mocks.grantUpdate).toHaveBeenCalled();
+    expect(mocks.grantCreate).toHaveBeenCalled();
   });
 
   it('first mint succeeds; second mint bound while active', async () => {

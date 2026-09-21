@@ -41,7 +41,7 @@ export function tipPublicUrlForGrant(rawToken: string): string {
 }
 
 export type MintedGuestTipGrant = {
-  status: 'MINTED';
+  status: 'MINTED' | 'REISSUED';
   grantToken: string;
   tipUrl: string;
   expiresAt: Date;
@@ -62,11 +62,16 @@ export type GuestTipMintResult = MintedGuestTipGrant | BoundGuestTipGrant;
  *
  * Safe under concurrency: locks the Job row (`FOR UPDATE`) inside a
  * transaction, then re-checks active grants before create.
+ *
+ * @param replaceActive When true (stay re-resolve UX), revoke any active grant
+ *   and mint a fresh raw token so the guest always receives a usable tip URL.
+ *   Still at most one active grant per job after the call.
  */
 export async function mintGuestTipAuthorization(input: {
   jobId: string;
   propertyId: string;
   ttlMs?: number;
+  replaceActive?: boolean;
 }): Promise<GuestTipMintResult> {
   return prisma.$transaction(async (tx) => {
     // Serialize concurrent mint attempts for this job (existing Job row —
@@ -86,13 +91,23 @@ export async function mintGuestTipAuthorization(input: {
       select: { id: true, expiresAt: true },
     });
 
+    let replaced = false;
     if (active.length >= MAX_ACTIVE_GRANTS_PER_JOB) {
       const existing = active[0]!;
-      return {
-        status: 'ALREADY_ACTIVE',
-        grantId: existing.id,
-        expiresAt: existing.expiresAt,
-      };
+      if (!input.replaceActive) {
+        return {
+          status: 'ALREADY_ACTIVE',
+          grantId: existing.id,
+          expiresAt: existing.expiresAt,
+        };
+      }
+      // Hash-at-rest: cannot return the prior raw token. Revoke + remint so
+      // successful stay resolve always yields a tippable link.
+      await tx.guestTipAuthorization.update({
+        where: { id: existing.id },
+        data: { revokedAt: new Date() },
+      });
+      replaced = true;
     }
 
     const raw = randomBytes(TOKEN_BYTES).toString('base64url');
@@ -111,7 +126,7 @@ export async function mintGuestTipAuthorization(input: {
     });
 
     return {
-      status: 'MINTED',
+      status: replaced ? 'REISSUED' : 'MINTED',
       grantToken: raw,
       tipUrl: tipPublicUrlForGrant(raw),
       expiresAt,

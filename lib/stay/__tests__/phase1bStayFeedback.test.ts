@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   feedbackUpdateMany: vi.fn(),
   grantCreate: vi.fn(),
   grantFindMany: vi.fn(),
+  grantFindFirst: vi.fn(),
+  grantUpdate: vi.fn(),
   logAuditEntry: vi.fn(),
 }));
 
@@ -34,6 +36,8 @@ vi.mock('@/lib/prisma', () => {
     guestTipAuthorization: {
       create: mocks.grantCreate,
       findMany: mocks.grantFindMany,
+      findFirst: mocks.grantFindFirst,
+      update: mocks.grantUpdate,
     },
     $queryRaw: vi.fn().mockResolvedValue([{ id: 'job-1' }]),
     $transaction: async (fn: (tx: typeof prisma) => Promise<unknown>) =>
@@ -69,6 +73,8 @@ describe('Phase 1B guest stay resolve', () => {
     vi.clearAllMocks();
     mocks.logAuditEntry.mockResolvedValue('audit-1');
     mocks.grantFindMany.mockResolvedValue([]);
+    mocks.grantFindFirst.mockResolvedValue(null);
+    mocks.grantUpdate.mockResolvedValue({});
     mocks.grantCreate.mockResolvedValue({ id: 'grant-1' });
   });
 
