@@ -30,7 +30,7 @@ export default function VermontClusterLanding({
     <div className="min-h-screen bg-white font-body">
       <BranchLandingNav
         bookingHref="/vermont/host-intake"
-        bookingLabel="Host Intake"
+        bookingLabel="Request a Quote"
         phone="+18027335348"
         phoneDisplay="(802) 733-5348"
         email="hello@velocitymaid.com"
@@ -56,8 +56,14 @@ export default function VermontClusterLanding({
                   href="/vermont/host-intake"
                   className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
                 >
-                  Book Vermont Cleaning
+                  Request a walkthrough
                 </Link>
+                <a
+                  href="tel:+18027335348"
+                  className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
+                >
+                  Call (802) 733-5348
+                </a>
                 <Link
                   href="/vermont"
                   className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
@@ -66,8 +72,10 @@ export default function VermontClusterLanding({
                 </Link>
               </div>
               <div className="flex flex-wrap gap-4">
-                <TrustBadge>Turnover-ready in time for check-in</TrustBadge>
-                <TrustBadge>Photo report after every clean</TrustBadge>
+                <TrustBadge>Turnovers planned around guest timing</TrustBadge>
+                <TrustBadge>
+                  Completion photos when included in the service standard
+                </TrustBadge>
               </div>
             </div>
 
@@ -119,8 +127,9 @@ export default function VermontClusterLanding({
             </h2>
             <p className="text-vm-muted font-body text-sm leading-relaxed">
               From welcoming front entries to guest-ready interiors, VelocityMaid
-              delivers consistent, photo-documented cleans for Vermont hosts who
-              manage from out of state.
+              delivers consistent, property-standard cleans for Vermont hosts who
+              manage from out of state—with completion documentation when included
+              in the service plan.
             </p>
           </div>
         </section>
@@ -229,18 +238,20 @@ export default function VermontClusterLanding({
 }
 
 function ServicesSection({ cluster }: { cluster: VermontClusterConfig }) {
+  const isOkemo = cluster.slug === "okemo";
+
   return (
     <section>
       <p className="text-vm-cyan text-xs font-semibold uppercase tracking-widest font-body mb-2">
         Our Services
       </p>
       <h2 className="font-heading font-bold text-vm-navy text-2xl mb-4">
-        Vermont Cleaning Services
+        {isOkemo ? "Okemo Valley Turnover Services" : "Middlebury Property-Care Services"}
       </h2>
       <p className="text-vm-muted font-body max-w-3xl mb-8">
-        Whether you&apos;re managing a ski rental, hosting guests on Airbnb,
-        or maintaining a second home, VelocityMaid offers structured cleaning
-        that fits your schedule and standards.
+        {isOkemo
+          ? "Ski-season scheduling, guest-ready resets, and local operational support for vacation rentals and remote-owned homes across the Okemo Valley."
+          : "Vacation-rental turnovers, deep cleaning, second-home care, and clear host communication for Middlebury and Addison County properties."}
       </p>
       <div className="grid md:grid-cols-3 gap-5">
         <ServiceImageCard
@@ -251,13 +262,13 @@ function ServicesSection({ cluster }: { cluster: VermontClusterConfig }) {
             Rental Turnover Cleaning
           </ServiceCardHeader>
           <p className="text-sm text-vm-muted font-body mb-3">
-            Quick, consistent cleaning between check-out and check-in.
+            Consistent cleaning between check-out and check-in, planned around guest timing.
           </p>
           <ul className="text-xs text-vm-muted font-body space-y-1">
             <li>• Beds stripped & remade</li>
             <li>• Bathrooms & kitchens reset</li>
             <li>• Floors vacuumed & mopped</li>
-            <li>• Photo report included</li>
+            <li>• Completion photos when included</li>
           </ul>
         </ServiceImageCard>
 
@@ -266,10 +277,12 @@ function ServicesSection({ cluster }: { cluster: VermontClusterConfig }) {
           imageAlt={cluster.contentImages.seasonal.alt}
         >
           <ServiceCardHeader icon={<Snowflake className="w-5 h-5 text-vm-cyan" />}>
-            Deep Winter / Seasonal Cleans
+            {isOkemo ? "Ski-Season & Deep Cleans" : "Deep Cleaning & Seasonal Resets"}
           </ServiceCardHeader>
           <p className="text-sm text-vm-muted font-body mb-3">
-            Detailed deep clean before or after ski season.
+            {isOkemo
+              ? "Detailed deep cleans before peak season or between heavier guest cycles."
+              : "Thorough deep cleans and property readiness for second homes and guest stays."}
           </p>
           <ul className="text-xs text-vm-muted font-body space-y-1">
             <li>• Baseboards, edges, and corners</li>
@@ -284,16 +297,17 @@ function ServicesSection({ cluster }: { cluster: VermontClusterConfig }) {
           imageAlt={cluster.contentImages.refresh.alt}
         >
           <ServiceCardHeader icon={<BedDouble className="w-5 h-5 text-vm-cyan" />}>
-            Second Home & Condo Care
+            {isOkemo ? "Remote-Owner Support" : "Second Home & Condo Care"}
           </ServiceCardHeader>
           <p className="text-sm text-vm-muted font-body mb-3">
-            Scheduled visits to keep your Vermont home fresh when you&apos;re
-            away.
+            {isOkemo
+              ? "Local support so remote owners can manage turnovers with confidence."
+              : "Scheduled visits to keep your Vermont home fresh when you are away."}
           </p>
           <ul className="text-xs text-vm-muted font-body space-y-1">
-            <li>• Monthly or bi-weekly cleans</li>
+            <li>• Property-specific service standards</li>
             <li>• Pre-arrival and post-departure visits</li>
-            <li>• Optional photo confirmations</li>
+            <li>• Host communication & observations</li>
           </ul>
         </ServiceImageCard>
       </div>
@@ -329,21 +343,20 @@ function HowItWorksSection() {
       </div>
       <ol className="space-y-3 text-sm text-vm-text font-body">
         <li>
-          <span className="font-semibold text-vm-navy">1. Tell us about your property:</span>{" "}
-          Complete the Vermont host intake form with your rental details.
+          <span className="font-semibold text-vm-navy">1. Property intake &amp; walkthrough:</span>{" "}
+          Call, email, or share property details so we can review scope and standards.
         </li>
         <li>
-          <span className="font-semibold text-vm-navy">2. Confirm:</span>{" "}
-          We&apos;ll follow up with scheduling and pricing for your turnover or
-          deep clean.
+          <span className="font-semibold text-vm-navy">2. Property profile &amp; service standard:</span>{" "}
+          We confirm a property-specific checklist and quote before service begins.
         </li>
         <li>
-          <span className="font-semibold text-vm-navy">3. We clean:</span>{" "}
-          Our team completes your checklist and sends a photo report.
+          <span className="font-semibold text-vm-navy">3. Scheduled turnover:</span>{" "}
+          Cleaning is planned around checkout and check-in windows.
         </li>
         <li>
-          <span className="font-semibold text-vm-navy">4. Guest-ready:</span>{" "}
-          Your property is prepared for the next arrival.
+          <span className="font-semibold text-vm-navy">4. Quality control &amp; host communication:</span>{" "}
+          Completion checks, documentation when included, and clear updates for the next arrival.
         </li>
       </ol>
     </div>
@@ -361,8 +374,8 @@ function CtaSection({ clusterLabel }: { clusterLabel: string }) {
           Let&apos;s get your {clusterLabel} property guest-ready.
         </h2>
         <p className="text-sm text-vm-muted font-body max-w-xl">
-          VelocityMaid helps Vermont hosts and homeowners prepare clean,
-          welcoming spaces with professional care.
+          Request a walkthrough or quote, call or text, or complete property intake
+          when you are ready.
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -370,15 +383,21 @@ function CtaSection({ clusterLabel }: { clusterLabel: string }) {
           href="/vermont/host-intake"
           className="inline-flex flex-1 sm:flex-none items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
         >
-          Get a quote
+          Request a quote
         </Link>
+        <a
+          href="tel:+18027335348"
+          className="inline-flex flex-1 sm:flex-none items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-vm-surface transition"
+        >
+          Call (802) 733-5348
+        </a>
         <a
           href="https://wa.me/18027335348"
           target="_blank"
           rel="noreferrer"
           className="inline-flex flex-1 sm:flex-none items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-vm-surface transition"
         >
-          Chat on WhatsApp
+          WhatsApp
         </a>
       </div>
     </section>

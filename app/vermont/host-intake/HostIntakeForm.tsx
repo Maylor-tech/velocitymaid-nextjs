@@ -253,8 +253,8 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
               You&apos;re all set, {firstName}!
             </h1>
             <p className="font-body text-vm-muted text-sm leading-relaxed mb-8">
-              We&apos;ll be in touch within 24 hours to confirm your quote and
-              next steps. Check your email — we&apos;ve sent a welcome summary.
+              We&apos;ve received your details and sent a welcome summary to your email.
+              We&apos;ll follow up to confirm your quote and next steps.
             </p>
             <Link
               href="/vermont"
@@ -290,8 +290,8 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
             Host intake form
           </h1>
           <p className="font-body text-vm-muted text-sm">
-            Tell us about your Vermont rental and we&apos;ll send a custom quote
-            within 24 hours.
+            Tell us about your Vermont rental and we&apos;ll prepare a custom quote
+            after reviewing your property details.
           </p>
         </div>
 
@@ -300,9 +300,9 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
             Reference pricing
           </h2>
           <ul className="font-body text-sm text-vm-text space-y-1.5 mb-4">
-            <li>Vacation rental turnover — starting at $175 per turn</li>
-            <li>Deep cleaning — starting at $300 per visit</li>
-            <li>Move in / move out — starting at $450 per service</li>
+            <li>Standard turnover — starting at $225</li>
+            <li>Large property turnover — starting at $275</li>
+            <li>Deep cleaning — starting at $325</li>
           </ul>
           <p className="font-body text-sm text-vm-muted leading-relaxed mb-2">
             <strong className="text-vm-navy">Project cleaning &amp; custom quotes:</strong>{" "}

@@ -35,7 +35,7 @@ export default function VermontOverviewPage() {
     <div className="min-h-screen bg-white font-body">
       <BranchLandingNav
         bookingHref="/vermont/host-intake"
-        bookingLabel="Host Intake"
+        bookingLabel="Request a Quote"
         phone="+18027335348"
         phoneDisplay="(802) 733-5348"
         email="hello@velocitymaid.com"
@@ -56,16 +56,30 @@ export default function VermontOverviewPage() {
               </span>
             </h1>
             <p className="font-body text-white/70 text-base sm:text-lg mb-8">
-              VelocityMaid operates in two Vermont clusters — Okemo Valley for
-              ski rentals and short-term turnovers, and Middlebury for property
-              readiness across Addison County. Choose your area below.
+              We help Vermont hosts keep properties guest-ready between stays through
+              documented turnovers, property-specific standards, and local operational
+              support across the Okemo Valley and Middlebury / Addison County.
             </p>
-            <Link
-              href="/vermont/host-intake"
-              className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
-            >
-              Vermont host intake form
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/vermont/host-intake"
+                className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+              >
+                Request a walkthrough
+              </Link>
+              <a
+                href="tel:+18027335348"
+                className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
+              >
+                Call (802) 733-5348
+              </a>
+              <a
+                href="mailto:hello@velocitymaid.com"
+                className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
+              >
+                Email us
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -80,9 +94,9 @@ export default function VermontOverviewPage() {
             Choose your Vermont cluster
           </h2>
           <p className="text-vm-muted font-body max-w-3xl mb-8">
-            Each cluster has dedicated local coverage, tailored messaging, and
-            the same VelocityMaid standards — photo reports, turnover-ready
-            timing, and professional care.
+            Each cluster has dedicated local coverage and the same VelocityMaid operating
+            approach — property-specific standards, guest-ready timing, completion checks,
+            and host communication.
           </p>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -161,25 +175,37 @@ export default function VermontOverviewPage() {
             Not sure which cluster fits?
           </h2>
           <p className="text-sm text-vm-muted font-body mb-4 max-w-2xl">
-            Submit the Vermont host intake form with your property address —
-            we&apos;ll confirm coverage and follow up with scheduling and pricing.
+            Call or email to request a walkthrough or quote, or complete property intake
+            when you are ready. We&apos;ll confirm coverage, schedule, and pricing.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
               href="/vermont/host-intake"
               className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
             >
-              Host intake form
+              Request a quote
             </Link>
+            <a
+              href="tel:+18027335348"
+              className="inline-flex items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-white transition"
+            >
+              Call (802) 733-5348
+            </a>
             <a
               href="https://wa.me/18027335348"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-white transition"
             >
-              Chat on WhatsApp
+              WhatsApp
             </a>
           </div>
+          <p className="mt-4 text-xs text-vm-muted font-body">
+            Prefer to share details first?{" "}
+            <Link href="/vermont/host-intake" className="text-vm-navy font-semibold hover:underline">
+              Complete property intake →
+            </Link>
+          </p>
         </section>
 
         <section className="border-t border-vm-border pt-6 text-xs text-vm-muted font-body space-y-1">

@@ -1,20 +1,18 @@
 export default function PricingHero() {
   return (
-    <div className="border-b border-vm-border">
-      <div className="mx-auto max-w-marketing px-4 sm:px-6 lg:px-8 py-20 lg:py-24">
-        <h1 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight text-vm-navy">
-          Care Program Pricing
-        </h1>
-        <p className="mt-4 max-w-2xl text-lg font-sans font-medium text-vm-muted leading-relaxed">
-          Hospitality-level standards, structured for predictable operations.
+    <div className="border-b border-vm-border bg-vm-navy">
+      <div className="mx-auto max-w-marketing px-4 py-16 text-center sm:px-6 sm:py-20 lg:px-8">
+        <p className="font-body text-xs font-bold uppercase tracking-[0.24em] text-vm-cyan">
+          Cleaning &amp; property care
         </p>
-        <p className="mt-6 max-w-3xl text-sm sm:text-base font-sans font-medium text-vm-muted leading-relaxed">
-          VelocityMaid pricing scales with your estate and care program—aligned
-          to real usage, with transparent tiers and no surprise fees.
+        <h1 className="mt-4 font-heading text-3xl font-bold tracking-tight text-white sm:text-5xl">
+          Straightforward starting-at pricing
+        </h1>
+        <p className="mx-auto mt-4 max-w-2xl font-body text-base leading-relaxed text-white/65 sm:text-lg">
+          Vermont vacation-rental turnovers and New Jersey residential cleaning—
+          priced for real homes, then confirmed for your property.
         </p>
       </div>
     </div>
   );
 }
-
-

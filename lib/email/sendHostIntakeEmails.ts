@@ -36,7 +36,7 @@ export async function sendHostIntakeConfirmationEmail(
     "Welcome to VelocityMaid",
     `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${NAVY};">
        Hi ${escapeHtml(firstName)}, we've received your host intake form for ${address}.
-       Brian will be in touch within 24 hours to confirm your first service and send your client portal login.
+       Brian will follow up to confirm your quote, first service, and client portal login.
      </p>
      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${NAVY};">
        In the meantime, here's everything you need to know about working with VelocityMaid:
@@ -52,7 +52,7 @@ export async function sendHostIntakeConfirmationEmail(
      </p>`
   );
 
-  const text = `Hi ${firstName}, we've received your host intake form for ${payload.propertyAddress}. Brian will be in touch within 24 hours to confirm your first service and send your client portal login.
+  const text = `Hi ${firstName}, we've received your host intake form for ${payload.propertyAddress}. Brian will follow up to confirm your quote, first service, and client portal login.
 
 In the meantime, here's everything you need to know about working with VelocityMaid:
 Host Welcome Packet: ${HOST_WELCOME_PACKET_URL}
