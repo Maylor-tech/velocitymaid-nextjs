@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import HostIntakeForm from "./HostIntakeForm";
 import { VermontHostMarketing } from "@/components/marketing/VermontHostMarketing";
 import { pageSocialMetadata } from "@/lib/seo/socialImages";
@@ -21,7 +22,15 @@ export const metadata: Metadata = {
 export default function HostIntakePage() {
   return (
     <VermontHostMarketing>
-      <HostIntakeForm embedded />
+      <Suspense
+        fallback={
+          <div className="py-12 text-center font-body text-sm text-vm-muted">
+            Loading form…
+          </div>
+        }
+      >
+        <HostIntakeForm embedded />
+      </Suspense>
     </VermontHostMarketing>
   );
 }

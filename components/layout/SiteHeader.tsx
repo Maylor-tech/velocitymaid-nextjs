@@ -69,6 +69,7 @@ export default function SiteHeader({
         { href: "/#faq", label: "FAQ" },
       ]
     : [
+        { href: "/hosts", label: "Hosts" },
         { href: "/pricing", label: "Pricing" },
         { href: "/contact", label: "Contact" },
         { href: "/partners", label: "Partners" },

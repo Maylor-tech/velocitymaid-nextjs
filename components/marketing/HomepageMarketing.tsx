@@ -128,8 +128,8 @@ export function HomepageMarketing() {
               ))}
             </ul>
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link href="/vermont/host-intake" className={primaryButton}>
-                Request a walkthrough
+              <Link href="/hosts" className={primaryButton}>
+                Request Property Setup
               </Link>
               <Link href="/vermont" className={outlineNavyButton}>
                 Explore Vermont
