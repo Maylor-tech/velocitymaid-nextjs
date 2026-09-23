@@ -281,9 +281,12 @@ describe('Phase 1D-B stay QR download', () => {
   });
 
   it('card copy brief preserves approved meaning', () => {
-    expect(STAY_CARD_VERSION).toBe('VM-STAY-CARD-v1');
+    expect(STAY_CARD_VERSION).toBe('VM-STAY-CARD-v1.1');
     expect(STAY_CARD_COPY.brand).toBe('VELOCITYMAID');
     expect(STAY_CARD_COPY.headline).toBe('How was your stay?');
+    expect(STAY_CARD_COPY.checkoutHint).toBe(
+      'No login required. We’ll help you identify your stay.'
+    );
     expect(STAY_CARD_COPY.googleReviewsNote.toLowerCase()).toContain('google');
     expect(STAY_CARD_COPY.tippingOptional.toLowerCase()).toContain('optional');
   });

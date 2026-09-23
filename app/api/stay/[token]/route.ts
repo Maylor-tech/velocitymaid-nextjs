@@ -6,14 +6,15 @@ import {
   findActivePropertyByGuestToken,
   guestFacingDisplayName,
 } from '@/lib/stay/propertyGuestAccess';
-import { listRecentCompletedStayDates } from '@/lib/stay/resolveStay';
+import { isStayFallbackEligible } from '@/lib/stay/resolveStay';
 
 type RouteContext = { params: { token: string } };
 
 /**
  * GET /api/stay/[token]
- * Public: safe display name + recent completed checkout dates (YYYY-MM-DD only).
- * Invalid/revoked → same 404 body. Never returns Job IDs or addresses.
+ * Public: safe display name + fallbackEligible boolean only.
+ * Never returns recentCheckoutDates, Job IDs, or addresses.
+ * Invalid/revoked → same 404 body.
  */
 export async function GET(_request: NextRequest, { params }: RouteContext) {
   try {
@@ -29,12 +30,12 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const recentCheckoutDates = await listRecentCompletedStayDates(property.id);
+    const fallbackEligible = await isStayFallbackEligible(property.id);
 
     return NextResponse.json({
       success: true,
       displayName: guestFacingDisplayName(property.guestDisplayName),
-      recentCheckoutDates,
+      fallbackEligible,
     });
   } catch (error: unknown) {
     const message =

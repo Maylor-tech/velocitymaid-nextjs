@@ -3,14 +3,18 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { checkStayResolveRateLimit } from '@/lib/stay/rateLimit';
-import { resolveStayToGuestFeedback } from '@/lib/stay/resolveStay';
+import {
+  resolveStayToGuestFeedback,
+  STAY_RESOLVE_MODE_SINGLE_RECENT,
+  type StayResolveMode,
+} from '@/lib/stay/resolveStay';
 
 type RouteContext = { params: { token: string } };
 
 /**
  * POST /api/stay/[token]/resolve
- * Body: { checkoutDate: "YYYY-MM-DD" }
- * Success: GUEST feedback token + safe labels only. Never Job.id / job lists / PII.
+ * Body: { checkoutDate: "YYYY-MM-DD" } OR { mode: "SINGLE_RECENT_ELIGIBLE" }
+ * Never accepts jobId. Success: GUEST feedback token + tip grant + safe labels only.
  */
 export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
@@ -32,10 +36,33 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const checkoutDate =
-      typeof body.checkoutDate === 'string' ? body.checkoutDate : '';
 
-    const result = await resolveStayToGuestFeedback(params.token, checkoutDate);
+    // Never honor client-supplied jobId
+    if (body && typeof body === 'object' && 'jobId' in body && body.jobId != null) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid resolve request.',
+          code: 'INVALID_REQUEST',
+        },
+        { status: 400 }
+      );
+    }
+
+    const checkoutDate =
+      typeof body.checkoutDate === 'string' ? body.checkoutDate : undefined;
+    const modeRaw = typeof body.mode === 'string' ? body.mode : undefined;
+    const mode =
+      modeRaw === STAY_RESOLVE_MODE_SINGLE_RECENT
+        ? (STAY_RESOLVE_MODE_SINGLE_RECENT as StayResolveMode)
+        : modeRaw
+          ? (modeRaw as StayResolveMode)
+          : undefined;
+
+    const result = await resolveStayToGuestFeedback(params.token, {
+      checkoutDate,
+      mode,
+    });
 
     if (result.ok === false) {
       const status =
