@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 import {
   ACCESS_TYPE_OPTIONS,
@@ -16,6 +17,15 @@ import {
   SQUARE_FOOTAGE_OPTIONS,
 } from "@/lib/hostIntake/constants";
 import type { HostIntakePayload } from "@/lib/hostIntake/types";
+import {
+  attributionAnalyticsParams,
+  hasAttribution,
+  mergeAttributionFirstTouch,
+  parseAttributionFromSearchParams,
+  readStoredAttribution,
+  writeStoredAttribution,
+  type HostAttribution,
+} from "@/lib/hostIntake/attribution";
 
 const BOOKING_PLATFORMS = [
   "Airbnb",
@@ -114,12 +124,39 @@ function FieldHelper({ children }: { children: React.ReactNode }) {
 }
 
 export default function HostIntakeForm({ embedded = false }: { embedded?: boolean }) {
+  const searchParams = useSearchParams();
   const [form, setForm] = useState<FormFields>(initialForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [firstName, setFirstName] = useState("");
+  const [attribution, setAttribution] = useState<HostAttribution | null>(null);
+
+  useEffect(() => {
+    const email = searchParams.get("email")?.trim().toLowerCase() || "";
+    const name = searchParams.get("name")?.trim() || "";
+    const phone = searchParams.get("phone")?.trim() || "";
+    const city = searchParams.get("city")?.trim() || "";
+
+    if (email || name || phone || city) {
+      setForm((prev) => ({
+        ...prev,
+        email: email || prev.email,
+        fullName: name || prev.fullName,
+        phone: phone || prev.phone,
+        city: city || prev.city,
+      }));
+    }
+
+    const fromUrl = parseAttributionFromSearchParams(searchParams);
+    const stored = readStoredAttribution();
+    const merged = mergeAttributionFirstTouch(stored, fromUrl);
+    if (hasAttribution(merged)) {
+      writeStoredAttribution(merged);
+      setAttribution(merged);
+    }
+  }, [searchParams]);
 
   function updateField<K extends keyof FormFields>(key: K, value: FormFields[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -203,7 +240,11 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
       const res = await fetch("/api/host-intake", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          mode: "FULL",
+          attribution: attribution && hasAttribution(attribution) ? attribution : undefined,
+        }),
       });
       const data = await res.json();
 
@@ -212,10 +253,10 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
       }
 
       const name = form.fullName.trim().split(/\s+/)[0] || "there";
-      trackEvent("host_intake_submitted", {
-        market: "vermont",
-        address: `${form.propertyAddress}, ${form.city}, VT`,
-      });
+      trackEvent(
+        "host_intake_submitted",
+        attributionAnalyticsParams(attribution)
+      );
       setFirstName(name);
       setSubmitted(true);
     } catch {

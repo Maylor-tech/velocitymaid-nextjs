@@ -1,5 +1,6 @@
 import type { Customer, LeadStatus, PipelineLeadStage, PrismaClient } from '@prisma/client';
-import type { HostIntakePayload } from '@/lib/hostIntake/types';
+import type { HostIntakePayload, HostSetupRequestPayload } from '@/lib/hostIntake/types';
+import { mergeLeadNotes } from '@/lib/hostIntake/attribution';
 import { leadStatusToStage, stageToLeadStatus } from './stages';
 
 function parseIntOrNull(value: string | undefined): number | null {
@@ -10,6 +11,59 @@ function parseIntOrNull(value: string | undefined): number | null {
 
 function customerStage(customer: Customer): PipelineLeadStage {
   return leadStatusToStage(customer.leadStatus) ?? 'NEW_LEAD';
+}
+
+/** Upsert a pipeline card from a lightweight /hosts setup request (no Property yet). */
+export async function upsertPipelineLeadFromSetupRequest(
+  prisma: PrismaClient,
+  customer: Customer,
+  payload: HostSetupRequestPayload
+) {
+  const name = `${customer.firstName} ${customer.lastName}`.trim() || payload.fullName;
+  const existing = await prisma.pipelineLead.findUnique({
+    where: { customerId: customer.id },
+  });
+
+  const notes = mergeLeadNotes({
+    existingNotes: existing?.notes,
+    freeText: null,
+    attribution: payload.attribution,
+    setupRequest: {
+      town: payload.city,
+      interest: payload.serviceInterest,
+      submitted_at: new Date().toISOString(),
+    },
+  });
+
+  const data = {
+    customerId: customer.id,
+    name,
+    phone: customer.phone || payload.phone || '',
+    email: customer.email,
+    propertyAddress: existing?.propertyAddress || `${payload.city}, VT`,
+    propertyType: 'Vacation rental / Airbnb',
+    leadSource: existing?.leadSource || 'Hosts landing (/hosts)',
+    // Do not regress a later stage if they already completed full intake.
+    stage: (existing?.stage === 'NEW_LEAD' || !existing
+      ? 'NEW_LEAD'
+      : existing.stage) as PipelineLeadStage,
+    notes: notes || null,
+  };
+
+  if (existing) {
+    return prisma.pipelineLead.update({
+      where: { id: existing.id },
+      data: {
+        ...data,
+        // Keep richer address/beds if already set from a prior full intake.
+        propertyAddress: existing.propertyAddress || data.propertyAddress,
+        bedrooms: existing.bedrooms,
+        bathrooms: existing.bathrooms,
+      },
+    });
+  }
+
+  return prisma.pipelineLead.create({ data });
 }
 
 /** Upsert a pipeline card from a host intake customer record. */
@@ -25,6 +79,23 @@ export async function upsertPipelineLeadFromIntake(
       ? 'Vacation rental / Airbnb'
       : 'Single-family home';
 
+  const existing = await prisma.pipelineLead.findUnique({
+    where: { customerId: customer.id },
+  });
+
+  const notes = mergeLeadNotes({
+    existingNotes: existing?.notes,
+    freeText: payload.specialInstructions?.trim() || null,
+    attribution: payload.attribution,
+    setupRequest: null,
+  });
+
+  const leadSource =
+    existing?.leadSource === 'Hosts landing (/hosts)' ||
+    payload.attribution?.landing === '/hosts'
+      ? 'Hosts landing (/hosts)'
+      : existing?.leadSource || 'Website form';
+
   const data = {
     customerId: customer.id,
     name,
@@ -34,14 +105,10 @@ export async function upsertPipelineLeadFromIntake(
     bedrooms: parseIntOrNull(payload.bedrooms),
     bathrooms: parseIntOrNull(payload.bathrooms),
     propertyType,
-    leadSource: 'Website form',
+    leadSource,
     stage: 'INTAKE_RECEIVED' as const,
-    notes: payload.specialInstructions?.trim() || null,
+    notes: notes || null,
   };
-
-  const existing = await prisma.pipelineLead.findUnique({
-    where: { customerId: customer.id },
-  });
 
   if (existing) {
     return prisma.pipelineLead.update({

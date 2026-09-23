@@ -1,4 +1,5 @@
-import type { HostIntakePayload } from "./types";
+import { parseAttributionFromUnknown } from "./attribution";
+import type { HostIntakeMode, HostIntakePayload } from "./types";
 
 function formatList(items: string[] | undefined): string {
   if (!items || items.length === 0) return "—";
@@ -127,6 +128,10 @@ export function parseHostIntakeBody(body: Record<string, unknown>): HostIntakePa
   const asStringArray = (value: unknown): string[] =>
     Array.isArray(value) ? value.map(String) : [];
 
+  const modeRaw = String(body.mode ?? "FULL").trim().toUpperCase();
+  const mode: HostIntakeMode =
+    modeRaw === "SETUP_REQUEST" ? "SETUP_REQUEST" : "FULL";
+
   return {
     propertyAddress: String(body.propertyAddress ?? "").trim(),
     city: String(body.city ?? "").trim(),
@@ -160,5 +165,8 @@ export function parseHostIntakeBody(body: Record<string, unknown>): HostIntakePa
     phone: String(body.phone ?? "").trim(),
     preferredContact: String(body.preferredContact ?? "").trim(),
     bestTimeToReach: String(body.bestTimeToReach ?? "").trim(),
+    mode,
+    serviceInterest: String(body.serviceInterest ?? "").trim(),
+    attribution: parseAttributionFromUnknown(body.attribution),
   };
 }
