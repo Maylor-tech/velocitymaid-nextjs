@@ -6,6 +6,7 @@ import {
   getPublicFeedbackByToken,
   submitPublicFeedback,
 } from '@/lib/feedback/serviceFeedback';
+import { parseGuestIssueTopic } from '@/lib/feedback/guestFeedbackClassification';
 
 /**
  * GET /api/feedback/[token] — public token view (no auth).
@@ -30,7 +31,7 @@ export async function GET(
 }
 
 /**
- * POST /api/feedback/[token] — one-shot customer submit.
+ * POST /api/feedback/[token] — one-shot customer/guest submit.
  */
 export async function POST(
   request: NextRequest,
@@ -38,12 +39,29 @@ export async function POST(
 ) {
   try {
     const body = await request.json();
+    const issueTopic =
+      body.issueTopic === undefined
+        ? undefined
+        : parseGuestIssueTopic(body.issueTopic);
+
+    if (
+      body.issueTopic != null &&
+      body.issueTopic !== '' &&
+      issueTopic === null
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid feedback topic', code: 'VALIDATION' },
+        { status: 400 }
+      );
+    }
+
     const result = await submitPublicFeedback(params.token, {
       overallRating: Number(body.overallRating),
       cleanlinessRating: Number(body.cleanlinessRating),
       communicationRating: Number(body.communicationRating),
       timelinessRating: Number(body.timelinessRating),
       comment: body.comment ?? null,
+      issueTopic: issueTopic === undefined ? undefined : issueTopic,
     });
 
     if (result.ok === false) {

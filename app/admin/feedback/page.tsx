@@ -13,6 +13,7 @@ type Item = {
   requestedAt: string;
   lowRating: boolean;
   underReview: boolean;
+  opsClass?: 'NORMAL' | 'CONCERN' | 'URGENT' | null;
   customer: { name: string; email: string } | null;
   cleaner: { name: string | null; email: string } | null;
   property: { name: string; address: string } | null;
@@ -104,6 +105,7 @@ export default function AdminFeedbackListPage() {
                 <th className="px-4 py-3">Property</th>
                 <th className="px-4 py-3">Cleaner</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Ops</th>
               </tr>
             </thead>
             <tbody>
@@ -158,6 +160,23 @@ export default function AdminFeedbackListPage() {
                     >
                       {item.status.replace(/_/g, ' ')}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {item.opsClass ? (
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
+                          item.opsClass === 'URGENT'
+                            ? 'bg-vm-danger-bg text-vm-danger'
+                            : item.opsClass === 'CONCERN'
+                              ? 'bg-amber-50 text-amber-950'
+                              : 'bg-vm-success-bg text-vm-success'
+                        }`}
+                      >
+                        {item.opsClass}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-vm-muted">—</span>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 
 type Detail = {
   id: string;
+  source?: string;
   status: string;
   overallRating: number | null;
   cleanlinessRating: number | null;
@@ -16,11 +17,20 @@ type Detail = {
   submittedAt: string | null;
   dispositionCategory: string | null;
   adminNotes: string | null;
+  opsClassification?: {
+    opsClass: 'NORMAL' | 'CONCERN' | 'URGENT';
+    issueTopic: string | null;
+    reasons: string[];
+  } | null;
   lowRating: boolean;
   cleanerResponse: string | null;
   customer: { firstName: string; lastName: string; email: string } | null;
   cleaner: { id: string; name: string | null; email: string } | null;
-  property: { name: string; address: string } | null;
+  property: {
+    name: string;
+    address: string;
+    guestDisplayName?: string | null;
+  } | null;
   job: {
     id: string;
     jobReference: string | null;
@@ -141,7 +151,28 @@ export default function AdminFeedbackDetailPage() {
           <p className="font-body text-sm text-vm-muted">
             {feedback.job.jobReference || feedback.job.id} · {feedback.status}
             {feedback.lowRating ? ' · LOW RATING' : ''}
+            {feedback.source ? ` · ${feedback.source}` : ''}
           </p>
+          {feedback.opsClassification && (
+            <p className="mt-2">
+              <span
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
+                  feedback.opsClassification.opsClass === 'URGENT'
+                    ? 'bg-vm-danger-bg text-vm-danger'
+                    : feedback.opsClassification.opsClass === 'CONCERN'
+                      ? 'bg-amber-50 text-amber-950'
+                      : 'bg-vm-success-bg text-vm-success'
+                }`}
+              >
+                {feedback.opsClassification.opsClass}
+              </span>
+              {feedback.opsClassification.issueTopic ? (
+                <span className="ml-2 font-body text-xs text-vm-muted">
+                  Guest topic: {feedback.opsClassification.issueTopic}
+                </span>
+              ) : null}
+            </p>
+          )}
         </div>
         <Link
           href={`/admin/jobs/${feedback.job.id}`}
@@ -178,7 +209,10 @@ export default function AdminFeedbackDetailPage() {
             <p>Cleaner: {feedback.cleaner?.name || feedback.cleaner?.email || '—'}</p>
             <p>
               Property:{' '}
-              {feedback.property?.name || feedback.property?.address || '—'}
+              {feedback.property?.guestDisplayName ||
+                feedback.property?.name ||
+                feedback.property?.address ||
+                '—'}
             </p>
           </div>
         </section>

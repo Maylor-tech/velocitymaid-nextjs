@@ -54,6 +54,14 @@ const DIMENSIONS = [
 
 type DimKey = (typeof DIMENSIONS)[number]['key'];
 
+type IssueTopic = 'good' | 'cleaning' | 'attention' | '';
+
+const ISSUE_OPTIONS: Array<{ value: Exclude<IssueTopic, ''>; label: string }> = [
+  { value: 'good', label: 'Everything was good' },
+  { value: 'cleaning', label: 'Cleaning issue' },
+  { value: 'attention', label: 'Something needs attention' },
+];
+
 export default function PublicFeedbackPage({
   params,
 }: {
@@ -66,6 +74,7 @@ export default function PublicFeedbackPage({
     communicationRating: 0,
     timelinessRating: 0,
   });
+  const [issueTopic, setIssueTopic] = useState<IssueTopic>('');
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,6 +112,7 @@ export default function PublicFeedbackPage({
         body: JSON.stringify({
           ...ratings,
           comment: comment.trim() || null,
+          ...(issueTopic ? { issueTopic } : {}),
         }),
       });
       const data = await res.json();
@@ -215,8 +225,44 @@ export default function PublicFeedbackPage({
               ))}
 
               <div>
+                <p className="mb-2 font-heading text-sm font-semibold text-vm-navy">
+                  What would you like us to know?{' '}
+                  <span className="font-normal text-vm-muted">(optional)</span>
+                </p>
+                <div className="space-y-2">
+                  {ISSUE_OPTIONS.map((opt) => (
+                    <label
+                      key={opt.value}
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 font-body text-sm ${
+                        issueTopic === opt.value
+                          ? 'border-vm-cyan bg-vm-cyan/5 text-vm-navy'
+                          : 'border-vm-border text-vm-navy'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="issueTopic"
+                        value={opt.value}
+                        checked={issueTopic === opt.value}
+                        onChange={() => setIssueTopic(opt.value)}
+                        className="accent-vm-cyan"
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+                {issueTopic === 'attention' && (
+                  <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-body text-xs text-amber-950">
+                    VelocityMaid is not an emergency service. For safety,
+                    medical, fire, flood, or security emergencies, contact the
+                    property host and emergency services immediately.
+                  </p>
+                )}
+              </div>
+
+              <div>
                 <label className="mb-2 block font-heading text-sm font-semibold text-vm-navy">
-                  Anything you&apos;d like us to know?{' '}
+                  Anything else?{' '}
                   <span className="font-normal text-vm-muted">(optional)</span>
                 </label>
                 <textarea

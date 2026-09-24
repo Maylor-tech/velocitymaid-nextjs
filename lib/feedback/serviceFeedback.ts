@@ -14,6 +14,17 @@ import {
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
 import { formatServiceDate } from '@/lib/dates/serviceDate';
+import {
+  buildAdminNotesWithGuestClass,
+  classifyGuestFeedback,
+  LOW_RATING_MAX,
+  mergeAdminNotesPreservingGuestClass,
+  parseGuestIssueTopic,
+  type GuestFeedbackClassification,
+  type GuestIssueTopic,
+} from '@/lib/feedback/guestFeedbackClassification';
+import { notifyGuestFeedbackOpsAlert } from '@/lib/feedback/notifyGuestFeedbackOps';
+import { guestFacingDisplayName } from '@/lib/stay/propertyGuestAccess';
 
 export const FEEDBACK_AUDIT = {
   REQUESTED: 'FEEDBACK_REQUESTED',
@@ -40,7 +51,8 @@ export const DISPOSITION_CATEGORIES: ServiceFeedbackDisposition[] = [
   'OTHER',
 ];
 
-const LOW_OVERALL_MAX = 3;
+/** @deprecated use LOW_RATING_MAX — kept for existing call sites */
+const LOW_OVERALL_MAX = LOW_RATING_MAX;
 
 export function feedbackReminderHours(): number {
   const raw = Number(process.env.FEEDBACK_REMINDER_HOURS ?? '48');
@@ -73,6 +85,11 @@ export type FeedbackSubmitInput = {
   communicationRating: number;
   timelinessRating: number;
   comment?: string | null;
+  /**
+   * Guest Stay Card optional selector (GUEST source only).
+   * good | cleaning | attention
+   */
+  issueTopic?: GuestIssueTopic | null;
 };
 
 export function validateFeedbackSubmit(
@@ -103,6 +120,18 @@ function statusAfterSubmit(overallRating: number): ServiceFeedbackStatus {
   return overallRating <= LOW_OVERALL_MAX
     ? ServiceFeedbackStatus.UNDER_REVIEW
     : ServiceFeedbackStatus.SUBMITTED;
+}
+
+function statusAfterGuestClassification(
+  classification: GuestFeedbackClassification
+): ServiceFeedbackStatus {
+  if (
+    classification.opsClass === 'CONCERN' ||
+    classification.opsClass === 'URGENT'
+  ) {
+    return ServiceFeedbackStatus.UNDER_REVIEW;
+  }
+  return ServiceFeedbackStatus.SUBMITTED;
 }
 
 export async function requestServiceFeedbackForJob(
@@ -364,7 +393,12 @@ export async function submitPublicFeedback(
   token: string,
   input: FeedbackSubmitInput
 ): Promise<
-  | { ok: true; status: ServiceFeedbackStatus; alreadySubmitted: boolean }
+  | {
+      ok: true;
+      status: ServiceFeedbackStatus;
+      alreadySubmitted: boolean;
+      opsClass?: GuestFeedbackClassification['opsClass'];
+    }
   | { ok: false; error: string; code: string }
 > {
   const validationError = validateFeedbackSubmit(input);
@@ -372,8 +406,28 @@ export async function submitPublicFeedback(
     return { ok: false, error: validationError, code: 'VALIDATION' };
   }
 
+  const issueTopicRaw = input.issueTopic;
+  let issueTopic: GuestIssueTopic | null = null;
+  if (issueTopicRaw !== undefined && issueTopicRaw !== null) {
+    const parsed = parseGuestIssueTopic(issueTopicRaw);
+    if (parsed == null) {
+      return {
+        ok: false,
+        error: 'Invalid feedback topic',
+        code: 'VALIDATION',
+      };
+    }
+    issueTopic = parsed;
+  }
+
   const row = await prisma.serviceFeedback.findUnique({
     where: { publicToken: token.trim() },
+    include: {
+      Property: {
+        select: { id: true, guestDisplayName: true, name: true },
+      },
+      Job: { select: { id: true, jobReference: true } },
+    },
   });
   if (!row) {
     return { ok: false, error: 'Feedback link is invalid', code: 'INVALID_TOKEN' };
@@ -387,10 +441,30 @@ export async function submitPublicFeedback(
     };
   }
 
-  const nextStatus = statusAfterSubmit(input.overallRating);
+  const isGuest = row.source === ServiceFeedbackSource.GUEST;
+  if (!isGuest) {
+    issueTopic = null;
+  }
+
+  const classification = isGuest
+    ? classifyGuestFeedback({
+        overallRating: input.overallRating,
+        cleanlinessRating: input.cleanlinessRating,
+        issueTopic,
+      })
+    : null;
+
+  const nextStatus = classification
+    ? statusAfterGuestClassification(classification)
+    : statusAfterSubmit(input.overallRating);
   const now = new Date();
   const comment =
     typeof input.comment === 'string' ? input.comment.trim() || null : null;
+
+  const adminNotes =
+    isGuest && classification
+      ? buildAdminNotesWithGuestClass(classification, row.adminNotes)
+      : undefined;
 
   // Atomic: only update if still REQUESTED / not submitted
   const updated = await prisma.serviceFeedback.updateMany({
@@ -408,6 +482,7 @@ export async function submitPublicFeedback(
       status: nextStatus,
       submittedAt: now,
       reviewedAt: nextStatus === ServiceFeedbackStatus.UNDER_REVIEW ? null : undefined,
+      ...(adminNotes !== undefined ? { adminNotes } : {}),
     },
   });
 
@@ -419,8 +494,6 @@ export async function submitPublicFeedback(
       alreadySubmitted: true,
     };
   }
-
-  const isGuest = row.source === ServiceFeedbackSource.GUEST;
 
   await logAuditEntry({
     actorRole: isGuest ? 'GUEST' : 'CUSTOMER',
@@ -435,10 +508,53 @@ export async function submitPublicFeedback(
       status: nextStatus,
       lowRating: input.overallRating <= LOW_OVERALL_MAX,
       source: row.source,
+      ...(classification
+        ? {
+            opsClass: classification.opsClass,
+            issueTopic: classification.issueTopic,
+            reasons: classification.reasons,
+          }
+        : {}),
     },
   });
 
-  return { ok: true, status: nextStatus, alreadySubmitted: false };
+  // Ops alert for guest CONCERN/URGENT only — never blocks guest success
+  if (
+    isGuest &&
+    classification &&
+    (classification.opsClass === 'CONCERN' ||
+      classification.opsClass === 'URGENT')
+  ) {
+    try {
+      await notifyGuestFeedbackOpsAlert({
+        feedbackId: row.id,
+        jobId: row.jobId,
+        jobReference: row.Job?.jobReference ?? null,
+        propertyGuestDisplayName: guestFacingDisplayName(
+          row.Property?.guestDisplayName
+        ),
+        propertyId: row.propertyId ?? row.Property?.id ?? null,
+        opsClass: classification.opsClass,
+        issueTopic: classification.issueTopic,
+        overallRating: input.overallRating,
+        cleanlinessRating: input.cleanlinessRating,
+        comment,
+        submittedAt: now,
+      });
+    } catch (err) {
+      console.error('[submitPublicFeedback] ops alert threw (feedback kept)', {
+        feedbackId: row.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  return {
+    ok: true,
+    status: nextStatus,
+    alreadySubmitted: false,
+    opsClass: classification?.opsClass,
+  };
 }
 
 export async function listServiceFeedbackForAdmin(options?: {
@@ -508,7 +624,14 @@ export async function getServiceFeedbackAdminDetail(
       },
       Cleaner: { select: { id: true, name: true, email: true, phone: true } },
       Property: {
-        select: { id: true, name: true, address: true, city: true, state: true },
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          city: true,
+          state: true,
+          guestDisplayName: true,
+        },
       },
       Job: {
         select: {
@@ -580,7 +703,10 @@ export async function adminUpdateServiceFeedback(
     data.dispositionCategory = input.dispositionCategory;
   }
   if (input.adminNotes !== undefined) {
-    data.adminNotes = input.adminNotes?.trim() || null;
+    data.adminNotes = mergeAdminNotesPreservingGuestClass({
+      existingNotes: existing.adminNotes,
+      editableNotes: input.adminNotes,
+    });
   }
 
   let auditAction: string | null = null;
