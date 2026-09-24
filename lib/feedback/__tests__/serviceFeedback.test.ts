@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   updateMany: vi.fn(),
   jobFindUnique: vi.fn(),
   logAuditEntry: vi.fn(),
+  notifyOps: vi.fn(),
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -30,6 +31,10 @@ vi.mock('@/lib/prisma', () => ({
 
 vi.mock('@/lib/audit', () => ({
   logAuditEntry: mocks.logAuditEntry,
+}));
+
+vi.mock('@/lib/feedback/notifyGuestFeedbackOps', () => ({
+  notifyGuestFeedbackOpsAlert: (...a: unknown[]) => mocks.notifyOps(...a),
 }));
 
 import {
@@ -80,6 +85,10 @@ describe('ServiceFeedback public token flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.logAuditEntry.mockResolvedValue('audit-1');
+    mocks.notifyOps.mockResolvedValue({
+      adminNotificationOk: true,
+      emailSent: false,
+    });
   });
 
   it('invalid token', async () => {
@@ -198,6 +207,11 @@ describe('ServiceFeedback public token flow', () => {
       status: ServiceFeedbackStatus.REQUESTED,
       submittedAt: null,
       source: 'GUEST',
+      jobId: 'job-g',
+      propertyId: 'prop-g',
+      adminNotes: null,
+      Property: { id: 'prop-g', guestDisplayName: "Lou Lou's Landing", name: 'X' },
+      Job: { id: 'job-g', jobReference: 'VM-1' },
     });
     mocks.updateMany.mockResolvedValue({ count: 1 });
 
@@ -206,18 +220,94 @@ describe('ServiceFeedback public token flow', () => {
       cleanlinessRating: 5,
       communicationRating: 5,
       timelinessRating: 5,
+      issueTopic: 'good',
     });
 
     expect(mocks.logAuditEntry).toHaveBeenCalledWith(
       expect.objectContaining({
         actorRole: 'GUEST',
         description: expect.stringMatching(/Guest submitted/i),
-        changes: expect.objectContaining({ source: 'GUEST' }),
+        changes: expect.objectContaining({
+          source: 'GUEST',
+          opsClass: 'NORMAL',
+        }),
       })
     );
-    expect(mocks.logAuditEntry).not.toHaveBeenCalledWith(
-      expect.objectContaining({ actorRole: 'CUSTOMER' })
+    expect(mocks.notifyOps).not.toHaveBeenCalled();
+  });
+
+  it('GUEST low rating alerts CONCERN', async () => {
+    mocks.findUnique.mockResolvedValue({
+      id: 'fb-c',
+      publicToken: 'tok-c',
+      status: ServiceFeedbackStatus.REQUESTED,
+      submittedAt: null,
+      source: 'GUEST',
+      jobId: 'job-c',
+      propertyId: 'prop-c',
+      adminNotes: null,
+      Property: { id: 'prop-c', guestDisplayName: 'Chipman Park Stay', name: 'X' },
+      Job: { id: 'job-c', jobReference: 'VM-2' },
+    });
+    mocks.updateMany.mockResolvedValue({ count: 1 });
+
+    const result = await submitPublicFeedback('tok-c', {
+      overallRating: 2,
+      cleanlinessRating: 2,
+      communicationRating: 3,
+      timelinessRating: 3,
+      issueTopic: 'cleaning',
+      comment: 'Missed bathroom',
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.status).toBe(ServiceFeedbackStatus.UNDER_REVIEW);
+      expect(result.opsClass).toBe('CONCERN');
+    }
+    expect(mocks.notifyOps).toHaveBeenCalledWith(
+      expect.objectContaining({
+        opsClass: 'CONCERN',
+        propertyGuestDisplayName: 'Chipman Park Stay',
+      })
     );
+    expect(mocks.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          adminNotes: expect.stringContaining('class=CONCERN'),
+        }),
+      })
+    );
+  });
+
+  it('GUEST attention topic alerts URGENT and keeps feedback if notify fails', async () => {
+    mocks.notifyOps.mockRejectedValue(new Error('notify down'));
+    mocks.findUnique.mockResolvedValue({
+      id: 'fb-u',
+      publicToken: 'tok-u',
+      status: ServiceFeedbackStatus.REQUESTED,
+      submittedAt: null,
+      source: 'GUEST',
+      jobId: 'job-u',
+      propertyId: null,
+      adminNotes: null,
+      Property: null,
+      Job: { id: 'job-u', jobReference: null },
+    });
+    mocks.updateMany.mockResolvedValue({ count: 1 });
+
+    const result = await submitPublicFeedback('tok-u', {
+      overallRating: 5,
+      cleanlinessRating: 5,
+      communicationRating: 5,
+      timelinessRating: 5,
+      issueTopic: 'attention',
+      comment: 'Smell of gas',
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.status).toBe(ServiceFeedbackStatus.UNDER_REVIEW);
+      expect(result.opsClass).toBe('URGENT');
+    }
   });
 
   it('high rating does not enter UNDER_REVIEW', async () => {
@@ -252,6 +342,9 @@ describe('ServiceFeedback public token flow', () => {
         publicToken: 'tok-1',
         status: ServiceFeedbackStatus.REQUESTED,
         submittedAt: null,
+        source: 'HOST',
+        Property: null,
+        Job: { id: 'job-1', jobReference: null },
       })
       .mockResolvedValueOnce({
         id: 'fb-1',
@@ -267,6 +360,7 @@ describe('ServiceFeedback public token flow', () => {
     });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.alreadySubmitted).toBe(true);
+    expect(mocks.notifyOps).not.toHaveBeenCalled();
   });
 
   it('request is one per job for HOST source only', async () => {

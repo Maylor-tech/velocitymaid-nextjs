@@ -10,7 +10,12 @@ import {
   adminUpdateServiceFeedback,
   getServiceFeedbackAdminDetail,
 } from '@/lib/feedback/serviceFeedback';
+import {
+  parseGuestClassFromAdminNotes,
+  stripGuestClassBlock,
+} from '@/lib/feedback/guestFeedbackClassification';
 import { CARE_CHECKLIST_TOTAL } from '@/lib/brand/careChecklist';
+import { guestFacingDisplayName } from '@/lib/stay/propertyGuestAccess';
 
 /**
  * GET /api/admin/feedback/[id]
@@ -27,10 +32,12 @@ export async function GET(
     }
 
     const checklistDone = row.Job.JobChecklistItem.length;
+    const opsClassParsed = parseGuestClassFromAdminNotes(row.adminNotes);
     return NextResponse.json({
       success: true,
       feedback: {
         id: row.id,
+        source: row.source,
         status: row.status,
         overallRating: row.overallRating,
         cleanlinessRating: row.cleanlinessRating,
@@ -44,7 +51,14 @@ export async function GET(
         releasedAt: row.releasedAt?.toISOString() ?? null,
         resolvedAt: row.resolvedAt?.toISOString() ?? null,
         dispositionCategory: row.dispositionCategory,
-        adminNotes: row.adminNotes,
+        adminNotes: stripGuestClassBlock(row.adminNotes),
+        opsClassification: opsClassParsed
+          ? {
+              opsClass: opsClassParsed.opsClass,
+              issueTopic: opsClassParsed.issueTopic,
+              reasons: opsClassParsed.reasons,
+            }
+          : null,
         cleanerResponse: row.cleanerResponse,
         cleanerRespondedAt: row.cleanerRespondedAt?.toISOString() ?? null,
         lowRating:
@@ -53,7 +67,18 @@ export async function GET(
           row.overallRating <= 3,
         customer: row.Customer,
         cleaner: row.Cleaner,
-        property: row.Property,
+        property: row.Property
+          ? {
+              id: row.Property.id,
+              name: row.Property.name,
+              address: row.Property.address,
+              city: row.Property.city,
+              state: row.Property.state,
+              guestDisplayName: guestFacingDisplayName(
+                row.Property.guestDisplayName
+              ),
+            }
+          : null,
         job: {
           id: row.Job.id,
           jobReference: row.Job.jobReference,
