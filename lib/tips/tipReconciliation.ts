@@ -38,9 +38,18 @@ export type TipReconFlags = {
   refundAfterPaidOut: boolean;
   disputeAfterPaidOut: boolean;
   missingBeneficiary: boolean;
+  hasAllocations: boolean;
+  owedAllocationCents: number;
+  allocatedCents: number;
 };
 
-export function buildTipReconFlags(tip: TipReconFlagsInput): TipReconFlags {
+export function buildTipReconFlags(
+  tip: TipReconFlagsInput & {
+    owedAllocationCents?: number;
+    allocatedCents?: number;
+    hasAllocations?: boolean;
+  }
+): TipReconFlags {
   const canonical = normalizeTipStatus(tip.status);
   const dispute = normalizeTipDisputeStatus(tip.disputeStatus);
   const paidOut = isTipPaidOut(tip.status);
@@ -53,8 +62,23 @@ export function buildTipReconFlags(tip: TipReconFlagsInput): TipReconFlags {
   const disputeAfterPaidOut =
     paidOut && (dispute === 'OPEN' || dispute === 'LOST');
 
+  const owedAllocationCents = tip.owedAllocationCents ?? 0;
+  const allocatedCents = tip.allocatedCents ?? 0;
+  const hasAllocations = Boolean(tip.hasAllocations);
+
+  const solePayable = isTipPayable(tip) && !hasAllocations;
+  const allocationPayable =
+    hasAllocations &&
+    isTipReceived(tip.status) &&
+    !paidOut &&
+    !tip.refundedAt &&
+    !tip.needsReconcile &&
+    dispute !== 'OPEN' &&
+    dispute !== 'LOST' &&
+    owedAllocationCents > 0;
+
   return {
-    payable: isTipPayable(tip),
+    payable: solePayable || allocationPayable,
     pendingZelle:
       tip.paymentMethod === 'ZELLE' &&
       (canonical === 'PENDING' || tip.status === 'pending'),
@@ -73,7 +97,12 @@ export function buildTipReconFlags(tip: TipReconFlagsInput): TipReconFlags {
     refundAfterPaidOut,
     disputeAfterPaidOut,
     missingBeneficiary:
-      isTipReceived(tip.status) && !tip.beneficiaryCleanerId,
+      isTipReceived(tip.status) &&
+      !tip.beneficiaryCleanerId &&
+      !hasAllocations,
+    hasAllocations,
+    owedAllocationCents,
+    allocatedCents,
   };
 }
 

@@ -65,6 +65,22 @@ export async function markTipPaidOut(
     };
   }
 
+  const allocationCount = await prisma.tipAllocation.count({
+    where: {
+      tipId: tip.id,
+      status: { in: ['OWED', 'PAID_OUT'] },
+    },
+  });
+  if (allocationCount > 0) {
+    return {
+      ok: false,
+      status: 409,
+      error:
+        'This tip has TipAllocation shares — settle each allocation, not the parent tip.',
+      code: 'USE_ALLOCATION_SETTLE',
+    };
+  }
+
   const normalized = normalizeTipStatus(tip.status);
 
   if (normalized === 'PENDING') {

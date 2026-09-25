@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   tipUpdateMany: vi.fn(),
   tipWebhookEventFindUnique: vi.fn(),
   tipWebhookEventCreate: vi.fn(),
+  tipAllocationCount: vi.fn(),
+  tipAllocationUpdateMany: vi.fn(),
   logAuditEntry: vi.fn(),
 }));
 
@@ -36,6 +38,10 @@ vi.mock('@/lib/prisma', () => ({
     tipWebhookEvent: {
       findUnique: (...a: unknown[]) => mocks.tipWebhookEventFindUnique(...a),
       create: (...a: unknown[]) => mocks.tipWebhookEventCreate(...a),
+    },
+    tipAllocation: {
+      count: (...a: unknown[]) => mocks.tipAllocationCount(...a),
+      updateMany: (...a: unknown[]) => mocks.tipAllocationUpdateMany(...a),
     },
   },
 }));
@@ -63,6 +69,8 @@ describe('Phase 7C tip liability', () => {
     mocks.jobOfferFindMany.mockResolvedValue([]);
     mocks.tipWebhookEventFindUnique.mockResolvedValue(null);
     mocks.tipWebhookEventCreate.mockResolvedValue({});
+    mocks.tipAllocationCount.mockResolvedValue(0);
+    mocks.tipAllocationUpdateMany.mockResolvedValue({ count: 0 });
   });
 
   it('1. freezes beneficiary from completed job assignee', async () => {

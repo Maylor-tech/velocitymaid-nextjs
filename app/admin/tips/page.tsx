@@ -3,6 +3,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
+type AllocationRow = {
+  id: string;
+  cleanerId: string;
+  cleanerName: string | null;
+  cleanerEmail: string | null;
+  amountCents: number;
+  amountDollars: number;
+  status: string;
+  paidOutAt: string | null;
+  payoutMethod: string | null;
+  payoutReference: string | null;
+};
+
 type TipRow = {
   id: string;
   amountDollars: number;
@@ -24,6 +37,15 @@ type TipRow = {
   refundedAt: string | null;
   needsReconcile: boolean;
   reconcileReasonLabel: string;
+  payableNowCents: number;
+  allocations: AllocationRow[];
+  allocationSummary: {
+    allocatedCents: number;
+    owedCents: number;
+    paidOutCents: number;
+    fullyAllocated: boolean;
+    hasAllocations: boolean;
+  };
   flags: {
     payable: boolean;
     needsReconcile: boolean;
@@ -33,6 +55,7 @@ type TipRow = {
     disputeOpen: boolean;
     refunded: boolean;
     paidOut: boolean;
+    hasAllocations: boolean;
   };
 };
 
@@ -111,6 +134,45 @@ export default function AdminTipsPayablesPage() {
     }
   }
 
+  async function markAllocationPaidOut(allocationId: string, cleanerLabel: string) {
+    const method = window.prompt(
+      `External payment method for ${cleanerLabel}?\nRecords settlement only — does not transfer funds.`,
+      'ZELLE'
+    );
+    if (!method || !method.trim()) return;
+    const reference = window.prompt('Optional payout reference / memo:', '') || '';
+    setBusyId(allocationId);
+    setMessage(null);
+    try {
+      const res = await fetch(
+        `/api/admin/tips/allocations/${allocationId}/mark-paid-out`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payoutMethod: method.trim(),
+            payoutReference: reference.trim() || null,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to mark allocation paid out');
+      }
+      setMessage(
+        data.alreadyPaidOut
+          ? 'Allocation already PAID_OUT (idempotent).'
+          : `Allocation recorded PAID_OUT. Parent tip: ${data.parentStatus}. API did not transfer funds.`
+      );
+      load();
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Failed');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl p-6">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
@@ -119,9 +181,8 @@ export default function AdminTipsPayablesPage() {
             Tip payables
           </h1>
           <p className="mt-1 font-body text-sm text-vm-muted">
-            Guest tip face value = cleaner entitlement. Record external
-            settlement here after you pay the cleaner — this page never moves
-            money.
+            Guest tip face value = cleaner/team entitlement. Record external
+            settlement after you pay — this page never moves money.
           </p>
         </div>
         <div className="flex gap-2">
@@ -188,79 +249,124 @@ export default function AdminTipsPayablesPage() {
       ) : tips.length === 0 ? (
         <p className="font-body text-sm text-vm-muted">No tips in this view.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-vm-border">
-          <table className="min-w-full text-left font-body text-sm">
-            <thead className="bg-vm-surface text-vm-muted">
-              <tr>
-                <th className="px-3 py-2 font-semibold">Amount</th>
-                <th className="px-3 py-2 font-semibold">Cleaner</th>
-                <th className="px-3 py-2 font-semibold">Property</th>
-                <th className="px-3 py-2 font-semibold">Job</th>
-                <th className="px-3 py-2 font-semibold">Stripe</th>
-                <th className="px-3 py-2 font-semibold">State</th>
-                <th className="px-3 py-2 font-semibold">Received</th>
-                <th className="px-3 py-2 font-semibold">Paid out</th>
-                <th className="px-3 py-2 font-semibold">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tips.map((t) => (
-                <tr key={t.id} className="border-t border-vm-border">
-                  <td className="px-3 py-2 font-semibold text-vm-navy">
+        <div className="space-y-4">
+          {tips.map((t) => (
+            <div
+              key={t.id}
+              className="overflow-hidden rounded-lg border border-vm-border"
+            >
+              <div className="grid gap-3 border-b border-vm-border bg-vm-surface px-3 py-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <div className="text-xs text-vm-muted">Parent tip</div>
+                  <div className="font-heading text-lg font-bold text-vm-navy">
                     ${t.entitlementDollars.toFixed(2)}
-                    <div className="text-xs font-normal text-vm-muted">
-                      VM share $0
-                    </div>
-                  </td>
-                  <td className="px-3 py-2">
-                    {t.beneficiaryName || '—'}
-                    {t.beneficiaryEmail ? (
-                      <div className="text-xs text-vm-muted">
-                        {t.beneficiaryEmail}
-                      </div>
-                    ) : null}
-                  </td>
-                  <td className="px-3 py-2">{t.propertyName || '—'}</td>
-                  <td className="px-3 py-2">{t.jobReference || '—'}</td>
-                  <td className="px-3 py-2 font-mono text-xs">
+                  </div>
+                  <div className="text-xs text-vm-muted">VM share $0</div>
+                </div>
+                <div>
+                  <div className="text-xs text-vm-muted">Still owed</div>
+                  <div className="font-semibold text-vm-navy">
+                    ${(t.allocationSummary.owedCents / 100).toFixed(2)}
+                  </div>
+                  <div className="text-xs text-vm-muted">
+                    Allocated $
+                    {(t.allocationSummary.allocatedCents / 100).toFixed(2)}
+                    {' · '}Paid $
+                    {(t.allocationSummary.paidOutCents / 100).toFixed(2)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-vm-muted">Context</div>
+                  <div className="text-sm text-vm-navy">
+                    {t.propertyName || '—'} / {t.jobReference || '—'}
+                  </div>
+                  <div className="font-mono text-[10px] text-vm-muted">
                     {t.stripePaymentIntentId
-                      ? `${t.stripePaymentIntentId.slice(0, 18)}…`
+                      ? `${t.stripePaymentIntentId.slice(0, 22)}…`
                       : t.internalReference || '—'}
-                  </td>
-                  <td className="px-3 py-2">
-                    <StateBadges tip={t} />
-                  </td>
-                  <td className="px-3 py-2 text-xs text-vm-muted">
-                    {t.receivedAt
-                      ? new Date(t.receivedAt).toLocaleString()
-                      : '—'}
-                  </td>
-                  <td className="px-3 py-2 text-xs text-vm-muted">
-                    {t.paidOutAt
-                      ? new Date(t.paidOutAt).toLocaleString()
-                      : '—'}
-                    {t.paidOutMethod ? (
-                      <div>{t.paidOutMethod}</div>
-                    ) : null}
-                  </td>
-                  <td className="px-3 py-2">
-                    {t.flags.payable ? (
-                      <button
-                        type="button"
-                        disabled={busyId === t.id}
-                        onClick={() => markPaidOut(t.id)}
-                        className="rounded-lg bg-vm-navy px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-                      >
-                        {busyId === t.id ? '…' : 'Mark paid out'}
-                      </button>
-                    ) : (
-                      <span className="text-xs text-vm-muted">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+                <div>
+                  <StateBadges tip={t} />
+                  {!t.flags.hasAllocations && t.flags.payable ? (
+                    <button
+                      type="button"
+                      disabled={busyId === t.id}
+                      onClick={() => markPaidOut(t.id)}
+                      className="mt-2 rounded-lg bg-vm-navy px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                    >
+                      {busyId === t.id ? '…' : 'Mark tip paid out'}
+                    </button>
+                  ) : null}
+                  {!t.flags.hasAllocations && t.beneficiaryName ? (
+                    <div className="mt-1 text-xs text-vm-muted">
+                      Sole: {t.beneficiaryName}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              {t.flags.hasAllocations ? (
+                <table className="min-w-full text-left font-body text-sm">
+                  <thead className="text-vm-muted">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">Cleaner</th>
+                      <th className="px-3 py-2 font-semibold">Share</th>
+                      <th className="px-3 py-2 font-semibold">Status</th>
+                      <th className="px-3 py-2 font-semibold">Paid out</th>
+                      <th className="px-3 py-2 font-semibold">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {t.allocations.map((a) => (
+                      <tr key={a.id} className="border-t border-vm-border">
+                        <td className="px-3 py-2">
+                          {a.cleanerName || a.cleanerId}
+                          {a.cleanerEmail ? (
+                            <div className="text-xs text-vm-muted">
+                              {a.cleanerEmail}
+                            </div>
+                          ) : null}
+                        </td>
+                        <td className="px-3 py-2 font-semibold text-vm-navy">
+                          ${a.amountDollars.toFixed(2)}
+                        </td>
+                        <td className="px-3 py-2 text-xs uppercase">
+                          {a.status}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-vm-muted">
+                          {a.paidOutAt
+                            ? new Date(a.paidOutAt).toLocaleString()
+                            : '—'}
+                          {a.payoutMethod ? <div>{a.payoutMethod}</div> : null}
+                        </td>
+                        <td className="px-3 py-2">
+                          {a.status.toUpperCase() === 'OWED' &&
+                          t.flags.payable ? (
+                            <button
+                              type="button"
+                              disabled={busyId === a.id}
+                              onClick={() =>
+                                markAllocationPaidOut(
+                                  a.id,
+                                  a.cleanerName || a.cleanerId
+                                )
+                              }
+                              className="rounded-lg bg-vm-navy px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                            >
+                              {busyId === a.id ? '…' : 'Mark share paid'}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-vm-muted">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : null}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -293,7 +399,7 @@ function StateBadges({ tip }: { tip: TipRow }) {
   const badges: Array<{ label: string; className: string }> = [];
   if (tip.flags.payable) {
     badges.push({
-      label: 'PAYABLE',
+      label: tip.flags.hasAllocations ? 'SHARES OWED' : 'PAYABLE',
       className: 'bg-vm-success/15 text-vm-success',
     });
   }
@@ -301,6 +407,12 @@ function StateBadges({ tip }: { tip: TipRow }) {
     label: tip.canonicalStatus,
     className: 'bg-vm-navy/10 text-vm-navy',
   });
+  if (tip.flags.hasAllocations) {
+    badges.push({
+      label: 'TEAM ALLOC',
+      className: 'bg-sky-100 text-sky-900',
+    });
+  }
   if (tip.flags.disputeOpen) {
     badges.push({
       label: 'DISPUTE OPEN',
