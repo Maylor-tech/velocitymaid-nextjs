@@ -67,6 +67,31 @@ export async function resolveTipServiceEarner(
     );
   }
 
+  // Team-clean boundary: fail closed when multiple service earners are recorded.
+  // Do not invent an automatic tip split.
+  const [teamMembers, acceptedOffers] = await Promise.all([
+    prisma.jobTeamMember.findMany({
+      where: { jobId },
+      select: { cleanerId: true },
+    }),
+    prisma.jobOffer.findMany({
+      where: { jobId, status: 'ACCEPTED' },
+      select: { cleanerId: true },
+    }),
+  ]);
+
+  const earnerIds = new Set<string>();
+  earnerIds.add(job.assignedCleanerId);
+  for (const m of teamMembers) earnerIds.add(m.cleanerId);
+  for (const o of acceptedOffers) earnerIds.add(o.cleanerId);
+
+  if (earnerIds.size > 1 || teamMembers.length > 1) {
+    throw new TipBeneficiaryError(
+      'AMBIGUOUS_SERVICE_EARNERS',
+      'Multiple cleaners are associated with this job. Guest tipping needs a single unambiguous service earner — contact VelocityMaid for help.'
+    );
+  }
+
   const cleaner = await prisma.user.findFirst({
     where: {
       id: job.assignedCleanerId,

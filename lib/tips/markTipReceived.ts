@@ -6,6 +6,7 @@ import {
   isTipReceived,
   receivedStatusForBeneficiary,
 } from '@/lib/tips/statuses';
+import { cleanerTipEntitlementCents } from '@/lib/tips/tipPolicy';
 
 export type MarkTipReceivedInput = {
   tipId: string;
@@ -23,12 +24,38 @@ export type MarkTipReceivedResult =
       tipId: string;
       status: string;
       alreadyReceived: boolean;
+      entitlementCents: number;
     }
   | { ok: false; status: number; error: string; code: string };
+
+async function recordWebhookEventSafe(input: {
+  stripeEventId: string;
+  tipId: string | null;
+  eventType: string;
+  outcome: string;
+}): Promise<void> {
+  try {
+    await prisma.tipWebhookEvent.create({
+      data: {
+        stripeEventId: input.stripeEventId,
+        tipId: input.tipId,
+        eventType: input.eventType,
+        outcome: input.outcome,
+      },
+    });
+  } catch (err: unknown) {
+    const code =
+      err && typeof err === 'object' && 'code' in err
+        ? String((err as { code?: string }).code)
+        : '';
+    if (code !== 'P2002') throw err;
+  }
+}
 
 /**
  * Idempotently mark a tip RECEIVED / RECEIVED_UNATTRIBUTED.
  * Never changes beneficiaryCleanerId. Never touches JobPayout.
+ * Entitlement = full guest face value (see tipPolicy).
  */
 export async function markTipReceived(
   input: MarkTipReceivedInput
@@ -42,6 +69,7 @@ export async function markTipReceived(
       beneficiaryCleanerId: true,
       stripeEventId: true,
       receivedAt: true,
+      refundedAt: true,
     },
   });
 
@@ -49,19 +77,22 @@ export async function markTipReceived(
     return { ok: false, status: 404, error: 'Tip not found', code: 'NOT_FOUND' };
   }
 
+  const entitlementCents = cleanerTipEntitlementCents(tip.amount);
+
   if (input.stripeEventId && tip.stripeEventId === input.stripeEventId) {
     return {
       ok: true,
       tipId: tip.id,
       status: tip.status,
       alreadyReceived: true,
+      entitlementCents,
     };
   }
 
   if (input.stripeEventId) {
     const existingEvent = await prisma.tip.findFirst({
       where: { stripeEventId: input.stripeEventId },
-      select: { id: true, status: true },
+      select: { id: true, status: true, amount: true },
     });
     if (existingEvent) {
       return {
@@ -69,16 +100,26 @@ export async function markTipReceived(
         tipId: existingEvent.id,
         status: existingEvent.status,
         alreadyReceived: true,
+        entitlementCents: cleanerTipEntitlementCents(existingEvent.amount),
       };
     }
   }
 
   if (isTipPaidOut(tip.status) || isTipReceived(tip.status)) {
+    if (input.stripeEventId) {
+      await recordWebhookEventSafe({
+        stripeEventId: input.stripeEventId,
+        tipId: tip.id,
+        eventType: 'payment_intent.succeeded',
+        outcome: 'DUPLICATE',
+      });
+    }
     return {
       ok: true,
       tipId: tip.id,
       status: tip.status,
       alreadyReceived: true,
+      entitlementCents,
     };
   }
 
@@ -88,6 +129,15 @@ export async function markTipReceived(
       status: 409,
       error: `Cannot mark tip received from status ${tip.status}`,
       code: 'INVALID_STATUS',
+    };
+  }
+
+  if (tip.refundedAt) {
+    return {
+      ok: false,
+      status: 409,
+      error: 'Cannot mark a refunded tip as received.',
+      code: 'REFUNDED',
     };
   }
 
@@ -112,9 +162,21 @@ export async function markTipReceived(
       providerReference: input.providerReference ?? undefined,
       confirmedByAdminId: input.confirmedByAdminId ?? undefined,
       confirmedAt: input.confirmedByAdminId ? receivedAt : undefined,
+      // Clear stale pending-mismatch flag if present
+      needsReconcile: false,
+      reconcileReason: null,
     },
     select: { id: true, status: true },
   });
+
+  if (input.stripeEventId) {
+    await recordWebhookEventSafe({
+      stripeEventId: input.stripeEventId,
+      tipId: tip.id,
+      eventType: 'payment_intent.succeeded',
+      outcome: 'PROCESSED',
+    });
+  }
 
   await logAuditEntry({
     actorId: input.confirmedByAdminId ?? null,
@@ -127,6 +189,8 @@ export async function markTipReceived(
       previousStatus: tip.status,
       newStatus: nextStatus,
       amountCents: tip.amount,
+      entitlementCents,
+      platformShareCents: 0,
       beneficiaryCleanerId: tip.beneficiaryCleanerId,
       stripeEventId: input.stripeEventId ?? null,
       providerReference: input.providerReference ?? null,
@@ -139,5 +203,6 @@ export async function markTipReceived(
     tipId: updated.id,
     status: updated.status,
     alreadyReceived: false,
+    entitlementCents,
   };
 }

@@ -24,6 +24,8 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     job: { findUnique: (...a: unknown[]) => jobFindUnique(...a) },
     user: { findFirst: (...a: unknown[]) => userFindFirst(...a) },
+    jobTeamMember: { findMany: vi.fn(async () => []) },
+    jobOffer: { findMany: vi.fn(async () => []) },
     tip: {
       create: (...a: unknown[]) => tipCreate(...a),
       update: (...a: unknown[]) => tipUpdate(...a),
