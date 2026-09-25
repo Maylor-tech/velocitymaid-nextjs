@@ -146,6 +146,7 @@ export async function reconcileHistorical50TeamTip(input: {
   const alloc = await setTipAllocations({
     tipId: tip.id,
     adminId: input.adminId,
+    notify: false,
     lines: [
       { cleanerId: BRIAN_CLEANER_ID, amountCents: 2500 },
       { cleanerId: CARYLL_CLEANER_ID, amountCents: 2500 },
@@ -158,6 +159,7 @@ export async function reconcileHistorical50TeamTip(input: {
       fundsTransferredByApi: false,
       stripeFeeIsPlatformExpense: true,
       platformTipShareCents: 0,
+      cleanerNotified: false,
     },
   });
 

@@ -123,7 +123,6 @@ describe('TipAllocation invariants', () => {
       refundedAt: null,
       TipAllocation: [],
     });
-    tipAllocationDeleteMany.mockResolvedValue({ count: 0 });
     tipAllocationCreate
       .mockResolvedValueOnce({
         id: 'alloc-b',
@@ -139,6 +138,7 @@ describe('TipAllocation invariants', () => {
     const result = await setTipAllocations({
       tipId: 'tip-50',
       adminId: 'admin-1',
+      notify: false,
       lines: [
         { cleanerId: 'brian', amountCents: 2500 },
         { cleanerId: 'caryll', amountCents: 2500 },
@@ -150,6 +150,168 @@ describe('TipAllocation invariants', () => {
       expect(result.allocations.map((a) => a.amountCents).sort()).toEqual([
         2500, 2500,
       ]);
+    }
+    expect(tipAllocationDeleteMany).not.toHaveBeenCalled();
+    expect(tipUpdate).toHaveBeenCalled();
+  });
+
+  it('setTipAllocations preserves notifiedAt on same cleaner (amount change)', async () => {
+    const notifiedAt = new Date('2026-09-01T12:00:00.000Z');
+    tipFindUnique.mockResolvedValue({
+      id: 'tip-50',
+      amount: 5000,
+      status: 'RECEIVED_UNATTRIBUTED',
+      refundedAt: null,
+      TipAllocation: [
+        {
+          id: 'alloc-b',
+          cleanerId: 'brian',
+          amountCents: 2500,
+          status: 'OWED',
+          notifiedAt,
+        },
+        {
+          id: 'alloc-c',
+          cleanerId: 'caryll',
+          amountCents: 2500,
+          status: 'OWED',
+          notifiedAt: null,
+        },
+      ],
+    });
+    tipAllocationUpdate
+      .mockResolvedValueOnce({
+        id: 'alloc-b',
+        cleanerId: 'brian',
+        amountCents: 3000,
+      })
+      .mockResolvedValueOnce({
+        id: 'alloc-c',
+        cleanerId: 'caryll',
+        amountCents: 2000,
+      });
+
+    const result = await setTipAllocations({
+      tipId: 'tip-50',
+      adminId: 'admin-1',
+      notify: false,
+      lines: [
+        { cleanerId: 'brian', amountCents: 3000 },
+        { cleanerId: 'caryll', amountCents: 2000 },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    expect(tipAllocationDeleteMany).not.toHaveBeenCalled();
+    expect(tipAllocationCreate).not.toHaveBeenCalled();
+    // Updates must not clear notifiedAt
+    for (const call of tipAllocationUpdate.mock.calls) {
+      const data = (call[0] as { data: Record<string, unknown> }).data;
+      expect(data).not.toHaveProperty('notifiedAt');
+      expect(data.status).toBe('OWED');
+    }
+  });
+
+  it('setTipAllocations cancels removed cleaner instead of deleteMany', async () => {
+    tipFindUnique.mockResolvedValue({
+      id: 'tip-50',
+      amount: 5000,
+      status: 'RECEIVED_UNATTRIBUTED',
+      refundedAt: null,
+      TipAllocation: [
+        {
+          id: 'alloc-b',
+          cleanerId: 'brian',
+          amountCents: 2500,
+          status: 'OWED',
+          notifiedAt: new Date(),
+        },
+        {
+          id: 'alloc-c',
+          cleanerId: 'caryll',
+          amountCents: 2500,
+          status: 'OWED',
+          notifiedAt: new Date(),
+        },
+      ],
+    });
+    tipAllocationUpdate
+      .mockResolvedValueOnce({
+        id: 'alloc-b',
+        cleanerId: 'brian',
+        amountCents: 5000,
+      })
+      .mockResolvedValueOnce({ id: 'alloc-c', status: 'CANCELLED' });
+
+    const result = await setTipAllocations({
+      tipId: 'tip-50',
+      adminId: 'admin-1',
+      notify: false,
+      lines: [{ cleanerId: 'brian', amountCents: 5000 }],
+    });
+    expect(result.ok).toBe(true);
+    expect(tipAllocationDeleteMany).not.toHaveBeenCalled();
+    const cancelCall = tipAllocationUpdate.mock.calls.find(
+      (c) =>
+        (c[0] as { where: { id: string }; data: { status?: string } }).where
+          .id === 'alloc-c'
+    );
+    expect(cancelCall).toBeTruthy();
+    expect(
+      (cancelCall![0] as { data: { status: string } }).data.status
+    ).toBe('CANCELLED');
+  });
+
+  it('re-adding a cancelled notified cleaner updates in place without clearing notifiedAt', async () => {
+    const notifiedAt = new Date('2026-09-01T12:00:00.000Z');
+    tipFindUnique.mockResolvedValue({
+      id: 'tip-50',
+      amount: 5000,
+      status: 'RECEIVED_UNATTRIBUTED',
+      refundedAt: null,
+      TipAllocation: [
+        {
+          id: 'alloc-b',
+          cleanerId: 'brian',
+          amountCents: 2500,
+          status: 'CANCELLED',
+          notifiedAt,
+        },
+        {
+          id: 'alloc-c',
+          cleanerId: 'caryll',
+          amountCents: 2500,
+          status: 'CANCELLED',
+          notifiedAt,
+        },
+      ],
+    });
+    tipAllocationUpdate
+      .mockResolvedValueOnce({
+        id: 'alloc-b',
+        cleanerId: 'brian',
+        amountCents: 2500,
+      })
+      .mockResolvedValueOnce({
+        id: 'alloc-c',
+        cleanerId: 'caryll',
+        amountCents: 2500,
+      });
+
+    const result = await setTipAllocations({
+      tipId: 'tip-50',
+      adminId: 'admin-1',
+      notify: false,
+      lines: [
+        { cleanerId: 'brian', amountCents: 2500 },
+        { cleanerId: 'caryll', amountCents: 2500 },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    expect(tipAllocationCreate).not.toHaveBeenCalled();
+    expect(tipAllocationDeleteMany).not.toHaveBeenCalled();
+    for (const call of tipAllocationUpdate.mock.calls) {
+      const data = (call[0] as { data: Record<string, unknown> }).data;
+      expect(data).not.toHaveProperty('notifiedAt');
     }
   });
 
