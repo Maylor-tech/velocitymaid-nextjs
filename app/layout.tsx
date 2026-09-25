@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   title: "VelocityMaid | Professional Cleaning Services in New Jersey & Vermont",
   description:
     "VelocityMaid offers professional cleaning services in New Jersey and Vermont. Home and apartment cleaning for NJ families. Turnover cleaning for Vermont Airbnbs and short-term rentals. Book online in minutes.",
-  keywords: "cleaning services, maid service, house cleaning, commercial cleaning, New Jersey, professional cleaners, Newark cleaning, Jersey City cleaning",
+  keywords: "cleaning services, maid service, house cleaning, commercial cleaning, New Jersey, Vermont, professional cleaners, Montclair cleaning, Newark cleaning, Bloomfield cleaning",
   authors: [{ name: "VelocityMaid" }],
   creator: "VelocityMaid",
   publisher: "VelocityMaid",
@@ -110,17 +110,16 @@ export default function RootLayout({
       "name": "VelocityMaid - New Jersey",
       "alternateName": "VelocityMaid Cleaning Services New Jersey",
       "image": socialImageAbsoluteUrl("default"),
-      "description": "VelocityMaid provides reliable home and apartment cleaning services across New Jersey, specializing in move-in/out cleaning, deep cleaning, and maintenance cleaning.",
+      "description": "VelocityMaid provides recurring residential cleaning across Bloomfield, Montclair, Newark, East Orange, Irvington, South Orange, West Orange, and Nutley — with deep cleans and move-in/move-out available. Pricing confirmed after quote review.",
       "address": {
         "@type": "PostalAddress",
-        "addressLocality": "Newark",
+        "addressLocality": "Montclair",
         "addressRegion": "NJ",
         "addressCountry": "US"
       },
       "url": "https://velocitymaid.com/new-jersey",
       "telephone": "+18027335348",
       "email": "hello@velocitymaid.com",
-      "priceRange": "$$",
       "openingHoursSpecification": [
         {
           "@type": "OpeningHoursSpecification",
@@ -129,11 +128,17 @@ export default function RootLayout({
           "closes": "18:00"
         }
       ],
-      "areaServed": {
-        "@type": "State",
-        "name": "New Jersey"
-      },
-      "serviceType": "Cleaning Service",
+      "areaServed": [
+        { "@type": "City", "name": "Bloomfield" },
+        { "@type": "City", "name": "Montclair" },
+        { "@type": "City", "name": "Newark" },
+        { "@type": "City", "name": "East Orange" },
+        { "@type": "City", "name": "Irvington" },
+        { "@type": "City", "name": "South Orange" },
+        { "@type": "City", "name": "West Orange" },
+        { "@type": "City", "name": "Nutley" }
+      ],
+      "serviceType": "Recurring Residential Cleaning",
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
         "name": "Cleaning Services",

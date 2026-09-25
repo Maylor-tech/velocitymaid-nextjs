@@ -68,9 +68,9 @@ export const VERMONT_SERVICE_OPTIONS: ServiceOption[] = [
 
 export const NJ_SERVICE_OPTIONS: ServiceOption[] = [
   {
-    value: 'STANDARD',
-    label: 'Standard Residential Clean',
-    description: 'Regular maintenance cleaning for your home',
+    value: 'RECURRING',
+    label: 'Recurring Residential Cleaning',
+    description: 'Weekly, bi-weekly, or monthly — our primary New Jersey offer',
   },
   {
     value: 'DEEP_CLEAN',
@@ -83,9 +83,9 @@ export const NJ_SERVICE_OPTIONS: ServiceOption[] = [
     description: 'Comprehensive cleaning for moving',
   },
   {
-    value: 'RECURRING',
-    label: 'Recurring Cleaning Plan',
-    description: 'Weekly, bi-weekly, or monthly scheduled cleans',
+    value: 'STANDARD',
+    label: 'One-Time Standard Clean',
+    description: 'Single-visit residential maintenance cleaning',
   },
 ];
 

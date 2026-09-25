@@ -5,7 +5,7 @@ const items = [
   },
   {
     q: "How do Vermont and New Jersey pricing differ?",
-    a: "Vermont service focuses on vacation-rental turnovers and property readiness, typically starting from $225. New Jersey service focuses on residential cleaning for homes and apartments, typically starting from $120.",
+    a: "Vermont service focuses on vacation-rental turnovers and property readiness, typically starting from $225. New Jersey service focuses on recurring residential cleaning (primary), deep cleaning, and move-in/move-out across Elaine's Essex County territory — pricing is confirmed after a quote review, not published as a starting rate.",
   },
   {
     q: "How do I get a Vermont quote?",

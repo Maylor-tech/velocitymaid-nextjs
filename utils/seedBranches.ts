@@ -18,73 +18,19 @@ import {
   createBranchAutomationConfig,
   createBranchLandingContent,
   createBranchPayoutRules,
-  type Branch,
   type PricingModel,
 } from './branchData';
+import { NJ_TERRITORY_ZIPS } from '@/lib/markets/newJersey';
 
 /**
- * New Jersey ZIP codes (major cities)
+ * New Jersey ZIP codes — Elaine territory.
  */
-const NJ_ZIP_CODES = [
-  // Newark
-  { zip: '07101', city: 'Newark', state: 'NJ' },
-  { zip: '07102', city: 'Newark', state: 'NJ' },
-  { zip: '07103', city: 'Newark', state: 'NJ' },
-  { zip: '07104', city: 'Newark', state: 'NJ' },
-  { zip: '07105', city: 'Newark', state: 'NJ' },
-  { zip: '07106', city: 'Newark', state: 'NJ' },
-  { zip: '07107', city: 'Newark', state: 'NJ' },
-  { zip: '07108', city: 'Newark', state: 'NJ' },
-  { zip: '07112', city: 'Newark', state: 'NJ' },
-  { zip: '07114', city: 'Newark', state: 'NJ' },
-  // Jersey City
-  { zip: '07302', city: 'Jersey City', state: 'NJ' },
-  { zip: '07303', city: 'Jersey City', state: 'NJ' },
-  { zip: '07304', city: 'Jersey City', state: 'NJ' },
-  { zip: '07305', city: 'Jersey City', state: 'NJ' },
-  { zip: '07306', city: 'Jersey City', state: 'NJ' },
-  { zip: '07307', city: 'Jersey City', state: 'NJ' },
-  { zip: '07308', city: 'Jersey City', state: 'NJ' },
-  { zip: '07310', city: 'Jersey City', state: 'NJ' },
-  { zip: '07311', city: 'Jersey City', state: 'NJ' },
-  // Paterson
-  { zip: '07501', city: 'Paterson', state: 'NJ' },
-  { zip: '07502', city: 'Paterson', state: 'NJ' },
-  { zip: '07503', city: 'Paterson', state: 'NJ' },
-  { zip: '07504', city: 'Paterson', state: 'NJ' },
-  { zip: '07505', city: 'Paterson', state: 'NJ' },
-  { zip: '07509', city: 'Paterson', state: 'NJ' },
-  { zip: '07510', city: 'Paterson', state: 'NJ' },
-  { zip: '07513', city: 'Paterson', state: 'NJ' },
-  { zip: '07514', city: 'Paterson', state: 'NJ' },
-  { zip: '07522', city: 'Paterson', state: 'NJ' },
-  { zip: '07524', city: 'Paterson', state: 'NJ' },
-  { zip: '07533', city: 'Paterson', state: 'NJ' },
-  { zip: '07543', city: 'Paterson', state: 'NJ' },
-  { zip: '07544', city: 'Paterson', state: 'NJ' },
-  // Elizabeth
-  { zip: '07201', city: 'Elizabeth', state: 'NJ' },
-  { zip: '07202', city: 'Elizabeth', state: 'NJ' },
-  { zip: '07206', city: 'Elizabeth', state: 'NJ' },
-  { zip: '07208', city: 'Elizabeth', state: 'NJ' },
-  // Edison
-  { zip: '08817', city: 'Edison', state: 'NJ' },
-  { zip: '08818', city: 'Edison', state: 'NJ' },
-  { zip: '08820', city: 'Edison', state: 'NJ' },
-  { zip: '08837', city: 'Edison', state: 'NJ' },
-  // Hoboken
-  { zip: '07030', city: 'Hoboken', state: 'NJ' },
-  // Clifton
-  { zip: '07011', city: 'Clifton', state: 'NJ' },
-  { zip: '07012', city: 'Clifton', state: 'NJ' },
-  { zip: '07013', city: 'Clifton', state: 'NJ' },
-  { zip: '07014', city: 'Clifton', state: 'NJ' },
-  { zip: '07015', city: 'Clifton', state: 'NJ' },
-];
+const NJ_ZIP_CODES = NJ_TERRITORY_ZIPS.map((z) => ({
+  zip: z.zip,
+  city: z.city,
+  state: z.state,
+}));
 
-/**
- * Vermont ZIP codes (major areas)
- */
 const VT_ZIP_CODES = [
   { zip: '05149', city: 'Ludlow', state: 'VT' },
   { zip: '05150', city: 'Ludlow', state: 'VT' },
@@ -358,7 +304,7 @@ function seedNewJersey() {
   });
 
   // Create service areas
-  NJ_ZIP_CODES.forEach(({ zip, city, state }, index) => {
+  NJ_ZIP_CODES.forEach(({ zip, city, state }) => {
     createBranchServiceArea({
       branchId: branch.id,
       zipCode: zip,
@@ -425,7 +371,7 @@ function seedNewJersey() {
   createBranchLandingContent({
     branchId: branch.id,
     headline: 'Professional Cleaning Services in New Jersey',
-    subheadline: 'Trusted by families across Newark, Jersey City, and beyond',
+    subheadline: 'Recurring residential cleaning across Bloomfield, Montclair, Newark, and nearby Essex County towns',
     heroImageUrl: '/images/gallery/velocitymaid-cozy-bedroom-cleaning-nj.jpg',
     localCtaLabel: 'Book Your New Jersey Cleaning',
     seoTitle: 'VelocityMaid | Professional Cleaning Services in New Jersey',
@@ -439,7 +385,7 @@ function seedNewJersey() {
       },
       {
         name: 'Michael C.',
-        location: 'Jersey City, NJ',
+        location: 'Montclair, NJ',
         text: 'As a busy professional, VelocityMaid has been a lifesaver. They\'re reliable, thorough, and professional.',
         rating: 5,
       },
@@ -447,7 +393,7 @@ function seedNewJersey() {
     faqEntries: [
       {
         question: 'What areas do you serve in New Jersey?',
-        answer: 'We serve all of New Jersey, including Newark, Jersey City, Paterson, Elizabeth, Edison, and surrounding areas.',
+        answer: 'We serve Bloomfield, Montclair, Newark, East Orange, Irvington, South Orange, West Orange, and Nutley.',
       },
       {
         question: 'How quickly can you schedule a cleaning?',
