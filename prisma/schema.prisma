@@ -1737,8 +1737,9 @@ model Tip {
   /// Legacy free-text. Never exposed on public tip surfaces for new flows.
   propertyAddress       String?
   stripePaymentIntentId String?   @unique
-  /// Canonical: PENDING | RECEIVED | RECEIVED_UNATTRIBUTED | PAID_OUT | CANCELLED | FAILED | REFUNDED
+  /// Canonical ledger: PENDING | RECEIVED | RECEIVED_UNATTRIBUTED | PAID_OUT | CANCELLED | FAILED | REFUNDED
   /// Legacy rows may still use pending | succeeded | failed.
+  /// PAYABLE is derived (RECEIVED + clear dispute/refund), not a stored status.
   status                String    @default("PENDING")
   market                String?
   jobId                 String?
@@ -1749,6 +1750,7 @@ model Tip {
   paymentMethod         String?
   internalReference     String?   @unique
   providerReference     String?
+  /// Stripe event id for successful receipt (idempotency). Additional events → TipWebhookEvent.
   stripeEventId         String?   @unique
   receivedAt            DateTime?
   confirmedByAdminId    String?
@@ -1757,6 +1759,15 @@ model Tip {
   payoutReference       String?
   paidOutByAdminId      String?
   paidOutMethod         String?
+  /// Dispute overlay — orthogonal so PAID_OUT history is never erased.
+  /// NONE | OPEN | WON | LOST
+  disputeStatus         String    @default("NONE")
+  disputedAt            DateTime?
+  disputeClosedAt       DateTime?
+  refundedAt            DateTime?
+  /// Durable ops signal; never auto-moves money.
+  needsReconcile        Boolean   @default(false)
+  reconcileReason       String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   Job                   Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
@@ -1764,13 +1775,32 @@ model Tip {
   Beneficiary           User?     @relation("TipBeneficiary", fields: [beneficiaryCleanerId], references: [id], onDelete: SetNull)
   ConfirmedByAdmin      User?     @relation("TipConfirmedBy", fields: [confirmedByAdminId], references: [id], onDelete: SetNull)
   PaidOutByAdmin        User?     @relation("TipPaidOutBy", fields: [paidOutByAdminId], references: [id], onDelete: SetNull)
+  TipWebhookEvent       TipWebhookEvent[]
 
   @@index([jobId])
   @@index([propertyId])
   @@index([beneficiaryCleanerId])
   @@index([status])
   @@index([paymentMethod])
+  @@index([disputeStatus])
+  @@index([needsReconcile])
   @@map("tips")
+}
+
+/// Idempotent record of Stripe tip-webhook events (success, refund, dispute).
+model TipWebhookEvent {
+  id            String   @id @default(cuid())
+  stripeEventId String   @unique
+  tipId         String?
+  eventType     String
+  /// PROCESSED | DUPLICATE | NO_MATCH | IGNORED | ERROR
+  outcome       String
+  createdAt     DateTime @default(now())
+  Tip           Tip?     @relation(fields: [tipId], references: [id], onDelete: SetNull)
+
+  @@index([tipId])
+  @@index([createdAt])
+  @@map("tip_webhook_events")
 }
 
 model Invoice {

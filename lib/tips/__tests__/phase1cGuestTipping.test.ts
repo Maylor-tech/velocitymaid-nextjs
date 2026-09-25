@@ -35,6 +35,8 @@ const mocks = vi.hoisted(() => {
       findMany: (...a: unknown[]) => m.jobFindMany(...a),
     },
     user: { findFirst: (...a: unknown[]) => m.userFindFirst(...a) },
+    jobTeamMember: { findMany: vi.fn(async () => []) },
+    jobOffer: { findMany: vi.fn(async () => []) },
     tip: {
       create: (...a: unknown[]) => m.tipCreate(...a),
       update: (...a: unknown[]) => m.tipUpdate(...a),

@@ -46,6 +46,12 @@ export const ADMIN_NAV: AdminNavItem[] = [
     match: (p) => p.startsWith('/admin/feedback'),
   },
   {
+    href: '/admin/tips',
+    label: 'Tips',
+    icon: DollarSign,
+    match: (p) => p.startsWith('/admin/tips'),
+  },
+  {
     href: '/admin/customers',
     label: 'Customers',
     icon: UserCircle,

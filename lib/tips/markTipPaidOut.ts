@@ -1,6 +1,11 @@
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
-import { isTipPaidOut, normalizeTipStatus } from '@/lib/tips/statuses';
+import {
+  isTipPaidOut,
+  isTipPayable,
+  isTipSettlementBlockedByDispute,
+  normalizeTipStatus,
+} from '@/lib/tips/statuses';
 
 export type MarkTipPaidOutInput = {
   tipId: string;
@@ -16,11 +21,14 @@ export type MarkTipPaidOutResult =
       tipId: string;
       status: 'PAID_OUT';
       alreadyPaidOut: boolean;
+      /** Explicit: this API records external settlement only. */
+      fundsTransferredByApi: false;
     }
   | { ok: false; status: number; error: string; code: string };
 
 /**
- * Manual tip settlement. Separate from JobPayout. Does not transfer money.
+ * Manual tip settlement recording. Separate from JobPayout.
+ * Does NOT transfer money — Ops must already have paid the cleaner externally.
  */
 export async function markTipPaidOut(
   input: MarkTipPaidOutInput
@@ -33,6 +41,13 @@ export async function markTipPaidOut(
       beneficiaryCleanerId: true,
       amount: true,
       paidOutAt: true,
+      receivedAt: true,
+      refundedAt: true,
+      disputeStatus: true,
+      needsReconcile: true,
+      paymentMethod: true,
+      stripePaymentIntentId: true,
+      providerReference: true,
     },
   });
 
@@ -46,28 +61,110 @@ export async function markTipPaidOut(
       tipId: tip.id,
       status: 'PAID_OUT',
       alreadyPaidOut: true,
+      fundsTransferredByApi: false,
     };
   }
 
   const normalized = normalizeTipStatus(tip.status);
-  if (normalized !== 'RECEIVED') {
+
+  if (normalized === 'PENDING') {
+    return {
+      ok: false,
+      status: 409,
+      error: 'Cannot settle a PENDING tip — payment is not confirmed.',
+      code: 'NOT_RECEIVED',
+    };
+  }
+  if (normalized === 'FAILED') {
+    return {
+      ok: false,
+      status: 409,
+      error: 'Cannot settle a FAILED tip.',
+      code: 'FAILED',
+    };
+  }
+  if (normalized === 'REFUNDED' || tip.refundedAt) {
+    return {
+      ok: false,
+      status: 409,
+      error: 'Cannot settle a refunded tip.',
+      code: 'REFUNDED',
+    };
+  }
+  if (isTipSettlementBlockedByDispute(tip.disputeStatus)) {
     return {
       ok: false,
       status: 409,
       error:
-        normalized === 'RECEIVED_UNATTRIBUTED'
-          ? 'Unattributed tips cannot be settled to a cleaner until beneficiary is resolved by approved ops.'
-          : `Only RECEIVED tips can be marked PAID_OUT (current: ${tip.status}).`,
-      code: 'INVALID_STATUS',
+        tip.disputeStatus === 'OPEN'
+          ? 'Cannot settle while a dispute is open.'
+          : 'Cannot settle a tip with a lost dispute.',
+      code: 'DISPUTE_BLOCK',
     };
   }
-
-  if (!tip.beneficiaryCleanerId) {
+  if (normalized === 'RECEIVED_UNATTRIBUTED' || !tip.beneficiaryCleanerId) {
     return {
       ok: false,
       status: 409,
-      error: 'Tip has no beneficiary; cannot settle.',
+      error:
+        'Tip has no beneficiary; cannot settle until beneficiary is resolved.',
       code: 'NO_BENEFICIARY',
+    };
+  }
+  if (normalized !== 'RECEIVED') {
+    return {
+      ok: false,
+      status: 409,
+      error: `Only RECEIVED (payable) tips can be marked PAID_OUT (current: ${tip.status}).`,
+      code: 'INVALID_STATUS',
+    };
+  }
+  if (!tip.receivedAt) {
+    return {
+      ok: false,
+      status: 409,
+      error: 'Tip has no confirmed receipt timestamp.',
+      code: 'NOT_RECEIVED',
+    };
+  }
+  // Stripe tips must have a PaymentIntent / provider reference confirming collection
+  if (tip.paymentMethod === 'STRIPE' && !tip.stripePaymentIntentId) {
+    return {
+      ok: false,
+      status: 409,
+      error: 'Stripe tip has no PaymentIntent reference — unsafe to settle.',
+      code: 'UNCONFIRMED_PAYMENT',
+    };
+  }
+  if (
+    tip.paymentMethod === 'ZELLE' ||
+    tip.paymentMethod === 'MANUAL'
+  ) {
+    // Admin confirm-received sets receivedAt — already required above
+  }
+  if (tip.needsReconcile) {
+    return {
+      ok: false,
+      status: 409,
+      error:
+        'Tip is flagged for reconciliation — resolve the mismatch before settling.',
+      code: 'NEEDS_RECONCILE',
+    };
+  }
+  if (
+    !isTipPayable({
+      status: tip.status,
+      beneficiaryCleanerId: tip.beneficiaryCleanerId,
+      disputeStatus: tip.disputeStatus,
+      refundedAt: tip.refundedAt,
+      needsReconcile: tip.needsReconcile,
+    })
+  ) {
+    return {
+      ok: false,
+      status: 409,
+      error: 'Tip is not currently payable.',
+      code: 'NOT_PAYABLE',
     };
   }
 
@@ -76,7 +173,7 @@ export async function markTipPaidOut(
     return {
       ok: false,
       status: 400,
-      error: 'paidOutMethod is required',
+      error: 'paidOutMethod is required (records external payment method only).',
       code: 'INVALID_METHOD',
     };
   }
@@ -100,7 +197,7 @@ export async function markTipPaidOut(
     action: 'TIP_PAID_OUT',
     entityType: 'Tip',
     entityId: tip.id,
-    description: `Tip marked PAID_OUT via ${method}`,
+    description: `Tip marked PAID_OUT (external settlement recorded via ${method}) — API did not transfer funds`,
     changes: {
       previousStatus: tip.status,
       newStatus: 'PAID_OUT',
@@ -108,6 +205,7 @@ export async function markTipPaidOut(
       beneficiaryCleanerId: tip.beneficiaryCleanerId,
       paidOutMethod: method,
       payoutReference: input.payoutReference?.trim() || null,
+      fundsTransferredByApi: false,
     },
   });
 
@@ -116,5 +214,6 @@ export async function markTipPaidOut(
     tipId: tip.id,
     status: 'PAID_OUT',
     alreadyPaidOut: false,
+    fundsTransferredByApi: false,
   };
 }

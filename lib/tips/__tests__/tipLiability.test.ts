@@ -4,11 +4,15 @@ import { JobStatus } from '@prisma/client';
 const mocks = vi.hoisted(() => ({
   jobFindUnique: vi.fn(),
   userFindFirst: vi.fn(),
+  jobTeamMemberFindMany: vi.fn(),
+  jobOfferFindMany: vi.fn(),
   tipCreate: vi.fn(),
   tipFindUnique: vi.fn(),
   tipFindFirst: vi.fn(),
   tipUpdate: vi.fn(),
   tipUpdateMany: vi.fn(),
+  tipWebhookEventFindUnique: vi.fn(),
+  tipWebhookEventCreate: vi.fn(),
   logAuditEntry: vi.fn(),
 }));
 
@@ -16,12 +20,22 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     job: { findUnique: (...a: unknown[]) => mocks.jobFindUnique(...a) },
     user: { findFirst: (...a: unknown[]) => mocks.userFindFirst(...a) },
+    jobTeamMember: {
+      findMany: (...a: unknown[]) => mocks.jobTeamMemberFindMany(...a),
+    },
+    jobOffer: {
+      findMany: (...a: unknown[]) => mocks.jobOfferFindMany(...a),
+    },
     tip: {
       create: (...a: unknown[]) => mocks.tipCreate(...a),
       findUnique: (...a: unknown[]) => mocks.tipFindUnique(...a),
       findFirst: (...a: unknown[]) => mocks.tipFindFirst(...a),
       update: (...a: unknown[]) => mocks.tipUpdate(...a),
       updateMany: (...a: unknown[]) => mocks.tipUpdateMany(...a),
+    },
+    tipWebhookEvent: {
+      findUnique: (...a: unknown[]) => mocks.tipWebhookEventFindUnique(...a),
+      create: (...a: unknown[]) => mocks.tipWebhookEventCreate(...a),
     },
   },
 }));
@@ -45,6 +59,10 @@ describe('Phase 7C tip liability', () => {
     vi.clearAllMocks();
     mocks.logAuditEntry.mockResolvedValue(undefined);
     mocks.tipFindFirst.mockResolvedValue(null);
+    mocks.jobTeamMemberFindMany.mockResolvedValue([]);
+    mocks.jobOfferFindMany.mockResolvedValue([]);
+    mocks.tipWebhookEventFindUnique.mockResolvedValue(null);
+    mocks.tipWebhookEventCreate.mockResolvedValue({});
   });
 
   it('1. freezes beneficiary from completed job assignee', async () => {
@@ -87,6 +105,7 @@ describe('Phase 7C tip liability', () => {
       beneficiaryCleanerId: 'cleaner-dorottya',
       stripeEventId: null,
       receivedAt: null,
+      refundedAt: null,
     });
     mocks.tipUpdate.mockResolvedValue({ id: 'tip-1', status: 'RECEIVED' });
 
@@ -154,6 +173,7 @@ describe('Phase 7C tip liability', () => {
       beneficiaryCleanerId: 'c1',
       stripeEventId: null,
       receivedAt: null,
+      refundedAt: null,
     });
     mocks.tipUpdate.mockResolvedValue({ id: 'tip-1', status: 'RECEIVED' });
 
@@ -177,6 +197,7 @@ describe('Phase 7C tip liability', () => {
       beneficiaryCleanerId: null,
       stripeEventId: null,
       receivedAt: null,
+      refundedAt: null,
     });
     mocks.tipUpdate.mockResolvedValue({
       id: 'tip-hist',
@@ -257,6 +278,7 @@ describe('Phase 7C tip liability', () => {
       beneficiaryCleanerId: 'c1',
       stripeEventId: null,
       receivedAt: null,
+      refundedAt: null,
     });
     mocks.tipUpdate.mockResolvedValue({ id: 'tip-z', status: 'RECEIVED' });
 
@@ -282,6 +304,7 @@ describe('Phase 7C tip liability', () => {
       beneficiaryCleanerId: 'c1',
       stripeEventId: null,
       receivedAt: null,
+      refundedAt: null,
     });
 
     const result = await markTipReceived({
@@ -347,6 +370,7 @@ describe('Phase 7C tip liability', () => {
       beneficiaryCleanerId: 'cleaner-a',
       stripeEventId: null,
       receivedAt: null,
+      refundedAt: null,
     });
     mocks.tipUpdate.mockResolvedValue({ id: 'tip-1', status: 'RECEIVED' });
     await markTipReceived({
@@ -390,6 +414,13 @@ describe('Phase 7C tip liability', () => {
       beneficiaryCleanerId: 'c1',
       amount: 2500,
       paidOutAt: new Date(),
+      receivedAt: new Date(),
+      refundedAt: null,
+      disputeStatus: 'NONE',
+      needsReconcile: false,
+      paymentMethod: 'STRIPE',
+      stripePaymentIntentId: 'pi_1',
+      providerReference: 'pi_1',
     });
 
     const result = await markTipPaidOut({
@@ -409,6 +440,7 @@ describe('Phase 7C tip liability', () => {
       beneficiaryCleanerId: 'c1',
       stripeEventId: null,
       receivedAt: null,
+      refundedAt: null,
     });
     mocks.tipUpdate.mockResolvedValue({ id: 'tip-1', status: 'RECEIVED' });
 
@@ -457,6 +489,13 @@ describe('Phase 7C tip liability', () => {
       beneficiaryCleanerId: null,
       amount: 5000,
       paidOutAt: null,
+      receivedAt: new Date(),
+      refundedAt: null,
+      disputeStatus: 'NONE',
+      needsReconcile: false,
+      paymentMethod: 'STRIPE',
+      stripePaymentIntentId: 'pi_u',
+      providerReference: 'pi_u',
     });
 
     const result = await markTipPaidOut({

@@ -111,7 +111,8 @@ export async function POST(request: NextRequest) {
             ? 404
             : e.code === 'JOB_NOT_ELIGIBLE' ||
                 e.code === 'JOB_NOT_COMPLETED' ||
-                e.code === 'NO_SERVICE_EARNER'
+                e.code === 'NO_SERVICE_EARNER' ||
+                e.code === 'AMBIGUOUS_SERVICE_EARNERS'
               ? 409
               : 400;
         return NextResponse.json(
