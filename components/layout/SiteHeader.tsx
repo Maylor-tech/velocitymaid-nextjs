@@ -47,7 +47,7 @@ const ctaClassName =
 
 export default function SiteHeader({
   homeAnchors = false,
-  bookingHref = "/book?branch=new-jersey",
+  bookingHref = "/lead/new-jersey",
   bookingLabel = "Book Now",
 }: SiteHeaderProps) {
   const pathname = usePathname();

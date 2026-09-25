@@ -19,6 +19,10 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     job: { findUnique: (...a: unknown[]) => jobFindUnique(...a) },
     user: { findFirst: (...a: unknown[]) => userFindFirst(...a) },
+    // Required by resolveTipServiceEarner team-boundary checks (P0-C+).
+    // Incomplete mocks caused 500 on main + this branch (not NJ-related).
+    jobTeamMember: { findMany: vi.fn().mockResolvedValue([]) },
+    jobOffer: { findMany: vi.fn().mockResolvedValue([]) },
   },
 }));
 

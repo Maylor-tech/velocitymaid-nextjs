@@ -1,105 +1,60 @@
 /**
  * City Routing Utilities
- * 
- * Maps ZIP codes to NJ sub-cities and handles city-specific routing
+ * Maps ZIP codes to NJ sub-cities (Elaine territory) for SEO city pages.
  */
 
-// ZIP to City Mapping for New Jersey
-const ZIP_TO_CITY: Record<string, string> = {
-  // Jersey City
-  '07302': 'jersey-city',
-  '07304': 'jersey-city',
-  '07305': 'jersey-city',
-  '07306': 'jersey-city',
-  '07307': 'jersey-city',
-  '07310': 'jersey-city',
-  
-  // Hoboken
-  '07030': 'hoboken',
-  
-  // Union
-  '07083': 'union',
-  
-  // Rahway
-  '07065': 'rahway',
-  
-  // Elizabeth
-  '07201': 'elizabeth',
-  '07202': 'elizabeth',
-  '07206': 'elizabeth',
-  '07208': 'elizabeth',
-  
-  // Newark
-  '07101': 'newark',
-  '07102': 'newark',
-  '07103': 'newark',
-  '07104': 'newark',
-  '07105': 'newark',
-  '07106': 'newark',
-  '07107': 'newark',
-  '07108': 'newark',
-  '07109': 'newark',
-  '07110': 'newark',
-  '07111': 'newark',
-  '07112': 'newark',
-  '07114': 'newark',
-};
+import {
+  NJ_CITY_DISPLAY_BY_SLUG,
+  NJ_TERRITORY_ZIPS,
+} from '@/lib/markets/newJersey';
 
-// City Display Names
+const ZIP_TO_CITY: Record<string, string> = Object.fromEntries(
+  NJ_TERRITORY_ZIPS.map((z) => [
+    z.zip,
+    z.city.toLowerCase().replace(/\s+/g, '-'),
+  ])
+);
+
 export const CITY_DISPLAY_NAMES: Record<string, string> = {
-  'jersey-city': 'Jersey City',
-  'hoboken': 'Hoboken',
-  'union': 'Union',
-  'rahway': 'Rahway',
-  'elizabeth': 'Elizabeth',
-  'newark': 'Newark',
+  ...NJ_CITY_DISPLAY_BY_SLUG,
 };
 
-// City ZIP Lists (for service area display)
-export const CITY_ZIPS: Record<string, string[]> = {
-  'jersey-city': ['07302', '07304', '07305', '07306', '07307', '07310'],
-  'hoboken': ['07030'],
-  'union': ['07083'],
-  'rahway': ['07065'],
-  'elizabeth': ['07201', '07202', '07206', '07208'],
-  'newark': ['07101', '07102', '07103', '07104', '07105', '07106', '07107', '07108', '07109', '07110', '07111', '07112', '07114'],
-};
+export const CITY_ZIP_CODES: Record<string, string[]> = (() => {
+  const map: Record<string, string[]> = {};
+  for (const row of NJ_TERRITORY_ZIPS) {
+    const slug = row.city.toLowerCase().replace(/\s+/g, '-');
+    if (!map[slug]) map[slug] = [];
+    map[slug].push(row.zip);
+  }
+  return map;
+})();
 
-/**
- * Resolve city from ZIP code
- */
-export function resolveCityFromZip(zipCode: string): string | null {
-  const normalizedZip = zipCode.trim();
-  return ZIP_TO_CITY[normalizedZip] || null;
+export function getCityFromZip(zip: string): string | null {
+  return ZIP_TO_CITY[zip] || null;
 }
 
-/**
- * Get all ZIPs for a city
- */
-export function getZipsForCity(citySlug: string): string[] {
-  return CITY_ZIPS[citySlug] || [];
+/** Alias used by /api/resolve-zip (city slug only; branch resolution is separate). */
+export function resolveCityFromZip(zip: string): string | null {
+  return getCityFromZip(zip.trim());
 }
 
-/**
- * Check if ZIP belongs to a city
- */
-export function isZipInCity(zipCode: string, citySlug: string): boolean {
-  const zips = getZipsForCity(citySlug);
-  return zips.includes(zipCode.trim());
-}
-
-/**
- * Get city display name
- */
 export function getCityDisplayName(citySlug: string): string {
   return CITY_DISPLAY_NAMES[citySlug] || citySlug;
 }
 
-/**
- * Get all NJ sub-cities
- */
-export function getAllNJCities(): string[] {
+export function getZipsForCity(citySlug: string): string[] {
+  return CITY_ZIP_CODES[citySlug] || [];
+}
+
+export function getAllNjCities(): string[] {
   return Object.keys(CITY_DISPLAY_NAMES);
 }
 
+/** Legacy alias */
+export function getAllNJCities(): string[] {
+  return getAllNjCities();
+}
 
+export function isValidNjCity(citySlug: string): boolean {
+  return citySlug in CITY_DISPLAY_NAMES;
+}

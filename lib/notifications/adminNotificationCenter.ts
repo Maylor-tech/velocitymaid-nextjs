@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 
 export type AdminNotificationType =
   | 'NEW_QUOTE'
+  | 'NJ_LEAD'
   | 'DEPOSIT_RECEIVED'
   | 'HOST_CLEANING_REQUEST'
   | 'CLEANER_ASSIGNED'

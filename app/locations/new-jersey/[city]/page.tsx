@@ -16,7 +16,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { getCityDisplayName, getZipsForCity, getAllNJCities } from '@/utils/cityRouting';
-import FAQAccordion from '../../new-jersey/components/FAQAccordion';
+import FAQAccordion from '../components/FAQAccordion';
 import { isBrandSafePublicImage } from '@/lib/seo/socialImages';
 
 type CityLandingContent = {

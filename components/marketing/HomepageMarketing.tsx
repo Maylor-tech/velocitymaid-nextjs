@@ -60,7 +60,7 @@ const homepageFaqs = [
 export function HomepageMarketing() {
   return (
     <div className="min-h-screen bg-white">
-      <SiteHeader homeAnchors bookingHref="/book?branch=new-jersey" />
+      <SiteHeader homeAnchors bookingHref="/lead/new-jersey" />
       <main>
         <section className="relative overflow-hidden bg-vm-navy px-5 py-20 text-center sm:py-24">
           <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-vm-cyan/10 blur-3xl" />
@@ -76,8 +76,8 @@ export function HomepageMarketing() {
               for vacation rentals, hosts, and busy households.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link href="/book?branch=new-jersey" className={primaryButton}>
-                Book New Jersey
+              <Link href="/lead/new-jersey" className={primaryButton}>
+                New Jersey quote
               </Link>
               <Link href="/vermont" className={outlineButton}>
                 Vermont hosts →
@@ -142,19 +142,27 @@ export function HomepageMarketing() {
               For Homes &amp; Apartments
             </h2>
             <p className="mt-4 max-w-xl font-body leading-relaxed text-vm-muted">
-              Recurring residential cleaning for homeowners, apartment residents,
-              and busy professionals across Newark, Jersey City, and Paterson.
+              Recurring residential cleaning is our primary New Jersey offer —
+              serving Bloomfield, Montclair, Newark, East Orange, Irvington,
+              South Orange, West Orange, and Nutley.
             </p>
             <ul className="my-6 space-y-2 font-body text-sm text-vm-text">
-              {["Recurring cleaning", "Deep cleaning", "Move-in and move-out"].map((item) => (
+              {[
+                "Recurring residential cleaning",
+                "Deep cleaning",
+                "Move-in and move-out",
+              ].map((item) => (
                 <li key={item} className="flex gap-2">
                   <CheckCircle2 className="h-5 w-5 text-vm-cyan-dark" />
                   {item}
                 </li>
               ))}
             </ul>
-            <Link href="/book?branch=new-jersey" className={primaryButton}>
-              Book cleaning
+            <p className="mb-4 font-body text-xs text-vm-muted">
+              Short-term rental cleaning available on request.
+            </p>
+            <Link href="/lead/new-jersey" className={primaryButton}>
+              Request a quote
             </Link>
           </article>
         </section>
@@ -285,14 +293,15 @@ export function HomepageMarketing() {
                   Residential cleaning
                 </h3>
                 <p className="mt-3 font-heading text-3xl font-bold text-vm-navy">
-                  $120{" "}
-                  <span className="font-body text-xs font-medium text-vm-muted">starting</span>
+                  Custom quote
                 </p>
                 <p className="mt-3 font-body text-sm leading-relaxed text-vm-muted">
-                  Recurring, deep, and move-in or move-out cleaning for homes and apartments.
+                  Recurring residential cleaning first, then deep cleans and
+                  move-in/move-out — across Elaine&apos;s Essex County territory.
+                  Pricing confirmed after review.
                 </p>
-                <Link href="/book?branch=new-jersey" className={`${primaryButton} mt-6`}>
-                  Book cleaning
+                <Link href="/lead/new-jersey" className={`${primaryButton} mt-6`}>
+                  Request a quote
                 </Link>
               </article>
             </div>

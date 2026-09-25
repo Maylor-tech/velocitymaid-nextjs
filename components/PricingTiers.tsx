@@ -16,12 +16,12 @@ const markets = [
   },
   {
     market: "New Jersey",
-    title: "Residential cleaning",
-    price: "$120",
+    title: "Recurring residential cleaning",
+    price: "Custom quote",
     detail:
-      "Recurring, deep, and move-in or move-out cleaning for homes and apartments.",
-    href: "/book?branch=new-jersey",
-    cta: "Book cleaning",
+      "Primary offer for Bloomfield, Montclair, Newark, East Orange, Irvington, South Orange, West Orange, and Nutley — plus deep cleans and move-in/move-out. Pricing confirmed after review.",
+    href: "/lead/new-jersey",
+    cta: "Request a quote",
   },
 ] as const;
 
@@ -69,8 +69,16 @@ export default function PricingTiers() {
               </p>
               <h3 className="mt-3 font-heading text-2xl font-bold text-vm-navy">{card.title}</h3>
               <p className="mt-3 font-heading text-3xl font-bold text-vm-navy">
-                {card.price}{" "}
-                <span className="font-body text-xs font-medium text-vm-muted">starting</span>
+                {card.market === "New Jersey" ? (
+                  card.price
+                ) : (
+                  <>
+                    {card.price}{" "}
+                    <span className="font-body text-xs font-medium text-vm-muted">
+                      starting
+                    </span>
+                  </>
+                )}
               </p>
               <p className="mt-3 font-body text-sm leading-relaxed text-vm-muted">{card.detail}</p>
               <Link href={card.href} className={`${primaryButton} mt-6`}>

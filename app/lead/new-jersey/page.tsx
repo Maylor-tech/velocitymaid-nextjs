@@ -1,22 +1,34 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import {
+  NJ_FREQUENCY_OPTIONS,
+  NJ_LEAD_SOURCES,
+  NJ_SERVICE_CITIES,
+  NJ_SERVICE_TYPE_OPTIONS,
+  njCitiesShortList,
+} from '@/lib/markets/newJersey';
 
 export default function LeadCapturePage() {
-  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
+    city: '',
     zip: '',
+    addressLine: '',
     bedrooms: '',
     bathrooms: '',
-    urgency: '',
     homeType: '',
+    serviceType: 'RECURRING',
+    frequency: 'biweekly',
+    preferredDate: '',
+    urgency: 'this_week',
+    referralSource: '',
     previousService: false,
+    pets: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -34,8 +46,12 @@ export default function LeadCapturePage() {
         body: JSON.stringify({
           ...formData,
           branch: 'new-jersey',
-          bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : undefined,
-          bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : undefined,
+          source: 'lead-new-jersey-page',
+          bedrooms: formData.bedrooms ? parseInt(formData.bedrooms, 10) : undefined,
+          bathrooms: formData.bathrooms
+            ? parseInt(formData.bathrooms, 10)
+            : undefined,
+          preferredDate: formData.preferredDate || undefined,
         }),
       });
 
@@ -59,17 +75,21 @@ export default function LeadCapturePage() {
       <div className="min-h-screen bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white text-[#0A3D2F] rounded-2xl shadow-2xl p-8 text-center">
           <CheckCircle2 className="w-16 h-16 text-vm-success mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+          <h2
+            className="text-2xl font-bold mb-4"
+            style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}
+          >
             Thank You!
           </h2>
           <p className="text-vm-text mb-6">
-            We've received your information and will contact you shortly at hello@velocitymaid.com.
+            We&apos;ve received your request. Our New Jersey team will follow up
+            shortly. Quoting and scheduling stay with VelocityMaid.
           </p>
           <Link
             href="/new-jersey"
             className="inline-block bg-[#0A3D2F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#083025] transition"
           >
-            Back to Home
+            Back to New Jersey
           </Link>
         </div>
       </div>
@@ -78,26 +98,34 @@ export default function LeadCapturePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A3D2F] to-[#083025]">
-      {/* Header */}
       <header className="bg-white/10 backdrop-blur-sm border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link href="/" className="flex items-center space-x-2">
             <Sparkles className="w-8 h-8 text-[#F8C548]" />
-            <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+            <span
+              className="text-2xl font-bold text-white"
+              style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}
+            >
               VelocityMaid
             </span>
           </Link>
         </div>
       </header>
 
-      {/* Form */}
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
-          <h1 className="text-4xl font-bold text-[#0A3D2F] mb-2 text-center" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
+          <h1
+            className="text-4xl font-bold text-[#0A3D2F] mb-2 text-center"
+            style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}
+          >
             Get Your Free Quote
           </h1>
-          <p className="text-vm-muted text-center mb-8">
-            Tell us about your cleaning needs and we'll get back to you right away!
+          <p className="text-vm-muted text-center mb-2">
+            Recurring residential cleaning first — then deep cleans and
+            move-in/move-out.
+          </p>
+          <p className="text-vm-muted text-center text-sm mb-8">
+            Serving {njCitiesShortList()}.
           </p>
 
           {error && (
@@ -119,11 +147,9 @@ export default function LeadCapturePage() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] focus:border-[#F8C548] outline-none"
-                  placeholder="John Smith"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
                 />
               </div>
-
               <div>
                 <label htmlFor="phone" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
                   Phone Number *
@@ -134,25 +160,62 @@ export default function LeadCapturePage() {
                   required
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] focus:border-[#F8C548] outline-none"
-                  placeholder="(555) 123-4567"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
                 />
               </div>
-
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
-                  Email Address
+                  Email Address *
                 </label>
                 <input
                   type="email"
                   id="email"
+                  required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] focus:border-[#F8C548] outline-none"
-                  placeholder="john@example.com"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
                 />
               </div>
-
+              <div>
+                <label htmlFor="referralSource" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                  How did you hear about us? *
+                </label>
+                <select
+                  id="referralSource"
+                  required
+                  value={formData.referralSource}
+                  onChange={(e) =>
+                    setFormData({ ...formData, referralSource: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                >
+                  <option value="">Select</option>
+                  {NJ_LEAD_SOURCES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="city" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                  City / town *
+                </label>
+                <select
+                  id="city"
+                  required
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                >
+                  <option value="">Select</option>
+                  {NJ_SERVICE_CITIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label htmlFor="zip" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
                   ZIP Code *
@@ -163,105 +226,195 @@ export default function LeadCapturePage() {
                   required
                   value={formData.zip}
                   onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] focus:border-[#F8C548] outline-none"
-                  placeholder="07030"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
                   maxLength={5}
                 />
               </div>
+            </div>
 
+            <div>
+              <label htmlFor="addressLine" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                Property address *
+              </label>
+              <input
+                type="text"
+                id="addressLine"
+                required
+                value={formData.addressLine}
+                onChange={(e) =>
+                  setFormData({ ...formData, addressLine: e.target.value })
+                }
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                placeholder="Street address, unit if applicable"
+              />
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="bedrooms" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
-                  Bedrooms
+                <label htmlFor="serviceType" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                  Service type *
                 </label>
                 <select
-                  id="bedrooms"
-                  value={formData.bedrooms}
-                  onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] focus:border-[#F8C548] outline-none"
+                  id="serviceType"
+                  required
+                  value={formData.serviceType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, serviceType: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
                 >
-                  <option value="">Select</option>
-                  <option value="1">1 Bedroom</option>
-                  <option value="2">2 Bedrooms</option>
-                  <option value="3">3 Bedrooms</option>
-                  <option value="4">4 Bedrooms</option>
-                  <option value="5">5+ Bedrooms</option>
+                  {NJ_SERVICE_TYPE_OPTIONS.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
                 </select>
               </div>
-
               <div>
-                <label htmlFor="bathrooms" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
-                  Bathrooms
+                <label htmlFor="frequency" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                  Frequency *
                 </label>
                 <select
-                  id="bathrooms"
-                  value={formData.bathrooms}
-                  onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] focus:border-[#F8C548] outline-none"
+                  id="frequency"
+                  required
+                  value={formData.frequency}
+                  onChange={(e) =>
+                    setFormData({ ...formData, frequency: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
                 >
-                  <option value="">Select</option>
-                  <option value="1">1 Bathroom</option>
-                  <option value="2">2 Bathrooms</option>
-                  <option value="3">3 Bathrooms</option>
-                  <option value="4">4+ Bathrooms</option>
+                  {NJ_FREQUENCY_OPTIONS.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
                 </select>
               </div>
-
+              <div>
+                <label htmlFor="preferredDate" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                  Preferred date *
+                </label>
+                <input
+                  type="date"
+                  id="preferredDate"
+                  required
+                  value={formData.preferredDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, preferredDate: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                />
+              </div>
               <div>
                 <label htmlFor="urgency" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
-                  When do you need cleaning? *
+                  Timing preference *
                 </label>
                 <select
                   id="urgency"
                   required
                   value={formData.urgency}
-                  onChange={(e) => setFormData({ ...formData, urgency: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] focus:border-[#F8C548] outline-none"
+                  onChange={(e) =>
+                    setFormData({ ...formData, urgency: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
                 >
-                  <option value="">Select</option>
-                  <option value="asap">ASAP</option>
-                  <option value="this_week">This Week</option>
-                  <option value="this_month">This Month</option>
-                  <option value="exploring">Just Exploring</option>
+                  <option value="asap">As soon as possible</option>
+                  <option value="this_week">This week</option>
+                  <option value="next_week">Next week</option>
+                  <option value="flexible">Flexible</option>
                 </select>
               </div>
-
+              <div>
+                <label htmlFor="bedrooms" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                  Bedrooms *
+                </label>
+                <select
+                  id="bedrooms"
+                  required
+                  value={formData.bedrooms}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bedrooms: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                >
+                  <option value="">Select</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5+</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="bathrooms" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                  Bathrooms *
+                </label>
+                <select
+                  id="bathrooms"
+                  required
+                  value={formData.bathrooms}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bathrooms: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                >
+                  <option value="">Select</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4+</option>
+                </select>
+              </div>
               <div>
                 <label htmlFor="homeType" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
-                  Home Type
+                  Home type *
                 </label>
                 <select
                   id="homeType"
+                  required
                   value={formData.homeType}
-                  onChange={(e) => setFormData({ ...formData, homeType: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] focus:border-[#F8C548] outline-none"
+                  onChange={(e) =>
+                    setFormData({ ...formData, homeType: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
                 >
                   <option value="">Select</option>
-                  <option value="house">House</option>
                   <option value="apartment">Apartment</option>
                   <option value="condo">Condo</option>
-                  <option value="townhouse">Townhouse</option>
+                  <option value="house">House</option>
+                  <option value="townhome">Townhome</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
             </div>
 
-            <div>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.previousService}
-                  onChange={(e) => setFormData({ ...formData, previousService: e.target.checked })}
-                  className="w-4 h-4 text-[#0A3D2F] border-gray-300 rounded focus:ring-[#F8C548]"
-                />
-                <span className="text-sm text-vm-text">I've used a cleaning service before</span>
-              </label>
-            </div>
+            <label className="flex items-center gap-2 text-sm text-[#0A3D2F]">
+              <input
+                type="checkbox"
+                checked={formData.pets}
+                onChange={(e) =>
+                  setFormData({ ...formData, pets: e.target.checked })
+                }
+              />
+              Pets in the home
+            </label>
+            <label className="flex items-center gap-2 text-sm text-[#0A3D2F]">
+              <input
+                type="checkbox"
+                checked={formData.previousService}
+                onChange={(e) =>
+                  setFormData({ ...formData, previousService: e.target.checked })
+                }
+              />
+              I&apos;ve used VelocityMaid before
+            </label>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#0A3D2F] text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#083025] transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#0A3D2F] text-white py-4 rounded-lg font-semibold hover:bg-[#083025] transition disabled:opacity-60"
             >
-              {isSubmitting ? 'Submitting...' : 'Get My Free Quote'}
+              {isSubmitting ? 'Submitting…' : 'Request my quote'}
             </button>
           </form>
         </div>
@@ -269,4 +422,3 @@ export default function LeadCapturePage() {
     </div>
   );
 }
-
