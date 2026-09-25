@@ -5,6 +5,7 @@ const branchFindUnique = vi.fn();
 const leadCreate = vi.fn();
 const leadUpdate = vi.fn();
 const customerFindFirst = vi.fn();
+const customerCreate = vi.fn();
 const notifyNjLeadFollowUp = vi.fn();
 const calculateLeadScore = vi.fn();
 
@@ -15,7 +16,10 @@ vi.mock('@/lib/prisma', () => ({
       create: (...a: unknown[]) => leadCreate(...a),
       update: (...a: unknown[]) => leadUpdate(...a),
     },
-    customer: { findFirst: (...a: unknown[]) => customerFindFirst(...a) },
+    customer: {
+      findFirst: (...a: unknown[]) => customerFindFirst(...a),
+      create: (...a: unknown[]) => customerCreate(...a),
+    },
   },
 }));
 
@@ -57,47 +61,128 @@ const njPayload = {
   branch: 'new-jersey',
 };
 
-describe('POST /api/leads/create NJ relaunch', () => {
+function mockNjLead(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'lead-nj',
+    name: njPayload.name,
+    phone: njPayload.phone,
+    email: njPayload.email,
+    city: njPayload.city,
+    zip: njPayload.zip,
+    addressLine: njPayload.addressLine,
+    serviceType: njPayload.serviceType,
+    frequency: njPayload.frequency,
+    preferredDate: new Date('2026-10-01'),
+    bedrooms: 3,
+    bathrooms: 2,
+    homeType: 'house',
+    referralSource: 'website',
+    source: 'lead-new-jersey-page',
+    followUpStatus: 'NEW',
+    opsAssignee: NJ_OPS_ASSIGNEE,
+    status: 'NEW',
+    ...overrides,
+  };
+}
+
+function automationFetches(fetchMock: ReturnType<typeof vi.fn>) {
+  return fetchMock.mock.calls.map((call) => String(call[0]));
+}
+
+describe('POST /api/leads/create NJ quote-first isolation', () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        json: async () => ({ success: false }),
-      })
-    );
-    calculateLeadScore.mockReturnValue({
-      leadScore: 40,
-      leadTier: 'C',
-      riskFlags: [],
-      reasoning: 'test',
+    fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({ success: true, depositUrl: 'https://example.com/deposit' }),
     });
+    vi.stubGlobal('fetch', fetchMock);
     branchFindUnique.mockResolvedValue({ id: 'branch-nj', slug: 'new-jersey' });
     customerFindFirst.mockResolvedValue(null);
+    customerCreate.mockResolvedValue({ id: 'cust-should-not-exist' });
     leadUpdate.mockResolvedValue({});
+    notifyNjLeadFollowUp.mockResolvedValue({
+      sentToOps: true,
+      sentToCompany: true,
+    });
   });
 
-  it('persists NJ lead with opsAssignee elaine even when ops email notify fails', async () => {
-    leadCreate.mockResolvedValue({
-      id: 'lead-1',
-      name: njPayload.name,
-      phone: njPayload.phone,
-      email: njPayload.email,
-      city: njPayload.city,
-      zip: njPayload.zip,
-      addressLine: njPayload.addressLine,
-      serviceType: njPayload.serviceType,
-      frequency: njPayload.frequency,
-      preferredDate: new Date('2026-10-01'),
-      bedrooms: 3,
-      bathrooms: 2,
-      homeType: 'house',
-      referralSource: 'website',
-      source: 'lead-new-jersey-page',
-      followUpStatus: 'NEW',
-      opsAssignee: NJ_OPS_ASSIGNEE,
-      status: 'NEW',
+  async function postNjWithTier(tier: 'A' | 'B' | 'C', score: number) {
+    calculateLeadScore.mockReturnValue({
+      leadScore: score,
+      leadTier: tier,
+      riskFlags: [],
+      reasoning: [`tier ${tier}`],
     });
+    leadCreate.mockResolvedValue(mockNjLead({ id: `lead-${tier}` }));
+    return POST(leadRequest(njPayload));
+  }
+
+  it.each([
+    { tier: 'A' as const, score: 90 },
+    { tier: 'B' as const, score: 65 },
+    { tier: 'C' as const, score: 40 },
+  ])(
+    'NJ Tier $tier → Lead only; no Customer, deposit, WhatsApp, or nurture',
+    async ({ tier, score }) => {
+      const res = await postNjWithTier(tier, score);
+      expect(res.status).toBe(200);
+      const body = await res.json();
+
+      expect(body.success).toBe(true);
+      expect(body.lead.followUpStatus).toBe('NEW');
+      expect(body.lead.opsAssignee).toBe('elaine');
+      expect(body.lead.leadTier).toBe(tier);
+      expect(body.lead.leadScore).toBe(score);
+      expect(body.lead.depositUrl).toBeNull();
+      expect(body.scoring.tier).toBe(tier);
+
+      const createData = leadCreate.mock.calls[0][0].data;
+      expect(createData.followUpStatus).toBe('NEW');
+      expect(createData.opsAssignee).toBe(NJ_OPS_ASSIGNEE);
+      expect(createData.leadTier).toBe(tier);
+      expect(createData.leadScore).toBe(score);
+
+      expect(customerFindFirst).not.toHaveBeenCalled();
+      expect(customerCreate).not.toHaveBeenCalled();
+      expect(leadUpdate).not.toHaveBeenCalled();
+
+      const urls = automationFetches(fetchMock);
+      expect(urls.some((u) => u.includes('/api/leads/deposit/generate'))).toBe(
+        false
+      );
+      expect(
+        urls.some((u) => u.includes('/api/automations/whatsapp/lead'))
+      ).toBe(false);
+      expect(
+        urls.some((u) => u.includes('/api/automations/nurture/scheduler'))
+      ).toBe(false);
+
+      expect(notifyNjLeadFollowUp).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it('NJ ops/company/admin notifications still execute (notifyNjLeadFollowUp)', async () => {
+    await postNjWithTier('A', 88);
+    expect(notifyNjLeadFollowUp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        leadId: 'lead-A',
+        city: 'Montclair',
+        followUpStatus: 'NEW',
+        serviceType: 'RECURRING',
+      })
+    );
+  });
+
+  it('notification failure does not roll back the persisted Lead', async () => {
+    calculateLeadScore.mockReturnValue({
+      leadScore: 90,
+      leadTier: 'A',
+      riskFlags: [],
+      reasoning: [],
+    });
+    leadCreate.mockResolvedValue(mockNjLead({ id: 'lead-notify-fail' }));
     notifyNjLeadFollowUp.mockRejectedValue(new Error('resend down'));
 
     const res = await POST(leadRequest(njPayload));
@@ -105,40 +190,177 @@ describe('POST /api/leads/create NJ relaunch', () => {
     const body = await res.json();
     expect(body.success).toBe(true);
     expect(body.lead.opsAssignee).toBe('elaine');
-    expect(body.lead.followUpStatus).toBe('NEW');
     expect(leadCreate).toHaveBeenCalled();
-    const createData = leadCreate.mock.calls[0][0].data;
-    expect(createData.opsAssignee).toBe('elaine');
-    expect(createData.city).toBe('Montclair');
-    expect(createData.serviceType).toBe('RECURRING');
-    // Routing label only — no User lookup required for Elaine
-    expect(createData).not.toHaveProperty('opsAssigneeId');
-    expect(notifyNjLeadFollowUp).toHaveBeenCalled();
+    expect(customerCreate).not.toHaveBeenCalled();
   });
 
   it('opsAssignee elaine is a string routing label (no User row required)', async () => {
-    leadCreate.mockResolvedValue({
-      id: 'lead-2',
-      ...njPayload,
-      preferredDate: new Date('2026-10-01'),
-      followUpStatus: 'NEW',
-      opsAssignee: 'elaine',
-      status: 'NEW',
-    });
-    notifyNjLeadFollowUp.mockResolvedValue({
-      sentToOps: false,
-      sentToCompany: true,
-    });
-
-    const res = await POST(leadRequest(njPayload));
-    expect(res.status).toBe(200);
+    await postNjWithTier('B', 55);
     const createData = leadCreate.mock.calls[0][0].data;
     expect(createData.opsAssignee).toBe(NJ_OPS_ASSIGNEE);
     expect(typeof createData.opsAssignee).toBe('string');
+    expect(createData).not.toHaveProperty('opsAssigneeId');
+  });
+});
+
+describe('POST /api/leads/create non-NJ automation preserved', () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (String(url).includes('/api/leads/deposit/generate')) {
+        return {
+          json: async () => ({
+            success: true,
+            depositUrl: 'https://example.com/deposit/vt',
+          }),
+        };
+      }
+      return { json: async () => ({ success: true }) };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    notifyNjLeadFollowUp.mockResolvedValue({
+      sentToOps: false,
+      sentToCompany: false,
+    });
+    leadUpdate.mockResolvedValue({});
   });
 
-  it('non-NJ lead behavior remains unchanged (no elaine assignee, no NJ notify)', async () => {
+  it('non-NJ Tier C still generates deposit URL and calls WhatsApp', async () => {
     branchFindUnique.mockResolvedValue({ id: 'branch-vt', slug: 'vermont' });
+    calculateLeadScore.mockReturnValue({
+      leadScore: 35,
+      leadTier: 'C',
+      riskFlags: [],
+      reasoning: [],
+    });
+    leadCreate.mockResolvedValue({
+      id: 'lead-vt-c',
+      name: 'VT Lead',
+      phone: '8025550100',
+      email: null,
+      city: null,
+      zip: '05149',
+      addressLine: null,
+      serviceType: null,
+      frequency: null,
+      preferredDate: null,
+      bedrooms: null,
+      bathrooms: null,
+      homeType: null,
+      referralSource: null,
+      source: null,
+      followUpStatus: 'NEW',
+      opsAssignee: null,
+      status: 'NEW',
+    });
+
+    const res = await POST(
+      leadRequest({
+        name: 'VT Lead',
+        phone: '8025550100',
+        zip: '05149',
+        urgency: 'flexible',
+        branch: 'vermont',
+      })
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.lead.depositUrl).toBe('https://example.com/deposit/vt');
+    expect(body.lead.opsAssignee).toBeNull();
+    expect(notifyNjLeadFollowUp).not.toHaveBeenCalled();
+    expect(customerCreate).not.toHaveBeenCalled();
+
+    const urls = automationFetches(fetchMock);
+    expect(urls.some((u) => u.includes('/api/leads/deposit/generate'))).toBe(
+      true
+    );
+    expect(urls.some((u) => u.includes('/api/automations/whatsapp/lead'))).toBe(
+      true
+    );
+  });
+
+  it.each([
+    { tier: 'A' as const, score: 85 },
+    { tier: 'B' as const, score: 60 },
+  ])(
+    'non-NJ Tier $tier still creates Customer and starts nurture',
+    async ({ tier, score }) => {
+      branchFindUnique.mockResolvedValue({ id: 'branch-vt', slug: 'vermont' });
+      calculateLeadScore.mockReturnValue({
+        leadScore: score,
+        leadTier: tier,
+        riskFlags: [],
+        reasoning: [],
+      });
+      leadCreate.mockResolvedValue({
+        id: `lead-vt-${tier}`,
+        name: 'VT Host',
+        phone: '8025550199',
+        email: 'vt@example.com',
+        city: null,
+        zip: '05149',
+        addressLine: null,
+        serviceType: null,
+        frequency: null,
+        preferredDate: null,
+        bedrooms: 3,
+        bathrooms: 2,
+        homeType: 'house',
+        referralSource: 'google',
+        source: null,
+        followUpStatus: 'NEW',
+        opsAssignee: null,
+        status: 'NEW',
+      });
+      customerFindFirst.mockResolvedValue(null);
+      customerCreate.mockResolvedValue({ id: `cust-vt-${tier}` });
+
+      const res = await POST(
+        leadRequest({
+          name: 'VT Host',
+          phone: '8025550199',
+          email: 'vt@example.com',
+          zip: '05149',
+          urgency: 'this_week',
+          bedrooms: 3,
+          bathrooms: 2,
+          homeType: 'house',
+          referralSource: 'google',
+          branch: 'vermont',
+        })
+      );
+      expect(res.status).toBe(200);
+      expect(notifyNjLeadFollowUp).not.toHaveBeenCalled();
+      expect(customerCreate).toHaveBeenCalled();
+      expect(leadUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { customerId: `cust-vt-${tier}` },
+        })
+      );
+
+      const urls = automationFetches(fetchMock);
+      expect(
+        urls.some((u) => u.includes('/api/automations/nurture/scheduler'))
+      ).toBe(true);
+      expect(
+        urls.some((u) => u.includes('/api/automations/whatsapp/lead'))
+      ).toBe(true);
+      expect(urls.some((u) => u.includes('/api/leads/deposit/generate'))).toBe(
+        false
+      );
+    }
+  );
+
+  it('non-NJ lead does not get elaine assignee or NJ notify', async () => {
+    branchFindUnique.mockResolvedValue({ id: 'branch-vt', slug: 'vermont' });
+    calculateLeadScore.mockReturnValue({
+      leadScore: 40,
+      leadTier: 'C',
+      riskFlags: [],
+      reasoning: [],
+    });
     leadCreate.mockResolvedValue({
       id: 'lead-vt',
       name: 'VT Lead',

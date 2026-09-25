@@ -1,6 +1,9 @@
 /**
  * New Jersey market relaunch — Elaine service territory + messaging.
  * Vermont remain untouched; import from this module for NJ-only surfaces.
+ *
+ * Quote-first: /lead/new-jersey persists Lead + ops notify only.
+ * No deposit URL, Customer auto-create, nurture, or WhatsApp booking CTAs.
  */
 
 export const NJ_BRANCH_SLUG = 'new-jersey' as const;

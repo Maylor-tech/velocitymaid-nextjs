@@ -5,8 +5,13 @@ export const dynamic = 'force-dynamic';
  * Create Lead
  * POST /api/leads/create
  *
- * Creates a new lead, scores it, triggers automation, and for NJ routes
- * operational follow-up to Elaine while retaining company CRM ownership.
+ * Creates a new lead, scores it, and triggers market-specific follow-up.
+ *
+ * New Jersey (quote-first): persist Lead + Elaine/ops/company/admin notify only.
+ * Scoring is stored for internal review — it must not trigger deposit URLs,
+ * Customer auto-create, nurture, WhatsApp booking/deposit CTAs, or Stripe.
+ *
+ * Other markets: existing Tier C deposit + Tier A/B customer/nurture + WhatsApp.
  */
 
 import { randomBytes } from 'crypto';
@@ -140,40 +145,45 @@ export async function POST(request: NextRequest) {
     });
 
     let depositUrl: string | null = null;
-    if (scoringResult.leadTier === 'C') {
+
+    // NJ quote-first: no deposit, WhatsApp, Customer, or nurture automation.
+    // Scoring remains on the Lead for ops review only.
+    if (!isNj) {
+      if (scoringResult.leadTier === 'C') {
+        try {
+          const depositResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/leads/deposit/generate`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ leadId: lead.id }),
+            }
+          );
+          const depositData = await depositResponse.json();
+          if (depositData.success) {
+            depositUrl = depositData.depositUrl;
+            await prisma.lead.update({
+              where: { id: lead.id },
+              data: { depositUrl },
+            });
+          }
+        } catch (error) {
+          console.error('Failed to generate deposit URL:', error);
+        }
+      }
+
       try {
-        const depositResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/leads/deposit/generate`,
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/automations/whatsapp/lead`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ leadId: lead.id }),
           }
         );
-        const depositData = await depositResponse.json();
-        if (depositData.success) {
-          depositUrl = depositData.depositUrl;
-          await prisma.lead.update({
-            where: { id: lead.id },
-            data: { depositUrl },
-          });
-        }
       } catch (error) {
-        console.error('Failed to generate deposit URL:', error);
+        console.error('Failed to send WhatsApp auto-response:', error);
       }
-    }
-
-    try {
-      await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/automations/whatsapp/lead`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ leadId: lead.id }),
-        }
-      );
-    } catch (error) {
-      console.error('Failed to send WhatsApp auto-response:', error);
     }
 
     if (isNj) {
@@ -201,7 +211,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (scoringResult.leadTier === 'A' || scoringResult.leadTier === 'B') {
+    if (
+      !isNj &&
+      (scoringResult.leadTier === 'A' || scoringResult.leadTier === 'B')
+    ) {
       let customer = await prisma.customer.findFirst({
         where: {
           phone,
