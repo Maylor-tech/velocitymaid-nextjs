@@ -13,6 +13,8 @@ import {
   applyTipPaymentFailed,
   findTipByPaymentIntentId,
 } from '@/lib/tips/tipReversal';
+import { notifyCleanersOfTipReceivedSafe } from '@/lib/notifications/cleanerTipReceived';
+import { maybeAttributeTeamTipSafe } from '@/lib/tips/teamTipAttribution';
 
 function paymentIntentIdFromCharge(
   charge: Stripe.Charge
@@ -90,6 +92,11 @@ export async function POST(request: NextRequest) {
         providerReference: paymentIntent.id,
         source: 'STRIPE_WEBHOOK',
       });
+
+      if (result.ok && !result.alreadyReceived) {
+        maybeAttributeTeamTipSafe({ tipId: tip.id, notify: true });
+        notifyCleanersOfTipReceivedSafe(tip.id);
+      }
 
       return NextResponse.json({ received: true, tip: result });
     }

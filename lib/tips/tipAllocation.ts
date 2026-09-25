@@ -120,11 +120,20 @@ export function assertValidAllocationLines(
 /**
  * Replace/create full allocation set for a tip (transactional).
  * Rejects if any existing allocation is already PAID_OUT.
+ *
+ * Notification history is durable across reconciliation:
+ * - same (tipId, cleanerId) → update in place; never clear notifiedAt
+ * - amount change on an already-notified cleaner → no automatic resend
+ * - new cleaner → notifiedAt null (eligible for first notify)
+ * - removed cleaner → CANCELLED (row kept so re-add cannot wipe history)
+ * Never uses deleteMany (that would reset notifiedAt).
  */
 export async function setTipAllocations(input: {
   tipId: string;
   lines: AllocationLineInput[];
   adminId: string;
+  /** When false, skip cleaner tip emails (historical / ops). Default true. */
+  notify?: boolean;
   auditAction?: string;
   auditDescription?: string;
   auditExtra?: Record<string, unknown>;
@@ -140,7 +149,13 @@ export async function setTipAllocations(input: {
       status: true,
       refundedAt: true,
       TipAllocation: {
-        select: { id: true, status: true, cleanerId: true, amountCents: true },
+        select: {
+          id: true,
+          status: true,
+          cleanerId: true,
+          amountCents: true,
+          notifiedAt: true,
+        },
       },
     },
   });
@@ -169,21 +184,60 @@ export async function setTipAllocations(input: {
     return { ok: false, status: 400, code: valid.code, error: valid.error };
   }
 
+  const nextCleanerIds = new Set(input.lines.map((l) => l.cleanerId));
+  const existingByCleaner = new Map(
+    tip.TipAllocation.map((a) => [a.cleanerId, a])
+  );
+
   const created = await prisma.$transaction(async (tx) => {
-    await tx.tipAllocation.deleteMany({ where: { tipId: tip.id } });
-    const rows = [];
+    const rows: Array<{ id: string; cleanerId: string; amountCents: number }> =
+      [];
+
     for (const line of input.lines) {
-      const row = await tx.tipAllocation.create({
-        data: {
-          tipId: tip.id,
-          cleanerId: line.cleanerId,
-          amountCents: line.amountCents,
-          status: 'OWED',
-        },
-        select: { id: true, cleanerId: true, amountCents: true },
-      });
-      rows.push(row);
+      const existing = existingByCleaner.get(line.cleanerId);
+      if (existing) {
+        // Preserve notifiedAt — amount changes must not reset delivery history.
+        const row = await tx.tipAllocation.update({
+          where: { id: existing.id },
+          data: {
+            amountCents: line.amountCents,
+            status: 'OWED',
+          },
+          select: { id: true, cleanerId: true, amountCents: true },
+        });
+        rows.push(row);
+      } else {
+        const row = await tx.tipAllocation.create({
+          data: {
+            tipId: tip.id,
+            cleanerId: line.cleanerId,
+            amountCents: line.amountCents,
+            status: 'OWED',
+          },
+          select: { id: true, cleanerId: true, amountCents: true },
+        });
+        rows.push(row);
+      }
     }
+
+    // Soft-remove: keep row + notifiedAt so a later re-add cannot re-notify.
+    for (const existing of tip.TipAllocation) {
+      if (nextCleanerIds.has(existing.cleanerId)) continue;
+      if (existing.status.toUpperCase() === 'CANCELLED') continue;
+      await tx.tipAllocation.update({
+        where: { id: existing.id },
+        data: { status: 'CANCELLED' },
+      });
+    }
+
+    // Full allocation resolves manual team-attribution hold.
+    await tx.tip.update({
+      where: { id: tip.id },
+      data: {
+        needsReconcile: false,
+        reconcileReason: null,
+      },
+    });
     return rows;
   });
 
@@ -200,9 +254,19 @@ export async function setTipAllocations(input: {
       tipAmountCents: tip.amount,
       allocations: created,
       platformTipShareCents: 0,
+      notificationHistoryPreserved: true,
       ...(input.auditExtra || {}),
     },
   });
+
+  if (input.notify !== false && isTipReceived(tip.status)) {
+    const { notifyCleanersOfTipReceived } = await import(
+      '@/lib/notifications/cleanerTipReceived'
+    );
+    await notifyCleanersOfTipReceived(tip.id).catch((err) => {
+      console.error('[setTipAllocations] notify failed', tip.id, err);
+    });
+  }
 
   return { ok: true, allocations: created };
 }

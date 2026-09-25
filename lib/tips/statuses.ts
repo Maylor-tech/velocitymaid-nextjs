@@ -26,6 +26,8 @@ export const TIP_RECONCILE_REASONS = [
   'DISPUTE_LOST_AFTER_PAID_OUT',
   'STRIPE_LEDGER_MISMATCH',
   'WEBHOOK_PROCESSING_FAILURE',
+  /** Team earners known; no approved auto-split — manual TipAllocation required. */
+  'TEAM_TIP_MANUAL_ALLOCATION',
 ] as const;
 export type TipReconcileReason = (typeof TIP_RECONCILE_REASONS)[number];
 
@@ -97,6 +99,7 @@ export function isTipPayable(tip: TipPayableInput): boolean {
   if (status !== 'RECEIVED') return false;
   if (!tip.beneficiaryCleanerId) return false;
   if (tip.refundedAt) return false;
+  if (tip.needsReconcile) return false;
   const dispute = normalizeTipDisputeStatus(tip.disputeStatus);
   if (dispute === 'OPEN' || dispute === 'LOST') return false;
   return true;

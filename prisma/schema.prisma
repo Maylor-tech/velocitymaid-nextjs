@@ -1770,6 +1770,8 @@ model Tip {
   /// Durable ops signal; never auto-moves money.
   needsReconcile        Boolean   @default(false)
   reconcileReason       String?
+  /// Sole-beneficiary cleaner tip email claimed/sent (idempotency).
+  beneficiaryNotifiedAt DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   Job                   Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
@@ -1803,6 +1805,8 @@ model TipAllocation {
   payoutReference  String?
   payoutMethod     String?
   paidOutByAdminId String?
+  /// Per-cleaner tip share email claimed/sent (idempotency).
+  notifiedAt       DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   Tip              Tip       @relation(fields: [tipId], references: [id], onDelete: Cascade)

@@ -6,6 +6,8 @@ import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import { markTipReceived } from '@/lib/tips/markTipReceived';
 import { isTipPending } from '@/lib/tips/statuses';
+import { notifyCleanersOfTipReceivedSafe } from '@/lib/notifications/cleanerTipReceived';
+import { maybeAttributeTeamTipSafe } from '@/lib/tips/teamTipAttribution';
 
 /**
  * POST /api/admin/tips/[tipId]/confirm-received
@@ -77,6 +79,14 @@ export async function POST(
         receivedAt,
         source: 'ADMIN_ZELLE',
       });
+      if (result.ok && !result.alreadyReceived) {
+        maybeAttributeTeamTipSafe({
+          tipId: tip.id,
+          notify: true,
+          adminId: auth.userId,
+        });
+        notifyCleanersOfTipReceivedSafe(tip.id);
+      }
       return NextResponse.json({ success: true, ...result });
     }
 
@@ -96,6 +106,15 @@ export async function POST(
         { success: false, error: result.error, code: result.code },
         { status: result.status }
       );
+    }
+
+    if (!result.alreadyReceived) {
+      maybeAttributeTeamTipSafe({
+        tipId: tip.id,
+        notify: true,
+        adminId: auth.userId,
+      });
+      notifyCleanersOfTipReceivedSafe(tip.id);
     }
 
     return NextResponse.json({ success: true, ...result });
