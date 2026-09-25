@@ -187,28 +187,31 @@ export async function POST(request: NextRequest) {
     }
 
     if (isNj) {
-      void notifyNjLeadFollowUp({
-        leadId: lead.id,
-        name: lead.name,
-        phone: lead.phone,
-        email: lead.email,
-        city: lead.city,
-        zip: lead.zip,
-        addressLine: lead.addressLine,
-        serviceType: lead.serviceType,
-        frequency: lead.frequency,
-        preferredDate: lead.preferredDate
-          ? lead.preferredDate.toISOString().slice(0, 10)
-          : null,
-        bedrooms: lead.bedrooms,
-        bathrooms: lead.bathrooms,
-        homeType: lead.homeType,
-        referralSource: lead.referralSource,
-        source: lead.source,
-        followUpStatus: lead.followUpStatus,
-      }).catch((err) =>
-        console.error('NJ ops follow-up notify failed:', err)
-      );
+      // Await on Vercel so emails/admin notify are not frozen after the response.
+      try {
+        await notifyNjLeadFollowUp({
+          leadId: lead.id,
+          name: lead.name,
+          phone: lead.phone,
+          email: lead.email,
+          city: lead.city,
+          zip: lead.zip,
+          addressLine: lead.addressLine,
+          serviceType: lead.serviceType,
+          frequency: lead.frequency,
+          preferredDate: lead.preferredDate
+            ? lead.preferredDate.toISOString().slice(0, 10)
+            : null,
+          bedrooms: lead.bedrooms,
+          bathrooms: lead.bathrooms,
+          homeType: lead.homeType,
+          referralSource: lead.referralSource,
+          source: lead.source,
+          followUpStatus: lead.followUpStatus,
+        });
+      } catch (err) {
+        console.error('NJ ops follow-up notify failed:', err);
+      }
     }
 
     if (

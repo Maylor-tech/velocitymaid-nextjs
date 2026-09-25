@@ -68,6 +68,19 @@ export async function notifyNjLeadFollowUp(
   lead: NjLeadFollowUpPayload
 ): Promise<{ sentToOps: boolean; sentToCompany: boolean }> {
   const result = { sentToOps: false, sentToCompany: false };
+
+  // Admin alert is independent of Resend — always attempt before email early-return.
+  try {
+    await createAdminNotification({
+      type: 'NJ_LEAD',
+      severity: 'INFO',
+      message: `NJ lead ${lead.name} — follow-up assigned to Elaine (${lead.serviceType || 'cleaning'}, ${lead.city || lead.zip || 'NJ'})`,
+      actionUrl: '/admin/lead-center',
+    });
+  } catch (err) {
+    console.error('[notifyNjLeadFollowUp] admin notification failed', err);
+  }
+
   const resend = getGuardedResend();
   if (!resend) return result;
 
@@ -136,17 +149,6 @@ export async function notifyNjLeadFollowUp(
   await sendTo(opsEmail, 'ops');
   if (companyEmail && companyEmail.toLowerCase() !== (opsEmail || '').toLowerCase()) {
     await sendTo(companyEmail, 'company');
-  }
-
-  try {
-    await createAdminNotification({
-      type: 'NJ_LEAD',
-      severity: 'INFO',
-      message: `NJ lead ${lead.name} — follow-up assigned to Elaine (${lead.serviceType || 'cleaning'}, ${lead.city || lead.zip || 'NJ'})`,
-      actionUrl: '/admin/lead-center',
-    });
-  } catch (err) {
-    console.error('[notifyNjLeadFollowUp] admin notification failed', err);
   }
 
   return result;
