@@ -1,5 +1,5 @@
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
@@ -7,9 +7,9 @@ import { resolveCityFromZip } from '@/utils/cityRouting';
 
 /**
  * Resolve ZIP Code / Routing Code API
- * 
+ *
  * GET /api/resolve-zip?zip=XXXXX
- * 
+ *
  * Returns branch slug for the given ZIP code or routing code
  * Supports:
  * - U.S. ZIP codes (07102, 05149, etc.)
@@ -31,19 +31,18 @@ export async function GET(request: NextRequest) {
 
     // Special handling for Jamaica routing codes (PA-XXX)
     if (normalizedZip.startsWith('PA-')) {
-      // Find Port Antonio branch by routing code
       const serviceArea = await prisma.branchServiceArea.findFirst({
         where: {
           zipCode: normalizedZip,
-          branch: {
+          Branch: {
             slug: 'port-antonio',
             status: {
-              in: ['ACTIVE', 'COMING_SOON'], // Allow COMING_SOON for Port Antonio
+              in: ['ACTIVE', 'COMING_SOON'],
             },
           },
         },
         include: {
-          branch: {
+          Branch: {
             select: {
               slug: true,
               status: true,
@@ -55,10 +54,10 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      if (serviceArea && serviceArea.branch) {
+      if (serviceArea?.Branch) {
         return NextResponse.json({
           success: true,
-          branchSlug: serviceArea.branch.slug,
+          branchSlug: serviceArea.Branch.slug,
         });
       }
     }
@@ -67,50 +66,46 @@ export async function GET(request: NextRequest) {
     const serviceArea = await prisma.branchServiceArea.findFirst({
       where: {
         zipCode: normalizedZip,
-        branch: {
-          status: 'ACTIVE', // Only active branches for U.S. ZIP codes
+        Branch: {
+          status: 'ACTIVE',
         },
       },
       include: {
-        branch: {
+        Branch: {
           select: {
             slug: true,
             status: true,
           },
         },
       },
-      orderBy: [
-        { priority: 'asc' },
-        { createdAt: 'asc' },
-      ],
+      orderBy: [{ priority: 'asc' }, { createdAt: 'asc' }],
     });
 
-    if (serviceArea && serviceArea.branch) {
-      // Determine sub-city for New Jersey
+    if (serviceArea?.Branch) {
       let assignedCity: string | null = null;
-      if (serviceArea.branch.slug === 'new-jersey') {
+      if (serviceArea.Branch.slug === 'new-jersey') {
         assignedCity = resolveCityFromZip(normalizedZip);
       }
 
       return NextResponse.json({
         success: true,
-        branchSlug: serviceArea.branch.slug,
+        branchSlug: serviceArea.Branch.slug,
         city: assignedCity,
       });
     }
 
-    // No match found
     return NextResponse.json({
       success: false,
       branchSlug: null,
       message: 'No branch found for this ZIP code or routing code',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Resolve ZIP error:', error);
+    const message =
+      error instanceof Error ? error.message : 'Failed to resolve ZIP code';
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to resolve ZIP code' },
+      { success: false, error: message },
       { status: 500 }
     );
   }
 }
-
