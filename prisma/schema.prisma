@@ -322,47 +322,47 @@ model Customer {
 /// Jobs snapshot occurrence fields separately — changing Property later must
 /// not rewrite historical Job.address / Job notes.
 model Property {
-  id                        String                  @id @default(cuid())
-  customerId                String
-  name                      String
-  address                   String
-  city                      String?
-  state                     String?
-  postalCode                String?
-  bedrooms                  Int?
-  bathrooms                 Float?
-  approximateSquareFeet     Int?
-  bedConfiguration          String?
-  amenities                 String[]                @default([])
-  restrictedAreas           String?
+  id                     String   @id @default(cuid())
+  customerId             String
+  name                   String
+  address                String
+  city                   String?
+  state                  String?
+  postalCode             String?
+  bedrooms               Int?
+  bathrooms              Float?
+  approximateSquareFeet  Int?
+  bedConfiguration       String?
+  amenities              String[] @default([])
+  restrictedAreas        String?
   /// Access method only (keypad / lockbox / etc.). Not a vault for codes.
-  accessType                String?
+  accessType             String?
   /// Restricted operational access details (codes, alarm). Never send to Calendar.
-  accessNotes               String?
-  supplyStorageLocation     String?
-  trashInstructions         String?
-  linenInstructions         String?
-  standardCheckoutTime      String?
-  standardCheckinTime       String?
-  turnoverFrequency         String?
-  sameDayTurnovers          String?
-  standingInstructions      String?
+  accessNotes            String?
+  supplyStorageLocation  String?
+  trashInstructions      String?
+  linenInstructions      String?
+  standardCheckoutTime   String?
+  standardCheckinTime    String?
+  turnoverFrequency      String?
+  sameDayTurnovers       String?
+  standingInstructions   String?
   /// Null = inherit Customer.billingPolicy.
-  billingPolicy             BillingPolicy?
+  billingPolicy          BillingPolicy?
   /// Opaque guest stay QR token. Not Property.id. Rotatable / revocable.
-  guestAccessToken          String?                 @unique
-  guestAccessTokenCreatedAt DateTime?
+  guestAccessToken            String?   @unique
+  guestAccessTokenCreatedAt   DateTime?
   /// Null = token active when guestAccessToken is set.
-  guestAccessRevokedAt      DateTime?
+  guestAccessRevokedAt        DateTime?
   /// Safe public nickname for guest stay / feedback surfaces. Prefer over Property.name.
-  guestDisplayName          String?
-  createdAt                 DateTime                @default(now())
-  updatedAt                 DateTime                @updatedAt
-  Customer                  Customer                @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  Job                       Job[]
-  Tip                       Tip[]
-  ServiceFeedback           ServiceFeedback[]
-  GuestTipAuthorization     GuestTipAuthorization[]
+  guestDisplayName            String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  Customer               Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  Job                    Job[]
+  Tip                    Tip[]
+  ServiceFeedback        ServiceFeedback[]
+  GuestTipAuthorization  GuestTipAuthorization[]
 
   @@index([customerId])
   @@index([customerId, address])
@@ -428,102 +428,102 @@ model JamaicaPayout {
 }
 
 model Job {
-  id                           String                     @id
-  sessionId                    String?                    @unique
-  jobReference                 String?                    @unique // "VM-2026-0001" — master cross-system reference, reused by Invoice
-  driveFolderId                String?
-  driveFolderUrl               String?
-  calendarEventId              String?
-  calendarEventStatus          String? // synced | pending | cancelled | error
-  branchId                     String
-  customerId                   String?
+  id                       String                     @id
+  sessionId                String?                    @unique
+  jobReference             String?                    @unique // "VM-2026-0001" — master cross-system reference, reused by Invoice
+  driveFolderId            String?
+  driveFolderUrl           String?
+  calendarEventId          String?
+  calendarEventStatus      String?                    // synced | pending | cancelled | error
+  branchId                 String
+  customerId               String?
   /// Optional link to standing Property profile. Nullable for legacy Jobs.
-  propertyId                   String?
-  assignedCleanerId            String?
-  customerName                 String?
-  preferredDate                DateTime?
-  preferredTime                String?
-  serviceType                  String?
-  serviceLocation              String?
+  propertyId               String?
+  assignedCleanerId        String?
+  customerName             String?
+  preferredDate            DateTime?
+  preferredTime            String?
+  serviceType              String?
+  serviceLocation          String?
   /// Occurrence snapshot — independent of Property.address after create.
-  address                      String?
-  totalPrice                   Decimal?                   @db.Decimal(10, 2)
-  quotedTotal                  Decimal?                   @db.Decimal(10, 2)
+  address                  String?
+  totalPrice               Decimal?                   @db.Decimal(10, 2)
+  quotedTotal              Decimal?                   @db.Decimal(10, 2)
   /// Economics / cleaner-payout base when processing protection applied. Null = legacy job.
   /// Contract: totalPrice/quotedTotal remain the customer-facing charged amounts.
-  operationalTotal             Decimal?                   @db.Decimal(10, 2)
+  operationalTotal         Decimal?                   @db.Decimal(10, 2)
   /// customerTotal − operationalTotal when protection applied; else null/0 for legacy.
-  processingAllowanceEstimated Decimal?                   @db.Decimal(10, 2)
+  processingAllowanceEstimated Decimal?               @db.Decimal(10, 2)
   /// Policy version string that produced protected pricing (e.g. "pp-v1").
-  pricingPolicyVersion         String?
-  depositAmount                Decimal?                   @db.Decimal(10, 2)
-  amountPaid                   Decimal?                   @db.Decimal(10, 2)
-  balanceDue                   Decimal?                   @db.Decimal(10, 2)
-  paymentStatus                PaymentStatus              @default(PENDING)
+  pricingPolicyVersion     String?
+  depositAmount            Decimal?                   @db.Decimal(10, 2)
+  amountPaid               Decimal?                   @db.Decimal(10, 2)
+  balanceDue               Decimal?                   @db.Decimal(10, 2)
+  paymentStatus            PaymentStatus              @default(PENDING)
   /// Snapshot at Job create. Null = treat as PREPAY (legacy / Stripe bookings).
-  billingPolicy                BillingPolicy?
-  reviewStatus                 JobReviewStatus            @default(PENDING)
-  depositPaymentIntentId       String?
-  balanceSessionId             String?                    @unique
-  balancePaymentIntentId       String?
-  depositPaidAt                DateTime?
-  balancePaidAt                DateTime?
-  paidAt                       DateTime?
-  paymentReference             String?
-  approvedAt                   DateTime?
-  approvedById                 String?
-  createdAt                    DateTime                   @default(now())
-  assignedAt                   DateTime?
-  onTheWayAt                   DateTime?
-  completedAt                  DateTime?
+  billingPolicy            BillingPolicy?
+  reviewStatus             JobReviewStatus            @default(PENDING)
+  depositPaymentIntentId   String?
+  balanceSessionId         String?                    @unique
+  balancePaymentIntentId   String?
+  depositPaidAt            DateTime?
+  balancePaidAt            DateTime?
+  paidAt                   DateTime?
+  paymentReference         String?
+  approvedAt               DateTime?
+  approvedById             String?
+  createdAt                DateTime                   @default(now())
+  assignedAt               DateTime?
+  onTheWayAt               DateTime?
+  completedAt              DateTime?
   /// Set when cleaner Start Job → IN_PROGRESS. Server-derived timer source.
-  startedAt                    DateTime?
+  startedAt                DateTime?
   /// Cleaner Finish Job — Submitted for QC. Not final service completion.
-  submittedForQcAt             DateTime?
+  submittedForQcAt         DateTime?
   /// Ops estimate; copied onto JobOffer at send time.
-  estimatedDurationMins        Int?
-  dispatchUrgency              DispatchUrgency            @default(STANDARD)
+  estimatedDurationMins    Int?
+  dispatchUrgency          DispatchUrgency            @default(STANDARD)
   /// Explicit ops waiver. Required for $0 final completion on a billable host job.
   /// Null + missing quote must never silently invoice as $0 PAID.
-  noChargeReason               NoChargeReason?
-  currency                     String?                    @default("USD")
-  paymentMethod                String?
-  jobQualityScore              Int?
-  appliedReferralCode          String?
-  promoApplied                 String?
-  promoDiscount                Decimal?                   @db.Decimal(10, 2)
-  cancellationReason           String?
-  cancelledAt                  DateTime?
-  status                       JobStatus                  @default(RECEIVED)
-  completedBy                  String?
-  cleanDurationMins            Int?
-  notifiedAt                   DateTime?
-  internalNotes                String?
-  marketLabel                  String?
-  archivedAt                   DateTime?
-  AssignmentLog                AssignmentLog[]
-  photos                       CleanPhoto[]
-  CleanerBalanceLedger         CleanerBalanceLedger[]
-  CleanerRating                CleanerRating?
-  ServiceFeedback              ServiceFeedback[]
-  ComplianceIssue              ComplianceIssue[]
-  CustomerJobChangeRequest     CustomerJobChangeRequest[]
-  JobChecklistItem             JobChecklistItem[]
-  JobTeamMember                JobTeamMember[]
-  CompletionReport             CompletionReport?
-  Invoice                      Invoice?
-  Receipts                     Receipt[]
-  IntegrationEventLog          IntegrationEventLog[]
-  AdminNotification            AdminNotification[]
-  User                         User?                      @relation(fields: [assignedCleanerId], references: [id])
-  ApprovedBy                   User?                      @relation("JobApprovedBy", fields: [approvedById], references: [id])
-  Branch                       Branch                     @relation(fields: [branchId], references: [id])
-  Customer                     Customer?                  @relation(fields: [customerId], references: [id])
-  Property                     Property?                  @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  JobPayout                    JobPayout?
-  JobOffer                     JobOffer[]
-  Tip                          Tip[]
-  GuestTipAuthorization        GuestTipAuthorization[]
+  noChargeReason           NoChargeReason?
+  currency                 String?                    @default("USD")
+  paymentMethod            String?
+  jobQualityScore          Int?
+  appliedReferralCode      String?
+  promoApplied             String?
+  promoDiscount            Decimal?                   @db.Decimal(10, 2)
+  cancellationReason       String?
+  cancelledAt              DateTime?
+  status                   JobStatus                  @default(RECEIVED)
+  completedBy              String?
+  cleanDurationMins        Int?
+  notifiedAt               DateTime?
+  internalNotes            String?
+  marketLabel              String?
+  archivedAt               DateTime?
+  AssignmentLog            AssignmentLog[]
+  photos                   CleanPhoto[]
+  CleanerBalanceLedger     CleanerBalanceLedger[]
+  CleanerRating            CleanerRating?
+  ServiceFeedback          ServiceFeedback[]
+  ComplianceIssue          ComplianceIssue[]
+  CustomerJobChangeRequest CustomerJobChangeRequest[]
+  JobChecklistItem         JobChecklistItem[]
+  JobTeamMember            JobTeamMember[]
+  CompletionReport         CompletionReport?
+  Invoice                  Invoice?
+  Receipts                 Receipt[]
+  IntegrationEventLog      IntegrationEventLog[]
+  AdminNotification        AdminNotification[]
+  User                     User?                      @relation(fields: [assignedCleanerId], references: [id])
+  ApprovedBy               User?                      @relation("JobApprovedBy", fields: [approvedById], references: [id])
+  Branch                   Branch                     @relation(fields: [branchId], references: [id])
+  Customer                 Customer?                  @relation(fields: [customerId], references: [id])
+  Property                 Property?                  @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  JobPayout                JobPayout?
+  JobOffer                 JobOffer[]
+  Tip                      Tip[]
+  GuestTipAuthorization    GuestTipAuthorization[]
 
   @@index([appliedReferralCode])
   @@index([assignedCleanerId])
@@ -557,30 +557,30 @@ model CleanPhoto {
 
 /// Dispatch offer — source of truth until the cleaner accepts. Not a JobStatus.
 model JobOffer {
-  id                    String            @id @default(cuid())
-  jobId                 String
-  cleanerId             String
-  status                JobOfferStatus    @default(OFFERED)
-  offeredAt             DateTime          @default(now())
-  expiresAt             DateTime
-  respondedAt           DateTime?
-  declineReason         String?
+  id                     String          @id @default(cuid())
+  jobId                  String
+  cleanerId              String
+  status                 JobOfferStatus  @default(OFFERED)
+  offeredAt              DateTime        @default(now())
+  expiresAt              DateTime
+  respondedAt            DateTime?
+  declineReason          String?
   /// Cleaner pay snapshot approved by ops. Never a customer invoice total.
-  compensationAmount    Decimal           @db.Decimal(10, 2)
-  compensationCurrency  String            @default("USD")
-  compensationBasis     CompensationBasis @default(FLAT)
-  estimatedDurationMins Int?
-  operationalNotes      String?
-  channel               String            @default("EMAIL")
-  createdByAdminId      String?
-  cancelledAt           DateTime?
-  cancelledByAdminId    String?
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-  Job                   Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  Cleaner               User              @relation("JobOfferCleaner", fields: [cleanerId], references: [id])
-  CreatedByAdmin        User?             @relation("JobOfferCreatedBy", fields: [createdByAdminId], references: [id])
-  CancelledByAdmin      User?             @relation("JobOfferCancelledBy", fields: [cancelledByAdminId], references: [id])
+  compensationAmount     Decimal         @db.Decimal(10, 2)
+  compensationCurrency   String          @default("USD")
+  compensationBasis      CompensationBasis @default(FLAT)
+  estimatedDurationMins  Int?
+  operationalNotes       String?
+  channel                String          @default("EMAIL")
+  createdByAdminId       String?
+  cancelledAt            DateTime?
+  cancelledByAdminId     String?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  Job                    Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Cleaner                User            @relation("JobOfferCleaner", fields: [cleanerId], references: [id])
+  CreatedByAdmin         User?           @relation("JobOfferCreatedBy", fields: [createdByAdminId], references: [id])
+  CancelledByAdmin       User?           @relation("JobOfferCancelledBy", fields: [cancelledByAdminId], references: [id])
 
   @@index([jobId, status])
   @@index([cleanerId, status])
@@ -588,37 +588,37 @@ model JobOffer {
 }
 
 model CleanerProfile {
-  id                   String    @id @default(cuid())
-  userId               String    @unique
-  firstName            String?
-  lastName             String?
-  publicDisplayName    String?
-  jobTitle             String?
-  serviceAreas         Json?
-  memberStatus         String    @default("ACTIVE")
-  certificationLabel   String    @default("PENDING")
-  internalNotes        String?
-  isInternalTeam       Boolean   @default(false)
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  firstName           String?
+  lastName            String?
+  publicDisplayName   String?
+  jobTitle            String?
+  serviceAreas        Json?
+  memberStatus        String   @default("ACTIVE")
+  certificationLabel  String   @default("PENDING")
+  internalNotes       String?
+  isInternalTeam      Boolean  @default(false)
   /// Legal / ops identity (optional). Never auto-filled from application checkboxes.
-  legalFirstName       String?
-  legalLastName        String?
-  mailingAddressLine1  String?
-  mailingAddressLine2  String?
-  mailingCity          String?
-  mailingState         String?
-  mailingPostalCode    String?
+  legalFirstName      String?
+  legalLastName       String?
+  mailingAddressLine1 String?
+  mailingAddressLine2 String?
+  mailingCity         String?
+  mailingState        String?
+  mailingPostalCode   String?
   /// Optional ISO country; leave null until verified (no migration backfill).
-  mailingCountry       String?
+  mailingCountry      String?
   /// Factual start date only when verified. Do not invent from User.createdAt in migration.
-  startDate            DateTime?
-  inactiveDate         DateTime?
+  startDate           DateTime?
+  inactiveDate        DateTime?
   /// UNRESOLVED | EMPLOYEE | INDEPENDENT_CONTRACTOR — never inferred automatically.
-  classificationStatus String    @default("UNRESOLVED")
+  classificationStatus String  @default("UNRESOLVED")
   /// ZELLE | CHECK | ACH_PROVIDER | STRIPE_CONNECT | OTHER | null — preference enum only, no credentials.
-  paymentPreference    String?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  User                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentPreference   String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([memberStatus])
   @@index([isInternalTeam])
@@ -1127,60 +1127,60 @@ model TransactionLedger {
 }
 
 model User {
-  id                                  String                    @id
-  email                               String                    @unique
+  id                                  String                 @id
+  email                               String                 @unique
   name                                String?
   phone                               String?
-  role                                UserRole                  @default(CLEANER)
+  role                                UserRole               @default(CLEANER)
   primaryBranchId                     String?
-  createdAt                           DateTime                  @default(now())
+  createdAt                           DateTime               @default(now())
   updatedAt                           DateTime
   stripeAccountId                     String?
-  stripeChargesEnabled                Boolean                   @default(false)
-  stripePayoutsEnabled                Boolean                   @default(false)
+  stripeChargesEnabled                Boolean                @default(false)
+  stripePayoutsEnabled                Boolean                @default(false)
   stripeOnboardingStatus              String?
-  stripeRequirementsDueCount          Int                       @default(0)
+  stripeRequirementsDueCount          Int                    @default(0)
   stripeLastAccountUpdateAt           DateTime?
-  isActive                            Boolean                   @default(false)
+  isActive                            Boolean                @default(false)
   homeZip                             String?
-  preferredCities                     String[]                  @default([])
-  isSuspended                         Boolean                   @default(false)
-  warningCount                        Int                       @default(0)
+  preferredCities                     String[]               @default([])
+  isSuspended                         Boolean                @default(false)
+  warningCount                        Int                    @default(0)
   AuditLog                            AuditLog[]
-  Branch_Branch_managerIdToUser       Branch[]                  @relation("Branch_managerIdToUser")
+  Branch_Branch_managerIdToUser       Branch[]               @relation("Branch_managerIdToUser")
   CleanerAvailability                 CleanerAvailability?
   CleanerBalanceLedger                CleanerBalanceLedger[]
   CleanerPaymentMethod                CleanerPaymentMethod[]
   CleanerPayout                       CleanerPayout[]
   CleanerRating                       CleanerRating[]
-  ServiceFeedbackAsCleaner            ServiceFeedback[]         @relation("ServiceFeedbackCleaner")
+  ServiceFeedbackAsCleaner            ServiceFeedback[]       @relation("ServiceFeedbackCleaner")
   CleanerTrainingProgress             CleanerTrainingProgress[]
   ComplianceIssue                     ComplianceIssue[]
   JamaicaPaymentMethod                JamaicaPaymentMethod?
   JamaicaPayout                       JamaicaPayout[]
   Job                                 Job[]
   JobPayout                           JobPayout[]
-  JobOfferAsCleaner                   JobOffer[]                @relation("JobOfferCleaner")
-  JobOfferCreated                     JobOffer[]                @relation("JobOfferCreatedBy")
-  JobOfferCancelled                   JobOffer[]                @relation("JobOfferCancelledBy")
-  JobsApproved                        Job[]                     @relation("JobApprovedBy")
-  JobChecklistItemCompleted           JobChecklistItem[]        @relation("JobChecklistItem_completedBy")
+  JobOfferAsCleaner                   JobOffer[]             @relation("JobOfferCleaner")
+  JobOfferCreated                     JobOffer[]             @relation("JobOfferCreatedBy")
+  JobOfferCancelled                   JobOffer[]             @relation("JobOfferCancelledBy")
+  JobsApproved                        Job[]                  @relation("JobApprovedBy")
+  JobChecklistItemCompleted           JobChecklistItem[]     @relation("JobChecklistItem_completedBy")
   LessonProgress                      LessonProgress[]
   PayoutTransfer                      PayoutTransfer[]
-  TrainingCertificate                 TrainingCertificate?      @relation("TrainingCertificate_cleaner")
+  TrainingCertificate                 TrainingCertificate?   @relation("TrainingCertificate_cleaner")
   TrainingQuizAttempt                 TrainingQuizAttempt[]
-  TrainingStatus                      TrainingStatus?           @relation("TrainingStatus_cleaner")
+  TrainingStatus                      TrainingStatus?        @relation("TrainingStatus_cleaner")
   CleanerProfile                      CleanerProfile?
   JobTeamMember                       JobTeamMember[]
   TransactionLedger                   TransactionLedger[]
-  TipsAsBeneficiary                   Tip[]                     @relation("TipBeneficiary")
-  TipsConfirmed                       Tip[]                     @relation("TipConfirmedBy")
-  TipsPaidOut                         Tip[]                     @relation("TipPaidOutBy")
-  TipAllocations                      TipAllocation[]           @relation("TipAllocationCleaner")
-  TipAllocationsPaidOut               TipAllocation[]           @relation("TipAllocationPaidOutBy")
-  WorkerAgreements                    WorkerAgreement[]         @relation("WorkerAgreementCleaner")
-  WorkerDocuments                     WorkerDocument[]          @relation("WorkerDocumentCleaner")
-  Branch_User_primaryBranchIdToBranch Branch?                   @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
+  TipsAsBeneficiary                   Tip[]                  @relation("TipBeneficiary")
+  TipsConfirmed                       Tip[]                  @relation("TipConfirmedBy")
+  TipsPaidOut                         Tip[]                  @relation("TipPaidOutBy")
+  TipAllocations                      TipAllocation[]        @relation("TipAllocationCleaner")
+  TipAllocationsPaidOut               TipAllocation[]        @relation("TipAllocationPaidOutBy")
+  WorkerAgreements                    WorkerAgreement[]      @relation("WorkerAgreementCleaner")
+  WorkerDocuments                     WorkerDocument[]       @relation("WorkerDocumentCleaner")
+  Branch_User_primaryBranchIdToBranch Branch?                @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
   UserBranch                          UserBranch[]
 
   @@index([isActive])
@@ -1748,20 +1748,20 @@ enum CleanPhotoCategory {
 }
 
 model Tip {
-  id                    String            @id @default(cuid())
+  id                    String    @id @default(cuid())
   amount                Int
-  currency              String            @default("usd")
+  currency              String    @default("usd")
   guestName             String?
   guestMessage          String?
   /// Legacy free-text display only. Never used for beneficiary resolution.
   cleanerName           String?
   /// Legacy free-text. Never exposed on public tip surfaces for new flows.
   propertyAddress       String?
-  stripePaymentIntentId String?           @unique
+  stripePaymentIntentId String?   @unique
   /// Canonical ledger: PENDING | RECEIVED | RECEIVED_UNATTRIBUTED | PAID_OUT | CANCELLED | FAILED | REFUNDED
   /// Legacy rows may still use pending | succeeded | failed.
   /// PAYABLE is derived (RECEIVED + clear dispute/refund), not a stored status.
-  status                String            @default("PENDING")
+  status                String    @default("PENDING")
   market                String?
   jobId                 String?
   propertyId            String?
@@ -1769,10 +1769,10 @@ model Tip {
   beneficiaryCleanerId  String?
   /// STRIPE | ZELLE | MANUAL
   paymentMethod         String?
-  internalReference     String?           @unique
+  internalReference     String?   @unique
   providerReference     String?
   /// Stripe event id for successful receipt (idempotency). Additional events → TipWebhookEvent.
-  stripeEventId         String?           @unique
+  stripeEventId         String?   @unique
   receivedAt            DateTime?
   confirmedByAdminId    String?
   confirmedAt           DateTime?
@@ -1782,22 +1782,22 @@ model Tip {
   paidOutMethod         String?
   /// Dispute overlay — orthogonal so PAID_OUT history is never erased.
   /// NONE | OPEN | WON | LOST
-  disputeStatus         String            @default("NONE")
+  disputeStatus         String    @default("NONE")
   disputedAt            DateTime?
   disputeClosedAt       DateTime?
   refundedAt            DateTime?
   /// Durable ops signal; never auto-moves money.
-  needsReconcile        Boolean           @default(false)
+  needsReconcile        Boolean   @default(false)
   reconcileReason       String?
   /// Sole-beneficiary cleaner tip email claimed/sent (idempotency).
   beneficiaryNotifiedAt DateTime?
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-  Job                   Job?              @relation(fields: [jobId], references: [id], onDelete: SetNull)
-  Property              Property?         @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  Beneficiary           User?             @relation("TipBeneficiary", fields: [beneficiaryCleanerId], references: [id], onDelete: SetNull)
-  ConfirmedByAdmin      User?             @relation("TipConfirmedBy", fields: [confirmedByAdminId], references: [id], onDelete: SetNull)
-  PaidOutByAdmin        User?             @relation("TipPaidOutBy", fields: [paidOutByAdminId], references: [id], onDelete: SetNull)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  Job                   Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  Property              Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  Beneficiary           User?     @relation("TipBeneficiary", fields: [beneficiaryCleanerId], references: [id], onDelete: SetNull)
+  ConfirmedByAdmin      User?     @relation("TipConfirmedBy", fields: [confirmedByAdminId], references: [id], onDelete: SetNull)
+  PaidOutByAdmin        User?     @relation("TipPaidOutBy", fields: [paidOutByAdminId], references: [id], onDelete: SetNull)
   TipWebhookEvent       TipWebhookEvent[]
   TipAllocation         TipAllocation[]
 
@@ -1856,10 +1856,10 @@ model TipWebhookEvent {
 }
 
 model Invoice {
-  id              String           @id @default(cuid())
-  invoiceNumber   String           @unique
-  publicToken     String           @unique @default(cuid())
-  jobId           String?          @unique
+  id              String         @id @default(cuid())
+  invoiceNumber   String         @unique
+  publicToken     String         @unique @default(cuid())
+  jobId           String?        @unique
   customerId      String?
   clientName      String
   clientEmail     String?
@@ -1868,23 +1868,23 @@ model Invoice {
   serviceType     String
   jobDate         DateTime?
   dueDate         DateTime?
-  subtotal        Decimal          @db.Decimal(10, 2)
-  tax             Decimal          @default(0) @db.Decimal(10, 2)
-  discount        Decimal          @default(0) @db.Decimal(10, 2)
-  total           Decimal          @db.Decimal(10, 2)
-  amountPaid      Decimal          @default(0) @db.Decimal(10, 2)
-  balanceDue      Decimal          @db.Decimal(10, 2)
-  status          InvoiceStatus    @default(DRAFT)
+  subtotal        Decimal        @db.Decimal(10, 2)
+  tax             Decimal        @default(0) @db.Decimal(10, 2)
+  discount        Decimal        @default(0) @db.Decimal(10, 2)
+  total           Decimal        @db.Decimal(10, 2)
+  amountPaid      Decimal        @default(0) @db.Decimal(10, 2)
+  balanceDue      Decimal        @db.Decimal(10, 2)
+  status          InvoiceStatus  @default(DRAFT)
   notes           String?
   sentAt          DateTime?
   reminderSentAt  DateTime?
   paidAt          DateTime?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   items           InvoiceItem[]
   payments        InvoicePayment[]
-  Job             Job?             @relation(fields: [jobId], references: [id])
-  Customer        Customer?        @relation(fields: [customerId], references: [id])
+  Job             Job?           @relation(fields: [jobId], references: [id])
+  Customer        Customer?      @relation(fields: [customerId], references: [id])
   Receipts        Receipt[]
 
   @@index([status])
@@ -1991,11 +1991,11 @@ enum ServiceFeedbackDisposition {
 }
 
 model ServiceFeedback {
-  id                  String                      @id @default(cuid())
-  publicToken         String                      @unique @default(cuid())
+  id                  String                       @id @default(cuid())
+  publicToken         String                       @unique @default(cuid())
   jobId               String
   /// HOST = existing customer/host email workflow; GUEST = stay-QR respondent.
-  source              ServiceFeedbackSource       @default(HOST)
+  source              ServiceFeedbackSource        @default(HOST)
   customerId          String
   cleanerId           String?
   propertyId          String?
@@ -2004,8 +2004,8 @@ model ServiceFeedback {
   communicationRating Int?
   timelinessRating    Int?
   comment             String?
-  status              ServiceFeedbackStatus       @default(REQUESTED)
-  requestedAt         DateTime                    @default(now())
+  status              ServiceFeedbackStatus        @default(REQUESTED)
+  requestedAt         DateTime                     @default(now())
   submittedAt         DateTime?
   reminderSentAt      DateTime?
   reviewedAt          DateTime?
@@ -2015,12 +2015,12 @@ model ServiceFeedback {
   adminNotes          String?
   cleanerResponse     String?
   cleanerRespondedAt  DateTime?
-  createdAt           DateTime                    @default(now())
-  updatedAt           DateTime                    @updatedAt
-  Job                 Job                         @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  Customer            Customer                    @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  Cleaner             User?                       @relation("ServiceFeedbackCleaner", fields: [cleanerId], references: [id], onDelete: SetNull)
-  Property            Property?                   @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
+  Job                 Job                          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Customer            Customer                     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  Cleaner             User?                        @relation("ServiceFeedbackCleaner", fields: [cleanerId], references: [id], onDelete: SetNull)
+  Property            Property?                    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
   @@unique([jobId, source])
   @@index([status])
@@ -2147,22 +2147,22 @@ enum TravelZone {
 }
 
 model AdminPlatformSettings {
-  id                          String    @id @default("default")
-  invoiceQuickAddItems        Json?
-  googleDriveConnected        Boolean   @default(false)
-  googleCalendarConnected     Boolean   @default(false)
-  googleDriveRootFolderId     String?
-  googleCalendarId            String?
-  lastSyncError               String?
-  lastSyncErrorAt             DateTime?
+  id                      String    @id @default("default")
+  invoiceQuickAddItems    Json?
+  googleDriveConnected    Boolean   @default(false)
+  googleCalendarConnected Boolean   @default(false)
+  googleDriveRootFolderId String?
+  googleCalendarId        String?
+  lastSyncError           String?
+  lastSyncErrorAt         DateTime?
   /// When false/missing, pricing pass-through (customer = operational). Default OFF.
-  processingProtectionEnabled Boolean   @default(false)
+  processingProtectionEnabled Boolean @default(false)
   /// e.g. 0.0349 for 3.49%. Not brand-specific — configurable allowance.
   processingPercentageRate    Decimal?  @db.Decimal(8, 6)
   processingFixedFee          Decimal?  @db.Decimal(10, 2)
   processingRoundingIncrement Int       @default(5)
   processingPolicyVersion     String?
-  updatedAt                   DateTime  @updatedAt
+  updatedAt               DateTime  @updatedAt
 
   @@map("admin_platform_settings")
 }

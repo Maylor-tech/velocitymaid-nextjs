@@ -35,21 +35,33 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function opsFollowUpEmail(): string | null {
+export function resolveNjOpsFollowUpEmail(
+  env: Record<string, string | undefined> = process.env
+): string | null {
   return (
-    process.env.NJ_OPS_FOLLOWUP_EMAIL ||
-    process.env.ELAINE_OPS_EMAIL ||
-    process.env.CONTACT_NOTIFICATIONS_EMAIL ||
+    env.NJ_OPS_FOLLOWUP_EMAIL ||
+    env.ELAINE_OPS_EMAIL ||
+    env.CONTACT_NOTIFICATIONS_EMAIL ||
     null
   );
 }
 
-function companyCopyEmail(): string | null {
+export function resolveNjLeadsCompanyEmail(
+  env: Record<string, string | undefined> = process.env
+): string | null {
   return (
-    process.env.NJ_LEADS_COMPANY_EMAIL ||
-    process.env.CONTACT_NOTIFICATIONS_EMAIL ||
+    env.NJ_LEADS_COMPANY_EMAIL ||
+    env.CONTACT_NOTIFICATIONS_EMAIL ||
     'hello@velocitymaid.com'
   );
+}
+
+function opsFollowUpEmail(): string | null {
+  return resolveNjOpsFollowUpEmail();
+}
+
+function companyCopyEmail(): string | null {
+  return resolveNjLeadsCompanyEmail();
 }
 
 export async function notifyNjLeadFollowUp(
