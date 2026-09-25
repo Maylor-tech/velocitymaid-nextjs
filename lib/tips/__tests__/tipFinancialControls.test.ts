@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   tipWebhookEventFindUnique: vi.fn(),
   tipWebhookEventCreate: vi.fn(),
   tipCreate: vi.fn(),
+  tipAllocationCount: vi.fn(),
+  tipAllocationUpdateMany: vi.fn(),
   logAuditEntry: vi.fn(),
   chargesRetrieve: vi.fn(),
 }));
@@ -37,6 +39,10 @@ vi.mock('@/lib/prisma', () => ({
     tipWebhookEvent: {
       findUnique: (...a: unknown[]) => mocks.tipWebhookEventFindUnique(...a),
       create: (...a: unknown[]) => mocks.tipWebhookEventCreate(...a),
+    },
+    tipAllocation: {
+      count: (...a: unknown[]) => mocks.tipAllocationCount(...a),
+      updateMany: (...a: unknown[]) => mocks.tipAllocationUpdateMany(...a),
     },
   },
 }));
@@ -73,6 +79,8 @@ describe('P0-C tip financial controls', () => {
     mocks.tipWebhookEventFindUnique.mockResolvedValue(null);
     mocks.tipWebhookEventCreate.mockResolvedValue({});
     mocks.tipFindFirst.mockResolvedValue(null);
+    mocks.tipAllocationCount.mockResolvedValue(0);
+    mocks.tipAllocationUpdateMany.mockResolvedValue({ count: 0 });
   });
 
   it('policy: $20 face value = $20 entitlement, $0 platform share', () => {

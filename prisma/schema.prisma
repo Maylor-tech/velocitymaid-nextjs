@@ -1157,6 +1157,8 @@ model User {
   TipsAsBeneficiary                   Tip[]                  @relation("TipBeneficiary")
   TipsConfirmed                       Tip[]                  @relation("TipConfirmedBy")
   TipsPaidOut                         Tip[]                  @relation("TipPaidOutBy")
+  TipAllocations                      TipAllocation[]        @relation("TipAllocationCleaner")
+  TipAllocationsPaidOut               TipAllocation[]        @relation("TipAllocationPaidOutBy")
   WorkerAgreements                    WorkerAgreement[]      @relation("WorkerAgreementCleaner")
   WorkerDocuments                     WorkerDocument[]       @relation("WorkerDocumentCleaner")
   Branch_User_primaryBranchIdToBranch Branch?                @relation("User_primaryBranchIdToBranch", fields: [primaryBranchId], references: [id])
@@ -1776,6 +1778,7 @@ model Tip {
   ConfirmedByAdmin      User?     @relation("TipConfirmedBy", fields: [confirmedByAdminId], references: [id], onDelete: SetNull)
   PaidOutByAdmin        User?     @relation("TipPaidOutBy", fields: [paidOutByAdminId], references: [id], onDelete: SetNull)
   TipWebhookEvent       TipWebhookEvent[]
+  TipAllocation         TipAllocation[]
 
   @@index([jobId])
   @@index([propertyId])
@@ -1785,6 +1788,32 @@ model Tip {
   @@index([disputeStatus])
   @@index([needsReconcile])
   @@map("tips")
+}
+
+/// Child share of a Tip payment. One Stripe Tip → one or more allocations.
+/// Never invent multiple Tip rows for one PaymentIntent.
+model TipAllocation {
+  id               String    @id @default(cuid())
+  tipId            String
+  cleanerId        String
+  amountCents      Int
+  /// OWED | PAID_OUT | CANCELLED
+  status           String    @default("OWED")
+  paidOutAt        DateTime?
+  payoutReference  String?
+  payoutMethod     String?
+  paidOutByAdminId String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  Tip              Tip       @relation(fields: [tipId], references: [id], onDelete: Cascade)
+  Cleaner          User      @relation("TipAllocationCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
+  PaidOutByAdmin   User?     @relation("TipAllocationPaidOutBy", fields: [paidOutByAdminId], references: [id], onDelete: SetNull)
+
+  @@unique([tipId, cleanerId])
+  @@index([tipId])
+  @@index([cleanerId])
+  @@index([status])
+  @@map("tip_allocations")
 }
 
 /// Idempotent record of Stripe tip-webhook events (success, refund, dispute).

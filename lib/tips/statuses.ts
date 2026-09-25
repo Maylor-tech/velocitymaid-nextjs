@@ -85,9 +85,12 @@ export type TipPayableInput = {
 };
 
 /**
- * Derived PAYABLE: Stripe/admin-confirmed RECEIVED tip owed to a frozen
- * beneficiary, not refunded, not blocked by open/lost dispute.
- * PAID_OUT tips are settled (not payable). Unattributed tips are not payable.
+ * Derived PAYABLE (sole-beneficiary tips): Stripe/admin-confirmed RECEIVED tip
+ * owed to a frozen beneficiary, not refunded, not blocked by open/lost dispute.
+ * PAID_OUT tips are settled (not payable). Unattributed tips without allocations
+ * are not payable via this sole-beneficiary path.
+ *
+ * Team tips with TipAllocation rows use allocation-level payability instead.
  */
 export function isTipPayable(tip: TipPayableInput): boolean {
   const status = normalizeTipStatus(tip.status);
@@ -97,6 +100,25 @@ export function isTipPayable(tip: TipPayableInput): boolean {
   const dispute = normalizeTipDisputeStatus(tip.disputeStatus);
   if (dispute === 'OPEN' || dispute === 'LOST') return false;
   return true;
+}
+
+/**
+ * Parent tip may show as having payable shares when RECEIVED or
+ * RECEIVED_UNATTRIBUTED and at least one TipAllocation is OWED.
+ */
+export function tipHasPayableAllocations(input: {
+  status: string;
+  refundedAt?: Date | null;
+  disputeStatus?: string | null;
+  needsReconcile?: boolean | null;
+  owedAllocationCents: number;
+}): boolean {
+  if (!isTipReceived(input.status)) return false;
+  if (isTipPaidOut(input.status)) return false;
+  if (input.refundedAt) return false;
+  if (input.needsReconcile) return false;
+  if (isTipSettlementBlockedByDispute(input.disputeStatus)) return false;
+  return input.owedAllocationCents > 0;
 }
 
 /** Settlement blocked for mark-paid-out when dispute is open or lost. */

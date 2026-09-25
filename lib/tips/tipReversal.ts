@@ -6,6 +6,7 @@ import {
   normalizeTipDisputeStatus,
   normalizeTipStatus,
 } from '@/lib/tips/statuses';
+import { cancelOwedTipAllocations } from '@/lib/tips/tipAllocation';
 
 export type TipReversalResult =
   | {
@@ -133,17 +134,29 @@ export async function applyTipFullRefund(input: {
     };
   }
 
-  if (paidOut) {
+  const paidAllocations = await prisma.tipAllocation.count({
+    where: { tipId: tip.id, status: 'PAID_OUT' },
+  });
+
+  if (paidOut || paidAllocations > 0) {
+    await cancelOwedTipAllocations({
+      tipId: tip.id,
+      reason: 'refund_after_partial_or_full_settlement',
+    });
     await prisma.tip.update({
       where: { id: tip.id },
       data: {
         refundedAt,
         needsReconcile: true,
         reconcileReason: 'REFUND_AFTER_PAID_OUT',
-        // Preserve PAID_OUT status — never silently debit cleaner settlement history
+        // Preserve PAID_OUT / partial allocation history — never silently debit
       },
     });
   } else {
+    await cancelOwedTipAllocations({
+      tipId: tip.id,
+      reason: 'refund_before_allocation_payout',
+    });
     await prisma.tip.update({
       where: { id: tip.id },
       data: {
@@ -379,7 +392,14 @@ export async function applyTipDisputeClosed(input: {
       },
     });
   } else if (isLost) {
-    if (paidOut) {
+    const paidAllocations = await prisma.tipAllocation.count({
+      where: { tipId: tip.id, status: 'PAID_OUT' },
+    });
+    if (paidOut || paidAllocations > 0) {
+      await cancelOwedTipAllocations({
+        tipId: tip.id,
+        reason: 'dispute_lost_after_partial_or_full_settlement',
+      });
       await prisma.tip.update({
         where: { id: tip.id },
         data: {
@@ -391,6 +411,10 @@ export async function applyTipDisputeClosed(input: {
         },
       });
     } else {
+      await cancelOwedTipAllocations({
+        tipId: tip.id,
+        reason: 'dispute_lost_before_allocation_payout',
+      });
       await prisma.tip.update({
         where: { id: tip.id },
         data: {

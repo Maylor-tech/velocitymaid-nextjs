@@ -10,10 +10,11 @@ import {
   reconcileReasonLabel,
 } from '@/lib/tips/tipReconciliation';
 import { cleanerTipEntitlementCents } from '@/lib/tips/tipPolicy';
+import { summarizeAllocations } from '@/lib/tips/tipAllocation';
 
 /**
  * GET /api/admin/tips
- * Compact tip payables / reconciliation list.
+ * Compact tip payables / reconciliation list (includes TipAllocation shares).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -74,13 +75,38 @@ export async function GET(request: NextRequest) {
             email: true,
           },
         },
+        TipAllocation: {
+          select: {
+            id: true,
+            cleanerId: true,
+            amountCents: true,
+            status: true,
+            paidOutAt: true,
+            payoutMethod: true,
+            payoutReference: true,
+            Cleaner: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
 
     const mapped = tips.map((t) => {
-      const canonical = normalizeTipStatus(t.status);
-      const flags = buildTipReconFlags(t);
+      const allocSummary = summarizeAllocations(t.amount, t.TipAllocation);
+      const flags = buildTipReconFlags({
+        ...t,
+        hasAllocations: allocSummary.hasAllocations,
+        owedAllocationCents: allocSummary.owedCents,
+        allocatedCents: allocSummary.allocatedCents,
+      });
       const entitlementCents = cleanerTipEntitlementCents(t.amount);
+      const payableNowCents = allocSummary.hasAllocations
+        ? allocSummary.owedCents
+        : flags.payable
+          ? entitlementCents
+          : 0;
       return {
         id: t.id,
         amountCents: t.amount,
@@ -90,7 +116,7 @@ export async function GET(request: NextRequest) {
         platformShareCents: 0,
         currency: t.currency,
         status: t.status,
-        canonicalStatus: canonical,
+        canonicalStatus: normalizeTipStatus(t.status),
         paymentMethod: t.paymentMethod,
         internalReference: t.internalReference,
         providerReference: t.providerReference,
@@ -119,6 +145,26 @@ export async function GET(request: NextRequest) {
         ),
         createdAt: t.createdAt.toISOString(),
         guestName: t.guestName,
+        allocations: t.TipAllocation.map((a) => ({
+          id: a.id,
+          cleanerId: a.cleanerId,
+          cleanerName: a.Cleaner?.name || null,
+          cleanerEmail: a.Cleaner?.email || null,
+          amountCents: a.amountCents,
+          amountDollars: a.amountCents / 100,
+          status: a.status,
+          paidOutAt: a.paidOutAt?.toISOString() ?? null,
+          payoutMethod: a.payoutMethod,
+          payoutReference: a.payoutReference,
+        })),
+        allocationSummary: {
+          allocatedCents: allocSummary.allocatedCents,
+          owedCents: allocSummary.owedCents,
+          paidOutCents: allocSummary.paidOutCents,
+          fullyAllocated: allocSummary.fullyAllocated,
+          hasAllocations: allocSummary.hasAllocations,
+        },
+        payableNowCents,
         flags,
       };
     });
@@ -159,7 +205,7 @@ export async function GET(request: NextRequest) {
       pendingZelle: mapped.filter((t) => t.flags.pendingZelle).length,
       payableCents: mapped
         .filter((t) => t.flags.payable)
-        .reduce((sum, t) => sum + t.entitlementCents, 0),
+        .reduce((sum, t) => sum + t.payableNowCents, 0),
     };
 
     return NextResponse.json({ success: true, summary, tips: filtered });
