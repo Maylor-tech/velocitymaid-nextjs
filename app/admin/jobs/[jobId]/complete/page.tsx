@@ -574,7 +574,7 @@ export default function MarkCleanCompletePage() {
                       • {uploadedPhotos.length} photo
                       {uploadedPhotos.length === 1 ? "" : "s"} from the clean
                     </li>
-                    <li>• A PayPal payment link (if a balance is due)</li>
+                    <li>• A Pay by Card link (if a balance is due)</li>
                   </ul>
                   <p className="mt-2 font-body text-xs text-vm-muted">
                     Sent to {job.customer?.email || "the client's email on file"}

@@ -187,8 +187,21 @@ export async function POST(
       const invoiceAmount =
         balanceDue != null && balanceDue > 0 ? balanceDue : undefined;
       const market = resolveMarket(job.marketLabel, job.Branch?.state ?? null);
-      const paypalEmail =
-        process.env.PAYPAL_EMAIL || "hello@velocitymaid.com";
+      const invoiceToken =
+        billingWorkflow?.invoice &&
+        typeof billingWorkflow.invoice === "object" &&
+        "publicToken" in billingWorkflow.invoice
+          ? String(
+              (billingWorkflow.invoice as { publicToken?: string }).publicToken ||
+                ""
+            )
+          : "";
+      const appBase =
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+        "https://velocitymaid.com";
+      const invoiceViewUrl = invoiceToken
+        ? `${appBase}/invoice/${invoiceToken}`
+        : undefined;
 
       if (!toEmail) {
         emailResult = {
@@ -207,7 +220,7 @@ export async function POST(
             caption: p.caption ?? undefined,
           })),
           invoiceAmount,
-          paypalEmail,
+          invoiceViewUrl,
           market,
           jobId: undefined,
         });
