@@ -20,7 +20,8 @@ export type AdminNotificationType =
   | 'FAILED_DRIVE_SYNC'
   | 'FAILED_CALENDAR_SYNC'
   | 'JOB_ISSUE_REPORTED'
-  | 'JOB_COMPLETED';
+  | 'JOB_COMPLETED'
+  | 'INVOICE_STRIPE_OVERPAYMENT';
 
 export type AdminNotificationSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
 

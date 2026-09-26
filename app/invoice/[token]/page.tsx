@@ -5,6 +5,13 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { CheckCircle2, CreditCard, Loader2 } from 'lucide-react';
 import type { SerializedInvoice } from '@/lib/invoices/serializeInvoice';
 import { InvoiceDocument } from '@/components/invoices/InvoiceDocument';
+import { SERVICE_INVOICE_ZELLE_SECONDARY } from '@/lib/tips/zelleDestination';
+
+type InvoiceZelleInfo = {
+  label: string;
+  handle: string;
+  secondaryText: string;
+};
 
 export default function PublicInvoicePage() {
   const params = useParams();
@@ -12,6 +19,7 @@ export default function PublicInvoicePage() {
   const token = params.token as string;
   const [invoice, setInvoice] = useState<SerializedInvoice | null>(null);
   const [stripeConfigured, setStripeConfigured] = useState(false);
+  const [zelle, setZelle] = useState<InvoiceZelleInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState('');
@@ -25,6 +33,13 @@ export default function PublicInvoicePage() {
     if (data.success) {
       setInvoice(data.invoice);
       setStripeConfigured(data.stripeConfigured);
+      if (data.zelle?.label && data.zelle?.handle) {
+        setZelle({
+          label: data.zelle.label,
+          handle: data.zelle.handle,
+          secondaryText: data.zelle.secondaryText || SERVICE_INVOICE_ZELLE_SECONDARY,
+        });
+      }
     } else {
       setError(data.error || 'Invoice not found');
     }
@@ -97,6 +112,12 @@ export default function PublicInvoicePage() {
               {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
               Pay with card
             </button>
+            {zelle && (
+              <p className="mt-4 font-body text-xs text-vm-muted leading-relaxed">
+                {zelle.secondaryText} {zelle.label} · {zelle.handle}. Zelle remains
+                manual — VelocityMaid marks the invoice paid only after verifying the transfer.
+              </p>
+            )}
           </div>
         )}
 

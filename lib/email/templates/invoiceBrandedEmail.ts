@@ -1,5 +1,9 @@
 import type { SerializedInvoice } from '@/lib/invoices/serializeInvoice';
 import { formatInvoiceDate } from '@/lib/invoices/invoiceUtils';
+import {
+  getServiceInvoiceZelleDestination,
+  SERVICE_INVOICE_ZELLE_SECONDARY,
+} from '@/lib/tips/zelleDestination';
 
 const NAVY = '#0F1C2E';
 const CYAN = '#00C2CB';
@@ -66,12 +70,6 @@ export function parseInvoiceNotes(notes: string | null | undefined): {
   };
 }
 
-function shortClientName(fullName: string): string {
-  const parts = fullName.trim().split(/\s+/);
-  if (parts.length <= 1) return fullName;
-  return `${parts[0]} ${parts[parts.length - 1]}`;
-}
-
 function dueDateLabel(invoice: SerializedInvoice): string {
   if (invoice.status === 'PAID') return 'Paid';
   if (!invoice.dueDate) return 'Due Now';
@@ -94,15 +92,6 @@ function statusBadge(invoice: SerializedInvoice): { label: string; color: string
     return { label: 'PARTIAL', color: ORANGE, bg: '#FFF3E0' };
   }
   return { label: 'UNPAID', color: ORANGE, bg: '#FFF3E0' };
-}
-
-function paypalConfig() {
-  const email = process.env.PAYPAL_EMAIL || 'hello@velocitymaid.com';
-  const meUrl =
-    process.env.PAYPAL_ME_URL ||
-    process.env.NEXT_PUBLIC_PAYPAL_ME_URL ||
-    'https://paypal.me/velocitymaid';
-  return { email, meUrl };
 }
 
 function lineItemsHtml(invoice: SerializedInvoice): string {
@@ -170,8 +159,7 @@ export function buildInvoiceBrandedEmailHtml(
   const dueLabel = dueDateLabel(invoice);
   const dueColor = dueLabel === 'Due Now' || invoice.status === 'OVERDUE' ? ORANGE : NAVY;
   const invoiceDate = formatInvoiceDate(invoice.jobDate || invoice.createdAt);
-  const { email: paypalEmail, meUrl: paypalMeUrl } = paypalConfig();
-  const reference = `${invoice.invoiceNumber} — ${shortClientName(invoice.clientName)}`;
+  const payByCardUrl = options.viewUrl || '';
 
   const streetDisplay = street || invoice.propertyAddress;
   const defaultClosingText = `Thank you for trusting VelocityMaid with ${streetDisplay}. Questions? Reply to this email or call (802) 733-5348.`;
@@ -196,7 +184,9 @@ export function buildInvoiceBrandedEmailHtml(
     </td></tr>`;
   }
 
-  const showPaymentBlock = invoice.balanceDue > 0 && variant !== 'receipt';
+  const showPaymentBlock =
+    invoice.balanceDue > 0 && variant !== 'receipt' && Boolean(payByCardUrl);
+  const zelle = getServiceInvoiceZelleDestination();
 
   const previewText = `Invoice ${invoice.invoiceNumber} — ${invoice.balanceDueFormatted} due for ${invoice.serviceType} at ${street || invoice.propertyAddress}.`;
 
@@ -302,17 +292,22 @@ export function buildInvoiceBrandedEmailHtml(
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${NAVY};border-radius:8px;">
         <tr>
           <td style="padding:20px 24px;">
-            <div style="font-family:${FONT};font-size:13px;font-weight:bold;color:#FFFFFF;margin-bottom:6px;">Payment Instructions</div>
+            <div style="font-family:${FONT};font-size:13px;font-weight:bold;color:#FFFFFF;margin-bottom:6px;">Pay securely online</div>
             <div style="font-family:${FONT};font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6;">
-              Send payment via <strong style="color:${CYAN};">PayPal</strong> to ${escapeHtml(paypalEmail)}<br/>
-              Reference: <strong style="color:#FFFFFF;">${escapeHtml(reference)}</strong>
+              Pay by card on your invoice page. Amount due:
+              <strong style="color:#FFFFFF;">${escapeHtml(invoice.balanceDueFormatted)}</strong>
             </div>
           </td>
           <td align="right" valign="middle" style="padding:20px 24px;">
-            <a href="${escapeHtml(paypalMeUrl)}" style="display:inline-block;font-family:${FONT};font-size:13px;font-weight:bold;color:${NAVY};background-color:${CYAN};text-decoration:none;padding:12px 24px;border-radius:6px;white-space:nowrap;">Pay via PayPal</a>
+            <a href="${escapeHtml(payByCardUrl)}" style="display:inline-block;font-family:${FONT};font-size:13px;font-weight:bold;color:${NAVY};background-color:${CYAN};text-decoration:none;padding:12px 24px;border-radius:6px;white-space:nowrap;">Pay by Card</a>
           </td>
         </tr>
       </table>
+      <p style="font-family:${FONT};font-size:12px;color:${MUTED};line-height:1.55;margin:12px 0 0;">
+        ${escapeHtml(SERVICE_INVOICE_ZELLE_SECONDARY)}
+        ${escapeHtml(zelle.label)} &middot; ${escapeHtml(zelle.handle)}.
+        Zelle is confirmed only after VelocityMaid verifies the transfer.
+      </p>
     </td>
   </tr>` : ''}
 
@@ -370,8 +365,7 @@ export function buildInvoiceBrandedEmailText(
 ): string {
   const variant = options.variant ?? 'sent';
   const { closingNote, upcomingLines } = parseInvoiceNotes(invoice.notes);
-  const { email: paypalEmail, meUrl: paypalMeUrl } = paypalConfig();
-  const reference = `${invoice.invoiceNumber} — ${shortClientName(invoice.clientName)}`;
+  const zelle = getServiceInvoiceZelleDestination();
 
   const lines = [
     `VelocityMaid Invoice ${invoice.invoiceNumber}`,
@@ -388,7 +382,15 @@ export function buildInvoiceBrandedEmailText(
   }
 
   if (invoice.balanceDue > 0 && variant !== 'receipt') {
-    lines.push('', `Pay via PayPal: ${paypalMeUrl}`, `PayPal email: ${paypalEmail}`, `Reference: ${reference}`);
+    if (options.viewUrl) {
+      lines.push('', `Pay by Card: ${options.viewUrl}`);
+    }
+    lines.push(
+      '',
+      SERVICE_INVOICE_ZELLE_SECONDARY,
+      `Zelle: ${zelle.label} · ${zelle.handle}`,
+      'Zelle is confirmed only after VelocityMaid verifies the transfer.'
+    );
   }
 
   if (upcomingLines.length) {

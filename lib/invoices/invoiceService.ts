@@ -48,8 +48,39 @@ export async function recordInvoicePayment(params: {
   if (!invoice) throw new Error('Invoice not found');
   if (invoice.status === 'CANCELLED') throw new Error('Cannot add payment to cancelled invoice');
 
-  const amount = Math.max(0, params.amount);
-  if (amount <= 0) throw new Error('Payment amount must be greater than zero');
+  if (params.stripeSessionId) {
+    const existingSession = await prisma.invoicePayment.findFirst({
+      where: { stripeSessionId: params.stripeSessionId },
+    });
+    if (existingSession) {
+      return {
+        payment: existingSession,
+        previousStatus: invoice.status,
+        becamePaid: false,
+        duplicate: true as const,
+        clamped: false as const,
+        remainingBefore: computeBalanceDue(
+          decimalToNumber(invoice.total),
+          decimalToNumber(invoice.amountPaid)
+        ),
+        requestedAmount: Math.max(0, params.amount),
+      };
+    }
+  }
+
+  const total = decimalToNumber(invoice.total);
+  const alreadyPaid = decimalToNumber(invoice.amountPaid);
+  const remaining = computeBalanceDue(total, alreadyPaid);
+  if (remaining <= 0) {
+    throw new Error('Invoice is already paid in full');
+  }
+
+  const requested = Math.max(0, params.amount);
+  if (requested <= 0) throw new Error('Payment amount must be greater than zero');
+
+  // Clamp so manual Zelle/other + Stripe cannot silently overpay the invoice ledger.
+  const amount = Math.min(requested, remaining);
+  const clamped = amount < requested;
 
   const previousStatus = invoice.status;
 
@@ -65,8 +96,7 @@ export async function recordInvoicePayment(params: {
     },
   });
 
-  const newPaid = decimalToNumber(invoice.amountPaid) + amount;
-  const total = decimalToNumber(invoice.total);
+  const newPaid = alreadyPaid + amount;
   const balanceDue = computeBalanceDue(total, newPaid);
   const baseStatus: InvoiceStatus =
     invoice.status === 'DRAFT' ? 'SENT' : invoice.status;
@@ -90,7 +120,37 @@ export async function recordInvoicePayment(params: {
     },
   });
 
-  return { payment, previousStatus, becamePaid: status === 'PAID' && previousStatus !== 'PAID' };
+  const { syncJobPaymentFromInvoice } = await import('./syncJobPaymentFromInvoice');
+  await syncJobPaymentFromInvoice(params.invoiceId);
+
+  // Expire stale Checkout sessions whose amount no longer matches unpaid balance.
+  // Keep the completing Stripe session (if any) so webhook can mark it COMPLETED.
+  try {
+    const { expireMismatchedInvoiceCheckoutSessions, balanceToCents } = await import(
+      './invoiceCheckoutSession'
+    );
+    await expireMismatchedInvoiceCheckoutSessions({
+      invoiceId: params.invoiceId,
+      balanceCents: balanceToCents(balanceDue),
+      keepStripeSessionId: params.stripeSessionId ?? null,
+      reason: balanceDue <= 0 ? 'EXPIRED' : 'SUPERSEDED',
+    });
+  } catch (err) {
+    console.error(
+      '[recordInvoicePayment] failed to expire mismatched checkout sessions:',
+      err
+    );
+  }
+
+  return {
+    payment,
+    previousStatus,
+    becamePaid: status === 'PAID' && previousStatus !== 'PAID',
+    duplicate: false as const,
+    clamped,
+    remainingBefore: remaining,
+    requestedAmount: requested,
+  };
 }
 
 /** After payment is recorded, create receipt + optional emails/review. */

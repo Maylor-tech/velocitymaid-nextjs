@@ -1,6 +1,10 @@
 import { resend, getResendFromEmail } from "./resendClient";
 import { prisma } from "@/lib/prisma";
 import { logIntegrationEvent } from "@/lib/google/integrationLog";
+import {
+  getServiceInvoiceZelleDestination,
+  SERVICE_INVOICE_ZELLE_SECONDARY,
+} from "@/lib/tips/zelleDestination";
 
 export interface CleanCompletePhoto {
   url: string;
@@ -15,7 +19,8 @@ export interface SendCleanCompleteEmailParams {
   cleanDurationMins?: number;
   photos: CleanCompletePhoto[];
   invoiceAmount?: number;
-  paypalEmail: string;
+  /** Public invoice page URL for card checkout (`/invoice/{token}`). */
+  invoiceViewUrl?: string;
   market: "vermont" | "new-jersey";
   /** When provided, a 3-day follow-up review request is scheduled after send. */
   jobId?: string;
@@ -129,14 +134,17 @@ function buildHtml(params: SendCleanCompleteEmailParams): string {
     cleanDurationMins,
     photos,
     invoiceAmount,
-    paypalEmail,
+    invoiceViewUrl,
   } = params;
 
   const safeName = escapeHtml(toName?.trim() || "there");
   const safeAddress = escapeHtml(propertyAddress?.trim() || "your property");
   const dateLabel = escapeHtml(formatCleanDate(cleanDate));
   const durationLabel = formatDuration(cleanDurationMins);
-  const safePaypal = escapeHtml(paypalEmail);
+  const zelle = getServiceInvoiceZelleDestination();
+  const safeZelleHandle = escapeHtml(zelle.handle);
+  const safeZelleLabel = escapeHtml(zelle.label);
+  const safeInvoiceUrl = invoiceViewUrl ? escapeHtml(invoiceViewUrl) : "";
 
   const detailRow = (label: string, value: string) => `
     <tr>
@@ -198,11 +206,11 @@ function buildHtml(params: SendCleanCompleteEmailParams): string {
   }
 
   let paymentSection = "";
-  if (typeof invoiceAmount === "number" && Number.isFinite(invoiceAmount)) {
+  if (typeof invoiceAmount === "number" && Number.isFinite(invoiceAmount) && invoiceAmount > 0) {
     const amountLabel = escapeHtml(formatCurrency(invoiceAmount));
-    const payLink = paypalEmail
-      ? `https://www.paypal.com/paypalme/velocitymaid`
-      : `https://paypal.me/velocitymaid`;
+    const cardCta = safeInvoiceUrl
+      ? `<a href="${safeInvoiceUrl}" style="display:inline-block;margin-top:18px;background:${CYAN};color:${NAVY};font-weight:700;font-family:${FONT};font-size:15px;text-decoration:none;padding:12px 28px;border-radius:6px;">Pay by Card</a>`
+      : "";
     paymentSection = `
       <tr>
         <td style="padding:24px 40px;">
@@ -210,8 +218,12 @@ function buildHtml(params: SendCleanCompleteEmailParams): string {
             <tr>
               <td style="padding:24px;text-align:center;">
                 <div style="color:#ffffff;font-size:20px;font-weight:700;font-family:${FONT};">Amount due: ${amountLabel}</div>
-                <div style="color:rgba(255,255,255,0.7);font-size:14px;font-family:${FONT};margin-top:6px;">Send payment via PayPal to ${safePaypal}</div>
-                <a href="${payLink}" style="display:inline-block;margin-top:18px;background:${CYAN};color:${NAVY};font-weight:700;font-family:${FONT};font-size:15px;text-decoration:none;padding:12px 28px;border-radius:6px;">Pay Now via PayPal</a>
+                <div style="color:rgba(255,255,255,0.7);font-size:14px;font-family:${FONT};margin-top:6px;">Pay securely by card on your invoice page</div>
+                ${cardCta}
+                <div style="color:rgba(255,255,255,0.55);font-size:12px;font-family:${FONT};margin-top:16px;line-height:1.5;">
+                  ${escapeHtml(SERVICE_INVOICE_ZELLE_SECONDARY)} ${safeZelleLabel} &middot; ${safeZelleHandle}.
+                  Confirmed after VelocityMaid verifies the transfer.
+                </div>
               </td>
             </tr>
           </table>

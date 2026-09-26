@@ -40,32 +40,111 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   if (metadata.paymentType === 'billing_invoice' && metadata.invoiceId) {
     const amount = (session.amount_total ?? 0) / 100;
+    const amountCents = session.amount_total ?? Math.round(amount * 100);
     const { recordInvoicePayment } = await import('@/lib/invoices/invoiceService');
     const { serializeInvoice } = await import('@/lib/invoices/serializeInvoice');
     const { sendInvoiceReceiptEmail } = await import('@/lib/email/invoiceEmails');
     const { prisma } = await import('@/lib/prisma');
+    const { maybeCreatePayoutAfterTransition } = await import(
+      '@/lib/booking/maybeCreatePayoutAfterTransition'
+    );
+    const {
+      markInvoiceCheckoutSessionCompleted,
+      markInvoiceCheckoutNeedsReconciliation,
+      expireMismatchedInvoiceCheckoutSessions,
+    } = await import('@/lib/invoices/invoiceCheckoutSession');
 
     const existing = await prisma.invoicePayment.findFirst({
       where: { stripeSessionId: session.id },
     });
-    if (!existing && amount > 0) {
-      const { payment } = await recordInvoicePayment({
+    if (existing) {
+      await markInvoiceCheckoutSessionCompleted(session.id);
+      return { success: true, message: 'Billing invoice payment already recorded' };
+    }
+
+    const invoiceBefore = await prisma.invoice.findUnique({
+      where: { id: metadata.invoiceId },
+      select: { id: true, balanceDue: true, status: true, jobId: true, total: true, amountPaid: true },
+    });
+    if (!invoiceBefore) {
+      return { success: false, message: 'Invoice not found for billing payment' };
+    }
+
+    const remaining = Number(invoiceBefore.balanceDue);
+    if (invoiceBefore.status === 'PAID' || remaining <= 0) {
+      // Real Stripe capture after another payment won the race — do not discard silently.
+      await markInvoiceCheckoutNeedsReconciliation({
         invoiceId: metadata.invoiceId,
-        amount,
-        paymentMethod: 'STRIPE',
-        transactionReference: typeof session.payment_intent === 'string'
-          ? session.payment_intent
-          : session.payment_intent?.id,
         stripeSessionId: session.id,
+        capturedAmountCents: amountCents,
+        note: 'Stripe Checkout completed after invoice was already fully paid. Ledger credit skipped; operator refund required.',
+        jobId: invoiceBefore.jobId,
       });
+      return {
+        success: true,
+        message: 'Invoice already paid; Stripe capture flagged for reconciliation',
+        needsReconciliation: true,
+      };
+    }
+
+    if (amount > 0) {
+      const { payment, becamePaid, duplicate, clamped, remainingBefore, requestedAmount } =
+        await recordInvoicePayment({
+          invoiceId: metadata.invoiceId,
+          amount,
+          paymentMethod: 'STRIPE',
+          transactionReference: typeof session.payment_intent === 'string'
+            ? session.payment_intent
+            : session.payment_intent?.id,
+          stripeSessionId: session.id,
+        });
+
+      if (duplicate) {
+        await markInvoiceCheckoutSessionCompleted(session.id);
+        return { success: true, message: 'Billing invoice payment already recorded' };
+      }
+
+      if (clamped && requestedAmount != null && remainingBefore != null) {
+        const excessCents = Math.round((requestedAmount - Number(payment.amount)) * 100);
+        if (excessCents > 0) {
+          await markInvoiceCheckoutNeedsReconciliation({
+            invoiceId: metadata.invoiceId,
+            stripeSessionId: session.id,
+            capturedAmountCents: amountCents,
+            note: `Stripe charged $${requestedAmount.toFixed(2)} but only $${Number(payment.amount).toFixed(2)} credited (remaining due was $${remainingBefore.toFixed(2)}). Excess requires operator refund.`,
+            jobId: invoiceBefore.jobId,
+          });
+        } else {
+          await markInvoiceCheckoutSessionCompleted(session.id);
+        }
+      } else {
+        await markInvoiceCheckoutSessionCompleted(session.id);
+      }
+
+      // Ensure no other open sessions remain after this completion.
+      await expireMismatchedInvoiceCheckoutSessions({
+        invoiceId: metadata.invoiceId,
+        balanceCents: 0,
+        keepStripeSessionId: session.id,
+        reason: 'EXPIRED',
+      });
+
       const invoice = await prisma.invoice.findUnique({
         where: { id: metadata.invoiceId },
         include: { items: true, payments: true },
       });
       if (invoice) {
-        await sendInvoiceReceiptEmail(serializeInvoice(invoice), amount);
+        await sendInvoiceReceiptEmail(serializeInvoice(invoice), Number(payment.amount));
         const { finalizeInvoicePayment } = await import('@/lib/invoices/invoiceService');
-        await finalizeInvoicePayment(metadata.invoiceId, payment.id, amount);
+        await finalizeInvoicePayment(
+          metadata.invoiceId,
+          payment.id,
+          Number(payment.amount)
+        );
+      }
+
+      if (becamePaid && invoiceBefore.jobId) {
+        await maybeCreatePayoutAfterTransition(invoiceBefore.jobId);
       }
     }
     return { success: true, message: 'Billing invoice payment recorded' };

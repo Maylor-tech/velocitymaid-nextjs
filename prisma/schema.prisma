@@ -1883,6 +1883,7 @@ model Invoice {
   updatedAt       DateTime       @updatedAt
   items           InvoiceItem[]
   payments        InvoicePayment[]
+  checkoutSessions InvoiceCheckoutSession[]
   Job             Job?           @relation(fields: [jobId], references: [id])
   Customer        Customer?      @relation(fields: [customerId], references: [id])
   Receipts        Receipt[]
@@ -1924,6 +1925,36 @@ model InvoicePayment {
   Receipt              Receipt?
 
   @@index([invoiceId])
+  @@index([stripeSessionId])
+}
+
+/// Tracks Stripe Checkout sessions for service invoices so stale sessions can
+/// be expired when balance changes (manual Zelle, partial pay, etc.).
+enum InvoiceCheckoutSessionStatus {
+  OPEN
+  COMPLETED
+  EXPIRED
+  SUPERSEDED
+  NEEDS_RECONCILIATION
+}
+
+model InvoiceCheckoutSession {
+  id                   String                       @id @default(cuid())
+  invoiceId            String
+  stripeSessionId      String                       @unique
+  amountCents          Int
+  status               InvoiceCheckoutSessionStatus @default(OPEN)
+  createdAt            DateTime                     @default(now())
+  expiredAt            DateTime?
+  completedAt          DateTime?
+  /// Present when Stripe captured money that must not be ledger-credited.
+  capturedAmountCents  Int?
+  reconciliationNote   String?
+  Invoice              Invoice                      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId, status])
+  @@index([status])
+  @@map("invoice_checkout_sessions")
 }
 
 enum CompletionReportStatus {
