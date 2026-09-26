@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { BrandLogo } from '@/components/brand';
+import { resolveCustomerPostLoginRedirect } from '@/lib/customer/postLoginRedirect';
 
 export default function CustomerLoginPage() {
   const [email, setEmail] = useState('');
@@ -14,7 +15,9 @@ export default function CustomerLoginPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const redirectUrl = searchParams.get('redirect') || '/customer';
+  const redirectUrl = resolveCustomerPostLoginRedirect(
+    searchParams.get('redirect')
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

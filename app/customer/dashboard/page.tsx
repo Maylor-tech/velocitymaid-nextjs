@@ -2,13 +2,14 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { CUSTOMER_PORTAL_HOME } from '@/lib/customer/postLoginRedirect';
 
-/** Legacy route — customer home is /customer */
+/** Legacy route — canonical portal home is /customer/jobs */
 export default function CustomerDashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/customer');
+    router.replace(CUSTOMER_PORTAL_HOME);
   }, [router]);
 
   return (

@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { createCustomerSessionToken, COOKIE_NAME, COOKIE_MAX_AGE_SECONDS } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
 import { consumeMagicToken } from '@/lib/magicTokenStore';
+import { resolveCustomerPostLoginRedirect } from '@/lib/customer/postLoginRedirect';
 
 export async function GET(req: NextRequest) {
   try {
@@ -49,10 +50,12 @@ export async function GET(req: NextRequest) {
       path: '/',
     });
 
-    // Redirect to dashboard
-    const redirectUrl = searchParams.get('redirect') || '/customer/jobs';
+    // Redirect to a validated customer-portal destination only
+    const redirectUrl = resolveCustomerPostLoginRedirect(
+      searchParams.get('redirect')
+    );
     return NextResponse.redirect(new URL(redirectUrl, req.url));
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[AUTH CALLBACK] Error:', error);
     return NextResponse.redirect(new URL('/customer/login?error=server_error', req.url));
   }
