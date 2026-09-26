@@ -9,6 +9,7 @@ import {
   isCustomerPortalEmailBlocked,
   customerPortalBlockedMessage,
 } from '@/lib/customer/portalAccess';
+import { CUSTOMER_PORTAL_HOME } from '@/lib/customer/postLoginRedirect';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       success: true,
-      redirectTo: '/customer',
+      redirectTo: CUSTOMER_PORTAL_HOME,
     });
 
     res.cookies.set(COOKIE_NAME, sessionToken, {

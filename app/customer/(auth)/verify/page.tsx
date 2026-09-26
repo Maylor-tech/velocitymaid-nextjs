@@ -4,13 +4,16 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { BrandLogo } from '@/components/brand';
 import { brandClasses } from '@/lib/brand/colors';
+import { resolveCustomerPostLoginRedirect } from '@/lib/customer/postLoginRedirect';
 
 export default function CustomerVerifyPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const emailFromQuery = searchParams.get('email') || '';
-  const redirectUrl = searchParams.get('redirect') || '/customer';
+  const redirectUrl = resolveCustomerPostLoginRedirect(
+    searchParams.get('redirect')
+  );
 
   const [code, setCode] = useState('');
   const [email, setEmail] = useState(emailFromQuery);
@@ -51,7 +54,7 @@ export default function CustomerVerifyPage() {
         throw new Error(data.error || 'Invalid or expired code.');
       }
 
-      router.push(redirectUrl || '/customer');
+      router.push(redirectUrl);
     } catch (err: unknown) {
       console.error(err);
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';

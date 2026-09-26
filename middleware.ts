@@ -8,6 +8,10 @@ import {
   isPathAllowedForBranchScopedAdminApi,
   type AdminSessionPayload,
 } from './lib/auth/adminScope';
+import {
+  CUSTOMER_PORTAL_HOME,
+  resolveCustomerPostLoginRedirect,
+} from './lib/customer/postLoginRedirect';
 
 function parseAdminSession(
   adminSession: string | undefined
@@ -230,22 +234,31 @@ export async function middleware(req: NextRequest) {
   if (!session && !isAuthRoute) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = '/customer/login';
-    loginUrl.searchParams.set('redirect', pathname);
+    const safeRedirect = resolveCustomerPostLoginRedirect(
+      `${pathname}${req.nextUrl.search || ''}`
+    );
+    loginUrl.searchParams.set('redirect', safeRedirect);
     return NextResponse.redirect(loginUrl);
   }
 
   // Logged in, trying to access login/verify → redirect to jobs home
   if (session && isAuthRoute) {
     const jobsUrl = req.nextUrl.clone();
-    jobsUrl.pathname = '/customer/jobs';
+    jobsUrl.pathname = CUSTOMER_PORTAL_HOME;
     jobsUrl.searchParams.delete('redirect');
     return NextResponse.redirect(jobsUrl);
   }
 
-  // Legacy dashboard route → jobs home
-  if (session && pathname === '/customer/dashboard') {
+  // Legacy / compatibility portal homes → jobs
+  if (
+    session &&
+    (pathname === '/customer/dashboard' ||
+      pathname === '/customer/home' ||
+      pathname === '/customer')
+  ) {
     const jobsUrl = req.nextUrl.clone();
-    jobsUrl.pathname = '/customer/jobs';
+    jobsUrl.pathname = CUSTOMER_PORTAL_HOME;
+    jobsUrl.search = '';
     return NextResponse.redirect(jobsUrl);
   }
 
