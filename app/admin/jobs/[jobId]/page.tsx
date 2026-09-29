@@ -29,6 +29,8 @@ interface Job {
   address: string | null;
   preferredDate: string | null;
   preferredTime: string | null;
+  guestCheckInDate?: string | null;
+  guestCheckOutDate?: string | null;
   serviceType: string | null;
   serviceLocation: string | null;
   status: string;
@@ -167,6 +169,8 @@ export default function AdminJobDetailPage() {
   const [editForm, setEditForm] = useState({
     preferredDate: '',
     preferredTime: '',
+    guestCheckInDate: '',
+    guestCheckOutDate: '',
     internalNotes: '',
     address: '',
     serviceType: '',
@@ -234,6 +238,12 @@ export default function AdminJobDetailPage() {
             ? new Date(data.job.preferredDate).toISOString().slice(0, 10)
             : '',
           preferredTime: data.job.preferredTime || '',
+          guestCheckInDate: data.job.guestCheckInDate
+            ? new Date(data.job.guestCheckInDate).toISOString().slice(0, 10)
+            : '',
+          guestCheckOutDate: data.job.guestCheckOutDate
+            ? new Date(data.job.guestCheckOutDate).toISOString().slice(0, 10)
+            : '',
           internalNotes: data.job.internalNotes || '',
           address: data.job.address || '',
           serviceType: data.job.serviceType || '',
@@ -522,6 +532,8 @@ export default function AdminJobDetailPage() {
         body: JSON.stringify({
           preferredDate: editForm.preferredDate || null,
           preferredTime: editForm.preferredTime,
+          guestCheckInDate: editForm.guestCheckInDate || null,
+          guestCheckOutDate: editForm.guestCheckOutDate || null,
           internalNotes: editForm.internalNotes,
           address: editForm.address,
           serviceType: editForm.serviceType,
@@ -1311,13 +1323,18 @@ export default function AdminJobDetailPage() {
             <div className="mb-6 rounded-lg border border-vm-cyan/30 bg-vm-cyan-tint/30 p-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-vm-muted">Scheduled date</label>
+                  <label className="mb-1 block text-xs font-medium text-vm-muted">
+                    Cleaning / service date
+                  </label>
                   <input
                     type="date"
                     value={editForm.preferredDate}
                     onChange={(e) => setEditForm((f) => ({ ...f, preferredDate: e.target.value }))}
                     className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                   />
+                  <p className="mt-1 text-[11px] text-vm-muted">
+                    VelocityMaid turnover day — not guest check-in or checkout.
+                  </p>
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-vm-muted">Scheduled time</label>
@@ -1328,6 +1345,35 @@ export default function AdminJobDetailPage() {
                     placeholder="e.g. 9:00 AM – 12:00 PM"
                     className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                   />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-vm-muted">
+                    Guest check-in date
+                  </label>
+                  <input
+                    type="date"
+                    value={editForm.guestCheckInDate}
+                    onChange={(e) =>
+                      setEditForm((f) => ({ ...f, guestCheckInDate: e.target.value }))
+                    }
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-vm-muted">
+                    Guest checkout date
+                  </label>
+                  <input
+                    type="date"
+                    value={editForm.guestCheckOutDate}
+                    onChange={(e) =>
+                      setEditForm((f) => ({ ...f, guestCheckOutDate: e.target.value }))
+                    }
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  />
+                  <p className="mt-1 text-[11px] text-vm-muted">
+                    Stay Card matches guests by this date when set.
+                  </p>
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-vm-muted">Service type</label>
@@ -1453,11 +1499,23 @@ export default function AdminJobDetailPage() {
               <p className="text-vm-text">{job.serviceType || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-sm text-vm-muted">Date & Time</p>
+              <p className="text-sm text-vm-muted">Cleaning / service date</p>
               <p className="text-vm-text">{formatDate(job.preferredDate)}</p>
               {job.preferredTime && (
                 <p className="text-sm text-vm-muted">{job.preferredTime}</p>
               )}
+            </div>
+            <div>
+              <p className="text-sm text-vm-muted">Guest check-in</p>
+              <p className="text-vm-text">
+                {job.guestCheckInDate ? formatDate(job.guestCheckInDate) : '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-vm-muted">Guest checkout</p>
+              <p className="text-vm-text">
+                {job.guestCheckOutDate ? formatDate(job.guestCheckOutDate) : '—'}
+              </p>
             </div>
             <div>
               <p className="text-sm text-vm-muted">Branch</p>

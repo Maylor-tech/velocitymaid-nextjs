@@ -26,6 +26,8 @@ export default function AddCleaningPage() {
   const [propertyName, setPropertyName] = useState<string>('');
   const [preferredDate, setPreferredDate] = useState('');
   const [preferredTime, setPreferredTime] = useState('');
+  const [guestCheckInDate, setGuestCheckInDate] = useState('');
+  const [guestCheckOutDate, setGuestCheckOutDate] = useState('');
   const [serviceType, setServiceType] = useState<string>(SERVICE_TYPES[0]);
   const [sameDayTurnover, setSameDayTurnover] = useState(false);
   const [checkInDeadline, setCheckInDeadline] = useState('');
@@ -77,6 +79,8 @@ export default function AddCleaningPage() {
         body: JSON.stringify({
           preferredDate,
           preferredTime: preferredTime || null,
+          guestCheckInDate: guestCheckInDate || null,
+          guestCheckOutDate: guestCheckOutDate || null,
           serviceType,
           sameDayTurnover,
           checkInDeadline: sameDayTurnover ? checkInDeadline.trim() : null,
@@ -122,9 +126,9 @@ export default function AddCleaningPage() {
       </div>
 
       <div className="rounded-xl border border-vm-cyan/30 bg-vm-cyan/5 px-4 py-3 font-body text-sm text-vm-navy">
-        Schedule the day you need VelocityMaid at the property. You do not need
-        to enter every Airbnb reservation — only the cleaning/turnover we need
-        to service.
+        Cleaning/service date is when VelocityMaid turns the property. Guest
+        check-in and checkout are optional stay dates for the Stay Card — they
+        are not the same as the cleaning day.
       </div>
 
       {error && (
@@ -139,7 +143,7 @@ export default function AddCleaningPage() {
         className="space-y-4 rounded-xl border border-vm-navy/10 bg-vm-white p-6 shadow-sm"
       >
         <label className="block font-body text-sm text-vm-muted">
-          Cleaning date
+          Cleaning / service date
           <input
             type="date"
             required
@@ -148,8 +152,8 @@ export default function AddCleaningPage() {
             onChange={(e) => setPreferredDate(e.target.value)}
           />
           <span className="mt-1 block text-xs text-vm-muted">
-            Enter the day our team should clean the property — usually the guest
-            checkout/turnover day, not the incoming guest&apos;s arrival date.
+            Day our team should clean — often the guest checkout/turnover day,
+            but enter the actual service date even if it differs.
           </span>
         </label>
 
@@ -162,6 +166,31 @@ export default function AddCleaningPage() {
             onChange={(e) => setPreferredTime(e.target.value)}
           />
         </label>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <label className="block font-body text-sm text-vm-muted">
+            Guest check-in date
+            <input
+              type="date"
+              className={inputClass}
+              value={guestCheckInDate}
+              onChange={(e) => setGuestCheckInDate(e.target.value)}
+            />
+            <span className="mt-1 block text-xs text-vm-muted">Optional</span>
+          </label>
+          <label className="block font-body text-sm text-vm-muted">
+            Guest checkout date
+            <input
+              type="date"
+              className={inputClass}
+              value={guestCheckOutDate}
+              onChange={(e) => setGuestCheckOutDate(e.target.value)}
+            />
+            <span className="mt-1 block text-xs text-vm-muted">
+              Optional — Stay Card uses this when set
+            </span>
+          </label>
+        </div>
 
         <label className="block font-body text-sm text-vm-muted">
           Service type
@@ -223,9 +252,9 @@ export default function AddCleaningPage() {
         )}
 
         <p className="rounded-lg bg-vm-surface px-3 py-2 font-body text-xs text-vm-muted">
-          Example: Guests stay Oct 9–11 → choose Oct 11 as the cleaning date. If
-          new guests also arrive Oct 11, mark this as a same-day turnover and
-          enter their check-in time.
+          Example: Guests stay Oct 9–11, clean Oct 11 → checkout Oct 11, cleaning
+          Oct 11. If clean is Oct 12 after a late checkout, set checkout Oct 11
+          and cleaning Oct 12 separately.
         </p>
 
         <label className="block font-body text-sm text-vm-muted">
