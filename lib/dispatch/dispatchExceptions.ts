@@ -4,6 +4,7 @@
  */
 
 import { businessDateKey, parseServiceDateInput, serviceDateKey } from '@/lib/dates/serviceDate';
+import { isJobAssignable } from '@/lib/billing/billingPolicy';
 import { effectiveOfferStatus, isEffectivelyOpen } from '@/lib/dispatch/offerExpiry';
 
 type ExceptionUrgency = 'normal' | 'warning' | 'danger';
@@ -11,10 +12,12 @@ type ExceptionUrgency = 'normal' | 'warning' | 'danger';
 export type DispatchExceptionKind =
   | 'TODAY_UNASSIGNED'
   | 'TOMORROW_UNASSIGNED'
+  | 'NEEDS_BOOKING_APPROVAL'
   | 'NOTIFICATION_FAILED'
   | 'EXPIRED_OR_DECLINED'
   | 'AWAITING_RESPONSE'
-  | 'CLEANER_NEEDED_NO_OFFER';
+  | 'CLEANER_NEEDED_NO_OFFER'
+  | 'PAYMENT_REQUIRED';
 
 export type DispatchExceptionInput = {
   assignedCleanerId: string | null;
@@ -22,6 +25,14 @@ export type DispatchExceptionInput = {
   status?: string | null;
   offers?: Array<{ status: string; expiresAt: Date | string | null }>;
   latestOfferEmailStatus?: 'SUCCESS' | 'FAILED' | string | null;
+  /**
+   * Billing fields. When `paymentStatus` is provided, classification becomes
+   * billing-aware: jobs that isJobAssignable() would block never surface as
+   * "send offer" dispatch work. Omit them to keep legacy date/offer behavior.
+   */
+  paymentStatus?: string | null;
+  billingPolicy?: string | null;
+  reviewStatus?: string | null;
 };
 
 const TERMINAL_JOB = new Set(['COMPLETED', 'CANCELLED', 'CANCELLED_EMERGENCY']);
@@ -70,6 +81,27 @@ export function classifyDispatchException(
   if (input.assignedCleanerId) return null;
   const status = (input.status || '').toUpperCase();
   if (TERMINAL_JOB.has(status)) return null;
+
+  // Billing-aware gate (opt-in: only when paymentStatus is supplied). Mirrors
+  // isJobAssignable() — the same policy the Staffing strip/playbook use — so a
+  // payment-blocked job is surfaced as a money/review action, never as a
+  // staffable "send offer" item. Never mutates payment state.
+  if (input.paymentStatus != null) {
+    const assignable = isJobAssignable({
+      paymentStatus: input.paymentStatus,
+      reviewStatus: input.reviewStatus,
+      billingPolicy: input.billingPolicy,
+    });
+    if (!assignable) {
+      if (
+        input.paymentStatus.toUpperCase() === 'DEPOSIT_PAID' &&
+        (input.reviewStatus || '').toUpperCase() === 'PENDING'
+      ) {
+        return 'NEEDS_BOOKING_APPROVAL';
+      }
+      return 'PAYMENT_REQUIRED';
+    }
+  }
 
   const day = serviceDayBucket(input.preferredDate, now);
   if (day === 'today') return 'TODAY_UNASSIGNED';
@@ -121,6 +153,14 @@ export const DISPATCH_EXCEPTION_META: Record<
     urgency: 'danger',
     priority: 20,
   },
+  NEEDS_BOOKING_APPROVAL: {
+    id: 'dispatch-needs-booking-approval',
+    label: 'Needs booking approval',
+    reason: 'Deposit paid — approve the booking to release it for staffing.',
+    cta: 'Review booking',
+    urgency: 'warning',
+    priority: 25,
+  },
   NOTIFICATION_FAILED: {
     id: 'dispatch-notification-failed',
     label: 'Notification failed',
@@ -153,6 +193,14 @@ export const DISPATCH_EXCEPTION_META: Record<
     urgency: 'warning',
     priority: 60,
   },
+  PAYMENT_REQUIRED: {
+    id: 'dispatch-payment-required',
+    label: 'Payment required before staffing',
+    reason: 'Prepay booking — assignment stays blocked until payment clears.',
+    cta: 'Open job',
+    urgency: 'normal',
+    priority: 65,
+  },
 };
 
 export type ClassifiedDispatchJob = {
@@ -181,10 +229,12 @@ export function groupDispatchExceptionItems(jobs: ClassifiedDispatchJob[]): Arra
   const order: DispatchExceptionKind[] = [
     'TODAY_UNASSIGNED',
     'TOMORROW_UNASSIGNED',
+    'NEEDS_BOOKING_APPROVAL',
     'NOTIFICATION_FAILED',
     'EXPIRED_OR_DECLINED',
     'AWAITING_RESPONSE',
     'CLEANER_NEEDED_NO_OFFER',
+    'PAYMENT_REQUIRED',
   ];
   return order.map((kind) => {
     const meta = DISPATCH_EXCEPTION_META[kind];
