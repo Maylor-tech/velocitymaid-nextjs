@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { PropertyReadinessBanner } from '@/components/customer/PropertyReadiness';
+import type { HostReadinessInput } from '@/lib/properties/propertyReadiness';
 
 const SERVICE_TYPES = [
   'Vacation Rental Turnover',
@@ -24,6 +26,9 @@ export default function AddCleaningPage() {
   const propertyId = params.propertyId as string;
 
   const [propertyName, setPropertyName] = useState<string>('');
+  const [propertyBrief, setPropertyBrief] = useState<HostReadinessInput | null>(
+    null
+  );
   const [preferredDate, setPreferredDate] = useState('');
   const [preferredTime, setPreferredTime] = useState('');
   const [guestCheckInDate, setGuestCheckInDate] = useState('');
@@ -45,7 +50,16 @@ export default function AddCleaningPage() {
         if (!res.ok || !data.success) {
           throw new Error(data.error || 'Property not found');
         }
-        if (!cancelled) setPropertyName(data.property.name);
+        if (!cancelled) {
+          setPropertyName(data.property.name);
+          setPropertyBrief({
+            accessType: data.property.accessType ?? null,
+            standingInstructions: data.property.standingInstructions ?? null,
+            linenInstructions: data.property.linenInstructions ?? null,
+            supplyStorageLocation: data.property.supplyStorageLocation ?? null,
+            trashInstructions: data.property.trashInstructions ?? null,
+          });
+        }
       } catch (err: unknown) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load property');
@@ -130,6 +144,10 @@ export default function AddCleaningPage() {
         check-in and checkout are optional stay dates for the Stay Card — they
         are not the same as the cleaning day.
       </div>
+
+      {propertyBrief && (
+        <PropertyReadinessBanner property={propertyBrief} propertyId={propertyId} />
+      )}
 
       {error && (
         <div className="flex items-start gap-2 rounded-xl border border-vm-danger/20 bg-vm-danger-bg px-4 py-3 text-sm text-vm-danger">

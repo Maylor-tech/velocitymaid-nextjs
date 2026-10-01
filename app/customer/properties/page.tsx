@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Building2, Loader2, AlertCircle, ChevronRight } from 'lucide-react';
+import { PropertyReadinessPill } from '@/components/customer/PropertyReadiness';
 
 interface HostProperty {
   id: string;
@@ -12,6 +13,11 @@ interface HostProperty {
   state: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
+  accessType: string | null;
+  standingInstructions: string | null;
+  linenInstructions: string | null;
+  supplyStorageLocation: string | null;
+  trashInstructions: string | null;
 }
 
 export default function CustomerPropertiesPage() {
@@ -84,7 +90,10 @@ export default function CustomerPropertiesPage() {
               className="flex items-center justify-between rounded-xl border border-vm-navy/10 bg-vm-white p-5 shadow-sm transition hover:border-vm-cyan/40"
             >
               <div>
-                <p className="font-heading font-semibold text-vm-navy">{p.name}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-heading font-semibold text-vm-navy">{p.name}</p>
+                  <PropertyReadinessPill property={p} />
+                </div>
                 <p className="mt-1 font-body text-sm text-vm-muted">
                   {p.address}
                   {p.city ? `, ${p.city}` : ''}
@@ -96,7 +105,7 @@ export default function CustomerPropertiesPage() {
                   </p>
                 )}
               </div>
-              <ChevronRight className="h-5 w-5 text-vm-muted" />
+              <ChevronRight className="h-5 w-5 shrink-0 text-vm-muted" />
             </Link>
           </li>
         ))}
