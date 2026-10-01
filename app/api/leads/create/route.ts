@@ -113,6 +113,61 @@ export async function POST(request: NextRequest) {
         : null;
 
     const now = new Date();
+
+    // Fast-estimate dedupe (Workstream B): a prospect re-running the public
+    // instant estimate should refresh their existing lead instead of spawning
+    // duplicates. Strictly scoped to source==='fast-estimate' (public-pricing,
+    // never NJ) so every other capture flow is byte-for-byte unchanged, and we
+    // skip the duplicate deposit/WhatsApp/nurture automation on refresh.
+    if (source === 'fast-estimate' && !isNj) {
+      const existing = await prisma.lead.findFirst({
+        where: { branchId: branchRecord.id, phone, source: 'fast-estimate' },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (existing) {
+        const refreshed = await prisma.lead.update({
+          where: { id: existing.id },
+          data: {
+            name,
+            email: email || existing.email,
+            zip: zip || existing.zip,
+            city: city || existing.city,
+            addressLine: addressLine || existing.addressLine,
+            bedrooms: bedrooms ?? existing.bedrooms,
+            bathrooms: bathrooms ?? existing.bathrooms,
+            pets: Boolean(pets),
+            urgency,
+            serviceType: serviceType || existing.serviceType,
+            frequency: frequency || existing.frequency,
+            preferredDate: preferredDateValid ?? existing.preferredDate,
+            leadScore: scoringResult.leadScore,
+            leadTier: scoringResult.leadTier,
+            riskFlags: scoringResult.riskFlags,
+            updatedAt: now,
+          },
+        });
+        return NextResponse.json({
+          success: true,
+          deduped: true,
+          lead: {
+            id: refreshed.id,
+            leadScore: scoringResult.leadScore,
+            leadTier: scoringResult.leadTier,
+            status: refreshed.status,
+            followUpStatus: refreshed.followUpStatus,
+            opsAssignee: refreshed.opsAssignee,
+            depositUrl: refreshed.depositUrl ?? null,
+          },
+          scoring: {
+            score: scoringResult.leadScore,
+            tier: scoringResult.leadTier,
+            riskFlags: scoringResult.riskFlags,
+            reasoning: scoringResult.reasoning,
+          },
+        });
+      }
+    }
+
     const lead = await prisma.lead.create({
       data: {
         id: newLeadId(),

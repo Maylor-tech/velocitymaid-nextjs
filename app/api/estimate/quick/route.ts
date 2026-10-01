@@ -6,8 +6,9 @@ import { calculateBookingQuoteAsync } from '@/lib/pricing/calculateQuote';
 import {
   buildQuoteInputForEstimate,
   isPublicPricingAllowed,
-  toEstimateRange,
+  buildEstimateRange,
   CUSTOM_QUOTE_LABEL,
+  ESTIMATE_RANGE_LABEL,
   type FastEstimateParams,
 } from '@/lib/estimate/fastEstimate';
 
@@ -57,10 +58,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
+    // This endpoint returns an estimate range only — never a payable amount,
+    // never a confirmed quote/invoice, and it never creates a Job.
     return NextResponse.json({
       success: true,
       pricingVisible: true,
-      range: toEstimateRange(quote.total, quote.currency),
+      isEstimate: true,
+      label: ESTIMATE_RANGE_LABEL,
+      range: buildEstimateRange(quote.total, quote.currency),
       estimatedHours: quote.estimatedHours,
       recommendedCleaners: quote.recommendedCleaners,
     });
