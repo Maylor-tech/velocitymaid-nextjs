@@ -24,6 +24,7 @@ import {
   type JobOperationsInput,
 } from '@/lib/admin/jobsOperations';
 import { JobStaffingMoneyStrips } from '@/components/admin/jobs/JobStaffingMoneyStrips';
+import { getJobTriageReason, TRIAGE_TONE_CLASS } from '@/lib/admin/jobTriage';
 import { isTerminalStatus } from '@/lib/jobStatus';
 
 export interface AdminJobListItem extends JobOperationsInput {
@@ -88,6 +89,7 @@ export function JobOperationsCard({
   const isVermont = job.branch?.slug === 'vermont';
   const doneSteps = workflow.filter((s) => s.done).length;
   const showActiveDispatchBadges = !isTerminalStatus(job.status);
+  const triage = getJobTriageReason(job);
 
   return (
     <li
@@ -121,6 +123,14 @@ export function JobOperationsCard({
               job.dispatchUrgency !== 'STANDARD' && (
               <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
                 {job.dispatchUrgency.replace('_', ' ')}
+              </span>
+            )}
+            {triage.kind !== 'closed' && (
+              <span
+                className={`rounded-full px-2 py-0.5 font-body text-xs font-semibold ${TRIAGE_TONE_CLASS[triage.tone]}`}
+                title="Next action"
+              >
+                {triage.label}
               </span>
             )}
           </div>
