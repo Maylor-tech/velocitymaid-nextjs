@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, DollarSign, CheckCircle, XCircle, AlertCircle, Cloc
 import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 import { JobBillingWorkflowPanel } from '@/components/admin/jobs/JobBillingWorkflowPanel';
+import { JobStaffingMoneyStrips } from '@/components/admin/jobs/JobStaffingMoneyStrips';
 import { CustomerPortalPreview } from '@/components/admin/jobs/CustomerPortalPreview';
 import JobTeamSection from '@/components/admin/jobs/JobTeamSection';
 import { useAdminShell } from '@/components/admin/shell/AdminShell';
@@ -889,6 +890,18 @@ export default function AdminJobDetailPage() {
               )}
             </div>
           </div>
+          {!isBranchScoped && (
+            <JobStaffingMoneyStrips
+              job={{
+                status: job.status,
+                paymentStatus: job.paymentStatus,
+                reviewStatus: job.reviewStatus,
+                billingPolicy: job.billingPolicy,
+                assignedCleanerId: job.assignedCleanerId,
+              }}
+              className="mt-4"
+            />
+          )}
         </div>
 
         {loopProgress && (
