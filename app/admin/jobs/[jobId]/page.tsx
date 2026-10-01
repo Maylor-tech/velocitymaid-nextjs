@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 import { JobBillingWorkflowPanel } from '@/components/admin/jobs/JobBillingWorkflowPanel';
 import { JobStaffingMoneyStrips } from '@/components/admin/jobs/JobStaffingMoneyStrips';
+import { JobPlaybookPanel } from '@/components/admin/jobs/JobPlaybookPanel';
 import { CustomerPortalPreview } from '@/components/admin/jobs/CustomerPortalPreview';
 import JobTeamSection from '@/components/admin/jobs/JobTeamSection';
 import { useAdminShell } from '@/components/admin/shell/AdminShell';
@@ -903,6 +904,29 @@ export default function AdminJobDetailPage() {
             />
           )}
         </div>
+
+        {!isBranchScoped && (
+          <JobPlaybookPanel
+            job={{
+              status: job.status,
+              paymentStatus: job.paymentStatus,
+              reviewStatus: job.reviewStatus,
+              billingPolicy: job.billingPolicy,
+              assignedCleanerId: job.assignedCleanerId,
+              preferredDate: job.preferredDate,
+              guestCheckInDate: job.guestCheckInDate,
+              guestCheckOutDate: job.guestCheckOutDate,
+              completedAt: job.completedAt,
+              property: job.property
+                ? {
+                    accessType: job.property.accessType,
+                    standingInstructions: job.property.standingInstructions,
+                  }
+                : null,
+            }}
+            className="mb-6"
+          />
+        )}
 
         {loopProgress && (
           <div className="bg-white rounded-xl shadow-sm border border-indigo-200 p-6 mb-6">
