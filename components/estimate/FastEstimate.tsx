@@ -64,6 +64,9 @@ export function FastEstimate() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [urgency, setUrgency] = useState('THIS_WEEK');
+  // Service / turnover date (when the clean should happen) — distinct from any
+  // guest check-in/out stay dates, which are captured separately in the portal.
+  const [preferredDate, setPreferredDate] = useState('');
 
   const serviceOptions = serviceOptionsForMarket(market);
   const publicPricing = branchSlug !== 'new-jersey';
@@ -162,6 +165,8 @@ export function FastEstimate() {
           bathrooms,
           pets,
           serviceType: serviceType || undefined,
+          // Service / turnover date, not a guest stay date.
+          preferredDate: preferredDate || undefined,
           branch: branchSlug,
           source: 'fast-estimate',
         }),
@@ -354,7 +359,7 @@ export function FastEstimate() {
                   {formatUsd(estimate.range.high, estimate.range.currency)}
                 </p>
                 <p className="mt-1 font-body text-xs text-vm-muted">
-                  Ballpark only — final price is confirmed after a quick review.
+                  {estimate.range.label}
                 </p>
               </div>
             ) : (
@@ -429,6 +434,21 @@ export function FastEstimate() {
                     </option>
                   ))}
                 </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block font-body text-sm font-medium text-vm-navy">
+                  Preferred service / turnover date{' '}
+                  <span className="text-vm-muted">(optional)</span>
+                </span>
+                <input
+                  type="date"
+                  value={preferredDate}
+                  onChange={(e) => setPreferredDate(e.target.value)}
+                  className="w-full rounded-lg border border-vm-border px-3 py-2.5 font-body text-vm-text outline-none focus:border-vm-cyan"
+                />
+                <span className="mt-1 block font-body text-xs text-vm-muted">
+                  When the cleaning should happen — not a guest check-in/out date.
+                </span>
               </label>
               <button
                 type="button"

@@ -89,18 +89,46 @@ export interface EstimateRange {
   low: number;
   high: number;
   currency: string;
+  /** Human-facing label making clear this is an estimate, not a final quote. */
+  label: string;
 }
 
 /**
- * Marketing ballpark band around the computed total — rounded to tidy $ steps so
- * we never present false-precision single numbers before a real walkthrough.
+ * The one source of truth for estimate disclaimer copy. Surfaces (API, widget,
+ * follow-up) must reference this so an estimate is never mistaken for a quote,
+ * invoice, or payable amount.
  */
-export function toEstimateRange(total: number, currency = 'USD'): EstimateRange {
+export const ESTIMATE_RANGE_LABEL =
+  'Estimated range — final price confirmed after property details are reviewed.';
+
+/**
+ * Presentation band around the production quote total.
+ *
+ * The midpoint IS the production quote — we do not invent alternate pricing.
+ * We apply a documented ±10% presentation band and round to tidy $5 steps so a
+ * marketing surface never implies false-precision pricing before a walkthrough.
+ * This band exists only for estimate presentation and never feeds booking,
+ * checkout, invoicing, or payout.
+ *
+ * Contract: always returns low/high with low < high and a disclaimer label.
+ */
+export function buildEstimateRange(
+  quoteTotal: number,
+  currency = 'USD'
+): EstimateRange {
   const step = 5;
-  const safe = Number.isFinite(total) && total > 0 ? total : 0;
+  const safe = Number.isFinite(quoteTotal) && quoteTotal > 0 ? quoteTotal : 0;
   // Round to whole dollars first so float artifacts (e.g. 200*1.1 = 220.0000003)
   // don't bump the step rounding to the next bucket.
   const low = Math.max(0, Math.floor(Math.round(safe * 0.9) / step) * step);
   const highRaw = Math.ceil(Math.round(safe * 1.1) / step) * step;
-  return { low, high: highRaw > low ? highRaw : low + step, currency };
+  return {
+    low,
+    high: highRaw > low ? highRaw : low + step,
+    currency,
+    label: ESTIMATE_RANGE_LABEL,
+  };
 }
+
+/** Back-compat alias — prefer {@link buildEstimateRange}. */
+export const toEstimateRange = buildEstimateRange;

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   FAST_ESTIMATE_TIME_SLOT,
+  ESTIMATE_RANGE_LABEL,
+  buildEstimateRange,
   buildQuoteInputForEstimate,
   fastEstimateDate,
   isPublicPricingAllowed,
@@ -80,24 +82,55 @@ describe('buildQuoteInputForEstimate', () => {
   });
 });
 
-describe('toEstimateRange', () => {
+describe('buildEstimateRange', () => {
   it('builds a tidy band around the total', () => {
-    const r = toEstimateRange(200, 'USD');
+    const r = buildEstimateRange(200, 'USD');
     expect(r.low).toBe(180);
     expect(r.high).toBe(220);
     expect(r.currency).toBe('USD');
   });
 
   it('rounds to tidy $5 steps and keeps low < high', () => {
-    const r = toEstimateRange(203);
+    const r = buildEstimateRange(203);
     expect(r.low).toBe(180);
     expect(r.high).toBe(225);
     expect(r.low).toBeLessThan(r.high);
   });
 
-  it('never produces a degenerate or negative range', () => {
-    const zero = toEstimateRange(0);
-    expect(zero.low).toBe(0);
-    expect(zero.high).toBeGreaterThan(zero.low);
+  it('produces stable low/high for the same input (pure, deterministic)', () => {
+    expect(buildEstimateRange(417)).toEqual(buildEstimateRange(417));
+    expect(buildEstimateRange(417).low).toBe(buildEstimateRange(417).low);
+  });
+
+  it('always labels the result as an estimate — never a quote/final/invoice', () => {
+    const r = buildEstimateRange(250);
+    expect(r.label).toBe(ESTIMATE_RANGE_LABEL);
+    expect(r.label.toLowerCase()).toContain('estimate');
+    expect(r.label.toLowerCase()).not.toContain('invoice');
+    // Must read as not-yet-final.
+    expect(r.label.toLowerCase()).toContain('final price confirmed');
+  });
+
+  it('keeps the production quote total inside the presented band (never alters it)', () => {
+    for (const total of [120, 203, 315, 480, 1234]) {
+      const r = buildEstimateRange(total);
+      expect(r.low).toBeLessThanOrEqual(total);
+      expect(r.high).toBeGreaterThanOrEqual(total);
+    }
+  });
+
+  it('fails safe on invalid inputs (NaN, negative, Infinity) — no payable, no NaN', () => {
+    for (const bad of [NaN, -50, Infinity, -Infinity]) {
+      const r = buildEstimateRange(bad as number);
+      expect(Number.isFinite(r.low)).toBe(true);
+      expect(Number.isFinite(r.high)).toBe(true);
+      expect(r.low).toBeGreaterThanOrEqual(0);
+      expect(r.high).toBeGreaterThan(r.low);
+    }
+  });
+
+  it('toEstimateRange is a back-compat alias for buildEstimateRange', () => {
+    expect(toEstimateRange).toBe(buildEstimateRange);
+    expect(toEstimateRange(200)).toEqual(buildEstimateRange(200));
   });
 });
