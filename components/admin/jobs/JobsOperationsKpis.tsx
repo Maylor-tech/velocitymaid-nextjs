@@ -18,6 +18,20 @@ interface JobsOperationsKpisProps {
 
 export function JobsOperationsKpis({ summary, hideFinancial = false }: JobsOperationsKpisProps) {
   const attention = summary.needsAttention;
+  const money = summary.paymentBuckets;
+
+  // Cash Due is the only money to chase now; the rest is money intentionally
+  // pending (invoice-after-service) or future prepay — shown as context, not alarm.
+  const cashDueSubtitle =
+    [
+      `${money.cashDue.count} to collect`,
+      money.invoiceAfterService.amount > 0 &&
+        `${formatUsd(money.invoiceAfterService.amount)} invoice-after-service`,
+      money.prepayPending.amount > 0 &&
+        `${formatUsd(money.prepayPending.amount)} prepay pending`,
+    ]
+      .filter(Boolean)
+      .join(' · ') || 'Nothing due now';
 
   return (
     <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -28,9 +42,9 @@ export function JobsOperationsKpis({ summary, hideFinancial = false }: JobsOpera
       />
       {!hideFinancial && (
         <KpiCard
-          label="Awaiting Payment"
-          value={formatUsd(summary.awaitingPaymentAmount)}
-          subtitle={`${summary.awaitingPaymentCount} awaiting payment`}
+          label="Cash Due / Overdue"
+          value={formatUsd(money.cashDue.amount)}
+          subtitle={cashDueSubtitle}
           icon={<DollarSign className="h-5 w-5" />}
         />
       )}
@@ -41,6 +55,8 @@ export function JobsOperationsKpis({ summary, hideFinancial = false }: JobsOpera
           attention.total > 0
             ? [
                 attention.unassigned > 0 && `${attention.unassigned} unassigned`,
+                attention.staleUnassigned > 0 &&
+                  `${attention.staleUnassigned} past-dated`,
                 !hideFinancial &&
                   attention.overduePayments > 0 &&
                   `${attention.overduePayments} overdue pay`,

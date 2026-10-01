@@ -5,6 +5,7 @@
 
 import { formatServiceDate } from '@/lib/dates/serviceDate';
 import { isEffectivelyOpen, effectiveOfferStatus } from '@/lib/dispatch/offerExpiry';
+import { resolveBillingPolicy } from '@/lib/billing/billingPolicy';
 
 export type JobPriority = 'urgent' | 'high' | 'medium' | 'normal';
 
@@ -60,7 +61,10 @@ export interface CommunicationStatus {
 }
 
 export interface NeedsAttentionBreakdown {
+  /** Active staffing demand only — unassigned jobs inside the current-action window (today/future/unscheduled). */
   unassigned: number;
+  /** Unassigned jobs whose service date has already passed — abandoned/stale, not live demand. */
+  staleUnassigned: number;
   overduePayments: number;
   missingPhotos: number;
   incompleteChecklists: number;
@@ -68,10 +72,29 @@ export interface NeedsAttentionBreakdown {
   total: number;
 }
 
+/** Money separated into operational buckets rather than one ambiguous "awaiting" number. */
+export type PaymentBucketKind =
+  | 'cash_due' // collect now: overdue, balance due, or completed-and-unpaid
+  | 'invoice_after_service' // intentionally PENDING before completion (expected)
+  | 'prepay_pending' // future/pre-service PREPAY jobs that must pay before staffing
+  | 'none';
+
+export interface PaymentBucket {
+  amount: number;
+  count: number;
+}
+
+export interface PaymentBuckets {
+  cashDue: PaymentBucket;
+  invoiceAfterService: PaymentBucket;
+  prepayPending: PaymentBucket;
+}
+
 export interface OperationsSummary {
   scheduledToday: number;
   awaitingPaymentAmount: number;
   awaitingPaymentCount: number;
+  paymentBuckets: PaymentBuckets;
   needsAttention: NeedsAttentionBreakdown;
   completedThisMonth: number;
   monthRevenue: number;
@@ -204,6 +227,71 @@ export function outstandingBalance(job: JobOperationsInput): number {
   return diff > 0 ? diff : 0;
 }
 
+/**
+ * Classify a job's outstanding money into an operational bucket. Uses the shared
+ * billing policy — never mutates payment state. Invoice-after-service PENDING is
+ * NOT treated as cash to collect; it is money intentionally allowed to remain
+ * pending until after service.
+ */
+export function classifyJobPayment(
+  job: JobOperationsInput,
+  now = new Date()
+): PaymentBucketKind {
+  if (!jobHasOutstandingPayment(job)) return 'none';
+
+  // Money that should be collected now: overdue, an explicit balance due, or a
+  // completed job that still is not paid.
+  if (
+    isOverduePayment(job, now) ||
+    job.paymentStatus === 'BALANCE_DUE' ||
+    (job.status === 'COMPLETED' && job.paymentStatus !== 'PAID')
+  ) {
+    return 'cash_due';
+  }
+
+  const policy = resolveBillingPolicy({ jobPolicy: job.billingPolicy });
+  if (policy === 'INVOICE_AFTER_SERVICE') return 'invoice_after_service';
+  return 'prepay_pending';
+}
+
+/**
+ * Aggregate outstanding money into Cash Due / Invoice After Service / Prepay
+ * Pending. External invoices (already SENT/PARTIALLY_PAID/OVERDUE with a
+ * balance) are real cash to collect, so they land in Cash Due.
+ */
+export function computePaymentBuckets(
+  jobs: JobOperationsInput[],
+  invoiceOutstanding = 0,
+  invoiceAwaitingCount = 0,
+  now = new Date()
+): PaymentBuckets {
+  const active = jobs.filter(
+    (j) => !(j as { archivedAt?: string | null }).archivedAt
+  );
+  const buckets: PaymentBuckets = {
+    cashDue: { amount: 0, count: 0 },
+    invoiceAfterService: { amount: 0, count: 0 },
+    prepayPending: { amount: 0, count: 0 },
+  };
+
+  for (const job of active) {
+    const kind = classifyJobPayment(job, now);
+    if (kind === 'none') continue;
+    const bucket =
+      kind === 'cash_due'
+        ? buckets.cashDue
+        : kind === 'invoice_after_service'
+          ? buckets.invoiceAfterService
+          : buckets.prepayPending;
+    bucket.amount += outstandingBalance(job);
+    bucket.count += 1;
+  }
+
+  buckets.cashDue.amount += invoiceOutstanding;
+  buckets.cashDue.count += invoiceAwaitingCount;
+  return buckets;
+}
+
 export function getJobPriority(job: JobOperationsInput, now = new Date()): JobPriority {
   const pastIncomplete =
     isPastDate(job.preferredDate, now) &&
@@ -249,6 +337,10 @@ export function isMissingPhotos(job: JobOperationsInput): boolean {
 }
 
 export function isIncompleteChecklist(job: JobOperationsInput): boolean {
+  // Terminal jobs (completed / cancelled) keep their checklist history but must
+  // not inflate live operational attention — the field flow does not gate
+  // completion on the checklist, so completed jobs routinely show partial.
+  if (TERMINAL_STATUSES.has(job.status)) return false;
   const total = job.checklistTotal ?? 0;
   if (total === 0) return false;
   return (job.checklistCompleted ?? 0) < total;
@@ -259,6 +351,20 @@ export function isUnassigned(job: JobOperationsInput): boolean {
     !job.assignedCleanerId &&
     !TERMINAL_STATUSES.has(job.status)
   );
+}
+
+/**
+ * Active staffing demand: unassigned and inside the current-action window
+ * (today, future, or unscheduled). Past-dated unassigned jobs are stale and
+ * excluded — they are abandoned records, not live demand.
+ */
+export function isActiveUnassigned(job: JobOperationsInput, now = new Date()): boolean {
+  return isUnassigned(job) && !isPastDate(job.preferredDate, now);
+}
+
+/** Unassigned job whose service date has already passed — stale/abandoned. */
+export function isStaleUnassigned(job: JobOperationsInput, now = new Date()): boolean {
+  return isUnassigned(job) && isPastDate(job.preferredDate, now);
 }
 
 export function jobNeedsAttention(job: JobOperationsInput, now = new Date()): boolean {
@@ -276,7 +382,8 @@ export function computeNeedsAttentionBreakdown(
   now = new Date()
 ): NeedsAttentionBreakdown {
   const active = jobs.filter((j) => !TERMINAL_STATUSES.has(j.status) || j.status === 'COMPLETED');
-  const unassigned = active.filter(isUnassigned).length;
+  const unassigned = active.filter((j) => isActiveUnassigned(j, now)).length;
+  const staleUnassigned = active.filter((j) => isStaleUnassigned(j, now)).length;
   const overduePayments = active.filter((j) => isOverduePayment(j, now)).length;
   const missingPhotos = active.filter(isMissingPhotos).length;
   const incompleteChecklists = active.filter(isIncompleteChecklist).length;
@@ -291,6 +398,7 @@ export function computeNeedsAttentionBreakdown(
 
   return {
     unassigned,
+    staleUnassigned,
     overduePayments,
     missingPhotos,
     incompleteChecklists,
@@ -411,6 +519,13 @@ export function computeOperationsSummary(
     awaitingJobs.reduce((s, j) => s + outstandingBalance(j), 0) + invoiceOutstanding;
   const awaitingPaymentCount = awaitingJobs.length + invoiceAwaitingCount;
 
+  const paymentBuckets = computePaymentBuckets(
+    active,
+    invoiceOutstanding,
+    invoiceAwaitingCount,
+    now
+  );
+
   const needsAttention = computeNeedsAttentionBreakdown(active, now);
 
   const completedThisMonth = active.filter(
@@ -471,6 +586,7 @@ export function computeOperationsSummary(
     scheduledToday,
     awaitingPaymentAmount,
     awaitingPaymentCount,
+    paymentBuckets,
     needsAttention,
     completedThisMonth,
     monthRevenue,
