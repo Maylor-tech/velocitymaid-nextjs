@@ -134,11 +134,75 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
       basis: 'FLAT',
       basisLabel: 'Flat rate',
     });
+    expect(json.job.guestCheckInDate).toBeNull();
+    expect(json.job.guestCheckOutDate).toBeNull();
     const assignedBlob = JSON.stringify(json);
     expect(assignedBlob).not.toMatch(/quotedTotal|totalPrice|operationalTotal|337\.8|platformFee/);
   });
 
-  it('withholds access credentials on an unaccepted offer', async () => {
+  it('returns guest stay dates separately from preferredDate for assigned cleaner', async () => {
+    findUnique.mockResolvedValue({
+      id: JOB_ID,
+      status: 'ASSIGNED',
+      paymentStatus: 'PENDING',
+      customerName: 'Tiffany Mayo',
+      serviceType: 'Vacation Rental Turnover',
+      serviceLocation: 'Ludlow',
+      preferredDate: new Date('2026-10-05T00:00:00.000Z'),
+      preferredTime: '10:00 AM',
+      guestCheckInDate: new Date('2026-10-01T00:00:00.000Z'),
+      guestCheckOutDate: new Date('2026-10-04T00:00:00.000Z'),
+      address: '111 Thomson Drive',
+      currency: 'USD',
+      assignedAt: new Date(),
+      assignedCleanerId: CLEANER_ID,
+      onTheWayAt: null,
+      startedAt: null,
+      completedAt: null,
+      submittedForQcAt: null,
+      cleanDurationMins: null,
+      estimatedDurationMins: 180,
+      internalNotes: null,
+      propertyId: 'prop-1',
+      jobReference: 'VM-TEST-1',
+      Branch: { id: 'branch-vt', name: 'Vermont' },
+      Customer: {
+        id: 'cust-1',
+        firstName: 'Tiffany',
+        lastName: 'Mayo',
+        email: 'loulouslandingvt@gmail.com',
+        phone: '2039549764',
+      },
+      Property: propertyRow(),
+      JobOffer: [
+        {
+          id: 'offer-1',
+          jobId: JOB_ID,
+          cleanerId: CLEANER_ID,
+          status: 'ACCEPTED',
+          compensationAmount: 195,
+          compensationCurrency: 'USD',
+          compensationBasis: 'FLAT',
+          estimatedDurationMins: 180,
+          operationalNotes: null,
+          expiresAt: new Date('2099-01-01'),
+          offeredAt: new Date(),
+        },
+      ],
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/cleaner/jobs/' + JOB_ID), {
+      params: { jobId: JOB_ID },
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.access).toBe('ASSIGNED');
+    expect(json.job.preferredDate).toBe('2026-10-05T00:00:00.000Z');
+    expect(json.job.guestCheckInDate).toBe('2026-10-01T00:00:00.000Z');
+    expect(json.job.guestCheckOutDate).toBe('2026-10-04T00:00:00.000Z');
+  });
+
+  it('withholds guest stay dates and access on an unaccepted offer', async () => {
     findUnique.mockResolvedValue({
       id: JOB_ID,
       status: 'RECEIVED',
@@ -148,6 +212,8 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
       serviceLocation: 'Ludlow',
       preferredDate: new Date('2026-09-15T00:00:00.000Z'),
       preferredTime: '11:00 AM',
+      guestCheckInDate: new Date('2026-09-12T00:00:00.000Z'),
+      guestCheckOutDate: new Date('2026-09-14T00:00:00.000Z'),
       address: '111 Thomson Drive',
       currency: 'USD',
       assignedAt: null,
@@ -193,6 +259,8 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     const json = await res.json();
     expect(json.access).toBe('OFFER');
     expect(json.job.property).toBeUndefined();
+    expect(json.job).not.toHaveProperty('guestCheckInDate');
+    expect(json.job).not.toHaveProperty('guestCheckOutDate');
     expect(json.offer.location.areaLabel).toBe('Ludlow');
     expect(json.offer.compensation).toEqual({
       amount: 195,
@@ -206,6 +274,7 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     const blob = JSON.stringify(json);
     expect(blob).not.toContain('LOCKBOX-9999');
     expect(blob).not.toContain('111 Thomson Drive');
+    expect(blob).not.toContain('2026-09-12');
     expect(blob).not.toMatch(/quotedTotal|totalPrice|operationalTotal|337|platformFee|paymentStatus/);
     // Property / access instructions stay gated until acceptance (ASSIGNED access).
     expect(json.job).not.toHaveProperty('property');

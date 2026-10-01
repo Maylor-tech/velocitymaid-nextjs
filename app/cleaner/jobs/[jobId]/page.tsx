@@ -9,6 +9,7 @@ import { formatServiceDate } from "@/lib/dates/serviceDate";
 import { JobTimer } from "@/components/cleaner/JobTimer";
 import { JobPhotoCapture } from "@/components/cleaner/JobPhotoCapture";
 import { EscalateIssueCard } from "@/components/cleaner/EscalateIssueCard";
+import { JobPacketCard } from "@/components/cleaner/JobPacketCard";
 import { isOfferExpiredByTimestamp } from "@/lib/dispatch/offerExpiry";
 
 interface CustomerInfo {
@@ -48,6 +49,8 @@ interface Job {
   serviceType: string | null;
   preferredDate: string | null;
   preferredTime: string | null;
+  guestCheckInDate?: string | null;
+  guestCheckOutDate?: string | null;
   address: string | null;
   serviceLocation: string | null;
   compensationAmount?: number | null;
@@ -358,7 +361,7 @@ export default function CleanerJobDetailPage() {
 
   const getStatusBadgeColor = (status: string) => {
     const colors: Record<string, string> = {
-      ASSIGNED: "bg-purple-100 text-purple-800",
+      ASSIGNED: "bg-vm-navy/10 text-vm-navy",
       ON_THE_WAY: "bg-vm-cyan-tint text-blue-800",
       IN_PROGRESS: "bg-vm-warning-bg text-yellow-800",
       AWAITING_QC: "bg-amber-100 text-amber-900",
@@ -686,126 +689,20 @@ export default function CleanerJobDetailPage() {
           </div>
         )}
 
-        {(job.property || job.jobSpecificNotes) && access === "ASSIGNED" && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6 border-l-4 border-vm-navy">
-            <h2 className="font-semibold text-lg mb-4">Property Instructions</h2>
-
-            {job.property && (
-              <div className="space-y-6">
-                <section>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-2">
-                    Property overview
-                  </h3>
-                  <p className="font-medium text-vm-text">{job.property.name}</p>
-                  <p className="text-vm-muted text-sm mt-1">
-                    {job.property.address}
-                    {job.property.city ? `, ${job.property.city}` : ""}
-                    {job.property.state ? `, ${job.property.state}` : ""}
-                  </p>
-                  {(job.property.bedrooms != null ||
-                    job.property.bathrooms != null ||
-                    job.property.bedConfiguration) && (
-                    <p className="text-vm-muted text-sm mt-2">
-                      {job.property.bedrooms != null ? `${job.property.bedrooms} bed` : null}
-                      {job.property.bedrooms != null && job.property.bathrooms != null
-                        ? " · "
-                        : null}
-                      {job.property.bathrooms != null ? `${job.property.bathrooms} bath` : null}
-                      {job.property.bedConfiguration
-                        ? ` · ${job.property.bedConfiguration}`
-                        : null}
-                    </p>
-                  )}
-                  {job.property.amenities?.length > 0 && (
-                    <p className="text-vm-muted text-sm mt-2">
-                      Amenities: {job.property.amenities.join(", ")}
-                    </p>
-                  )}
-                  {job.property.restrictedAreas && (
-                    <p className="text-sm mt-2 text-amber-800">
-                      Restricted: {job.property.restrictedAreas}
-                    </p>
-                  )}
-                </section>
-
-                {(job.property.accessType || job.property.accessNotes) && (
-                  <section>
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-2">
-                      Access
-                    </h3>
-                    {job.property.accessType && (
-                      <p className="text-vm-text">{job.property.accessType}</p>
-                    )}
-                    {job.property.accessNotes && (
-                      <p className="text-vm-text whitespace-pre-wrap mt-1">
-                        {job.property.accessNotes}
-                      </p>
-                    )}
-                    {(job.property.standardCheckoutTime ||
-                      job.property.standardCheckinTime) && (
-                      <p className="text-vm-muted text-sm mt-2">
-                        {job.property.standardCheckoutTime
-                          ? `Checkout: ${job.property.standardCheckoutTime}`
-                          : null}
-                        {job.property.standardCheckoutTime &&
-                        job.property.standardCheckinTime
-                          ? " · "
-                          : null}
-                        {job.property.standardCheckinTime
-                          ? `Check-in: ${job.property.standardCheckinTime}`
-                          : null}
-                      </p>
-                    )}
-                  </section>
-                )}
-
-                {(job.property.linenInstructions ||
-                  job.property.supplyStorageLocation ||
-                  job.property.trashInstructions) && (
-                  <section>
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-2">
-                      Linens &amp; supplies
-                    </h3>
-                    {job.property.linenInstructions && (
-                      <p className="text-vm-text">
-                        Linens: {job.property.linenInstructions}
-                      </p>
-                    )}
-                    {job.property.supplyStorageLocation && (
-                      <p className="text-vm-text mt-1">
-                        Supplies: {job.property.supplyStorageLocation}
-                      </p>
-                    )}
-                    {job.property.trashInstructions && (
-                      <p className="text-vm-text mt-1">
-                        Trash: {job.property.trashInstructions}
-                      </p>
-                    )}
-                  </section>
-                )}
-
-                {job.property.standingInstructions && (
-                  <section>
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-2">
-                      Standard cleaning instructions
-                    </h3>
-                    <p className="text-vm-text whitespace-pre-wrap">
-                      {job.property.standingInstructions}
-                    </p>
-                  </section>
-                )}
-              </div>
+        {access === "ASSIGNED" && (
+          <JobPacketCard
+            preferredDate={job.preferredDate}
+            preferredTime={job.preferredTime}
+            guestCheckInDate={job.guestCheckInDate ?? null}
+            guestCheckOutDate={job.guestCheckOutDate ?? null}
+            property={job.property ?? null}
+            jobSpecificNotes={job.jobSpecificNotes ?? null}
+            compensationLabel={formatPrice(
+              job.compensation?.amount ?? job.compensationAmount ?? null,
+              job.compensation?.currency || job.compensationCurrency || job.currency
             )}
-
-            {job.jobSpecificNotes && (
-              <section className={job.property ? "mt-6 pt-6 border-t border-gray-200" : ""}>
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-vm-muted mb-2">
-                  Job-specific notes
-                </h3>
-                <p className="text-vm-text whitespace-pre-wrap">{job.jobSpecificNotes}</p>
-              </section>
-            )}
-          </div>
+            estimatedDurationMins={job.estimatedDurationMins ?? null}
+          />
         )}
 
         <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -815,7 +712,7 @@ export default function CleanerJobDetailPage() {
             <div className="flex items-start gap-3">
               <Calendar className="w-5 h-5 text-vm-muted mt-0.5" />
               <div>
-                <p className="font-medium">Date & Time</p>
+                <p className="font-medium">Cleaning / service date</p>
                 <p className="text-vm-muted">
                   {formatDate(job.preferredDate)} at {formatTime(job.preferredTime)}
                 </p>
