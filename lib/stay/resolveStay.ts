@@ -1,6 +1,13 @@
 /**
  * Phase 1B / Stay Card — resolve exactly one COMPLETED job for a guest stay.
- * Primary: checkout date. Secondary: SINGLE_RECENT_ELIGIBLE (14-day window).
+ *
+ * Gate 2 (structured stay dates):
+ * Primary: property-scoped exact match on Job.guestCheckOutDate.
+ * Legacy: when no structured checkout matches, match preferredDate only on jobs
+ *         where guestCheckOutDate is null (pre–Gate 2 Chipman / MJ / Lou Lou).
+ * Fallback SINGLE_RECENT_ELIGIBLE: one stay-identity day in the lookback window
+ *         (checkout day when set, else preferredDate) with exactly one job.
+ *
  * Fail closed on 0 or 2+ matches. Never returns job lists or Job.id to callers
  * that build guest payloads (internal jobId is for ensureGuest only).
  * Failed date guesses must not disclose which dates are real bookings.
@@ -56,6 +63,15 @@ export type StayResolveResult =
       message: string;
     };
 
+export type StayMatchSource = 'STRUCTURED_CHECKOUT' | 'LEGACY_PREFERRED_DATE';
+
+export type StayMatchedJob = {
+  id: string;
+  preferredDate: Date | null;
+  guestCheckOutDate: Date | null;
+  matchSource: StayMatchSource;
+};
+
 function utcDayRange(day: Date): { gte: Date; lt: Date } {
   const gte = new Date(
     Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate())
@@ -71,8 +87,22 @@ function lookbackSince(lookbackDays: number): Date {
   return since;
 }
 
+/** Stay identity day: structured checkout when set, else service/preferred date. */
+export function stayIdentityDayKey(job: {
+  guestCheckOutDate?: Date | null;
+  preferredDate?: Date | null;
+}): string | null {
+  if (job.guestCheckOutDate) {
+    return serviceDateKey(job.guestCheckOutDate);
+  }
+  if (job.preferredDate) {
+    return serviceDateKey(job.preferredDate);
+  }
+  return null;
+}
+
 /**
- * Recent completed service/checkout dates (internal / host tools).
+ * Recent completed stay-identity dates (internal / host tools).
  * Not returned on the public Stay GET — use isStayFallbackEligible instead.
  */
 export async function listRecentCompletedStayDates(
@@ -88,18 +118,20 @@ export async function listRecentCompletedStayDates(
       propertyId,
       status: JobStatus.COMPLETED,
       archivedAt: null,
-      preferredDate: { gte: since, not: null },
+      OR: [
+        { guestCheckOutDate: { gte: since } },
+        { guestCheckOutDate: null, preferredDate: { gte: since, not: null } },
+      ],
     },
-    select: { preferredDate: true },
-    orderBy: { preferredDate: 'desc' },
+    select: { preferredDate: true, guestCheckOutDate: true },
+    orderBy: [{ guestCheckOutDate: 'desc' }, { preferredDate: 'desc' }],
     take: limit * 3,
   });
 
   const seen = new Set<string>();
   const dates: string[] = [];
   for (const j of jobs) {
-    if (!j.preferredDate) continue;
-    const key = serviceDateKey(j.preferredDate);
+    const key = stayIdentityDayKey(j);
     if (!key || seen.has(key)) continue;
     seen.add(key);
     dates.push(key);
@@ -109,43 +141,74 @@ export async function listRecentCompletedStayDates(
 }
 
 /**
- * Match COMPLETED, non-archived jobs on property for exact preferredDate calendar day.
+ * Match COMPLETED, non-archived jobs on property for a guest checkout day.
+ * Structured guestCheckOutDate wins; legacy preferredDate only when checkout is null.
  */
 export async function findCompletedJobsForStayDay(
   propertyId: string,
   checkoutDate: string
-): Promise<{ dayKey: string; jobs: { id: string; preferredDate: Date }[] } | null> {
+): Promise<{ dayKey: string; jobs: StayMatchedJob[] } | null> {
   const day = parseServiceDateInput(checkoutDate);
   if (!day) return null;
 
   const { gte, lt } = utcDayRange(day);
+  const dayKey = serviceDateKey(day)!;
+
   const jobs = await prisma.job.findMany({
     where: {
       propertyId,
       status: JobStatus.COMPLETED,
       archivedAt: null,
-      preferredDate: { gte, lt },
+      OR: [
+        { guestCheckOutDate: { gte, lt } },
+        { guestCheckOutDate: null, preferredDate: { gte, lt } },
+      ],
     },
     select: {
       id: true,
       preferredDate: true,
+      guestCheckOutDate: true,
     },
     orderBy: { preferredDate: 'asc' },
-    take: 5,
+    take: 10,
   });
 
-  const dayKey = serviceDateKey(day)!;
-  const exact = jobs.filter(
-    (j) => j.preferredDate && serviceDateKey(j.preferredDate) === dayKey
-  );
+  const structured: StayMatchedJob[] = [];
+  const legacy: StayMatchedJob[] = [];
 
-  return {
-    dayKey,
-    jobs: exact.map((j) => ({
-      id: j.id,
-      preferredDate: j.preferredDate!,
-    })),
-  };
+  for (const j of jobs) {
+    if (
+      j.guestCheckOutDate &&
+      serviceDateKey(j.guestCheckOutDate) === dayKey
+    ) {
+      structured.push({
+        id: j.id,
+        preferredDate: j.preferredDate,
+        guestCheckOutDate: j.guestCheckOutDate,
+        matchSource: 'STRUCTURED_CHECKOUT',
+      });
+      continue;
+    }
+    if (
+      !j.guestCheckOutDate &&
+      j.preferredDate &&
+      serviceDateKey(j.preferredDate) === dayKey
+    ) {
+      legacy.push({
+        id: j.id,
+        preferredDate: j.preferredDate,
+        guestCheckOutDate: null,
+        matchSource: 'LEGACY_PREFERRED_DATE',
+      });
+    }
+  }
+
+  // Structured exact checkout always takes precedence over legacy preferredDate.
+  if (structured.length > 0) {
+    return { dayKey, jobs: structured };
+  }
+
+  return { dayKey, jobs: legacy };
 }
 
 export type SingleRecentEligible =
@@ -154,8 +217,9 @@ export type SingleRecentEligible =
   | { status: 'NOT_AVAILABLE' };
 
 /**
- * Exactly one eligible completed service day in the lookback window,
+ * Exactly one eligible completed stay-identity day in the lookback window,
  * and exactly one COMPLETED job on that day — otherwise fail closed.
+ * Identity day = guestCheckOutDate when set, else preferredDate (legacy).
  */
 export async function findSingleRecentEligibleStay(
   propertyId: string,
@@ -167,17 +231,19 @@ export async function findSingleRecentEligibleStay(
       propertyId,
       status: JobStatus.COMPLETED,
       archivedAt: null,
-      preferredDate: { gte: since, not: null },
+      OR: [
+        { guestCheckOutDate: { gte: since } },
+        { guestCheckOutDate: null, preferredDate: { gte: since, not: null } },
+      ],
     },
-    select: { id: true, preferredDate: true },
-    orderBy: { preferredDate: 'desc' },
+    select: { id: true, preferredDate: true, guestCheckOutDate: true },
+    orderBy: [{ guestCheckOutDate: 'desc' }, { preferredDate: 'desc' }],
     take: 40,
   });
 
   const byDay = new Map<string, string[]>();
   for (const j of jobs) {
-    if (!j.preferredDate) continue;
-    const key = serviceDateKey(j.preferredDate);
+    const key = stayIdentityDayKey(j);
     if (!key) continue;
     const list = byDay.get(key) ?? [];
     list.push(j.id);
@@ -208,7 +274,7 @@ export async function isStayFallbackEligible(
 async function mintStayGuestActions(
   property: { id: string; guestDisplayName: string | null },
   jobId: string,
-  dayKey: string
+  serviceDateKeyValue: string
 ): Promise<StayResolveResult> {
   const ensured = await ensureGuestServiceFeedbackForJob(jobId);
 
@@ -236,8 +302,23 @@ async function mintStayGuestActions(
     tipUrl: tipGrant.tipUrl,
     tipGrantStatus: tipGrant.status,
     propertyLabel,
-    serviceDate: dayKey,
+    serviceDate: serviceDateKeyValue,
   };
+}
+
+function resolveServiceDateKeyForMatch(
+  job: StayMatchedJob,
+  fallbackDayKey: string
+): string {
+  if (job.preferredDate) {
+    const key = serviceDateKey(job.preferredDate);
+    if (key) return key;
+  }
+  if (job.guestCheckOutDate) {
+    const key = serviceDateKey(job.guestCheckOutDate);
+    if (key) return key;
+  }
+  return fallbackDayKey;
 }
 
 function normalizeResolveInput(
@@ -349,5 +430,6 @@ export async function resolveStayToGuestFeedback(
   }
 
   const job = matched.jobs[0]!;
-  return mintStayGuestActions(property, job.id, matched.dayKey);
+  const serviceKey = resolveServiceDateKeyForMatch(job, matched.dayKey);
+  return mintStayGuestActions(property, job.id, serviceKey);
 }

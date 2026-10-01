@@ -24,6 +24,18 @@ import { notifyCleanerOfJobCancellation } from '@/lib/notifications/cleanerCance
 import { applyAdminTerminalCancellation } from '@/lib/admin/applyAdminTerminalCancellation';
 import { isDispatchError } from '@/lib/dispatch/errors';
 import type { Prisma } from '@prisma/client';
+import { parseServiceDateInput } from '@/lib/dates/serviceDate';
+
+/** Parse optional YYYY-MM-DD (or clear with null/empty) for guest stay dates. */
+function parseOptionalStayDate(
+  raw: unknown
+): { ok: true; value: Date | null } | { ok: false } {
+  if (raw === null || raw === '') return { ok: true, value: null };
+  if (typeof raw !== 'string') return { ok: false };
+  const parsed = parseServiceDateInput(raw);
+  if (!parsed) return { ok: false };
+  return { ok: true, value: parsed };
+}
 
 export async function GET(
   request: NextRequest,
@@ -55,6 +67,8 @@ export async function GET(
         assignedCleanerId: true,
         preferredDate: true,
         preferredTime: true,
+        guestCheckInDate: true,
+        guestCheckOutDate: true,
         serviceType: true,
         serviceLocation: true,
         address: true,
@@ -243,6 +257,8 @@ export async function GET(
       User: job.User,
       preferredDate: job.preferredDate?.toISOString() || null,
       preferredTime: job.preferredTime,
+      guestCheckInDate: job.guestCheckInDate?.toISOString() || null,
+      guestCheckOutDate: job.guestCheckOutDate?.toISOString() || null,
       serviceType: job.serviceType,
       serviceLocation: job.serviceLocation,
       address: job.address,
@@ -357,6 +373,8 @@ export async function PATCH(
         branchId: true,
         preferredDate: true,
         preferredTime: true,
+        guestCheckInDate: true,
+        guestCheckOutDate: true,
         internalNotes: true,
         address: true,
         serviceType: true,
@@ -381,10 +399,46 @@ export async function PATCH(
     const data: Record<string, unknown> = {};
 
     if (body.preferredDate !== undefined) {
-      data.preferredDate = body.preferredDate ? new Date(body.preferredDate) : null;
+      if (body.preferredDate === null || body.preferredDate === '') {
+        data.preferredDate = null;
+      } else if (typeof body.preferredDate === 'string') {
+        const parsed = parseServiceDateInput(body.preferredDate);
+        if (!parsed) {
+          return NextResponse.json(
+            { success: false, error: 'Invalid preferredDate' },
+            { status: 400 }
+          );
+        }
+        data.preferredDate = parsed;
+      } else {
+        return NextResponse.json(
+          { success: false, error: 'Invalid preferredDate' },
+          { status: 400 }
+        );
+      }
     }
     if (body.preferredTime !== undefined) {
       data.preferredTime = body.preferredTime?.trim() || null;
+    }
+    if (body.guestCheckInDate !== undefined) {
+      const parsed = parseOptionalStayDate(body.guestCheckInDate);
+      if (!parsed.ok) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid guestCheckInDate' },
+          { status: 400 }
+        );
+      }
+      data.guestCheckInDate = parsed.value;
+    }
+    if (body.guestCheckOutDate !== undefined) {
+      const parsed = parseOptionalStayDate(body.guestCheckOutDate);
+      if (!parsed.ok) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid guestCheckOutDate' },
+          { status: 400 }
+        );
+      }
+      data.guestCheckOutDate = parsed.value;
     }
     if (body.internalNotes !== undefined) {
       data.internalNotes = body.internalNotes?.trim() || null;
@@ -506,6 +560,8 @@ export async function PATCH(
           id: true,
           preferredDate: true,
           preferredTime: true,
+          guestCheckInDate: true,
+          guestCheckOutDate: true,
           internalNotes: true,
           address: true,
           serviceType: true,
@@ -529,6 +585,8 @@ export async function PATCH(
           before: {
             preferredDate: existing.preferredDate?.toISOString() ?? null,
             preferredTime: existing.preferredTime,
+            guestCheckInDate: existing.guestCheckInDate?.toISOString() ?? null,
+            guestCheckOutDate: existing.guestCheckOutDate?.toISOString() ?? null,
             internalNotes: existing.internalNotes,
             address: existing.address,
             serviceType: existing.serviceType,
@@ -539,6 +597,8 @@ export async function PATCH(
           after: {
             preferredDate: refreshed?.preferredDate?.toISOString() ?? null,
             preferredTime: refreshed?.preferredTime ?? null,
+            guestCheckInDate: refreshed?.guestCheckInDate?.toISOString() ?? null,
+            guestCheckOutDate: refreshed?.guestCheckOutDate?.toISOString() ?? null,
             internalNotes: refreshed?.internalNotes ?? null,
             address: refreshed?.address ?? null,
             serviceType: refreshed?.serviceType ?? null,
@@ -565,6 +625,8 @@ export async function PATCH(
           id: jobId,
           preferredDate: refreshed?.preferredDate?.toISOString() ?? null,
           preferredTime: refreshed?.preferredTime ?? null,
+          guestCheckInDate: refreshed?.guestCheckInDate?.toISOString() ?? null,
+          guestCheckOutDate: refreshed?.guestCheckOutDate?.toISOString() ?? null,
           internalNotes: refreshed?.internalNotes ?? null,
           address: refreshed?.address ?? null,
           serviceType: refreshed?.serviceType ?? null,
@@ -595,6 +657,8 @@ export async function PATCH(
         before: {
           preferredDate: existing.preferredDate?.toISOString() ?? null,
           preferredTime: existing.preferredTime,
+          guestCheckInDate: existing.guestCheckInDate?.toISOString() ?? null,
+          guestCheckOutDate: existing.guestCheckOutDate?.toISOString() ?? null,
           internalNotes: existing.internalNotes,
           address: existing.address,
           serviceType: existing.serviceType,
@@ -605,6 +669,8 @@ export async function PATCH(
         after: {
           preferredDate: updated.preferredDate?.toISOString() ?? null,
           preferredTime: updated.preferredTime,
+          guestCheckInDate: updated.guestCheckInDate?.toISOString() ?? null,
+          guestCheckOutDate: updated.guestCheckOutDate?.toISOString() ?? null,
           internalNotes: updated.internalNotes,
           address: updated.address,
           serviceType: updated.serviceType,
@@ -637,6 +703,8 @@ export async function PATCH(
         id: updated.id,
         preferredDate: updated.preferredDate?.toISOString() ?? null,
         preferredTime: updated.preferredTime,
+        guestCheckInDate: updated.guestCheckInDate?.toISOString() ?? null,
+        guestCheckOutDate: updated.guestCheckOutDate?.toISOString() ?? null,
         internalNotes: updated.internalNotes,
         address: updated.address,
         serviceType: updated.serviceType,

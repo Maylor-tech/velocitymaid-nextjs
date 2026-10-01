@@ -26,6 +26,7 @@ export interface JobOperationsInput {
   paidAt?: string | null;
   approvedAt?: string | null;
   reviewStatus?: string | null;
+  billingPolicy?: string | null;
   amountPaid?: number | null;
   balanceDue?: number | null;
   totalPrice?: number | null;

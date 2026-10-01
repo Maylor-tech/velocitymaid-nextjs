@@ -203,11 +203,12 @@ export default function GuestStayPage() {
                   Find your stay
                 </h2>
                 <p className="mt-1 font-body text-xs text-vm-muted">
-                  Enter your checkout date so we can connect your feedback to the
-                  correct cleaning.
+                  Enter the guest checkout date for your stay (not the cleaning
+                  day, if those differ). We&apos;ll match it to the correct
+                  completed clean.
                 </p>
                 <label className="mt-3 block font-body text-sm text-vm-navy">
-                  Checkout date
+                  Guest checkout date
                   <input
                     type="date"
                     required

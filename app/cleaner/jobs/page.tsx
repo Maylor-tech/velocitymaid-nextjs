@@ -113,9 +113,9 @@ export default function CleanerJobsPage() {
 
       setJobs(data.jobs || []);
       setOffers(offersData.success ? offersData.offers || [] : []);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch jobs:", err);
-      setError(err.message || "Failed to load jobs");
+      setError(err instanceof Error ? err.message : "Failed to load jobs");
     } finally {
       setLoading(false);
     }
@@ -144,7 +144,7 @@ export default function CleanerJobsPage() {
 
   const getStatusBadgeColor = (status: string) => {
     const colors: Record<string, string> = {
-      ASSIGNED: "bg-purple-100 text-purple-800",
+      ASSIGNED: "bg-vm-navy/10 text-vm-navy",
       ON_THE_WAY: "bg-vm-cyan-tint text-blue-800",
       IN_PROGRESS: "bg-vm-warning-bg text-yellow-800",
       AWAITING_QC: "bg-amber-100 text-amber-900",
@@ -286,12 +286,20 @@ export default function CleanerJobsPage() {
         {/* Jobs List */}
         {jobs.length === 0 && offers.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-vm-muted">No jobs found</p>
-            <p className="text-sm text-vm-muted mt-2">
+            <h2 className="font-heading text-lg font-semibold text-vm-navy">
+              {statusFilter ? "No jobs in this filter" : "No assigned jobs yet"}
+            </h2>
+            <p className="mt-2 font-body text-sm text-vm-muted">
               {statusFilter
-                ? "Try changing the status filter"
-                : "You don't have any assigned jobs yet"}
+                ? "Try All Statuses or another filter to see open offers and other jobs."
+                : "When ops sends you an offer, it will appear above this list. Assigned jobs show here after you accept. If you are waiting on your first job, finish training and check with VelocityMaid ops."}
             </p>
+            {!statusFilter && training && training.status !== "CERTIFIED" && (
+              <p className="mt-3 font-body text-sm text-vm-navy">
+                Training: {training.modulesCompleted}/{training.modulesTotal}{" "}
+                modules — complete certification to stay eligible for offers.
+              </p>
+            )}
           </div>
         ) : (
           <div className="grid gap-4">

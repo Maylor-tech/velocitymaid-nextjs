@@ -301,6 +301,8 @@ export type CreateCleaningFromPropertyInput = {
   sameDayTurnover: boolean;
   checkInDeadline?: string | null;
   jobSpecificNotes?: string | null;
+  guestCheckInDate?: Date | null;
+  guestCheckOutDate?: Date | null;
 };
 
 /**

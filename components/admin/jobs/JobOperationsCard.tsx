@@ -16,8 +16,6 @@ import {
   formatJobDate,
   formatUsdDetailed,
   getJobPriority,
-  getOpsListStaffingBadge,
-  getPaymentBadge,
   getPhotoStatus,
   getPrimaryAction,
   getStatusBadge,
@@ -25,6 +23,7 @@ import {
   priorityLabel,
   type JobOperationsInput,
 } from '@/lib/admin/jobsOperations';
+import { JobStaffingMoneyStrips } from '@/components/admin/jobs/JobStaffingMoneyStrips';
 import { isTerminalStatus } from '@/lib/jobStatus';
 
 export interface AdminJobListItem extends JobOperationsInput {
@@ -81,8 +80,6 @@ export function JobOperationsCard({
 }: JobOperationsCardProps) {
   const action = getPrimaryAction(job);
   const statusBadge = getStatusBadge(job.status);
-  const paymentBadge = getPaymentBadge(job.paymentStatus);
-  const staffingBadge = getOpsListStaffingBadge(job);
   const priority = getJobPriority(job);
   const photo = getPhotoStatus(job.photoCount ?? 0, job.serviceType, job.status);
   const workflow = buildWorkflowSteps(job);
@@ -112,9 +109,6 @@ export function JobOperationsCard({
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge.cls}`}>
               {statusBadge.label}
             </span>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${paymentBadge.cls}`}>
-              {paymentBadge.label}
-            </span>
             <span
               className={`rounded-full px-2 py-0.5 text-xs ${
                 isVermont ? 'bg-vm-navy/10 text-vm-navy' : 'bg-vm-cyan-tint text-vm-navy'
@@ -129,12 +123,10 @@ export function JobOperationsCard({
                 {job.dispatchUrgency.replace('_', ' ')}
               </span>
             )}
-            {staffingBadge && (
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${staffingBadge.cls}`}>
-                {staffingBadge.label}
-              </span>
-            )}
           </div>
+
+          {/* Independent staffing + money read-outs (policy-derived) */}
+          <JobStaffingMoneyStrips job={job} />
 
           <div>
             <Link

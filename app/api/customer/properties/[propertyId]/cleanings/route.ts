@@ -55,6 +55,12 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       typeof body.preferredDate === 'string' ? body.preferredDate.trim() : '';
     const preferredTime =
       typeof body.preferredTime === 'string' ? body.preferredTime.trim() : '';
+    const guestCheckInRaw =
+      typeof body.guestCheckInDate === 'string' ? body.guestCheckInDate.trim() : '';
+    const guestCheckOutRaw =
+      typeof body.guestCheckOutDate === 'string'
+        ? body.guestCheckOutDate.trim()
+        : '';
     const sameDayTurnover = Boolean(body.sameDayTurnover);
     const checkInDeadline =
       typeof body.checkInDeadline === 'string'
@@ -77,6 +83,28 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         { success: false, error: 'preferredDate is invalid' },
         { status: 400 }
       );
+    }
+
+    let guestCheckInDate: Date | null = null;
+    if (guestCheckInRaw) {
+      guestCheckInDate = parseServiceDateInput(guestCheckInRaw);
+      if (!guestCheckInDate) {
+        return NextResponse.json(
+          { success: false, error: 'guestCheckInDate is invalid' },
+          { status: 400 }
+        );
+      }
+    }
+
+    let guestCheckOutDate: Date | null = null;
+    if (guestCheckOutRaw) {
+      guestCheckOutDate = parseServiceDateInput(guestCheckOutRaw);
+      if (!guestCheckOutDate) {
+        return NextResponse.json(
+          { success: false, error: 'guestCheckOutDate is invalid' },
+          { status: 400 }
+        );
+      }
     }
 
     if (
@@ -144,6 +172,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       sameDayTurnover,
       checkInDeadline: checkInDeadline || null,
       jobSpecificNotes: jobSpecificNotes || null,
+      guestCheckInDate,
+      guestCheckOutDate,
     });
 
     const jobReference = await nextVmReference();
@@ -165,6 +195,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         serviceType,
         preferredDate,
         preferredTime: preferredTime || null,
+        guestCheckInDate,
+        guestCheckOutDate,
         currency: 'USD',
         status: 'RECEIVED',
         paymentStatus: 'PENDING',
@@ -179,6 +211,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         address: true,
         preferredDate: true,
         preferredTime: true,
+        guestCheckInDate: true,
+        guestCheckOutDate: true,
         serviceType: true,
         status: true,
         paymentStatus: true,
@@ -233,6 +267,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         address: job.address,
         preferredDate: job.preferredDate?.toISOString() ?? null,
         preferredTime: job.preferredTime,
+        guestCheckInDate: job.guestCheckInDate?.toISOString() ?? null,
+        guestCheckOutDate: job.guestCheckOutDate?.toISOString() ?? null,
         serviceType: job.serviceType,
         status: job.status,
         paymentStatus: job.paymentStatus,

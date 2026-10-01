@@ -443,6 +443,10 @@ model Job {
   customerName             String?
   preferredDate            DateTime?
   preferredTime            String?
+  /// Guest stay check-in calendar day (UTC midnight). Distinct from preferredDate (service).
+  guestCheckInDate         DateTime?
+  /// Guest stay checkout calendar day (UTC midnight). Stay Card primary match key when set.
+  guestCheckOutDate        DateTime?
   serviceType              String?
   serviceLocation          String?
   /// Occurrence snapshot — independent of Property.address after create.
@@ -532,6 +536,8 @@ model Job {
   @@index([propertyId])
   @@index([jobQualityScore])
   @@index([preferredDate])
+  @@index([guestCheckInDate])
+  @@index([guestCheckOutDate])
   @@index([status])
   @@index([paymentStatus])
   @@index([reviewStatus])
