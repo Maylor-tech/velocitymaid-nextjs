@@ -928,6 +928,9 @@ export async function getOpsCommandCenter(
       status: true,
       assignedCleanerId: true,
       preferredDate: true,
+      paymentStatus: true,
+      billingPolicy: true,
+      reviewStatus: true,
       customerName: true,
       address: true,
       Customer: { select: { firstName: true, lastName: true } },
@@ -955,6 +958,9 @@ export async function getOpsCommandCenter(
           status: j.status,
           offers: j.JobOffer,
           latestOfferEmailStatus: j.IntegrationEventLog[0]?.status ?? null,
+          paymentStatus: j.paymentStatus,
+          billingPolicy: j.billingPolicy,
+          reviewStatus: j.reviewStatus,
         },
         now
       );

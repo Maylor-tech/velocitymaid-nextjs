@@ -133,6 +133,87 @@ describe('classifyDispatchException', () => {
       )
     ).toBe('CLEANER_NEEDED_NO_OFFER');
   });
+
+  describe('billing-aware gating', () => {
+    it('PREPAY unpaid today → payment required, NOT today-unassigned/send-offer', () => {
+      expect(
+        classifyDispatchException(
+          {
+            assignedCleanerId: null,
+            preferredDate: TODAY,
+            status: 'RECEIVED',
+            offers: [],
+            paymentStatus: 'PENDING',
+            billingPolicy: 'PREPAY',
+          },
+          NOW
+        )
+      ).toBe('PAYMENT_REQUIRED');
+    });
+
+    it('PREPAY deposit paid + review pending → needs booking approval', () => {
+      expect(
+        classifyDispatchException(
+          {
+            assignedCleanerId: null,
+            preferredDate: TOMORROW,
+            status: 'RECEIVED',
+            offers: [],
+            paymentStatus: 'DEPOSIT_PAID',
+            reviewStatus: 'PENDING',
+            billingPolicy: 'PREPAY',
+          },
+          NOW
+        )
+      ).toBe('NEEDS_BOOKING_APPROVAL');
+    });
+
+    it('INVOICE_AFTER_SERVICE PENDING stays staffable (ready to offer)', () => {
+      expect(
+        classifyDispatchException(
+          {
+            assignedCleanerId: null,
+            preferredDate: NEXT_WEEK,
+            status: 'RECEIVED',
+            offers: [],
+            paymentStatus: 'PENDING',
+            billingPolicy: 'INVOICE_AFTER_SERVICE',
+          },
+          NOW
+        )
+      ).toBe('CLEANER_NEEDED_NO_OFFER');
+    });
+
+    it('PREPAY paid today → today-unassigned (normal dispatch path)', () => {
+      expect(
+        classifyDispatchException(
+          {
+            assignedCleanerId: null,
+            preferredDate: TODAY,
+            status: 'RECEIVED',
+            offers: [],
+            paymentStatus: 'PAID',
+            billingPolicy: 'PREPAY',
+          },
+          NOW
+        )
+      ).toBe('TODAY_UNASSIGNED');
+    });
+
+    it('omitting paymentStatus preserves legacy date/offer behavior', () => {
+      expect(
+        classifyDispatchException(
+          {
+            assignedCleanerId: null,
+            preferredDate: TODAY,
+            status: 'RECEIVED',
+            offers: [],
+          },
+          NOW
+        )
+      ).toBe('TODAY_UNASSIGNED');
+    });
+  });
 });
 
 describe('groupDispatchExceptionItems priority', () => {
@@ -149,6 +230,19 @@ describe('groupDispatchExceptionItems priority', () => {
       'dispatch-notification-failed',
       'dispatch-awaiting',
     ]);
-    expect(items.map((i) => i.priority)).toEqual([10, 20, 30, 40, 50, 60]);
+    expect(items.map((i) => i.priority)).toEqual([10, 20, 25, 30, 40, 50, 60, 65]);
+  });
+
+  it('separates payment-blocked buckets from send-offer buckets', () => {
+    const items = groupDispatchExceptionItems([
+      { id: 'j-pay', name: 'Prepay unpaid', kind: 'PAYMENT_REQUIRED' },
+      { id: 'j-rev', name: 'Deposit pending', kind: 'NEEDS_BOOKING_APPROVAL' },
+      { id: 'j-need', name: 'No offer', kind: 'CLEANER_NEEDED_NO_OFFER' },
+    ]);
+    const byId = Object.fromEntries(items.map((i) => [i.id, i]));
+    expect(byId['dispatch-payment-required'].count).toBe(1);
+    expect(byId['dispatch-payment-required'].cta).toBe('Open job');
+    expect(byId['dispatch-needs-booking-approval'].count).toBe(1);
+    expect(byId['dispatch-cleaner-needed'].count).toBe(1);
   });
 });
