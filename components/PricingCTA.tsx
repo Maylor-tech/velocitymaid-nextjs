@@ -16,11 +16,14 @@ export default function PricingCTA() {
         before service begins.
       </p>
       <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <Link href="/vermont/host-intake" className={primaryButton}>
+        <Link href="/estimate" className={primaryButton}>
+          Get a Fast Estimate
+        </Link>
+        <Link href="/vermont/host-intake" className={outlineButton}>
           Request a Vermont quote
         </Link>
-        <Link href="/book?branch=new-jersey" className={outlineButton}>
-          Book New Jersey cleaning
+        <Link href="/lead/new-jersey" className={outlineButton}>
+          Request a New Jersey quote
         </Link>
       </div>
       <p className="mt-6 font-body text-sm text-vm-muted">

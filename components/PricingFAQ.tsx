@@ -9,7 +9,7 @@ const items = [
   },
   {
     q: "How do I get a Vermont quote?",
-    a: "Request a walkthrough or quote, call or text (802) 733-5348, email hello@velocitymaid.com, or complete the Vermont host intake form so we can review your property details.",
+    a: "Get a Fast Estimate, request a walkthrough, call or text (802) 733-5348, email hello@velocitymaid.com, or complete the Vermont host intake form so we can review your property details.",
   },
   {
     q: "Can I book New Jersey cleaning online?",

@@ -18,6 +18,11 @@ import {
 } from "@/lib/company/businessAddress";
 import { EditorialProof } from "@/components/marketing/EditorialProof";
 import { MIDDLEBURY_PROOF, TURNOVER_PROOF } from "@/lib/marketing/portfolio";
+import {
+  FAST_ESTIMATE_CTA_LABEL,
+  FAST_ESTIMATE_PATH,
+  VERMONT_HOST_INTAKE_PATH,
+} from "@/lib/marketing/publicCtas";
 
 export interface VermontClusterLandingProps {
   cluster: VermontClusterConfig;
@@ -29,8 +34,10 @@ export default function VermontClusterLanding({
   return (
     <div className="min-h-screen bg-white font-body">
       <BranchLandingNav
-        bookingHref="/vermont/host-intake"
-        bookingLabel="Request a Quote"
+        bookingHref={FAST_ESTIMATE_PATH}
+        bookingLabel={FAST_ESTIMATE_CTA_LABEL}
+        secondaryHref={VERMONT_HOST_INTAKE_PATH}
+        secondaryLabel="Request a Quote"
         phone="+18027335348"
         phoneDisplay="(802) 733-5348"
         email="hello@velocitymaid.com"
@@ -53,8 +60,14 @@ export default function VermontClusterLanding({
               </p>
               <div className="flex flex-wrap gap-3 mb-6">
                 <Link
-                  href="/vermont/host-intake"
+                  href={FAST_ESTIMATE_PATH}
                   className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+                >
+                  {FAST_ESTIMATE_CTA_LABEL}
+                </Link>
+                <Link
+                  href={VERMONT_HOST_INTAKE_PATH}
+                  className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
                 >
                   Request a walkthrough
                 </Link>
@@ -380,8 +393,14 @@ function CtaSection({ clusterLabel }: { clusterLabel: string }) {
       </div>
       <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
         <Link
-          href="/vermont/host-intake"
+          href={FAST_ESTIMATE_PATH}
           className="inline-flex flex-1 sm:flex-none items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+        >
+          {FAST_ESTIMATE_CTA_LABEL}
+        </Link>
+        <Link
+          href={VERMONT_HOST_INTAKE_PATH}
+          className="inline-flex flex-1 sm:flex-none items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-vm-surface transition"
         >
           Request a quote
         </Link>

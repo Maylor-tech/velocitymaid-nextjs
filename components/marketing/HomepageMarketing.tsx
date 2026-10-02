@@ -13,6 +13,11 @@ import {
 } from "@/lib/vermont/middleburyPhotos";
 import { HOMEPAGE_TESTIMONIALS } from "@/lib/marketing/testimonials";
 import { HOMEPAGE_PROOF } from "@/lib/marketing/portfolio";
+import {
+  FAST_ESTIMATE_CTA_LABEL,
+  FAST_ESTIMATE_PATH,
+} from "@/lib/marketing/publicCtas";
+import { NJ_LEAD_PATH } from "@/lib/markets/newJersey";
 
 const primaryButton =
   "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
@@ -53,14 +58,14 @@ const homepageFaqs = [
   {
     question: "How do I get started?",
     answer:
-      "New Jersey customers can book online. Vermont hosts can request a walkthrough or quote, call or text (802) 733-5348, email hello@velocitymaid.com, or complete the host intake form.",
+      "Vermont hosts can Get a Fast Estimate, request a walkthrough, call or text (802) 733-5348, or complete host intake. New Jersey customers can request a quote — not a prepaid booking from the homepage.",
   },
 ];
 
 export function HomepageMarketing() {
   return (
     <div className="min-h-screen bg-white">
-      <SiteHeader homeAnchors bookingHref="/lead/new-jersey" />
+      <SiteHeader homeAnchors />
       <main>
         <section className="relative overflow-hidden bg-vm-navy px-5 py-20 text-center sm:py-24">
           <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-vm-cyan/10 blur-3xl" />
@@ -76,11 +81,14 @@ export function HomepageMarketing() {
               for vacation rentals, hosts, and busy households.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link href="/lead/new-jersey" className={primaryButton}>
-                New Jersey quote
+              <Link href={FAST_ESTIMATE_PATH} className={primaryButton}>
+                {FAST_ESTIMATE_CTA_LABEL}
               </Link>
               <Link href="/vermont" className={outlineButton}>
                 Vermont hosts →
+              </Link>
+              <Link href={NJ_LEAD_PATH} className={outlineButton}>
+                New Jersey quote
               </Link>
             </div>
           </div>
@@ -128,7 +136,10 @@ export function HomepageMarketing() {
               ))}
             </ul>
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link href="/hosts" className={primaryButton}>
+              <Link href={FAST_ESTIMATE_PATH} className={primaryButton}>
+                {FAST_ESTIMATE_CTA_LABEL}
+              </Link>
+              <Link href="/hosts" className={outlineNavyButton}>
                 Request Property Setup
               </Link>
               <Link href="/vermont" className={outlineNavyButton}>
@@ -161,7 +172,7 @@ export function HomepageMarketing() {
             <p className="mb-4 font-body text-xs text-vm-muted">
               Short-term rental cleaning available on request.
             </p>
-            <Link href="/lead/new-jersey" className={primaryButton}>
+            <Link href={NJ_LEAD_PATH} className={primaryButton}>
               Request a quote
             </Link>
           </article>
@@ -226,8 +237,8 @@ export function HomepageMarketing() {
               <Link href="/gallery" className={primaryButton}>
                 View Our Work
               </Link>
-              <Link href="/vermont/host-intake" className={outlineButton}>
-                Request a Quote
+              <Link href={FAST_ESTIMATE_PATH} className={outlineButton}>
+                {FAST_ESTIMATE_CTA_LABEL}
               </Link>
             </>
           }
@@ -281,8 +292,8 @@ export function HomepageMarketing() {
                   Guest-ready resets for hosts and property managers in the Okemo Valley,
                   Middlebury, and surrounding towns.
                 </p>
-                <Link href="/vermont/host-intake" className={`${primaryButton} mt-6`}>
-                  Request a quote
+                <Link href={FAST_ESTIMATE_PATH} className={`${primaryButton} mt-6`}>
+                  {FAST_ESTIMATE_CTA_LABEL}
                 </Link>
               </article>
               <article className="rounded-xl border border-vm-border bg-white p-7">

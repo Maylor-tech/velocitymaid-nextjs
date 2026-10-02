@@ -28,10 +28,10 @@ export default function EstimatePage() {
             VelocityMaid
           </Link>
           <Link
-            href="/book"
+            href="/vermont"
             className="font-body text-sm font-semibold text-vm-cyan-dark hover:underline"
           >
-            Book now
+            Vermont hosts
           </Link>
         </div>
       </header>

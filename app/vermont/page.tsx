@@ -4,6 +4,11 @@ import Link from "next/link";
 import BranchLandingNav from "@/components/layout/BranchLandingNav";
 import { VERMONT_CLUSTER_LIST } from "@/lib/vermont/clusters";
 import { pageSocialMetadata } from "@/lib/seo/socialImages";
+import {
+  FAST_ESTIMATE_CTA_LABEL,
+  FAST_ESTIMATE_PATH,
+  VERMONT_HOST_INTAKE_PATH,
+} from "@/lib/marketing/publicCtas";
 import { ArrowRight, MapPin, Snowflake } from "lucide-react";
 import {
   VERMONT_OPERATIONS_SUPPORT_LINE1,
@@ -34,8 +39,10 @@ export default function VermontOverviewPage() {
   return (
     <div className="min-h-screen bg-white font-body">
       <BranchLandingNav
-        bookingHref="/vermont/host-intake"
-        bookingLabel="Request a Quote"
+        bookingHref={FAST_ESTIMATE_PATH}
+        bookingLabel={FAST_ESTIMATE_CTA_LABEL}
+        secondaryHref={VERMONT_HOST_INTAKE_PATH}
+        secondaryLabel="Request a Quote"
         phone="+18027335348"
         phoneDisplay="(802) 733-5348"
         email="hello@velocitymaid.com"
@@ -62,8 +69,14 @@ export default function VermontOverviewPage() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/vermont/host-intake"
+                href={FAST_ESTIMATE_PATH}
                 className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+              >
+                {FAST_ESTIMATE_CTA_LABEL}
+              </Link>
+              <Link
+                href={VERMONT_HOST_INTAKE_PATH}
+                className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
               >
                 Request a walkthrough
               </Link>
@@ -180,8 +193,14 @@ export default function VermontOverviewPage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/vermont/host-intake"
+              href={FAST_ESTIMATE_PATH}
               className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+            >
+              {FAST_ESTIMATE_CTA_LABEL}
+            </Link>
+            <Link
+              href={VERMONT_HOST_INTAKE_PATH}
+              className="inline-flex items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-white transition"
             >
               Request a quote
             </Link>
@@ -202,7 +221,7 @@ export default function VermontOverviewPage() {
           </div>
           <p className="mt-4 text-xs text-vm-muted font-body">
             Prefer to share details first?{" "}
-            <Link href="/vermont/host-intake" className="text-vm-navy font-semibold hover:underline">
+            <Link href={VERMONT_HOST_INTAKE_PATH} className="text-vm-navy font-semibold hover:underline">
               Complete property intake →
             </Link>
           </p>

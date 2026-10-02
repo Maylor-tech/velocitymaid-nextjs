@@ -11,8 +11,8 @@ const markets = [
     price: "$225",
     detail:
       "Guest-ready resets for hosts and property managers in the Okemo Valley, Middlebury, and surrounding towns.",
-    href: "/vermont/host-intake",
-    cta: "Request a quote",
+    href: "/estimate",
+    cta: "Get a Fast Estimate",
   },
   {
     market: "New Jersey",
