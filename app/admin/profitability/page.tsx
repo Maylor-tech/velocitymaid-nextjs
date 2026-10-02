@@ -1,8 +1,9 @@
 /**
  * Admin Owner Profitability — P0 authoritative read model.
  *
- * Displays Invoice / InvoicePayment / JobPayout truth only.
- * Does not estimate fees, supplies, overhead, or profit.
+ * Displays Invoice / InvoicePayment / JobPayout truth, plus a separate
+ * read-only Team assistant pay signal. Does not fold assistant pay into
+ * JobPayout, estimate remaining costs, or claim contribution profit.
  */
 'use client';
 
@@ -46,6 +47,14 @@ type ProfitabilityResponse = {
       paymentCount: number;
       payablePayoutCount: number;
       paidPayoutCount: number;
+    };
+    teamPay?: {
+      owed: number;
+      paid: number;
+      owedCents: number;
+      paidCents: number;
+      owedCount: number;
+      paidCount: number;
     };
   };
 };
@@ -192,6 +201,29 @@ export default function AdminProfitabilityPage() {
                 {data.counts.draftInvoiceCount === 1 ? '' : 's'}).
               </p>
             ) : null}
+          </section>
+
+          <section>
+            <h2 className="mb-3 font-display text-lg font-semibold text-vm-navy">
+              Team assistant pay
+            </h2>
+            <p className="mb-3 font-body text-sm text-vm-muted">
+              VelocityMaid operating-expense records for job-team assistants.
+              Not a JobPayout, not Stripe cleaner pay, and not mixed into
+              contribution until other direct costs are recorded.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <KpiCard
+                label="Team pay owed"
+                value={formatUsd(data.teamPay?.owed ?? 0)}
+                hint={`${data.teamPay?.owedCount ?? 0} unpaid assistant record(s)`}
+              />
+              <KpiCard
+                label="Team pay paid"
+                value={formatUsd(data.teamPay?.paid ?? 0)}
+                hint={`${data.teamPay?.paidCount ?? 0} recorded payment(s)`}
+              />
+            </div>
           </section>
 
           <section>

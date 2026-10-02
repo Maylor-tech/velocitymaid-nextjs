@@ -1,13 +1,18 @@
 /**
  * Owner Profitability read model — P0 authoritative finance KPIs.
  *
- * READ-ONLY over Invoice, InvoicePayment, and JobPayout.
+ * READ-ONLY over Invoice, InvoicePayment, JobPayout, and JobTeamCompensation.
+ * Team assistant pay is a separate operating-expense signal — never mixed into
+ * JobPayout cleanerPayable/cleanerPaid. Direct job costs stay Not recorded;
+ * contribution stays Unavailable because costs are incomplete.
+ *
  * No Math.random, no legacy demo costs, no write paths.
  *
  * Invoiced ≠ Collected. Payable ≠ Paid. Platform Gross Share ≠ Profit.
  */
 import type { PrismaClient, Prisma } from '@prisma/client';
 import { InvoiceStatus } from '@prisma/client';
+import { aggregateTeamPay } from '@/lib/cleaners/jobTeamCompensation';
 
 /** Issued (non-draft) invoices count toward Invoiced Revenue. */
 export const ISSUED_INVOICE_STATUSES: InvoiceStatus[] = [
@@ -54,10 +59,21 @@ export type OwnerProfitabilitySecondary = {
   costsComplete: false;
 };
 
+/** Assistant compensation — not a JobPayout and not Stripe cleaner pay. */
+export type OwnerProfitabilityTeamPay = {
+  owed: number;
+  paid: number;
+  owedCents: number;
+  paidCents: number;
+  owedCount: number;
+  paidCount: number;
+};
+
 export type OwnerProfitabilitySnapshot = {
   scope: OwnerProfitabilityScope;
   primary: OwnerProfitabilityPrimary;
   secondary: OwnerProfitabilitySecondary;
+  teamPay: OwnerProfitabilityTeamPay;
   disclaimer: string;
   counts: {
     issuedInvoiceCount: number;
@@ -66,6 +82,11 @@ export type OwnerProfitabilitySnapshot = {
     payablePayoutCount: number;
     paidPayoutCount: number;
   };
+};
+
+export type OwnerProfitabilityTeamPayRow = {
+  amountCents: number;
+  status: string;
 };
 
 export type OwnerProfitabilityInvoiceRow = {
@@ -135,6 +156,7 @@ export function computeOwnerProfitability(input: {
   invoices: OwnerProfitabilityInvoiceRow[];
   payments: OwnerProfitabilityPaymentRow[];
   payouts: OwnerProfitabilityPayoutRow[];
+  teamPayRows?: OwnerProfitabilityTeamPayRow[];
 }): OwnerProfitabilitySnapshot {
   const issued = input.invoices.filter((inv) => isIssuedInvoiceStatus(inv.status));
   const drafts = input.invoices.filter(
@@ -146,6 +168,7 @@ export function computeOwnerProfitability(input: {
 
   const payablePayouts = input.payouts.filter(isCleanerPayoutPayable);
   const paidPayouts = input.payouts.filter(isCleanerPayoutPaid);
+  const teamAgg = aggregateTeamPay(input.teamPayRows ?? []);
 
   return {
     scope: input.scope,
@@ -169,8 +192,16 @@ export function computeOwnerProfitability(input: {
       contributionMarginLabel: UNAVAILABLE,
       costsComplete: false,
     },
+    teamPay: {
+      owed: money(teamAgg.owedCents / 100),
+      paid: money(teamAgg.paidCents / 100),
+      owedCents: teamAgg.owedCents,
+      paidCents: teamAgg.paidCents,
+      owedCount: teamAgg.owedCount,
+      paidCount: teamAgg.paidCount,
+    },
     disclaimer:
-      'Invoiced is not the same as collected. Cleaner payable is not the same as cleaner paid. Platform gross share is not profit.',
+      'Invoiced is not the same as collected. Cleaner payable is not the same as cleaner paid. Platform gross share is not profit. Team assistant pay is a separate operating expense and is not a JobPayout.',
     counts: {
       issuedInvoiceCount: issued.length,
       draftInvoiceCount: drafts.length,
@@ -199,6 +230,13 @@ function payoutBranchWhere(branchId: string | null): Prisma.JobPayoutWhereInput 
   return { branchId };
 }
 
+function teamPayBranchWhere(
+  branchId: string | null
+): Prisma.JobTeamCompensationWhereInput {
+  if (!branchId) return {};
+  return { branchId };
+}
+
 /**
  * Load authoritative rows and compute the owner snapshot.
  * Performs findMany only — never creates or updates finance records.
@@ -214,7 +252,7 @@ export async function loadOwnerProfitability(
   const invoiceWhere = invoiceBranchWhere(branchId);
   const payoutWhere = payoutBranchWhere(branchId);
 
-  const [invoices, payouts] = await Promise.all([
+  const [invoices, payouts, teamPayRows] = await Promise.all([
     db.invoice.findMany({
       where: invoiceWhere,
       select: {
@@ -231,6 +269,13 @@ export async function loadOwnerProfitability(
         platformFee: true,
         status: true,
         paidAt: true,
+      },
+    }),
+    db.jobTeamCompensation.findMany({
+      where: teamPayBranchWhere(branchId),
+      select: {
+        amountCents: true,
+        status: true,
       },
     }),
   ]);
@@ -270,5 +315,6 @@ export async function loadOwnerProfitability(
       status: p.status,
       paidAt: p.paidAt,
     })),
+    teamPayRows,
   });
 }
