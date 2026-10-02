@@ -51,6 +51,14 @@ describe('GET /api/admin/finance/owner-profitability', () => {
         costsComplete: false,
       },
       disclaimer: 'Invoiced is not the same as collected.',
+      teamPay: {
+        owed: 0,
+        paid: 0,
+        owedCents: 0,
+        paidCents: 0,
+        owedCount: 0,
+        paidCount: 0,
+      },
       counts: {
         issuedInvoiceCount: 1,
         draftInvoiceCount: 0,

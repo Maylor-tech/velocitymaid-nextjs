@@ -15,6 +15,22 @@ describe('adminScope — owner profitability access', () => {
     ).toBe(true);
   });
 
+  it('allows branch-scoped job team compensation APIs but still blocks payouts', () => {
+    expect(
+      isPathAllowedForBranchScopedAdminApi(
+        '/api/admin/jobs/job-1/team-compensation'
+      )
+    ).toBe(true);
+    expect(
+      isPathAllowedForBranchScopedAdminApi(
+        '/api/admin/jobs/job-1/team-compensation/pay'
+      )
+    ).toBe(true);
+    expect(
+      isPathAllowedForBranchScopedAdminApi('/api/admin/jobs/job-1/payout/run')
+    ).toBe(false);
+  });
+
   it('still blocks unrelated finance APIs for branch-scoped admins', () => {
     expect(
       isPathAllowedForBranchScopedAdminApi('/api/admin/finance/overview')
