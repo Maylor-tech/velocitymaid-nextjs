@@ -160,8 +160,8 @@ export default function AddCleaningPage() {
         onSubmit={handleSubmit}
         className="space-y-4 rounded-xl border border-vm-navy/10 bg-vm-white p-6 shadow-sm"
       >
-        <label className="block font-body text-sm text-vm-muted">
-          Cleaning / service date
+        <label className="block font-body text-sm font-semibold text-vm-navy">
+          Cleaning date
           <input
             type="date"
             required
@@ -169,9 +169,10 @@ export default function AddCleaningPage() {
             value={preferredDate}
             onChange={(e) => setPreferredDate(e.target.value)}
           />
-          <span className="mt-1 block text-xs text-vm-muted">
-            Day our team should clean — often the guest checkout/turnover day,
-            but enter the actual service date even if it differs.
+          <span className="mt-1 block text-xs font-normal text-vm-muted">
+            When should VelocityMaid service the property? This is the service /
+            turnover day — often the guest checkout day, but enter the actual
+            service date even if it differs.
           </span>
         </label>
 
@@ -186,26 +187,29 @@ export default function AddCleaningPage() {
         </label>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <label className="block font-body text-sm text-vm-muted">
-            Guest check-in date
-            <input
-              type="date"
-              className={inputClass}
-              value={guestCheckInDate}
-              onChange={(e) => setGuestCheckInDate(e.target.value)}
-            />
-            <span className="mt-1 block text-xs text-vm-muted">Optional</span>
-          </label>
-          <label className="block font-body text-sm text-vm-muted">
-            Guest checkout date
+          <label className="block font-body text-sm font-semibold text-vm-navy">
+            Guest checkout
             <input
               type="date"
               className={inputClass}
               value={guestCheckOutDate}
               onChange={(e) => setGuestCheckOutDate(e.target.value)}
             />
-            <span className="mt-1 block text-xs text-vm-muted">
-              Optional — Stay Card uses this when set
+            <span className="mt-1 block text-xs font-normal text-vm-muted">
+              When are the departing guests expected to leave? Optional — Stay
+              Card uses this when set.
+            </span>
+          </label>
+          <label className="block font-body text-sm font-semibold text-vm-navy">
+            Guest check-in
+            <input
+              type="date"
+              className={inputClass}
+              value={guestCheckInDate}
+              onChange={(e) => setGuestCheckInDate(e.target.value)}
+            />
+            <span className="mt-1 block text-xs font-normal text-vm-muted">
+              When are the arriving guests expected? Optional.
             </span>
           </label>
         </div>
@@ -294,10 +298,10 @@ export default function AddCleaningPage() {
           {submitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Scheduling…
+              Submitting request…
             </>
           ) : (
-            'Schedule Cleaning'
+            'Request Cleaning'
           )}
         </button>
       </form>

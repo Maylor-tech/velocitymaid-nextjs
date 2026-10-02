@@ -20,6 +20,12 @@ import {
 } from '@/lib/customer/marketSupport';
 import { formatServiceDate, serviceDateKey } from '@/lib/dates/serviceDate';
 import { isCompletedCustomerJob, tipUrlForJob } from '@/lib/tips/tipLinks';
+import {
+  getHostAttentionItems,
+  HOST_REQUEST_CONFIRMATION,
+  HOST_EMPTY_STATE,
+  type HostAttentionJob,
+} from '@/lib/customer/hostAttention';
 
 interface CustomerJob {
   id: string;
@@ -30,6 +36,8 @@ interface CustomerJob {
   serviceType?: string;
   scheduledDate?: string;
   timeWindow?: string;
+  guestCheckInDate?: string;
+  guestCheckOutDate?: string;
   address: string;
   price: number | null;
   balanceDue?: number | null;
@@ -69,6 +77,11 @@ function formatShortDateTime(dateStr?: string, timeWindow?: string): string {
     day: 'numeric',
   });
   return timeWindow ? `${datePart} · ${timeWindow}` : datePart;
+}
+
+function formatGuestDate(dateStr?: string): string | null {
+  if (!dateStr) return null;
+  return formatServiceDate(dateStr, { month: 'short', day: 'numeric' });
 }
 
 function countdownLabel(dateStr?: string): string | null {
@@ -217,6 +230,14 @@ function CustomerJobsPage() {
   const tipHint = searchParams.get('needTipJob') === '1';
   const jobs = activeTab === 'upcoming' ? upcomingJobs : pastJobs;
   const countdown = countdownLabel(nextJob?.scheduledDate);
+  const attentionItems = useMemo(
+    () =>
+      getHostAttentionItems([
+        ...upcomingJobs,
+        ...pastJobs,
+      ] as HostAttentionJob[]),
+    [upcomingJobs, pastJobs]
+  );
 
   useEffect(() => {
     if (tipHint) setActiveTab('past');
@@ -241,8 +262,11 @@ function CustomerJobsPage() {
 
       {justCreated && (
         <div className="rounded-xl border border-vm-success/30 bg-vm-success-bg p-4">
-          <p className="text-sm font-body text-vm-success">
-            Request received. It is listed under My Jobs — we will confirm the schedule shortly.
+          <p className="text-sm font-heading font-semibold text-vm-success">
+            {HOST_REQUEST_CONFIRMATION.title}
+          </p>
+          <p className="mt-0.5 text-sm font-body text-vm-success">
+            {HOST_REQUEST_CONFIRMATION.detail}
           </p>
         </div>
       )}
@@ -295,6 +319,20 @@ function CustomerJobsPage() {
           <p className="mt-1 text-sm text-vm-white/60 font-body">
             {formatShortDateTime(nextJob.scheduledDate, nextJob.timeWindow)}
           </p>
+          {(nextJob.guestCheckOutDate || nextJob.guestCheckInDate) && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {nextJob.guestCheckOutDate && (
+                <span className="rounded-full bg-vm-white/10 px-3 py-1 text-xs font-body text-vm-white/80">
+                  Guest checkout · {formatGuestDate(nextJob.guestCheckOutDate)}
+                </span>
+              )}
+              {nextJob.guestCheckInDate && (
+                <span className="rounded-full bg-vm-white/10 px-3 py-1 text-xs font-body text-vm-white/80">
+                  Guest check-in · {formatGuestDate(nextJob.guestCheckInDate)}
+                </span>
+              )}
+            </div>
+          )}
           {nextJob.cleaner && (
             <div className="mt-5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -328,18 +366,56 @@ function CustomerJobsPage() {
         </div>
       ) : (
         <div className="rounded-2xl border border-vm-border bg-vm-white p-6 text-center shadow-sm">
-          <p className="font-heading font-semibold text-vm-navy">No upcoming cleans scheduled</p>
+          <p className="font-heading font-semibold text-vm-navy">
+            {bookingCta.isHostCta
+              ? HOST_EMPTY_STATE.title
+              : 'No upcoming cleans scheduled'}
+          </p>
           <p className="mt-1 text-sm text-vm-muted font-body">
             {bookingCta.isHostCta
-              ? 'Request your next cleaning from this property.'
+              ? HOST_EMPTY_STATE.detail
               : 'Book your next service in minutes.'}
           </p>
           <Link
             href={bookingCta.href}
             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-vm-navy px-5 py-2.5 text-sm font-heading font-semibold text-vm-white"
           >
-            {bookingCta.isHostCta ? 'Request Cleaning' : 'Book a clean'}
+            {bookingCta.isHostCta ? HOST_EMPTY_STATE.ctaLabel : 'Book a clean'}
           </Link>
+        </div>
+      )}
+
+      {/* Needs attention — actionable host items only */}
+      {attentionItems.length > 0 && (
+        <div className="rounded-2xl border border-vm-warning/30 bg-vm-warning-bg p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-vm-warning" />
+            <h2 className="font-heading text-sm font-bold text-vm-navy">
+              Needs attention
+            </h2>
+          </div>
+          <ul className="space-y-2">
+            {attentionItems.map((item, idx) => (
+              <li key={`${item.jobId}-${item.kind}-${idx}`}>
+                <Link
+                  href={item.href}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-vm-border bg-vm-white px-4 py-3 hover:shadow-sm transition-shadow"
+                >
+                  <span className="min-w-0">
+                    <span className="block font-heading text-sm font-semibold text-vm-navy">
+                      {item.title}
+                    </span>
+                    <span className="block text-xs font-body text-vm-muted">
+                      {item.detail}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-sm font-body font-medium text-vm-cyan-dark">
+                    Review →
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

@@ -31,8 +31,8 @@ import {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication and get session
-    const auth = await requireRole(request, "CUSTOMER");
+    // Verify authentication and get session (throws a 401/403 Response if not)
+    await requireRole(request, "CUSTOMER");
     const session = await getCustomerSession();
     if (!session) {
       return NextResponse.json(
@@ -119,6 +119,9 @@ export async function GET(request: NextRequest) {
         serviceType: job.serviceType || undefined,
         scheduledDate: job.preferredDate?.toISOString() || undefined,
         timeWindow: job.preferredTime || undefined,
+        // Guest stay dates are independent of the service date (preferredDate).
+        guestCheckInDate: job.guestCheckInDate?.toISOString() || undefined,
+        guestCheckOutDate: job.guestCheckOutDate?.toISOString() || undefined,
         address: job.address || job.serviceLocation || 'Address not provided',
         price: job.quotedTotal
           ? Number(job.quotedTotal)
