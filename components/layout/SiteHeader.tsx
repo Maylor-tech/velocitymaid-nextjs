@@ -6,6 +6,10 @@ import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { BrandLogo } from "@/components/brand";
 import { cn } from "@/lib/utils";
+import {
+  FAST_ESTIMATE_CTA_LABEL,
+  FAST_ESTIMATE_PATH,
+} from "@/lib/marketing/publicCtas";
 
 const LOCATIONS = [
   { href: "/new-jersey", label: "New Jersey" },
@@ -23,7 +27,8 @@ export interface SiteHeaderProps {
     | "Host Intake"
     | "Book Cleaning"
     | "Request a Quote"
-    | "Request a Walkthrough";
+    | "Request a Walkthrough"
+    | "Get a Fast Estimate";
 }
 
 function isNavActive(href: string, pathname: string): boolean {
@@ -47,8 +52,8 @@ const ctaClassName =
 
 export default function SiteHeader({
   homeAnchors = false,
-  bookingHref = "/lead/new-jersey",
-  bookingLabel = "Book Now",
+  bookingHref = FAST_ESTIMATE_PATH,
+  bookingLabel = FAST_ESTIMATE_CTA_LABEL,
 }: SiteHeaderProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);

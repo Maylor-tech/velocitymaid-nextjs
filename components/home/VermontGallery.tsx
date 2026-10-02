@@ -152,10 +152,10 @@ export default function VermontGallery({
             ))}
           </div>
           <Link
-            href="/vermont/host-intake"
+            href="/estimate"
             className="bg-vm-cyan text-vm-navy font-heading font-semibold text-sm px-5 py-2.5 rounded-lg hover:bg-vm-cyan-dark transition-colors flex-shrink-0"
           >
-            Get a quote →
+            Get a Fast Estimate →
           </Link>
         </div>
       </div>

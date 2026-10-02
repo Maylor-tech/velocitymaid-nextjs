@@ -33,7 +33,7 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <SiteHeader bookingHref="/book?branch=new-jersey" />
+      <SiteHeader />
       <main>
         <section className="bg-vm-navy px-5 py-16 text-center sm:py-20">
           <p className="mb-3 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-vm-cyan">
@@ -96,14 +96,14 @@ export default function GalleryPage() {
             book residential cleaning online.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/vermont/host-intake" className={primaryButton}>
-              Book Property Care
+            <Link href="/estimate" className={primaryButton}>
+              Get a Fast Estimate
             </Link>
             <Link
-              href="/book?branch=new-jersey"
+              href="/lead/new-jersey"
               className="inline-flex items-center justify-center rounded-md border border-white/40 px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-white transition hover:border-vm-cyan hover:text-vm-cyan"
             >
-              Book NJ Cleaning
+              Request a New Jersey quote
             </Link>
           </div>
         </section>

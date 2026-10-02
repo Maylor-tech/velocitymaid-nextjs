@@ -12,7 +12,7 @@ export default function NotFound() {
           <h1 className="text-6xl font-bold text-vm-text mb-4">404</h1>
           <h2 className="text-3xl font-bold text-vm-text mb-4">Page Not Found</h2>
           <p className="text-xl text-vm-muted mb-8">
-            Oops! The page you're looking for doesn't exist or has been moved.
+            Oops! The page you&apos;re looking for doesn&apos;t exist or has been moved.
           </p>
         </div>
 
@@ -37,8 +37,8 @@ export default function NotFound() {
           <Link href="/" className="text-vm-muted hover:text-vm-cyan-dark transition">
             Home
           </Link>
-          <Link href="/book" className="text-vm-muted hover:text-vm-cyan-dark transition">
-            Book Now
+          <Link href="/estimate" className="text-vm-muted hover:text-vm-cyan-dark transition">
+            Get a Fast Estimate
           </Link>
           <Link href="/gallery" className="text-vm-muted hover:text-vm-cyan-dark transition">
             Gallery

@@ -12,6 +12,10 @@ import {
 } from "@/lib/vermont/middleburyPhotos";
 import { VERMONT_TESTIMONIALS } from "@/lib/marketing/testimonials";
 import { VERMONT_SUPPORT } from "@/lib/customer/marketSupport";
+import {
+  FAST_ESTIMATE_CTA_LABEL,
+  FAST_ESTIMATE_PATH,
+} from "@/lib/marketing/publicCtas";
 
 const primaryButton =
   "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
@@ -123,7 +127,10 @@ export function VermontHostMarketing({ children }: { children: React.ReactNode }
 
   return (
     <div className="min-h-screen bg-white">
-      <SiteHeader bookingHref="#walkthrough" bookingLabel="Request a Quote" />
+      <SiteHeader
+        bookingHref={FAST_ESTIMATE_PATH}
+        bookingLabel={FAST_ESTIMATE_CTA_LABEL}
+      />
       <main>
         <section className="bg-vm-navy px-5 py-16 text-center sm:py-20">
           <p className="font-body text-xs font-bold uppercase tracking-[0.24em] text-vm-cyan">
@@ -137,7 +144,10 @@ export function VermontHostMarketing({ children }: { children: React.ReactNode }
             documented turnovers, property-specific standards, and local operational support.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
-            <Link href="#walkthrough" className={primaryButton}>
+            <Link href={FAST_ESTIMATE_PATH} className={primaryButton}>
+              {FAST_ESTIMATE_CTA_LABEL}
+            </Link>
+            <Link href="#walkthrough" className={outlineButton}>
               Request a walkthrough
             </Link>
             <a href={phoneHref} className={outlineButton}>

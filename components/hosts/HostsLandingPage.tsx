@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   CalendarDays,
@@ -19,6 +20,10 @@ import { HostSetupRequestForm } from "@/components/hosts/HostSetupRequestForm";
 import { VERMONT_TESTIMONIALS } from "@/lib/marketing/testimonials";
 import { VERMONT_SUPPORT } from "@/lib/customer/marketSupport";
 import { trackEvent } from "@/lib/analytics/trackEvent";
+import {
+  FAST_ESTIMATE_CTA_LABEL,
+  FAST_ESTIMATE_PATH,
+} from "@/lib/marketing/publicCtas";
 import {
   attributionAnalyticsParams,
   mergeAttributionFirstTouch,
@@ -268,7 +273,10 @@ export function HostsLandingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <SiteHeader bookingHref="#setup-request" bookingLabel="Request a Quote" />
+      <SiteHeader
+        bookingHref={FAST_ESTIMATE_PATH}
+        bookingLabel={FAST_ESTIMATE_CTA_LABEL}
+      />
       <Suspense fallback={null}>
         <HostsAnalyticsBootstrap />
       </Suspense>
@@ -286,9 +294,16 @@ export function HostsLandingPage() {
             rentals—so the next guest arrives to a home that feels ready.
           </p>
           <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href={FAST_ESTIMATE_PATH}
+              className={primaryButton}
+              onClick={() => trackCta("hero_fast_estimate")}
+            >
+              {FAST_ESTIMATE_CTA_LABEL}
+            </Link>
             <a
               href="#setup-request"
-              className={primaryButton}
+              className={outlineButton}
               onClick={() => trackCta("hero_request_setup")}
             >
               Request Property Setup
@@ -350,9 +365,16 @@ export function HostsLandingPage() {
             Request property setup or call us directly for Vermont turnover support.
           </p>
           <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href={FAST_ESTIMATE_PATH}
+              className={primaryButton}
+              onClick={() => trackCta("final_fast_estimate")}
+            >
+              {FAST_ESTIMATE_CTA_LABEL}
+            </Link>
             <a
               href="#setup-request"
-              className={primaryButton}
+              className={outlineButton}
               onClick={() => trackCta("final_request_setup")}
             >
               Request Property Setup

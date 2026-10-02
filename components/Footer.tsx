@@ -26,6 +26,11 @@ export default function Footer() {
             <h4 className={footerHeadingClass}>Resources</h4>
             <ul className="space-y-2 text-sm font-body">
               <li>
+                <Link href="/estimate" className={footerLinkClass}>
+                  Get a Fast Estimate
+                </Link>
+              </li>
+              <li>
                 <Link href="/hosts" className={footerLinkClass}>
                   Hosts
                 </Link>
