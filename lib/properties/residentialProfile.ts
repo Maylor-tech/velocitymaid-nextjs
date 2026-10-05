@@ -1,8 +1,31 @@
-import type { Prisma, PrismaClient, Property } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import type { ResidentialIntakePayload } from "@/lib/residentialIntake/types";
-import { findPropertyForCustomerAddress } from "@/lib/properties/propertyService";
+import { addressesMatch } from "@/lib/properties/normalizeAddress";
 
 type Db = PrismaClient | Prisma.TransactionClient;
+
+/** Core property scalars used by residential intake. Omits stay-QR columns so
+ * this path does not depend on later guest-access migrations. */
+const RESIDENTIAL_PROPERTY_SELECT = {
+  id: true,
+  customerId: true,
+  name: true,
+  address: true,
+  city: true,
+  state: true,
+  bedrooms: true,
+  bathrooms: true,
+  approximateSquareFeet: true,
+  accessType: true,
+  trashInstructions: true,
+  standingInstructions: true,
+  useType: true,
+  billingPolicy: true,
+} satisfies Prisma.PropertySelect;
+
+export type ResidentialIntakeProperty = Prisma.PropertyGetPayload<{
+  select: typeof RESIDENTIAL_PROPERTY_SELECT;
+}>;
 
 function parseIntOrNull(value: string | undefined): number | null {
   if (!value?.trim()) return null;
@@ -52,13 +75,18 @@ export async function createOrUpdatePropertyFromResidentialIntake(
   db: Db,
   customerId: string,
   payload: ResidentialIntakePayload
-): Promise<Property> {
+): Promise<ResidentialIntakeProperty> {
   const address = payload.serviceAddress.trim();
   if (!address) {
     throw new Error("serviceAddress is required to persist Property");
   }
 
-  const existing = await findPropertyForCustomerAddress(db, customerId, address);
+  const candidates = await db.property.findMany({
+    where: { customerId },
+    select: { id: true, name: true, address: true },
+  });
+  const existing =
+    candidates.find((p) => addressesMatch(p.address, address)) ?? null;
   const propertyData = {
     name: defaultPropertyName(payload),
     address,
@@ -83,12 +111,14 @@ export async function createOrUpdatePropertyFromResidentialIntake(
               ? existing.name
               : propertyData.name,
         },
+        select: RESIDENTIAL_PROPERTY_SELECT,
       })
     : await db.property.create({
         data: {
           customerId,
           ...propertyData,
         },
+        select: RESIDENTIAL_PROPERTY_SELECT,
       });
 
   const profile = profileDataFromIntake(payload);
