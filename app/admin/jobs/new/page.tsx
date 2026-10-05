@@ -20,6 +20,7 @@ const VERMONT_SERVICES = [
   "Move-In Cleaning",
   "Move-Out Cleaning",
   "Property Readiness",
+  "Residential Cleaning",
   "Emergency Response Cleaning",
   "Property Walkthrough",
   "Office Prep",
