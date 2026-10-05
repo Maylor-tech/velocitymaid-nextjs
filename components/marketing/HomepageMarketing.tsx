@@ -142,6 +142,9 @@ export function HomepageMarketing() {
               <Link href="/hosts" className={outlineNavyButton}>
                 Request Property Setup
               </Link>
+              <Link href="/residential" className={outlineNavyButton}>
+                Vermont Homes
+              </Link>
               <Link href="/vermont" className={outlineNavyButton}>
                 Explore Vermont
               </Link>

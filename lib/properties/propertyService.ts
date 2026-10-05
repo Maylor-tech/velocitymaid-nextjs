@@ -140,6 +140,7 @@ export type HostPropertyView = {
   city: string | null;
   state: string | null;
   postalCode: string | null;
+  useType: string;
   bedrooms: number | null;
   bathrooms: number | null;
   approximateSquareFeet: number | null;
@@ -167,6 +168,7 @@ export function toHostPropertyView(property: Property): HostPropertyView {
     city: property.city,
     state: property.state,
     postalCode: property.postalCode,
+    useType: property.useType === 'RESIDENTIAL' ? 'RESIDENTIAL' : 'HOST',
     bedrooms: property.bedrooms,
     bathrooms: property.bathrooms,
     approximateSquareFeet: property.approximateSquareFeet,

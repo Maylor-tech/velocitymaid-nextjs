@@ -75,6 +75,7 @@ export default function SiteHeader({
       ]
     : [
         { href: "/hosts", label: "Hosts" },
+        { href: "/residential", label: "Homes" },
         { href: "/pricing", label: "Pricing" },
         { href: "/contact", label: "Contact" },
         { href: "/partners", label: "Partners" },

@@ -4,11 +4,14 @@
  */
 
 export const HOST_ATTRIBUTION_STORAGE_KEY = "vm_host_attribution_v1";
+export const RESIDENTIAL_ATTRIBUTION_STORAGE_KEY = "vm_residential_attribution_v1";
 
 export const VM_ATTRIBUTION_START = "[VM_ATTRIBUTION v1]";
 export const VM_ATTRIBUTION_END = "[/VM_ATTRIBUTION]";
 export const VM_SETUP_REQUEST_START = "[VM_SETUP_REQUEST v1]";
 export const VM_SETUP_REQUEST_END = "[/VM_SETUP_REQUEST]";
+export const VM_RESIDENTIAL_INTAKE_START = "[VM_RESIDENTIAL_INTAKE v1]";
+export const VM_RESIDENTIAL_INTAKE_END = "[/VM_RESIDENTIAL_INTAKE]";
 
 export type HostAttribution = {
   landing: string;
@@ -22,6 +25,14 @@ export type HostAttribution = {
 export type HostSetupRequestMeta = {
   town: string;
   interest: string;
+  submitted_at: string;
+};
+
+export type ResidentialIntakeMeta = {
+  service_type: string;
+  frequency: string;
+  city: string;
+  condition_flags: string;
   submitted_at: string;
 };
 
@@ -118,6 +129,18 @@ export function formatSetupRequestBlock(meta: HostSetupRequestMeta): string {
   ].join("\n");
 }
 
+export function formatResidentialIntakeBlock(meta: ResidentialIntakeMeta): string {
+  return [
+    VM_RESIDENTIAL_INTAKE_START,
+    `service_type=${meta.service_type || ""}`,
+    `frequency=${meta.frequency || ""}`,
+    `city=${meta.city || ""}`,
+    `condition_flags=${meta.condition_flags || ""}`,
+    `submitted_at=${meta.submitted_at || ""}`,
+    VM_RESIDENTIAL_INTAKE_END,
+  ].join("\n");
+}
+
 function parseKeyedBlock(
   notes: string | null | undefined,
   start: string,
@@ -166,6 +189,7 @@ export function stripStructuredBlocks(notes: string | null | undefined): string 
   };
   strip(VM_ATTRIBUTION_START, VM_ATTRIBUTION_END);
   strip(VM_SETUP_REQUEST_START, VM_SETUP_REQUEST_END);
+  strip(VM_RESIDENTIAL_INTAKE_START, VM_RESIDENTIAL_INTAKE_END);
   return result.trim();
 }
 
@@ -178,6 +202,7 @@ export function mergeLeadNotes(options: {
   freeText?: string | null;
   attribution?: HostAttribution | null;
   setupRequest?: HostSetupRequestMeta | null;
+  residentialIntake?: ResidentialIntakeMeta | null;
 }): string {
   const existingAttr = parseAttributionFromNotes(options.existingNotes);
   const mergedAttr = mergeAttributionFirstTouch(existingAttr, options.attribution);
@@ -204,6 +229,26 @@ export function mergeLeadNotes(options: {
           town: existingSetup.town || "",
           interest: existingSetup.interest || "",
           submitted_at: existingSetup.submitted_at || "",
+        })
+      );
+    }
+  }
+  if (options.residentialIntake) {
+    parts.push(formatResidentialIntakeBlock(options.residentialIntake));
+  } else {
+    const existingResidential = parseKeyedBlock(
+      options.existingNotes,
+      VM_RESIDENTIAL_INTAKE_START,
+      VM_RESIDENTIAL_INTAKE_END
+    );
+    if (existingResidential) {
+      parts.push(
+        formatResidentialIntakeBlock({
+          service_type: existingResidential.service_type || "",
+          frequency: existingResidential.frequency || "",
+          city: existingResidential.city || "",
+          condition_flags: existingResidential.condition_flags || "",
+          submitted_at: existingResidential.submitted_at || "",
         })
       );
     }
@@ -286,6 +331,32 @@ export function writeStoredAttribution(attr: HostAttribution): void {
     const existing = readStoredAttribution();
     const merged = mergeAttributionFirstTouch(existing, attr);
     sessionStorage.setItem(HOST_ATTRIBUTION_STORAGE_KEY, JSON.stringify(merged));
+  } catch {
+    // sessionStorage may be unavailable
+  }
+}
+
+export function readStoredResidentialAttribution(): HostAttribution | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(RESIDENTIAL_ATTRIBUTION_STORAGE_KEY);
+    if (!raw) return null;
+    return parseAttributionFromUnknown(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+export function writeStoredResidentialAttribution(attr: HostAttribution): void {
+  if (typeof window === "undefined") return;
+  if (!hasAttribution(attr)) return;
+  try {
+    const existing = readStoredResidentialAttribution();
+    const merged = mergeAttributionFirstTouch(existing, attr);
+    sessionStorage.setItem(
+      RESIDENTIAL_ATTRIBUTION_STORAGE_KEY,
+      JSON.stringify(merged)
+    );
   } catch {
     // sessionStorage may be unavailable
   }

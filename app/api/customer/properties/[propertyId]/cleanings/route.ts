@@ -10,6 +10,10 @@ import { awaitJobGoogleSync } from '@/lib/google/jobGoogleSync';
 import { parseServiceDateInput } from '@/lib/dates/serviceDate';
 import { resolveBillingPolicy } from '@/lib/billing/billingPolicy';
 import { notifyHostCleaningRequestCreated } from '@/lib/notifications/hostCleaningRequestNotify';
+import { sendHostRequestReceivedEmail } from '@/lib/email/sendHostRequestReceivedEmail';
+import { notifyResidentialCleaningRequestCreated } from '@/lib/notifications/residentialIntakeNotify';
+import { RESIDENTIAL_CLEANING_SERVICE_TYPES } from '@/lib/residentialIntake/constants';
+import { isResidentialProperty } from '@/lib/properties/residentialProfile';
 import {
   buildHostCleaningJobNotes,
   buildPropertyDefaultsForJob,
@@ -107,9 +111,14 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       }
     }
 
+    const residential = isResidentialProperty(property);
+    const allowedServiceTypes = residential
+      ? RESIDENTIAL_CLEANING_SERVICE_TYPES
+      : HOST_CLEANING_SERVICE_TYPES;
+
     if (
       !serviceType ||
-      !(HOST_CLEANING_SERVICE_TYPES as readonly string[]).includes(serviceType)
+      !(allowedServiceTypes as readonly string[]).includes(serviceType)
     ) {
       return NextResponse.json(
         { success: false, error: 'Invalid serviceType' },
@@ -117,7 +126,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       );
     }
 
-    if (sameDayTurnover && !checkInDeadline) {
+    if (!residential && sameDayTurnover && !checkInDeadline) {
       return NextResponse.json(
         {
           success: false,
@@ -165,16 +174,23 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     const defaults = buildPropertyDefaultsForJob(property);
     const customerName =
       `${customer.firstName} ${customer.lastName}`.trim() || session.email;
-    const internalNotes = buildHostCleaningJobNotes({
-      preferredDate,
-      preferredTime: preferredTime || null,
-      serviceType,
-      sameDayTurnover,
-      checkInDeadline: checkInDeadline || null,
-      jobSpecificNotes: jobSpecificNotes || null,
-      guestCheckInDate,
-      guestCheckOutDate,
-    });
+    const internalNotes = residential
+      ? [
+          '[Source: RESIDENTIAL_PORTAL]',
+          jobSpecificNotes || null,
+        ]
+          .filter(Boolean)
+          .join('\n')
+      : buildHostCleaningJobNotes({
+          preferredDate,
+          preferredTime: preferredTime || null,
+          serviceType,
+          sameDayTurnover,
+          checkInDeadline: checkInDeadline || null,
+          jobSpecificNotes: jobSpecificNotes || null,
+          guestCheckInDate,
+          guestCheckOutDate,
+        });
 
     const jobReference = await nextVmReference();
     const billingPolicy = resolveBillingPolicy({
@@ -195,8 +211,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         serviceType,
         preferredDate,
         preferredTime: preferredTime || null,
-        guestCheckInDate,
-        guestCheckOutDate,
+        guestCheckInDate: residential ? null : guestCheckInDate,
+        guestCheckOutDate: residential ? null : guestCheckOutDate,
         currency: 'USD',
         status: 'RECEIVED',
         paymentStatus: 'PENDING',
@@ -236,24 +252,73 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     // notification writes never landed in production (HOST_CLEANING_REQUEST = 0).
     // Email failure must not fail HTTP; opsAlert metadata is returned so the
     // write is observable even when it fails.
-    let notify: Awaited<ReturnType<typeof notifyHostCleaningRequestCreated>> | null =
-      null;
+    let opsAlert: {
+      type: string;
+      ok: boolean;
+      created: boolean;
+      id: string | null;
+      error?: string;
+    } = {
+      type: residential ? 'RESIDENTIAL_CLEANING_REQUEST' : 'HOST_CLEANING_REQUEST',
+      ok: false,
+      created: false,
+      id: null,
+      error: 'notify threw before returning',
+    };
+    let requestReceivedEmail: {
+      sent: boolean;
+      skipped: boolean;
+      skippedReason?: string;
+    } = {
+      sent: false,
+      skipped: false,
+      skippedReason: 'notify threw before returning',
+    };
+
     try {
-      notify = await notifyHostCleaningRequestCreated({
-        jobId: job.id,
-        jobReference: job.jobReference,
-        customerName,
-        customerEmail: customer.email || session.email,
-        customerFirstName: customer.firstName,
-        propertyName: property.name,
-        address: defaults.address,
-        preferredDate,
-        preferredTime: preferredTime || null,
-        serviceType,
-      });
+      if (residential) {
+        const residentialAlert = await notifyResidentialCleaningRequestCreated({
+          jobId: job.id,
+          jobReference: job.jobReference,
+          customerName,
+          address: defaults.address,
+        });
+        opsAlert = residentialAlert;
+        const email = await sendHostRequestReceivedEmail({
+          to: customer.email || session.email,
+          customerFirstName: customer.firstName,
+          propertyName: property.name,
+          address: defaults.address,
+          preferredDate,
+          preferredTime: preferredTime || null,
+          serviceType,
+          jobReference: job.jobReference,
+          jobId: job.id,
+        });
+        requestReceivedEmail = {
+          sent: email.sent,
+          skipped: Boolean(email.skippedReason),
+          skippedReason: email.skippedReason,
+        };
+      } else {
+        const notify = await notifyHostCleaningRequestCreated({
+          jobId: job.id,
+          jobReference: job.jobReference,
+          customerName,
+          customerEmail: customer.email || session.email,
+          customerFirstName: customer.firstName,
+          propertyName: property.name,
+          address: defaults.address,
+          preferredDate,
+          preferredTime: preferredTime || null,
+          serviceType,
+        });
+        opsAlert = notify.opsAlert;
+        requestReceivedEmail = notify.email;
+      }
     } catch (notifyError) {
       console.error(
-        '[customer/properties/:id/cleanings] host request notify failed',
+        '[customer/properties/:id/cleanings] request notify failed',
         notifyError
       );
     }
@@ -274,18 +339,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         paymentStatus: job.paymentStatus,
         billingPolicy: job.billingPolicy,
       },
-      opsAlert: notify?.opsAlert ?? {
-        type: 'HOST_CLEANING_REQUEST',
-        ok: false,
-        created: false,
-        id: null,
-        error: 'notify threw before returning',
-      },
-      requestReceivedEmail: notify?.email ?? {
-        sent: false,
-        skipped: false,
-        skippedReason: 'notify threw before returning',
-      },
+      opsAlert,
+      requestReceivedEmail,
     });
   } catch (error: unknown) {
     const message =

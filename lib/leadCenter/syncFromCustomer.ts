@@ -1,6 +1,12 @@
 import type { Customer, LeadStatus, PipelineLeadStage, PrismaClient } from '@prisma/client';
 import type { HostIntakePayload, HostSetupRequestPayload } from '@/lib/hostIntake/types';
+import type { ResidentialIntakePayload } from '@/lib/residentialIntake/types';
 import { mergeLeadNotes } from '@/lib/hostIntake/attribution';
+import {
+  RESIDENTIAL_LEAD_SOURCE,
+  RESIDENTIAL_PROPERTY_TYPE,
+} from '@/lib/residentialIntake/constants';
+import { residentialLeadFreeText } from '@/lib/residentialIntake/formatSubmission';
 import { leadStatusToStage, stageToLeadStatus } from './stages';
 
 function parseIntOrNull(value: string | undefined): number | null {
@@ -107,6 +113,80 @@ export async function upsertPipelineLeadFromIntake(
     propertyType,
     leadSource,
     stage: 'INTAKE_RECEIVED' as const,
+    notes: notes || null,
+  };
+
+  if (existing) {
+    return prisma.pipelineLead.update({
+      where: { id: existing.id },
+      data,
+    });
+  }
+
+  return prisma.pipelineLead.create({ data });
+}
+
+const HOST_LEAD_MARKERS = [
+  'Hosts landing (/hosts)',
+  'Vacation rental / Airbnb',
+];
+
+/** Upsert a pipeline card from /residential intake. Does not clobber host leads. */
+export async function upsertPipelineLeadFromResidentialIntake(
+  prisma: PrismaClient,
+  customer: Customer,
+  payload: ResidentialIntakePayload
+) {
+  const name = `${customer.firstName} ${customer.lastName}`.trim() || payload.fullName;
+  const existing = await prisma.pipelineLead.findUnique({
+    where: { customerId: customer.id },
+  });
+
+  const keepHostIdentity =
+    Boolean(existing) &&
+    (HOST_LEAD_MARKERS.includes(existing!.leadSource || '') ||
+      HOST_LEAD_MARKERS.includes(existing!.propertyType || ''));
+
+  const notes = mergeLeadNotes({
+    existingNotes: existing?.notes,
+    freeText: residentialLeadFreeText(payload),
+    attribution: payload.attribution,
+    residentialIntake: {
+      service_type: payload.serviceType,
+      frequency: payload.frequency,
+      city: payload.city,
+      condition_flags: payload.conditionFlags.join(','),
+      submitted_at: new Date().toISOString(),
+    },
+  });
+
+  const recurring =
+    payload.frequency === 'Weekly' ||
+    payload.frequency === 'Biweekly' ||
+    payload.frequency === 'Monthly';
+
+  const data = {
+    customerId: customer.id,
+    name,
+    phone: customer.phone || payload.phone || '',
+    email: customer.email,
+    propertyAddress: keepHostIdentity
+      ? existing!.propertyAddress || payload.serviceAddress
+      : payload.serviceAddress,
+    bedrooms: keepHostIdentity
+      ? existing!.bedrooms
+      : parseIntOrNull(payload.bedrooms),
+    bathrooms: keepHostIdentity
+      ? existing!.bathrooms
+      : parseIntOrNull(payload.bathrooms),
+    propertyType: keepHostIdentity
+      ? existing!.propertyType
+      : RESIDENTIAL_PROPERTY_TYPE,
+    leadSource: keepHostIdentity
+      ? existing!.leadSource
+      : existing?.leadSource || RESIDENTIAL_LEAD_SOURCE,
+    stage: 'INTAKE_RECEIVED' as const,
+    isRecurring: existing?.isRecurring || recurring,
     notes: notes || null,
   };
 
