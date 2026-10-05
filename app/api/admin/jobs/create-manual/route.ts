@@ -26,6 +26,7 @@ import { nextVmReference } from "@/lib/billing/numbering";
 import { awaitJobGoogleSync } from "@/lib/google/jobGoogleSync";
 import { protectOperationalPrice } from "@/lib/pricing/processingPolicy";
 import { roundMoney } from "@/lib/pricing/money";
+import { resolveBillingPolicy } from "@/lib/billing/billingPolicy";
 import {
   findPropertyForCustomerAddress,
   loadPropertyById,
@@ -71,6 +72,9 @@ interface ManualJobBody {
 
   internalNotes?: string;
   marketLabel?: string;
+  estimatedLaborHours?: number;
+  actualLaborHours?: number;
+  pricingBasis?: string;
 }
 
 function isJobStatus(value: unknown): value is JobStatus {
@@ -176,7 +180,7 @@ export async function POST(request: NextRequest) {
 
     let customer = await prisma.customer.findUnique({
       where: { email: clientEmail },
-      select: { id: true },
+      select: { id: true, billingPolicy: true },
     });
 
     const customerAddressData = {
@@ -198,7 +202,7 @@ export async function POST(request: NextRequest) {
           phone: clientPhone,
           ...customerAddressData,
         },
-        select: { id: true },
+        select: { id: true, billingPolicy: true },
       });
       geocodeCustomerInBackground(customer.id);
     } else {
@@ -333,11 +337,13 @@ export async function POST(request: NextRequest) {
 
     // Link Property when explicitly provided or when customer+address match uniquely.
     let propertyConnect: { connect: { id: string } } | undefined;
+    let linkedProperty: Awaited<ReturnType<typeof loadPropertyById>> = null;
     const explicitPropertyId = body.propertyId?.trim();
     if (explicitPropertyId) {
       const owned = await loadPropertyById(prisma, explicitPropertyId);
       if (owned && owned.customerId === customer.id) {
         propertyConnect = { connect: { id: owned.id } };
+        linkedProperty = owned;
       }
     } else {
       const matched = await findPropertyForCustomerAddress(
@@ -347,8 +353,25 @@ export async function POST(request: NextRequest) {
       );
       if (matched) {
         propertyConnect = { connect: { id: matched.id } };
+        linkedProperty = matched;
       }
     }
+
+    const billingPolicy = resolveBillingPolicy({
+      propertyPolicy: linkedProperty?.billingPolicy ?? null,
+      customerPolicy: customer.billingPolicy,
+    });
+    const estimatedLaborHours =
+      typeof body.estimatedLaborHours === "number" &&
+      Number.isFinite(body.estimatedLaborHours)
+        ? body.estimatedLaborHours
+        : null;
+    const actualLaborHours =
+      typeof body.actualLaborHours === "number" &&
+      Number.isFinite(body.actualLaborHours)
+        ? body.actualLaborHours
+        : null;
+    const pricingBasis = body.pricingBasis?.trim() || null;
 
     const job = await prisma.job.create({
       data: {
@@ -364,6 +387,10 @@ export async function POST(request: NextRequest) {
         preferredDate,
         preferredTime,
         currency: "USD",
+        billingPolicy,
+        estimatedLaborHours,
+        actualLaborHours,
+        pricingBasis,
         totalPrice: totalAmount,
         quotedTotal: totalAmount,
         ...(operationalTotal != null ? { operationalTotal } : {}),

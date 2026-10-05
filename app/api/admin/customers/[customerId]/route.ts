@@ -1,7 +1,7 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { TravelZone } from '@prisma/client';
+import { BillingPolicy, TravelZone } from '@prisma/client';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import { geocodeCustomerInBackground } from '@/lib/geocoding/geocodeCustomer';
@@ -34,7 +34,19 @@ export async function GET(
         archivedAt: true,
         archivedBy: true,
         recordKind: true,
+        billingPolicy: true,
         Branch: { select: { name: true, slug: true } },
+        Property: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            city: true,
+            useType: true,
+            ResidentialProfile: true,
+          },
+          orderBy: { createdAt: 'asc' },
+        },
         _count: { select: { Job: true, Invoice: true } },
       },
     });
@@ -75,6 +87,7 @@ export async function PATCH(
       city?: string | null;
       state?: string | null;
       defaultAddress?: string | null;
+      billingPolicy?: BillingPolicy;
       updatedAt: Date;
     } = { updatedAt: new Date() };
 
@@ -86,6 +99,12 @@ export async function PATCH(
       } else {
         return NextResponse.json({ success: false, error: 'Invalid travel zone' }, { status: 400 });
       }
+    }
+
+    if (body.billingPolicy === 'PREPAY' || body.billingPolicy === 'INVOICE_AFTER_SERVICE') {
+      data.billingPolicy = body.billingPolicy;
+    } else if (body.billingPolicy !== undefined) {
+      return NextResponse.json({ success: false, error: 'Invalid billing policy' }, { status: 400 });
     }
 
     if (body.addressLine1 !== undefined) data.addressLine1 = body.addressLine1?.trim() || null;
@@ -108,6 +127,7 @@ export async function PATCH(
         city: true,
         state: true,
         defaultAddress: true,
+        billingPolicy: true,
       },
     });
 

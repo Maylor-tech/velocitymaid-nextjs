@@ -1,7 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getCustomerSession } from '@/lib/customerSession';
 import { prisma } from '@/lib/prisma';
 import { resolveMarketSupportForCustomer } from '@/lib/customer/marketSupport';
@@ -16,7 +16,7 @@ import { resolveAuthenticatedBookingCta } from '@/lib/customer/requestCleaningCt
  *
  * GET /api/customer/me
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getCustomerSession();
 
@@ -43,7 +43,11 @@ export async function GET(request: NextRequest) {
         city: true,
         state: true,
         billingPolicy: true,
-        Property: { select: { id: true }, take: 2, orderBy: { createdAt: 'asc' } },
+        Property: {
+          select: { id: true, useType: true },
+          take: 20,
+          orderBy: { createdAt: 'asc' },
+        },
         Branch: {
           select: {
             slug: true,
@@ -81,9 +85,17 @@ export async function GET(request: NextRequest) {
       null;
 
     const properties = customer.Property ?? [];
+    const hostPropertyCount = properties.filter(
+      (property) => property.useType !== 'RESIDENTIAL'
+    ).length;
+    const residentialPropertyCount = properties.filter(
+      (property) => property.useType === 'RESIDENTIAL'
+    ).length;
     const bookingCta = resolveAuthenticatedBookingCta({
       propertyCount: properties.length >= 2 ? 2 : properties.length,
       firstPropertyId: properties[0]?.id ?? null,
+      hostPropertyCount,
+      residentialPropertyCount,
     });
 
     return NextResponse.json({

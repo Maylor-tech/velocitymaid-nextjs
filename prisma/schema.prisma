@@ -347,6 +347,8 @@ model Property {
   turnoverFrequency      String?
   sameDayTurnovers       String?
   standingInstructions   String?
+  /// Null = treat as HOST (legacy STR profiles).
+  useType                PropertyUseType?
   /// Null = inherit Customer.billingPolicy.
   billingPolicy          BillingPolicy?
   /// Opaque guest stay QR token. Not Property.id. Rotatable / revocable.
@@ -359,6 +361,7 @@ model Property {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   Customer               Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  ResidentialProfile     PropertyResidentialProfile?
   Job                    Job[]
   Tip                    Tip[]
   ServiceFeedback        ServiceFeedback[]
@@ -366,7 +369,42 @@ model Property {
 
   @@index([customerId])
   @@index([customerId, address])
+  @@index([useType])
   @@map("properties")
+}
+
+/// Standing residential-home profile. Recurrence is documented only — each
+/// service remains an explicit Job. Not used for vacation-rental hosts.
+model PropertyResidentialProfile {
+  id                         String    @id @default(cuid())
+  propertyId                 String    @unique
+  serviceType                String?
+  frequency                  String?
+  preferredServiceDate       String?
+  preferredContactMethod     String?
+  petsNotes                  String?
+  occupancyApprox            Int?
+  accessParkingNotes         String?
+  suppliesProvidedBy         String?
+  trashRequirements          String?
+  laundryRequested           Boolean?
+  bedMakingRequested         Boolean?
+  lastProfessionalClean      String?
+  specialInstructions        String?
+  conditionFlags             String[]  @default([])
+  conditionOther             String?
+  estimatedLaborHours        Decimal?  @db.Decimal(6, 2)
+  agreedPrice                Decimal?  @db.Decimal(10, 2)
+  pricingBasis               String?
+  includedScope              String?
+  exclusions                 String?
+  preExistingConditionNotes  String?
+  approvedAddOns             Json?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+  Property                   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_residential_profiles")
 }
 
 model FranchiseApplication {
@@ -466,6 +504,12 @@ model Job {
   paymentStatus            PaymentStatus              @default(PENDING)
   /// Snapshot at Job create. Null = treat as PREPAY (legacy / Stripe bookings).
   billingPolicy            BillingPolicy?
+  /// Admin-recorded residential labor estimate (hours). Distinct from dispatch duration.
+  estimatedLaborHours      Decimal?                   @db.Decimal(6, 2)
+  /// Admin-recorded actual labor hours after service.
+  actualLaborHours         Decimal?                   @db.Decimal(6, 2)
+  /// RECURRING_FLAT | DEEP_CLEAN_QUOTE | HOURLY | MIXED
+  pricingBasis             String?
   reviewStatus             JobReviewStatus            @default(PENDING)
   depositPaymentIntentId   String?
   balanceSessionId         String?                    @unique
@@ -1705,6 +1749,11 @@ enum PaymentStatus {
 enum BillingPolicy {
   PREPAY
   INVOICE_AFTER_SERVICE
+}
+
+enum PropertyUseType {
+  HOST
+  RESIDENTIAL
 }
 
 enum JobReviewStatus {

@@ -27,9 +27,29 @@ interface CustomerProfile {
   archivedAt: string | null;
   archivedBy: string | null;
   recordKind: 'STANDARD' | 'SYSTEM' | 'TEST';
+  billingPolicy?: 'PREPAY' | 'INVOICE_AFTER_SERVICE';
   jobCount?: number;
   invoiceCount?: number;
   Branch: { name: string; slug: string } | null;
+  Property?: Array<{
+    id: string;
+    name: string;
+    address: string;
+    city: string | null;
+    useType: 'HOST' | 'RESIDENTIAL' | null;
+    ResidentialProfile: {
+      id: string;
+      estimatedLaborHours: string | number | null;
+      agreedPrice: string | number | null;
+      pricingBasis: string | null;
+      includedScope: string | null;
+      exclusions: string | null;
+      preExistingConditionNotes: string | null;
+      conditionFlags: string[];
+      frequency: string | null;
+      serviceType: string | null;
+    } | null;
+  }>;
   portal?: {
     portalInviteSent: boolean;
     inviteAccepted: boolean;
@@ -45,9 +65,14 @@ export default function AdminCustomerProfilePage() {
   const customerId = params.customerId;
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
   const [travelZone, setTravelZone] = useState<TravelZone | ''>('');
+  const [billingPolicy, setBillingPolicy] = useState<'PREPAY' | 'INVOICE_AFTER_SERVICE'>('PREPAY');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingProfileId, setSavingProfileId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [profileDrafts, setProfileDrafts] = useState<
+    Record<string, { estimatedLaborHours: string; agreedPrice: string; pricingBasis: string; includedScope: string; exclusions: string; preExistingConditionNotes: string }>
+  >({});
 
   const load = () =>
     fetch(`/api/admin/customers/${customerId}`, { credentials: 'include' })
@@ -56,6 +81,20 @@ export default function AdminCustomerProfilePage() {
         if (d.success) {
           setCustomer(d.customer);
           setTravelZone(d.customer.travelZone || '');
+          setBillingPolicy(d.customer.billingPolicy || 'PREPAY');
+          const drafts: Record<string, { estimatedLaborHours: string; agreedPrice: string; pricingBasis: string; includedScope: string; exclusions: string; preExistingConditionNotes: string }> = {};
+          for (const property of d.customer.Property ?? []) {
+            if (property.useType !== 'RESIDENTIAL') continue;
+            drafts[property.id] = {
+              estimatedLaborHours: property.ResidentialProfile?.estimatedLaborHours?.toString() ?? '',
+              agreedPrice: property.ResidentialProfile?.agreedPrice?.toString() ?? '',
+              pricingBasis: property.ResidentialProfile?.pricingBasis ?? '',
+              includedScope: property.ResidentialProfile?.includedScope ?? '',
+              exclusions: property.ResidentialProfile?.exclusions ?? '',
+              preExistingConditionNotes: property.ResidentialProfile?.preExistingConditionNotes ?? '',
+            };
+          }
+          setProfileDrafts(drafts);
         }
       });
 
@@ -71,12 +110,23 @@ export default function AdminCustomerProfilePage() {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ travelZone: travelZone || null }),
+        body: JSON.stringify({
+          travelZone: travelZone || null,
+          billingPolicy,
+        }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
-      setCustomer((c) => (c ? { ...c, travelZone: data.customer.travelZone } : c));
-      setMessage('Travel zone saved.');
+      setCustomer((c) =>
+        c
+          ? {
+              ...c,
+              travelZone: data.customer.travelZone,
+              billingPolicy: data.customer.billingPolicy,
+            }
+          : c
+      );
+      setMessage('Customer saved.');
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Save failed');
     } finally {
@@ -260,6 +310,177 @@ export default function AdminCustomerProfilePage() {
             </p>
           </div>
 
+          <div>
+            <label className={labelClass} htmlFor="billingPolicy">
+              Billing policy
+            </label>
+            <select
+              id="billingPolicy"
+              className={inputClass}
+              value={billingPolicy}
+              onChange={(e) =>
+                setBillingPolicy(e.target.value as 'PREPAY' | 'INVOICE_AFTER_SERVICE')
+              }
+            >
+              <option value="PREPAY">PREPAY — payment before assignment</option>
+              <option value="INVOICE_AFTER_SERVICE">
+                INVOICE_AFTER_SERVICE — assign while payment pending
+              </option>
+            </select>
+            <p className="mt-2 font-body text-xs text-vm-muted">
+              Approve residential clients here, then send a portal invite. Public
+              intake does not set invoice-after-service automatically.
+            </p>
+          </div>
+
+          {(customer.Property ?? []).filter((p) => p.useType === 'RESIDENTIAL').map((property) => {
+            const draft = profileDrafts[property.id];
+            if (!draft) return null;
+            return (
+              <div key={property.id} className="rounded-lg border border-vm-border p-4">
+                <p className={labelClass}>Residential scope — {property.name}</p>
+                <p className="mb-3 font-body text-xs text-vm-muted">
+                  {property.address}
+                  {property.ResidentialProfile?.conditionFlags?.length
+                    ? ` · Conditions: ${property.ResidentialProfile.conditionFlags.join(', ')}`
+                    : ''}
+                </p>
+                <p className="mb-3 font-body text-xs text-vm-muted">
+                  Do not price deep cleans from bedroom count or square footage alone.
+                  A small one-bedroom can still need five or more hours when condition is severe.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <label className="font-body text-xs text-vm-muted">
+                    Estimated labor hours
+                    <input
+                      className={`${inputClass} mt-1`}
+                      value={draft.estimatedLaborHours}
+                      onChange={(e) =>
+                        setProfileDrafts((prev) => ({
+                          ...prev,
+                          [property.id]: { ...draft, estimatedLaborHours: e.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="font-body text-xs text-vm-muted">
+                    Agreed price
+                    <input
+                      className={`${inputClass} mt-1`}
+                      value={draft.agreedPrice}
+                      onChange={(e) =>
+                        setProfileDrafts((prev) => ({
+                          ...prev,
+                          [property.id]: { ...draft, agreedPrice: e.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="font-body text-xs text-vm-muted">
+                    Pricing basis
+                    <select
+                      className={`${inputClass} mt-1`}
+                      value={draft.pricingBasis}
+                      onChange={(e) =>
+                        setProfileDrafts((prev) => ({
+                          ...prev,
+                          [property.id]: { ...draft, pricingBasis: e.target.value },
+                        }))
+                      }
+                    >
+                      <option value="">Not set</option>
+                      <option value="RECURRING_FLAT">Recurring flat rate</option>
+                      <option value="DEEP_CLEAN_QUOTE">Deep-clean quote</option>
+                      <option value="HOURLY">Hourly</option>
+                      <option value="MIXED">Mixed</option>
+                    </select>
+                  </label>
+                </div>
+                <label className="mt-3 block font-body text-xs text-vm-muted">
+                  Included scope
+                  <textarea
+                    className={`${inputClass} mt-1`}
+                    rows={2}
+                    value={draft.includedScope}
+                    onChange={(e) =>
+                      setProfileDrafts((prev) => ({
+                        ...prev,
+                        [property.id]: { ...draft, includedScope: e.target.value },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="mt-3 block font-body text-xs text-vm-muted">
+                  Exclusions
+                  <textarea
+                    className={`${inputClass} mt-1`}
+                    rows={2}
+                    value={draft.exclusions}
+                    onChange={(e) =>
+                      setProfileDrafts((prev) => ({
+                        ...prev,
+                        [property.id]: { ...draft, exclusions: e.target.value },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="mt-3 block font-body text-xs text-vm-muted">
+                  Pre-existing property-condition notes
+                  <textarea
+                    className={`${inputClass} mt-1`}
+                    rows={2}
+                    value={draft.preExistingConditionNotes}
+                    onChange={(e) =>
+                      setProfileDrafts((prev) => ({
+                        ...prev,
+                        [property.id]: { ...draft, preExistingConditionNotes: e.target.value },
+                      }))
+                    }
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-vm-navy/15 px-4 py-2 font-heading text-xs font-semibold uppercase tracking-wider text-vm-navy"
+                  disabled={savingProfileId === property.id}
+                  onClick={async () => {
+                    setSavingProfileId(property.id);
+                    setMessage(null);
+                    try {
+                      const res = await fetch(
+                        `/api/admin/properties/${property.id}/residential-profile`,
+                        {
+                          method: 'PATCH',
+                          credentials: 'include',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            estimatedLaborHours: draft.estimatedLaborHours
+                              ? Number(draft.estimatedLaborHours)
+                              : null,
+                            agreedPrice: draft.agreedPrice ? Number(draft.agreedPrice) : null,
+                            pricingBasis: draft.pricingBasis || null,
+                            includedScope: draft.includedScope,
+                            exclusions: draft.exclusions,
+                            preExistingConditionNotes: draft.preExistingConditionNotes,
+                          }),
+                        }
+                      );
+                      const data = await res.json();
+                      if (!data.success) throw new Error(data.error);
+                      setMessage('Residential scope saved.');
+                    } catch (err) {
+                      setMessage(err instanceof Error ? err.message : 'Save failed');
+                    } finally {
+                      setSavingProfileId(null);
+                    }
+                  }}
+                >
+                  {savingProfileId === property.id ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Save residential scope
+                </button>
+              </div>
+            );
+          })}
+
           {message && <p className="font-body text-sm text-vm-muted">{message}</p>}
 
           <button
@@ -269,7 +490,7 @@ export default function AdminCustomerProfilePage() {
             className="inline-flex items-center gap-2 rounded-lg bg-vm-cyan px-5 py-2.5 font-heading text-sm font-semibold text-vm-navy hover:opacity-90 disabled:opacity-60"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Save travel zone
+            Save customer
           </button>
         </div>
       </div>
