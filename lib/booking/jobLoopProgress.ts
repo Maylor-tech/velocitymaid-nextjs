@@ -22,6 +22,7 @@ export type JobLoopInput = {
   billingPolicy?: string | null;
   dispatchOffersEnabled?: boolean;
   dispatchState?: DispatchUiState | null;
+  hasPayout?: boolean;
 };
 
 export type JobLoopProgress = {
@@ -86,7 +87,9 @@ export function getJobLoopProgress(
     return {
       step: 'PAID',
       label: 'Fully paid',
-      nextAction: 'Payout should be READY. Verify in Cleaner Payout section below.',
+      nextAction: job.hasPayout
+        ? 'Customer is paid. Mark the cleaner paid when you send their money.'
+        : 'Customer is paid. Cleaner payout record is missing — check Cleaner Payout below.',
       cleanerJobUrl: `/cleaner/jobs/${jobId}`,
       customerJobUrl: `/customer/jobs/${jobId}`,
       steps,

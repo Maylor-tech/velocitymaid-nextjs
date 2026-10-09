@@ -15,6 +15,7 @@ import {
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import { GuestReadyProcess } from "@/components/marketing/GuestReadyProcess";
+import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 import { MarketingTestimonials } from "@/components/marketing/MarketingTestimonials";
 import { HostSetupRequestForm } from "@/components/hosts/HostSetupRequestForm";
 import { VERMONT_TESTIMONIALS } from "@/lib/marketing/testimonials";
@@ -316,6 +317,7 @@ export function HostsLandingPage() {
 
         <TrustStrip />
         <GuestReadyProcess tone="light" />
+        <AfterTheClean />
         <ServicesSection />
         <ChecklistSection />
         <QualitySection />

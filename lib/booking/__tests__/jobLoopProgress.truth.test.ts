@@ -61,6 +61,20 @@ describe('jobLoopProgress truthfulness', () => {
     expect(loop.nextAction).not.toMatch(/Complete Job/);
   });
 
+  it('paid completed jobs do not claim payout is READY when no record exists', () => {
+    const loop = getJobLoopProgress('job-paid', {
+      status: 'COMPLETED',
+      paymentStatus: 'PAID',
+      reviewStatus: 'APPROVED',
+      assignedCleanerId: 'cleaner-1',
+      billingPolicy: 'INVOICE_AFTER_SERVICE',
+      hasPayout: false,
+    });
+    expect(loop.step).toBe('PAID');
+    expect(loop.nextAction).toMatch(/payout record is missing/i);
+    expect(loop.nextAction).not.toMatch(/Payout should be READY/);
+  });
+
   it('in-progress cleaner is told to Submit for QC, not Complete Job', () => {
     const loop = getJobLoopProgress('job-ip', {
       status: 'IN_PROGRESS',

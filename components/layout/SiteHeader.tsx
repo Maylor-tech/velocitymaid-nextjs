@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils";
 import {
   FAST_ESTIMATE_CTA_LABEL,
   FAST_ESTIMATE_PATH,
+  NJ_WORK_WITH_US_PATH,
+  VERMONT_WORK_WITH_US_LABEL,
+  VERMONT_WORK_WITH_US_PATH,
 } from "@/lib/marketing/publicCtas";
 
 const LOCATIONS = [
@@ -65,6 +68,10 @@ export default function SiteHeader({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const workWithUsPath = pathname.startsWith("/new-jersey")
+    ? NJ_WORK_WITH_US_PATH
+    : VERMONT_WORK_WITH_US_PATH;
+
   const navLinks = homeAnchors
     ? [
         { href: "/#services", label: "Services" },
@@ -72,6 +79,7 @@ export default function SiteHeader({
         { href: "/#testimonials", label: "Reviews" },
         { href: "/#pricing", label: "Pricing" },
         { href: "/#faq", label: "FAQ" },
+        { href: workWithUsPath, label: VERMONT_WORK_WITH_US_LABEL },
       ]
     : [
         { href: "/hosts", label: "Hosts" },
@@ -79,6 +87,7 @@ export default function SiteHeader({
         { href: "/pricing", label: "Pricing" },
         { href: "/contact", label: "Contact" },
         { href: "/partners", label: "Partners" },
+        { href: workWithUsPath, label: VERMONT_WORK_WITH_US_LABEL },
       ];
 
   return (
@@ -209,13 +218,6 @@ export default function SiteHeader({
               onClick={() => setMenuOpen(false)}
             >
               Customer Portal
-            </Link>
-            <Link
-              href="/cleaners/apply"
-              className="py-2 text-sm font-body text-white hover:text-vm-cyan transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              Apply as Specialist
             </Link>
           </nav>
         )}

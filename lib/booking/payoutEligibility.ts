@@ -68,7 +68,8 @@ export function computePayoutEligibility(job: EligibilityInput): PayoutEligibili
 
   return {
     eligible: true,
-    reason: 'Eligible — payout will be created automatically after balance is paid',
+    reason:
+      'Customer is paid and a cleaner is assigned, but no payout record exists yet. Create it from payouts or wait for the paid-job webhook.',
     payoutRecord: null,
   };
 }

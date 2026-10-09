@@ -89,6 +89,9 @@ export function JobOperationsCard({
   const isVermont = job.branch?.slug === 'vermont';
   const doneSteps = workflow.filter((s) => s.done).length;
   const showActiveDispatchBadges = !isTerminalStatus(job.status);
+  const closedPaid =
+    isTerminalStatus(job.status) &&
+    (job.paymentStatus === 'PAID' || job.paymentStatus === 'REFUNDED');
   const triage = getJobTriageReason(job);
 
   return (
@@ -135,8 +138,7 @@ export function JobOperationsCard({
             )}
           </div>
 
-          {/* Independent staffing + money read-outs (policy-derived) */}
-          <JobStaffingMoneyStrips job={job} />
+          {!closedPaid && <JobStaffingMoneyStrips job={job} />}
 
           <div>
             <Link
@@ -234,46 +236,48 @@ export function JobOperationsCard({
             )}
           </div>
 
-          {/* Workflow */}
-          <div>
-            <p className="mb-1.5 font-body text-xs font-semibold uppercase tracking-wide text-vm-muted">
-              Workflow · {doneSteps}/{workflow.length}
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {workflow.map((step) => (
-                <span
-                  key={step.id}
-                  title={step.label}
-                  className={`inline-flex items-center gap-1 rounded-md px-2 py-1 font-body text-[11px] ${
-                    step.done
-                      ? 'bg-vm-success-bg text-vm-success'
-                      : 'bg-vm-surface text-vm-muted'
-                  }`}
-                >
-                  {step.done ? (
-                    <CheckCircle2 className="h-3 w-3 shrink-0" />
-                  ) : (
-                    <Circle className="h-3 w-3 shrink-0" />
-                  )}
-                  <span className="hidden sm:inline">{step.label}</span>
-                </span>
-              ))}
-            </div>
-          </div>
+          {!closedPaid && (
+            <>
+              <div>
+                <p className="mb-1.5 font-body text-xs font-semibold uppercase tracking-wide text-vm-muted">
+                  Workflow · {doneSteps}/{workflow.length}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {workflow.map((step) => (
+                    <span
+                      key={step.id}
+                      title={step.label}
+                      className={`inline-flex items-center gap-1 rounded-md px-2 py-1 font-body text-[11px] ${
+                        step.done
+                          ? 'bg-vm-success-bg text-vm-success'
+                          : 'bg-vm-surface text-vm-muted'
+                      }`}
+                    >
+                      {step.done ? (
+                        <CheckCircle2 className="h-3 w-3 shrink-0" />
+                      ) : (
+                        <Circle className="h-3 w-3 shrink-0" />
+                      )}
+                      <span className="hidden sm:inline">{step.label}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
 
-          {/* Host communication */}
-          <div>
-            <p className="mb-1.5 flex items-center gap-1 font-body text-xs font-semibold uppercase tracking-wide text-vm-muted">
-              <MessageSquare className="h-3.5 w-3.5" /> Host communication
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <CommPill label="Booking" done={comms.bookingConfirmation} />
-              <CommPill label="Reminder" done={comms.preArrivalReminder} />
-              <CommPill label="Completion" done={comms.completionMessage} />
-              <CommPill label="Invoice" done={comms.invoiceSent} todo />
-              <CommPill label="Receipt" done={comms.receiptSent} />
-            </div>
-          </div>
+              <div>
+                <p className="mb-1.5 flex items-center gap-1 font-body text-xs font-semibold uppercase tracking-wide text-vm-muted">
+                  <MessageSquare className="h-3.5 w-3.5" /> Host communication
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <CommPill label="Booking" done={comms.bookingConfirmation} />
+                  <CommPill label="Reminder" done={comms.preArrivalReminder} />
+                  <CommPill label="Completion" done={comms.completionMessage} />
+                  <CommPill label="Invoice" done={comms.invoiceSent} todo />
+                  <CommPill label="Receipt" done={comms.receiptSent} />
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Actions */}

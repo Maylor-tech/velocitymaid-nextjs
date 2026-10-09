@@ -51,3 +51,6 @@ Thumbs.db
 
 # local photo ingest — never commit camera originals
 /_incoming/
+
+.local/
+

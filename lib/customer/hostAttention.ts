@@ -38,6 +38,7 @@ export interface HostAttentionJob {
   billingPolicy?: string | null;
   /** Service / turnover date (ISO) — NOT a guest stay date. */
   scheduledDate?: string | null;
+  invoicePayUrl?: string | null;
 }
 
 function isTerminal(status?: string | null): boolean {
@@ -55,8 +56,16 @@ function isTerminal(status?: string | null): boolean {
  */
 function paymentActuallyRequired(job: HostAttentionJob): boolean {
   if (job.paymentStatus === 'BALANCE_DUE') return true;
-  if (isTerminal(job.serviceStatus)) return false;
   const policy = resolveBillingPolicy({ jobPolicy: job.billingPolicy ?? undefined });
+  if (
+    job.serviceStatus === 'COMPLETED' &&
+    policy === 'INVOICE_AFTER_SERVICE' &&
+    (job.paymentStatus === 'PENDING' || job.paymentStatus === 'UNPAID') &&
+    Boolean(job.invoicePayUrl)
+  ) {
+    return true;
+  }
+  if (isTerminal(job.serviceStatus)) return false;
   if (policy !== 'PREPAY') return false;
   return job.paymentStatus === 'PENDING' || job.paymentStatus === 'FAILED';
 }
@@ -78,11 +87,13 @@ export function getHostAttentionItems(
       items.push({
         jobId: job.id,
         kind: 'payment',
-        title: balanceDue ? 'Balance due' : 'Payment needed',
+        title: balanceDue ? 'Balance due' : job.invoicePayUrl ? 'Pay for this cleaning' : 'Payment needed',
         detail: balanceDue
           ? 'Complete payment for your recent cleaning.'
-          : 'This cleaning is confirmed once payment is received.',
-        href,
+          : job.invoicePayUrl
+            ? 'The property is done. Pay by card or Zelle.'
+            : 'This cleaning is confirmed once payment is received.',
+        href: job.invoicePayUrl || href,
       });
     }
 

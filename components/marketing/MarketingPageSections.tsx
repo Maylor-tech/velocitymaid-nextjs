@@ -16,6 +16,8 @@ import {
   njCitiesHeroList,
   njCitiesShortList,
 } from "@/lib/markets/newJersey";
+import { NJ_WORK_WITH_US_PATH } from "@/lib/marketing/publicCtas";
+import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 
 const primaryButton =
   "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
@@ -166,9 +168,17 @@ export function NewJerseyBookingMockup({
             residential cleaning is our primary offer — with deep cleans and
             move-in/move-out when you need them.
           </p>
-          <Link href={NJ_LEAD_PATH} className={`${primaryButton} mt-8`}>
-            Request a quote
-          </Link>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link href={NJ_LEAD_PATH} className={primaryButton}>
+              Request a quote
+            </Link>
+            <Link
+              href={NJ_WORK_WITH_US_PATH}
+              className="inline-flex items-center justify-center rounded-md border border-white/40 px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-white transition hover:border-vm-cyan hover:text-vm-cyan"
+            >
+              Work with us
+            </Link>
+          </div>
         </section>
 
         <ValueStrip items={values} />
@@ -257,6 +267,8 @@ export function NewJerseyBookingMockup({
             )}
           </div>
         </section>
+
+        <AfterTheClean variant="home" />
 
         <section className="bg-vm-surface px-5 py-16 text-center">
           <div className="mx-auto max-w-xl rounded-xl border border-vm-border bg-white p-8">

@@ -11,6 +11,10 @@ import {
   resolveBillingPolicy,
   serviceStatusLabel,
 } from '@/lib/billing/billingPolicy';
+import {
+  customerInvoicePayPath,
+  isInvoiceOpenForPayment,
+} from '@/lib/customer/invoicePay';
 
 /**
  * GET /api/customer/jobs/[jobId]
@@ -22,7 +26,7 @@ export async function GET(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    const auth = await requireCustomerJobOwnership(request, params.jobId);
+    await requireCustomerJobOwnership(request, params.jobId);
     const session = await readCustomerSession();
     if (!session) throw new Error("Session not found after auth");
 
@@ -65,6 +69,13 @@ export async function GET(
             lastName: true,
             email: true,
             phone: true,
+          },
+        },
+        Invoice: {
+          select: {
+            publicToken: true,
+            status: true,
+            balanceDue: true,
           },
         },
       },
@@ -110,6 +121,19 @@ export async function GET(
     const total = subtotal !== null ? subtotal + fees : null;
 
     const billingPolicy = resolveBillingPolicy({ jobPolicy: job.billingPolicy });
+    const invoice = job.Invoice;
+    const invoicePayUrl =
+      job.status === 'COMPLETED' &&
+      isInvoiceOpenForPayment(
+        invoice
+          ? {
+              status: invoice.status,
+              balanceDue: Number(invoice.balanceDue),
+            }
+          : null
+      )
+        ? customerInvoicePayPath(invoice.publicToken)
+        : null;
 
     return NextResponse.json({
       success: true,
@@ -148,6 +172,7 @@ export async function GET(
         paymentStatus: job.paymentStatus,
         paymentStatusLabel: paymentStatusLabel(job.paymentStatus, billingPolicy),
         billingPolicy,
+        invoicePayUrl,
         reviewStatus: job.reviewStatus,
         rating: job.CleanerRating
           ? {
@@ -161,12 +186,15 @@ export async function GET(
         completedAt: job.completedAt?.toISOString() || undefined,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
     console.error('Get job details error:', error);
+    const message =
+      error instanceof Error ? error.message : 'Failed to fetch job details';
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch job details',
+        error: message,
       },
       { status: 500 }
     );

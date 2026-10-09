@@ -60,6 +60,16 @@ export default function Footer() {
                   Pricing
                 </Link>
               </li>
+              <li>
+                <Link href="/vermont/work-with-us" className={footerLinkClass}>
+                  Work with us — Vermont
+                </Link>
+              </li>
+              <li>
+                <Link href="/new-jersey/work-with-us" className={footerLinkClass}>
+                  Work with us — New Jersey
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

@@ -14,6 +14,7 @@ export interface BranchLandingNavProps {
   phone?: string;
   phoneDisplay?: string;
   email?: string;
+  extraNavLinks?: { href: string; label: string }[];
   maxWidthClass?: string;
   /**
    * @deprecated No longer rendered. The approved brand system uses one
@@ -38,6 +39,7 @@ export default function BranchLandingNav({
   phone,
   phoneDisplay,
   email,
+  extraNavLinks = [],
   maxWidthClass = "max-w-6xl",
 }: BranchLandingNavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -79,6 +81,11 @@ export default function BranchLandingNav({
               {secondaryLabel}
             </Link>
           )}
+          {extraNavLinks.map((link) => (
+            <Link key={link.href} href={link.href} className={navLinkClass}>
+              {link.label}
+            </Link>
+          ))}
           <Link href={bookingHref} className={ctaClassName}>
             {bookingLabel}
           </Link>
@@ -139,6 +146,16 @@ export default function BranchLandingNav({
                 {secondaryLabel}
               </Link>
             )}
+            {extraNavLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn("py-2", navLinkClass)}
+                onClick={() => setMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
             <Link
               href={bookingHref}
               className={cn("py-2", navLinkClass)}

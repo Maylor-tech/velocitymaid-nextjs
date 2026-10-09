@@ -22,6 +22,8 @@ import {
   FAST_ESTIMATE_CTA_LABEL,
   FAST_ESTIMATE_PATH,
   VERMONT_HOST_INTAKE_PATH,
+  VERMONT_WORK_WITH_US_LABEL,
+  VERMONT_WORK_WITH_US_PATH,
 } from "@/lib/marketing/publicCtas";
 
 export interface VermontClusterLandingProps {
@@ -42,6 +44,9 @@ export default function VermontClusterLanding({
         phoneDisplay="(802) 733-5348"
         email="hello@velocitymaid.com"
         marketTagline="vermont"
+        extraNavLinks={[
+          { href: VERMONT_WORK_WITH_US_PATH, label: VERMONT_WORK_WITH_US_LABEL },
+        ]}
       />
 
       <section className="bg-vm-navy">
@@ -231,6 +236,24 @@ export default function VermontClusterLanding({
           <HowItWorksSection />
         </section>
 
+        <section className="rounded-xl border border-vm-border bg-vm-navy p-6 sm:p-8">
+          <p className="text-vm-cyan text-xs font-semibold uppercase tracking-widest font-body mb-2">
+            Live nearby?
+          </p>
+          <h2 className="font-heading font-bold text-white text-xl mb-2">
+            We are hiring in this cluster
+          </h2>
+          <p className="text-sm text-white/70 font-body mb-4 max-w-2xl">
+            See the job, typical pay, and how you get paid — then apply.
+          </p>
+          <Link
+            href={VERMONT_WORK_WITH_US_PATH}
+            className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+          >
+            {VERMONT_WORK_WITH_US_LABEL}
+          </Link>
+        </section>
+
         <CtaSection clusterLabel={cluster.navLabel} />
 
         <section className="border-t border-vm-border pt-6 text-xs text-vm-muted font-body space-y-1">
@@ -370,6 +393,11 @@ function HowItWorksSection() {
         <li>
           <span className="font-semibold text-vm-navy">4. Quality control &amp; host communication:</span>{" "}
           Completion checks, documentation when included, and clear updates for the next arrival.
+        </li>
+        <li>
+          <span className="font-semibold text-vm-navy">5. Done + pay:</span>{" "}
+          You get photos and the invoice together. Pay by card or Zelle. We line up
+          the cleaner to be paid.
         </li>
       </ol>
     </div>

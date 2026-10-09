@@ -19,6 +19,10 @@ import {
   memberDisplayName,
   type TeamMemberDisplay,
 } from '@/lib/cleaners/teamDisplay';
+import {
+  customerInvoicePayPath,
+  isInvoiceOpenForPayment,
+} from '@/lib/customer/invoicePay';
 
 /**
  * GET /api/customer/jobs
@@ -74,6 +78,13 @@ export async function GET(request: NextRequest) {
               comment: true,
             },
           },
+          Invoice: {
+            select: {
+              publicToken: true,
+              status: true,
+              balanceDue: true,
+            },
+          },
         },
         orderBy: {
           preferredDate: type === 'upcoming' ? 'asc' : 'desc',
@@ -108,6 +119,19 @@ export async function GET(request: NextRequest) {
           }
         : null;
       const team = mergePrimaryWithTeam(primaryMember, teamMap.get(job.id) ?? []);
+      const invoice = job.Invoice;
+      const invoicePayUrl =
+        job.status === 'COMPLETED' &&
+        isInvoiceOpenForPayment(
+          invoice
+            ? {
+                status: invoice.status,
+                balanceDue: Number(invoice.balanceDue),
+              }
+            : null
+        )
+          ? customerInvoicePayPath(invoice?.publicToken)
+          : null;
 
       return {
         id: job.id,
@@ -147,6 +171,7 @@ export async function GET(request: NextRequest) {
         paymentStatus,
         paymentStatusLabel: paymentStatusLabel(paymentStatus, billingPolicy),
         billingPolicy,
+        invoicePayUrl,
         rating: job.CleanerRating
           ? {
               score: job.CleanerRating.rating,

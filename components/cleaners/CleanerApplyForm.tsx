@@ -22,6 +22,11 @@ import {
   validateCleanerApply,
 } from "@/lib/cleaners/validateCleanerApply";
 import { parseApplyMarket } from "@/lib/cleaners/applyMarket";
+import { PAYOUT_RULES } from "@/lib/payoutRules";
+import {
+  NJ_WORK_WITH_US_PATH,
+  VERMONT_WORK_WITH_US_PATH,
+} from "@/lib/marketing/publicCtas";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 
 interface Branch {
@@ -227,6 +232,29 @@ export default function CleanerApplyForm() {
               Apply to be a Cleaner
             </h1>
             <p className="font-body text-vm-muted text-base mt-2">{USA_SUBTITLE}</p>
+            {(market === "vermont" || market === "new-jersey") && (
+            <div className="mt-5 rounded-xl border border-vm-border bg-vm-surface px-4 py-3 text-left">
+              <p className="font-heading text-xs font-bold uppercase tracking-wider text-vm-navy">
+                How this work is paid
+              </p>
+              <p className="mt-1 font-body text-sm leading-relaxed text-vm-muted">
+                Independent contractor (1099). You earn{" "}
+                {Math.round(PAYOUT_RULES.cleanerPct * 100)}% of the job total.
+                Payout is queued after the job is marked complete, on a weekly
+                cycle. You handle taxes; we collect a W-9 once.
+              </p>
+              <Link
+                href={
+                  market === "vermont"
+                    ? VERMONT_WORK_WITH_US_PATH
+                    : NJ_WORK_WITH_US_PATH
+                }
+                className="mt-2 inline-block font-heading text-xs font-semibold text-vm-cyan-dark hover:underline"
+              >
+                Full job outline →
+              </Link>
+            </div>
+            )}
           </div>
 
           <Toast
