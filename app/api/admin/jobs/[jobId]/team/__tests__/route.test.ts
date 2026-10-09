@@ -11,6 +11,7 @@ const createMany = vi.fn();
 const jobUpdate = vi.fn();
 const loadJobTeamMembers = vi.fn();
 const awaitJobCalendarSync = vi.fn();
+const compensationFindMany = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...args: unknown[]) => requireRole(...args),
@@ -25,6 +26,9 @@ vi.mock('@/lib/prisma', () => ({
     jobTeamMember: {
       deleteMany: (...args: unknown[]) => deleteMany(...args),
       createMany: (...args: unknown[]) => createMany(...args),
+    },
+    jobTeamCompensation: {
+      findMany: (...args: unknown[]) => compensationFindMany(...args),
     },
   },
 }));
@@ -62,11 +66,12 @@ describe('GET/PUT /api/admin/jobs/[jobId]/team', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN' });
-    jobFindUnique.mockResolvedValue({ id: JOB_ID });
+    jobFindUnique.mockResolvedValue({ id: JOB_ID, branchId: 'branch-vt' });
     deleteMany.mockResolvedValue({ count: 0 });
     createMany.mockResolvedValue({ count: 0 });
     jobUpdate.mockResolvedValue({});
     loadJobTeamMembers.mockResolvedValue([]);
+    compensationFindMany.mockResolvedValue([]);
   });
 
   it('blocks unauthorized access', async () => {
@@ -192,12 +197,50 @@ describe('GET/PUT /api/admin/jobs/[jobId]/team', () => {
     expect(json.team).toHaveLength(1);
   });
 
-  it('GET blocks unauthorized access', async () => {
-    requireRole.mockRejectedValue(
-      NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    );
+  it('GET returns compensations alongside team', async () => {
+    loadJobTeamMembers.mockResolvedValue([{ id: BRIAN, name: 'Brian' }]);
+    compensationFindMany.mockResolvedValue([
+      {
+        id: 'comp-1',
+        jobId: JOB_ID,
+        cleanerId: DORI,
+        branchId: 'branch-vt',
+        amountCents: 10000,
+        currency: 'USD',
+        status: 'PAID',
+        paymentMethod: 'ZELLE',
+        paidAt: new Date('2026-10-02T12:00:00.000Z'),
+        paymentRef: 'zelle-1',
+        note: null,
+      },
+    ]);
     const res = await GET(getRequest(), { params: { jobId: JOB_ID } });
-    expect(res.status).toBe(401);
-    expect(loadJobTeamMembers).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.compensations).toHaveLength(1);
+    expect(json.compensations[0].amountCents).toBe(10000);
+    expect(json.compensations[0].status).toBe('PAID');
+  });
+
+  it('PUT replace never deletes JobTeamCompensation history', async () => {
+    await PUT(putRequest({ cleanerIds: [BRIAN] }), {
+      params: { jobId: JOB_ID },
+    });
+    expect(deleteMany).toHaveBeenCalledWith({ where: { jobId: JOB_ID } });
+    expect(deleteMany).toHaveBeenCalledTimes(1);
+    expect(compensationFindMany).toHaveBeenCalledWith({ where: { jobId: JOB_ID } });
+  });
+
+  it('branch-scoped admin cannot mutate another branch job team', async () => {
+    requireRole.mockResolvedValue({
+      userId: 'admin-nj',
+      role: 'ADMIN',
+      branchId: 'branch-nj',
+    });
+    const res = await PUT(putRequest({ cleanerIds: [BRIAN] }), {
+      params: { jobId: JOB_ID },
+    });
+    expect(res.status).toBe(404);
+    expect(deleteMany).not.toHaveBeenCalled();
   });
 });

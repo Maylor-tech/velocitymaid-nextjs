@@ -44,6 +44,14 @@ describe('ownerProfitabilityReadModel — $300 Vermont acceptance', () => {
     expect(snap.primary.cleanerPayable).toBe(195);
     expect(snap.primary.cleanerPaid).toBe(0);
     expect(snap.primary.platformGrossShare).toBe(105);
+    expect(snap.teamPay).toEqual({
+      owed: 0,
+      paid: 0,
+      owedCents: 0,
+      paidCents: 0,
+      owedCount: 0,
+      paidCount: 0,
+    });
     expect(snap.secondary.processingCost).toBeNull();
     expect(snap.secondary.processingCostLabel).toBe(NOT_RECORDED);
     expect(snap.secondary.directJobCosts).toBeNull();
@@ -264,16 +272,37 @@ describe('ownerProfitabilityReadModel — invoice and payout variants', () => {
     expect(a).toEqual(b);
   });
 
-  it('never invents processing fee or expenses', () => {
+  it('reports team assistant pay separately and never folds it into JobPayout KPIs or contribution', () => {
     const snap = computeOwnerProfitability({
       scope: vtScope,
-      invoices: [],
-      payments: [],
-      payouts: [],
+      invoices: [
+        { id: 'inv-1', total: 300, balanceDue: 0, status: InvoiceStatus.PAID },
+      ],
+      payments: [{ amount: 300, invoiceId: 'inv-1' }],
+      payouts: [
+        {
+          cleanerAmount: 195,
+          platformFee: 105,
+          status: 'READY',
+          paidAt: null,
+        },
+      ],
+      teamPayRows: [
+        { amountCents: 10000, status: 'OWED' },
+        { amountCents: 2500, status: 'PAID' },
+      ],
     });
-    expect(snap.secondary.processingCost).toBeNull();
+    expect(snap.primary.cleanerPayable).toBe(195);
+    expect(snap.primary.cleanerPaid).toBe(0);
+    expect(snap.teamPay.owed).toBe(100);
+    expect(snap.teamPay.paid).toBe(25);
+    expect(snap.teamPay.owedCents).toBe(10000);
+    expect(snap.teamPay.paidCents).toBe(2500);
     expect(snap.secondary.directJobCosts).toBeNull();
-    expect(snap.secondary.contributionProfit).toBeNull();
+    expect(snap.secondary.directJobCostsLabel).toBe(NOT_RECORDED);
+    expect(snap.secondary.contributionProfitLabel).toBe(UNAVAILABLE);
+    expect(snap.secondary.costsComplete).toBe(false);
+    expect(snap.disclaimer).toContain('Team assistant pay');
   });
 });
 
@@ -293,6 +322,9 @@ describe('loadOwnerProfitability — branch isolation + read-only', () => {
         paidAt: null,
       },
     ]);
+    const teamPayFindMany = vi.fn().mockResolvedValue([
+      { amountCents: 10000, status: 'OWED' },
+    ]);
     const create = vi.fn();
     const update = vi.fn();
     const updateMany = vi.fn();
@@ -301,6 +333,7 @@ describe('loadOwnerProfitability — branch isolation + read-only', () => {
       invoice: { findMany: invoiceFindMany, create, update, updateMany },
       invoicePayment: { findMany: paymentFindMany, create, update },
       jobPayout: { findMany: payoutFindMany, create, update },
+      jobTeamCompensation: { findMany: teamPayFindMany, create, update },
       receipt: { create },
       cleanerBalanceLedger: { create },
       job: { update },
@@ -317,6 +350,8 @@ describe('loadOwnerProfitability — branch isolation + read-only', () => {
     expect(snap.primary.invoicedRevenue).toBe(300);
     expect(snap.primary.collectedRevenue).toBe(300);
     expect(snap.primary.cleanerPayable).toBe(195);
+    expect(snap.teamPay.owed).toBe(100);
+    expect(snap.teamPay.paid).toBe(0);
 
     expect(invoiceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -332,6 +367,11 @@ describe('loadOwnerProfitability — branch isolation + read-only', () => {
         where: { branchId: 'branch-vt' },
       })
     );
+    expect(teamPayFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { branchId: 'branch-vt' },
+      })
+    );
 
     expect(create).not.toHaveBeenCalled();
     expect(update).not.toHaveBeenCalled();
@@ -341,15 +381,20 @@ describe('loadOwnerProfitability — branch isolation + read-only', () => {
   it('global mode omits branch filter on payouts', async () => {
     const invoiceFindMany = vi.fn().mockResolvedValue([]);
     const payoutFindMany = vi.fn().mockResolvedValue([]);
+    const teamPayFindMany = vi.fn().mockResolvedValue([]);
     const db = {
       invoice: { findMany: invoiceFindMany },
       invoicePayment: { findMany: vi.fn() },
       jobPayout: { findMany: payoutFindMany },
+      jobTeamCompensation: { findMany: teamPayFindMany },
     };
 
     const snap = await loadOwnerProfitability(db as never, { branchId: null });
     expect(snap.scope.mode).toBe('global');
     expect(payoutFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: {} })
+    );
+    expect(teamPayFindMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: {} })
     );
     expect(invoiceFindMany.mock.calls[0][0].where.OR).toBeUndefined();
@@ -358,19 +403,23 @@ describe('loadOwnerProfitability — branch isolation + read-only', () => {
   it('Vermont query shape cannot match NJ/Jamaica branch ids', async () => {
     const invoiceFindMany = vi.fn().mockResolvedValue([]);
     const payoutFindMany = vi.fn().mockResolvedValue([]);
+    const teamPayFindMany = vi.fn().mockResolvedValue([]);
     const db = {
       invoice: { findMany: invoiceFindMany },
       invoicePayment: { findMany: vi.fn() },
       jobPayout: { findMany: payoutFindMany },
+      jobTeamCompensation: { findMany: teamPayFindMany },
     };
 
     await loadOwnerProfitability(db as never, { branchId: 'branch-vt' });
 
     const invoiceWhere = invoiceFindMany.mock.calls[0][0].where;
     const payoutWhere = payoutFindMany.mock.calls[0][0].where;
+    const teamWhere = teamPayFindMany.mock.calls[0][0].where;
     expect(JSON.stringify(invoiceWhere)).toContain('branch-vt');
     expect(JSON.stringify(invoiceWhere)).not.toContain('branch-nj');
     expect(JSON.stringify(invoiceWhere)).not.toContain('jamaica');
     expect(payoutWhere).toEqual({ branchId: 'branch-vt' });
+    expect(teamWhere).toEqual({ branchId: 'branch-vt' });
   });
 });

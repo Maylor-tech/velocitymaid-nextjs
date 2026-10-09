@@ -44,6 +44,7 @@ model Branch {
   JamaicaPayout                     JamaicaPayout[]
   Job                               Job[]
   JobPayout                         JobPayout[]
+  JobTeamCompensation               JobTeamCompensation[]
   Lead                              Lead[]
   NurtureSequence                   NurtureSequence[]
   PayoutTransfer                    PayoutTransfer[]
@@ -558,6 +559,7 @@ model Job {
   CustomerJobChangeRequest CustomerJobChangeRequest[]
   JobChecklistItem         JobChecklistItem[]
   JobTeamMember            JobTeamMember[]
+  JobTeamCompensation      JobTeamCompensation[]
   CompletionReport         CompletionReport?
   Invoice                  Invoice?
   Receipts                 Receipt[]
@@ -731,6 +733,36 @@ model JobTeamMember {
   @@unique([jobId, cleanerId])
   @@index([jobId])
   @@index([cleanerId])
+}
+
+/// Assistant operating-expense ledger. Independent of JobPayout (primary cleaner)
+/// and of customer invoice / paymentStatus. Survives JobTeamMember replacement.
+model JobTeamCompensation {
+  id            String    @id @default(cuid())
+  jobId         String
+  cleanerId     String
+  branchId      String
+  /// Integer cents — never floating-point money.
+  amountCents   Int
+  currency      String    @default("USD")
+  /// OWED | PAID
+  status        String    @default("OWED")
+  /// ZELLE | CASH | CHECK | OTHER — set when recording payment.
+  paymentMethod String?
+  paidAt        DateTime?
+  paymentRef    String?
+  note          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  Job           Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  User          User      @relation(fields: [cleanerId], references: [id], onDelete: Restrict)
+  Branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, cleanerId])
+  @@index([jobId])
+  @@index([cleanerId])
+  @@index([branchId])
+  @@index([status])
 }
 
 model ReviewRequest {
@@ -1210,6 +1242,7 @@ model User {
   JamaicaPayout                       JamaicaPayout[]
   Job                                 Job[]
   JobPayout                           JobPayout[]
+  JobTeamCompensation                 JobTeamCompensation[]
   JobOfferAsCleaner                   JobOffer[]             @relation("JobOfferCleaner")
   JobOfferCreated                     JobOffer[]             @relation("JobOfferCreatedBy")
   JobOfferCancelled                   JobOffer[]             @relation("JobOfferCancelledBy")
