@@ -11,9 +11,6 @@ export function canShowPayBalance(job: PayBalanceJobSnapshot): boolean {
   const normalizedStatus = job.status.toUpperCase();
 
   if (normalizedStatus !== 'COMPLETED') return false;
-  if (normalizedStatus === 'CANCELLED' || normalizedStatus === 'CANCELLED_EMERGENCY') {
-    return false;
-  }
   if (job.reviewStatus === 'REJECTED') return false;
   if (job.billingPolicy === 'INVOICE_AFTER_SERVICE') return false;
   if (job.paymentStatus === 'PAID') return false;

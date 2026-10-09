@@ -140,7 +140,7 @@ export default function JobTeamSection({
 
   const save = async () => {
     const validated = validateAndBuildCleanerIds(draft);
-    if (!validated.ok) {
+    if (validated.ok === false) {
       onToast?.(validated.error, 'error');
       return;
     }

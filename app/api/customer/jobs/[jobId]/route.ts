@@ -26,7 +26,7 @@ export async function GET(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    const auth = await requireCustomerJobOwnership(request, params.jobId);
+    await requireCustomerJobOwnership(request, params.jobId);
     const session = await readCustomerSession();
     if (!session) throw new Error("Session not found after auth");
 
@@ -186,12 +186,15 @@ export async function GET(
         completedAt: job.completedAt?.toISOString() || undefined,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof Response) return error;
     console.error('Get job details error:', error);
+    const message =
+      error instanceof Error ? error.message : 'Failed to fetch job details';
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch job details',
+        error: message,
       },
       { status: 500 }
     );
