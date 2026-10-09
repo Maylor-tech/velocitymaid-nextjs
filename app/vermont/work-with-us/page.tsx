@@ -11,13 +11,20 @@ import {
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import { pageSocialMetadata } from "@/lib/seo/socialImages";
-import { calcPayout, PAYOUT_RULES } from "@/lib/payoutRules";
+import { calcPayout } from "@/lib/payoutRules";
 import {
   CLEANER_APPLY_VERMONT_PATH,
   FAST_ESTIMATE_CTA_LABEL,
   FAST_ESTIMATE_PATH,
   VERMONT_WORK_WITH_US_PATH,
 } from "@/lib/marketing/publicCtas";
+import {
+  RECRUITMENT_PAY_HEADING,
+  RECRUITMENT_PAY_OFFER_COPY,
+  RECRUITMENT_PAY_SCHEDULE_COPY,
+} from "@/lib/marketing/recruitmentPayCopy";
+import { readVermontFounderVideoEmbed } from "@/lib/marketing/founderVideo";
+import { FounderRecruitmentVideo } from "@/components/marketing/FounderRecruitmentVideo";
 
 const title = "Work with us in Vermont | VelocityMaid";
 const description =
@@ -53,7 +60,7 @@ function usd(amount: number) {
 const DAY_STEPS = [
   {
     title: "Accept the job",
-    text: "You see the property area, window, and your payout before you say yes. Nothing is assigned until you accept.",
+    text: RECRUITMENT_PAY_OFFER_COPY,
   },
   {
     title: "Drive and work the checklist",
@@ -76,11 +83,11 @@ const FAQS = [
   },
   {
     q: "How much do I earn?",
-    a: `You earn ${Math.round(PAYOUT_RULES.cleanerPct * 100)}% of the job total. On a typical $${HOST_TIERS[0].hostPrice} guest-ready turnover, that is about ${usd(calcPayout(HOST_TIERS[0].hostPrice).cleanerAmount)}. Larger homes and deep cleans pay more. You see the exact payout before you accept. Tips are extra.`,
+    a: `You earn ${RECRUITMENT_PAY_HEADING}. On a typical $${HOST_TIERS[0].hostPrice} guest-ready turnover, that is about ${usd(calcPayout(HOST_TIERS[0].hostPrice).cleanerAmount)}. Larger homes and deep cleans pay more. ${RECRUITMENT_PAY_OFFER_COPY} Tips are extra.`,
   },
   {
     q: "When do I get paid?",
-    a: "After the job is marked complete, your payout is queued. We pay on a weekly cycle. You will see ready vs paid in the cleaner app.",
+    a: RECRUITMENT_PAY_SCHEDULE_COPY,
   },
   {
     q: "Where do you actually need people?",
@@ -97,6 +104,8 @@ const FAQS = [
 ] as const;
 
 export default function VermontWorkWithUsPage() {
+  const founderVideo = readVermontFounderVideoEmbed();
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
@@ -176,6 +185,9 @@ export default function VermontWorkWithUsPage() {
                 See pay
               </a>
             </div>
+            {founderVideo ? (
+              <FounderRecruitmentVideo embed={founderVideo} className="mt-8" />
+            ) : null}
           </div>
         </section>
 
@@ -282,11 +294,12 @@ export default function VermontWorkWithUsPage() {
               id="pay-heading"
               className="font-heading text-3xl font-bold text-vm-navy"
             >
-              {Math.round(PAYOUT_RULES.cleanerPct * 100)}% of the job total
+              {RECRUITMENT_PAY_HEADING}
             </h2>
             <p className="mt-4 max-w-2xl font-body text-sm leading-relaxed text-vm-muted">
-              These examples use published host starting prices. Your exact payout
-              is shown on each job before you accept. Tips are separate and extra.
+              These examples use published host starting prices as the eligible
+              job amount. Offered jobs show the exact payout before you accept.
+              Tips are separate and extra.
             </p>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               {HOST_TIERS.map((tier) => {
@@ -312,8 +325,8 @@ export default function VermontWorkWithUsPage() {
             <div className="mt-6 flex items-start gap-3 rounded-xl border border-vm-border bg-vm-surface p-5">
               <DollarSign className="mt-0.5 h-5 w-5 shrink-0 text-vm-cyan-dark" aria-hidden />
               <p className="font-body text-sm leading-relaxed text-vm-text">
-                After the job is marked complete, payout is queued and paid on a
-                weekly cycle. 1099. W-9 once. You handle taxes. VelocityMaid is
+                After the job is marked complete, payout is queued and paid on
+                Fridays. 1099. W-9 once. You handle taxes. VelocityMaid is
                 founder-led and small — the work is real, and so is the pay
                 schedule.
               </p>
