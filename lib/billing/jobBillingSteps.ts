@@ -6,6 +6,7 @@ import {
   formatUsd,
 } from '@/lib/invoices/invoiceUtils';
 import { requireCommercialAmount } from '@/lib/billing/commercialAmount';
+import { syncZeroInvoiceFromJobPrice } from '@/lib/billing/syncZeroInvoiceFromJob';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
 import { sendInvoiceSentEmail } from '@/lib/email/invoiceEmails';
 import { recordInvoicePayment } from '@/lib/invoices/invoiceService';
@@ -320,6 +321,15 @@ export async function generateCompletionReportForJob(
 export async function generateInvoiceFromJob(jobId: string) {
   const job = await loadJobBillingContext(jobId);
   if (job.Invoice) {
+    if (decimalToNumber(job.Invoice.total) <= 0) {
+      const synced = await syncZeroInvoiceFromJobPrice(jobId);
+      if (synced.synced) {
+        return { invoice: synced.invoice, created: false, synced: true };
+      }
+      if (synced.invoice) {
+        return { invoice: synced.invoice, created: false, synced: false };
+      }
+    }
     return { invoice: serializeInvoice(job.Invoice), created: false };
   }
 

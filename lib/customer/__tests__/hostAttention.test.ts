@@ -40,6 +40,37 @@ describe('getHostAttentionItems', () => {
     expect(items.some((i) => i.kind === 'payment')).toBe(true);
   });
 
+  it('flags a completed invoice-after-service job that still needs invoice pay', () => {
+    const items = getHostAttentionItems([
+      job({
+        id: 'done-unpaid',
+        serviceStatus: 'COMPLETED',
+        billingPolicy: 'INVOICE_AFTER_SERVICE',
+        paymentStatus: 'PENDING',
+        invoicePayUrl: '/invoice/tok',
+      }),
+    ]);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      jobId: 'done-unpaid',
+      kind: 'payment',
+      title: 'Pay for this cleaning',
+      href: '/invoice/tok',
+    });
+  });
+
+  it('does not flag a completed invoice-after job with no pay link', () => {
+    const items = getHostAttentionItems([
+      job({
+        id: 'done-pending',
+        serviceStatus: 'COMPLETED',
+        billingPolicy: 'INVOICE_AFTER_SERVICE',
+        paymentStatus: 'PENDING',
+      }),
+    ]);
+    expect(items).toEqual([]);
+  });
+
   it('flags BALANCE_DUE even on a completed invoice-after-service job', () => {
     const items = getHostAttentionItems([
       job({

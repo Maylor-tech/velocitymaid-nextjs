@@ -145,6 +145,13 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted, jobStatus }: JobB
   if (!workflow) return null;
 
   const s = workflow.steps;
+  const doneKeys = STEP_ORDER.filter((key) => {
+    const step = s[key];
+    return 'state' in step && step.state === 'done';
+  });
+  const openKeys = STEP_ORDER.filter((key) => !doneKeys.includes(key));
+  const collapseDone = doneKeys.length >= 2 && openKeys.length > 0;
+  const visibleSteps = collapseDone ? openKeys : STEP_ORDER;
 
   return (
     <div className="rounded-xl border border-vm-border bg-vm-white p-6 shadow-sm">
@@ -168,8 +175,13 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted, jobStatus }: JobB
         <p className="mb-4 rounded-lg bg-vm-surface px-3 py-2 font-body text-sm text-vm-navy">{message}</p>
       )}
 
+      {collapseDone && (
+        <p className="mb-3 font-body text-xs text-vm-muted">
+          {doneKeys.map((key) => STEP_LABELS[key]).join(' · ')} — done
+        </p>
+      )}
       <ol className="mb-6 space-y-3">
-        {STEP_ORDER.map((key) => {
+        {visibleSteps.map((key) => {
           const step = s[key];
           const state = 'state' in step ? step.state : 'pending';
           return (
@@ -189,7 +201,11 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted, jobStatus }: JobB
                 {key === 'invoice' && s.invoice.invoiceNumber && (
                   <p className="font-body text-xs text-vm-muted">
                     #{s.invoice.invoiceNumber}
-                    {s.invoice.balanceDueFormatted ? ` · Due ${s.invoice.balanceDueFormatted}` : ''}
+                    {s.invoice.status === 'PAID' && s.invoice.totalFormatted
+                      ? ` · ${s.invoice.totalFormatted} paid`
+                      : s.invoice.balanceDueFormatted
+                        ? ` · Due ${s.invoice.balanceDueFormatted}`
+                        : ''}
                   </p>
                 )}
                 {key === 'payment' && s.payment.amountPaidFormatted && (

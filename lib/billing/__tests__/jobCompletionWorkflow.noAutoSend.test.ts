@@ -88,6 +88,7 @@ beforeEach(() => {
   // Return whatever status was requested at create time.
   invoiceCreate.mockImplementation(async ({ data }: { data: { status: string; sentAt: Date | null } }) => ({
     id: 'inv1',
+    publicToken: 'tok-draft',
     status: data.status,
     sentAt: data.sentAt,
     balanceDue: 300,
@@ -113,8 +114,14 @@ describe('runJobCompletionBillingWorkflow', () => {
     // Incident #001 C7: stamp scheduled calendar day, not completedAt (Aug 23).
     expect(createArg.data.jobDate.toISOString()).toBe('2026-08-25T00:00:00.000Z');
 
-    // Completion report email still sent; invoice send deferred (not dispatched).
+    // Completion report email still sent; invoice is not marked SENT (Incident #001).
+    // Pay link may be included on the completion email so the host can close in one message.
     expect(sendCompletionReportEmail).toHaveBeenCalledTimes(1);
+    expect(sendCompletionReportEmail.mock.calls[0][3]).toEqual(
+      expect.objectContaining({
+        invoiceViewUrl: expect.stringContaining('/invoice/tok-draft'),
+      })
+    );
     expect(result.invoiceSendDeferred).toBe(true);
     expect(result.emailResults.invoice?.sent).toBe(false);
     expect(result.emailResults.invoice?.skippedReason).toMatch(/draft/i);

@@ -46,6 +46,7 @@ interface CustomerJob {
   paymentStatus?: string;
   paymentStatusLabel?: string;
   billingPolicy?: string;
+  invoicePayUrl?: string | null;
 }
 
 interface CustomerProfile {
@@ -126,6 +127,9 @@ function paymentLine(job: CustomerJob): {
   text: string;
   className: string;
 } {
+  if (job.invoicePayUrl) {
+    return { text: 'Pay now', className: 'text-vm-cyan-dark text-xs font-body font-semibold' };
+  }
   if (job.paymentStatusLabel) {
     const paid = job.paymentStatus === 'PAID';
     const due =
@@ -457,12 +461,14 @@ function CustomerJobsPage() {
           jobs.map((job) => {
             const pay = paymentLine(job);
             return (
-              <Link
+              <div
                 key={job.id}
-                href={`/customer/jobs/${job.id}`}
                 className="flex items-center justify-between gap-4 rounded-xl border border-vm-border bg-vm-white p-4 hover:shadow-sm transition-shadow"
               >
-                <div className="flex items-start gap-3 min-w-0">
+                <Link
+                  href={`/customer/jobs/${job.id}`}
+                  className="flex min-w-0 flex-1 items-start gap-3"
+                >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-vm-cyan/10">
                     <Home className="h-4 w-4 text-vm-cyan" />
                   </span>
@@ -480,14 +486,23 @@ function CustomerJobsPage() {
                       {job.cleaner ? ` · ${job.cleaner.name}` : ''}
                     </p>
                   </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-heading font-bold text-vm-navy text-sm">
+                </Link>
+                <div className="shrink-0 text-right">
+                  <p className="font-heading text-sm font-bold text-vm-navy">
                     {formatMoney(job.price)}
                   </p>
-                  <p className={pay.className}>{pay.text}</p>
+                  {job.invoicePayUrl ? (
+                    <Link
+                      href={job.invoicePayUrl}
+                      className="text-xs font-body font-semibold text-vm-cyan-dark hover:underline"
+                    >
+                      Pay now
+                    </Link>
+                  ) : (
+                    <p className={pay.className}>{pay.text}</p>
+                  )}
                 </div>
-              </Link>
+              </div>
             );
           })
         )}

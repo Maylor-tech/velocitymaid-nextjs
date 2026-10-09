@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { PropertyGalleryPreview } from "@/components/marketing/PropertyGalleryPreview";
 import { MarketingTestimonials } from "@/components/marketing/MarketingTestimonials";
 import { GuestReadyProcess } from "@/components/marketing/GuestReadyProcess";
+import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 import {
   LUDLOW_CARD_IMAGES,
   MIDDLEBURY_CARD_IMAGES,
@@ -168,6 +169,7 @@ export function VermontHostMarketing({ children }: { children: React.ReactNode }
         <ValueStrip />
 
         <GuestReadyProcess tone="light" />
+        <AfterTheClean />
 
         <PropertyGalleryPreview
           title="Vermont Properties We Service"

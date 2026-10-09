@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
-import { canShowPayBalance } from '@/lib/booking/payBalanceVisibility';
+import { canShowPayBalance, canShowInvoicePay } from '@/lib/booking/payBalanceVisibility';
 import { formatServiceDate } from '@/lib/dates/serviceDate';
 import { tipUrlForJob } from '@/lib/tips/tipLinks';
 
@@ -58,6 +58,7 @@ interface JobDetails {
   balanceDue?: number | null;
   depositAmount?: number | null;
   completedAt?: string;
+  invoicePayUrl?: string | null;
 }
 
 function JobDetailsContent() {
@@ -204,6 +205,14 @@ function JobDetailsContent() {
       reviewStatus: job.reviewStatus,
       billingPolicy: job.billingPolicy,
     });
+  const showInvoicePay =
+    job &&
+    canShowInvoicePay({
+      status: job.status,
+      billingPolicy: job.billingPolicy,
+      paymentStatus: job.paymentStatus,
+      invoicePayUrl: job.invoicePayUrl,
+    });
 
   const isFullyPaid =
     job?.paymentStatus === 'PAID' &&
@@ -291,6 +300,23 @@ function JobDetailsContent() {
           balanceDue={job.balanceDue}
           currency={job.currency}
         />
+      )}
+
+      {showInvoicePay && job.invoicePayUrl && (
+        <div className="rounded-xl border border-vm-cyan/30 bg-vm-cyan/10 p-5">
+          <p className="font-heading text-sm font-bold text-vm-navy">
+            The property is done
+          </p>
+          <p className="mt-1 font-body text-sm text-vm-muted">
+            View the invoice and pay by card or Zelle.
+          </p>
+          <a
+            href={job.invoicePayUrl}
+            className="mt-4 inline-flex items-center justify-center rounded-lg bg-vm-cyan px-5 py-2.5 font-heading text-sm font-semibold text-vm-navy hover:bg-vm-cyan-dark"
+          >
+            Pay now
+          </a>
+        </div>
       )}
 
       <div className="bg-vm-white rounded-xl shadow-sm border border-vm-navy/10 p-6">

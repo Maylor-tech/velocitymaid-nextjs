@@ -6,8 +6,7 @@ import { ArrowLeft, Loader2, DollarSign, CheckCircle, XCircle, AlertCircle, Cloc
 import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 import { JobBillingWorkflowPanel } from '@/components/admin/jobs/JobBillingWorkflowPanel';
-import { JobStaffingMoneyStrips } from '@/components/admin/jobs/JobStaffingMoneyStrips';
-import { JobPlaybookPanel } from '@/components/admin/jobs/JobPlaybookPanel';
+import { JobDetailHero } from '@/components/admin/jobs/JobDetailHero';
 import { CustomerPortalPreview } from '@/components/admin/jobs/CustomerPortalPreview';
 import JobTeamSection from '@/components/admin/jobs/JobTeamSection';
 import { useAdminShell } from '@/components/admin/shell/AdminShell';
@@ -677,17 +676,6 @@ export default function AdminJobDetailPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    const statusLower = status.toLowerCase();
-    if (statusLower.includes('awaiting_qc')) return 'bg-amber-100 text-amber-900';
-    if (statusLower.includes('completed')) return 'bg-vm-success-bg text-vm-success';
-    if (statusLower.includes('cancelled')) return 'bg-vm-danger-bg text-red-800';
-    if (statusLower.includes('assigned')) return 'bg-vm-cyan-tint text-blue-800';
-    if (statusLower.includes('in_progress') || statusLower.includes('on_the_way')) return 'bg-purple-100 text-purple-800';
-    if (statusLower.includes('confirmed')) return 'bg-vm-warning-bg text-yellow-800';
-    return 'bg-gray-100 text-vm-text';
-  };
-
   const getPayoutStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
       case 'PAID':
@@ -814,6 +802,9 @@ export default function AdminJobDetailPage() {
         billingPolicy: job.billingPolicy,
         dispatchOffersEnabled: job.dispatchOffersEnabled,
         dispatchState: (job.dispatchUi?.state as DispatchUiState | undefined) ?? null,
+        hasPayout: Boolean(
+          Array.isArray(job.JobPayout) ? job.JobPayout[0] : job.JobPayout
+        ),
       })
     : null;
 
@@ -861,143 +852,152 @@ export default function AdminJobDetailPage() {
           </div>
         )}
 
-        {/* Header */}
-        <div className="mb-6">
-          <Link
-            href="/admin/jobs"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Jobs
-          </Link>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-vm-text mb-2">Job Details</h1>
-              <p className="text-vm-muted">Job ID: {job.id}</p>
-            </div>
-            <div className="flex flex-wrap gap-2 justify-end">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(job.status)}`}>
-                {job.status}
-              </span>
-              {!isBranchScoped && (
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(job.paymentStatus)}`}>
-                Payment: {job.paymentStatus}
-              </span>
-              )}
-              {job.reviewStatus && (
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getReviewStatusColor(job.reviewStatus)}`}>
-                  Review: {job.reviewStatus}
-                </span>
-              )}
-            </div>
-          </div>
-          {!isBranchScoped && (
-            <JobStaffingMoneyStrips
-              job={{
-                status: job.status,
-                paymentStatus: job.paymentStatus,
-                reviewStatus: job.reviewStatus,
-                billingPolicy: job.billingPolicy,
-                assignedCleanerId: job.assignedCleanerId,
-              }}
-              className="mt-4"
-            />
-          )}
-        </div>
-
-        {!isBranchScoped && (
-          <JobPlaybookPanel
-            job={{
-              status: job.status,
-              paymentStatus: job.paymentStatus,
-              reviewStatus: job.reviewStatus,
-              billingPolicy: job.billingPolicy,
-              assignedCleanerId: job.assignedCleanerId,
-              preferredDate: job.preferredDate,
-              guestCheckInDate: job.guestCheckInDate,
-              guestCheckOutDate: job.guestCheckOutDate,
-              completedAt: job.completedAt,
-              property: job.property
-                ? {
-                    accessType: job.property.accessType,
-                    standingInstructions: job.property.standingInstructions,
-                  }
-                : null,
-            }}
-            className="mb-6"
-          />
-        )}
+        <JobDetailHero
+          job={{
+            id: job.id,
+            customerName: job.customerName,
+            address: job.address,
+            preferredDate: job.preferredDate,
+            preferredTime: job.preferredTime,
+            serviceType: job.serviceType,
+            status: job.status,
+            paymentStatus: job.paymentStatus,
+            reviewStatus: job.reviewStatus,
+            billingPolicy: job.billingPolicy,
+            assignedCleanerId: job.assignedCleanerId,
+            guestCheckInDate: job.guestCheckInDate,
+            guestCheckOutDate: job.guestCheckOutDate,
+            completedAt: job.completedAt,
+            customer: job.customer,
+            branch: job.branch,
+            property: job.property
+              ? {
+                  name: job.property.name,
+                  accessType: job.property.accessType,
+                  standingInstructions: job.property.standingInstructions,
+                }
+              : null,
+          }}
+          isBranchScoped={isBranchScoped}
+        />
 
         {loopProgress && (
-          <div className="bg-white rounded-xl shadow-sm border border-indigo-200 p-6 mb-6">
-            <h2 className="text-xl font-semibold text-vm-text mb-1">Operational Progress</h2>
-            <p className="text-sm text-indigo-800 font-medium mb-4">{loopProgress.label}</p>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {loopProgress.steps.map((step) => (
-                <span
-                  key={step.id}
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${
-                    step.done
-                      ? 'bg-vm-success-bg text-vm-success'
-                      : step.current
-                        ? 'bg-indigo-100 text-indigo-900 ring-2 ring-indigo-300'
-                        : 'bg-gray-100 text-vm-muted'
-                  }`}
-                >
-                  {step.done ? '✓ ' : step.current ? '→ ' : ''}
-                  {step.label}
-                </span>
-              ))}
-            </div>
-            <p className="text-sm text-vm-text mb-4">{loopProgress.nextAction}</p>
-            <div className="flex flex-wrap gap-3">
-              {loopProgress.cleanerJobUrl && (
-                <Link
-                  href={loopProgress.cleanerJobUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
-                >
-                  Open Cleaner Job →
-                </Link>
-              )}
-              <Link
-                href="/cleaners/login"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center rounded-lg border border-purple-300 px-4 py-2 text-sm font-medium text-purple-800 hover:bg-purple-50"
-              >
-                Cleaner Login
-              </Link>
-              {loopProgress.customerJobUrl && (
-                <Link
-                  href={loopProgress.customerJobUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center rounded-lg bg-vm-success px-4 py-2 text-sm font-medium text-white hover:bg-vm-success/90"
-                >
-                  Open Customer Job →
-                </Link>
-              )}
-              {process.env.NODE_ENV === 'development' &&
-                job.assignedCleanerId &&
-                job.status !== 'COMPLETED' &&
-                job.status !== 'AWAITING_QC' && (
-                  <button
-                    type="button"
-                    onClick={handleTestComplete}
-                    disabled={testCompleting}
-                    className="inline-flex items-center rounded-lg border border-amber-400 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-60"
+          <div
+            className={`mb-6 rounded-xl border bg-white shadow-sm ${
+              loopProgress.step === 'PAID'
+                ? 'border-vm-border p-4'
+                : 'border-indigo-200 p-6'
+            }`}
+          >
+            {loopProgress.step === 'PAID' ? (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="font-heading text-sm font-semibold text-vm-navy">
+                    {loopProgress.label}
+                  </h2>
+                  <p className="mt-0.5 font-body text-sm text-vm-muted">
+                    {loopProgress.nextAction}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {loopProgress.cleanerJobUrl && (
+                    <Link
+                      href={loopProgress.cleanerJobUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-lg border border-vm-border px-3 py-1.5 font-body text-xs font-semibold text-vm-navy hover:bg-vm-surface"
+                    >
+                      Cleaner job
+                    </Link>
+                  )}
+                  {loopProgress.customerJobUrl && (
+                    <Link
+                      href={loopProgress.customerJobUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-lg border border-vm-border px-3 py-1.5 font-body text-xs font-semibold text-vm-navy hover:bg-vm-surface"
+                    >
+                      Customer job
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                <h2 className="mb-1 text-xl font-semibold text-vm-text">
+                  Operational Progress
+                </h2>
+                <p className="mb-4 text-sm font-medium text-indigo-800">
+                  {loopProgress.label}
+                </p>
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {loopProgress.steps.map((step) => (
+                    <span
+                      key={step.id}
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        step.done
+                          ? 'bg-vm-success-bg text-vm-success'
+                          : step.current
+                            ? 'bg-indigo-100 text-indigo-900 ring-2 ring-indigo-300'
+                            : 'bg-gray-100 text-vm-muted'
+                      }`}
+                    >
+                      {step.done ? '✓ ' : step.current ? '→ ' : ''}
+                      {step.label}
+                    </span>
+                  ))}
+                </div>
+                <p className="mb-4 text-sm text-vm-text">{loopProgress.nextAction}</p>
+                <div className="flex flex-wrap gap-3">
+                  {loopProgress.cleanerJobUrl && (
+                    <Link
+                      href={loopProgress.cleanerJobUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+                    >
+                      Open Cleaner Job →
+                    </Link>
+                  )}
+                  <Link
+                    href="/cleaners/login"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center rounded-lg border border-purple-300 px-4 py-2 text-sm font-medium text-purple-800 hover:bg-purple-50"
                   >
-                    {testCompleting ? 'Completing…' : 'Dev only — skip cleaner workflow'}
-                  </button>
+                    Cleaner Login
+                  </Link>
+                  {loopProgress.customerJobUrl && (
+                    <Link
+                      href={loopProgress.customerJobUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-lg bg-vm-success px-4 py-2 text-sm font-medium text-white hover:bg-vm-success/90"
+                    >
+                      Open Customer Job →
+                    </Link>
+                  )}
+                  {process.env.NODE_ENV === 'development' &&
+                    job.assignedCleanerId &&
+                    job.status !== 'COMPLETED' &&
+                    job.status !== 'AWAITING_QC' && (
+                      <button
+                        type="button"
+                        onClick={handleTestComplete}
+                        disabled={testCompleting}
+                        className="inline-flex items-center rounded-lg border border-amber-400 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-60"
+                      >
+                        {testCompleting ? 'Completing…' : 'Dev only — skip cleaner workflow'}
+                      </button>
+                    )}
+                </div>
+                {job.assignedCleaner && loopProgress.step === 'ASSIGNED' && (
+                  <p className="mt-3 text-xs text-vm-muted">
+                    Log in as <strong>{job.assignedCleaner.email}</strong> at /cleaners/login, then
+                    open the cleaner job link above → On the Way → Start Service → Submit for QC.
+                  </p>
                 )}
-            </div>
-            {job.assignedCleaner && loopProgress.step === 'ASSIGNED' && (
-              <p className="mt-3 text-xs text-vm-muted">
-                Log in as <strong>{job.assignedCleaner.email}</strong> at /cleaners/login, then
-                open the cleaner job link above → On the Way → Start Service → Submit for QC.
-              </p>
+              </>
             )}
           </div>
         )}
@@ -1099,7 +1099,7 @@ export default function AdminJobDetailPage() {
                 <span className={`inline-flex w-fit px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(job.paymentStatus)}`}>
                   {job.paymentStatus}
                 </span>
-                {job.reviewStatus && (
+                {job.reviewStatus && !isTerminalStatus(job.status) && (
                   <span className={`inline-flex w-fit px-2 py-1 rounded-full text-xs font-medium ${getReviewStatusColor(job.reviewStatus)}`}>
                     Review: {job.reviewStatus}
                   </span>
@@ -1866,6 +1866,8 @@ export default function AdminJobDetailPage() {
           <JobTeamSection
             jobId={jobId}
             cleaners={cleaners}
+            assignedCleanerId={job.assignedCleanerId}
+            assignedCleanerName={job.assignedCleaner?.name || job.assignedCleaner?.email || null}
             disabled={isPaymentBlocked}
             onToast={(message, type) => {
               setToastMessage(message);

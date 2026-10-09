@@ -8,7 +8,10 @@ import {
   FAST_ESTIMATE_CTA_LABEL,
   FAST_ESTIMATE_PATH,
   VERMONT_HOST_INTAKE_PATH,
+  VERMONT_WORK_WITH_US_LABEL,
+  VERMONT_WORK_WITH_US_PATH,
 } from "@/lib/marketing/publicCtas";
+import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 import { ArrowRight, MapPin, Snowflake } from "lucide-react";
 import {
   VERMONT_OPERATIONS_SUPPORT_LINE1,
@@ -47,6 +50,9 @@ export default function VermontOverviewPage() {
         phoneDisplay="(802) 733-5348"
         email="hello@velocitymaid.com"
         marketTagline="vermont"
+        extraNavLinks={[
+          { href: VERMONT_WORK_WITH_US_PATH, label: VERMONT_WORK_WITH_US_LABEL },
+        ]}
       />
 
       <section className="bg-vm-navy">
@@ -164,6 +170,8 @@ export default function VermontOverviewPage() {
         </section>
       </div>
 
+      <AfterTheClean />
+
       <EditorialProof
         id="vermont-proof"
         tone="navy"
@@ -183,6 +191,25 @@ export default function VermontOverviewPage() {
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 space-y-16">
+        <section className="rounded-xl border border-vm-border bg-vm-navy p-6 sm:p-8">
+          <p className="text-vm-cyan text-xs font-semibold uppercase tracking-widest font-body mb-2">
+            Live in the Okemo Valley or Middlebury?
+          </p>
+          <h2 className="font-heading font-bold text-white text-xl mb-2">
+            We are hiring local cleaners
+          </h2>
+          <p className="text-sm text-white/70 font-body mb-4 max-w-2xl">
+            Job description, typical pay, and how you get paid — on one page. No
+            phone call required to decide.
+          </p>
+          <Link
+            href={VERMONT_WORK_WITH_US_PATH}
+            className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+          >
+            {VERMONT_WORK_WITH_US_LABEL}
+          </Link>
+        </section>
+
         <section className="rounded-xl border border-vm-border bg-vm-surface/50 p-6 sm:p-8">
           <h2 className="font-heading font-bold text-vm-navy text-xl mb-2">
             Not sure which cluster fits?

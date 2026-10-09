@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { CheckCircle2, Home, ShieldCheck, Sparkles } from "lucide-react";
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
+import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 import { ResidentialIntakeForm } from "@/components/residential/ResidentialIntakeForm";
 import { VERMONT_SUPPORT } from "@/lib/customer/marketSupport";
 import {
@@ -73,6 +74,8 @@ export function ResidentialLandingPage() {
           ))}
         </div>
       </section>
+
+      <AfterTheClean variant="home" />
 
       <section id="request" className="bg-vm-surface px-4 py-12 sm:px-6">
         <div className="mx-auto max-w-2xl">

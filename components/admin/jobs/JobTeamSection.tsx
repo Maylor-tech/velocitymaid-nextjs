@@ -27,6 +27,8 @@ type TeamMember = {
 type Props = {
   jobId: string;
   cleaners: CleanerOption[];
+  assignedCleanerId?: string | null;
+  assignedCleanerName?: string | null;
   disabled?: boolean;
   onSaved?: (payload: {
     team: TeamMember[];
@@ -42,6 +44,8 @@ function labelFor(c: CleanerOption): string {
 export default function JobTeamSection({
   jobId,
   cleaners,
+  assignedCleanerId = null,
+  assignedCleanerName = null,
   disabled = false,
   onSaved,
   onToast,
@@ -53,6 +57,7 @@ export default function JobTeamSection({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [teamUnsynced, setTeamUnsynced] = useState(false);
 
   const loadTeam = useCallback(async () => {
     setLoading(true);
@@ -66,13 +71,22 @@ export default function JobTeamSection({
         throw new Error(data.error || 'Failed to load job team');
       }
       const ids = (data.team as TeamMember[]).map((m) => m.id);
-      setDraft(draftFromOrderedIds(ids));
+      if (ids.length === 0 && assignedCleanerId) {
+        setDraft({
+          primaryCleanerId: assignedCleanerId,
+          assistantCleanerIds: [],
+        });
+        setTeamUnsynced(true);
+      } else {
+        setDraft(draftFromOrderedIds(ids));
+        setTeamUnsynced(false);
+      }
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Failed to load job team');
     } finally {
       setLoading(false);
     }
-  }, [jobId]);
+  }, [jobId, assignedCleanerId]);
 
   useEffect(() => {
     void loadTeam();
@@ -145,6 +159,7 @@ export default function JobTeamSection({
       }
       const team = (data.team as TeamMember[]) || [];
       setDraft(draftFromOrderedIds(team.map((m) => m.id)));
+      setTeamUnsynced(false);
       onSaved?.({
         team,
         primaryCleanerId: validated.cleanerIds[0] ?? null,
@@ -192,6 +207,12 @@ export default function JobTeamSection({
         </div>
       ) : (
         <div className={`mt-4 space-y-4 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
+          {teamUnsynced && (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-body text-sm text-amber-900">
+              {assignedCleanerName || 'The assigned cleaner'} is on the job but not saved as
+              Job Team. Save to sync the cleaner portal and payout.
+            </p>
+          )}
           <div>
             <label className="block text-sm font-medium text-vm-text mb-1">
               Primary cleaner

@@ -22,20 +22,30 @@ function firstNameFrom(clientName: string): string {
 export async function sendCompletionReportEmail(
   report: SerializedCompletionReport,
   toEmail: string,
-  clientName: string
+  clientName: string,
+  pay?: { invoiceViewUrl: string; amountFormatted?: string } | null
 ): Promise<{ sent: boolean; skippedReason?: string }> {
   if (!resend) return { sent: false, skippedReason: 'RESEND_API_KEY not configured' };
   const viewUrl = `${appBaseUrl()}/report/${report.publicToken}`;
   const pdfUrl = `${appBaseUrl()}/api/report/${report.publicToken}/pdf`;
+  const payBlock = pay?.invoiceViewUrl
+    ? `<p style="margin:20px 0 8px;font-size:15px;color:#0F1C2E;">${
+        pay.amountFormatted
+          ? `Amount due: <strong>${escapeHtml(pay.amountFormatted)}</strong>. `
+          : ''
+      }Pay by card or Zelle — no need to call to close this job.</p>
+     <a href="${escapeHtml(pay.invoiceViewUrl)}" style="display:inline-block;background:#00C2CB;color:#0F1C2E;text-decoration:none;padding:12px 22px;border-radius:6px;font-weight:600;font-size:14px;margin:0 8px 12px 0;">Pay now</a>`
+    : '';
 
   const html = brandHtml(
     `Completion Report ${report.reportNumber}`,
-    `<h1 style="margin:0 0 12px;font-size:22px;color:#0F1C2E;">Your service completion report</h1>
+    `<h1 style="margin:0 0 12px;font-size:22px;color:#0F1C2E;">Your service is complete</h1>
      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#0F1C2E;">Hi ${escapeHtml(clientName)},</p>
-     <p style="margin:0 0 8px;font-size:15px;color:#0F1C2E;">Your cleaning at <strong>${escapeHtml(report.propertyAddress)}</strong> is complete.</p>
+     <p style="margin:0 0 8px;font-size:15px;color:#0F1C2E;">Your cleaning at <strong>${escapeHtml(report.propertyAddress)}</strong> is done. Photos are in the report.</p>
      <p style="margin:0 0 20px;font-size:15px;color:#0F1C2E;">Report #${escapeHtml(report.reportNumber)} · ${escapeHtml(report.serviceDateFormatted)}</p>
-     <a href="${escapeHtml(viewUrl)}" style="display:inline-block;background:#0F1C2E;color:#fff;text-decoration:none;padding:12px 22px;border-radius:6px;font-weight:600;font-size:14px;margin-right:8px;">View report</a>
-     <a href="${escapeHtml(pdfUrl)}" style="display:inline-block;background:#00C2CB;color:#0F1C2E;text-decoration:none;padding:12px 22px;border-radius:6px;font-weight:600;font-size:14px;">Download PDF</a>`
+     <a href="${escapeHtml(viewUrl)}" style="display:inline-block;background:#0F1C2E;color:#fff;text-decoration:none;padding:12px 22px;border-radius:6px;font-weight:600;font-size:14px;margin-right:8px;">View photos</a>
+     <a href="${escapeHtml(pdfUrl)}" style="display:inline-block;background:#fff;color:#0F1C2E;border:1px solid #0F1C2E;text-decoration:none;padding:12px 22px;border-radius:6px;font-weight:600;font-size:14px;">Download PDF</a>
+     ${payBlock}`
   );
 
   await resend.emails.send({

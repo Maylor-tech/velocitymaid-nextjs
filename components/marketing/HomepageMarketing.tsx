@@ -6,6 +6,7 @@ import { PropertyGalleryPreview } from "@/components/marketing/PropertyGalleryPr
 import { EditorialProof } from "@/components/marketing/EditorialProof";
 import { MarketingTestimonials } from "@/components/marketing/MarketingTestimonials";
 import { GuestReadyProcess } from "@/components/marketing/GuestReadyProcess";
+import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 import {
   LUDLOW_CARD_IMAGES,
   MIDDLEBURY_CARD_IMAGES,
@@ -182,6 +183,7 @@ export function HomepageMarketing() {
         </section>
 
         <GuestReadyProcess tone="light" />
+        <AfterTheClean />
 
         <section id="why-us" className="scroll-mt-20 bg-vm-navy px-5 py-16">
           <div className="mx-auto max-w-marketing text-center">

@@ -11,6 +11,10 @@ import {
   resolveBillingPolicy,
   serviceStatusLabel,
 } from '@/lib/billing/billingPolicy';
+import {
+  customerInvoicePayPath,
+  isInvoiceOpenForPayment,
+} from '@/lib/customer/invoicePay';
 
 /**
  * GET /api/customer/jobs/[jobId]
@@ -67,6 +71,13 @@ export async function GET(
             phone: true,
           },
         },
+        Invoice: {
+          select: {
+            publicToken: true,
+            status: true,
+            balanceDue: true,
+          },
+        },
       },
     });
 
@@ -110,6 +121,19 @@ export async function GET(
     const total = subtotal !== null ? subtotal + fees : null;
 
     const billingPolicy = resolveBillingPolicy({ jobPolicy: job.billingPolicy });
+    const invoice = job.Invoice;
+    const invoicePayUrl =
+      job.status === 'COMPLETED' &&
+      isInvoiceOpenForPayment(
+        invoice
+          ? {
+              status: invoice.status,
+              balanceDue: Number(invoice.balanceDue),
+            }
+          : null
+      )
+        ? customerInvoicePayPath(invoice.publicToken)
+        : null;
 
     return NextResponse.json({
       success: true,
@@ -148,6 +172,7 @@ export async function GET(
         paymentStatus: job.paymentStatus,
         paymentStatusLabel: paymentStatusLabel(job.paymentStatus, billingPolicy),
         billingPolicy,
+        invoicePayUrl,
         reviewStatus: job.reviewStatus,
         rating: job.CleanerRating
           ? {

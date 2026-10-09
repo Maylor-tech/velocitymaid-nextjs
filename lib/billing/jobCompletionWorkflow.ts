@@ -201,10 +201,24 @@ export async function runJobCompletionBillingWorkflow(
     {};
 
   if (sendEmails && clientEmail) {
+    const appBase =
+      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
+      'https://velocitymaid.com';
+    const pay =
+      serializedInvoice &&
+      serializedInvoice.publicToken &&
+      serializedInvoice.balanceDue > 0
+        ? {
+            invoiceViewUrl: `${appBase}/invoice/${serializedInvoice.publicToken}`,
+            amountFormatted: serializedInvoice.balanceDueFormatted,
+          }
+        : null;
+
     emailResults.completionReport = await sendCompletionReportEmail(
       serializedReport,
       clientEmail,
-      clientName
+      clientName,
+      pay
     );
     if (emailResults.completionReport.sent) {
       await prisma.completionReport.update({

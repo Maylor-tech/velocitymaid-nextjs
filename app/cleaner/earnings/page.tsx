@@ -17,6 +17,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2, DollarSign, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { PayoutStatusCard } from '@/components/cleaner/PayoutStatusCard';
+import { cleanerPayoutTimingCopy } from '@/lib/payout/payoutSchedule';
 
 interface Job {
   id: string;
@@ -207,7 +208,7 @@ export default function CleanerEarningsPage() {
                 {formatCurrency(data.payouts.readyTotal)}
               </p>
               <p className="text-xs text-vm-muted mt-1">
-                Awaiting admin manual payout
+                {cleanerPayoutTimingCopy({ status: 'READY' })}
               </p>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-vm-success/30 p-6">
@@ -388,7 +389,10 @@ export default function CleanerEarningsPage() {
                             </span>
                             {job.payoutStatus && (
                               <span className="text-xs text-vm-muted">
-                                {job.payoutStatus}
+                                {cleanerPayoutTimingCopy({
+                                  status: job.payoutStatus,
+                                  paidAt: job.payoutPaidAt,
+                                })}
                               </span>
                             )}
                           </span>
