@@ -172,6 +172,8 @@ export async function GET(request: NextRequest) {
         paymentStatusLabel: paymentStatusLabel(paymentStatus, billingPolicy),
         billingPolicy,
         invoicePayUrl,
+        hasLinkedInvoice: Boolean(invoice),
+        linkedInvoiceStatus: invoice?.status ?? null,
         rating: job.CleanerRating
           ? {
               score: job.CleanerRating.rating,

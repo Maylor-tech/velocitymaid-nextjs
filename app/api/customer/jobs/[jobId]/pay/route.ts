@@ -9,6 +9,8 @@ import { getStripe } from '@/utils/stripe';
 import { createBalanceCheckoutSession } from '@/lib/booking/stripeCheckout';
 import { getBookingDepositDollars } from '@/lib/booking/paymentConfig';
 import { assertStripeTestModeForDepositBooking } from '@/lib/stripe/stripeMode';
+import { resolveJobBalanceCollection } from '@/lib/billing/authorizedCollection';
+import { decimalToNumber } from '@/lib/invoices/invoiceUtils';
 
 /**
  * POST /api/customer/jobs/[jobId]/pay
@@ -39,6 +41,9 @@ export async function POST(
         balanceDue: true,
         currency: true,
         Customer: { select: { email: true } },
+        Invoice: {
+          select: { status: true, total: true, amountPaid: true, balanceDue: true },
+        },
       },
     });
 
@@ -61,6 +66,28 @@ export async function POST(
       assertStripeTestModeForDepositBooking();
       const balanceDue = job.balanceDue ? Number(job.balanceDue) : 0;
       const email = job.Customer?.email || auth.email;
+      const collection = resolveJobBalanceCollection({
+        jobId: job.id,
+        jobBalanceDue: balanceDue,
+        invoice: job.Invoice
+          ? {
+              status: job.Invoice.status,
+              total: decimalToNumber(job.Invoice.total),
+              amountPaid: decimalToNumber(job.Invoice.amountPaid),
+              balanceDue: decimalToNumber(job.Invoice.balanceDue),
+            }
+          : null,
+      });
+      if (!collection.allowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: collection.reason,
+            code: collection.code,
+          },
+          { status: 409 }
+        );
+      }
       if (balanceDue > 0 && email) {
         const session = await createBalanceCheckoutSession({
           jobId: job.id,

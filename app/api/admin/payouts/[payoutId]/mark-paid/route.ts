@@ -12,6 +12,8 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import { logAuditEntry } from "@/lib/audit";
 import { randomUUID } from "crypto";
+import { loadPayoutExecutionDecision } from "@/lib/payout/loadPayoutExecutionDecision";
+import { asPolicyDetails, payoutErrorMessage } from "@/lib/payout/payoutRouteUtils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -85,9 +87,24 @@ export async function PATCH(
       );
     }
 
+    const hold = await loadPayoutExecutionDecision(payoutId);
+    if (hold?.hold) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: hold.code,
+          error: hold.reason,
+          hold: true,
+          mutatePayout: false,
+          preview: hold.preview,
+        },
+        { status: 409 }
+      );
+    }
+
     const previousStatus = payout.status;
     const settlementTimestamp = paidAt ? new Date(paidAt) : new Date();
-    const existingDetails = (payout.policyEvalDetails as any) || {};
+    const existingDetails = asPolicyDetails(payout.policyEvalDetails);
 
     // Store settlement metadata
     const updatedDetails = {
@@ -181,13 +198,13 @@ export async function PATCH(
       success: true,
       payout: updated,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     console.error("[MARK_PAID] Error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to mark payout as paid",
+        error: payoutErrorMessage(error, "Failed to mark payout as paid"),
       },
       { status: 500 }
     );

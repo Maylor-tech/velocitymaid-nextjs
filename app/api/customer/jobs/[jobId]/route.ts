@@ -173,6 +173,8 @@ export async function GET(
         paymentStatusLabel: paymentStatusLabel(job.paymentStatus, billingPolicy),
         billingPolicy,
         invoicePayUrl,
+        hasLinkedInvoice: Boolean(invoice),
+        linkedInvoiceStatus: invoice?.status ?? null,
         reviewStatus: job.reviewStatus,
         rating: job.CleanerRating
           ? {
