@@ -32,8 +32,45 @@ function authorizedPriceApplied(invoiceTotal: number | null | undefined): boolea
   return moneyEq(invoiceTotal, ELIZABETH_K_PHASE2.authorizedInvoiceTotal);
 }
 
+function elizabethDepositCredited(invoice: InvoiceCollectionSnapshot | null | undefined): boolean {
+  if (!invoice) return false;
+  return (
+    authorizedPriceApplied(invoice.total) &&
+    moneyEq(invoice.amountPaid, ELIZABETH_K_PHASE2.depositAmount)
+  );
+}
+
+function elizabethPhase2Hold(
+  jobId: string | null | undefined,
+  due: number,
+  invoice: InvoiceCollectionSnapshot | null | undefined
+): CollectionDecision | null {
+  if (!isElizabethJob(jobId) || elizabethDepositCredited(invoice)) return null;
+
+  const invoiceDue = invoice ? roundMoney(invoice.balanceDue) : null;
+  const invoiceTotal = invoice ? roundMoney(invoice.total) : null;
+  const blocksIntermediate =
+    isBlockedLeftoverAmount(due) ||
+    moneyEq(due, ELIZABETH_K_PHASE2.authorizedInvoiceTotal) ||
+    (invoiceDue != null &&
+      (isBlockedLeftoverAmount(invoiceDue) ||
+        moneyEq(invoiceDue, ELIZABETH_K_PHASE2.authorizedInvoiceTotal))) ||
+    (invoiceTotal != null &&
+      (isBlockedLeftoverAmount(invoiceTotal) || authorizedPriceApplied(invoiceTotal)));
+
+  if (!blocksIntermediate) return null;
+
+  return {
+    allowed: false,
+    amount: null,
+    code: 'ELIZABETH_K_PHASE2_HOLD',
+    reason:
+      'Elizabeth K collection is held until the authorized $250 invoice has the existing $25 deposit credited. $400 leftover and uncredited $250 paths stay closed.',
+  };
+}
+
 /**
- * Block only this reconciled job's stale $400 quote leftover.
+ * Block this reconciled job's $400 leftover and the intermediate uncredited $250.
  * Other PREPAY deposit/balance checkouts are unchanged.
  */
 export function resolveJobBalanceCollection(input: {
@@ -51,15 +88,8 @@ export function resolveJobBalanceCollection(input: {
     };
   }
 
-  if (isElizabethJob(input.jobId) && isBlockedLeftoverAmount(due) && !authorizedPriceApplied(input.invoice?.total)) {
-    return {
-      allowed: false,
-      amount: null,
-      code: 'UNAUTHORIZED_QUOTE_LEFTOVER',
-      reason:
-        'Collection of the original $400 quote leftover is blocked until the authorized $250 price adjustment is applied.',
-    };
-  }
+  const hold = elizabethPhase2Hold(input.jobId, due, input.invoice);
+  if (hold) return hold;
 
   return {
     allowed: true,
@@ -105,19 +135,8 @@ export function resolveInvoiceCollection(input: {
     };
   }
 
-  if (
-    isElizabethJob(input.jobId) &&
-    !authorizedPriceApplied(input.invoice.total) &&
-    (isBlockedLeftoverAmount(due) || isBlockedLeftoverAmount(roundMoney(input.invoice.total)))
-  ) {
-    return {
-      allowed: false,
-      amount: null,
-      code: 'UNAUTHORIZED_QUOTE_LEFTOVER',
-      reason:
-        'The $400 quote-leftover collection path is blocked until the authorized $250 price adjustment is applied.',
-    };
-  }
+  const hold = elizabethPhase2Hold(input.jobId, due, input.invoice);
+  if (hold) return hold;
 
   return {
     allowed: true,

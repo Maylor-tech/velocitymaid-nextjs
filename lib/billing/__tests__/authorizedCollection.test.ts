@@ -29,13 +29,13 @@ describe('authorizedCollection — scoped to invalid Elizabeth K leftover', () =
         jobBalanceDue: 400,
         invoice: draft400,
       }).code
-    ).toBe('UNAUTHORIZED_QUOTE_LEFTOVER');
+    ).toBe('ELIZABETH_K_PHASE2_HOLD');
     expect(
       resolveInvoiceCollection({
         jobId: ELIZABETH_K_PHASE2.jobId,
         invoice: draft400,
       }).code
-    ).toBe('UNAUTHORIZED_QUOTE_LEFTOVER');
+    ).toBe('ELIZABETH_K_PHASE2_HOLD');
   });
 
   it('does not block an unrelated PREPAY job-balance, even with a linked invoice', () => {
@@ -57,6 +57,23 @@ describe('authorizedCollection — scoped to invalid Elizabeth K leftover', () =
     expect(decision.amount).toBe(225);
   });
 
+  it('blocks the intermediate $250 invoice and leftover $400 job after Phase 2A, before credit', () => {
+    const draft250 = { status: 'DRAFT', total: 250, amountPaid: 0, balanceDue: 250 };
+    expect(
+      resolveInvoiceCollection({
+        jobId: ELIZABETH_K_PHASE2.jobId,
+        invoice: draft250,
+      })
+    ).toMatchObject({ allowed: false, code: 'ELIZABETH_K_PHASE2_HOLD' });
+    expect(
+      resolveJobBalanceCollection({
+        jobId: ELIZABETH_K_PHASE2.jobId,
+        jobBalanceDue: 400,
+        invoice: draft250,
+      })
+    ).toMatchObject({ allowed: false, code: 'ELIZABETH_K_PHASE2_HOLD' });
+  });
+
   it('aligns issued checkout to $225 after the authorized price and deposit credit', () => {
     const decision = resolveInvoiceCollection({
       jobId: ELIZABETH_K_PHASE2.jobId,
@@ -72,7 +89,7 @@ describe('authorizedCollection — scoped to invalid Elizabeth K leftover', () =
         jobId: ELIZABETH_K_PHASE2.jobId,
         invoice: { status: 'SENT', total: 400, amountPaid: 0, balanceDue: 400 },
       }).code
-    ).toBe('UNAUTHORIZED_QUOTE_LEFTOVER');
+    ).toBe('ELIZABETH_K_PHASE2_HOLD');
     expect(
       resolveInvoiceCollection({
         jobId: 'other-job',

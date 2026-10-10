@@ -99,7 +99,7 @@ describe('invoiceCheckoutSession lifecycle', () => {
     });
     expect(result.ok).toBe(false);
     if (result.ok === false) {
-      expect(result.code).toBe('UNAUTHORIZED_QUOTE_LEFTOVER');
+      expect(result.code).toBe('ELIZABETH_K_PHASE2_HOLD');
     }
     expect(stripeCreate).not.toHaveBeenCalled();
   });
