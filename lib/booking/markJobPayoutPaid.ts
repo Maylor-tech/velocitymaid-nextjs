@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
+import { loadPayoutExecutionDecision } from '@/lib/payout/loadPayoutExecutionDecision';
 
 export type MarkPayoutPaidInput = {
   payoutId: string;
@@ -24,7 +25,7 @@ export type MarkPayoutPaidResult =
         policyEvalDetails: unknown;
       };
     }
-  | { ok: false; status: number; error: string };
+  | { ok: false; status: number; error: string; code?: string };
 
 const MARKABLE_STATUSES = new Set(['READY', 'APPROVED']);
 
@@ -63,6 +64,18 @@ export async function markJobPayoutPaid(
       ok: false,
       status: 400,
       error: `Cannot mark payout as PAID. Current status is ${payout.status}. Only READY or APPROVED payouts can be marked paid manually.`,
+    };
+  }
+
+  const hold = await loadPayoutExecutionDecision(payout.id);
+  if (hold?.hold) {
+    return {
+      ok: false,
+      status: 409,
+      code: hold.code ?? 'PAYOUT_HOLD_QUOTE_BASIS',
+      error:
+        hold.reason ??
+        'Payout settlement is held until the authorized cleaner amount is resolved.',
     };
   }
 

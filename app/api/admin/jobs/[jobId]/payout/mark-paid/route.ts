@@ -95,7 +95,11 @@ export async function POST(
 
     if (result.ok === false) {
       return NextResponse.json(
-        { success: false, error: result.error },
+        {
+          success: false,
+          error: result.error,
+          ...(result.code ? { code: result.code, hold: true, mutatePayout: false } : {}),
+        },
         { status: result.status }
       );
     }

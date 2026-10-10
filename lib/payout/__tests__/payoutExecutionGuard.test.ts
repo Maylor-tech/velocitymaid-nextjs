@@ -1,6 +1,16 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { describe, expect, it } from 'vitest';
 import { evaluatePayoutExecutionHold, previewPayoutRecalc } from '../payoutExecutionGuard';
 import { ELIZABETH_K_PHASE2 } from '@/lib/billing/elizabethKPhase2';
+
+const SETTLEMENT_PATHS = [
+  'app/api/admin/payouts/[payoutId]/execute/route.ts',
+  'app/api/admin/payouts/[payoutId]/approve/route.ts',
+  'app/api/admin/payouts/bulk/execute/route.ts',
+  'lib/booking/markJobPayoutPaid.ts',
+  'app/api/admin/payouts/[payoutId]/mark-paid/route.ts',
+];
 
 describe('payoutExecutionGuard', () => {
   it('holds Elizabeth K READY $276.25 and previews $162.50', () => {
@@ -62,5 +72,12 @@ describe('payoutExecutionGuard', () => {
     const preview = previewPayoutRecalc(250, 276.25, 425);
     expect(preview.cleanerAmount).toBe(162.5);
     expect(preview.currentCleanerAmount).toBe(276.25);
+  });
+
+  it('wires the hold into execute, approve, bulk-execute, and both mark-paid paths', () => {
+    for (const file of SETTLEMENT_PATHS) {
+      const src = readFileSync(join(process.cwd(), file), 'utf8');
+      expect(src, file).toContain('loadPayoutExecutionDecision');
+    }
   });
 });
