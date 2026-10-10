@@ -4,6 +4,10 @@ import { logAuditEntry } from '@/lib/audit';
 import { computeBalanceDue, decimalToNumber, roundMoney } from './invoiceUtils';
 import { DepositCreditError } from './depositCreditError';
 import { retrieveAndAssertCapturedDepositPaymentIntent } from './assertCapturedDepositPaymentIntent';
+import {
+  DEPOSIT_CREDIT_UNIQUE_INDEX,
+  assertDepositCreditWritesEnabled,
+} from './depositCreditSchemaGate';
 
 export { DepositCreditError };
 
@@ -215,6 +219,14 @@ export async function creditJobDepositToInvoice(params: {
         'Deposit credit exceeds the invoice unpaid balance'
       );
     }
+
+    const indexRows = await tx.$queryRaw<Array<{ indexname: string }>>`
+      SELECT indexname
+      FROM pg_indexes
+      WHERE schemaname = 'public'
+        AND indexname = ${DEPOSIT_CREDIT_UNIQUE_INDEX}
+    `;
+    assertDepositCreditWritesEnabled(indexRows);
 
     let payment;
     try {

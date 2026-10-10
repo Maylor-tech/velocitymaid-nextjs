@@ -105,7 +105,13 @@ function jobRow(overrides: Record<string, unknown> = {}) {
 describe('creditJobDepositToInvoice', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    queryRaw.mockResolvedValue([{ id: ELIZABETH_K_PHASE2.invoiceId }]);
+    queryRaw.mockImplementation(async (strings: TemplateStringsArray) => {
+      const sql = strings.join(' ');
+      if (sql.includes('pg_indexes')) {
+        return [{ indexname: 'invoice_payment_intent_once' }];
+      }
+      return [{ id: ELIZABETH_K_PHASE2.invoiceId }];
+    });
     invoicePaymentFindFirst.mockResolvedValue(null);
     logAuditEntry.mockResolvedValue('audit-1');
     retrievePi.mockResolvedValue(capturedPi());
@@ -263,6 +269,50 @@ describe('creditJobDepositToInvoice', () => {
         amount: 25,
       })
     ).rejects.toMatchObject({ code: 'PAYMENT_INTENT_NOT_CAPTURED' });
+    expect(invoicePaymentCreate).not.toHaveBeenCalled();
+  });
+
+  it('blocks a new credit write when the unique index is not applied', async () => {
+    queryRaw.mockImplementation(async (strings: TemplateStringsArray) => {
+      const sql = strings.join(' ');
+      if (sql.includes('pg_indexes')) return [];
+      return [{ id: ELIZABETH_K_PHASE2.invoiceId }];
+    });
+
+    await expect(
+      creditJobDepositToInvoice({
+        invoiceId: ELIZABETH_K_PHASE2.invoiceId,
+        confirmJobId: ELIZABETH_K_PHASE2.jobId,
+        paymentIntentId: PI,
+        amount: 25,
+      })
+    ).rejects.toMatchObject({ code: 'MIGRATION_REQUIRED', status: 503 });
+    expect(invoicePaymentCreate).not.toHaveBeenCalled();
+    expect(invoiceUpdate).not.toHaveBeenCalled();
+    expect(jobUpdate).not.toHaveBeenCalled();
+  });
+
+  it('still returns an existing credit without requiring the unique index', async () => {
+    const existing = {
+      id: 'pay-existing',
+      invoiceId: ELIZABETH_K_PHASE2.invoiceId,
+      transactionReference: PI,
+      amount: 25,
+    };
+    invoicePaymentFindFirst.mockResolvedValue(existing);
+    invoiceFindUnique.mockResolvedValue(
+      draftInvoice({ amountPaid: 25, balanceDue: 225, payments: [existing] })
+    );
+    queryRaw.mockImplementation(async () => [{ id: ELIZABETH_K_PHASE2.invoiceId }]);
+
+    const result = await creditJobDepositToInvoice({
+      invoiceId: ELIZABETH_K_PHASE2.invoiceId,
+      confirmJobId: ELIZABETH_K_PHASE2.jobId,
+      paymentIntentId: PI,
+      amount: 25,
+    });
+
+    expect(result.duplicate).toBe(true);
     expect(invoicePaymentCreate).not.toHaveBeenCalled();
   });
 
