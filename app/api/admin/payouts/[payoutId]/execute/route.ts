@@ -15,6 +15,11 @@ import { logAuditEntry } from "@/lib/audit";
 import { notifyPayoutSent } from "@/lib/notifications";
 import { DEMO_MODE } from "@/lib/demoMode";
 import { loadPayoutExecutionDecision } from "@/lib/payout/loadPayoutExecutionDecision";
+import {
+  mergeExecutionNote,
+  payoutAmountNumber,
+  payoutErrorMessage,
+} from "@/lib/payout/payoutRouteUtils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,6 +79,7 @@ export async function POST(
         currency: true,
         executedAt: true,
         executionMethod: true,
+        policyEvalDetails: true,
       },
     });
 
@@ -137,6 +143,12 @@ export async function POST(
     const executedAt = new Date();
 
     // DEMO MODE: Update database but mark as demo (no real payment rails)
+    const { policyEvalDetails, executionNote } = mergeExecutionNote(
+      payout.policyEvalDetails,
+      typeof note === "string" ? note : null,
+      DEMO_MODE
+    );
+
     if (DEMO_MODE) {
       console.log(`[DEMO_MODE] Executing payout ${payoutId} (demo mode - no real payment)`);
       
@@ -147,8 +159,7 @@ export async function POST(
           executedAt,
           executionMethod,
           externalReferenceId: externalReferenceId || null,
-          executionNote: (note || "") + " [DEMO MODE]",
-          updatedAt: new Date(),
+          policyEvalDetails,
         },
       });
 
@@ -161,7 +172,7 @@ export async function POST(
           executedAt: true,
           executionMethod: true,
           externalReferenceId: true,
-          executionNote: true,
+          policyEvalDetails: true,
         },
       });
 
@@ -170,7 +181,7 @@ export async function POST(
 
       return NextResponse.json({
         success: true,
-        payout: updated,
+        payout: updated ? { ...updated, executionNote } : updated,
         demoMode: true,
         message: "[DEMO MODE] Payout executed. No real payment processed.",
       });
@@ -184,8 +195,7 @@ export async function POST(
         executedAt,
         executionMethod,
         externalReferenceId: externalReferenceId || null,
-        executionNote: note || null,
-        updatedAt: new Date(),
+        policyEvalDetails,
       },
     });
 
@@ -198,7 +208,7 @@ export async function POST(
         executedAt: true,
         executionMethod: true,
         externalReferenceId: true,
-        executionNote: true,
+        policyEvalDetails: true,
       },
     });
 
@@ -218,7 +228,7 @@ export async function POST(
         cleanerId: payout.cleanerId,
         executionMethod,
         externalReferenceId: externalReferenceId || null,
-        executionNote: note || null,
+        executionNote,
         executedAt: executedAt.toISOString(),
       },
     });
@@ -229,7 +239,7 @@ export async function POST(
     notifyPayoutSent(
       payout.cleanerId,
       payoutId,
-      payout.cleanerAmount,
+      payoutAmountNumber(payout.cleanerAmount),
       payout.currency,
       executionMethod
     ).catch((err) => {
@@ -239,15 +249,15 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      payout: updated,
+      payout: updated ? { ...updated, executionNote } : updated,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     console.error("[EXECUTE_PAYOUT] Error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to execute payout",
+        error: payoutErrorMessage(error, "Failed to execute payout"),
       },
       { status: 500 }
     );

@@ -13,6 +13,11 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEntry } from "@/lib/audit";
 import { randomUUID } from "crypto";
 import { loadPayoutExecutionDecision } from "@/lib/payout/loadPayoutExecutionDecision";
+import {
+  asPolicyDetails,
+  payoutAmountNumber,
+  payoutErrorMessage,
+} from "@/lib/payout/payoutRouteUtils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,7 +78,7 @@ export async function POST(
     }
 
     const previousStatus = payout.status;
-    const existingDetails = (payout.policyEvalDetails as any) || {};
+    const existingDetails = asPolicyDetails(payout.policyEvalDetails);
     const updatedDetails = {
       ...existingDetails,
       adminDecision: {
@@ -108,12 +113,13 @@ export async function POST(
             id: randomUUID(),
             branchId: payout.branchId,
             transactionType: "CLEANER_PAYOUT",
-            amount: payout.cleanerAmount,
+            amount: payoutAmountNumber(payout.cleanerAmount),
             currency: payout.currency,
             description: `Approved payout for job ${payout.jobId}`,
             referenceId: payoutId,
             referenceType: "JobPayout",
             cleanerId: payout.cleanerId,
+            updatedAt: approvalTimestamp,
             metadata: {
               jobId: payout.jobId,
               payoutId: payoutId,
@@ -157,13 +163,13 @@ export async function POST(
       success: true,
       payout: updated,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     console.error("[APPROVE_PAYOUT] Error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to approve payout",
+        error: payoutErrorMessage(error, "Failed to approve payout"),
       },
       { status: 500 }
     );

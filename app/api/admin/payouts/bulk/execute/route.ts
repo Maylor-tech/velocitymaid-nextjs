@@ -23,6 +23,11 @@ import { logAuditEntry } from "@/lib/audit";
 import { notifyPayoutSent } from "@/lib/notifications";
 import { DEMO_MODE } from "@/lib/demoMode";
 import { loadPayoutExecutionDecision } from "@/lib/payout/loadPayoutExecutionDecision";
+import {
+  mergeExecutionNote,
+  payoutAmountNumber,
+  payoutErrorMessage,
+} from "@/lib/payout/payoutRouteUtils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -106,6 +111,7 @@ export async function POST(request: NextRequest) {
               currency: true,
               executedAt: true,
               executionMethod: true,
+              policyEvalDetails: true,
             },
           });
 
@@ -160,6 +166,11 @@ export async function POST(request: NextRequest) {
           const externalReferenceId = referencePrefix 
             ? `${referencePrefix}-${payoutId.slice(-8)}`
             : null;
+          const { policyEvalDetails } = mergeExecutionNote(
+            payout.policyEvalDetails,
+            typeof note === "string" ? note : null,
+            true
+          );
 
           await prisma.jobPayout.update({
             where: { id: payoutId },
@@ -168,8 +179,7 @@ export async function POST(request: NextRequest) {
               executedAt,
               executionMethod,
               externalReferenceId,
-              executionNote: (note || "") + " [DEMO MODE]",
-              updatedAt: new Date(),
+              policyEvalDetails,
             },
           });
 
@@ -181,11 +191,11 @@ export async function POST(request: NextRequest) {
             success: true,
             status: "SENT",
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           results.push({
             payoutId,
             success: false,
-            error: error.message || "Failed to execute payout",
+            error: payoutErrorMessage(error, "Failed to execute payout"),
           });
         }
       }
@@ -225,6 +235,7 @@ export async function POST(request: NextRequest) {
             currency: true,
             executedAt: true,
             executionMethod: true,
+            policyEvalDetails: true,
           },
         });
 
@@ -285,6 +296,11 @@ export async function POST(request: NextRequest) {
         const externalReferenceId = referencePrefix
           ? `${referencePrefix}-${payoutId.substring(0, 8)}`
           : null;
+        const { policyEvalDetails, executionNote } = mergeExecutionNote(
+          payout.policyEvalDetails,
+          typeof note === "string" ? note : null,
+          false
+        );
 
         // Update payout (each in its own transaction)
         await prisma.jobPayout.update({
@@ -294,8 +310,7 @@ export async function POST(request: NextRequest) {
             executedAt,
             executionMethod,
             externalReferenceId,
-            executionNote: note || null,
-            updatedAt: new Date(),
+            policyEvalDetails,
           },
         });
 
@@ -315,7 +330,7 @@ export async function POST(request: NextRequest) {
             cleanerId: payout.cleanerId,
             executionMethod,
             externalReferenceId,
-            executionNote: note || null,
+            executionNote,
             executedAt: executedAt.toISOString(),
             bulkOperation: true,
           },
@@ -325,7 +340,7 @@ export async function POST(request: NextRequest) {
         notifyPayoutSent(
           payout.cleanerId,
           payoutId,
-          payout.cleanerAmount,
+          payoutAmountNumber(payout.cleanerAmount),
           payout.currency,
           executionMethod
         ).catch((err) => {
@@ -337,12 +352,12 @@ export async function POST(request: NextRequest) {
           success: true,
           status: "SENT",
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Individual payout failure doesn't stop the batch
         results.push({
           payoutId,
           success: false,
-          error: error.message || "Failed to execute payout",
+          error: payoutErrorMessage(error, "Failed to execute payout"),
         });
       }
     }
@@ -361,13 +376,13 @@ export async function POST(request: NextRequest) {
       failed: failureCount,
       results,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     console.error("[BULK_EXECUTE_PAYOUTS] Error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to bulk execute payouts",
+        error: payoutErrorMessage(error, "Failed to bulk execute payouts"),
       },
       { status: 500 }
     );
