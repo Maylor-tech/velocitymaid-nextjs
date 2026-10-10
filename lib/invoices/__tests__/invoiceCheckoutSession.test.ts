@@ -56,6 +56,8 @@ function unpaidInvoice(overrides: Record<string, unknown> = {}) {
     invoiceNumber: 'VM-2026-0099',
     publicToken: 'tok-1',
     status: 'SENT',
+    total: 225,
+    amountPaid: 0,
     balanceDue: 225,
     serviceType: 'Turnover',
     clientEmail: 'a@b.com',
@@ -79,6 +81,27 @@ describe('invoiceCheckoutSession lifecycle', () => {
       url: 'https://checkout.stripe.com/new',
     });
     createAdminNotification.mockResolvedValue({ ok: true, created: true, id: 'n1' });
+  });
+
+  it('blocks a $400 leftover checkout on the reconciled Elizabeth K job', async () => {
+    invoiceFindUnique.mockResolvedValue(
+      unpaidInvoice({
+        jobId: '874c4802-8cc0-433e-af51-72baa78d58d9',
+        status: 'SENT',
+        total: 400,
+        amountPaid: 0,
+        balanceDue: 400,
+      })
+    );
+    const result = await createOrReuseInvoiceCheckout({
+      publicToken: 'tok-1',
+      origin: 'https://velocitymaid.com',
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok === false) {
+      expect(result.code).toBe('UNAUTHORIZED_QUOTE_LEFTOVER');
+    }
+    expect(stripeCreate).not.toHaveBeenCalled();
   });
 
   it('rejects PAID invoices', async () => {

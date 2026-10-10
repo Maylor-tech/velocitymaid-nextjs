@@ -8,6 +8,8 @@ import { requireCustomerJobOwnership } from '@/lib/auth/requireRole';
 import { createBalanceCheckoutSession } from '@/lib/booking/stripeCheckout';
 import { getBookingDepositDollars } from '@/lib/booking/paymentConfig';
 import { assertStripeTestModeForDepositBooking } from '@/lib/stripe/stripeMode';
+import { resolveJobBalanceCollection } from '@/lib/billing/authorizedCollection';
+import { decimalToNumber } from '@/lib/invoices/invoiceUtils';
 
 /**
  * POST /api/customer/jobs/[jobId]/pay-balance
@@ -25,6 +27,9 @@ export async function POST(
       where: { id: params.jobId },
       include: {
         Customer: { select: { email: true } },
+        Invoice: {
+          select: { status: true, total: true, amountPaid: true, balanceDue: true },
+        },
       },
     });
 
@@ -56,6 +61,29 @@ export async function POST(
       return NextResponse.json(
         { success: false, error: 'No balance due for this job' },
         { status: 400 }
+      );
+    }
+
+    const collection = resolveJobBalanceCollection({
+      jobId: job.id,
+      jobBalanceDue: balanceDue,
+      invoice: job.Invoice
+        ? {
+            status: job.Invoice.status,
+            total: decimalToNumber(job.Invoice.total),
+            amountPaid: decimalToNumber(job.Invoice.amountPaid),
+            balanceDue: decimalToNumber(job.Invoice.balanceDue),
+          }
+        : null,
+    });
+    if (!collection.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: collection.reason,
+          code: collection.code,
+        },
+        { status: 409 }
       );
     }
 

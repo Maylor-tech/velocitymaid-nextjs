@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { getStripe } from '@/lib/stripe';
 import { decimalToNumber } from './invoiceUtils';
 import { serializeInvoice } from './serializeInvoice';
+import { resolveInvoiceCollection } from '@/lib/billing/authorizedCollection';
 
 export type CreateInvoiceCheckoutResult =
   | {
@@ -17,7 +18,7 @@ export type CreateInvoiceCheckoutResult =
       amountCents: number;
       invoice: ReturnType<typeof serializeInvoice>;
     }
-  | { ok: false; error: string; status: number };
+  | { ok: false; error: string; status: number; code?: string };
 
 async function expireStripeSession(stripeSessionId: string): Promise<boolean> {
   try {
@@ -196,6 +197,24 @@ export async function createOrReuseInvoiceCheckout(params: {
     return { ok: false, error: 'This invoice is already paid', status: 400 };
   }
 
+  const collection = resolveInvoiceCollection({
+    jobId: invoice.jobId,
+    invoice: {
+      status: invoice.status,
+      total: decimalToNumber(invoice.total),
+      amountPaid: decimalToNumber(invoice.amountPaid),
+      balanceDue: decimalToNumber(invoice.balanceDue),
+    },
+  });
+  if (!collection.allowed) {
+    return {
+      ok: false,
+      error: collection.reason,
+      status: 409,
+      code: collection.code,
+    };
+  }
+
   const balance = decimalToNumber(invoice.balanceDue);
   const amountCents = Math.round(balance * 100);
   if (balance <= 0 || amountCents <= 0) {
@@ -274,6 +293,23 @@ export async function createOrReuseInvoiceCheckout(params: {
   }
   if (fresh.status === 'PAID') {
     return { ok: false, error: 'This invoice is already paid', status: 400 };
+  }
+  const freshCollection = resolveInvoiceCollection({
+    jobId: fresh.jobId,
+    invoice: {
+      status: fresh.status,
+      total: decimalToNumber(fresh.total),
+      amountPaid: decimalToNumber(fresh.amountPaid),
+      balanceDue: decimalToNumber(fresh.balanceDue),
+    },
+  });
+  if (!freshCollection.allowed) {
+    return {
+      ok: false,
+      error: freshCollection.reason,
+      status: 409,
+      code: freshCollection.code,
+    };
   }
   const freshBalance = decimalToNumber(fresh.balanceDue);
   const freshCents = Math.round(freshBalance * 100);

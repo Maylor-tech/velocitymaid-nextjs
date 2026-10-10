@@ -22,6 +22,7 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEntry } from "@/lib/audit";
 import { notifyPayoutSent } from "@/lib/notifications";
 import { DEMO_MODE } from "@/lib/demoMode";
+import { loadPayoutExecutionDecision } from "@/lib/payout/loadPayoutExecutionDecision";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -135,6 +136,16 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
+          const hold = await loadPayoutExecutionDecision(payoutId);
+          if (hold?.hold) {
+            results.push({
+              payoutId,
+              success: false,
+              error: hold.reason ?? "Payout execution held",
+            });
+            continue;
+          }
+
           const allowedStatuses = ["APPROVED", "PENDING", "READY"];
           if (!allowedStatuses.includes(payout.status)) {
             results.push({
@@ -242,6 +253,16 @@ export async function POST(request: NextRequest) {
             payoutId,
             success: false,
             error: "Cannot execute payout that is already PAID",
+          });
+          continue;
+        }
+
+        const hold = await loadPayoutExecutionDecision(payoutId);
+        if (hold?.hold) {
+          results.push({
+            payoutId,
+            success: false,
+            error: hold.reason ?? "Payout execution held",
           });
           continue;
         }

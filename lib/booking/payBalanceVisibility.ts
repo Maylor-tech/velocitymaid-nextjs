@@ -1,4 +1,7 @@
+import { resolveJobBalanceCollection } from '@/lib/billing/authorizedCollection';
+
 export type PayBalanceJobSnapshot = {
+  id?: string;
   status: string;
   paymentStatus?: string | null;
   balanceDue?: number | null;
@@ -17,7 +20,16 @@ export function canShowPayBalance(job: PayBalanceJobSnapshot): boolean {
   if (job.paymentStatus !== 'BALANCE_DUE') return false;
 
   const due = job.balanceDue ?? 0;
-  return due > 0;
+  if (due <= 0) return false;
+  if (job.id) {
+    const collection = resolveJobBalanceCollection({
+      jobId: job.id,
+      jobBalanceDue: due,
+      invoice: null,
+    });
+    if (!collection.allowed) return false;
+  }
+  return true;
 }
 
 /** Invoice-after-service: pay via public invoice page, not Stripe job-balance checkout. */

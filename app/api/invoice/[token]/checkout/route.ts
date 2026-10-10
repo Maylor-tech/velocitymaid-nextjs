@@ -21,7 +21,7 @@ export async function POST(
 
     if (result.ok === false) {
       return NextResponse.json(
-        { success: false, error: result.error },
+        { success: false, error: result.error, code: result.code },
         { status: result.status }
       );
     }

@@ -59,6 +59,8 @@ interface JobDetails {
   depositAmount?: number | null;
   completedAt?: string;
   invoicePayUrl?: string | null;
+  hasLinkedInvoice?: boolean;
+  linkedInvoiceStatus?: string | null;
 }
 
 function JobDetailsContent() {
@@ -199,6 +201,7 @@ function JobDetailsContent() {
   const showPayBalance =
     job &&
     canShowPayBalance({
+      id: job.id,
       status: job.status,
       paymentStatus: job.paymentStatus,
       balanceDue: job.balanceDue,

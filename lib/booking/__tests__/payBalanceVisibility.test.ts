@@ -45,4 +45,5 @@ describe('canShowPayBalance', () => {
       })
     ).toBe(true);
   });
+
 });

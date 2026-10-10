@@ -1979,8 +1979,10 @@ model InvoicePayment {
   Invoice              Invoice              @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   Receipt              Receipt?
 
+  @@unique([invoiceId, transactionReference], name: "invoice_payment_intent_once")
   @@index([invoiceId])
   @@index([stripeSessionId])
+  @@index([transactionReference])
 }
 
 /// Tracks Stripe Checkout sessions for service invoices so stale sessions can

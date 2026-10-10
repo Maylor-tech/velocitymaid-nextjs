@@ -12,6 +12,7 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import { logAuditEntry } from "@/lib/audit";
 import { randomUUID } from "crypto";
+import { loadPayoutExecutionDecision } from "@/lib/payout/loadPayoutExecutionDecision";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,6 +44,21 @@ export async function POST(
       return NextResponse.json(
         { success: false, error: "Payout not found" },
         { status: 404 }
+      );
+    }
+
+    const hold = await loadPayoutExecutionDecision(payoutId);
+    if (hold?.hold) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: hold.code,
+          error: hold.reason,
+          hold: true,
+          mutatePayout: false,
+          preview: hold.preview,
+        },
+        { status: 409 }
       );
     }
 
