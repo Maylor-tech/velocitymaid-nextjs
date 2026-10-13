@@ -16,13 +16,13 @@ import { resolveBillingPolicy } from '@/lib/billing/billingPolicy';
 import {
   isOverduePayment,
   isPastDate,
-  isUnassigned,
   jobHasOutstandingPayment,
   type JobOperationsInput,
 } from '@/lib/admin/jobsOperations';
 
 export type JobTriageKind =
   | 'past_stale'
+  | 'needs_close'
   | 'overdue_payment'
   | 'needs_booking_approval'
   | 'payment_required'
@@ -50,7 +50,8 @@ export interface JobTriageReason {
 const TERMINAL = new Set(['COMPLETED', 'CANCELLED', 'CANCELLED_EMERGENCY']);
 
 const REASON: Record<JobTriageKind, { label: string; tone: TriageTone }> = {
-  past_stale: { label: 'Past-dated / stale', tone: 'muted' },
+  past_stale: { label: 'Needs close', tone: 'warning' },
+  needs_close: { label: 'Needs close', tone: 'warning' },
   overdue_payment: { label: 'Overdue payment', tone: 'danger' },
   needs_booking_approval: { label: 'Needs booking approval', tone: 'warning' },
   payment_required: { label: 'Payment required before staffing', tone: 'warning' },
@@ -88,9 +89,9 @@ export function getJobTriageReason(
     return build('closed');
   }
 
-  // Stale: unassigned with a service date already in the past (abandoned).
-  if (isUnassigned(job) && isPastDate(job.preferredDate, now)) {
-    return build('past_stale');
+  // Past service date and still open — operator must close or cancel. Not "Urgent".
+  if (isPastDate(job.preferredDate, now)) {
+    return build('needs_close');
   }
 
   // Overdue money on an active job (e.g. past-date assigned & unpaid).

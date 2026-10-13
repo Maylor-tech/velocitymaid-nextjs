@@ -98,6 +98,46 @@ export function serviceDateKey(
 /** Operating timezone for business/service-date reasoning. */
 export const BUSINESS_TIMEZONE = process.env.BILLING_TIMEZONE || 'America/New_York';
 
+/** YYYY-MM-DD of `now` in the business timezone (America/New_York unless overridden). */
+export function easternDateKey(
+  now: Date = new Date(),
+  timeZone: string = BUSINESS_TIMEZONE
+): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+}
+
+/** Add signed whole days to a YYYY-MM-DD key without using the local timezone. */
+export function addCalendarDayKey(yyyyMmDd: string, days: number): string {
+  const parsed = parseServiceDateInput(yyyyMmDd);
+  if (!parsed) return yyyyMmDd;
+  parsed.setUTCDate(parsed.getUTCDate() + days);
+  return serviceDateKey(parsed) ?? yyyyMmDd;
+}
+
+export type ServiceDayRelation = 'unscheduled' | 'past' | 'today' | 'future';
+
+/**
+ * Compare a job service date to "today" in Eastern.
+ * UTC-midnight preferredDate values keep their UTC calendar day (no EDT backshift).
+ */
+export function serviceDayRelativeToEastern(
+  preferredDate: string | Date | null | undefined,
+  now: Date = new Date(),
+  timeZone: string = BUSINESS_TIMEZONE
+): ServiceDayRelation {
+  const service = businessDateKey(preferredDate, timeZone);
+  if (!service) return 'unscheduled';
+  const today = easternDateKey(now, timeZone);
+  if (service === today) return 'today';
+  if (service < today) return 'past';
+  return 'future';
+}
+
 function isUtcMidnight(date: Date): boolean {
   return (
     date.getUTCHours() === 0 &&

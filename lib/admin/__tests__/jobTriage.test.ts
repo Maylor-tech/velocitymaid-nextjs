@@ -84,13 +84,28 @@ describe('getJobTriageReason', () => {
     expect(getJobTriageReason(job({ id: 'c', status: 'CANCELLED' }), NOW).kind).toBe('closed');
   });
 
-  it('unassigned past-dated → past_stale', () => {
+  it('unassigned past-dated → needs_close', () => {
     expect(
       getJobTriageReason(
         job({ id: 's', assignedCleanerId: null, preferredDate: PAST, paymentStatus: 'PAID' }),
         NOW
       ).kind
-    ).toBe('past_stale');
+    ).toBe('needs_close');
+  });
+
+  it('assigned past-dated paid job is Needs close, not staffed/urgent', () => {
+    const reason = getJobTriageReason(
+      job({
+        id: 'chris',
+        status: 'ASSIGNED',
+        assignedCleanerId: 'brian',
+        preferredDate: PAST,
+        paymentStatus: 'PAID',
+      }),
+      NOW
+    );
+    expect(reason.kind).toBe('needs_close');
+    expect(reason.label).toBe('Needs close');
   });
 
   it('isJobAssignable is the staffing authority: same inputs, policy flips ready vs blocked', () => {

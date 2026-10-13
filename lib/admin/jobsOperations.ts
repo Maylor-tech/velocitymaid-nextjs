@@ -3,11 +3,17 @@
  * Pure functions — safe to use on client and server.
  */
 
-import { formatServiceDate } from '@/lib/dates/serviceDate';
+import {
+  addCalendarDayKey,
+  businessDateKey,
+  easternDateKey,
+  formatServiceDate,
+  serviceDayRelativeToEastern,
+} from '@/lib/dates/serviceDate';
 import { isEffectivelyOpen, effectiveOfferStatus } from '@/lib/dispatch/offerExpiry';
 import { resolveBillingPolicy } from '@/lib/billing/billingPolicy';
 
-export type JobPriority = 'urgent' | 'high' | 'medium' | 'normal';
+export type JobPriority = 'urgent' | 'needs_close' | 'high' | 'medium' | 'normal';
 
 export type PhotoStatusKind = 'none' | 'partial' | 'complete' | 'missing';
 
@@ -166,25 +172,17 @@ export function isSameCalendarDay(a: Date, b: Date): boolean {
 }
 
 export function isToday(iso: string | null | undefined, now = new Date()): boolean {
-  if (!iso) return false;
-  return isSameCalendarDay(new Date(iso), now);
+  return serviceDayRelativeToEastern(iso, now) === 'today';
 }
 
 export function isTomorrow(iso: string | null | undefined, now = new Date()): boolean {
-  if (!iso) return false;
-  const d = new Date(iso);
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return isSameCalendarDay(d, tomorrow);
+  const service = businessDateKey(iso);
+  if (!service) return false;
+  return service === addCalendarDayKey(easternDateKey(now), 1);
 }
 
 export function isPastDate(iso: string | null | undefined, now = new Date()): boolean {
-  if (!iso) return false;
-  const d = new Date(iso);
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
-  d.setHours(0, 0, 0, 0);
-  return d < today;
+  return serviceDayRelativeToEastern(iso, now) === 'past';
 }
 
 export function isThisMonth(iso: string | null | undefined, now = new Date()): boolean {
@@ -297,7 +295,8 @@ export function getJobPriority(job: JobOperationsInput, now = new Date()): JobPr
     isPastDate(job.preferredDate, now) &&
     !TERMINAL_STATUSES.has(job.status);
 
-  if (pastIncomplete || isOverduePayment(job, now)) return 'urgent';
+  if (pastIncomplete) return 'needs_close';
+  if (isOverduePayment(job, now)) return 'urgent';
   if (isToday(job.preferredDate, now)) return 'high';
   if (isTomorrow(job.preferredDate, now)) return 'medium';
   return 'normal';
@@ -307,6 +306,8 @@ export function priorityLabel(p: JobPriority): string {
   switch (p) {
     case 'urgent':
       return 'Urgent';
+    case 'needs_close':
+      return 'Needs close';
     case 'high':
       return 'Today';
     case 'medium':
@@ -320,10 +321,12 @@ export function priorityClasses(p: JobPriority): string {
   switch (p) {
     case 'urgent':
       return 'bg-vm-danger-bg text-vm-danger border-vm-danger/20';
-    case 'high':
+    case 'needs_close':
       return 'bg-vm-warning-bg text-vm-warning border-vm-warning/30';
-    case 'medium':
+    case 'high':
       return 'bg-vm-cyan-tint text-vm-navy border-vm-cyan/30';
+    case 'medium':
+      return 'bg-vm-navy/10 text-vm-navy border-vm-navy/20';
     default:
       return 'bg-vm-surface text-vm-muted border-vm-border';
   }
@@ -620,6 +623,20 @@ export function formatUsdDetailed(amount: number, currency = 'USD'): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+export function formatReceivedAt(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 export function formatJobDate(dateStr: string | null): string {

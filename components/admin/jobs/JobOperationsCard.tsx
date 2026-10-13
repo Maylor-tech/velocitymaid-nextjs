@@ -15,6 +15,7 @@ import {
   buildWorkflowSteps,
   formatJobDate,
   formatUsdDetailed,
+  formatReceivedAt,
   getJobPriority,
   getPhotoStatus,
   getPrimaryAction,
@@ -36,6 +37,13 @@ export interface AdminJobListItem extends JobOperationsInput {
   totalPrice: number | null;
   currency: string | null;
   archivedAt?: string | null;
+  createdAt?: string | null;
+  property?: {
+    id: string;
+    name: string;
+    address: string;
+    guestDisplayName: string | null;
+  } | null;
   assignedCleaner: {
     id: string;
     name: string | null;
@@ -138,7 +146,9 @@ export function JobOperationsCard({
             )}
           </div>
 
-          {!closedPaid && <JobStaffingMoneyStrips job={job} />}
+          {!closedPaid && priority !== 'needs_close' && (
+            <JobStaffingMoneyStrips job={job} />
+          )}
 
           <div>
             <Link
@@ -147,8 +157,20 @@ export function JobOperationsCard({
             >
               {job.customerName || 'Guest'}
             </Link>
-            {job.address && (
-              <p className="mt-0.5 font-body text-sm text-vm-muted">{job.address}</p>
+            {(job.property?.guestDisplayName || job.property?.name) && (
+              <p className="mt-0.5 font-body text-sm font-medium text-vm-navy">
+                {job.property?.guestDisplayName || job.property?.name}
+              </p>
+            )}
+            {(job.property?.address || job.address) && (
+              <p className="mt-0.5 font-body text-sm text-vm-muted">
+                {job.property?.address || job.address}
+              </p>
+            )}
+            {job.createdAt && (
+              <p className="mt-1 font-body text-xs text-vm-muted">
+                Received {formatReceivedAt(job.createdAt)} ET
+              </p>
             )}
           </div>
 
@@ -236,7 +258,7 @@ export function JobOperationsCard({
             )}
           </div>
 
-          {!closedPaid && (
+          {!closedPaid && priority !== 'needs_close' && (
             <>
               <div>
                 <p className="mb-1.5 font-body text-xs font-semibold uppercase tracking-wide text-vm-muted">
