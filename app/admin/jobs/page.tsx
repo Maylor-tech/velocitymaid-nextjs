@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Archive, Loader2, Plus } from "lucide-react";
 import {
   JobsOperationsKpis,
@@ -13,21 +13,45 @@ import {
   type AdminJobListItem,
 } from "@/components/admin/jobs/JobOperationsCard";
 import type { OperationsSummary } from "@/lib/admin/jobsOperations";
-import { getJobPriority } from "@/lib/admin/jobsOperations";
+import {
+  JOBS_BOARD_VIEWS,
+  isJobsBoardView,
+  sortJobsBoardView,
+  type JobsBoardView,
+} from "@/lib/admin/jobsBoard";
 import { useAdminShell } from "@/components/admin/shell/AdminShell";
 
 type MarketTab = "all" | "vermont" | "new-jersey";
+
+const BOARD_LABEL: Record<JobsBoardView, string> = {
+  inbox: "Inbox",
+  today: "Today",
+  upcoming: "Upcoming",
+  completed: "Completed",
+  exceptions: "Exceptions",
+};
 
 const navyButton =
   "inline-flex items-center justify-center rounded-lg bg-vm-navy px-4 py-2 font-heading text-sm text-white transition-opacity hover:opacity-90";
 
 function AdminJobsPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { isBranchScoped } = useAdminShell();
   const [allJobs, setAllJobs] = useState<AdminJobListItem[]>([]);
   const [summary, setSummary] = useState<OperationsSummary | null>(null);
+  const [boardCounts, setBoardCounts] = useState<Record<JobsBoardView, number>>({
+    inbox: 0,
+    today: 0,
+    upcoming: 0,
+    completed: 0,
+    exceptions: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
+  const board: JobsBoardView = isJobsBoardView(searchParams.get("board"))
+    ? (searchParams.get("board") as JobsBoardView)
+    : "today";
 
   const [marketTab, setMarketTab] = useState<MarketTab>(
     isBranchScoped ? "vermont" : "all"
@@ -64,6 +88,7 @@ function AdminJobsPageContent() {
       const params = new URLSearchParams();
       if (showArchived) params.append("includeArchived", "true");
       if (customerIdFilter) params.append("customerId", customerIdFilter);
+      params.append("board", board);
 
       const res = await fetch(`/api/admin/jobs/list?${params.toString()}`);
       const data = await res.json();
@@ -76,6 +101,7 @@ function AdminJobsPageContent() {
       }
       setAllJobs(data.jobs ?? []);
       setSummary(data.summary ?? null);
+      if (data.boardCounts) setBoardCounts(data.boardCounts);
     } catch {
       setLoadFailed(true);
       setAllJobs([]);
@@ -83,7 +109,7 @@ function AdminJobsPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [showArchived, customerIdFilter]);
+  }, [showArchived, customerIdFilter, board]);
 
   useEffect(() => {
     fetchJobs();
@@ -161,16 +187,14 @@ function AdminJobsPageContent() {
       return true;
     });
 
-    const priorityOrder = { urgent: 0, high: 1, medium: 2, normal: 3 };
-    return [...filtered].sort((a, b) => {
-      const pa = priorityOrder[getJobPriority(a)];
-      const pb = priorityOrder[getJobPriority(b)];
-      if (pa !== pb) return pa - pb;
-      const da = a.preferredDate ? new Date(a.preferredDate).getTime() : Infinity;
-      const db = b.preferredDate ? new Date(b.preferredDate).getTime() : Infinity;
-      return da - db;
-    });
-  }, [allJobs, marketTab, statusFilter, paymentFilter, unassignedOnly]);
+    return sortJobsBoardView(filtered, board);
+  }, [allJobs, marketTab, statusFilter, paymentFilter, unassignedOnly, board]);
+
+  const setBoard = (next: JobsBoardView) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("board", next);
+    router.replace(`/admin/jobs?${params.toString()}`);
+  };
 
   return (
     <div className="p-7 pb-28">
@@ -187,7 +211,8 @@ function AdminJobsPageContent() {
               Jobs Operations
             </h1>
             <p className="mt-1 font-body text-sm text-vm-muted">
-              Daily schedule, payments, assignments, photos, and host communication.
+              Inbox for new requests. Today and Upcoming for scheduled work.
+              Completed stays closed. Exceptions need a human close — never auto-complete.
             </p>
             {customerIdFilter && (
               <p className="mt-2 font-body text-xs text-vm-cyan-dark">
@@ -227,6 +252,33 @@ function AdminJobsPageContent() {
               </>
             )}
 
+            <div className="mb-4 flex flex-wrap items-center gap-4 border-b border-vm-border">
+              {JOBS_BOARD_VIEWS.map((view) => (
+                <MarketTabButton
+                  key={view}
+                  label={BOARD_LABEL[view]}
+                  count={boardCounts[view]}
+                  active={board === view}
+                  onClick={() => setBoard(view)}
+                />
+              ))}
+            </div>
+
+            {board === "exceptions" && (
+              <div className="mb-4 rounded-lg border border-vm-warning/40 bg-vm-warning-bg px-4 py-3 font-body text-sm text-vm-navy">
+                Past service date, not completed. Confirm the clean happened before
+                closing. Chris (Sep 16), Jeff (Sep 23), and Tiffany Mayo (Oct 11) stay
+                here until verified. Do not auto-complete.
+              </div>
+            )}
+
+            {board === "inbox" && (
+              <div className="mb-4 rounded-lg border border-vm-border bg-vm-white px-4 py-3 font-body text-sm text-vm-muted">
+                New requests (RECEIVED), newest first. A request is not a scheduled
+                cleaning until it is confirmed.
+              </div>
+            )}
+
             {!isBranchScoped && (
             <div className="mb-4 flex items-center gap-6 border-b border-vm-border">
               <MarketTabButton
@@ -251,19 +303,18 @@ function AdminJobsPageContent() {
             )}
 
             <div className="mb-6 flex flex-wrap items-center gap-3">
+              {(board === "today" || board === "upcoming") && (
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan"
               >
                 <option value="all">All Statuses</option>
-                <option value="RECEIVED">Received</option>
                 <option value="CONFIRMED">Confirmed</option>
                 <option value="ASSIGNED">Scheduled</option>
                 <option value="IN_PROGRESS">In Progress</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="CANCELLED">Cancelled</option>
               </select>
+              )}
               {!isBranchScoped && (
               <select
                 value={paymentFilter}

@@ -13,6 +13,11 @@ import { requireRole } from '@/lib/auth/requireRole';
 import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
 import { prisma } from '@/lib/prisma';
 import { computeOperationsSummary } from '@/lib/admin/jobsOperations';
+import {
+  isJobsBoardView,
+  jobsBoardDateBounds,
+  type JobsBoardView,
+} from '@/lib/admin/jobsBoard';
 import { loadJobTeamBatch } from '@/lib/cleaners/internalCleanerService';
 import {
   mergePrimaryWithTeam,
@@ -45,6 +50,9 @@ export async function GET(request: NextRequest) {
     const includeArchived = searchParams.get('includeArchived') === 'true';
     const search = searchParams.get('search') || '';
     const customerId = searchParams.get('customerId') || '';
+    const boardParam = searchParams.get('board');
+    const board: JobsBoardView = isJobsBoardView(boardParam) ? boardParam : 'today';
+    const { today, tomorrow } = jobsBoardDateBounds();
 
     const branchIdParam = searchParams.get('branchId');
     const branchFilter =
@@ -64,9 +72,28 @@ export async function GET(request: NextRequest) {
       : undefined;
 
     const where: Record<string, unknown> = {};
+    const andFilters: Record<string, unknown>[] = [];
 
     if (!includeArchived) {
       where.archivedAt = null;
+    }
+
+    if (board === 'inbox') {
+      where.status = 'RECEIVED';
+      andFilters.push({
+        OR: [{ preferredDate: null }, { preferredDate: { gte: today } }],
+      });
+    } else if (board === 'today') {
+      where.status = { in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS'] };
+      where.preferredDate = { gte: today, lt: tomorrow };
+    } else if (board === 'upcoming') {
+      where.status = { in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS'] };
+      where.preferredDate = { gte: tomorrow };
+    } else if (board === 'completed') {
+      where.status = 'COMPLETED';
+    } else if (board === 'exceptions') {
+      where.status = { notIn: ['COMPLETED', 'CANCELLED', 'CANCELLED_EMERGENCY'] };
+      where.preferredDate = { lt: today };
     }
 
     if (branchFilter) {
@@ -77,7 +104,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (status && status !== 'all') {
+    if (status && status !== 'all' && board !== 'inbox' && board !== 'completed' && board !== 'exceptions') {
       where.status = status;
     }
 
@@ -89,7 +116,6 @@ export async function GET(request: NextRequest) {
       where.assignedCleanerId = cleanerId;
     } else if (unassignedOnly) {
       where.assignedCleanerId = null;
-      where.status = { notIn: ['CANCELLED', 'CANCELLED_EMERGENCY'] };
     }
 
     if (dateFrom || dateTo) {
@@ -106,11 +132,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      where.OR = [
-        { customerName: { contains: search, mode: 'insensitive' } },
-        { address: { contains: search, mode: 'insensitive' } },
-        { serviceLocation: { contains: search, mode: 'insensitive' } },
-      ];
+      andFilters.push({
+        OR: [
+          { customerName: { contains: search, mode: 'insensitive' } },
+          { address: { contains: search, mode: 'insensitive' } },
+          { serviceLocation: { contains: search, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (andFilters.length === 1) {
+      Object.assign(where, andFilters[0]);
+    } else if (andFilters.length > 1) {
+      where.AND = andFilters;
     }
 
     if (customerId) {
@@ -175,6 +209,14 @@ export async function GET(request: NextRequest) {
             preferSameCleaner: true,
           },
         },
+        Property: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            guestDisplayName: true,
+          },
+        },
         User: {
           select: {
             id: true,
@@ -215,10 +257,14 @@ export async function GET(request: NextRequest) {
           select: { id: true },
         },
       },
-      orderBy: [
-        { preferredDate: 'asc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy:
+        board === 'inbox'
+          ? [{ createdAt: 'desc' as const }]
+          : board === 'completed'
+            ? [{ completedAt: 'desc' as const }]
+            : board === 'exceptions'
+              ? [{ preferredDate: 'asc' as const }, { createdAt: 'asc' as const }]
+              : [{ preferredDate: 'asc' as const }, { createdAt: 'asc' as const }],
       take: 200,
     });
 
@@ -268,6 +314,14 @@ export async function GET(request: NextRequest) {
       customerId: job.customerId,
       customer: job.Customer,
       customerName: job.customerName,
+      property: job.Property
+        ? {
+            id: job.Property.id,
+            name: job.Property.name,
+            address: job.Property.address,
+            guestDisplayName: job.Property.guestDisplayName,
+          }
+        : null,
       assignedCleanerId: job.assignedCleanerId,
       assignedCleaner: job.User
         ? {
@@ -363,10 +417,61 @@ export async function GET(request: NextRequest) {
       invoiceAwaitingCount
     );
 
+    const countBase: Record<string, unknown> = {};
+    if (!includeArchived) countBase.archivedAt = null;
+    if (branchFilter) {
+      if (BRANCH_SLUGS.has(branchFilter)) countBase.Branch = { slug: branchFilter };
+      else countBase.branchId = branchFilter;
+    }
+    if (customerId) countBase.customerId = customerId;
+
+    const [inboxCount, todayCount, upcomingCount, completedCount, exceptionsCount] =
+      await Promise.all([
+        prisma.job.count({
+          where: {
+            ...countBase,
+            status: 'RECEIVED',
+            OR: [{ preferredDate: null }, { preferredDate: { gte: today } }],
+          },
+        }),
+        prisma.job.count({
+          where: {
+            ...countBase,
+            status: { in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS'] },
+            preferredDate: { gte: today, lt: tomorrow },
+          },
+        }),
+        prisma.job.count({
+          where: {
+            ...countBase,
+            status: { in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS'] },
+            preferredDate: { gte: tomorrow },
+          },
+        }),
+        prisma.job.count({
+          where: { ...countBase, status: 'COMPLETED' },
+        }),
+        prisma.job.count({
+          where: {
+            ...countBase,
+            status: { notIn: ['COMPLETED', 'CANCELLED', 'CANCELLED_EMERGENCY'] },
+            preferredDate: { lt: today },
+          },
+        }),
+      ]);
+
     return NextResponse.json({
       success: true,
+      board,
       jobs: jobsWithTeam,
       summary,
+      boardCounts: {
+        inbox: inboxCount,
+        today: todayCount,
+        upcoming: upcomingCount,
+        completed: completedCount,
+        exceptions: exceptionsCount,
+      },
     });
   } catch (err: unknown) {
     const authResponse = rethrowIfAuthResponse(err);
