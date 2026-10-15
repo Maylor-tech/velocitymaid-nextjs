@@ -3,6 +3,7 @@ import { JobStatus, PaymentStatus } from '@prisma/client';
 
 const mocks = vi.hoisted(() => ({
   findUniqueJob: vi.fn(),
+  findUniqueUser: vi.fn(),
   findUniquePayout: vi.fn(),
   findFirstOffer: vi.fn(),
   createPayout: vi.fn(),
@@ -12,6 +13,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     job: { findUnique: (...a: unknown[]) => mocks.findUniqueJob(...a) },
+    user: { findUnique: (...a: unknown[]) => mocks.findUniqueUser(...a) },
     jobPayout: {
       findUnique: (...a: unknown[]) => mocks.findUniquePayout(...a),
       create: (...a: unknown[]) => mocks.createPayout(...a),
@@ -46,6 +48,11 @@ describe('COMPLETED → JobPayout orchestration (Phase 7D-1)', () => {
     vi.clearAllMocks();
     mocks.findUniquePayout.mockResolvedValue(null);
     mocks.findFirstOffer.mockResolvedValue(null);
+    mocks.findUniqueUser.mockResolvedValue({
+      id: 'cleaner-1',
+      email: 'cleaner@example.com',
+      role: 'CLEANER',
+    });
     mocks.createPayout.mockImplementation(
       async ({ data }: { data: { id: string } }) => data
     );

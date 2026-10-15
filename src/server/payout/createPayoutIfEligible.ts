@@ -1,6 +1,7 @@
 import { JobOfferStatus, JobStatus } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
+import { isOwnerAssigneeForPayoutSkip } from '@/lib/payout/ownerAssignee';
 import { calcPayout, round2 } from '@/lib/payoutRules';
 
 export type CreatePayoutResult =
@@ -142,6 +143,15 @@ export async function createPayoutIfEligible(
     return { ok: false, reason: 'NOT_COMPLETED' };
   }
   if (!job.assignedCleanerId) return { ok: false, reason: 'NO_CLEANER' };
+
+  // Gate 2b: owner-staffed jobs never mint a payable. No money movement.
+  const assignee = await prisma.user.findUnique({
+    where: { id: job.assignedCleanerId },
+    select: { id: true, email: true, role: true },
+  });
+  if (isOwnerAssigneeForPayoutSkip(assignee)) {
+    return { ok: false, reason: 'OWNER_ASSIGNEE' };
+  }
 
   const existing = await prisma.jobPayout.findUnique({ where: { jobId } });
   if (existing) {
