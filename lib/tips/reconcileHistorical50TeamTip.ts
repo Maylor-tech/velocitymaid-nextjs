@@ -6,13 +6,18 @@
 
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
+import {
+  BRIAN_OWNER_CLEANER_ID,
+  CARYLL_CLEANER_ID,
+} from '@/lib/payout/ownerAssignee';
 import { markTipReceived } from '@/lib/tips/markTipReceived';
 import { setTipAllocations } from '@/lib/tips/tipAllocation';
 
 export const HISTORICAL_50_TIP_ID = 'cmskddblp0000k304e5k5y9b8';
 export const HISTORICAL_50_PI_ID = 'pi_3U29fgRqPKxN0h8W1sIum8oS';
-export const BRIAN_CLEANER_ID = 'admin-1782271497170-94e9jc';
-export const CARYLL_CLEANER_ID = '1a0483bc-8a0d-4837-9f00-5ec6b5d804d1';
+/** @deprecated Prefer BRIAN_OWNER_CLEANER_ID from lib/payout/ownerAssignee */
+export const BRIAN_CLEANER_ID = BRIAN_OWNER_CLEANER_ID;
+export { CARYLL_CLEANER_ID };
 
 export async function reconcileHistorical50TeamTip(input: {
   adminId: string;
