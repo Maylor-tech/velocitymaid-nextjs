@@ -14,7 +14,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
     const invoice = await prisma.invoice.findUnique({
       where: { id: params.id },
       include: { items: true, payments: true },
@@ -28,12 +28,16 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Invoice is already paid' }, { status: 400 });
     }
 
-    const { payment, previousStatus, becamePaid } = await recordInvoicePayment({
-      invoiceId: params.id,
-      amount: balance,
-      paymentMethod: 'OTHER',
-      notes: 'Marked paid by admin',
-    });
+    const { payment, previousStatus, becamePaid, duplicate, clamped } =
+      await recordInvoicePayment({
+        invoiceId: params.id,
+        amount: balance,
+        paymentMethod: 'OTHER',
+        notes: 'Marked paid by admin',
+        actorId: auth.userId,
+      });
+
+    const creditedAmount = Number(payment.amount);
 
     const updated = await prisma.invoice.findUnique({
       where: { id: params.id },
@@ -41,11 +45,19 @@ export async function POST(
     });
     const serialized = serializeInvoice(updated!);
     if (becamePaid) {
-      await notifyInvoicePaymentConfirmation(params.id, previousStatus, balance);
+      await notifyInvoicePaymentConfirmation(params.id, previousStatus, creditedAmount);
     }
-    await finalizeInvoicePayment(params.id, payment.id, balance);
+    if (!duplicate) {
+      await finalizeInvoicePayment(params.id, payment.id, creditedAmount);
+    }
 
-    return NextResponse.json({ success: true, invoice: serialized });
+    return NextResponse.json({
+      success: true,
+      invoice: serialized,
+      duplicate,
+      clamped,
+      paymentAmount: creditedAmount,
+    });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to mark paid';

@@ -8,9 +8,23 @@ const invoiceUpdate = vi.fn();
 const jobFindUnique = vi.fn();
 const jobUpdate = vi.fn();
 const expireMismatched = vi.fn();
+const queryRaw = vi.fn();
+const logAuditEntry = vi.fn();
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({
+        $queryRaw: (...a: unknown[]) => queryRaw(...a),
+        invoice: {
+          findUnique: (...a: unknown[]) => invoiceFindUnique(...a),
+          update: (...a: unknown[]) => invoiceUpdate(...a),
+        },
+        invoicePayment: {
+          findFirst: (...a: unknown[]) => invoicePaymentFindFirst(...a),
+          create: (...a: unknown[]) => invoicePaymentCreate(...a),
+        },
+      }),
     invoice: {
       findUnique: (...a: unknown[]) => invoiceFindUnique(...a),
       update: (...a: unknown[]) => invoiceUpdate(...a),
@@ -24,6 +38,10 @@ vi.mock('@/lib/prisma', () => ({
       update: (...a: unknown[]) => jobUpdate(...a),
     },
   },
+}));
+
+vi.mock('@/lib/audit', () => ({
+  logAuditEntry: (...a: unknown[]) => logAuditEntry(...a),
 }));
 
 vi.mock('@/lib/invoices/invoiceCheckoutSession', () => ({
@@ -53,8 +71,10 @@ function unpaidInvoice(overrides: Record<string, unknown> = {}) {
 describe('recordInvoicePayment + job sync', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    queryRaw.mockResolvedValue([{ id: 'inv-1' }]);
     invoicePaymentFindFirst.mockResolvedValue(null);
     expireMismatched.mockResolvedValue({ expired: 0 });
+    logAuditEntry.mockResolvedValue('audit-1');
     invoicePaymentCreate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
       id: 'pay-1',
       ...data,
@@ -226,6 +246,7 @@ describe('recordInvoicePayment + job sync', () => {
       invoiceId: 'inv-1',
       amount: 100,
       paymentMethod: 'ZELLE',
+      transactionReference: 'zelle-partial-1',
     });
 
     expect(jobUpdate).toHaveBeenCalledWith(
@@ -261,6 +282,7 @@ describe('recordInvoicePayment + job sync', () => {
       invoiceId: 'inv-1',
       amount: 225,
       paymentMethod: 'ZELLE',
+      transactionReference: 'zelle-full-1',
     });
 
     expect(expireMismatched).toHaveBeenCalledWith(

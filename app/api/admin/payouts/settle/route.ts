@@ -15,6 +15,7 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEntry } from "@/lib/audit";
 import { notifyPayoutPaid } from "@/lib/notifications";
 import { DEMO_MODE } from "@/lib/demoMode";
+import { ensureJobPayoutLedgerEntry } from "@/lib/booking/ensureJobPayoutLedgerEntry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -161,36 +162,20 @@ export async function POST(request: NextRequest) {
         settledPayoutIds.push(payout.id);
         jobIds.push(payout.jobId);
 
-        // Ensure TransactionLedger entry exists (idempotent check)
-        const existingLedger = await tx.transactionLedger.findFirst({
-          where: {
-            referenceId: payout.id,
-            referenceType: "JobPayout",
+        await ensureJobPayoutLedgerEntry(tx, {
+          payoutId: payout.id,
+          jobId: payout.jobId,
+          cleanerId: payout.cleanerId,
+          branchId: payout.branchId,
+          cleanerAmount: Number(payout.cleanerAmount),
+          currency: payout.currency,
+          description: `Payout settled PAID for job ${payout.jobId}`,
+          timestamp: paidAt,
+          metadata: {
+            paidAt: paidAt.toISOString(),
+            settledBy: auth.userId,
           },
         });
-
-        if (!existingLedger) {
-          const { randomUUID } = await import("crypto");
-          await tx.transactionLedger.create({
-            data: {
-              id: randomUUID(),
-              branchId: payout.branchId,
-              transactionType: "CLEANER_PAYOUT",
-              amount: payout.cleanerAmount,
-              currency: payout.currency,
-              description: `Payout settled PAID for job ${payout.jobId}`,
-              referenceId: payout.id,
-              referenceType: "JobPayout",
-              cleanerId: payout.cleanerId,
-              metadata: {
-                jobId: payout.jobId,
-                payoutId: payout.id,
-                paidAt: paidAt.toISOString(),
-                settledBy: auth.userId,
-              },
-            },
-          });
-        }
       }
 
       // Update related Job records: payoutStatus = PAID

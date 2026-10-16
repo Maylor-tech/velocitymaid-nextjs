@@ -501,7 +501,7 @@ export async function recordPaymentForJobInvoice(
   const job = await loadJobBillingContext(jobId);
   if (!job.Invoice) throw new Error('No invoice linked to this job');
 
-  const { payment, previousStatus, becamePaid } = await recordInvoicePayment({
+  const { payment, previousStatus, becamePaid, duplicate } = await recordInvoicePayment({
     invoiceId: job.Invoice.id,
     amount: params.amount,
     paymentMethod: params.paymentMethod,
@@ -509,12 +509,16 @@ export async function recordPaymentForJobInvoice(
     transactionReference: params.transactionReference,
   });
 
-  const receiptResult = await onInvoicePaymentRecorded({
-    invoiceId: job.Invoice.id,
-    paymentId: payment.id,
-    amount: params.amount,
-    sendEmails: params.sendEmails !== false,
-  });
+  const creditedAmount = Number(payment.amount);
+  let receiptResult: Awaited<ReturnType<typeof onInvoicePaymentRecorded>> = null;
+  if (!duplicate) {
+    receiptResult = await onInvoicePaymentRecorded({
+      invoiceId: job.Invoice.id,
+      paymentId: payment.id,
+      amount: creditedAmount,
+      sendEmails: params.sendEmails !== false,
+    });
+  }
 
   const updated = await prisma.invoice.findUnique({
     where: { id: job.Invoice.id },
@@ -526,10 +530,15 @@ export async function recordPaymentForJobInvoice(
     const { notifyInvoicePaymentConfirmation } = await import(
       '@/lib/invoices/notifyPaymentConfirmation'
     );
-    await notifyInvoicePaymentConfirmation(job.Invoice.id, previousStatus, params.amount);
+    await notifyInvoicePaymentConfirmation(job.Invoice.id, previousStatus, creditedAmount);
   }
 
-  return { payment, invoice: serialized, receipt: receiptResult?.receipt ?? null };
+  return {
+    payment,
+    invoice: serialized,
+    receipt: receiptResult?.receipt ?? null,
+    duplicate,
+  };
 }
 
 export async function generateReceiptForLatestPayment(jobId: string, sendEmail = true) {

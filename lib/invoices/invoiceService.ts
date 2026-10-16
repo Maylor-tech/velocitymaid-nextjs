@@ -1,5 +1,7 @@
-import type { InvoicePaymentMethod, InvoiceStatus } from '@prisma/client';
+import type { InvoicePayment, InvoicePaymentMethod, InvoiceStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { logAuditEntry } from '@/lib/audit';
 import {
   computeBalanceDue,
   computeSubtotal,
@@ -9,6 +11,28 @@ import {
   lineTotal,
   type InvoiceLineInput,
 } from './invoiceUtils';
+
+/** External methods that must carry a confirmation / memo id for idempotency. */
+export const EXTERNAL_REF_REQUIRED_METHODS: ReadonlySet<InvoicePaymentMethod> = new Set([
+  'ZELLE',
+  'VENMO',
+  'BANK_TRANSFER',
+  'CHECK',
+]);
+
+function isUniqueViolation(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+}
+
+export type RecordInvoicePaymentResult = {
+  payment: InvoicePayment;
+  previousStatus: InvoiceStatus;
+  becamePaid: boolean;
+  duplicate: boolean;
+  clamped: boolean;
+  remainingBefore: number;
+  requestedAmount: number;
+};
 
 export async function refreshInvoiceStatus(invoiceId: string): Promise<void> {
   const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
@@ -40,116 +64,209 @@ export async function recordInvoicePayment(params: {
   transactionReference?: string;
   notes?: string;
   stripeSessionId?: string;
-}) {
-  const invoice = await prisma.invoice.findUnique({
-    where: { id: params.invoiceId },
-    include: { items: true, payments: true },
-  });
-  if (!invoice) throw new Error('Invoice not found');
-  if (invoice.status === 'CANCELLED') throw new Error('Cannot add payment to cancelled invoice');
-
-  if (params.stripeSessionId) {
-    const existingSession = await prisma.invoicePayment.findFirst({
-      where: { stripeSessionId: params.stripeSessionId },
-    });
-    if (existingSession) {
-      return {
-        payment: existingSession,
-        previousStatus: invoice.status,
-        becamePaid: false,
-        duplicate: true as const,
-        clamped: false as const,
-        remainingBefore: computeBalanceDue(
-          decimalToNumber(invoice.total),
-          decimalToNumber(invoice.amountPaid)
-        ),
-        requestedAmount: Math.max(0, params.amount),
-      };
-    }
-  }
-
-  const total = decimalToNumber(invoice.total);
-  const alreadyPaid = decimalToNumber(invoice.amountPaid);
-  const remaining = computeBalanceDue(total, alreadyPaid);
-  if (remaining <= 0) {
-    throw new Error('Invoice is already paid in full');
-  }
-
+  actorId?: string | null;
+}): Promise<RecordInvoicePaymentResult> {
   const requested = Math.max(0, params.amount);
   if (requested <= 0) throw new Error('Payment amount must be greater than zero');
 
-  // Clamp so manual Zelle/other + Stripe cannot silently overpay the invoice ledger.
-  const amount = Math.min(requested, remaining);
-  const clamped = amount < requested;
+  const stripeSessionId = params.stripeSessionId?.trim() || null;
+  const transactionReference = params.transactionReference?.trim() || null;
 
-  const previousStatus = invoice.status;
-
-  const payment = await prisma.invoicePayment.create({
-    data: {
-      invoiceId: params.invoiceId,
-      amount,
-      paymentMethod: params.paymentMethod,
-      paymentDate: params.paymentDate ?? new Date(),
-      transactionReference: params.transactionReference ?? null,
-      notes: params.notes ?? null,
-      stripeSessionId: params.stripeSessionId ?? null,
-    },
-  });
-
-  const newPaid = alreadyPaid + amount;
-  const balanceDue = computeBalanceDue(total, newPaid);
-  const baseStatus: InvoiceStatus =
-    invoice.status === 'DRAFT' ? 'SENT' : invoice.status;
-  const status = deriveInvoiceStatus({
-    status: baseStatus,
-    total,
-    amountPaid: newPaid,
-    dueDate: invoice.dueDate,
-  });
-
-  await prisma.invoice.update({
-    where: { id: params.invoiceId },
-    data: {
-      amountPaid: newPaid,
-      balanceDue,
-      status,
-      ...(status === 'PAID'
-        ? { paidAt: invoice.paidAt ?? params.paymentDate ?? new Date() }
-        : {}),
-      updatedAt: new Date(),
-    },
-  });
-
-  const { syncJobPaymentFromInvoice } = await import('./syncJobPaymentFromInvoice');
-  await syncJobPaymentFromInvoice(params.invoiceId);
-
-  // Expire stale Checkout sessions whose amount no longer matches unpaid balance.
-  // Keep the completing Stripe session (if any) so webhook can mark it COMPLETED.
-  try {
-    const { expireMismatchedInvoiceCheckoutSessions, balanceToCents } = await import(
-      './invoiceCheckoutSession'
-    );
-    await expireMismatchedInvoiceCheckoutSessions({
-      invoiceId: params.invoiceId,
-      balanceCents: balanceToCents(balanceDue),
-      keepStripeSessionId: params.stripeSessionId ?? null,
-      reason: balanceDue <= 0 ? 'EXPIRED' : 'SUPERSEDED',
-    });
-  } catch (err) {
-    console.error(
-      '[recordInvoicePayment] failed to expire mismatched checkout sessions:',
-      err
+  if (
+    EXTERNAL_REF_REQUIRED_METHODS.has(params.paymentMethod) &&
+    !transactionReference
+  ) {
+    throw new Error(
+      `transactionReference is required for ${params.paymentMethod} payments`
     );
   }
 
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${params.invoiceId} FOR UPDATE`;
+
+    const invoice = await tx.invoice.findUnique({
+      where: { id: params.invoiceId },
+    });
+    if (!invoice) throw new Error('Invoice not found');
+    if (invoice.status === 'CANCELLED') {
+      throw new Error('Cannot add payment to cancelled invoice');
+    }
+
+    const previousStatus = invoice.status;
+    const total = decimalToNumber(invoice.total);
+    const alreadyPaid = decimalToNumber(invoice.amountPaid);
+    const remaining = computeBalanceDue(total, alreadyPaid);
+
+    const orFilters: Prisma.InvoicePaymentWhereInput[] = [];
+    if (stripeSessionId) {
+      orFilters.push({ stripeSessionId });
+    }
+    if (transactionReference) {
+      orFilters.push({ transactionReference });
+    }
+
+    if (orFilters.length > 0) {
+      const existing = await tx.invoicePayment.findFirst({
+        where: { OR: orFilters },
+      });
+      if (existing) {
+        return {
+          payment: existing,
+          previousStatus,
+          becamePaid: false,
+          duplicate: true as const,
+          clamped: false as const,
+          remainingBefore: remaining,
+          requestedAmount: requested,
+          status: invoice.status,
+          balanceDue: computeBalanceDue(total, alreadyPaid),
+          newPaid: alreadyPaid,
+        };
+      }
+    }
+
+    if (remaining <= 0) {
+      throw new Error('Invoice is already paid in full');
+    }
+
+    const amount = Math.min(requested, remaining);
+    const clamped = amount < requested;
+
+    let payment: InvoicePayment;
+    try {
+      payment = await tx.invoicePayment.create({
+        data: {
+          invoiceId: params.invoiceId,
+          amount,
+          paymentMethod: params.paymentMethod,
+          paymentDate: params.paymentDate ?? new Date(),
+          transactionReference,
+          notes: params.notes ?? null,
+          stripeSessionId,
+        },
+      });
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
+      const raced = await tx.invoicePayment.findFirst({
+        where: {
+          OR: [
+            ...(stripeSessionId ? [{ stripeSessionId }] : []),
+            ...(transactionReference ? [{ transactionReference }] : []),
+          ],
+        },
+      });
+      if (!raced) throw error;
+      return {
+        payment: raced,
+        previousStatus,
+        becamePaid: false,
+        duplicate: true as const,
+        clamped: false as const,
+        remainingBefore: remaining,
+        requestedAmount: requested,
+        status: invoice.status,
+        balanceDue: computeBalanceDue(total, alreadyPaid),
+        newPaid: alreadyPaid,
+      };
+    }
+
+    const newPaid = alreadyPaid + amount;
+    const balanceDue = computeBalanceDue(total, newPaid);
+    const baseStatus: InvoiceStatus =
+      invoice.status === 'DRAFT' ? 'SENT' : invoice.status;
+    const status = deriveInvoiceStatus({
+      status: baseStatus,
+      total,
+      amountPaid: newPaid,
+      dueDate: invoice.dueDate,
+    });
+
+    await tx.invoice.update({
+      where: { id: params.invoiceId },
+      data: {
+        amountPaid: newPaid,
+        balanceDue,
+        status,
+        ...(status === 'PAID'
+          ? { paidAt: invoice.paidAt ?? params.paymentDate ?? new Date() }
+          : {}),
+        updatedAt: new Date(),
+      },
+    });
+
+    return {
+      payment,
+      previousStatus,
+      becamePaid: status === 'PAID' && previousStatus !== 'PAID',
+      duplicate: false as const,
+      clamped,
+      remainingBefore: remaining,
+      requestedAmount: requested,
+      status,
+      balanceDue,
+      newPaid,
+    };
+  });
+
+  if (!result.duplicate) {
+    const { syncJobPaymentFromInvoice } = await import('./syncJobPaymentFromInvoice');
+    await syncJobPaymentFromInvoice(params.invoiceId);
+
+    try {
+      const { expireMismatchedInvoiceCheckoutSessions, balanceToCents } = await import(
+        './invoiceCheckoutSession'
+      );
+      await expireMismatchedInvoiceCheckoutSessions({
+        invoiceId: params.invoiceId,
+        balanceCents: balanceToCents(result.balanceDue),
+        keepStripeSessionId: stripeSessionId,
+        reason: result.balanceDue <= 0 ? 'EXPIRED' : 'SUPERSEDED',
+      });
+    } catch (err) {
+      console.error(
+        '[recordInvoicePayment] failed to expire mismatched checkout sessions:',
+        err
+      );
+    }
+  }
+
+  await logAuditEntry({
+    actorId: params.actorId ?? null,
+    actorRole: params.actorId ? 'ADMIN' : 'SYSTEM',
+    action: result.duplicate
+      ? 'INVOICE_PAYMENT_IDEMPOTENT'
+      : result.clamped
+        ? 'INVOICE_PAYMENT_CLAMPED'
+        : 'INVOICE_PAYMENT_RECORDED',
+    entityType: 'Invoice',
+    entityId: params.invoiceId,
+    description: result.duplicate
+      ? `Duplicate payment ignored for invoice ${params.invoiceId}`
+      : `Recorded ${params.paymentMethod} payment $${Number(result.payment.amount).toFixed(2)} on invoice ${params.invoiceId}`,
+    changes: {
+      paymentId: result.payment.id,
+      paymentMethod: params.paymentMethod,
+      amount: Number(result.payment.amount),
+      requestedAmount: result.requestedAmount,
+      duplicate: result.duplicate,
+      clamped: result.clamped,
+      stripeSessionId,
+      transactionReference,
+      previousStatus: result.previousStatus,
+      status: result.status,
+      amountPaid: result.newPaid,
+      balanceDue: result.balanceDue,
+    },
+  });
+
   return {
-    payment,
-    previousStatus,
-    becamePaid: status === 'PAID' && previousStatus !== 'PAID',
-    duplicate: false as const,
-    clamped,
-    remainingBefore: remaining,
-    requestedAmount: requested,
+    payment: result.payment,
+    previousStatus: result.previousStatus,
+    becamePaid: result.becamePaid,
+    duplicate: result.duplicate,
+    clamped: result.clamped,
+    remainingBefore: result.remainingBefore,
+    requestedAmount: result.requestedAmount,
   };
 }
 

@@ -11,8 +11,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import { logAuditEntry } from "@/lib/audit";
-import { randomUUID } from "crypto";
 import { loadPayoutExecutionDecision } from "@/lib/payout/loadPayoutExecutionDecision";
+import { ensureJobPayoutLedgerEntry } from "@/lib/booking/ensureJobPayoutLedgerEntry";
 import {
   asPolicyDetails,
   payoutAmountNumber,
@@ -98,36 +98,19 @@ export async function POST(
         },
       });
 
-      // Check if TransactionLedger entry exists
-      const existingLedger = await tx.transactionLedger.findFirst({
-        where: {
-          referenceId: payoutId,
-          referenceType: "JobPayout",
+      await ensureJobPayoutLedgerEntry(tx, {
+        payoutId,
+        jobId: payout.jobId,
+        cleanerId: payout.cleanerId,
+        branchId: payout.branchId,
+        cleanerAmount: payoutAmountNumber(payout.cleanerAmount),
+        currency: payout.currency,
+        description: `Approved payout for job ${payout.jobId}`,
+        timestamp: approvalTimestamp,
+        metadata: {
+          approvedAt: approvalTimestamp.toISOString(),
         },
       });
-
-      // Create ledger entry if missing (idempotent)
-      if (!existingLedger) {
-        await tx.transactionLedger.create({
-          data: {
-            id: randomUUID(),
-            branchId: payout.branchId,
-            transactionType: "CLEANER_PAYOUT",
-            amount: payoutAmountNumber(payout.cleanerAmount),
-            currency: payout.currency,
-            description: `Approved payout for job ${payout.jobId}`,
-            referenceId: payoutId,
-            referenceType: "JobPayout",
-            cleanerId: payout.cleanerId,
-            updatedAt: approvalTimestamp,
-            metadata: {
-              jobId: payout.jobId,
-              payoutId: payoutId,
-              approvedAt: approvalTimestamp.toISOString(),
-            },
-          },
-        });
-      }
     });
 
     const updated = await prisma.jobPayout.findUnique({
