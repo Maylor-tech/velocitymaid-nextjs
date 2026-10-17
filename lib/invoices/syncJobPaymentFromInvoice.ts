@@ -12,39 +12,75 @@ export type SyncJobPaymentResult = {
 
 /**
  * Mirror a linked Invoice's payment totals onto Job money fields.
- * Does not touch Job.status / service lifecycle.
+ * Re-reads the invoice and job under row locks so a slower sync cannot
+ * write totals that an earlier, stale read captured.
+ * Writes amountPaid, balanceDue, paymentStatus, and paidAt/paymentMethod
+ * only when the job becomes paid. Does not write status, totalPrice, or quotedTotal.
  * Idempotent: repeated calls with the same invoice totals are no-ops.
  */
 export async function syncJobPaymentFromInvoice(
   invoiceId: string
 ): Promise<SyncJobPaymentResult | null> {
-  const invoice = await prisma.invoice.findUnique({
-    where: { id: invoiceId },
-    select: {
-      id: true,
-      jobId: true,
-      amountPaid: true,
-      balanceDue: true,
-      status: true,
-    },
-  });
-  if (!invoice?.jobId) return null;
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${invoiceId} FOR UPDATE`;
+    const invoice = await tx.invoice.findUnique({
+      where: { id: invoiceId },
+      select: {
+        id: true,
+        jobId: true,
+        amountPaid: true,
+        balanceDue: true,
+        status: true,
+      },
+    });
+    if (!invoice?.jobId) return null;
 
+    await tx.$queryRaw`SELECT id FROM "Job" WHERE id = ${invoice.jobId} FOR UPDATE`;
+    const job = await tx.job.findUnique({
+      where: { id: invoice.jobId },
+      select: {
+        id: true,
+        paymentStatus: true,
+        amountPaid: true,
+        balanceDue: true,
+        paidAt: true,
+        paymentMethod: true,
+      },
+    });
+    if (!job) return null;
+
+    return applyLockedJobPayment(tx, invoice, job);
+  });
+}
+
+async function applyLockedJobPayment(
+  tx: {
+    job: {
+      update: (args: {
+        where: { id: string };
+        data: {
+          amountPaid: number;
+          balanceDue: number;
+          paymentStatus: PaymentStatus;
+          paidAt?: Date;
+          paymentMethod?: string | null;
+        };
+      }) => Promise<unknown>;
+    };
+  },
+  invoice: { amountPaid: unknown; balanceDue: unknown },
+  job: {
+    id: string;
+    paymentStatus: PaymentStatus;
+    amountPaid: unknown;
+    balanceDue: unknown;
+    paidAt: Date | null;
+    paymentMethod: string | null;
+  }
+): Promise<SyncJobPaymentResult> {
   const amountPaid = decimalToNumber(invoice.amountPaid);
   const balanceDue = decimalToNumber(invoice.balanceDue);
 
-  const job = await prisma.job.findUnique({
-    where: { id: invoice.jobId },
-    select: {
-      id: true,
-      paymentStatus: true,
-      amountPaid: true,
-      balanceDue: true,
-      paidAt: true,
-      paymentMethod: true,
-    },
-  });
-  if (!job) return null;
   if (job.paymentStatus === PaymentStatus.REFUNDED) {
     return {
       jobId: job.id,
@@ -88,7 +124,7 @@ export async function syncJobPaymentFromInvoice(
     nextPaymentStatus === PaymentStatus.PAID &&
     job.paymentStatus !== PaymentStatus.PAID;
 
-  await prisma.job.update({
+  await tx.job.update({
     where: { id: job.id },
     data: {
       amountPaid,

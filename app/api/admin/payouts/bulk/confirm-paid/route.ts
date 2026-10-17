@@ -18,8 +18,8 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import { logAuditEntry } from "@/lib/audit";
 import { notifyPayoutPaid } from "@/lib/notifications";
-import { randomUUID } from "crypto";
 import { DEMO_MODE } from "@/lib/demoMode";
+import { ensureJobPayoutLedgerEntry } from "@/lib/booking/ensureJobPayoutLedgerEntry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -126,34 +126,20 @@ export async function POST(request: NextRequest) {
               },
             });
 
-            const existingLedger = await tx.transactionLedger.findFirst({
-              where: {
-                referenceId: payoutId,
-                referenceType: "JobPayout",
+            await ensureJobPayoutLedgerEntry(tx, {
+              payoutId,
+              jobId: payout.jobId,
+              cleanerId: payout.cleanerId,
+              branchId: payout.branchId,
+              cleanerAmount: Number(payout.cleanerAmount),
+              currency: payout.currency,
+              description: `Payout confirmed PAID for job ${payout.jobId} [DEMO]`,
+              timestamp: paidAt,
+              metadata: {
+                paidAt: paidAt.toISOString(),
+                demoMode: true,
               },
             });
-
-            if (!existingLedger) {
-              await tx.transactionLedger.create({
-                data: {
-                  id: randomUUID(),
-                  branchId: payout.branchId,
-                  transactionType: "CLEANER_PAYOUT",
-                  amount: payout.cleanerAmount,
-                  currency: payout.currency,
-                  description: `Payout confirmed PAID for job ${payout.jobId} [DEMO]`,
-                  referenceId: payoutId,
-                  referenceType: "JobPayout",
-                  cleanerId: payout.cleanerId,
-                  metadata: {
-                    jobId: payout.jobId,
-                    payoutId: payoutId,
-                    paidAt: paidAt.toISOString(),
-                    demoMode: true,
-                  },
-                },
-              });
-            }
           });
 
           // Don't send real notifications in demo mode
@@ -267,35 +253,20 @@ export async function POST(request: NextRequest) {
             },
           });
 
-          // Ensure TransactionLedger entry exists (idempotent check)
-          const existingLedger = await tx.transactionLedger.findFirst({
-            where: {
-              referenceId: payoutId,
-              referenceType: "JobPayout",
+          await ensureJobPayoutLedgerEntry(tx, {
+            payoutId,
+            jobId: payout.jobId,
+            cleanerId: payout.cleanerId,
+            branchId: payout.branchId,
+            cleanerAmount: Number(payout.cleanerAmount),
+            currency: payout.currency,
+            description: `Payout bulk confirmed PAID for job ${payout.jobId}`,
+            timestamp: paidAt,
+            metadata: {
+              paidAt: paidAt.toISOString(),
+              bulkOperation: true,
             },
           });
-
-          if (!existingLedger) {
-            await tx.transactionLedger.create({
-              data: {
-                id: randomUUID(),
-                branchId: payout.branchId,
-                transactionType: "CLEANER_PAYOUT",
-                amount: payout.cleanerAmount,
-                currency: payout.currency,
-                description: `Payout bulk confirmed PAID for job ${payout.jobId}`,
-                referenceId: payoutId,
-                referenceType: "JobPayout",
-                cleanerId: payout.cleanerId,
-                metadata: {
-                  jobId: payout.jobId,
-                  payoutId: payoutId,
-                  paidAt: paidAt.toISOString(),
-                  bulkOperation: true,
-                },
-              },
-            });
-          }
         });
 
         // Audit log EACH payout separately

@@ -5,17 +5,24 @@ export const runtime = 'nodejs';
  * Invoice Overdue Reminders (Cron)
  * GET /api/cron/invoice-reminders
  *
- * Sends one friendly overdue reminder for SENT invoices 7+ days past due.
+ * Sends one friendly overdue reminder for open invoices 7+ days past due.
+ * Claim-before-send on reminderSentAt prevents double-send races.
  * Schedule: daily 9:00 AM UTC (vercel.json).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { InvoiceStatus } from '@prisma/client';
+import { InvoiceStatus, Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { sendInvoiceOverdueReminderEmail } from '@/lib/email/cronAutomationEmails';
 
 const MAX_PER_RUN = 100;
+
+const REMINDABLE_STATUSES: InvoiceStatus[] = [
+  InvoiceStatus.SENT,
+  InvoiceStatus.OVERDUE,
+  InvoiceStatus.PARTIALLY_PAID,
+];
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,9 +37,10 @@ export async function GET(request: NextRequest) {
 
     const overdue = await prisma.invoice.findMany({
       where: {
-        status: InvoiceStatus.SENT,
+        status: { in: REMINDABLE_STATUSES },
         dueDate: { lt: sevenDaysAgo },
         reminderSentAt: null,
+        balanceDue: { gt: 0 },
         clientEmail: { not: null },
       },
       orderBy: { dueDate: 'asc' },
@@ -41,9 +49,26 @@ export async function GET(request: NextRequest) {
 
     let sent = 0;
     let failed = 0;
+    let skippedClaimed = 0;
 
     for (const invoice of overdue) {
       if (!invoice.clientEmail || !invoice.dueDate) continue;
+
+      // Claim before send — exactly-once under concurrent cron runners.
+      const claim = await prisma.invoice.updateMany({
+        where: {
+          id: invoice.id,
+          reminderSentAt: null,
+          balanceDue: { gt: 0 },
+          status: { in: REMINDABLE_STATUSES },
+        },
+        data: { reminderSentAt: new Date() },
+      });
+
+      if (claim.count !== 1) {
+        skippedClaimed++;
+        continue;
+      }
 
       const dueDate = new Date(invoice.dueDate);
       dueDate.setHours(0, 0, 0, 0);
@@ -63,12 +88,13 @@ export async function GET(request: NextRequest) {
       });
 
       if (result.sent) {
-        await prisma.invoice.update({
-          where: { id: invoice.id },
-          data: { reminderSentAt: new Date() },
-        });
         sent++;
       } else {
+        // Release claim so a later run can retry after hard email failure.
+        await prisma.invoice.update({
+          where: { id: invoice.id },
+          data: { reminderSentAt: null },
+        });
         console.error(
           `[invoice-reminders] Failed for ${invoice.invoiceNumber}:`,
           result.error || result.skippedReason
@@ -82,6 +108,7 @@ export async function GET(request: NextRequest) {
       processed: overdue.length,
       sent,
       failed,
+      skippedClaimed,
     });
   } catch (error: unknown) {
     const message =
@@ -94,3 +121,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return GET(request);
 }
+
+// Re-export for tests
+export const __test = {
+  REMINDABLE_STATUSES,
+  buildOverdueWhere: (sevenDaysAgo: Date): Prisma.InvoiceWhereInput => ({
+    status: { in: REMINDABLE_STATUSES },
+    dueDate: { lt: sevenDaysAgo },
+    reminderSentAt: null,
+    balanceDue: { gt: 0 },
+    clientEmail: { not: null },
+  }),
+};

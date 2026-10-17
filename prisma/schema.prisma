@@ -1173,6 +1173,8 @@ model TransactionLedger {
   @@index([createdAt])
   @@index([customerId])
   @@index([referenceId, referenceType])
+  /// Partial unique (referenceId, referenceType) WHERE both NOT NULL —
+  /// see migration 20261016000000_fin001_payment_reconciliation.
   @@index([transactionType])
 }
 
@@ -1979,6 +1981,9 @@ model InvoicePayment {
   Invoice              Invoice              @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   Receipt              Receipt?
 
+  /// Per-invoice PI uniqueness (deposit credit). Global non-null uniqueness
+  /// for stripeSessionId + transactionReference is enforced via partial unique
+  /// indexes in migration 20261016000000_fin001_payment_reconciliation.
   @@unique([invoiceId, transactionReference], name: "invoice_payment_intent_once")
   @@index([invoiceId])
   @@index([stripeSessionId])

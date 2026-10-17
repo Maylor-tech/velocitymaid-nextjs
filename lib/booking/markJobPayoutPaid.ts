@@ -1,7 +1,7 @@
-import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
 import { loadPayoutExecutionDecision } from '@/lib/payout/loadPayoutExecutionDecision';
+import { ensureJobPayoutLedgerEntry } from '@/lib/booking/ensureJobPayoutLedgerEntry';
 
 export type MarkPayoutPaidInput = {
   payoutId: string;
@@ -108,37 +108,21 @@ export async function markJobPayoutPaid(
       },
     });
 
-    const existingLedger = await tx.transactionLedger.findFirst({
-      where: {
-        referenceId: payout.id,
-        referenceType: 'JobPayout',
+    await ensureJobPayoutLedgerEntry(tx, {
+      payoutId: payout.id,
+      jobId: payout.jobId,
+      cleanerId: payout.cleanerId,
+      branchId: payout.branchId,
+      cleanerAmount: Number(payout.cleanerAmount),
+      currency: payout.currency,
+      description: `Payout marked PAID for job ${payout.jobId}`,
+      timestamp: settlementTimestamp,
+      metadata: {
+        paidAt: settlementTimestamp.toISOString(),
+        methodType,
+        reference: input.reference?.trim() || null,
       },
     });
-
-    if (!existingLedger) {
-      const now = settlementTimestamp;
-      await tx.transactionLedger.create({
-        data: {
-          id: randomUUID(),
-          branchId: payout.branchId,
-          transactionType: 'CLEANER_PAYOUT',
-          amount: Number(payout.cleanerAmount),
-          currency: payout.currency,
-          description: `Payout marked PAID for job ${payout.jobId}`,
-          referenceId: payout.id,
-          referenceType: 'JobPayout',
-          cleanerId: payout.cleanerId,
-          updatedAt: now,
-          metadata: {
-            jobId: payout.jobId,
-            payoutId: payout.id,
-            paidAt: settlementTimestamp.toISOString(),
-            methodType,
-            reference: input.reference?.trim() || null,
-          },
-        },
-      });
-    }
   });
 
   const updated = await prisma.jobPayout.findUnique({

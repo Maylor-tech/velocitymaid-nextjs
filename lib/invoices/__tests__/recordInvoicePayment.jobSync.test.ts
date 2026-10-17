@@ -8,9 +8,31 @@ const invoiceUpdate = vi.fn();
 const jobFindUnique = vi.fn();
 const jobUpdate = vi.fn();
 const expireMismatched = vi.fn();
+const queryRaw = vi.fn();
+const logAuditEntry = vi.fn();
+
+const txClient = {
+  $queryRaw: (...a: unknown[]) => queryRaw(...a),
+  invoice: {
+    findUnique: (...a: unknown[]) => invoiceFindUnique(...a),
+    update: (...a: unknown[]) => invoiceUpdate(...a),
+  },
+  invoicePayment: {
+    findFirst: (...a: unknown[]) => invoicePaymentFindFirst(...a),
+    create: (...a: unknown[]) => invoicePaymentCreate(...a),
+  },
+  job: {
+    findUnique: (...a: unknown[]) => jobFindUnique(...a),
+    update: (...a: unknown[]) => jobUpdate(...a),
+  },
+};
+
+let transactionImpl: (fn: (tx: typeof txClient) => Promise<unknown>) => Promise<unknown> =
+  async (fn) => fn(txClient);
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
+    $transaction: (fn: (tx: typeof txClient) => Promise<unknown>) => transactionImpl(fn),
     invoice: {
       findUnique: (...a: unknown[]) => invoiceFindUnique(...a),
       update: (...a: unknown[]) => invoiceUpdate(...a),
@@ -24,6 +46,10 @@ vi.mock('@/lib/prisma', () => ({
       update: (...a: unknown[]) => jobUpdate(...a),
     },
   },
+}));
+
+vi.mock('@/lib/audit', () => ({
+  logAuditEntry: (...a: unknown[]) => logAuditEntry(...a),
 }));
 
 vi.mock('@/lib/invoices/invoiceCheckoutSession', () => ({
@@ -52,9 +78,12 @@ function unpaidInvoice(overrides: Record<string, unknown> = {}) {
 
 describe('recordInvoicePayment + job sync', () => {
   beforeEach(() => {
+    transactionImpl = async (fn) => fn(txClient);
     vi.clearAllMocks();
+    queryRaw.mockResolvedValue([{ id: 'inv-1' }]);
     invoicePaymentFindFirst.mockResolvedValue(null);
     expireMismatched.mockResolvedValue({ expired: 0 });
+    logAuditEntry.mockResolvedValue('audit-1');
     invoicePaymentCreate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
       id: 'pay-1',
       ...data,
@@ -111,8 +140,10 @@ describe('recordInvoicePayment + job sync', () => {
         }),
       })
     );
-    // Service status is never touched by payment sync.
+    // Service status and job price are never touched by payment sync.
     expect(jobUpdate.mock.calls[0][0].data.status).toBeUndefined();
+    expect(jobUpdate.mock.calls[0][0].data.totalPrice).toBeUndefined();
+    expect(jobUpdate.mock.calls[0][0].data.quotedTotal).toBeUndefined();
   });
 
   it('is idempotent on webhook replay via stripeSessionId', async () => {
@@ -226,6 +257,7 @@ describe('recordInvoicePayment + job sync', () => {
       invoiceId: 'inv-1',
       amount: 100,
       paymentMethod: 'ZELLE',
+      transactionReference: 'zelle-partial-1',
     });
 
     expect(jobUpdate).toHaveBeenCalledWith(
@@ -261,6 +293,7 @@ describe('recordInvoicePayment + job sync', () => {
       invoiceId: 'inv-1',
       amount: 225,
       paymentMethod: 'ZELLE',
+      transactionReference: 'zelle-full-1',
     });
 
     expect(expireMismatched).toHaveBeenCalledWith(
@@ -271,5 +304,171 @@ describe('recordInvoicePayment + job sync', () => {
         keepStripeSessionId: null,
       })
     );
+  });
+
+  it('retries a saved payment after job sync fails without a second payment', async () => {
+    const paidInvoice = {
+      id: 'inv-1',
+      jobId: 'job-1',
+      status: 'PAID',
+      total: 225,
+      amountPaid: 225,
+      balanceDue: 0,
+      dueDate: new Date('2026-09-10'),
+      paidAt: new Date('2026-08-27T00:00:00.000Z'),
+    };
+    invoiceFindUnique
+      .mockResolvedValueOnce(unpaidInvoice())
+      .mockResolvedValueOnce(paidInvoice)
+      .mockResolvedValueOnce(paidInvoice)
+      .mockResolvedValueOnce(paidInvoice);
+    invoicePaymentFindFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        id: 'pay-1',
+        invoiceId: 'inv-1',
+        amount: 225,
+        stripeSessionId: 'cs_retry',
+      });
+    jobFindUnique
+      .mockRejectedValueOnce(new Error('job row locked'))
+      .mockResolvedValueOnce({
+        id: 'job-1',
+        status: 'COMPLETED',
+        totalPrice: 300,
+        quotedTotal: 300,
+        paymentStatus: PaymentStatus.PENDING,
+        amountPaid: 0,
+        balanceDue: 300,
+        paidAt: null,
+        paymentMethod: null,
+      });
+
+    await expect(
+      recordInvoicePayment({
+        invoiceId: 'inv-1',
+        amount: 225,
+        paymentMethod: 'STRIPE',
+        stripeSessionId: 'cs_retry',
+        actorId: 'admin-user-1',
+        actorRole: 'ADMIN',
+      })
+    ).rejects.toThrow(/job payment sync failed/);
+
+    const recovered = await recordInvoicePayment({
+      invoiceId: 'inv-1',
+      amount: 225,
+      paymentMethod: 'STRIPE',
+      stripeSessionId: 'cs_retry',
+      actorId: 'admin-user-1',
+      actorRole: 'ADMIN',
+    });
+
+    expect(recovered.duplicate).toBe(true);
+    expect(recovered.payment.id).toBe('pay-1');
+    expect(invoicePaymentCreate).toHaveBeenCalledTimes(1);
+    expect(invoiceUpdate).toHaveBeenCalledTimes(1);
+    expect(invoiceUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          amountPaid: 225,
+          balanceDue: 0,
+          status: 'PAID',
+        }),
+      })
+    );
+    expect(jobUpdate).toHaveBeenCalledTimes(1);
+    const jobWrite = jobUpdate.mock.calls[0][0].data as Record<string, unknown>;
+    expect(jobWrite).toEqual(
+      expect.objectContaining({
+        amountPaid: 225,
+        balanceDue: 0,
+        paymentStatus: PaymentStatus.PAID,
+      })
+    );
+    expect(jobWrite.status).toBeUndefined();
+    expect(jobWrite.totalPrice).toBeUndefined();
+    expect(jobWrite.quotedTotal).toBeUndefined();
+    expect(logAuditEntry).toHaveBeenCalledTimes(2);
+    expect(logAuditEntry.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        action: 'INVOICE_PAYMENT_RECORDED',
+        actorId: 'admin-user-1',
+        changes: expect.objectContaining({ syncFailed: true, jobSync: 'failed' }),
+      })
+    );
+    expect(logAuditEntry.mock.calls[1][0]).toEqual(
+      expect.objectContaining({
+        action: 'INVOICE_PAYMENT_IDEMPOTENT',
+        actorId: 'admin-user-1',
+        changes: expect.objectContaining({
+          duplicate: true,
+          jobSync: 'repaired',
+          paymentId: 'pay-1',
+          amountPaid: 225,
+          balanceDue: 0,
+        }),
+      })
+    );
+    expect(logAuditEntry.mock.calls[1][0].changes.syncFailed).toBeUndefined();
+  });
+
+  it('does not let a concurrent sync overwrite job fields with a stale total', async () => {
+    let invoicePaid = 100;
+    let tail: Promise<void> = Promise.resolve();
+    transactionImpl = async (fn) => {
+      const previous = tail;
+      let release: () => void = () => undefined;
+      tail = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      await previous;
+      try {
+        return await fn(txClient);
+      } finally {
+        release();
+      }
+    };
+    invoiceFindUnique.mockImplementation(async () => ({
+      id: 'inv-1',
+      jobId: 'job-1',
+      amountPaid: invoicePaid,
+      balanceDue: 225 - invoicePaid,
+      status: invoicePaid >= 225 ? 'PAID' : 'PARTIALLY_PAID',
+    }));
+    jobFindUnique.mockResolvedValue({
+      id: 'job-1',
+      status: 'COMPLETED',
+      totalPrice: 300,
+      quotedTotal: 300,
+      paymentStatus: PaymentStatus.PENDING,
+      amountPaid: 0,
+      balanceDue: 225,
+      paidAt: null,
+      paymentMethod: null,
+    });
+    const writes: number[] = [];
+    jobUpdate.mockImplementation(async ({ data }: { data: { amountPaid: number } }) => {
+      writes.push(data.amountPaid);
+      invoicePaid = 225;
+    });
+
+    await Promise.all([
+      syncJobPaymentFromInvoice('inv-1'),
+      syncJobPaymentFromInvoice('inv-1'),
+    ]);
+
+    expect(writes).toEqual([100, 225]);
+    const lockSql = queryRaw.mock.calls.map((call) =>
+      (call[0] as TemplateStringsArray).join(' ')
+    );
+    expect(lockSql.some((sql) => /Invoice/.test(sql) && /FOR UPDATE/.test(sql))).toBe(true);
+    expect(lockSql.some((sql) => /Job/.test(sql) && /FOR UPDATE/.test(sql))).toBe(true);
+    for (const call of jobUpdate.mock.calls) {
+      const data = call[0].data as Record<string, unknown>;
+      expect(data.status).toBeUndefined();
+      expect(data.totalPrice).toBeUndefined();
+      expect(data.quotedTotal).toBeUndefined();
+    }
   });
 });
