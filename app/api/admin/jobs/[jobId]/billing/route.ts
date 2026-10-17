@@ -93,6 +93,8 @@ export async function POST(
           notes: body.notes,
           transactionReference: body.transactionReference,
           sendEmails: body.sendEmails !== false,
+          actorId: auth.userId,
+          actorRole: 'ADMIN',
         });
         return NextResponse.json({ success: true, ...result });
       }

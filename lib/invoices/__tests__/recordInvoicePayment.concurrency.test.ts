@@ -240,4 +240,85 @@ describe('recordInvoicePayment concurrency & idempotency (FIN-001)', () => {
     const sqlParts = queryRaw.mock.calls[0][0] as TemplateStringsArray;
     expect(sqlParts.join(' ')).toMatch(/FOR UPDATE/);
   });
+
+  it('attributes a real admin user on the audit row', async () => {
+    invoiceFindUnique.mockResolvedValue(unpaidInvoice());
+
+    await recordInvoicePayment({
+      invoiceId: 'inv-1',
+      amount: 25,
+      paymentMethod: 'CASH',
+      actorId: 'admin-user-1',
+      actorRole: 'ADMIN',
+    });
+
+    expect(logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: 'admin-user-1',
+        actorRole: 'ADMIN',
+        action: 'INVOICE_PAYMENT_RECORDED',
+      })
+    );
+  });
+
+  it('keeps the legacy local-admin sentinel off the User foreign key', async () => {
+    invoiceFindUnique.mockResolvedValue(unpaidInvoice());
+
+    await recordInvoicePayment({
+      invoiceId: 'inv-1',
+      amount: 25,
+      paymentMethod: 'CASH',
+      actorId: 'local-admin',
+      actorRole: 'ADMIN',
+    });
+
+    expect(logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: null,
+        actorRole: 'ADMIN',
+        changes: expect.objectContaining({ unresolvedActorId: 'local-admin' }),
+      })
+    );
+  });
+
+  it('attributes a Stripe webhook with no actor as SYSTEM', async () => {
+    invoiceFindUnique.mockResolvedValue(unpaidInvoice());
+
+    await recordInvoicePayment({
+      invoiceId: 'inv-1',
+      amount: 25,
+      paymentMethod: 'STRIPE',
+      stripeSessionId: 'cs_system_1',
+    });
+
+    expect(logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: null,
+        actorRole: 'SYSTEM',
+      })
+    );
+  });
+
+  it('writes the audit row when job payment sync fails, then rejects', async () => {
+    invoiceFindUnique.mockResolvedValue(unpaidInvoice());
+    syncJob.mockRejectedValueOnce(new Error('job row locked'));
+
+    await expect(
+      recordInvoicePayment({
+        invoiceId: 'inv-1',
+        amount: 25,
+        paymentMethod: 'CASH',
+        actorId: 'admin-user-1',
+        actorRole: 'ADMIN',
+      })
+    ).rejects.toThrow(/job payment sync failed/);
+
+    expect(logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: 'admin-user-1',
+        actorRole: 'ADMIN',
+        changes: expect.objectContaining({ syncFailed: true }),
+      })
+    );
+  });
 });

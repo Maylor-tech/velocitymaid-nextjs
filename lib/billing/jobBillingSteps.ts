@@ -496,6 +496,8 @@ export async function recordPaymentForJobInvoice(
     notes?: string;
     transactionReference?: string;
     sendEmails?: boolean;
+    actorId?: string | null;
+    actorRole?: 'ADMIN' | 'SYSTEM' | null;
   }
 ) {
   const job = await loadJobBillingContext(jobId);
@@ -507,6 +509,8 @@ export async function recordPaymentForJobInvoice(
     paymentMethod: params.paymentMethod,
     notes: params.notes,
     transactionReference: params.transactionReference,
+    actorId: params.actorId,
+    actorRole: params.actorRole ?? (params.actorId ? 'ADMIN' : 'SYSTEM'),
   });
 
   const creditedAmount = Number(payment.amount);

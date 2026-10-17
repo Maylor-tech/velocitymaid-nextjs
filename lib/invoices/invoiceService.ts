@@ -2,6 +2,7 @@ import type { InvoicePayment, InvoicePaymentMethod, InvoiceStatus } from '@prism
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
+import { attributeInvoicePaymentAudit } from '@/lib/invoices/invoicePaymentAudit';
 import {
   computeBalanceDue,
   computeSubtotal,
@@ -65,6 +66,8 @@ export async function recordInvoicePayment(params: {
   notes?: string;
   stripeSessionId?: string;
   actorId?: string | null;
+  /** Admin routes pass ADMIN. Stripe webhooks omit this and stay SYSTEM. */
+  actorRole?: 'ADMIN' | 'SYSTEM' | null;
 }): Promise<RecordInvoicePaymentResult> {
   const requested = Math.max(0, params.amount);
   if (requested <= 0) throw new Error('Payment amount must be greater than zero');
@@ -208,9 +211,15 @@ export async function recordInvoicePayment(params: {
     };
   });
 
+  let syncFailed = false;
   if (!result.duplicate) {
-    const { syncJobPaymentFromInvoice } = await import('./syncJobPaymentFromInvoice');
-    await syncJobPaymentFromInvoice(params.invoiceId);
+    try {
+      const { syncJobPaymentFromInvoice } = await import('./syncJobPaymentFromInvoice');
+      await syncJobPaymentFromInvoice(params.invoiceId);
+    } catch (err) {
+      syncFailed = true;
+      console.error('[recordInvoicePayment] job payment sync failed:', err);
+    }
 
     try {
       const { expireMismatchedInvoiceCheckoutSessions, balanceToCents } = await import(
@@ -230,9 +239,14 @@ export async function recordInvoicePayment(params: {
     }
   }
 
+  const attribution = attributeInvoicePaymentAudit({
+    actorId: params.actorId,
+    actorRole: params.actorRole,
+  });
+
   await logAuditEntry({
-    actorId: params.actorId ?? null,
-    actorRole: params.actorId ? 'ADMIN' : 'SYSTEM',
+    actorId: attribution.actorId,
+    actorRole: attribution.actorRole,
     action: result.duplicate
       ? 'INVOICE_PAYMENT_IDEMPOTENT'
       : result.clamped
@@ -256,8 +270,16 @@ export async function recordInvoicePayment(params: {
       status: result.status,
       amountPaid: result.newPaid,
       balanceDue: result.balanceDue,
+      ...(attribution.unresolvedActorId
+        ? { unresolvedActorId: attribution.unresolvedActorId }
+        : {}),
+      ...(syncFailed ? { syncFailed: true } : {}),
     },
   });
+
+  if (syncFailed) {
+    throw new Error('Invoice payment was recorded but job payment sync failed');
+  }
 
   return {
     payment: result.payment,

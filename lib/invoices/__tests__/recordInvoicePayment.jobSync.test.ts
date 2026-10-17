@@ -131,8 +131,10 @@ describe('recordInvoicePayment + job sync', () => {
         }),
       })
     );
-    // Service status is never touched by payment sync.
+    // Service status and job price are never touched by payment sync.
     expect(jobUpdate.mock.calls[0][0].data.status).toBeUndefined();
+    expect(jobUpdate.mock.calls[0][0].data.totalPrice).toBeUndefined();
+    expect(jobUpdate.mock.calls[0][0].data.quotedTotal).toBeUndefined();
   });
 
   it('is idempotent on webhook replay via stripeSessionId', async () => {
