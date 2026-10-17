@@ -84,6 +84,11 @@ export async function recordInvoicePayment(params: {
     );
   }
 
+  // Persistence boundaries (also docs/defects/FIN-001-payment-transaction-boundaries.md):
+  // 1. This transaction commits the InvoicePayment and invoice totals, or rolls all of that back.
+  // 2. Job sync runs after commit, under its own locks. A sync failure leaves the payment in place.
+  // 3. Audit is appended after that and is never rolled back with the payment. A duplicate retry
+  //    syncs the job again and appends another audit row; it does not delete the earlier one.
   const result = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${params.invoiceId} FOR UPDATE`;
 
@@ -212,15 +217,18 @@ export async function recordInvoicePayment(params: {
   });
 
   let syncFailed = false;
-  if (!result.duplicate) {
-    try {
-      const { syncJobPaymentFromInvoice } = await import('./syncJobPaymentFromInvoice');
-      await syncJobPaymentFromInvoice(params.invoiceId);
-    } catch (err) {
-      syncFailed = true;
-      console.error('[recordInvoicePayment] job payment sync failed:', err);
-    }
+  let jobSync: 'failed' | 'repaired' | 'unchanged' = 'unchanged';
+  try {
+    const { syncJobPaymentFromInvoice } = await import('./syncJobPaymentFromInvoice');
+    const synced = await syncJobPaymentFromInvoice(params.invoiceId);
+    jobSync = synced?.changed ? 'repaired' : 'unchanged';
+  } catch (err) {
+    syncFailed = true;
+    jobSync = 'failed';
+    console.error('[recordInvoicePayment] job payment sync failed:', err);
+  }
 
+  if (!result.duplicate) {
     try {
       const { expireMismatchedInvoiceCheckoutSessions, balanceToCents } = await import(
         './invoiceCheckoutSession'
@@ -273,6 +281,7 @@ export async function recordInvoicePayment(params: {
       ...(attribution.unresolvedActorId
         ? { unresolvedActorId: attribution.unresolvedActorId }
         : {}),
+      jobSync,
       ...(syncFailed ? { syncFailed: true } : {}),
     },
   });

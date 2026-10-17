@@ -118,7 +118,7 @@ describe('recordInvoicePayment concurrency & idempotency (FIN-001)', () => {
     expect(result.duplicate).toBe(true);
     expect(invoicePaymentCreate).not.toHaveBeenCalled();
     expect(invoiceUpdate).not.toHaveBeenCalled();
-    expect(syncJob).not.toHaveBeenCalled();
+    expect(syncJob).toHaveBeenCalledWith('inv-1');
     expect(logAuditEntry).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'INVOICE_PAYMENT_IDEMPOTENT' })
     );
@@ -145,6 +145,7 @@ describe('recordInvoicePayment concurrency & idempotency (FIN-001)', () => {
 
     expect(result.duplicate).toBe(true);
     expect(invoicePaymentCreate).not.toHaveBeenCalled();
+    expect(syncJob).toHaveBeenCalledWith('inv-1');
   });
 
   it('handles P2002 race as duplicate without updating amountPaid', async () => {
@@ -174,6 +175,7 @@ describe('recordInvoicePayment concurrency & idempotency (FIN-001)', () => {
     expect(result.duplicate).toBe(true);
     expect(result.payment.id).toBe('pay-raced');
     expect(invoiceUpdate).not.toHaveBeenCalled();
+    expect(syncJob).toHaveBeenCalledWith('inv-1');
   });
 
   it('requires transactionReference for Zelle', async () => {

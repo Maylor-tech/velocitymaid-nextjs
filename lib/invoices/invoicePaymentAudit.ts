@@ -2,6 +2,11 @@
  * AuditLog.actorId is an optional FK to User.
  * A non-user sentinel such as the legacy dev bypass "local-admin"
  * makes the insert fail, and the failure used to drop the whole audit row.
+ *
+ * This helper does not authenticate or authorize. Payment routes call
+ * requireRole before recordInvoicePayment. A rejected id is stored only as
+ * audit metadata (unresolvedActorId / actorIdRejected) and is never treated
+ * as a session or a permission.
  */
 
 export const NON_USER_ACTOR_SENTINELS = new Set(['local-admin']);
