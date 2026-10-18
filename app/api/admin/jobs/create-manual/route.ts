@@ -36,6 +36,14 @@ import {
   resolveManualJobPrice,
   type ServiceCategory,
 } from "@/lib/admin/manualJobCreate";
+import {
+  buildJobServiceSnapshot,
+  servicePackagesFromRows,
+} from "@/lib/properties/jobServiceSnapshot";
+import {
+  ServicePackageValidationError,
+  type PaymentPreferenceRecord,
+} from "@/lib/properties/servicePackage";
 
 interface ManualJobBody {
   customerMode?: "existing" | "new";
@@ -62,6 +70,8 @@ interface ManualJobBody {
 
   totalAmount?: number;
   operationalAmount?: number | null;
+  visitPriceOverride?: number | string | null;
+  priceOverrideReason?: string | null;
   priceInputMode?: "operational" | "customer";
   depositAmount?: number;
 
@@ -247,6 +257,19 @@ export async function POST(request: NextRequest) {
     if (body.operationalAmount != null && operationalAmount == null) {
       return NextResponse.json(
         { success: false, error: "operationalAmount is invalid" },
+        { status: 400 }
+      );
+    }
+    const visitPriceOverride = moneyOrNull(body.visitPriceOverride);
+    if (body.visitPriceOverride != null && body.visitPriceOverride !== "" && visitPriceOverride == null) {
+      return NextResponse.json(
+        { success: false, error: "visitPriceOverride is invalid" },
+        { status: 400 }
+      );
+    }
+    if (visitPriceOverride != null && visitPriceOverride < 0) {
+      return NextResponse.json(
+        { success: false, error: "A one-off price must be zero or greater." },
         { status: 400 }
       );
     }
@@ -443,9 +466,53 @@ export async function POST(request: NextRequest) {
       agreedPrice = moneyOrNull(property.ResidentialProfile?.agreedPrice);
     }
 
+    let packageSnapshot: ReturnType<typeof buildJobServiceSnapshot> = null;
+    if (propertyId) {
+      const [packageRows, preferenceRow] = await Promise.all([
+        prisma.propertyServicePackage.findMany({
+          where: { propertyId },
+          include: { Rates: true },
+        }),
+        prisma.propertyPaymentPreference.findUnique({ where: { propertyId } }),
+      ]);
+      const preferences: PaymentPreferenceRecord[] = preferenceRow
+        ? [
+            {
+              propertyId: preferenceRow.propertyId,
+              allowedMethods: preferenceRow.allowedMethods,
+              preferredMethod: preferenceRow.preferredMethod,
+            },
+          ]
+        : [];
+      try {
+        packageSnapshot = buildJobServiceSnapshot({
+          propertyId,
+          serviceCategory: serviceCategory as ServiceCategory,
+          serviceType,
+          serviceDate: body.scheduledDate,
+          packages: servicePackagesFromRows(packageRows),
+          preferences,
+          visitPriceOverride,
+          priceOverrideReason: body.priceOverrideReason ?? null,
+        });
+      } catch (error) {
+        if (error instanceof ServicePackageValidationError) {
+          return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+        }
+        throw error;
+      }
+    } else if (visitPriceOverride != null) {
+      return NextResponse.json(
+        { success: false, error: "A one-off price requires a service package for this visit." },
+        { status: 400 }
+      );
+    }
+
     const protectedPrice =
-      priceMode === "operational" ? await protectOperationalPrice(totalAmount) : null;
-    const priced = resolveManualJobPrice({
+      packageSnapshot == null && priceMode === "operational"
+        ? await protectOperationalPrice(totalAmount)
+        : null;
+    const manualPrice = resolveManualJobPrice({
       mode: priceMode,
       totalAmount,
       operationalAmount,
@@ -459,7 +526,17 @@ export async function POST(request: NextRequest) {
           }
         : null,
     });
-    const overridden = priceWasOverridden(agreedPrice, priced.customerTotal, priceMode);
+    const priced = packageSnapshot
+      ? {
+          customerTotal: packageSnapshot.customerTotal,
+          operationalTotal: packageSnapshot.operationalTotal,
+          processingAllowanceEstimated: 0,
+          pricingPolicyVersion: "service-package-snapshot",
+        }
+      : manualPrice;
+    const overridden = packageSnapshot
+      ? packageSnapshot.priceOverridden
+      : priceWasOverridden(agreedPrice, priced.customerTotal, priceMode);
 
     const depositAmount =
       typeof body.depositAmount === "number" && Number.isFinite(body.depositAmount)
@@ -525,6 +602,21 @@ export async function POST(request: NextRequest) {
         ...(priced.pricingPolicyVersion
           ? { pricingPolicyVersion: priced.pricingPolicyVersion }
           : {}),
+        ...(packageSnapshot
+          ? {
+              servicePackageId: packageSnapshot.servicePackageId,
+              serviceRateId: packageSnapshot.serviceRateId,
+              agreedCustomerPrice: packageSnapshot.agreedCustomerPrice,
+              agreedOperationalPrice: packageSnapshot.agreedOperationalPrice,
+              includedScopeSnapshot: packageSnapshot.includedScopeSnapshot,
+              exclusionsSnapshot: packageSnapshot.exclusionsSnapshot,
+              ...(packageSnapshot.paymentPreferenceSnapshot
+                ? { paymentPreferenceSnapshot: packageSnapshot.paymentPreferenceSnapshot }
+                : {}),
+              priceOverridden: packageSnapshot.priceOverridden,
+              priceOverrideReason: packageSnapshot.priceOverrideReason,
+            }
+          : {}),
         depositAmount,
         amountPaid,
         balanceDue,
@@ -558,6 +650,9 @@ export async function POST(request: NextRequest) {
         operationalTotal: priced.operationalTotal,
         processingAllowanceEstimated: priced.processingAllowanceEstimated,
         priceOverridden: overridden,
+        servicePackageId: packageSnapshot?.servicePackageId ?? null,
+        serviceRateId: packageSnapshot?.serviceRateId ?? null,
+        priceOverrideReason: packageSnapshot?.priceOverrideReason ?? null,
         guestCheckInDate: stayDates.guestCheckInDate?.toISOString() ?? null,
         guestCheckOutDate: stayDates.guestCheckOutDate?.toISOString() ?? null,
         sameDayJobIds: conflicts.map((row) => row.id),

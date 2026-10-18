@@ -261,7 +261,12 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
     setTravelBannerDismissed(false);
   }, [form.serviceType, selectedCustomer?.id]);
 
+  const [visitPriceOverride, setVisitPriceOverride] = useState("");
+  const [priceOverrideReason, setPriceOverrideReason] = useState("");
+
   const applyVisitDraft = (draft: VisitDraft, keepState = false) => {
+    setVisitPriceOverride("");
+    setPriceOverrideReason("");
     setPropertyId(draft.propertyId);
     setServiceCategory(draft.serviceCategory);
     setAgreedPrice(draft.agreedPrice);
@@ -431,6 +436,13 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
     if (!Number.isFinite(activeAmount) || activeAmount < 0 || (priceMode === "customer" ? customerPrice === "" : operationalAmount === "")) {
       return setError(priceMode === "customer" ? "Customer price is required." : "Operational subtotal is required.");
     }
+    const overrideAmount = visitPriceOverride.trim() === "" ? null : Number(visitPriceOverride);
+    if (visitPriceOverride.trim() !== "" && (!Number.isFinite(overrideAmount) || (overrideAmount as number) < 0)) {
+      return setError("A one-off price must be zero or greater.");
+    }
+    if (overrideAmount != null && !priceOverrideReason.trim()) {
+      return setError("A one-off price needs a reason. The standing package is not changed.");
+    }
 
     const branch = form.state === "VT" ? "vermont" : "new-jersey";
     const payload = buildManualJobRequest({
@@ -459,6 +471,8 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
           ? Number(operationalAmount)
           : null,
       paymentStatus: form.paymentStatus,
+      visitPriceOverride: overrideAmount,
+      priceOverrideReason: priceOverrideReason.trim(),
       internalNotes: form.internalNotes.trim(),
       marketLabel: branch,
     });
@@ -1020,6 +1034,35 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
                   )}
                 </div>
               )}
+              <div>
+                <label className={labelClass} htmlFor="visitPriceOverride">
+                  One-off price ($)
+                </label>
+                <input
+                  id="visitPriceOverride"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  className={inputClass}
+                  value={visitPriceOverride}
+                  onChange={(e) => setVisitPriceOverride(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-vm-muted">
+                  Charges this visit only. A saved package or rate is not changed.
+                </p>
+              </div>
+              <div>
+                <label className={labelClass} htmlFor="priceOverrideReason">
+                  Reason for one-off price
+                </label>
+                <input
+                  id="priceOverrideReason"
+                  type="text"
+                  className={inputClass}
+                  value={priceOverrideReason}
+                  onChange={(e) => setPriceOverrideReason(e.target.value)}
+                />
+              </div>
               <div>
                 <label className={labelClass} htmlFor="paymentStatus">
                   Payment status

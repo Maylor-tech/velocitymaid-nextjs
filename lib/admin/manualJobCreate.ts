@@ -219,6 +219,8 @@ export type ManualJobRequestInput = {
   priceMode: ManualPriceMode;
   totalAmount: number;
   operationalAmount?: number | null;
+  visitPriceOverride?: number | null;
+  priceOverrideReason?: string | null;
   paymentStatus: string;
   internalNotes?: string;
   marketLabel?: string;
@@ -253,6 +255,12 @@ export function buildManualJobRequest(input: ManualJobRequestInput) {
     operationalAmount:
       input.priceMode === 'customer' ? input.operationalAmount ?? undefined : undefined,
     paymentStatus: input.paymentStatus,
+    ...(input.visitPriceOverride != null
+      ? {
+          visitPriceOverride: input.visitPriceOverride,
+          priceOverrideReason: input.priceOverrideReason?.trim() || undefined,
+        }
+      : {}),
     jobStatus: 'RECEIVED' as const,
     internalNotes: input.internalNotes,
     marketLabel: input.marketLabel,

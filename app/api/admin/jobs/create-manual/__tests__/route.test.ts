@@ -15,6 +15,10 @@ const mocks = vi.hoisted(() => ({
   branchFindUnique: vi.fn(),
   jobFindMany: vi.fn(),
   jobCreate: vi.fn(),
+  packageFindMany: vi.fn(),
+  packageUpdate: vi.fn(),
+  rateUpdate: vi.fn(),
+  preferenceFindUnique: vi.fn(),
   protectOperationalPrice: vi.fn(),
   nextVmReference: vi.fn(),
   awaitJobGoogleSync: vi.fn(),
@@ -42,6 +46,16 @@ vi.mock('@/lib/prisma', () => ({
     job: {
       findMany: mocks.jobFindMany,
       create: mocks.jobCreate,
+    },
+    propertyServicePackage: {
+      findMany: mocks.packageFindMany,
+      update: mocks.packageUpdate,
+    },
+    propertyServiceRate: {
+      update: mocks.rateUpdate,
+    },
+    propertyPaymentPreference: {
+      findUnique: mocks.preferenceFindUnique,
     },
   },
 }));
@@ -112,6 +126,8 @@ describe('POST /api/admin/jobs/create-manual', () => {
     mocks.awaitJobGoogleSync.mockResolvedValue(undefined);
     mocks.logAuditEntry.mockResolvedValue('audit-1');
     mocks.jobFindMany.mockResolvedValue([]);
+    mocks.packageFindMany.mockResolvedValue([]);
+    mocks.preferenceFindUnique.mockResolvedValue(null);
     mocks.jobCreate.mockImplementation(async ({ data }: { data: { Property?: { connect: { id: string } } } }) => ({
       id: 'job-new',
       propertyId: data.Property?.connect.id ?? null,
@@ -170,6 +186,10 @@ describe('POST /api/admin/jobs/create-manual', () => {
     expect(created.status).toBe('RECEIVED');
     expect(created.assignedCleanerId).toBeUndefined();
     expect(created.internalNotes).not.toContain('Should Not Assign');
+    expect(created.servicePackageId).toBeUndefined();
+    expect(created.agreedCustomerPrice).toBeUndefined();
+    expect(mocks.packageUpdate).not.toHaveBeenCalled();
+    expect(mocks.rateUpdate).not.toHaveBeenCalled();
     expect(created.guestCheckInDate).toEqual(new Date('2026-11-01T00:00:00.000Z'));
     expect(created.guestCheckOutDate).toEqual(new Date('2026-11-08T00:00:00.000Z'));
     expect(created).not.toHaveProperty('bathrooms');
@@ -401,6 +421,125 @@ describe('POST /api/admin/jobs/create-manual', () => {
     expect(json.customerId).toBe(TINA_CUSTOMER_ID);
     expect(mocks.customerCreate).not.toHaveBeenCalled();
     expect(mocks.jobCreate).not.toHaveBeenCalled();
+  });
+
+  describe('service package snapshots', () => {
+  function winterPackage() {
+    return {
+      id: 'package-turnover',
+      propertyId: TINA_PROPERTY_ID,
+      serviceCategory: 'VACATION_RENTAL',
+      serviceType: 'Vacation Rental Turnover',
+      customerPrice: 350,
+      operationalPrice: 340,
+      includedScope: 'Turnover cleaning',
+      exclusions: 'Owner closet',
+      active: true,
+      Rates: [
+        {
+          id: 'rate-december',
+          label: 'December',
+          customerPrice: 375,
+          operationalPrice: 360,
+          startsOn: new Date('2026-12-01T00:00:00.000Z'),
+          endsOn: new Date('2026-12-31T00:00:00.000Z'),
+          active: true,
+        },
+      ],
+    };
+  }
+
+  let currentPackage = winterPackage();
+
+  beforeEach(() => {
+    currentPackage = winterPackage();
+    mocks.packageFindMany.mockResolvedValue([currentPackage]);
+    mocks.preferenceFindUnique.mockResolvedValue({
+      propertyId: TINA_PROPERTY_ID,
+      allowedMethods: ['ZELLE'],
+      preferredMethod: 'ZELLE',
+    });
+  });
+
+  it('snapshots the December rate and still syncs the calendar', async () => {
+    const res = await POST(request(tinaBody({ scheduledDate: '2026-12-15', totalAmount: 200 })));
+    const json = await res.json();
+    const created = mocks.jobCreate.mock.calls[0][0].data;
+
+    expect(res.status).toBe(200);
+    expect(created.totalPrice).toBe(375);
+    expect(created.operationalTotal).toBe(360);
+    expect(created.agreedCustomerPrice).toBe(375);
+    expect(created.servicePackageId).toBe('package-turnover');
+    expect(created.serviceRateId).toBe('rate-december');
+    expect(created.includedScopeSnapshot).toBe('Turnover cleaning');
+    expect(created.exclusionsSnapshot).toBe('Owner closet');
+    expect(created.paymentPreferenceSnapshot).toEqual({
+      allowedMethods: ['ZELLE'],
+      preferredMethod: 'ZELLE',
+    });
+    expect(created.priceOverridden).toBe(false);
+    expect(created.processingAllowanceEstimated).toBe(0);
+    expect(mocks.protectOperationalPrice).not.toHaveBeenCalled();
+    expect(mocks.packageUpdate).not.toHaveBeenCalled();
+    expect(mocks.rateUpdate).not.toHaveBeenCalled();
+    expect(currentPackage.customerPrice).toBe(350);
+    expect(currentPackage.Rates[0].customerPrice).toBe(375);
+    expect(mocks.awaitJobGoogleSync).toHaveBeenCalledWith('job-new');
+    expect(json.pricing.customerTotal).toBe(375);
+  });
+
+  it('keeps the snapshot when the package row changes after booking', async () => {
+    await POST(request(tinaBody({ scheduledDate: '2026-12-15' })));
+    const created = mocks.jobCreate.mock.calls[0][0].data;
+    currentPackage.customerPrice = 999;
+    currentPackage.Rates[0].customerPrice = 999;
+    currentPackage.includedScope = 'Changed after booking';
+
+    expect(created.agreedCustomerPrice).toBe(375);
+    expect(created.includedScopeSnapshot).toBe('Turnover cleaning');
+    expect(mocks.packageUpdate).not.toHaveBeenCalled();
+  });
+
+  it('charges a one-off price with a reason and leaves the rate in place', async () => {
+    const res = await POST(
+      request(
+        tinaBody({
+          scheduledDate: '2026-12-15',
+          visitPriceOverride: 300,
+          priceOverrideReason: 'Shorter clean requested for this stay',
+        })
+      )
+    );
+    const created = mocks.jobCreate.mock.calls[0][0].data;
+
+    expect(res.status).toBe(200);
+    expect(created.totalPrice).toBe(300);
+    expect(created.agreedCustomerPrice).toBe(375);
+    expect(created.agreedOperationalPrice).toBe(360);
+    expect(created.operationalTotal).toBe(360);
+    expect(created.priceOverridden).toBe(true);
+    expect(created.priceOverrideReason).toBe('Shorter clean requested for this stay');
+    expect(mocks.packageUpdate).not.toHaveBeenCalled();
+    expect(mocks.rateUpdate).not.toHaveBeenCalled();
+    expect(mocks.awaitJobGoogleSync).toHaveBeenCalledWith('job-new');
+  });
+
+  it('rejects a one-off price without a reason before creating a job', async () => {
+    const res = await POST(
+      request(
+        tinaBody({
+          scheduledDate: '2026-12-15',
+          visitPriceOverride: 300,
+        })
+      )
+    );
+
+    expect(res.status).toBe(400);
+    expect(mocks.jobCreate).not.toHaveBeenCalled();
+    expect(mocks.packageUpdate).not.toHaveBeenCalled();
+    expect(mocks.awaitJobGoogleSync).not.toHaveBeenCalled();
+  });
   });
 });
 
