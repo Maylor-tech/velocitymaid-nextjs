@@ -367,6 +367,8 @@ model Property {
   ServiceFeedback        ServiceFeedback[]
   GuestTipAuthorization  GuestTipAuthorization[]
   PhotoSlots             PropertyPhotoSlot[]
+  ServicePackages        PropertyServicePackage[]
+  PaymentPreference      PropertyPaymentPreference?
 
   @@index([customerId])
   @@index([customerId, address])
@@ -406,6 +408,61 @@ model PropertyResidentialProfile {
   Property                   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@map("property_residential_profiles")
+}
+
+/// Standing agreed cleaning package for one property and service.
+/// Read-only until an approved admin write exists. Absence means the
+/// property keeps today's pricing and job-creation behavior.
+model PropertyServicePackage {
+  id               String                 @id @default(cuid())
+  propertyId       String
+  serviceCategory  ServicePackageCategory
+  serviceType      String
+  customerPrice    Decimal                @db.Decimal(10, 2)
+  operationalPrice Decimal?               @db.Decimal(10, 2)
+  includedScope    String?
+  exclusions       String?
+  active           Boolean                @default(true)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  Property         Property               @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  Rates            PropertyServiceRate[]
+
+  @@unique([propertyId, serviceCategory, serviceType], map: "property_service_packages_identity_key")
+  @@index([propertyId])
+  @@map("property_service_packages")
+}
+
+/// Seasonal price window for a package. Active windows must not share a day.
+/// Ended or inactive rows remain as history.
+model PropertyServiceRate {
+  id               String                 @id @default(cuid())
+  packageId        String
+  label            String
+  customerPrice    Decimal                @db.Decimal(10, 2)
+  operationalPrice Decimal?               @db.Decimal(10, 2)
+  startsOn         DateTime               @db.Date
+  endsOn           DateTime?              @db.Date
+  active           Boolean                @default(true)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  Package          PropertyServicePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId, startsOn])
+  @@map("property_service_rates")
+}
+
+/// How this property prefers to pay. Independent of billing policy and invoices.
+model PropertyPaymentPreference {
+  id              String                  @id @default(cuid())
+  propertyId      String                  @unique
+  allowedMethods  PropertyPaymentMethod[] @default([])
+  preferredMethod PropertyPaymentMethod
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  Property        Property                @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_payment_preferences")
 }
 
 model FranchiseApplication {
@@ -1778,6 +1835,20 @@ enum BillingPolicy {
 enum PropertyUseType {
   HOST
   RESIDENTIAL
+}
+
+enum ServicePackageCategory {
+  RESIDENTIAL
+  VACATION_RENTAL
+}
+
+/// Customer payment methods for a property agreement.
+/// CARD is the preference label only. It is not a Stripe charge.
+enum PropertyPaymentMethod {
+  CASH
+  CHECK
+  ZELLE
+  CARD
 }
 
 enum JobReviewStatus {
