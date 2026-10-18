@@ -3,8 +3,10 @@ import {
   RESIDENTIAL_SERVICE_TYPES,
   VACATION_RENTAL_SERVICE_TYPES,
   buildManualJobRequest,
+  emptyVisitDraft,
   guestDatesForCategory,
   resolveManualJobPrice,
+  visitDraftFromProperty,
 } from '../manualJobCreate';
 
 const TINA_CUSTOMER_ID = '1233f6e1-5463-4a19-a35f-fbca5fe54725';
@@ -47,6 +49,56 @@ describe('manual job create helpers', () => {
     expect(priced.operationalTotal).toBe(250);
     expect(priced.processingAllowanceEstimated).toBe(0);
     expect(priced.pricingPolicyVersion).toBe('manual-customer-price');
+  });
+
+  it('clears price, service, guest dates, and travel-fee notes when the property changes', () => {
+    const next = visitDraftFromProperty(
+      {
+        id: 'property-b',
+        address: '354 Grout Road',
+        city: 'Perkinsville',
+        state: 'VT',
+        useType: null,
+        residentialServiceType: null,
+        agreedPrice: null,
+      },
+      'Zone B Travel Fee — 18 Snow Trak North: $20\nBring the key',
+      'VT'
+    );
+    expect(next.propertyId).toBe('property-b');
+    expect(next.propertyAddress).toBe('354 Grout Road');
+    expect(next.serviceType).toBe('');
+    expect(next.serviceCategory).toBe('VACATION_RENTAL');
+    expect(next.guestCheckInDate).toBe('');
+    expect(next.guestCheckOutDate).toBe('');
+    expect(next.customerPrice).toBe('');
+    expect(next.operationalAmount).toBe('');
+    expect(next.agreedPrice).toBeNull();
+    expect(next.priceMode).toBe('operational');
+    expect(next.travelFeeApplied).toBe(false);
+    expect(next.internalNotes).toBe('Bring the key');
+  });
+
+  it('loads a saved agreed price for the new property and drops the previous operational amount', () => {
+    const next = visitDraftFromProperty(
+      {
+        id: TINA_PROPERTY_ID,
+        address: '18 Snow Trak North',
+        city: 'Ludlow',
+        state: 'VT',
+        useType: 'RESIDENTIAL',
+        residentialServiceType: 'Residential Maintenance Cleaning',
+        agreedPrice: 250,
+      },
+      'Zone B Travel Fee — 354 Grout Road: $20'
+    );
+    expect(next.priceMode).toBe('customer');
+    expect(next.customerPrice).toBe('250');
+    expect(next.operationalAmount).toBe('');
+    expect(next.serviceType).toBe('Residential Maintenance Cleaning');
+    expect(next.serviceCategory).toBe('RESIDENTIAL');
+    expect(next.internalNotes).toBe('');
+    expect(emptyVisitDraft(next.internalNotes).propertyId).toBe('');
   });
 
   it('submits Tina’s existing ids and does not assign a cleaner', () => {

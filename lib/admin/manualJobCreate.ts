@@ -108,6 +108,86 @@ export function resolveManualJobPrice(input: {
   };
 }
 
+export function stripTravelFeeNotes(notes: string): string {
+  return notes
+    .split("\n")
+    .filter((line) => !line.includes("Travel Fee —"))
+    .join("\n")
+    .trim();
+}
+
+export type VisitDraft = {
+  propertyId: string;
+  propertyAddress: string;
+  propertyCity: string;
+  state: string;
+  serviceCategory: ServiceCategory;
+  serviceType: string;
+  guestCheckInDate: string;
+  guestCheckOutDate: string;
+  priceMode: ManualPriceMode;
+  customerPrice: string;
+  operationalAmount: string;
+  agreedPrice: number | null;
+  travelFeeApplied: boolean;
+  travelBannerDismissed: boolean;
+  internalNotes: string;
+};
+
+export function emptyVisitDraft(notes = ""): VisitDraft {
+  return {
+    propertyId: "",
+    propertyAddress: "",
+    propertyCity: "",
+    state: "",
+    serviceCategory: "VACATION_RENTAL",
+    serviceType: "",
+    guestCheckInDate: "",
+    guestCheckOutDate: "",
+    priceMode: "operational",
+    customerPrice: "",
+    operationalAmount: "",
+    agreedPrice: null,
+    travelFeeApplied: false,
+    travelBannerDismissed: false,
+    internalNotes: stripTravelFeeNotes(notes),
+  };
+}
+
+export function visitDraftFromProperty(
+  property: {
+    id: string;
+    address: string;
+    city?: string | null;
+    state?: string | null;
+    useType?: string | null;
+    residentialServiceType?: string | null;
+    agreedPrice?: number | null;
+  },
+  notes: string,
+  fallbackState = ""
+): VisitDraft {
+  const draft = emptyVisitDraft(notes);
+  const serviceCategory = categoryForPropertyUse(property.useType);
+  const types = serviceTypesFor(serviceCategory);
+  const profileService = property.residentialServiceType?.trim() || "";
+  const agreed =
+    property.agreedPrice != null && property.agreedPrice > 0 ? property.agreedPrice : null;
+  const state = property.state === "VT" || property.state === "NJ" ? property.state : fallbackState;
+  return {
+    ...draft,
+    propertyId: property.id,
+    propertyAddress: property.address,
+    propertyCity: property.city?.trim() || "",
+    state,
+    serviceCategory,
+    serviceType: profileService && types.includes(profileService) ? profileService : "",
+    priceMode: agreed != null ? "customer" : "operational",
+    customerPrice: agreed != null ? String(agreed) : "",
+    agreedPrice: agreed,
+  };
+}
+
 export function priceWasOverridden(
   agreedPrice: number | null,
   customerTotal: number,

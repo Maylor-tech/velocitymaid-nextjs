@@ -120,6 +120,9 @@ describe('POST /api/admin/jobs/create-manual', () => {
       if (where.id === TINA_CUSTOMER_ID) {
         return {
           id: TINA_CUSTOMER_ID,
+          firstName: 'Tina',
+          lastName: 'Martin',
+          email: 'tmrmar01@aol.com',
           billingPolicy: 'INVOICE_AFTER_SERVICE',
           branchId: 'branch-vt',
           Branch: { id: 'branch-vt', state: 'VT', slug: 'vermont' },
@@ -159,6 +162,7 @@ describe('POST /api/admin/jobs/create-manual', () => {
     expect(mocks.geocodeCustomerInBackground).not.toHaveBeenCalled();
 
     const created = mocks.jobCreate.mock.calls[0][0].data;
+    expect(created.customerName).toBe('Tina Martin');
     expect(created.Customer.connect.id).toBe(TINA_CUSTOMER_ID);
     expect(created.Property.connect.id).toBe(TINA_PROPERTY_ID);
     expect(created.Branch.connect.id).toBe('branch-vt');
@@ -299,6 +303,24 @@ describe('POST /api/admin/jobs/create-manual', () => {
     const res = await POST(request(tinaBody({ jobStatus: 'ASSIGNED' })));
     expect(res.status).toBe(400);
     expect(mocks.jobCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects an existing-customer id when the email belongs to someone else', async () => {
+    const res = await POST(
+      request(tinaBody({ clientEmail: 'other.person@example.com', clientFirstName: 'Other' }))
+    );
+    expect(res.status).toBe(400);
+    expect(mocks.jobCreate).not.toHaveBeenCalled();
+    expect(mocks.customerUpdate).not.toHaveBeenCalled();
+    expect(mocks.customerCreate).not.toHaveBeenCalled();
+  });
+
+  it('keeps the stored customer name when the form name does not match', async () => {
+    const res = await POST(request(tinaBody({ clientFirstName: 'Not', clientLastName: 'Tina' })));
+    const created = mocks.jobCreate.mock.calls[0][0].data;
+    expect(res.status).toBe(200);
+    expect(created.customerName).toBe('Tina Martin');
+    expect(created.Customer.connect.id).toBe(TINA_CUSTOMER_ID);
   });
 
   it('rejects a property that belongs to someone else', async () => {

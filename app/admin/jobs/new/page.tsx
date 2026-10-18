@@ -13,11 +13,13 @@ import {
 } from "@/lib/vermont/travelZone";
 import {
   buildManualJobRequest,
-  categoryForPropertyUse,
+  emptyVisitDraft,
   serviceTypesFor,
+  visitDraftFromProperty,
   type ManualCustomerMode,
   type ManualPriceMode,
   type ServiceCategory,
+  type VisitDraft,
 } from "@/lib/admin/manualJobCreate";
 
 type StateCode = "VT" | "NJ" | "";
@@ -85,7 +87,7 @@ function stateCode(value: string | null | undefined): StateCode {
   return "";
 }
 
-export default function NewManualJobPage() {
+export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
   const { isBranchScoped } = useAdminShell();
   const [customerMode, setCustomerMode] = useState<ManualCustomerMode>("existing");
   const [searchQuery, setSearchQuery] = useState("");
@@ -144,7 +146,7 @@ export default function NewManualJobPage() {
     let cancelled = false;
     const timer = setTimeout(() => {
       setSearching(true);
-      fetch(`/api/admin/customers?q=${encodeURIComponent(q)}&limit=8`, {
+      fetcher(`/api/admin/customers?q=${encodeURIComponent(q)}&limit=8`, {
         credentials: "include",
       })
         .then((r) => r.json())
@@ -163,7 +165,7 @@ export default function NewManualJobPage() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [searchQuery, customerMode, selectedCustomer]);
+  }, [searchQuery, customerMode, selectedCustomer, fetcher]);
 
   useEffect(() => {
     if (priceMode !== "operational") {
@@ -181,7 +183,7 @@ export default function NewManualJobPage() {
     }
     let cancelled = false;
     const timer = setTimeout(() => {
-      fetch("/api/admin/pricing/protect-preview", {
+      fetcher("/api/admin/pricing/protect-preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -206,7 +208,7 @@ export default function NewManualJobPage() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [operationalAmount, priceMode]);
+  }, [operationalAmount, priceMode, fetcher]);
 
   useEffect(() => {
     if (!propertyId || !form.scheduledDate || customerMode !== "existing") {
@@ -219,7 +221,7 @@ export default function NewManualJobPage() {
       scheduledDate: form.scheduledDate,
       ...(selectedCustomer ? { customerId: selectedCustomer.id } : {}),
     });
-    fetch(`/api/admin/jobs/create-manual?${params.toString()}`, { credentials: "include" })
+    fetcher(`/api/admin/jobs/create-manual?${params.toString()}`, { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
@@ -231,7 +233,7 @@ export default function NewManualJobPage() {
     return () => {
       cancelled = true;
     };
-  }, [propertyId, form.scheduledDate, customerMode, selectedCustomer]);
+  }, [propertyId, form.scheduledDate, customerMode, selectedCustomer, fetcher]);
 
   const serviceOptions = useMemo(
     () => serviceTypesFor(serviceCategory),
@@ -259,37 +261,50 @@ export default function NewManualJobPage() {
     setTravelBannerDismissed(false);
   }, [form.serviceType, selectedCustomer?.id]);
 
-  const applyProperty = (property: PropertyOption) => {
-    const category = categoryForPropertyUse(property.useType);
-    const agreed = moneyNumber(property.ResidentialProfile?.agreedPrice);
-    const types = serviceTypesFor(category);
-    const profileService = property.ResidentialProfile?.serviceType;
-    setPropertyId(property.id);
-    setServiceCategory(category);
+  const applyVisitDraft = (draft: VisitDraft, keepState = false) => {
+    setPropertyId(draft.propertyId);
+    setServiceCategory(draft.serviceCategory);
+    setAgreedPrice(draft.agreedPrice);
+    setCustomerPrice(draft.customerPrice);
+    setOperationalAmount(draft.operationalAmount);
+    setPriceMode(draft.priceMode);
+    setTravelFeeApplied(draft.travelFeeApplied);
+    setTravelBannerDismissed(draft.travelBannerDismissed);
+    setSameDayJobs([]);
     setForm((prev) => ({
       ...prev,
-      propertyAddress: property.address,
-      propertyCity: property.city || "",
-      state: stateCode(property.state) || prev.state,
-      serviceType: profileService && types.includes(profileService) ? profileService : "",
-      guestCheckInDate: "",
-      guestCheckOutDate: "",
+      propertyAddress: draft.propertyAddress,
+      propertyCity: draft.propertyCity,
+      state: (draft.state as StateCode) || (keepState ? prev.state : ""),
+      serviceType: draft.serviceType,
+      guestCheckInDate: draft.guestCheckInDate,
+      guestCheckOutDate: draft.guestCheckOutDate,
+      internalNotes: draft.internalNotes,
     }));
-    if (agreed != null && agreed > 0) {
-      setAgreedPrice(agreed);
-      setCustomerPrice(String(agreed));
-      setPriceMode("customer");
-      setOperationalAmount("");
-    } else {
-      setAgreedPrice(null);
-      setCustomerPrice("");
-      setPriceMode("operational");
-    }
+  };
+
+  const applyProperty = (property: PropertyOption) => {
+    applyVisitDraft(
+      visitDraftFromProperty(
+        {
+          id: property.id,
+          address: property.address,
+          city: property.city,
+          state: stateCode(property.state) || undefined,
+          useType: property.useType,
+          residentialServiceType: property.ResidentialProfile?.serviceType,
+          agreedPrice: moneyNumber(property.ResidentialProfile?.agreedPrice),
+        },
+        form.internalNotes,
+        form.state
+      ),
+      true
+    );
   };
 
   const selectCustomer = async (id: string) => {
     setError(null);
-    const res = await fetch(`/api/admin/customers/${id}`, { credentials: "include" });
+    const res = await fetcher(`/api/admin/customers/${id}`, { credentials: "include" });
     const data = await res.json();
     if (!res.ok || !data.success || !data.customer) {
       setError(data.error || "Could not load that customer");
@@ -309,18 +324,22 @@ export default function NewManualJobPage() {
     if (customer.Property.length === 1) {
       applyProperty(customer.Property[0]);
     } else {
-      setPropertyId("");
-      setAgreedPrice(null);
+      applyVisitDraft(emptyVisitDraft(form.internalNotes));
     }
   };
 
   const clearCustomer = () => {
     setSelectedCustomer(null);
-    setPropertyId("");
-    setAgreedPrice(null);
     setSearchQuery("");
     setSearchHits([]);
-    setSameDayJobs([]);
+    applyVisitDraft(emptyVisitDraft(form.internalNotes));
+    setForm((prev) => ({
+      ...prev,
+      clientFirstName: "",
+      clientLastName: "",
+      clientEmail: "",
+      clientPhone: "",
+    }));
   };
 
   const handleAddTravelFee = () => {
@@ -377,12 +396,15 @@ export default function NewManualJobPage() {
     });
     setSavedJobId(null);
     setError(null);
-    clearCustomer();
+    setSelectedCustomer(null);
+    setSearchQuery("");
+    setSearchHits([]);
     setCustomerMode("existing");
-    setPriceMode("operational");
-    setCustomerPrice("");
-    setOperationalAmount("");
     setServiceCategory("VACATION_RENTAL");
+    applyVisitDraft(emptyVisitDraft(""));
+    if (isBranchScoped) {
+      setForm((prev) => ({ ...prev, state: "VT" }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -443,7 +465,7 @@ export default function NewManualJobPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/admin/jobs/create-manual", {
+      const res = await fetcher("/api/admin/jobs/create-manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -618,7 +640,7 @@ export default function NewManualJobPage() {
                       onChange={(e) => {
                         const next = selectedCustomer.Property.find((property) => property.id === e.target.value);
                         if (next) applyProperty(next);
-                        else setPropertyId("");
+                        else applyVisitDraft(emptyVisitDraft(form.internalNotes));
                       }}
                     >
                       <option value="">Select a property…</option>
@@ -1056,4 +1078,8 @@ export default function NewManualJobPage() {
       </div>
     </div>
   );
+}
+
+export default function NewManualJobPage() {
+  return <ManualJobForm />;
 }

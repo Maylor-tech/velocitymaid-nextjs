@@ -272,6 +272,8 @@ export async function POST(request: NextRequest) {
 
     let customerId: string;
     let customerBilling: string | null = null;
+    let jobFirstName = clientFirstName;
+    let jobLastName = clientLastName;
     let branch: { id: string; state: string | null; slug: string | null };
 
     if (customerMode === "existing") {
@@ -286,6 +288,9 @@ export async function POST(request: NextRequest) {
         where: { id: requestedId },
         select: {
           id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
           billingPolicy: true,
           branchId: true,
           Branch: { select: { id: true, state: true, slug: true } },
@@ -294,8 +299,20 @@ export async function POST(request: NextRequest) {
       if (!existing) {
         return NextResponse.json({ success: false, error: "Customer not found" }, { status: 404 });
       }
+      const storedEmail = existing.email.trim().toLowerCase();
+      if (clientEmail !== storedEmail) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Email does not match the selected customer. Choose that customer again.",
+          },
+          { status: 400 }
+        );
+      }
       customerId = existing.id;
       customerBilling = existing.billingPolicy;
+      jobFirstName = existing.firstName;
+      jobLastName = existing.lastName.trim();
       if (existing.Branch) {
         branch = {
           id: existing.Branch.id,
@@ -474,7 +491,7 @@ export async function POST(request: NextRequest) {
         ? branch.slug
         : body.marketLabel?.trim() || null;
 
-    const customerName = `${clientFirstName}${clientLastName ? ` ${clientLastName}` : ""}`.trim();
+    const customerName = `${jobFirstName}${jobLastName ? ` ${jobLastName}` : ""}`.trim();
     const billingPolicy = resolveBillingPolicy({
       propertyPolicy: propertyBilling,
       customerPolicy: customerBilling,
