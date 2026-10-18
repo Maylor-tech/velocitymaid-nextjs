@@ -160,6 +160,56 @@ describe('resolvePropertyServiceTerms', () => {
     ).toBe('rate-december');
   });
 
+  it('lets an active covering rate win, then falls back to the package price', () => {
+    const packages = [
+      pkg({
+        customerPrice: 350,
+        operationalPrice: 340,
+        rates: [
+          rate({
+            id: 'rate-winter',
+            customerPrice: 375,
+            operationalPrice: 360,
+            startsOn: '2026-12-01',
+            endsOn: '2027-03-31',
+          }),
+          rate({
+            id: 'rate-retired',
+            label: 'Retired',
+            customerPrice: 400,
+            operationalPrice: 400,
+            startsOn: '2026-11-01',
+            endsOn: '2026-11-30',
+            active: false,
+          }),
+        ],
+      }),
+    ];
+    const visit = {
+      propertyId: PROPERTY_A,
+      serviceCategory: 'VACATION_RENTAL' as const,
+      serviceType: 'Vacation Rental Turnover',
+      packages,
+    };
+
+    expect(
+      resolvePropertyServiceTerms({ ...visit, serviceDate: '2026-12-15' })
+    ).toMatchObject({
+      rateId: 'rate-winter',
+      customerPrice: 375,
+      operationalPrice: 360,
+      priceSource: 'seasonal',
+    });
+    expect(
+      resolvePropertyServiceTerms({ ...visit, serviceDate: '2026-11-15' })
+    ).toMatchObject({
+      rateId: null,
+      customerPrice: 350,
+      operationalPrice: 340,
+      priceSource: 'standing',
+    });
+  });
+
   it('uses the standing package price outside every seasonal window', () => {
     const terms = resolvePropertyServiceTerms({
       propertyId: PROPERTY_A,
@@ -294,14 +344,16 @@ describe('payment preference', () => {
     ).toThrow(ServicePackageValidationError);
   });
 
-  it('requires the preferred method to be allowed and the property to match', () => {
+  it('requires the preferred method to be one of the allowed methods', () => {
     expect(() =>
       validatePaymentPreference({
         propertyId: PROPERTY_A,
         allowedMethods: ['CASH', 'CHECK'],
         preferredMethod: 'CARD',
       })
-    ).toThrowError(/preferred/i);
+    ).toThrow(
+      expect.objectContaining({ code: 'PAYMENT_PREFERENCE_PREFERRED' })
+    );
 
     expect(
       paymentPreferenceForProperty(PROPERTY_B, [
@@ -343,6 +395,15 @@ describe('foundation boundaries', () => {
       expect(statement).not.toMatch(/^ALTER TABLE "(JOB|INVOICE|INVOICEPAYMENT|JOBPAYOUT)"/);
       expect(statement).not.toMatch(/\bSET NOT NULL\b/);
     }
+    expect(sql).toContain(
+      'ALTER TABLE "property_service_rates" ADD CONSTRAINT "property_service_rates_ends_on_check" CHECK ("endsOn" IS NULL OR "endsOn" >= "startsOn")'
+    );
+    expect(sql).toContain(
+      'ALTER TABLE "property_service_packages" ADD CONSTRAINT "property_service_packages_price_check" CHECK ("customerPrice" >= 0 AND ("operationalPrice" IS NULL OR "operationalPrice" >= 0))'
+    );
+    expect(sql).toContain(
+      'ALTER TABLE "property_service_rates" ADD CONSTRAINT "property_service_rates_price_check" CHECK ("customerPrice" >= 0 AND ("operationalPrice" IS NULL OR "operationalPrice" >= 0))'
+    );
     expect(sql).not.toMatch(/fe494d88|1233f6e1|cmuijy8vg|cmuoajao8/);
   });
 

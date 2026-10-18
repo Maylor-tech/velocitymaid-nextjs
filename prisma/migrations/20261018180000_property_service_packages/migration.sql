@@ -62,6 +62,12 @@ ALTER TABLE "property_service_rates" ADD CONSTRAINT "property_service_rates_pack
 
 ALTER TABLE "property_payment_preferences" ADD CONSTRAINT "property_payment_preferences_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "properties"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+ALTER TABLE "property_service_rates" ADD CONSTRAINT "property_service_rates_ends_on_check" CHECK ("endsOn" IS NULL OR "endsOn" >= "startsOn");
+
+ALTER TABLE "property_service_packages" ADD CONSTRAINT "property_service_packages_price_check" CHECK ("customerPrice" >= 0 AND ("operationalPrice" IS NULL OR "operationalPrice" >= 0));
+
+ALTER TABLE "property_service_rates" ADD CONSTRAINT "property_service_rates_price_check" CHECK ("customerPrice" >= 0 AND ("operationalPrice" IS NULL OR "operationalPrice" >= 0));
+
 -- Match existing RLS posture (20260715094314_enable_rls_all_tables).
 ALTER TABLE "property_service_packages" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "allow_postgres_full_access" ON "property_service_packages" FOR ALL TO postgres USING (true) WITH CHECK (true);

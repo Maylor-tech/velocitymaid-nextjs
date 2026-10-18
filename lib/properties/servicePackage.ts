@@ -178,6 +178,10 @@ function money(amount: number): number {
  * Resolve the agreement that applies to one property and service date.
  * Returns null when that property has no active package for the service,
  * including when the package list is empty or belongs to another property.
+ *
+ * Price precedence: an active seasonal rate whose window covers the service
+ * date supplies customerPrice and operationalPrice. Otherwise the package
+ * customerPrice and operationalPrice are used. An inactive rate does not win.
  */
 export function resolvePropertyServiceTerms(input: {
   propertyId: string;
@@ -231,6 +235,7 @@ export function resolvePropertyServiceTerms(input: {
   };
 }
 
+/** preferredMethod must be one of allowedMethods. */
 export function validatePaymentPreference(input: {
   propertyId: string;
   allowedMethods: readonly string[];
