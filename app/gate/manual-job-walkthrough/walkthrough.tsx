@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { ManualJobForm } from "@/app/admin/jobs/new/page";
+import { ManualJobForm } from "@/components/admin/jobs/ManualJobForm";
 
 const TINA_ID = "1233f6e1-5463-4a19-a35f-fbca5fe54725";
 const SNOW_TRAK_ID = "cmuoajao80003ku0447slewk1";
