@@ -1,4 +1,4 @@
-import { parseServiceDateInput } from '@/lib/dates/serviceDate';
+import { businessDateKey, parseServiceDateInput } from '@/lib/dates/serviceDate';
 import { roundMoney } from '@/lib/pricing/money';
 
 /**
@@ -8,7 +8,16 @@ import { roundMoney } from '@/lib/pricing/money';
  * packages, change jobs, invoices, payments, or payouts, calculate card fees,
  * or create guest stay QR codes. Properties with no package resolve to null
  * so callers keep today's behavior.
+ *
+ * Seasonal windows are calendar dates. A timestamp is placed on the
+ * America/New_York calendar day. A date-only value stays on that day.
+ *
+ * PR 2B must copy included scope, exclusions, the selected rate amount, and
+ * the payment preference onto the job at booking time. An in-place package
+ * edit must not change a historical job.
  */
+
+const SERVICE_TIMEZONE = 'America/New_York';
 
 export const SERVICE_PACKAGE_CATEGORIES = ['RESIDENTIAL', 'VACATION_RENTAL'] as const;
 export type ServicePackageCategory = (typeof SERVICE_PACKAGE_CATEGORIES)[number];
@@ -79,7 +88,8 @@ export function isPropertyPaymentMethod(value: unknown): value is PropertyPaymen
 }
 
 export function parseCalendarDay(value: string): string {
-  const parsed = parseServiceDateInput(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  const parsed = match ? parseServiceDateInput(match[0]) : null;
   if (!parsed) {
     throw new ServicePackageValidationError(
       'Seasonal dates must be calendar days.',
@@ -87,6 +97,18 @@ export function parseCalendarDay(value: string): string {
     );
   }
   return parsed.toISOString().slice(0, 10);
+}
+
+/** America/New_York calendar day for a visit. Date-only values are not shifted. */
+export function serviceCalendarDay(value: string | Date): string {
+  const key = businessDateKey(value, SERVICE_TIMEZONE);
+  if (!key) {
+    throw new ServicePackageValidationError(
+      'Seasonal dates must be calendar days.',
+      'SEASONAL_RATE_DATE'
+    );
+  }
+  return key;
 }
 
 function dayNumber(value: string): number {
@@ -161,7 +183,7 @@ export function resolvePropertyServiceTerms(input: {
   propertyId: string;
   serviceCategory: ServicePackageCategory;
   serviceType: string;
-  serviceDate: string;
+  serviceDate: string | Date;
   packages: ServicePackageRecord[];
 }): ResolvedServiceTerms | null {
   const matches = input.packages.filter(
@@ -182,7 +204,7 @@ export function resolvePropertyServiceTerms(input: {
 
   const pkg = matches[0];
   assertSeasonalRatesDoNotOverlap(pkg.rates);
-  const day = parseCalendarDay(input.serviceDate);
+  const day = serviceCalendarDay(input.serviceDate);
   const covering = pkg.rates.filter((rate) => rateCovers(rate, day));
   if (covering.length > 1) {
     throw new ServicePackageValidationError(

@@ -116,6 +116,50 @@ describe('resolvePropertyServiceTerms', () => {
     expect(terms).not.toHaveProperty('processingAllowanceEstimated');
   });
 
+  it('uses the America/New_York calendar day across midnight', () => {
+    const packages = [
+      pkg({
+        rates: [
+          rate({
+            id: 'rate-november',
+            label: 'November',
+            customerPrice: 350,
+            operationalPrice: 350,
+            startsOn: '2026-11-01',
+            endsOn: '2026-11-30',
+          }),
+          rate({
+            id: 'rate-december',
+            label: 'December',
+            customerPrice: 375,
+            operationalPrice: 375,
+            startsOn: '2026-12-01',
+            endsOn: '2026-12-31',
+          }),
+        ],
+      }),
+    ];
+    const visit = {
+      propertyId: PROPERTY_A,
+      serviceCategory: 'VACATION_RENTAL' as const,
+      serviceType: 'Vacation Rental Turnover',
+      packages,
+    };
+
+    expect(
+      resolvePropertyServiceTerms({
+        ...visit,
+        serviceDate: '2026-11-30T23:30:00-05:00',
+      })?.rateId
+    ).toBe('rate-november');
+    expect(
+      resolvePropertyServiceTerms({
+        ...visit,
+        serviceDate: '2026-12-01T00:30:00-05:00',
+      })?.rateId
+    ).toBe('rate-december');
+  });
+
   it('uses the standing package price outside every seasonal window', () => {
     const terms = resolvePropertyServiceTerms({
       propertyId: PROPERTY_A,
