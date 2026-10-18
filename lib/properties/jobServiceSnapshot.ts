@@ -15,7 +15,10 @@ import {
  *
  * Price precedence is the 2A rule: an active seasonal rate covering the
  * service date wins; otherwise the package customerPrice is used.
- * A one-off visit price replaces only the amount charged on this job.
+ * A one-off customer price replaces the amount charged on this job.
+ * A one-off operational price replaces the cleaner amount. Blank keeps the
+ * agreed operational price. A typed customer price that differs from the
+ * package price is rejected unless it is sent as the one-off price with a reason.
  */
 
 export type JobServiceSnapshot = {
@@ -31,10 +34,13 @@ export type JobServiceSnapshot = {
   } | null;
   priceOverridden: boolean;
   priceOverrideReason: string | null;
+  /** Null keeps the agreed operational price. */
+  operationalPriceOverride: number | null;
   /** Amount to store on Job.totalPrice / quotedTotal. */
   customerTotal: number;
-  /** Amount to store on Job.operationalTotal. Not replaced by a one-off price. */
+  /** Amount to store on Job.operationalTotal. */
   operationalTotal: number;
+  rateLabel: string;
 };
 
 export type StoredServiceRateRow = {
@@ -142,7 +148,10 @@ export function buildJobServiceSnapshot(input: {
   serviceDate: string | Date;
   packages: ServicePackageRecord[];
   preferences: PaymentPreferenceRecord[];
+  /** Customer amount typed on the manual form. A difference is not ignored. */
+  typedCustomerPrice: number | null;
   visitPriceOverride: number | null;
+  visitOperationalOverride: number | null;
   priceOverrideReason: string | null;
 }): JobServiceSnapshot | null {
   const terms = resolvePropertyServiceTerms({
@@ -153,8 +162,10 @@ export function buildJobServiceSnapshot(input: {
     packages: input.packages,
   });
 
+  const hasCustomerOverride = input.visitPriceOverride != null;
+  const hasOperationalOverride = input.visitOperationalOverride != null;
   if (!terms) {
-    if (input.visitPriceOverride != null) {
+    if (hasCustomerOverride || hasOperationalOverride) {
       throw new ServicePackageValidationError(
         'A one-off price requires a service package for this visit.',
         'PRICE_OVERRIDE_PACKAGE'
@@ -163,17 +174,37 @@ export function buildJobServiceSnapshot(input: {
     return null;
   }
 
+  if (
+    !hasCustomerOverride &&
+    input.typedCustomerPrice != null &&
+    roundMoney(input.typedCustomerPrice) !== terms.customerPrice
+  ) {
+    throw new ServicePackageValidationError(
+      `Package price is $${terms.customerPrice.toFixed(2)} (${terms.rateLabel}). Use a one-off price and reason to charge a different amount.`,
+      'PRICE_TYPED_MISMATCH'
+    );
+  }
+
   const reason = input.priceOverrideReason?.trim() || '';
-  const hasOverride = input.visitPriceOverride != null;
+  const hasOverride = hasCustomerOverride || hasOperationalOverride;
   if (hasOverride && !reason) {
     throw new ServicePackageValidationError(
       'A one-off price needs a reason. The standing package is not changed.',
       'PRICE_OVERRIDE_REASON'
     );
   }
-  if (hasOverride && (!Number.isFinite(input.visitPriceOverride) || (input.visitPriceOverride as number) < 0)) {
+  if (hasCustomerOverride && (!Number.isFinite(input.visitPriceOverride) || (input.visitPriceOverride as number) < 0)) {
     throw new ServicePackageValidationError(
       'A one-off price must be zero or greater.',
+      'PRICE_OVERRIDE_AMOUNT'
+    );
+  }
+  if (
+    hasOperationalOverride &&
+    (!Number.isFinite(input.visitOperationalOverride) || (input.visitOperationalOverride as number) < 0)
+  ) {
+    throw new ServicePackageValidationError(
+      'A one-off operational price must be zero or greater.',
       'PRICE_OVERRIDE_AMOUNT'
     );
   }
@@ -181,8 +212,13 @@ export function buildJobServiceSnapshot(input: {
   const preference = paymentPreferenceForProperty(input.propertyId, input.preferences);
   const agreedCustomerPrice = terms.customerPrice;
   const agreedOperationalPrice = terms.operationalPrice;
-  const customerTotal = hasOverride ? roundMoney(input.visitPriceOverride as number) : agreedCustomerPrice;
-  const operationalTotal = agreedOperationalPrice ?? agreedCustomerPrice;
+  const customerTotal = hasCustomerOverride
+    ? roundMoney(input.visitPriceOverride as number)
+    : agreedCustomerPrice;
+  const operationalPriceOverride = hasOperationalOverride
+    ? roundMoney(input.visitOperationalOverride as number)
+    : null;
+  const operationalTotal = operationalPriceOverride ?? agreedOperationalPrice ?? agreedCustomerPrice;
 
   return {
     servicePackageId: terms.packageId,
@@ -199,7 +235,9 @@ export function buildJobServiceSnapshot(input: {
       : null,
     priceOverridden: hasOverride,
     priceOverrideReason: hasOverride ? reason : null,
+    operationalPriceOverride,
     customerTotal,
     operationalTotal,
+    rateLabel: terms.rateLabel,
   };
 }

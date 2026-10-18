@@ -10,11 +10,13 @@ ADD COLUMN "includedScopeSnapshot" TEXT,
 ADD COLUMN "exclusionsSnapshot" TEXT,
 ADD COLUMN "paymentPreferenceSnapshot" JSONB,
 ADD COLUMN "priceOverridden" BOOLEAN,
-ADD COLUMN "priceOverrideReason" TEXT;
+ADD COLUMN "priceOverrideReason" TEXT,
+ADD COLUMN "operationalPriceOverride" DECIMAL(10,2);
 
 ALTER TABLE "Job" ADD CONSTRAINT "Job_service_snapshot_price_check" CHECK (
     ("agreedCustomerPrice" IS NULL OR "agreedCustomerPrice" >= 0)
     AND ("agreedOperationalPrice" IS NULL OR "agreedOperationalPrice" >= 0)
+    AND ("operationalPriceOverride" IS NULL OR "operationalPriceOverride" >= 0)
 );
 
 ALTER TABLE "Job" ADD CONSTRAINT "Job_price_override_reason_check" CHECK (

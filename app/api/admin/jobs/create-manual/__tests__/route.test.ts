@@ -462,7 +462,7 @@ describe('POST /api/admin/jobs/create-manual', () => {
   });
 
   it('snapshots the December rate and still syncs the calendar', async () => {
-    const res = await POST(request(tinaBody({ scheduledDate: '2026-12-15', totalAmount: 200 })));
+    const res = await POST(request(tinaBody({ scheduledDate: '2026-12-15', totalAmount: 375 })));
     const json = await res.json();
     const created = mocks.jobCreate.mock.calls[0][0].data;
 
@@ -490,7 +490,7 @@ describe('POST /api/admin/jobs/create-manual', () => {
   });
 
   it('keeps the snapshot when the package row changes after booking', async () => {
-    await POST(request(tinaBody({ scheduledDate: '2026-12-15' })));
+    await POST(request(tinaBody({ scheduledDate: '2026-12-15', totalAmount: 375 })));
     const created = mocks.jobCreate.mock.calls[0][0].data;
     currentPackage.customerPrice = 999;
     currentPackage.Rates[0].customerPrice = 999;
@@ -523,6 +523,52 @@ describe('POST /api/admin/jobs/create-manual', () => {
     expect(mocks.packageUpdate).not.toHaveBeenCalled();
     expect(mocks.rateUpdate).not.toHaveBeenCalled();
     expect(mocks.awaitJobGoogleSync).toHaveBeenCalledWith('job-new');
+  });
+
+  it('does not silently ignore a typed price that differs from the package', async () => {
+    const res = await POST(request(tinaBody({ scheduledDate: '2026-12-15', totalAmount: 200 })));
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toMatch(/Package price is \$375\.00 \(December\)/);
+    expect(mocks.jobCreate).not.toHaveBeenCalled();
+    expect(mocks.packageUpdate).not.toHaveBeenCalled();
+    expect(mocks.awaitJobGoogleSync).not.toHaveBeenCalled();
+    expect(currentPackage.Rates[0].customerPrice).toBe(375);
+  });
+
+  it('keeps the agreed operational price unless a cleaner override and reason are sent', async () => {
+    const kept = await POST(
+      request(
+        tinaBody({
+          scheduledDate: '2026-12-15',
+          totalAmount: 375,
+          visitOperationalOverride: 300,
+        })
+      )
+    );
+    expect(kept.status).toBe(400);
+    expect(mocks.jobCreate).not.toHaveBeenCalled();
+
+    const res = await POST(
+      request(
+        tinaBody({
+          scheduledDate: '2026-12-15',
+          totalAmount: 375,
+          visitOperationalOverride: 300,
+          priceOverrideReason: 'Cleaner paid less for this stay',
+        })
+      )
+    );
+    const created = mocks.jobCreate.mock.calls[0][0].data;
+
+    expect(res.status).toBe(200);
+    expect(created.totalPrice).toBe(375);
+    expect(created.agreedOperationalPrice).toBe(360);
+    expect(created.operationalPriceOverride).toBe(300);
+    expect(created.operationalTotal).toBe(300);
+    expect(currentPackage.Rates[0].operationalPrice).toBe(360);
+    expect(mocks.packageUpdate).not.toHaveBeenCalled();
   });
 
   it('rejects a one-off price without a reason before creating a job', async () => {
@@ -572,9 +618,57 @@ describe('GET /api/admin/jobs/create-manual', () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
+    expect(json.packagePrice).toBeNull();
     expect(json.sameDayJobs).toHaveLength(1);
     expect(mocks.jobCreate).not.toHaveBeenCalled();
     expect(mocks.customerCreate).not.toHaveBeenCalled();
     expect(mocks.propertyUpdate).not.toHaveBeenCalled();
+  });
+
+  it('returns the package price and rate label for the service date', async () => {
+    mocks.propertyFindUnique.mockResolvedValue({
+      id: TINA_PROPERTY_ID,
+      customerId: TINA_CUSTOMER_ID,
+    });
+    mocks.jobFindMany.mockResolvedValue([]);
+    mocks.packageFindMany.mockResolvedValue([
+      {
+        id: 'package-turnover',
+        propertyId: TINA_PROPERTY_ID,
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        customerPrice: 350,
+        operationalPrice: 340,
+        includedScope: 'Turnover cleaning',
+        exclusions: 'Owner closet',
+        active: true,
+        Rates: [
+          {
+            id: 'rate-december',
+            label: 'December',
+            customerPrice: 375,
+            operationalPrice: 360,
+            startsOn: new Date('2026-12-01T00:00:00.000Z'),
+            endsOn: new Date('2026-12-31T00:00:00.000Z'),
+            active: true,
+          },
+        ],
+      },
+    ]);
+
+    const res = await GET(
+      new NextRequest(
+        `http://localhost/api/admin/jobs/create-manual?propertyId=${TINA_PROPERTY_ID}&scheduledDate=2026-12-15&customerId=${TINA_CUSTOMER_ID}&serviceCategory=VACATION_RENTAL&serviceType=${encodeURIComponent('Vacation Rental Turnover')}`
+      )
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.packagePrice).toEqual({
+      customerPrice: 375,
+      operationalPrice: 360,
+      rateLabel: 'December',
+    });
+    expect(mocks.jobCreate).not.toHaveBeenCalled();
   });
 });

@@ -60,7 +60,9 @@ function snap(
     serviceDate,
     packages,
     preferences: [preference],
+    typedCustomerPrice: null,
     visitPriceOverride: override,
+    visitOperationalOverride: null,
     priceOverrideReason: reason,
   });
 }
@@ -128,6 +130,74 @@ describe('buildJobServiceSnapshot', () => {
     expect(packages[0].rates[1].customerPrice).toBe(375);
   });
 
+  it('rejects a typed price that differs from the matched package price', () => {
+    const packages = [winterPackage()];
+    expect(() =>
+      buildJobServiceSnapshot({
+        propertyId: PROPERTY_ID,
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        serviceDate: '2026-12-15',
+        packages,
+        preferences: [preference],
+        typedCustomerPrice: 200,
+        visitPriceOverride: null,
+        visitOperationalOverride: null,
+        priceOverrideReason: null,
+      })
+    ).toThrow(expect.objectContaining({ code: 'PRICE_TYPED_MISMATCH' }));
+    expect(packages[0].rates[1].customerPrice).toBe(375);
+    expect(packages[0].customerPrice).toBe(350);
+  });
+
+  it('keeps the agreed operational price when the cleaner override is blank', () => {
+    const snapshot = buildJobServiceSnapshot({
+      propertyId: PROPERTY_ID,
+      serviceCategory: 'VACATION_RENTAL',
+      serviceType: 'Vacation Rental Turnover',
+      serviceDate: '2026-12-15',
+      packages: [winterPackage()],
+      preferences: [preference],
+      typedCustomerPrice: 300,
+      visitPriceOverride: 300,
+      visitOperationalOverride: null,
+      priceOverrideReason: 'Shorter clean requested for this stay',
+    });
+
+    expect(snapshot).toMatchObject({
+      customerTotal: 300,
+      agreedOperationalPrice: 360,
+      operationalPriceOverride: null,
+      operationalTotal: 360,
+    });
+  });
+
+  it('applies an optional operational override with the same reason', () => {
+    const packages = [winterPackage()];
+    const snapshot = buildJobServiceSnapshot({
+      propertyId: PROPERTY_ID,
+      serviceCategory: 'VACATION_RENTAL',
+      serviceType: 'Vacation Rental Turnover',
+      serviceDate: '2026-12-15',
+      packages,
+      preferences: [preference],
+      typedCustomerPrice: 375,
+      visitPriceOverride: null,
+      visitOperationalOverride: 300,
+      priceOverrideReason: 'Cleaner paid less for this stay',
+    });
+
+    expect(snapshot).toMatchObject({
+      customerTotal: 375,
+      agreedCustomerPrice: 375,
+      agreedOperationalPrice: 360,
+      operationalPriceOverride: 300,
+      operationalTotal: 300,
+      priceOverridden: true,
+    });
+    expect(packages[0].rates[1].operationalPrice).toBe(360);
+  });
+
   it('requires a reason before accepting a one-off price', () => {
     expect(() => snap([winterPackage()], '2026-12-15', 300, '  ')).toThrow(
       expect.objectContaining({ code: 'PRICE_OVERRIDE_REASON' })
@@ -163,6 +233,7 @@ describe('job snapshot migration', () => {
     expect(sql).toContain('ADD COLUMN "paymentPreferenceSnapshot" JSONB');
     expect(sql).toContain('ADD COLUMN "priceOverridden" BOOLEAN');
     expect(sql).toContain('ADD COLUMN "priceOverrideReason" TEXT');
+    expect(sql).toContain('ADD COLUMN "operationalPriceOverride" DECIMAL(10,2)');
     for (const statement of statements) {
       expect(statement).not.toMatch(/^(DROP|RENAME|UPDATE|DELETE|TRUNCATE)\b/);
       expect(statement).not.toMatch(/^ALTER TABLE "(INVOICE|INVOICEPAYMENT|JOBPAYOUT)"/);

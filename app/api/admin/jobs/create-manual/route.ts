@@ -42,6 +42,7 @@ import {
 } from "@/lib/properties/jobServiceSnapshot";
 import {
   ServicePackageValidationError,
+  resolvePropertyServiceTerms,
   type PaymentPreferenceRecord,
 } from "@/lib/properties/servicePackage";
 
@@ -71,6 +72,7 @@ interface ManualJobBody {
   totalAmount?: number;
   operationalAmount?: number | null;
   visitPriceOverride?: number | string | null;
+  visitOperationalOverride?: number | string | null;
   priceOverrideReason?: string | null;
   priceInputMode?: "operational" | "customer";
   depositAmount?: number;
@@ -155,8 +157,36 @@ export async function GET(request: NextRequest) {
       );
     }
     const jobs = await sameDayJobs(property.id, preferredDate);
+    const serviceCategory = request.nextUrl.searchParams.get("serviceCategory")?.trim();
+    const serviceType = request.nextUrl.searchParams.get("serviceType")?.trim();
+    let packagePrice: {
+      customerPrice: number;
+      operationalPrice: number | null;
+      rateLabel: string;
+    } | null = null;
+    if (serviceCategory && serviceType && isServiceCategory(serviceCategory)) {
+      const packageRows = await prisma.propertyServicePackage.findMany({
+        where: { propertyId: property.id },
+        include: { Rates: true },
+      });
+      const terms = resolvePropertyServiceTerms({
+        propertyId: property.id,
+        serviceCategory,
+        serviceType,
+        serviceDate: scheduledDate,
+        packages: servicePackagesFromRows(packageRows),
+      });
+      if (terms) {
+        packagePrice = {
+          customerPrice: terms.customerPrice,
+          operationalPrice: terms.operationalPrice,
+          rateLabel: terms.rateLabel,
+        };
+      }
+    }
     return NextResponse.json({
       success: true,
+      packagePrice,
       sameDayJobs: jobs.map((job) => ({
         id: job.id,
         jobReference: job.jobReference,
@@ -270,6 +300,23 @@ export async function POST(request: NextRequest) {
     if (visitPriceOverride != null && visitPriceOverride < 0) {
       return NextResponse.json(
         { success: false, error: "A one-off price must be zero or greater." },
+        { status: 400 }
+      );
+    }
+    const visitOperationalOverride = moneyOrNull(body.visitOperationalOverride);
+    if (
+      body.visitOperationalOverride != null &&
+      body.visitOperationalOverride !== "" &&
+      visitOperationalOverride == null
+    ) {
+      return NextResponse.json(
+        { success: false, error: "visitOperationalOverride is invalid" },
+        { status: 400 }
+      );
+    }
+    if (visitOperationalOverride != null && visitOperationalOverride < 0) {
+      return NextResponse.json(
+        { success: false, error: "A one-off operational price must be zero or greater." },
         { status: 400 }
       );
     }
@@ -492,7 +539,9 @@ export async function POST(request: NextRequest) {
           serviceDate: body.scheduledDate,
           packages: servicePackagesFromRows(packageRows),
           preferences,
+          typedCustomerPrice: totalAmount,
           visitPriceOverride,
+          visitOperationalOverride,
           priceOverrideReason: body.priceOverrideReason ?? null,
         });
       } catch (error) {
@@ -501,7 +550,7 @@ export async function POST(request: NextRequest) {
         }
         throw error;
       }
-    } else if (visitPriceOverride != null) {
+    } else if (visitPriceOverride != null || visitOperationalOverride != null) {
       return NextResponse.json(
         { success: false, error: "A one-off price requires a service package for this visit." },
         { status: 400 }
@@ -615,6 +664,9 @@ export async function POST(request: NextRequest) {
                 : {}),
               priceOverridden: packageSnapshot.priceOverridden,
               priceOverrideReason: packageSnapshot.priceOverrideReason,
+              ...(packageSnapshot.operationalPriceOverride != null
+                ? { operationalPriceOverride: packageSnapshot.operationalPriceOverride }
+                : {}),
             }
           : {}),
         depositAmount,

@@ -101,6 +101,11 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
   const [operationalAmount, setOperationalAmount] = useState("");
   const [agreedPrice, setAgreedPrice] = useState<number | null>(null);
   const [sameDayJobs, setSameDayJobs] = useState<SameDayJob[]>([]);
+  const [packagePrice, setPackagePrice] = useState<{
+    customerPrice: number;
+    operationalPrice: number | null;
+    rateLabel: string;
+  } | null>(null);
   const [form, setForm] = useState({
     clientFirstName: "",
     clientLastName: "",
@@ -213,6 +218,7 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
   useEffect(() => {
     if (!propertyId || !form.scheduledDate || customerMode !== "existing") {
       setSameDayJobs([]);
+      setPackagePrice(null);
       return;
     }
     let cancelled = false;
@@ -220,20 +226,38 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
       propertyId,
       scheduledDate: form.scheduledDate,
       ...(selectedCustomer ? { customerId: selectedCustomer.id } : {}),
+      ...(form.serviceType
+        ? { serviceCategory, serviceType: form.serviceType }
+        : {}),
     });
     fetcher(`/api/admin/jobs/create-manual?${params.toString()}`, { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
         setSameDayJobs(Array.isArray(data.sameDayJobs) ? data.sameDayJobs : []);
+        setPackagePrice(
+          data.packagePrice && Number.isFinite(Number(data.packagePrice.customerPrice))
+            ? {
+                customerPrice: Number(data.packagePrice.customerPrice),
+                operationalPrice:
+                  data.packagePrice.operationalPrice == null
+                    ? null
+                    : Number(data.packagePrice.operationalPrice),
+                rateLabel: String(data.packagePrice.rateLabel || "Standing rate"),
+              }
+            : null
+        );
       })
       .catch(() => {
-        if (!cancelled) setSameDayJobs([]);
+        if (!cancelled) {
+          setSameDayJobs([]);
+          setPackagePrice(null);
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [propertyId, form.scheduledDate, customerMode, selectedCustomer, fetcher]);
+  }, [propertyId, form.scheduledDate, form.serviceType, serviceCategory, customerMode, selectedCustomer, fetcher]);
 
   const serviceOptions = useMemo(
     () => serviceTypesFor(serviceCategory),
@@ -262,11 +286,14 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
   }, [form.serviceType, selectedCustomer?.id]);
 
   const [visitPriceOverride, setVisitPriceOverride] = useState("");
+  const [visitOperationalOverride, setVisitOperationalOverride] = useState("");
   const [priceOverrideReason, setPriceOverrideReason] = useState("");
 
   const applyVisitDraft = (draft: VisitDraft, keepState = false) => {
     setVisitPriceOverride("");
+    setVisitOperationalOverride("");
     setPriceOverrideReason("");
+    setPackagePrice(null);
     setPropertyId(draft.propertyId);
     setServiceCategory(draft.serviceCategory);
     setAgreedPrice(draft.agreedPrice);
@@ -431,16 +458,28 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
     if (!form.scheduledDate) return setError("Date is required.");
     if (!form.scheduledStartTime) return setError("Start time is required.");
 
-    const activeAmount =
-      priceMode === "customer" ? Number(customerPrice) : Number(operationalAmount);
-    if (!Number.isFinite(activeAmount) || activeAmount < 0 || (priceMode === "customer" ? customerPrice === "" : operationalAmount === "")) {
+    const packageMatched = packagePrice != null;
+    const activeAmount = packageMatched
+      ? packagePrice.customerPrice
+      : priceMode === "customer"
+        ? Number(customerPrice)
+        : Number(operationalAmount);
+    if (!packageMatched && (!Number.isFinite(activeAmount) || activeAmount < 0 || (priceMode === "customer" ? customerPrice === "" : operationalAmount === ""))) {
       return setError(priceMode === "customer" ? "Customer price is required." : "Operational subtotal is required.");
     }
     const overrideAmount = visitPriceOverride.trim() === "" ? null : Number(visitPriceOverride);
     if (visitPriceOverride.trim() !== "" && (!Number.isFinite(overrideAmount) || (overrideAmount as number) < 0)) {
       return setError("A one-off price must be zero or greater.");
     }
-    if (overrideAmount != null && !priceOverrideReason.trim()) {
+    const operationalOverride =
+      visitOperationalOverride.trim() === "" ? null : Number(visitOperationalOverride);
+    if (
+      visitOperationalOverride.trim() !== "" &&
+      (!Number.isFinite(operationalOverride) || (operationalOverride as number) < 0)
+    ) {
+      return setError("A one-off operational price must be zero or greater.");
+    }
+    if ((overrideAmount != null || operationalOverride != null) && !priceOverrideReason.trim()) {
       return setError("A one-off price needs a reason. The standing package is not changed.");
     }
 
@@ -472,6 +511,7 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
           : null,
       paymentStatus: form.paymentStatus,
       visitPriceOverride: overrideAmount,
+      visitOperationalOverride: operationalOverride,
       priceOverrideReason: priceOverrideReason.trim(),
       internalNotes: form.internalNotes.trim(),
       marketLabel: branch,
@@ -933,7 +973,15 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
 
           <section className="rounded-xl border border-vm-border bg-vm-white p-6">
             <h2 className={sectionTitleClass}>Price for this visit</h2>
-            {agreedPrice != null && (
+            {packagePrice != null && (
+              <div className="mb-3 rounded-lg border border-vm-border bg-vm-surface p-3">
+                <p className="font-body text-sm font-semibold text-vm-navy">
+                  Package price: ${packagePrice.customerPrice.toFixed(2)} ({packagePrice.rateLabel})
+                </p>
+                <p className="mt-1 text-xs text-vm-muted">Use one-off price to change this visit.</p>
+              </div>
+            )}
+            {agreedPrice != null && packagePrice == null && (
               <p className="mb-3 font-body text-sm text-vm-navy">
                 Saved agreed price ${agreedPrice.toFixed(2)} is the customer price. Changing it applies to this visit only and is not grossed up.
               </p>
@@ -941,6 +989,7 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
             <div className="mb-4 flex flex-wrap gap-2">
               <button
                 type="button"
+                disabled={packagePrice != null}
                 onClick={() => setPriceMode("customer")}
                 className={`rounded-lg px-3 py-2 font-heading text-sm font-semibold ${
                   priceMode === "customer" ? "bg-vm-navy text-white" : "border border-vm-border text-vm-navy"
@@ -950,6 +999,7 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
               </button>
               <button
                 type="button"
+                disabled={packagePrice != null}
                 onClick={() => setPriceMode("operational")}
                 className={`rounded-lg px-3 py-2 font-heading text-sm font-semibold ${
                   priceMode === "operational" ? "bg-vm-navy text-white" : "border border-vm-border text-vm-navy"
@@ -971,11 +1021,15 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
                       min={0}
                       step="0.01"
                       className={inputClass}
-                      value={customerPrice}
+                      value={packagePrice ? packagePrice.customerPrice.toFixed(2) : customerPrice}
+                      readOnly={packagePrice != null}
+                      disabled={packagePrice != null}
                       onChange={(e) => setCustomerPrice(e.target.value)}
                     />
                     <p className="mt-1 text-xs text-vm-muted">
-                      Processing protection is not applied to this amount.
+                      {packagePrice
+                        ? "Use one-off price to change this visit."
+                        : "Processing protection is not applied to this amount."}
                     </p>
                   </div>
                   <div>
@@ -988,11 +1042,19 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
                       min={0}
                       step="0.01"
                       className={inputClass}
-                      value={operationalAmount}
+                      value={
+                        packagePrice
+                          ? (packagePrice.operationalPrice ?? packagePrice.customerPrice).toFixed(2)
+                          : operationalAmount
+                      }
+                      readOnly={packagePrice != null}
+                      disabled={packagePrice != null}
                       onChange={(e) => setOperationalAmount(e.target.value)}
                     />
                     <p className="mt-1 text-xs text-vm-muted">
-                      Payout base. Leave blank to use the customer price.
+                      {packagePrice
+                        ? "Use one-off price to change this visit."
+                        : "Payout base. Leave blank to use the customer price."}
                     </p>
                   </div>
                 </>
@@ -1007,13 +1069,21 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
                     min={0}
                     step="0.01"
                     className={inputClass}
-                    value={operationalAmount}
+                    value={
+                      packagePrice
+                        ? (packagePrice.operationalPrice ?? packagePrice.customerPrice).toFixed(2)
+                        : operationalAmount
+                    }
+                    readOnly={packagePrice != null}
+                    disabled={packagePrice != null}
                     onChange={(e) => setOperationalAmount(e.target.value)}
                   />
                   <p className="mt-1 text-xs text-vm-muted">
-                    Processing protection, when enabled, calculates the customer price from this amount.
+                    {packagePrice
+                      ? "Use one-off price to change this visit."
+                      : "Processing protection, when enabled, calculates the customer price from this amount."}
                   </p>
-                  {customerPricePreview != null && (
+                  {packagePrice == null && customerPricePreview != null && (
                     <div className="mt-3 rounded-lg border border-vm-border bg-vm-surface p-3 text-sm">
                       <div className="flex justify-between gap-2">
                         <span className="text-vm-muted">Customer price</span>
@@ -1049,6 +1119,23 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
                 />
                 <p className="mt-1 text-xs text-vm-muted">
                   Charges this visit only. A saved package or rate is not changed.
+                </p>
+              </div>
+              <div>
+                <label className={labelClass} htmlFor="visitOperationalOverride">
+                  One-off operational price ($)
+                </label>
+                <input
+                  id="visitOperationalOverride"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  className={inputClass}
+                  value={visitOperationalOverride}
+                  onChange={(e) => setVisitOperationalOverride(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-vm-muted">
+                  Cleaner amount for this visit. Leave blank to keep the agreed operational price.
                 </p>
               </div>
               <div>
