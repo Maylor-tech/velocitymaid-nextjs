@@ -4,15 +4,16 @@ export const dynamic = "force-dynamic";
 /**
  * Manual Job Creation API
  * POST /api/admin/jobs/create-manual
+ * GET  /api/admin/jobs/create-manual?propertyId&scheduledDate&customerId
  *
- * Lets admins record jobs booked offline (phone, text, in person) that live
- * outside the Stripe booking flow. Creates/links a Customer by email and
- * creates a Job. Does not touch Stripe, payment, or booking logic.
+ * Existing customers are selected by id. Their master address and branch are
+ * not rewritten. A saved agreed price is a customer-facing amount and is not
+ * grossed up. Jobs are created as RECEIVED with no cleaner assignment.
  *
- * priceInputMode (ADMIN-ONLY — this route requires requireRole ADMIN):
- * - 'operational' (default): totalAmount is economics base; processing
- *   protection may raise the customer total when enabled.
- * - 'customer': totalAmount is the final customer price (no gross-up).
+ * priceInputMode (ADMIN-ONLY):
+ * - 'operational': totalAmount is the payout base; protection may raise the
+ *   customer total when enabled.
+ * - 'customer': totalAmount is the final customer price. No gross-up.
  *   Public booking/checkout APIs do not accept this field.
  */
 
@@ -25,14 +26,22 @@ import { geocodeCustomerInBackground } from "@/lib/geocoding/geocodeCustomer";
 import { nextVmReference } from "@/lib/billing/numbering";
 import { awaitJobGoogleSync } from "@/lib/google/jobGoogleSync";
 import { protectOperationalPrice } from "@/lib/pricing/processingPolicy";
-import { roundMoney } from "@/lib/pricing/money";
 import { resolveBillingPolicy } from "@/lib/billing/billingPolicy";
+import { logAuditEntry } from "@/lib/audit";
+import { parseServiceDateInput } from "@/lib/dates/serviceDate";
 import {
-  findPropertyForCustomerAddress,
-  loadPropertyById,
-} from "@/lib/properties/propertyService";
+  guestDatesForCategory,
+  isServiceCategory,
+  priceWasOverridden,
+  resolveManualJobPrice,
+  type ServiceCategory,
+} from "@/lib/admin/manualJobCreate";
 
 interface ManualJobBody {
+  customerMode?: "existing" | "new";
+  customerId?: string;
+  propertyId?: string;
+
   clientFirstName?: string;
   clientLastName?: string;
   clientEmail?: string;
@@ -41,47 +50,27 @@ interface ManualJobBody {
   propertyAddress?: string;
   propertyCity?: string;
   propertyState?: string;
-  /** Optional explicit Property link when known. */
-  propertyId?: string;
 
+  serviceCategory?: string;
   serviceType?: string;
   scheduledDate?: string;
   scheduledStartTime?: string;
   scheduledEndTime?: string;
+  guestCheckInDate?: string | null;
+  guestCheckOutDate?: string | null;
   branch?: string;
 
-  /**
-   * Dollar amount. Interpreted as operational subtotal by default
-   * (`priceInputMode: 'operational'`). Processing protection produces
-   * customer totalPrice/quotedTotal. Use `priceInputMode: 'customer'` to
-   * treat this as the final customer total (no second gross-up).
-   */
   totalAmount?: number;
-  /** @default 'operational' */
-  priceInputMode?: 'operational' | 'customer';
+  operationalAmount?: number | null;
+  priceInputMode?: "operational" | "customer";
   depositAmount?: number;
-
-  cleanerName?: string;
 
   jobStatus?: string;
   paymentStatus?: string;
-
-  completedAt?: string;
-  completedBy?: string;
-  cleanDurationMins?: number;
+  cleanerName?: string;
 
   internalNotes?: string;
   marketLabel?: string;
-  estimatedLaborHours?: number;
-  actualLaborHours?: number;
-  pricingBasis?: string;
-}
-
-function isJobStatus(value: unknown): value is JobStatus {
-  return (
-    typeof value === "string" &&
-    (Object.values(JobStatus) as string[]).includes(value)
-  );
 }
 
 function isPaymentStatus(value: unknown): value is PaymentStatus {
@@ -91,19 +80,124 @@ function isPaymentStatus(value: unknown): value is PaymentStatus {
   );
 }
 
+function moneyOrNull(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function readStayDate(value: unknown): Date | null | "invalid" {
+  if (value == null || value === "") return null;
+  if (typeof value !== "string") return "invalid";
+  return parseServiceDateInput(value) ?? "invalid";
+}
+
+async function sameDayJobs(propertyId: string, preferredDate: Date) {
+  const end = new Date(preferredDate.getTime() + 24 * 60 * 60 * 1000);
+  return prisma.job.findMany({
+    where: {
+      propertyId,
+      preferredDate: { gte: preferredDate, lt: end },
+      status: { notIn: [JobStatus.CANCELLED, JobStatus.CANCELLED_EMERGENCY] },
+    },
+    select: {
+      id: true,
+      jobReference: true,
+      status: true,
+      serviceType: true,
+      preferredDate: true,
+    },
+    orderBy: { createdAt: "desc" },
+    take: 8,
+  });
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    await requireRole(request, "ADMIN");
+    const propertyId = request.nextUrl.searchParams.get("propertyId")?.trim();
+    const scheduledDate = request.nextUrl.searchParams.get("scheduledDate")?.trim();
+    const customerId = request.nextUrl.searchParams.get("customerId")?.trim();
+    if (!propertyId || !scheduledDate) {
+      return NextResponse.json(
+        { success: false, error: "propertyId and scheduledDate are required" },
+        { status: 400 }
+      );
+    }
+    const preferredDate = parseServiceDateInput(scheduledDate);
+    if (!preferredDate) {
+      return NextResponse.json(
+        { success: false, error: "scheduledDate is invalid" },
+        { status: 400 }
+      );
+    }
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: { id: true, customerId: true },
+    });
+    if (!property) {
+      return NextResponse.json({ success: false, error: "Property not found" }, { status: 404 });
+    }
+    if (customerId && property.customerId !== customerId) {
+      return NextResponse.json(
+        { success: false, error: "Property does not belong to this customer" },
+        { status: 400 }
+      );
+    }
+    const jobs = await sameDayJobs(property.id, preferredDate);
+    return NextResponse.json({
+      success: true,
+      sameDayJobs: jobs.map((job) => ({
+        id: job.id,
+        jobReference: job.jobReference,
+        status: job.status,
+        serviceType: job.serviceType,
+        preferredDate: job.preferredDate?.toISOString() ?? null,
+      })),
+    });
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
+    const message = error instanceof Error ? error.message : "Failed to check existing jobs";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const auth = await requireRole(request, "ADMIN");
-
     const body = (await request.json()) as ManualJobBody;
+
+    if (body.jobStatus && body.jobStatus !== JobStatus.RECEIVED) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Manual jobs are created as Received. Assign a cleaner from the job page.",
+        },
+        { status: 400 }
+      );
+    }
+    if (!isPaymentStatus(body.paymentStatus)) {
+      return NextResponse.json(
+        { success: false, error: `Invalid paymentStatus: ${body.paymentStatus}` },
+        { status: 400 }
+      );
+    }
+    if (!isServiceCategory(body.serviceCategory)) {
+      return NextResponse.json(
+        { success: false, error: "serviceCategory must be RESIDENTIAL or VACATION_RENTAL" },
+        { status: 400 }
+      );
+    }
 
     const clientFirstName = body.clientFirstName?.trim();
     const clientEmail = body.clientEmail?.trim().toLowerCase();
     const propertyAddress = body.propertyAddress?.trim();
     const serviceType = body.serviceType?.trim();
     const branchSlug = body.branch?.trim();
+    const serviceCategory = body.serviceCategory;
+    const customerMode = body.customerMode === "existing" ? "existing" : "new";
+    const priceMode = body.priceInputMode === "customer" ? "customer" : "operational";
 
-    // Required fields
     if (!clientFirstName) {
       return NextResponse.json(
         { success: false, error: "clientFirstName is required" },
@@ -128,38 +222,186 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    if (!branchSlug) {
+    if (!body.scheduledDate?.trim()) {
       return NextResponse.json(
-        { success: false, error: "branch is required" },
+        { success: false, error: "scheduledDate is required" },
         { status: 400 }
       );
     }
-    if (!isJobStatus(body.jobStatus)) {
+    const preferredDate = parseServiceDateInput(body.scheduledDate);
+    if (!preferredDate) {
       return NextResponse.json(
-        { success: false, error: `Invalid jobStatus: ${body.jobStatus}` },
-        { status: 400 }
-      );
-    }
-    if (!isPaymentStatus(body.paymentStatus)) {
-      return NextResponse.json(
-        { success: false, error: `Invalid paymentStatus: ${body.paymentStatus}` },
+        { success: false, error: "scheduledDate is invalid" },
         { status: 400 }
       );
     }
 
-    const jobStatus = body.jobStatus;
-    const paymentStatus = body.paymentStatus;
-
-    // Resolve branch by slug
-    const branch = await prisma.branch.findUnique({
-      where: { slug: branchSlug },
-      select: { id: true, state: true },
-    });
-    if (!branch) {
+    const totalAmount = moneyOrNull(body.totalAmount);
+    if (totalAmount == null || totalAmount < 0) {
       return NextResponse.json(
-        { success: false, error: `Branch not found for slug "${branchSlug}"` },
+        { success: false, error: "totalAmount is required" },
         { status: 400 }
       );
+    }
+    const operationalAmount = moneyOrNull(body.operationalAmount);
+    if (body.operationalAmount != null && operationalAmount == null) {
+      return NextResponse.json(
+        { success: false, error: "operationalAmount is invalid" },
+        { status: 400 }
+      );
+    }
+
+    const checkIn = readStayDate(body.guestCheckInDate);
+    const checkOut = readStayDate(body.guestCheckOutDate);
+    if (checkIn === "invalid" || checkOut === "invalid") {
+      return NextResponse.json(
+        { success: false, error: "Guest check-in or checkout date is invalid" },
+        { status: 400 }
+      );
+    }
+    const stayDates = guestDatesForCategory(
+      serviceCategory as ServiceCategory,
+      checkIn,
+      checkOut
+    );
+
+    const clientLastName = body.clientLastName?.trim() || "";
+    const clientPhone = body.clientPhone?.trim() || null;
+    const propertyCity = body.propertyCity?.trim() || null;
+    const propertyState = body.propertyState?.trim() || null;
+
+    let customerId: string;
+    let customerBilling: string | null = null;
+    let jobFirstName = clientFirstName;
+    let jobLastName = clientLastName;
+    let branch: { id: string; state: string | null; slug: string | null };
+
+    if (customerMode === "existing") {
+      const requestedId = body.customerId?.trim();
+      if (!requestedId) {
+        return NextResponse.json(
+          { success: false, error: "customerId is required for an existing customer" },
+          { status: 400 }
+        );
+      }
+      const existing = await prisma.customer.findUnique({
+        where: { id: requestedId },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          billingPolicy: true,
+          branchId: true,
+          Branch: { select: { id: true, state: true, slug: true } },
+        },
+      });
+      if (!existing) {
+        return NextResponse.json({ success: false, error: "Customer not found" }, { status: 404 });
+      }
+      const storedEmail = existing.email.trim().toLowerCase();
+      if (clientEmail !== storedEmail) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Email does not match the selected customer. Choose that customer again.",
+          },
+          { status: 400 }
+        );
+      }
+      customerId = existing.id;
+      customerBilling = existing.billingPolicy;
+      jobFirstName = existing.firstName;
+      jobLastName = existing.lastName.trim();
+      if (existing.Branch) {
+        branch = {
+          id: existing.Branch.id,
+          state: existing.Branch.state,
+          slug: existing.Branch.slug,
+        };
+      } else {
+        if (!branchSlug) {
+          return NextResponse.json(
+            { success: false, error: "branch is required" },
+            { status: 400 }
+          );
+        }
+        const resolved = await prisma.branch.findUnique({
+          where: { slug: branchSlug },
+          select: { id: true, state: true, slug: true },
+        });
+        if (!resolved) {
+          return NextResponse.json(
+            { success: false, error: `Branch not found for slug "${branchSlug}"` },
+            { status: 400 }
+          );
+        }
+        branch = resolved;
+      }
+    } else {
+      if (!branchSlug) {
+        return NextResponse.json(
+          { success: false, error: "branch is required" },
+          { status: 400 }
+        );
+      }
+      const resolved = await prisma.branch.findUnique({
+        where: { slug: branchSlug },
+        select: { id: true, state: true, slug: true },
+      });
+      if (!resolved) {
+        return NextResponse.json(
+          { success: false, error: `Branch not found for slug "${branchSlug}"` },
+          { status: 400 }
+        );
+      }
+      branch = resolved;
+      const emailOwner = await prisma.customer.findUnique({
+        where: { email: clientEmail },
+        select: { id: true },
+      });
+      if (emailOwner) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "A customer with this email already exists. Select that customer instead.",
+            code: "CUSTOMER_EXISTS",
+            customerId: emailOwner.id,
+          },
+          { status: 409 }
+        );
+      }
+      if (body.propertyId?.trim()) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "A saved property can only be used with an existing customer.",
+          },
+          { status: 400 }
+        );
+      }
+      const fullAddress = propertyCity
+        ? `${propertyAddress}, ${propertyCity}${propertyState ? `, ${propertyState}` : ""}`
+        : propertyAddress;
+      const created = await prisma.customer.create({
+        data: {
+          id: randomUUID(),
+          firstName: clientFirstName,
+          lastName: clientLastName,
+          email: clientEmail,
+          phone: clientPhone,
+          addressLine1: propertyAddress,
+          city: propertyCity,
+          state: propertyState || branch.state,
+          defaultAddress: fullAddress,
+          branchId: branch.id,
+          updatedAt: new Date(),
+        },
+        select: { id: true, billingPolicy: true },
+      });
+      geocodeCustomerInBackground(created.id);
+      customerId = created.id;
+      customerBilling = created.billingPolicy;
     }
 
     if (auth.branchId && branch.id !== auth.branchId) {
@@ -169,117 +411,69 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. Find or create the customer (match by email)
-    const clientLastName = body.clientLastName?.trim() || "";
-    const clientPhone = body.clientPhone?.trim() || null;
-    const propertyCity = body.propertyCity?.trim() || null;
-    const propertyState = body.propertyState?.trim() || branch.state || null;
-    const fullAddress = propertyCity
-      ? `${propertyAddress}, ${propertyCity}${propertyState ? `, ${propertyState}` : ""}`
-      : propertyAddress;
+    let propertyId: string | null = null;
+    let propertyBilling: string | null = null;
+    let agreedPrice: number | null = null;
 
-    let customer = await prisma.customer.findUnique({
-      where: { email: clientEmail },
-      select: { id: true, billingPolicy: true },
-    });
-
-    const customerAddressData = {
-      addressLine1: propertyAddress,
-      city: propertyCity,
-      state: propertyState,
-      defaultAddress: fullAddress,
-      branchId: branch.id,
-      updatedAt: new Date(),
-    };
-
-    if (!customer) {
-      customer = await prisma.customer.create({
-        data: {
-          id: randomUUID(),
-          firstName: clientFirstName,
-          lastName: clientLastName,
-          email: clientEmail,
-          phone: clientPhone,
-          ...customerAddressData,
-        },
-        select: { id: true, billingPolicy: true },
-      });
-      geocodeCustomerInBackground(customer.id);
-    } else {
-      await prisma.customer.update({
-        where: { id: customer.id },
-        data: {
-          phone: clientPhone ?? undefined,
-          ...customerAddressData,
+    if (customerMode === "existing") {
+      const requestedPropertyId = body.propertyId?.trim();
+      if (!requestedPropertyId) {
+        return NextResponse.json(
+          { success: false, error: "propertyId is required for an existing customer" },
+          { status: 400 }
+        );
+      }
+      const property = await prisma.property.findUnique({
+        where: { id: requestedPropertyId },
+        select: {
+          id: true,
+          customerId: true,
+          billingPolicy: true,
+          ResidentialProfile: { select: { agreedPrice: true } },
         },
       });
-      geocodeCustomerInBackground(customer.id);
+      if (!property || property.customerId !== customerId) {
+        return NextResponse.json(
+          { success: false, error: "Property does not belong to this customer" },
+          { status: 400 }
+        );
+      }
+      propertyId = property.id;
+      propertyBilling = property.billingPolicy;
+      agreedPrice = moneyOrNull(property.ResidentialProfile?.agreedPrice);
     }
 
-    // 2. Build the Job record
-    const inputAmount =
-      typeof body.totalAmount === "number" && Number.isFinite(body.totalAmount)
-        ? body.totalAmount
-        : null;
-    const priceInputMode =
-      body.priceInputMode === "customer" ? "customer" : "operational";
+    const protectedPrice =
+      priceMode === "operational" ? await protectOperationalPrice(totalAmount) : null;
+    const priced = resolveManualJobPrice({
+      mode: priceMode,
+      totalAmount,
+      operationalAmount,
+      protectedPrice: protectedPrice
+        ? {
+            protected: protectedPrice.protected,
+            customerPrice: protectedPrice.customerPrice,
+            operationalSubtotal: protectedPrice.operationalSubtotal,
+            processingAllowanceEstimated: protectedPrice.processingAllowanceEstimated,
+            pricingPolicyVersion: protectedPrice.pricingPolicyVersion,
+          }
+        : null,
+    });
+    const overridden = priceWasOverridden(agreedPrice, priced.customerTotal, priceMode);
+
     const depositAmount =
-      typeof body.depositAmount === "number" &&
-      Number.isFinite(body.depositAmount)
+      typeof body.depositAmount === "number" && Number.isFinite(body.depositAmount)
         ? body.depositAmount
         : null;
-
-    let operationalTotal: number | null = null;
-    let customerTotal: number | null = null;
-    let processingAllowanceEstimated: number | null = null;
-    let pricingPolicyVersion: string | null = null;
-    let processingWarning: string | null = null;
-
-    if (inputAmount != null) {
-      if (priceInputMode === "customer") {
-        // Explicit customer override — admin-only; do not apply a second gross-up.
-        // Persist operationalTotal = customer so payout basis matches the override.
-        customerTotal = roundMoney(inputAmount);
-        operationalTotal = customerTotal;
-        processingAllowanceEstimated = 0;
-        pricingPolicyVersion = "manual-customer-override";
-      } else {
-        const protectedPrice = await protectOperationalPrice(inputAmount);
-        processingWarning = protectedPrice.warning;
-        if (protectedPrice.protected) {
-          operationalTotal = protectedPrice.operationalSubtotal;
-          customerTotal = protectedPrice.customerPrice;
-          processingAllowanceEstimated =
-            protectedPrice.processingAllowanceEstimated;
-          pricingPolicyVersion = protectedPrice.pricingPolicyVersion;
-        } else {
-          // Feature OFF / pass-through: behave like pre-protection manual pricing.
-          // Do not require new economics fields on the Job row.
-          customerTotal = roundMoney(inputAmount);
-          operationalTotal = null;
-          processingAllowanceEstimated = null;
-          pricingPolicyVersion = null;
-        }
-      }
-    }
-
-    const totalAmount = customerTotal;
-
-    // Derive paid / balance from the chosen payment status (manual, non-Stripe).
-    // Balance math uses CUSTOMER total.
-    let amountPaid: number | null = null;
-    let balanceDue: number | null = null;
-    if (totalAmount != null) {
-      if (paymentStatus === PaymentStatus.PAID) {
-        amountPaid = totalAmount;
-        balanceDue = 0;
-      } else if (paymentStatus === PaymentStatus.DEPOSIT_PAID) {
-        amountPaid = depositAmount ?? 0;
-        balanceDue = Math.max(totalAmount - (depositAmount ?? 0), 0);
-      } else {
-        amountPaid = 0;
-        balanceDue = totalAmount;
-      }
+    const paymentStatus = body.paymentStatus;
+    let amountPaid: number | null = 0;
+    let balanceDue: number | null = priced.customerTotal;
+    if (paymentStatus === PaymentStatus.PAID) {
+      amountPaid = priced.customerTotal;
+      balanceDue = 0;
+    } else if (paymentStatus === PaymentStatus.DEPOSIT_PAID) {
+      amountPaid = depositAmount ?? 0;
+      balanceDue = Math.max(priced.customerTotal - (depositAmount ?? 0), 0);
     }
 
     const preferredTime = body.scheduledStartTime?.trim()
@@ -288,155 +482,116 @@ export async function POST(request: NextRequest) {
         : body.scheduledStartTime.trim()
       : null;
 
-    let preferredDate: Date | null = null;
-    if (body.scheduledDate) {
-      const d = new Date(body.scheduledDate);
-      if (!isNaN(d.getTime())) preferredDate = d;
-    }
-
-    const isCompleted = jobStatus === JobStatus.COMPLETED;
-    let completedAt: Date | null = null;
-    if (isCompleted) {
-      if (body.completedAt) {
-        const c = new Date(body.completedAt);
-        completedAt = isNaN(c.getTime()) ? new Date() : c;
-      } else {
-        completedAt = new Date();
-      }
-    }
-    const completedBy = isCompleted
-      ? body.completedBy?.trim() || body.cleanerName?.trim() || null
-      : null;
-    const cleanDurationMins =
-      isCompleted &&
-      typeof body.cleanDurationMins === "number" &&
-      Number.isFinite(body.cleanDurationMins) &&
-      body.cleanDurationMins > 0
-        ? Math.round(body.cleanDurationMins)
-        : null;
-
-    // Compose internal notes with the manual-entry marker + extras that have
-    // no dedicated column (cleaner name, waived flag).
-    const noteLines: string[] = ["[Source: MANUAL]"];
-    if (body.cleanerName?.trim()) {
-      noteLines.push(`Cleaner: ${body.cleanerName.trim()}`);
-    }
-    if (body.internalNotes?.trim()) {
-      noteLines.push(body.internalNotes.trim());
-    }
+    const noteLines = ["[Source: MANUAL]"];
+    if (body.internalNotes?.trim()) noteLines.push(body.internalNotes.trim());
     const internalNotes = noteLines.join("\n");
 
     const marketLabel =
-      body.marketLabel?.trim() ||
-      (branchSlug === "vermont" ? "vermont" : "new-jersey");
+      branch.slug === "vermont" || branch.slug === "new-jersey"
+        ? branch.slug
+        : body.marketLabel?.trim() || null;
 
-    const customerName =
-      `${clientFirstName}${clientLastName ? ` ${clientLastName}` : ""}`.trim();
-
-    const jobReference = await nextVmReference();
-
-    // Link Property when explicitly provided or when customer+address match uniquely.
-    let propertyConnect: { connect: { id: string } } | undefined;
-    let linkedProperty: Awaited<ReturnType<typeof loadPropertyById>> = null;
-    const explicitPropertyId = body.propertyId?.trim();
-    if (explicitPropertyId) {
-      const owned = await loadPropertyById(prisma, explicitPropertyId);
-      if (owned && owned.customerId === customer.id) {
-        propertyConnect = { connect: { id: owned.id } };
-        linkedProperty = owned;
-      }
-    } else {
-      const matched = await findPropertyForCustomerAddress(
-        prisma,
-        customer.id,
-        propertyAddress
-      );
-      if (matched) {
-        propertyConnect = { connect: { id: matched.id } };
-        linkedProperty = matched;
-      }
-    }
-
+    const customerName = `${jobFirstName}${jobLastName ? ` ${jobLastName}` : ""}`.trim();
     const billingPolicy = resolveBillingPolicy({
-      propertyPolicy: linkedProperty?.billingPolicy ?? null,
-      customerPolicy: customer.billingPolicy,
+      propertyPolicy: propertyBilling,
+      customerPolicy: customerBilling,
     });
-    const estimatedLaborHours =
-      typeof body.estimatedLaborHours === "number" &&
-      Number.isFinite(body.estimatedLaborHours)
-        ? body.estimatedLaborHours
-        : null;
-    const actualLaborHours =
-      typeof body.actualLaborHours === "number" &&
-      Number.isFinite(body.actualLaborHours)
-        ? body.actualLaborHours
-        : null;
-    const pricingBasis = body.pricingBasis?.trim() || null;
+    const jobReference = await nextVmReference();
+    const conflicts = propertyId ? await sameDayJobs(propertyId, preferredDate) : [];
 
     const job = await prisma.job.create({
       data: {
         id: randomUUID(),
         jobReference,
         Branch: { connect: { id: branch.id } },
-        Customer: { connect: { id: customer.id } },
-        ...(propertyConnect ? { Property: propertyConnect } : {}),
+        Customer: { connect: { id: customerId } },
+        ...(propertyId ? { Property: { connect: { id: propertyId } } } : {}),
         customerName,
         address: propertyAddress,
-        serviceLocation: body.propertyCity?.trim() || null,
+        serviceLocation: propertyCity,
         serviceType,
         preferredDate,
         preferredTime,
+        guestCheckInDate: stayDates.guestCheckInDate,
+        guestCheckOutDate: stayDates.guestCheckOutDate,
         currency: "USD",
         billingPolicy,
-        estimatedLaborHours,
-        actualLaborHours,
-        pricingBasis,
-        totalPrice: totalAmount,
-        quotedTotal: totalAmount,
-        ...(operationalTotal != null ? { operationalTotal } : {}),
-        ...(processingAllowanceEstimated != null
-          ? { processingAllowanceEstimated }
+        totalPrice: priced.customerTotal,
+        quotedTotal: priced.customerTotal,
+        ...(priced.operationalTotal != null ? { operationalTotal: priced.operationalTotal } : {}),
+        ...(priced.processingAllowanceEstimated != null
+          ? { processingAllowanceEstimated: priced.processingAllowanceEstimated }
           : {}),
-        ...(pricingPolicyVersion ? { pricingPolicyVersion } : {}),
+        ...(priced.pricingPolicyVersion
+          ? { pricingPolicyVersion: priced.pricingPolicyVersion }
+          : {}),
         depositAmount,
         amountPaid,
         balanceDue,
         paymentStatus,
-        status: jobStatus,
-        completedAt,
-        completedBy,
-        cleanDurationMins,
+        status: JobStatus.RECEIVED,
         internalNotes,
         marketLabel,
       },
       select: { id: true, propertyId: true },
     });
 
-    // Await in-request: Drive whenever enabled; Calendar creates only once
-    // preferredDate is present (enough scheduling info). Cancelled jobs skip
-    // via syncJobCalendarEvent status check. Job row already committed.
-    if (jobStatus !== JobStatus.CANCELLED && jobStatus !== JobStatus.CANCELLED_EMERGENCY) {
-      await awaitJobGoogleSync(job.id);
-    }
+    await awaitJobGoogleSync(job.id);
+
+    const auditId = await logAuditEntry({
+      actorId: auth.userId,
+      actorRole: "ADMIN",
+      action: "MANUAL_JOB_CREATED",
+      entityType: "Job",
+      entityId: job.id,
+      description:
+        "Created a received job from Add Job Manually without changing the customer or property profile.",
+      changes: {
+        customerMode,
+        customerId,
+        propertyId,
+        serviceCategory,
+        serviceType,
+        priceInputMode: priceMode,
+        agreedPrice,
+        customerTotal: priced.customerTotal,
+        operationalTotal: priced.operationalTotal,
+        processingAllowanceEstimated: priced.processingAllowanceEstimated,
+        priceOverridden: overridden,
+        guestCheckInDate: stayDates.guestCheckInDate?.toISOString() ?? null,
+        guestCheckOutDate: stayDates.guestCheckOutDate?.toISOString() ?? null,
+        sameDayJobIds: conflicts.map((row) => row.id),
+        status: JobStatus.RECEIVED,
+      },
+    });
 
     return NextResponse.json({
       success: true,
       jobId: job.id,
-      customerId: customer.id,
+      customerId,
       propertyId: job.propertyId,
+      status: JobStatus.RECEIVED,
+      sameDayJobs: conflicts.map((row) => ({
+        id: row.id,
+        jobReference: row.jobReference,
+        status: row.status,
+        serviceType: row.serviceType,
+      })),
+      auditId,
       pricing: {
-        operationalTotal,
-        customerTotal: totalAmount,
-        processingAllowanceEstimated,
-        pricingPolicyVersion,
-        warning: processingWarning,
-        priceInputMode,
+        priceInputMode: priceMode,
+        customerTotal: priced.customerTotal,
+        operationalTotal: priced.operationalTotal,
+        processingAllowanceEstimated: priced.processingAllowanceEstimated,
+        pricingPolicyVersion: priced.pricingPolicyVersion,
+        agreedPrice,
+        priceOverridden: overridden,
+        warning: protectedPrice?.warning ?? null,
       },
     });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
-    const message =
-      error instanceof Error ? error.message : "Failed to create manual job";
+    const message = error instanceof Error ? error.message : "Failed to create manual job";
     console.error("[create-manual job]", error);
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
