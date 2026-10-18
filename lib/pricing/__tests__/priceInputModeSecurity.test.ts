@@ -27,8 +27,12 @@ describe('priceInputMode security boundary', () => {
     expect(checkoutPricing).toMatch(/priceInputMode[\s\S]*NOT accepted/);
   });
 
-  it('admin jobs/new defaults to operational mode (not customer bypass)', () => {
+  it('admin jobs/new defaults to operational mode and does not hardcode a customer bypass', () => {
     const page = read('app/admin/jobs/new/page.tsx');
-    expect(page).toMatch(/priceInputMode:\s*["']operational["']/);
+    const helper = read('lib/admin/manualJobCreate.ts');
+    expect(page).toMatch(/useState<ManualPriceMode>\("operational"\)/);
+    expect(page).toMatch(/buildManualJobRequest\(/);
+    expect(page).not.toMatch(/priceInputMode:\s*["']customer["']/);
+    expect(helper).toMatch(/priceInputMode: input\.priceMode/);
   });
 });

@@ -11,95 +11,121 @@ import {
   TRAVEL_ZONE_SHORT_LABEL,
   travelFeeLineDescription,
 } from "@/lib/vermont/travelZone";
+import {
+  buildManualJobRequest,
+  categoryForPropertyUse,
+  serviceTypesFor,
+  type ManualCustomerMode,
+  type ManualPriceMode,
+  type ServiceCategory,
+} from "@/lib/admin/manualJobCreate";
 
 type StateCode = "VT" | "NJ" | "";
 
-const VERMONT_SERVICES = [
-  "Vacation Rental Turnover",
-  "Deep Cleaning & Property Reset",
-  "Move-In Cleaning",
-  "Move-Out Cleaning",
-  "Property Readiness",
-  "Residential Cleaning",
-  "Emergency Response Cleaning",
-  "Property Walkthrough",
-  "Office Prep",
-  "Garage Cleanup",
-  "Grill Deep Clean",
-];
-
-const NEW_JERSEY_SERVICES = [
-  "Standard Residential Cleaning",
-  "Deep Cleaning",
-  "Recurring Cleaning",
-  "Move-In Cleaning",
-  "Move-Out Cleaning",
-  "Apartment Cleaning",
-];
-
-// Readable label -> existing PaymentStatus enum value.
-const PAYMENT_OPTIONS: { label: string; value: string; waived?: boolean }[] = [
+const PAYMENT_OPTIONS: { label: string; value: string }[] = [
   { label: "Not Paid Yet", value: "PENDING" },
   { label: "Deposit Paid", value: "DEPOSIT_PAID" },
   { label: "Paid in Full", value: "PAID" },
-  { label: "Waived", value: "PAID", waived: true },
-];
-
-// Readable label -> existing JobStatus enum value.
-const STATUS_OPTIONS: { label: string; value: string }[] = [
-  { label: "Completed", value: "COMPLETED" },
-  { label: "Confirmed", value: "CONFIRMED" },
-  { label: "Scheduled", value: "ASSIGNED" },
-  { label: "Pending Review", value: "RECEIVED" },
 ];
 
 const inputClass =
   "w-full rounded-lg border border-vm-border px-3 py-2 font-body text-vm-text outline-none focus:border-vm-cyan focus:ring-2 focus:ring-vm-cyan/30";
 const labelClass = "mb-1 block font-heading text-sm font-medium text-vm-navy";
-const sectionTitleClass =
-  "mb-4 font-heading text-base font-semibold text-vm-navy";
+const sectionTitleClass = "mb-4 font-heading text-base font-semibold text-vm-navy";
 
-const EMPTY_FORM = {
-  clientFirstName: "",
-  clientLastName: "",
-  clientEmail: "",
-  clientPhone: "",
-  propertyAddress: "",
-  propertyCity: "",
-  state: "" as StateCode,
-  serviceType: "",
-  scheduledDate: "",
-  scheduledStartTime: "",
-  scheduledEndTime: "",
-  totalAmount: "",
-  paymentOptionIndex: "0",
-  cleanerName: "",
-  jobStatus: "ASSIGNED",
-  completedBy: "",
-  completedAt: "",
-  cleanDurationMins: "",
-  internalNotes: "",
+type SearchHit = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
 };
+
+type PropertyOption = {
+  id: string;
+  name: string;
+  address: string;
+  city: string | null;
+  state: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  useType: "HOST" | "RESIDENTIAL" | null;
+  ResidentialProfile: {
+    agreedPrice: string | number | null;
+    serviceType: string | null;
+  } | null;
+};
+
+type SelectedCustomer = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  travelZone: TravelZone | null;
+  Property: PropertyOption[];
+};
+
+type SameDayJob = {
+  id: string;
+  jobReference: string | null;
+  status: string;
+  serviceType: string | null;
+};
+
+function moneyNumber(value: string | number | null | undefined): number | null {
+  if (value == null || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function stateCode(value: string | null | undefined): StateCode {
+  if (value === "VT" || value === "Vermont") return "VT";
+  if (value === "NJ" || value === "New Jersey") return "NJ";
+  return "";
+}
 
 export default function NewManualJobPage() {
   const { isBranchScoped } = useAdminShell();
-  const [form, setForm] = useState({ ...EMPTY_FORM, state: "" as StateCode });
+  const [customerMode, setCustomerMode] = useState<ManualCustomerMode>("existing");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchHits, setSearchHits] = useState<SearchHit[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
+  const [propertyId, setPropertyId] = useState("");
+  const [serviceCategory, setServiceCategory] = useState<ServiceCategory>("VACATION_RENTAL");
+  const [priceMode, setPriceMode] = useState<ManualPriceMode>("operational");
+  const [customerPrice, setCustomerPrice] = useState("");
+  const [operationalAmount, setOperationalAmount] = useState("");
+  const [agreedPrice, setAgreedPrice] = useState<number | null>(null);
+  const [sameDayJobs, setSameDayJobs] = useState<SameDayJob[]>([]);
+  const [form, setForm] = useState({
+    clientFirstName: "",
+    clientLastName: "",
+    clientEmail: "",
+    clientPhone: "",
+    propertyAddress: "",
+    propertyCity: "",
+    state: "" as StateCode,
+    serviceType: "",
+    scheduledDate: "",
+    scheduledStartTime: "",
+    scheduledEndTime: "",
+    guestCheckInDate: "",
+    guestCheckOutDate: "",
+    paymentStatus: "PENDING",
+    internalNotes: "",
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedJobId, setSavedJobId] = useState<string | null>(null);
-  const [matchedCustomer, setMatchedCustomer] = useState<{
-    id: string;
-    travelZone: TravelZone | null;
-    firstName: string;
-    lastName: string;
-  } | null>(null);
   const [travelFeeApplied, setTravelFeeApplied] = useState(false);
   const [travelBannerDismissed, setTravelBannerDismissed] = useState(false);
   const [customerPricePreview, setCustomerPricePreview] = useState<number | null>(null);
   const [allowancePreview, setAllowancePreview] = useState<number | null>(null);
   const [previewWarning, setPreviewWarning] = useState<string | null>(null);
 
-  const update = (key: keyof typeof EMPTY_FORM, value: string) =>
+  const update = (key: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
   useEffect(() => {
@@ -109,8 +135,45 @@ export default function NewManualJobPage() {
   }, [isBranchScoped]);
 
   useEffect(() => {
-    const amount = Number(form.totalAmount);
-    if (!form.totalAmount || !Number.isFinite(amount) || amount < 0) {
+    if (customerMode !== "existing") return;
+    const q = searchQuery.trim();
+    if (q.length < 2 || selectedCustomer) {
+      setSearchHits([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      setSearching(true);
+      fetch(`/api/admin/customers?q=${encodeURIComponent(q)}&limit=8`, {
+        credentials: "include",
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (cancelled) return;
+          setSearchHits(Array.isArray(data.customers) ? data.customers : []);
+        })
+        .catch(() => {
+          if (!cancelled) setSearchHits([]);
+        })
+        .finally(() => {
+          if (!cancelled) setSearching(false);
+        });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, customerMode, selectedCustomer]);
+
+  useEffect(() => {
+    if (priceMode !== "operational") {
+      setCustomerPricePreview(null);
+      setAllowancePreview(null);
+      setPreviewWarning(null);
+      return;
+    }
+    const amount = Number(operationalAmount);
+    if (!operationalAmount || !Number.isFinite(amount) || amount < 0) {
       setCustomerPricePreview(null);
       setAllowancePreview(null);
       setPreviewWarning(null);
@@ -143,59 +206,121 @@ export default function NewManualJobPage() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [form.totalAmount]);
+  }, [operationalAmount, priceMode]);
 
-  const branch = form.state === "VT" ? "vermont" : form.state === "NJ" ? "new-jersey" : "";
-  const serviceOptions = useMemo(() => {
-    if (form.state === "VT") return VERMONT_SERVICES;
-    if (form.state === "NJ") return NEW_JERSEY_SERVICES;
-    return [];
-  }, [form.state]);
+  useEffect(() => {
+    if (!propertyId || !form.scheduledDate || customerMode !== "existing") {
+      setSameDayJobs([]);
+      return;
+    }
+    let cancelled = false;
+    const params = new URLSearchParams({
+      propertyId,
+      scheduledDate: form.scheduledDate,
+      ...(selectedCustomer ? { customerId: selectedCustomer.id } : {}),
+    });
+    fetch(`/api/admin/jobs/create-manual?${params.toString()}`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        setSameDayJobs(Array.isArray(data.sameDayJobs) ? data.sameDayJobs : []);
+      })
+      .catch(() => {
+        if (!cancelled) setSameDayJobs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [propertyId, form.scheduledDate, customerMode, selectedCustomer]);
 
-  const isCompleted = form.jobStatus === "COMPLETED";
+  const serviceOptions = useMemo(
+    () => serviceTypesFor(serviceCategory),
+    [serviceCategory]
+  );
+
+  const selectedProperty = selectedCustomer?.Property.find((property) => property.id === propertyId) ?? null;
 
   const suggestedTravelFee = useMemo(() => {
     if (
-      !shouldSuggestTravelFee(form.state, form.serviceType, matchedCustomer?.travelZone)
+      !shouldSuggestTravelFee(form.state, form.serviceType, selectedCustomer?.travelZone)
     ) {
       return null;
     }
-    const zone = matchedCustomer!.travelZone!;
+    const zone = selectedCustomer!.travelZone!;
     const fee = TRAVEL_ZONE_FEE[zone];
     if (fee == null || fee <= 0) return null;
     return { zone, fee };
-  }, [form.state, form.serviceType, matchedCustomer]);
+  }, [form.state, form.serviceType, selectedCustomer]);
 
-  const showTravelBanner =
-    suggestedTravelFee &&
-    !travelFeeApplied &&
-    !travelBannerDismissed;
+  const showTravelBanner = suggestedTravelFee && !travelFeeApplied && !travelBannerDismissed;
 
   useEffect(() => {
     setTravelFeeApplied(false);
     setTravelBannerDismissed(false);
-  }, [form.serviceType, matchedCustomer?.id]);
+  }, [form.serviceType, selectedCustomer?.id]);
 
-  const lookupCustomer = async (email: string) => {
-    const trimmed = email.trim().toLowerCase();
-    if (!trimmed || !trimmed.includes("@")) {
-      setMatchedCustomer(null);
+  const applyProperty = (property: PropertyOption) => {
+    const category = categoryForPropertyUse(property.useType);
+    const agreed = moneyNumber(property.ResidentialProfile?.agreedPrice);
+    const types = serviceTypesFor(category);
+    const profileService = property.ResidentialProfile?.serviceType;
+    setPropertyId(property.id);
+    setServiceCategory(category);
+    setForm((prev) => ({
+      ...prev,
+      propertyAddress: property.address,
+      propertyCity: property.city || "",
+      state: stateCode(property.state) || prev.state,
+      serviceType: profileService && types.includes(profileService) ? profileService : "",
+      guestCheckInDate: "",
+      guestCheckOutDate: "",
+    }));
+    if (agreed != null && agreed > 0) {
+      setAgreedPrice(agreed);
+      setCustomerPrice(String(agreed));
+      setPriceMode("customer");
+      setOperationalAmount("");
+    } else {
+      setAgreedPrice(null);
+      setCustomerPrice("");
+      setPriceMode("operational");
+    }
+  };
+
+  const selectCustomer = async (id: string) => {
+    setError(null);
+    const res = await fetch(`/api/admin/customers/${id}`, { credentials: "include" });
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.customer) {
+      setError(data.error || "Could not load that customer");
       return;
     }
-    try {
-      const res = await fetch(
-        `/api/admin/customers/lookup?email=${encodeURIComponent(trimmed)}`,
-        { credentials: "include" }
-      );
-      const data = await res.json();
-      if (data.success && data.customer) {
-        setMatchedCustomer(data.customer);
-      } else {
-        setMatchedCustomer(null);
-      }
-    } catch {
-      setMatchedCustomer(null);
+    const customer = data.customer as SelectedCustomer;
+    setSelectedCustomer(customer);
+    setSearchHits([]);
+    setSearchQuery(`${customer.firstName} ${customer.lastName}`.trim());
+    setForm((prev) => ({
+      ...prev,
+      clientFirstName: customer.firstName,
+      clientLastName: customer.lastName,
+      clientEmail: customer.email,
+      clientPhone: customer.phone || "",
+    }));
+    if (customer.Property.length === 1) {
+      applyProperty(customer.Property[0]);
+    } else {
+      setPropertyId("");
+      setAgreedPrice(null);
     }
+  };
+
+  const clearCustomer = () => {
+    setSelectedCustomer(null);
+    setPropertyId("");
+    setAgreedPrice(null);
+    setSearchQuery("");
+    setSearchHits([]);
+    setSameDayJobs([]);
   };
 
   const handleAddTravelFee = () => {
@@ -205,12 +330,16 @@ export default function NewManualJobPage() {
       [form.clientFirstName, form.clientLastName].filter(Boolean).join(" ") ||
       "Property";
     const line = travelFeeLineDescription(suggestedTravelFee.zone, propertyLabel);
-    const currentTotal = Number(form.totalAmount) || 0;
-    const newTotal = currentTotal + suggestedTravelFee.fee;
     const noteLine = `${line}: $${suggestedTravelFee.fee}`;
+    if (priceMode === "customer") {
+      const current = Number(customerPrice) || 0;
+      setCustomerPrice(String(current + suggestedTravelFee.fee));
+    } else {
+      const current = Number(operationalAmount) || 0;
+      setOperationalAmount(String(current + suggestedTravelFee.fee));
+    }
     setForm((prev) => ({
       ...prev,
-      totalAmount: String(newTotal),
       internalNotes: prev.internalNotes.trim()
         ? `${prev.internalNotes.trim()}\n${noteLine}`
         : noteLine,
@@ -218,78 +347,106 @@ export default function NewManualJobPage() {
     setTravelFeeApplied(true);
   };
 
-  const handleStateChange = (state: StateCode) => {
+  const handleCategoryChange = (category: ServiceCategory) => {
+    setServiceCategory(category);
     setForm((prev) => ({
       ...prev,
-      state,
-      // Reset service type when market changes so a stale option isn't kept.
       serviceType: "",
+      guestCheckInDate: category === "VACATION_RENTAL" ? prev.guestCheckInDate : "",
+      guestCheckOutDate: category === "VACATION_RENTAL" ? prev.guestCheckOutDate : "",
     }));
   };
 
   const resetForm = () => {
-    setForm({ ...EMPTY_FORM });
+    setForm({
+      clientFirstName: "",
+      clientLastName: "",
+      clientEmail: "",
+      clientPhone: "",
+      propertyAddress: "",
+      propertyCity: "",
+      state: isBranchScoped ? "VT" : "",
+      serviceType: "",
+      scheduledDate: "",
+      scheduledStartTime: "",
+      scheduledEndTime: "",
+      guestCheckInDate: "",
+      guestCheckOutDate: "",
+      paymentStatus: "PENDING",
+      internalNotes: "",
+    });
     setSavedJobId(null);
     setError(null);
+    clearCustomer();
+    setCustomerMode("existing");
+    setPriceMode("operational");
+    setCustomerPrice("");
+    setOperationalAmount("");
+    setServiceCategory("VACATION_RENTAL");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
+    if (customerMode === "existing" && !selectedCustomer) {
+      return setError("Select an existing customer.");
+    }
+    if (customerMode === "existing" && !propertyId) {
+      return setError("Select that customer's property.");
+    }
     if (!form.clientFirstName.trim()) return setError("First name is required.");
     if (!form.clientEmail.trim()) return setError("Email is required.");
-    if (!form.propertyAddress.trim())
-      return setError("Property address is required.");
+    if (!form.propertyAddress.trim()) return setError("Property address is required.");
     if (!form.propertyCity.trim()) return setError("City is required.");
     if (!form.state) return setError("State is required.");
     if (!form.serviceType) return setError("Service type is required.");
     if (!form.scheduledDate) return setError("Date is required.");
     if (!form.scheduledStartTime) return setError("Start time is required.");
-    if (!form.totalAmount) return setError("Total amount is required.");
 
-    const paymentOption =
-      PAYMENT_OPTIONS[Number(form.paymentOptionIndex)] || PAYMENT_OPTIONS[0];
+    const activeAmount =
+      priceMode === "customer" ? Number(customerPrice) : Number(operationalAmount);
+    if (!Number.isFinite(activeAmount) || activeAmount < 0 || (priceMode === "customer" ? customerPrice === "" : operationalAmount === "")) {
+      return setError(priceMode === "customer" ? "Customer price is required." : "Operational subtotal is required.");
+    }
 
-    // Surface a "waived" note since there is no WAIVED PaymentStatus enum.
-    const notes = paymentOption.waived
-      ? [form.internalNotes.trim(), "Payment waived."].filter(Boolean).join("\n")
-      : form.internalNotes.trim();
+    const branch = form.state === "VT" ? "vermont" : "new-jersey";
+    const payload = buildManualJobRequest({
+      customerMode,
+      customerId: selectedCustomer?.id,
+      propertyId: propertyId || null,
+      clientFirstName: form.clientFirstName.trim(),
+      clientLastName: form.clientLastName.trim(),
+      clientEmail: form.clientEmail.trim(),
+      clientPhone: form.clientPhone.trim(),
+      propertyAddress: form.propertyAddress.trim(),
+      propertyCity: form.propertyCity.trim(),
+      propertyState: form.state,
+      branch,
+      serviceCategory,
+      serviceType: form.serviceType,
+      scheduledDate: form.scheduledDate,
+      scheduledStartTime: form.scheduledStartTime,
+      scheduledEndTime: form.scheduledEndTime || undefined,
+      guestCheckInDate: form.guestCheckInDate,
+      guestCheckOutDate: form.guestCheckOutDate,
+      priceMode,
+      totalAmount: activeAmount,
+      operationalAmount:
+        priceMode === "customer" && operationalAmount !== ""
+          ? Number(operationalAmount)
+          : null,
+      paymentStatus: form.paymentStatus,
+      internalNotes: form.internalNotes.trim(),
+      marketLabel: branch,
+    });
 
     setSubmitting(true);
     try {
       const res = await fetch("/api/admin/jobs/create-manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientFirstName: form.clientFirstName.trim(),
-          clientLastName: form.clientLastName.trim() || undefined,
-          clientEmail: form.clientEmail.trim(),
-          clientPhone: form.clientPhone.trim() || undefined,
-          propertyAddress: form.propertyAddress.trim(),
-          propertyCity: form.propertyCity.trim(),
-          propertyState: form.state,
-          serviceType: form.serviceType,
-          scheduledDate: form.scheduledDate,
-          scheduledStartTime: form.scheduledStartTime,
-          scheduledEndTime: form.scheduledEndTime || undefined,
-          branch,
-          totalAmount: Number(form.totalAmount),
-          priceInputMode: "operational",
-          paymentStatus: paymentOption.value,
-          cleanerName: form.cleanerName.trim() || undefined,
-          jobStatus: form.jobStatus,
-          completedBy: isCompleted
-            ? form.completedBy.trim() || form.cleanerName.trim() || undefined
-            : undefined,
-          completedAt: isCompleted && form.completedAt ? form.completedAt : undefined,
-          cleanDurationMins:
-            isCompleted && form.cleanDurationMins
-              ? Number(form.cleanDurationMins)
-              : undefined,
-          internalNotes: notes || undefined,
-          marketLabel: branch,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -310,18 +467,22 @@ export default function NewManualJobPage() {
           <div className="rounded-xl border border-vm-success/30 bg-vm-success-bg p-6">
             <div className="flex items-start gap-3">
               <CheckCircle className="mt-0.5 h-6 w-6 flex-shrink-0 text-vm-success" />
-              <h2 className="font-heading text-lg font-semibold text-vm-navy">
-                Job saved successfully.
-              </h2>
+              <div>
+                <h2 className="font-heading text-lg font-semibold text-vm-navy">
+                  Job saved as Received.
+                </h2>
+                <p className="mt-1 font-body text-sm text-vm-muted">
+                  Assign a cleaner from the job page. This did not change the customer or property profile.
+                </p>
+              </div>
             </div>
           </div>
-
           <div className="mt-6 flex flex-col gap-3">
             <Link
-              href={`/admin/jobs/${savedJobId}/complete`}
+              href={`/admin/jobs/${savedJobId}`}
               className="inline-flex w-full items-center justify-center rounded-lg bg-vm-cyan px-4 py-3 font-heading font-semibold text-vm-navy transition-opacity hover:opacity-90"
             >
-              Upload Photos &amp; Notify Client
+              Open job
             </Link>
             <button
               type="button"
@@ -357,85 +518,188 @@ export default function NewManualJobPage() {
           Add Job Manually
         </h1>
         <p className="mb-6 font-body text-sm text-vm-muted">
-          Record a job booked offline (phone, text, or in person).
+          Choose an existing customer and property, or add a new customer. The job is saved as Received.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* SECTION 1: CLIENT INFORMATION */}
           <section className="rounded-xl border border-vm-border bg-vm-white p-6">
-            <h2 className={sectionTitleClass}>Client Information</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className={labelClass} htmlFor="firstName">
-                  First Name *
-                </label>
-                <input
-                  id="firstName"
-                  className={inputClass}
-                  value={form.clientFirstName}
-                  onChange={(e) => update("clientFirstName", e.target.value)}
-                />
-              </div>
-              <div>
-                <label className={labelClass} htmlFor="lastName">
-                  Last Name
-                </label>
-                <input
-                  id="lastName"
-                  className={inputClass}
-                  value={form.clientLastName}
-                  onChange={(e) => update("clientLastName", e.target.value)}
-                />
-              </div>
-              <div>
-                <label className={labelClass} htmlFor="email">
-                  Email *
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  className={inputClass}
-                  value={form.clientEmail}
-                  onChange={(e) => update("clientEmail", e.target.value)}
-                  onBlur={(e) => lookupCustomer(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className={labelClass} htmlFor="phone">
-                  Phone
-                </label>
-                <input
-                  id="phone"
-                  type="tel"
-                  className={inputClass}
-                  value={form.clientPhone}
-                  onChange={(e) => update("clientPhone", e.target.value)}
-                />
-              </div>
+            <h2 className={sectionTitleClass}>Customer</h2>
+            <div className="mb-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomerMode("existing");
+                }}
+                className={`rounded-lg px-4 py-2 font-heading text-sm font-semibold ${
+                  customerMode === "existing"
+                    ? "bg-vm-navy text-white"
+                    : "border border-vm-border text-vm-navy"
+                }`}
+              >
+                Existing customer
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomerMode("new");
+                  clearCustomer();
+                }}
+                className={`rounded-lg px-4 py-2 font-heading text-sm font-semibold ${
+                  customerMode === "new"
+                    ? "bg-vm-navy text-white"
+                    : "border border-vm-border text-vm-navy"
+                }`}
+              >
+                New customer
+              </button>
             </div>
-            <p className="mt-3 font-body text-sm text-vm-muted">
-              Already in the system? We&apos;ll match by email automatically.
-              {matchedCustomer?.id && (
-                <>
-                  {" "}
-                  <Link
-                    href={`/admin/customers/${matchedCustomer.id}`}
-                    className="font-semibold text-vm-cyan-dark hover:underline"
-                  >
-                    Edit property travel zone →
-                  </Link>
-                </>
-              )}
-            </p>
+
+            {customerMode === "existing" ? (
+              <div className="space-y-3">
+                {!selectedCustomer && (
+                  <div>
+                    <label className={labelClass} htmlFor="customerSearch">
+                      Search name or email
+                    </label>
+                    <input
+                      id="customerSearch"
+                      className={inputClass}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Tina Martin"
+                    />
+                    {searching && (
+                      <p className="mt-2 font-body text-sm text-vm-muted">Searching…</p>
+                    )}
+                    {searchHits.length > 0 && (
+                      <ul className="mt-2 divide-y divide-vm-border rounded-lg border border-vm-border">
+                        {searchHits.map((hit) => (
+                          <li key={hit.id}>
+                            <button
+                              type="button"
+                              onClick={() => void selectCustomer(hit.id)}
+                              className="w-full px-3 py-2 text-left hover:bg-vm-surface"
+                            >
+                              <span className="block font-heading text-sm font-semibold text-vm-navy">
+                                {hit.firstName} {hit.lastName}
+                              </span>
+                              <span className="block font-body text-xs text-vm-muted">{hit.email}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+                {selectedCustomer && (
+                  <div className="rounded-lg border border-vm-border bg-vm-surface p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-heading text-sm font-semibold text-vm-navy">
+                          {selectedCustomer.firstName} {selectedCustomer.lastName}
+                        </p>
+                        <p className="font-body text-xs text-vm-muted">{selectedCustomer.email}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={clearCustomer}
+                        className="font-body text-xs font-semibold text-vm-navy underline"
+                      >
+                        Change
+                      </button>
+                    </div>
+                    <label className={`${labelClass} mt-3`} htmlFor="propertyId">
+                      Property
+                    </label>
+                    <select
+                      id="propertyId"
+                      className={inputClass}
+                      value={propertyId}
+                      onChange={(e) => {
+                        const next = selectedCustomer.Property.find((property) => property.id === e.target.value);
+                        if (next) applyProperty(next);
+                        else setPropertyId("");
+                      }}
+                    >
+                      <option value="">Select a property…</option>
+                      {selectedCustomer.Property.map((property) => (
+                        <option key={property.id} value={property.id}>
+                          {property.name} — {property.address}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedCustomer.Property.length === 0 && (
+                      <p className="mt-2 font-body text-sm text-vm-muted">
+                        This customer has no saved property. Use New customer only for someone who is not already on file. This form will not create a second property.
+                      </p>
+                    )}
+                    {selectedProperty && (selectedProperty.bedrooms != null || selectedProperty.bathrooms != null) && (
+                      <p className="mt-2 font-body text-xs text-vm-muted">
+                        On file: {selectedProperty.bedrooms ?? "—"} bed / {selectedProperty.bathrooms ?? "—"} bath.
+                        This visit does not change those numbers.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className={labelClass} htmlFor="firstName">
+                    First Name *
+                  </label>
+                  <input
+                    id="firstName"
+                    className={inputClass}
+                    value={form.clientFirstName}
+                    onChange={(e) => update("clientFirstName", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass} htmlFor="lastName">
+                    Last Name
+                  </label>
+                  <input
+                    id="lastName"
+                    className={inputClass}
+                    value={form.clientLastName}
+                    onChange={(e) => update("clientLastName", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass} htmlFor="email">
+                    Email *
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    className={inputClass}
+                    value={form.clientEmail}
+                    onChange={(e) => update("clientEmail", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass} htmlFor="phone">
+                    Phone
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    className={inputClass}
+                    value={form.clientPhone}
+                    onChange={(e) => update("clientPhone", e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
           </section>
 
-          {/* SECTION 2: PROPERTY & SCHEDULING */}
           <section className="rounded-xl border border-vm-border bg-vm-white p-6">
-            <h2 className={sectionTitleClass}>Property &amp; Scheduling</h2>
+            <h2 className={sectionTitleClass}>This visit</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label className={labelClass} htmlFor="address">
-                  Property Address (full street address) *
+                  Property address *
                 </label>
                 <input
                   id="address"
@@ -443,6 +707,9 @@ export default function NewManualJobPage() {
                   value={form.propertyAddress}
                   onChange={(e) => update("propertyAddress", e.target.value)}
                 />
+                <p className="mt-1 font-body text-xs text-vm-muted">
+                  Saved on this job only. The customer and property records stay as they are.
+                </p>
               </div>
               <div>
                 <label className={labelClass} htmlFor="city">
@@ -463,7 +730,7 @@ export default function NewManualJobPage() {
                   id="state"
                   className={inputClass}
                   value={form.state}
-                  onChange={(e) => handleStateChange(e.target.value as StateCode)}
+                  onChange={(e) => update("state", e.target.value as StateCode)}
                   disabled={isBranchScoped}
                 >
                   <option value="">Select state…</option>
@@ -472,19 +739,43 @@ export default function NewManualJobPage() {
                 </select>
               </div>
               <div className="sm:col-span-2">
+                <p className={labelClass}>Service category</p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleCategoryChange("RESIDENTIAL")}
+                    className={`rounded-lg px-3 py-2 font-heading text-sm font-semibold ${
+                      serviceCategory === "RESIDENTIAL"
+                        ? "bg-vm-navy text-white"
+                        : "border border-vm-border text-vm-navy"
+                    }`}
+                  >
+                    Residential maintenance
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCategoryChange("VACATION_RENTAL")}
+                    className={`rounded-lg px-3 py-2 font-heading text-sm font-semibold ${
+                      serviceCategory === "VACATION_RENTAL"
+                        ? "bg-vm-navy text-white"
+                        : "border border-vm-border text-vm-navy"
+                    }`}
+                  >
+                    Vacation-rental turnover
+                  </button>
+                </div>
+              </div>
+              <div className="sm:col-span-2">
                 <label className={labelClass} htmlFor="serviceType">
-                  Service Type *
+                  Service type *
                 </label>
                 <select
                   id="serviceType"
                   className={inputClass}
                   value={form.serviceType}
                   onChange={(e) => update("serviceType", e.target.value)}
-                  disabled={!form.state}
                 >
-                  <option value="">
-                    {form.state ? "Select service…" : "Select a state first"}
-                  </option>
+                  <option value="">Select service…</option>
                   {serviceOptions.map((svc) => (
                     <option key={svc} value={svc}>
                       {svc}
@@ -496,16 +787,16 @@ export default function NewManualJobPage() {
               {showTravelBanner && suggestedTravelFee && (
                 <div className="sm:col-span-2 rounded-lg border border-vm-warning/40 bg-vm-warning-bg p-4">
                   <p className="font-body text-sm text-vm-navy">
-                    This property is in{" "}
+                    This customer is in{" "}
                     <strong>{TRAVEL_ZONE_SHORT_LABEL[suggestedTravelFee.zone]}</strong>.
                     Standalone visits typically include a{" "}
-                    <strong>${suggestedTravelFee.fee}</strong> travel fee. Add to this job?
+                    <strong>${suggestedTravelFee.fee}</strong> travel fee. Add to this visit?
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={handleAddTravelFee}
-                      className="rounded-lg bg-vm-navy px-4 py-2 font-heading text-xs font-semibold text-vm-white hover:opacity-90"
+                      className="rounded-lg bg-vm-navy px-4 py-2 font-heading text-xs font-semibold text-white hover:opacity-90"
                     >
                       Add Travel Fee
                     </button>
@@ -522,7 +813,7 @@ export default function NewManualJobPage() {
 
               <div>
                 <label className={labelClass} htmlFor="date">
-                  Date *
+                  Service date *
                 </label>
                 <input
                   id="date"
@@ -558,167 +849,194 @@ export default function NewManualJobPage() {
                   />
                 </div>
               </div>
+
+              {serviceCategory === "VACATION_RENTAL" && (
+                <>
+                  <div>
+                    <label className={labelClass} htmlFor="guestCheckIn">
+                      Guest check-in
+                    </label>
+                    <input
+                      id="guestCheckIn"
+                      type="date"
+                      className={inputClass}
+                      value={form.guestCheckInDate}
+                      onChange={(e) => update("guestCheckInDate", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass} htmlFor="guestCheckOut">
+                      Guest checkout
+                    </label>
+                    <input
+                      id="guestCheckOut"
+                      type="date"
+                      className={inputClass}
+                      value={form.guestCheckOutDate}
+                      onChange={(e) => update("guestCheckOutDate", e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
             </div>
+            {sameDayJobs.length > 0 && (
+              <div className="mt-4 rounded-lg border border-vm-warning/40 bg-vm-warning-bg p-4">
+                <p className="font-body text-sm text-vm-navy">
+                  This property already has a job on this date. A second visit can still be saved.
+                </p>
+                <ul className="mt-2 space-y-1 font-body text-xs text-vm-muted">
+                  {sameDayJobs.map((job) => (
+                    <li key={job.id}>
+                      {job.jobReference || job.id} · {job.serviceType || "Service"} · {job.status}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
 
-          {/* SECTION 3: PAYMENT & ASSIGNMENT */}
           <section className="rounded-xl border border-vm-border bg-vm-white p-6">
-            <h2 className={sectionTitleClass}>Payment &amp; Assignment</h2>
+            <h2 className={sectionTitleClass}>Price for this visit</h2>
+            {agreedPrice != null && (
+              <p className="mb-3 font-body text-sm text-vm-navy">
+                Saved agreed price ${agreedPrice.toFixed(2)} is the customer price. Changing it applies to this visit only and is not grossed up.
+              </p>
+            )}
+            <div className="mb-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setPriceMode("customer")}
+                className={`rounded-lg px-3 py-2 font-heading text-sm font-semibold ${
+                  priceMode === "customer" ? "bg-vm-navy text-white" : "border border-vm-border text-vm-navy"
+                }`}
+              >
+                Customer price
+              </button>
+              <button
+                type="button"
+                onClick={() => setPriceMode("operational")}
+                className={`rounded-lg px-3 py-2 font-heading text-sm font-semibold ${
+                  priceMode === "operational" ? "bg-vm-navy text-white" : "border border-vm-border text-vm-navy"
+                }`}
+              >
+                Operational subtotal
+              </button>
+            </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className={labelClass} htmlFor="totalAmount">
-                  Operational subtotal ($) *
-                </label>
-                <input
-                  id="totalAmount"
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  className={inputClass}
-                  value={form.totalAmount}
-                  onChange={(e) => update("totalAmount", e.target.value)}
-                />
-                <p className="mt-1 text-xs text-vm-muted">
-                  Enter the operational economics amount. Processing protection (when enabled)
-                  calculates the customer price automatically — it is not a card surcharge line.
-                </p>
-                {customerPricePreview != null && (
-                  <div className="mt-3 rounded-lg border border-vm-border bg-vm-surface p-3 text-sm">
-                    <div className="flex justify-between gap-2">
-                      <span className="text-vm-muted">Customer price</span>
-                      <span className="font-semibold text-vm-navy">
-                        ${customerPricePreview.toFixed(2)}
-                      </span>
-                    </div>
-                    {allowancePreview != null && allowancePreview > 0 && (
-                      <div className="mt-1 flex justify-between gap-2 text-xs">
-                        <span className="text-vm-muted">Processing protection (est.)</span>
-                        <span>${allowancePreview.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {previewWarning && (
-                      <p className="mt-2 text-xs text-amber-800">{previewWarning}</p>
-                    )}
+              {priceMode === "customer" ? (
+                <>
+                  <div>
+                    <label className={labelClass} htmlFor="customerPrice">
+                      Customer price ($) *
+                    </label>
+                    <input
+                      id="customerPrice"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      className={inputClass}
+                      value={customerPrice}
+                      onChange={(e) => setCustomerPrice(e.target.value)}
+                    />
+                    <p className="mt-1 text-xs text-vm-muted">
+                      Processing protection is not applied to this amount.
+                    </p>
                   </div>
-                )}
-              </div>
+                  <div>
+                    <label className={labelClass} htmlFor="operationalAmount">
+                      Operational subtotal ($)
+                    </label>
+                    <input
+                      id="operationalAmount"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      className={inputClass}
+                      value={operationalAmount}
+                      onChange={(e) => setOperationalAmount(e.target.value)}
+                    />
+                    <p className="mt-1 text-xs text-vm-muted">
+                      Payout base. Leave blank to use the customer price.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className={labelClass} htmlFor="operationalAmount">
+                    Operational subtotal ($) *
+                  </label>
+                  <input
+                    id="operationalAmount"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    className={inputClass}
+                    value={operationalAmount}
+                    onChange={(e) => setOperationalAmount(e.target.value)}
+                  />
+                  <p className="mt-1 text-xs text-vm-muted">
+                    Processing protection, when enabled, calculates the customer price from this amount.
+                  </p>
+                  {customerPricePreview != null && (
+                    <div className="mt-3 rounded-lg border border-vm-border bg-vm-surface p-3 text-sm">
+                      <div className="flex justify-between gap-2">
+                        <span className="text-vm-muted">Customer price</span>
+                        <span className="font-semibold text-vm-navy">
+                          ${customerPricePreview.toFixed(2)}
+                        </span>
+                      </div>
+                      {allowancePreview != null && allowancePreview > 0 && (
+                        <div className="mt-1 flex justify-between gap-2 text-xs">
+                          <span className="text-vm-muted">Processing protection (est.)</span>
+                          <span>${allowancePreview.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {previewWarning && (
+                        <p className="mt-2 text-xs text-amber-800">{previewWarning}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
               <div>
                 <label className={labelClass} htmlFor="paymentStatus">
-                  Payment Status *
+                  Payment status
                 </label>
                 <select
                   id="paymentStatus"
                   className={inputClass}
-                  value={form.paymentOptionIndex}
-                  onChange={(e) => update("paymentOptionIndex", e.target.value)}
+                  value={form.paymentStatus}
+                  onChange={(e) => update("paymentStatus", e.target.value)}
                 >
-                  {PAYMENT_OPTIONS.map((opt, i) => (
-                    <option key={opt.label} value={String(i)}>
+                  {PAYMENT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
                       {opt.label}
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="sm:col-span-2">
-                <label className={labelClass} htmlFor="cleanerName">
-                  Cleaner Name
-                </label>
-                <input
-                  id="cleanerName"
-                  className={inputClass}
-                  placeholder="e.g. Caryll"
-                  value={form.cleanerName}
-                  onChange={(e) => update("cleanerName", e.target.value)}
-                />
-              </div>
             </div>
+            <p className="mt-4 font-body text-sm text-vm-muted">
+              The job stays Received. Choose a cleaner later with the offer flow. No cleaner is assigned here.
+            </p>
           </section>
 
-          {/* SECTION 4: JOB STATUS & NOTES */}
           <section className="rounded-xl border border-vm-border bg-vm-white p-6">
-            <h2 className={sectionTitleClass}>Job Status &amp; Notes</h2>
-            <div className="space-y-4">
-              <div>
-                <label className={labelClass} htmlFor="jobStatus">
-                  Job Status *
-                </label>
-                <select
-                  id="jobStatus"
-                  className={inputClass}
-                  value={form.jobStatus}
-                  onChange={(e) => update("jobStatus", e.target.value)}
-                >
-                  {STATUS_OPTIONS.map((opt) => (
-                    <option key={opt.label} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {isCompleted && (
-                <div className="grid grid-cols-1 gap-4 rounded-lg bg-vm-surface p-4 sm:grid-cols-2">
-                  <div>
-                    <label className={labelClass} htmlFor="completedBy">
-                      Completed By
-                    </label>
-                    <input
-                      id="completedBy"
-                      className={inputClass}
-                      value={form.completedBy || form.cleanerName}
-                      onChange={(e) => update("completedBy", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass} htmlFor="completedAt">
-                      Date &amp; Time Completed
-                    </label>
-                    <input
-                      id="completedAt"
-                      type="datetime-local"
-                      className={inputClass}
-                      value={form.completedAt}
-                      onChange={(e) => update("completedAt", e.target.value)}
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className={labelClass} htmlFor="duration">
-                      Duration in Minutes
-                    </label>
-                    <input
-                      id="duration"
-                      type="number"
-                      min={0}
-                      className={inputClass}
-                      value={form.cleanDurationMins}
-                      onChange={(e) => update("cleanDurationMins", e.target.value)}
-                    />
-                    <p className="mt-1 font-body text-sm text-vm-muted">
-                      2.5 hours = 150 minutes
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className={labelClass} htmlFor="internalNotes">
-                  Internal Notes
-                </label>
-                <textarea
-                  id="internalNotes"
-                  rows={4}
-                  className={inputClass}
-                  placeholder="Notes visible to admin only — not sent to client"
-                  value={form.internalNotes}
-                  onChange={(e) => update("internalNotes", e.target.value)}
-                />
-              </div>
-            </div>
+            <h2 className={sectionTitleClass}>Notes</h2>
+            <label className={labelClass} htmlFor="internalNotes">
+              Internal notes
+            </label>
+            <textarea
+              id="internalNotes"
+              rows={4}
+              className={inputClass}
+              placeholder="Notes visible to admin only — not sent to client"
+              value={form.internalNotes}
+              onChange={(e) => update("internalNotes", e.target.value)}
+            />
           </section>
 
-          {error && (
-            <p className="font-body text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="font-body text-sm text-red-600">{error}</p>}
 
           <button
             type="submit"
