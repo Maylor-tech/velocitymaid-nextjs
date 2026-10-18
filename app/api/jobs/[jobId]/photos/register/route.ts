@@ -35,6 +35,8 @@ export async function POST(
       storagePath: path,
       uploadedBy,
       category: body.category,
+      slotKey: typeof body.slotKey === "string" ? body.slotKey : null,
+      caption: typeof body.caption === "string" ? body.caption : null,
     });
 
     return NextResponse.json(photo);

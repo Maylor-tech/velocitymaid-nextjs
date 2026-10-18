@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Camera, Loader2 } from 'lucide-react';
 import { CLEAN_PHOTO_CATEGORIES } from '@/lib/photos/cleanPhotoStorage';
 import { useJobPhotoUpload } from '@/lib/photos/useJobPhotoUpload';
@@ -9,6 +9,8 @@ import {
   PhotoQueueItemErrors,
   PhotoQueueMessages,
 } from '@/components/photos/PhotoQueueGrid';
+import { ArrivalCheck } from '@/components/cleaner/ArrivalCheck';
+import { PhotoSlotList, type SlotRow } from '@/components/cleaner/PhotoSlotList';
 
 const LABELS: Record<string, string> = {
   BEFORE: 'Before',
@@ -19,17 +21,45 @@ const LABELS: Record<string, string> = {
   OTHER: 'Other',
 };
 
+interface ChecklistPayload {
+  arrivalCondition: "NORMAL" | "ISSUES" | null;
+  slots: Array<{ key: string; label: string; room: string; required: boolean }>;
+  photos: Array<{ slotKey: string | null; category: string }>;
+}
+
 export function JobPhotoCapture({
   jobId,
   uploadedBy,
+  slotMode = false,
 }: {
   jobId: string;
   uploadedBy?: string;
+  slotMode?: boolean;
 }) {
   const [category, setCategory] = useState('AFTER');
   const upload = useJobPhotoUpload(jobId, category);
   const inputRef = useRef<HTMLInputElement>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [checklist, setChecklist] = useState<ChecklistPayload | null>(null);
+  const [issueNote, setIssueNote] = useState("");
+
+  const loadChecklist = useCallback(async () => {
+    if (!slotMode) return;
+    const res = await fetch(`/api/cleaner/jobs/${jobId}/photo-checklist`);
+    const data = await res.json();
+    if (res.ok && data.checklist) setChecklist(data.checklist as ChecklistPayload);
+  }, [jobId, slotMode]);
+
+  useEffect(() => {
+    void loadChecklist();
+  }, [loadChecklist]);
+
+  const slotRows: SlotRow[] = (checklist?.slots ?? []).map((slot) => ({
+    ...slot,
+    filled: (checklist?.photos ?? []).some(
+      (photo) => photo.slotKey === slot.key && photo.category === "AFTER"
+    ),
+  }));
 
   const handleUpload = async () => {
     setSubmitError(null);
@@ -45,6 +75,24 @@ export function JobPhotoCapture({
       <p className="text-sm text-vm-muted mb-4">
         Operational evidence only. Photos are not sent to the customer from this screen.
       </p>
+      {slotMode && (
+        <>
+          <ArrivalCheck
+            jobId={jobId}
+            value={checklist?.arrivalCondition ?? null}
+            onSaved={() => void loadChecklist()}
+          />
+          <PhotoSlotList
+            jobId={jobId}
+            slots={slotRows}
+            issueNote={issueNote}
+            onIssueNote={setIssueNote}
+            showIssueNote={checklist?.arrivalCondition === "ISSUES"}
+            uploadedBy={uploadedBy}
+            onUploaded={() => void loadChecklist()}
+          />
+        </>
+      )}
       <div className="flex flex-wrap gap-2 mb-4">
         {CLEAN_PHOTO_CATEGORIES.map((c) => (
           <button
@@ -78,7 +126,7 @@ export function JobPhotoCapture({
         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300"
       >
         <Camera className="h-4 w-4" />
-        Add {LABELS[category]} photos
+        Add more photos
       </button>
       <PhotoQueueMessages messages={upload.fileMessages} />
       <PhotoQueueItemErrors items={upload.items} />

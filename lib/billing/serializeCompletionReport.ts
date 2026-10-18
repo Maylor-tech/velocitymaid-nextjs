@@ -2,9 +2,22 @@ import type { CompletionReport } from '@prisma/client';
 import { formatInvoiceDate } from '@/lib/invoices/invoiceUtils';
 import { brandedDocumentShell, documentHeader, escapeHtml } from './documentHtml';
 
-export type ReportPhoto = { url: string; caption?: string | null };
+export type ReportPhoto = {
+  url: string;
+  caption?: string | null;
+  slotLabel?: string | null;
+  category?: string | null;
+};
 
-export function serializeCompletionReport(report: CompletionReport) {
+export interface CompletionReportContext {
+  arrivalCondition?: "NORMAL" | "ISSUES" | null;
+  invoicePublicToken?: string | null;
+}
+
+export function serializeCompletionReport(
+  report: CompletionReport,
+  context: CompletionReportContext = {}
+) {
   const beforePhotos = (report.beforePhotos as ReportPhoto[] | null) ?? [];
   const afterPhotos = (report.afterPhotos as ReportPhoto[] | null) ?? [];
 
@@ -23,6 +36,8 @@ export function serializeCompletionReport(report: CompletionReport) {
     supplyRequests: report.supplyRequests,
     beforePhotos,
     afterPhotos,
+    arrivalCondition: context.arrivalCondition ?? null,
+    invoicePublicToken: context.invoicePublicToken ?? null,
     status: report.status,
     sentAt: report.sentAt?.toISOString() ?? null,
     createdAt: report.createdAt.toISOString(),
@@ -66,6 +81,10 @@ export function renderCompletionReportHtml(report: SerializedCompletionReport): 
     <div>
       <p class="label">Assigned team</p>
       <p class="value">${escapeHtml(report.teamSummary || 'VelocityMaid certified team')}</p>
+    </div>
+    <div>
+      <p class="label">Arrival</p>
+      <p class="value">${escapeHtml(report.arrivalCondition === 'ISSUES' ? 'Issues' : report.arrivalCondition === 'NORMAL' ? 'Normal' : 'Not recorded')}</p>
     </div>
   </div>
   ${optionalSection('Service notes', report.notes)}

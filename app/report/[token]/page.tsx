@@ -56,6 +56,20 @@ export default function PublicReportPage({ params }: { params: { token: string }
         <div className="space-y-6 rounded-2xl border border-vm-border bg-vm-white p-6 shadow-sm">
           <Section label="Service">{report.serviceType || 'Professional cleaning'}</Section>
           <Section label="Team">{report.teamSummary || 'VelocityMaid certified team'}</Section>
+          <Section label="Arrival">
+            {report.arrivalCondition === 'ISSUES'
+              ? 'Issues'
+              : report.arrivalCondition === 'NORMAL'
+                ? 'Normal'
+                : 'Not recorded'}
+          </Section>
+          {report.invoicePublicToken && (
+            <p className="font-body text-sm">
+              <Link href={`/invoice/${report.invoicePublicToken}`} className="text-vm-cyan-dark hover:underline">
+                View invoice
+              </Link>
+            </p>
+          )}
           {report.notes && <Section label="Notes">{report.notes}</Section>}
           {report.issuesFound && <Section label="Issues found">{report.issuesFound}</Section>}
           {report.supplyRequests && <Section label="Supply requests">{report.supplyRequests}</Section>}
@@ -85,7 +99,7 @@ function PhotoGrid({
   photos,
 }: {
   label: string;
-  photos: Array<{ url: string; caption?: string | null }>;
+  photos: Array<{ url: string; caption?: string | null; slotLabel?: string | null }>;
 }) {
   if (!photos.length) return null;
   return (
@@ -96,7 +110,9 @@ function PhotoGrid({
           <div key={i} className="overflow-hidden rounded-lg border border-vm-border">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={p.url} alt={p.caption || label} className="h-32 w-full object-cover" />
-            {p.caption && <p className="px-2 py-1 font-body text-xs text-vm-muted">{p.caption}</p>}
+            {(p.slotLabel || p.caption) && (
+              <p className="px-2 py-1 font-body text-xs text-vm-muted">{p.slotLabel || p.caption}</p>
+            )}
           </div>
         ))}
       </div>

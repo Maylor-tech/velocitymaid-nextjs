@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { assertSlotKeyForJob } from "@/lib/photos/jobPhotoChecklist";
 import {
   CLEAN_PHOTOS_BUCKET,
   isAllowedUploadContentType,
@@ -96,6 +97,8 @@ export async function registerCleanPhoto(params: {
   storagePath: string;
   uploadedBy?: string | null;
   category?: unknown;
+  slotKey?: string | null;
+  caption?: string | null;
 }) {
   if (!params.storagePath.startsWith(`${params.jobId}/`)) {
     throw new Error("Invalid storage path for this job");
@@ -110,6 +113,10 @@ export async function registerCleanPhoto(params: {
   } = supabase.storage.from(CLEAN_PHOTOS_BUCKET).getPublicUrl(params.storagePath);
 
   const category: CleanPhotoCategoryValue = parseCleanPhotoCategory(params.category);
+  const slotKey = params.slotKey?.trim() || null;
+  if (slotKey) {
+    await assertSlotKeyForJob(params.jobId, slotKey);
+  }
 
   const record = await prisma.cleanPhoto.create({
     data: {
@@ -117,9 +124,18 @@ export async function registerCleanPhoto(params: {
       url: publicUrl,
       uploadedBy: params.uploadedBy?.trim() || null,
       category,
+      slotKey,
+      caption: params.caption?.trim() || null,
       customerVisible: false,
     },
-    select: { id: true, url: true, uploadedAt: true, category: true, customerVisible: true },
+    select: {
+      id: true,
+      url: true,
+      uploadedAt: true,
+      category: true,
+      slotKey: true,
+      customerVisible: true,
+    },
   });
 
   return {
@@ -127,6 +143,7 @@ export async function registerCleanPhoto(params: {
     url: record.url,
     uploadedAt: record.uploadedAt.toISOString(),
     category: record.category,
+    slotKey: record.slotKey,
     customerVisible: record.customerVisible,
   };
 }

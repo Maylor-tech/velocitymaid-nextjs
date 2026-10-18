@@ -41,6 +41,12 @@ vi.mock('@/lib/api/routeAuth', () => ({
     error instanceof NextResponse ? error : null,
 }));
 
+vi.mock('@/lib/photos/jobPhotoChecklist', () => ({
+  loadJobPhotoChecklist: async () => ({
+    finish: { ok: true, missingAfter: [], needsArrival: false, issuesNeedBefore: false },
+  }),
+}));
+
 import { PATCH } from '@/app/api/cleaner/jobs/[jobId]/complete/route';
 
 const JOB_ID = 'job-1';

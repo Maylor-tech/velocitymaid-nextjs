@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, DollarSign, CheckCircle, XCircle, AlertCircle, Clock, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
+import { JobPhotoReview } from '@/components/admin/jobs/JobPhotoReview';
 import { JobBillingWorkflowPanel } from '@/components/admin/jobs/JobBillingWorkflowPanel';
 import { JobDetailHero } from '@/components/admin/jobs/JobDetailHero';
 import { CustomerPortalPreview } from '@/components/admin/jobs/CustomerPortalPreview';
@@ -1882,6 +1883,10 @@ export default function AdminJobDetailPage() {
               }
             }}
           />
+        </div>
+
+        <div className="mt-6">
+          <JobPhotoReview jobId={jobId} />
         </div>
 
         <div className="mt-6">

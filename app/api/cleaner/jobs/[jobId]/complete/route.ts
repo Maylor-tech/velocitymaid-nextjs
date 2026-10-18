@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { logAuditEntry } from '@/lib/audit';
 import { getAuthenticatedCleaner } from '@/lib/cleanerAuth';
-import { JobStatus } from '@prisma/client';
 import { requireCleanerJobAssignment } from '@/lib/auth/requireRole';
 import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
-import { computeCleanDurationMins } from '@/lib/dispatch/duration';
-import { assertTransition } from '@/lib/jobStatus';
-import {
-  createAdminNotification,
-  adminNotificationHelpers,
-} from '@/lib/notifications/adminNotificationCenter';
+import { prisma } from '@/lib/prisma';
+import { submitJobForQc } from '@/lib/jobs/submitJobForQc';
+import { loadJobPhotoChecklist } from '@/lib/photos/jobPhotoChecklist';
+import { finishPhotoBlockMessage } from '@/lib/photos/propertyPhotoSlots';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,6 +14,8 @@ export const dynamic = 'force-dynamic';
  * PATCH /api/cleaner/jobs/[jobId]/complete
  *
  * Cleaner Finish → AWAITING_QC (Submitted for QC).
+ * Blocks when arrival or required AFTER slots are missing.
+ * Admin override lives on the admin photo-review route, not here.
  * Does not set COMPLETED, does not set completedAt, does not invoice,
  * does not email the customer, and never changes paymentStatus.
  */
@@ -37,152 +34,76 @@ export async function PATCH(
       );
     }
 
-    const cleanerId = authResult.cleanerId;
-
-    const job = await prisma.job.findUnique({
+    const assigned = await prisma.job.findUnique({
       where: { id: jobId },
-      select: {
-        id: true,
-        status: true,
-        paymentStatus: true,
-        billingPolicy: true,
-        assignedCleanerId: true,
-        startedAt: true,
-        completedAt: true,
-        submittedForQcAt: true,
-        cleanDurationMins: true,
-        jobReference: true,
-      },
+      select: { assignedCleanerId: true, status: true },
     });
-
-    if (!job) {
+    if (!assigned) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
     }
-
-    if (job.assignedCleanerId !== cleanerId) {
+    if (assigned.assignedCleanerId !== authResult.cleanerId) {
       return NextResponse.json({ error: 'Job is not assigned to you' }, { status: 403 });
     }
 
-    if (job.status === JobStatus.COMPLETED) {
-      return NextResponse.json({
-        success: true,
-        job: {
-          id: job.id,
-          status: job.status,
-          paymentStatus: job.paymentStatus,
-          completedAt: job.completedAt,
-          submittedForQcAt: job.submittedForQcAt,
-          startedAt: job.startedAt,
-          cleanDurationMins: job.cleanDurationMins,
-        },
-        submittedForQc: true,
-        message: 'Admin already approved completion.',
-      });
+    if (assigned.status === 'IN_PROGRESS') {
+      const checklist = await loadJobPhotoChecklist(jobId);
+      if (checklist && !checklist.finish.ok) {
+        return NextResponse.json(
+          {
+            error: finishPhotoBlockMessage(checklist.finish),
+            missingAfter: checklist.finish.missingAfter,
+            needsArrival: checklist.finish.needsArrival,
+            issuesNeedBefore: checklist.finish.issuesNeedBefore,
+          },
+          { status: 400 }
+        );
+      }
     }
 
-    if (job.status === JobStatus.AWAITING_QC) {
-      return NextResponse.json({
-        success: true,
-        job: {
-          id: job.id,
-          status: job.status,
-          paymentStatus: job.paymentStatus,
-          completedAt: job.completedAt,
-          submittedForQcAt: job.submittedForQcAt,
-          startedAt: job.startedAt,
-          cleanDurationMins: job.cleanDurationMins,
-        },
-        submittedForQc: true,
-        message: 'Already submitted for QC. Admin still reviews completion and billing.',
-      });
-    }
+    const result = await submitJobForQc({
+      jobId,
+      actorId: authResult.cleanerId,
+      actorRole: 'CLEANER',
+    });
 
-    if (job.status !== JobStatus.IN_PROGRESS) {
+    if (result.kind === 'missing') {
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+    }
+    if (result.kind === 'not-in-progress') {
       return NextResponse.json(
         {
-          error: `Job cannot be finished. Current status: ${job.status}. Must be IN_PROGRESS.`,
-          currentStatus: job.status,
+          error: `Job cannot be finished. Current status: ${result.status}. Must be IN_PROGRESS.`,
+          currentStatus: result.status,
           requiredStatus: 'IN_PROGRESS',
         },
         { status: 400 }
       );
     }
-
-    assertTransition(job.status, JobStatus.AWAITING_QC);
-
-    const submittedForQcAt = new Date();
-    const cleanDurationMins = computeCleanDurationMins({
-      startedAt: job.startedAt,
-      completedAt: submittedForQcAt,
-      existingMins: job.cleanDurationMins,
-    });
-
-    const updatedJob = await prisma.job.update({
-      where: { id: jobId },
-      data: {
-        status: JobStatus.AWAITING_QC,
-        submittedForQcAt,
-        ...(cleanDurationMins != null ? { cleanDurationMins } : {}),
-      },
-      select: {
-        id: true,
-        status: true,
-        paymentStatus: true,
-        billingPolicy: true,
-        completedAt: true,
-        submittedForQcAt: true,
-        startedAt: true,
-        cleanDurationMins: true,
-      },
-    });
-
-    if (updatedJob.paymentStatus !== job.paymentStatus) {
+    if (result.kind === 'already') {
+      return NextResponse.json({
+        success: true,
+        job: result.job,
+        submittedForQc: true,
+        message: result.message,
+      });
+    }
+    if (result.kind === 'payment-changed') {
       return NextResponse.json(
         { error: 'Finish Job must not change payment status' },
         { status: 500 }
       );
     }
-
-    if (updatedJob.status === JobStatus.COMPLETED || updatedJob.completedAt != null) {
+    if (result.kind === 'completed-forbidden') {
       return NextResponse.json(
         { error: 'Finish Job must not mark the job COMPLETED' },
         { status: 500 }
       );
     }
 
-    await logAuditEntry({
-      actorId: cleanerId,
-      actorRole: 'CLEANER',
-      action: 'JOB_SUBMITTED_FOR_QC',
-      entityType: 'Job',
-      entityId: jobId,
-      description: `Cleaner submitted job for QC (not invoiced, not COMPLETED)`,
-      changes: {
-        previousStatus: job.status,
-        newStatus: JobStatus.AWAITING_QC,
-        submittedForQcAt: updatedJob.submittedForQcAt?.toISOString(),
-        completedAt: updatedJob.completedAt?.toISOString() ?? null,
-        startedAt: updatedJob.startedAt?.toISOString() ?? null,
-        cleanDurationMins: updatedJob.cleanDurationMins,
-        paymentStatusUnchanged: updatedJob.paymentStatus,
-        billingPolicy: updatedJob.billingPolicy,
-      },
-    });
-
-    createAdminNotification({
-      type: 'JOB_COMPLETED',
-      severity: 'INFO',
-      message: `${job.jobReference || jobId} submitted for QC — review before invoicing`,
-      jobId,
-      actionUrl: adminNotificationHelpers.adminJobLink(jobId),
-    }).catch(() => {});
-
     return NextResponse.json({
       success: true,
       submittedForQc: true,
-      job: {
-        ...updatedJob,
-      },
+      job: result.job,
       message:
         'Submitted for QC. Admin reviews photos and checklist before invoicing or notifying the customer.',
     });

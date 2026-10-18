@@ -291,7 +291,14 @@ export default function CleanerJobDetailPage() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to complete job");
+        const missing = Array.isArray(data.missingAfter)
+          ? data.missingAfter.map((item: { label?: string }) => item.label).filter(Boolean)
+          : [];
+        throw new Error(
+          missing.length > 0
+            ? `${data.error || "Finish blocked"} (${missing.join(", ")})`
+            : data.error || "Failed to complete job"
+        );
       }
 
       await fetchJob();
@@ -798,7 +805,11 @@ export default function CleanerJobDetailPage() {
             job.status === "AWAITING_QC" ||
             job.status === "COMPLETED") && (
             <>
-              <JobPhotoCapture jobId={jobId} uploadedBy="cleaner" />
+              <JobPhotoCapture
+                jobId={jobId}
+                uploadedBy="cleaner"
+                slotMode={job.status === "IN_PROGRESS"}
+              />
               <EscalateIssueCard jobId={jobId} />
             </>
           )}

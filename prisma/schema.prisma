@@ -366,6 +366,7 @@ model Property {
   Tip                    Tip[]
   ServiceFeedback        ServiceFeedback[]
   GuestTipAuthorization  GuestTipAuthorization[]
+  PhotoSlots             PropertyPhotoSlot[]
 
   @@index([customerId])
   @@index([customerId, address])
@@ -548,6 +549,8 @@ model Job {
   notifiedAt               DateTime?
   internalNotes            String?
   marketLabel              String?
+  /// Set by the cleaner after Start Job. Null until they choose.
+  arrivalCondition         ArrivalCondition?
   archivedAt               DateTime?
   AssignmentLog            AssignmentLog[]
   photos                   CleanPhoto[]
@@ -597,12 +600,31 @@ model CleanPhoto {
   uploadedBy      String?
   uploadedAt      DateTime           @default(now())
   category        CleanPhotoCategory @default(OTHER)
+  /// PropertyPhotoSlot.key this frame fills. Null for extra photos.
+  slotKey         String?
   customerVisible Boolean            @default(false)
   Job             Job                @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([jobId])
   @@index([jobId, category])
+  @@index([jobId, slotKey])
   @@map("clean_photos")
+}
+
+/// Ordered shots for one property. Empty means the runtime default list.
+model PropertyPhotoSlot {
+  id         String   @id @default(cuid())
+  propertyId String
+  key        String
+  label      String
+  room       String
+  sortOrder  Int
+  required   Boolean  @default(true)
+  Property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, key])
+  @@index([propertyId])
+  @@map("property_photo_slots")
 }
 
 /// Dispatch offer — source of truth until the cleaner accepts. Not a JobStatus.
@@ -1802,6 +1824,12 @@ enum CleanPhotoCategory {
   DAMAGE
   SUPPLY
   OTHER
+}
+
+/// Cleaner arrival check after Start Job. Null until they choose.
+enum ArrivalCondition {
+  NORMAL
+  ISSUES
 }
 
 model Tip {

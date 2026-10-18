@@ -14,12 +14,23 @@ export async function GET(
 ) {
   const report = await prisma.completionReport.findUnique({
     where: { publicToken: params.token },
+    include: {
+      Job: {
+        select: {
+          arrivalCondition: true,
+          Invoice: { select: { publicToken: true } },
+        },
+      },
+    },
   });
   if (!report) {
     return NextResponse.json({ success: false, error: 'Report not found' }, { status: 404 });
   }
 
-  const serialized = serializeCompletionReport(report);
+  const serialized = serializeCompletionReport(report, {
+    arrivalCondition: report.Job.arrivalCondition,
+    invoicePublicToken: report.Job.Invoice?.publicToken ?? null,
+  });
   const html = renderCompletionReportHtml(serialized);
 
   return new NextResponse(html, {
