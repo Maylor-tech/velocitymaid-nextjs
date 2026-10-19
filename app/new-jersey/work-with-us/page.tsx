@@ -4,7 +4,11 @@ import { Car, Clock, DollarSign, MapPin, ShieldCheck } from "lucide-react";
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import { pageSocialMetadata } from "@/lib/seo/socialImages";
-import { PAYOUT_RULES } from "@/lib/payoutRules";
+import {
+  RECRUITMENT_PAY_HEADING,
+  RECRUITMENT_PAY_OFFER_COPY,
+  RECRUITMENT_PAY_SCHEDULE_COPY,
+} from "@/lib/marketing/recruitmentPayCopy";
 import { NJ_SERVICE_CITIES } from "@/lib/markets/newJersey";
 import {
   CLEANER_APPLY_NJ_PATH,
@@ -29,8 +33,6 @@ export const metadata: Metadata = {
   }),
 };
 
-const pct = Math.round(PAYOUT_RULES.cleanerPct * 100);
-
 export default function NewJerseyWorkWithUsPage() {
   return (
     <div className="min-h-screen bg-white">
@@ -49,8 +51,9 @@ export default function NewJerseyWorkWithUsPage() {
             </h1>
             <p className="mx-auto mt-4 max-w-2xl font-body text-sm leading-relaxed text-white/70 sm:text-base">
               Independent contractor work for recurring homes and deep cleans.
-              {` You earn ${pct}% of the job total.`} Weekly payout after the job
-              is marked complete.
+              You earn {RECRUITMENT_PAY_HEADING}. Offered jobs show your payout
+              before you accept. We pay on Fridays after the job is marked
+              complete.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
@@ -74,13 +77,13 @@ export default function NewJerseyWorkWithUsPage() {
             {[
               {
                 icon: DollarSign,
-                title: `${pct}% of the quoted job`,
-                text: "New Jersey jobs are quoted per home. You see the payout before you accept. Tips are extra. 1099 — W-9 once.",
+                title: RECRUITMENT_PAY_HEADING,
+                text: `New Jersey jobs are quoted per home. ${RECRUITMENT_PAY_OFFER_COPY} Tips are extra. 1099 — W-9 once.`,
               },
               {
                 icon: Clock,
-                title: "Paid on a weekly cycle",
-                text: "After the job is marked complete, payout is queued. You will see ready vs paid in the cleaner app.",
+                title: "Paid on Fridays",
+                text: RECRUITMENT_PAY_SCHEDULE_COPY,
               },
               {
                 icon: Car,

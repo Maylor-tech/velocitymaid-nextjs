@@ -2,16 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { trackEvent } from "@/lib/analytics/trackEvent";
-
-/** NJ market: WhatsApp temporarily unavailable — hide widget on these paths */
-const NJ_WHATSAPP_HIDDEN_PREFIXES = [
-  '/new-jersey',
-  '/locations/new-jersey',
-  '/lead/new-jersey',
-  '/review-us/new-jersey',
-];
+import { shouldHideWhatsAppWidget } from "@/lib/marketing/whatsappWidget";
 
 interface WhatsAppButtonProps {
   phoneNumber: string;
@@ -32,12 +25,7 @@ export default function WhatsAppButton({
   const [isVisible, setIsVisible] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
-  const hiddenForNj =
-    pathname != null &&
-    NJ_WHATSAPP_HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-
-  const isAdmin = pathname != null && pathname.startsWith('/admin');
-  const isMapPage = pathname === '/admin/map';
+  const hidden = shouldHideWhatsAppWidget(pathname);
 
   useEffect(() => {
     // Show button after a short delay for better UX
@@ -56,7 +44,7 @@ export default function WhatsAppButton({
     window.open(whatsappUrl, '_blank');
   };
 
-  if (hiddenForNj || isAdmin || isMapPage || !isVisible) return null;
+  if (hidden || !isVisible) return null;
 
   const horizontalPosition =
     position === 'left'
