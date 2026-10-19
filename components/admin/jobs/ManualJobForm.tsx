@@ -106,6 +106,10 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
     operationalPrice: number | null;
     rateLabel: string;
   } | null>(null);
+  const [allowanceDisplay, setAllowanceDisplay] = useState<{
+    preferredMethod: string | null;
+    estimatedAllowance: number;
+  } | null>(null);
   const [form, setForm] = useState({
     clientFirstName: "",
     clientLastName: "",
@@ -219,6 +223,7 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
     if (!propertyId || !form.scheduledDate || customerMode !== "existing") {
       setSameDayJobs([]);
       setPackagePrice(null);
+      setAllowanceDisplay(null);
       return;
     }
     let cancelled = false;
@@ -247,11 +252,21 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
               }
             : null
         );
+        const display = data.processingAllowanceDisplay;
+        setAllowanceDisplay(
+          display && Number.isFinite(Number(display.estimatedAllowance))
+            ? {
+                preferredMethod: display.preferredMethod ?? null,
+                estimatedAllowance: Number(display.estimatedAllowance),
+              }
+            : null
+        );
       })
       .catch(() => {
         if (!cancelled) {
           setSameDayJobs([]);
           setPackagePrice(null);
+          setAllowanceDisplay(null);
         }
       });
     return () => {
@@ -979,6 +994,13 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
                   Package price: ${packagePrice.customerPrice.toFixed(2)} ({packagePrice.rateLabel})
                 </p>
                 <p className="mt-1 text-xs text-vm-muted">Use one-off price to change this visit.</p>
+                {allowanceDisplay && (
+                  <p className="mt-2 font-body text-xs text-vm-muted">
+                    {allowanceDisplay.preferredMethod === "CARD"
+                      ? `Estimated card processing allowance: $${allowanceDisplay.estimatedAllowance.toFixed(2)}. The customer price stays $${packagePrice.customerPrice.toFixed(2)}.`
+                      : "Processing allowance: $0.00. Cash, check, and Zelle are not added to the customer price."}
+                  </p>
+                )}
               </div>
             )}
             {agreedPrice != null && packagePrice == null && (
