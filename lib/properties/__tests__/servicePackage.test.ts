@@ -407,7 +407,7 @@ describe('foundation boundaries', () => {
     expect(sql).not.toMatch(/fe494d88|1233f6e1|cmuijy8vg|cmuoajao8/);
   });
 
-  it('does not change manual job creation, Stripe, invoices, or guest QR', () => {
+  it('does not write Stripe, invoices, guest QR, or the standing package', () => {
     const source = readFileSync(path.join(root, 'lib/properties/servicePackage.ts'), 'utf8');
     const createManual = readFileSync(
       path.join(root, 'app/api/admin/jobs/create-manual/route.ts'),
@@ -415,6 +415,8 @@ describe('foundation boundaries', () => {
     );
 
     expect(source).not.toMatch(/stripe|protectOperationalPrice|propertyGuestAccess|InvoicePayment|JobPayout/i);
-    expect(createManual).not.toMatch(/PropertyServicePackage|servicePackage|PropertyPaymentPreference/);
+    expect(createManual).not.toMatch(
+      /propertyServicePackage\.update|propertyServiceRate\.update|propertyGuestAccess|InvoicePayment|JobPayout/
+    );
   });
 });

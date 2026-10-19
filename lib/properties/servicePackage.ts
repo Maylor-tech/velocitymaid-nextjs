@@ -60,6 +60,8 @@ export type ResolvedServiceTerms = {
   propertyId: string;
   packageId: string;
   rateId: string | null;
+  /** Seasonal rate label, or Standing rate when the package price applies. */
+  rateLabel: string;
   serviceCategory: ServicePackageCategory;
   serviceType: string;
   customerPrice: number;
@@ -222,6 +224,7 @@ export function resolvePropertyServiceTerms(input: {
     propertyId: pkg.propertyId,
     packageId: pkg.id,
     rateId: rate?.id ?? null,
+    rateLabel: rate?.label ?? 'Standing rate',
     serviceCategory: pkg.serviceCategory,
     serviceType: pkg.serviceType,
     customerPrice: money(rate ? rate.customerPrice : pkg.customerPrice),

@@ -556,6 +556,19 @@ model Job {
   processingAllowanceEstimated Decimal?               @db.Decimal(10, 2)
   /// Policy version string that produced protected pricing (e.g. "pp-v1").
   pricingPolicyVersion     String?
+  /// Frozen service agreement copied at booking. Later package edits do not rewrite these.
+  servicePackageId         String?
+  serviceRateId            String?
+  agreedCustomerPrice      Decimal?                   @db.Decimal(10, 2)
+  agreedOperationalPrice   Decimal?                   @db.Decimal(10, 2)
+  includedScopeSnapshot    String?
+  exclusionsSnapshot       String?
+  paymentPreferenceSnapshot Json?
+  /// Null on jobs created before snapshots. True only when this visit's price differs.
+  priceOverridden          Boolean?
+  priceOverrideReason      String?
+  /// One-off cleaner amount for this visit. Null keeps agreedOperationalPrice.
+  operationalPriceOverride Decimal?                   @db.Decimal(10, 2)
   depositAmount            Decimal?                   @db.Decimal(10, 2)
   amountPaid               Decimal?                   @db.Decimal(10, 2)
   balanceDue               Decimal?                   @db.Decimal(10, 2)
