@@ -188,7 +188,14 @@ export async function GET(request: NextRequest) {
           rateLabel: terms.rateLabel,
         };
         const preferredMethod = preferenceRow?.preferredMethod ?? null;
-        const policy = preferredMethod === "CARD" ? await loadProcessingPolicy() : null;
+        let policy = null;
+        if (preferredMethod === "CARD") {
+          try {
+            policy = await loadProcessingPolicy();
+          } catch {
+            policy = null;
+          }
+        }
         processingAllowanceDisplay = displayProcessingAllowance({
           preferredMethod,
           operationalSubtotal: terms.operationalPrice ?? terms.customerPrice,

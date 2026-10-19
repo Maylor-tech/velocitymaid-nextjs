@@ -4,7 +4,9 @@ import type { PropertyPaymentMethod } from '@/lib/properties/servicePackage';
 
 export type ProcessingAllowanceDisplay = {
   preferredMethod: PropertyPaymentMethod | null;
-  estimatedAllowance: number;
+  /** Null when the card policy is missing. Zero is only used when the allowance is known. */
+  estimatedAllowance: number | null;
+  availability: 'zero' | 'estimated' | 'unavailable';
   /** The agreed customer price is never replaced by this estimate. */
   customerPriceUnchanged: true;
 };
@@ -31,10 +33,16 @@ export function displayProcessingAllowance(input: {
     customerPriceUnchanged: true as const,
   };
   if (!input.preferredMethod || NO_ALLOWANCE.has(input.preferredMethod)) {
-    return { ...base, estimatedAllowance: 0 };
+    return { ...base, estimatedAllowance: 0, availability: 'zero' };
   }
-  if (!input.policy?.enabled || !(input.operationalSubtotal > 0)) {
-    return { ...base, estimatedAllowance: 0 };
+  if (!input.policy) {
+    return { ...base, estimatedAllowance: null, availability: 'unavailable' };
+  }
+  if (!input.policy.enabled) {
+    return { ...base, estimatedAllowance: 0, availability: 'zero' };
+  }
+  if (!(input.operationalSubtotal > 0)) {
+    return { ...base, estimatedAllowance: 0, availability: 'estimated' };
   }
   try {
     const result = applyProcessingProtection({
@@ -46,8 +54,9 @@ export function displayProcessingAllowance(input: {
     return {
       ...base,
       estimatedAllowance: roundMoney(result.processingAllowanceEstimated),
+      availability: 'estimated',
     };
   } catch {
-    return { ...base, estimatedAllowance: 0 };
+    return { ...base, estimatedAllowance: null, availability: 'unavailable' };
   }
 }

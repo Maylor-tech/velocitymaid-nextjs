@@ -19,8 +19,17 @@ import {
   assertSeasonalRatesDoNotOverlap,
   parseCalendarDay,
   validatePaymentPreference,
-  type ServiceRateRecord,
 } from "@/lib/properties/servicePackage";
+
+type PreparedRate = {
+  id: string | null;
+  label: string;
+  customerPrice: number;
+  operationalPrice: number | null;
+  startsOn: string;
+  endsOn: string | null;
+  active: boolean;
+};
 
 type RouteContext = { params: { propertyId: string } };
 
@@ -42,6 +51,74 @@ function moneyOrNull(value: unknown, label: string): number | null {
 
 function decimal(amount: number): Prisma.Decimal {
   return new Prisma.Decimal(amount.toFixed(2));
+}
+
+function sameInstant(stored: Date, submitted: string | null): boolean {
+  if (!submitted) return false;
+  const submittedTime = new Date(submitted).getTime();
+  return Number.isFinite(submittedTime) && stored.getTime() === submittedTime;
+}
+
+function preparePackage(packageBody: {
+  serviceCategory?: unknown;
+  serviceType?: unknown;
+  customerPrice?: unknown;
+  operationalPrice?: unknown;
+  includedScope?: unknown;
+  exclusions?: unknown;
+  active?: unknown;
+  updatedAt?: unknown;
+  id?: unknown;
+  rates?: unknown;
+}) {
+  if (!isServiceCategory(packageBody.serviceCategory)) {
+    throw new ServicePackageValidationError(
+      "Choose residential or vacation-rental.",
+      "PACKAGE_CATEGORY"
+    );
+  }
+  const serviceType = String(packageBody.serviceType || "").trim();
+  if (!serviceTypesFor(packageBody.serviceCategory).includes(serviceType)) {
+    throw new ServicePackageValidationError(
+      "Choose a service type for that category.",
+      "PACKAGE_SERVICE_TYPE"
+    );
+  }
+  const customerPrice = money(packageBody.customerPrice, "Customer price");
+  const operationalPrice = moneyOrNull(packageBody.operationalPrice, "Operational price");
+  const ratesInput = Array.isArray(packageBody.rates) ? packageBody.rates : [];
+  const rates: PreparedRate[] = ratesInput.map(
+    (rate: Record<string, unknown>) => ({
+      id: typeof rate.id === "string" && rate.id.trim() ? rate.id.trim() : null,
+      label: String(rate.label || "").trim(),
+      customerPrice: money(rate.customerPrice, "Seasonal customer price"),
+      operationalPrice: moneyOrNull(rate.operationalPrice, "Seasonal operational price"),
+      startsOn: parseCalendarDay(String(rate.startsOn || "")),
+      endsOn:
+        rate.endsOn == null || rate.endsOn === "" ? null : parseCalendarDay(String(rate.endsOn)),
+      active: rate.active !== false,
+    })
+  );
+  if (rates.some((rate) => !rate.label)) {
+    throw new ServicePackageValidationError("Each seasonal rate needs a label.", "SEASONAL_RATE_DATE");
+  }
+  assertSeasonalRatesDoNotOverlap(rates.map((rate) => ({ ...rate, id: rate.id ?? "new" })));
+  return {
+    serviceCategory: packageBody.serviceCategory,
+    serviceType,
+    customerPrice,
+    operationalPrice,
+    packageId: typeof packageBody.id === "string" && packageBody.id.trim() ? packageBody.id.trim() : null,
+    updatedAt: typeof packageBody.updatedAt === "string" ? packageBody.updatedAt : null,
+    rates,
+    data: {
+      customerPrice: decimal(customerPrice),
+      operationalPrice: operationalPrice == null ? null : decimal(operationalPrice),
+      includedScope: String(packageBody.includedScope || "").trim() || null,
+      exclusions: String(packageBody.exclusions || "").trim() || null,
+      active: packageBody.active !== false,
+    },
+  };
 }
 
 export async function GET(request: NextRequest, { params }: RouteContext) {
@@ -91,130 +168,130 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       );
     }
 
-    let packageAudit: Prisma.InputJsonObject | null = null;
-    let preferenceAudit: Prisma.InputJsonObject | null = null;
+    const preparedPackage = packageBody ? preparePackage(packageBody) : null;
+    const preparedPreference = preferenceBody
+      ? validatePaymentPreference({
+          propertyId: property.id,
+          allowedMethods: Array.isArray(preferenceBody.allowedMethods)
+            ? preferenceBody.allowedMethods
+            : [],
+          preferredMethod: String(preferenceBody.preferredMethod || ""),
+        })
+      : null;
 
-    if (packageBody) {
-      if (!isServiceCategory(packageBody.serviceCategory)) {
-        throw new ServicePackageValidationError(
-          "Choose residential or vacation-rental.",
-          "PACKAGE_CATEGORY"
-        );
-      }
-      const serviceType = String(packageBody.serviceType || "").trim();
-      if (!serviceTypesFor(packageBody.serviceCategory).includes(serviceType)) {
-        throw new ServicePackageValidationError(
-          "Choose a service type for that category.",
-          "PACKAGE_SERVICE_TYPE"
-        );
-      }
-      const customerPrice = money(packageBody.customerPrice, "Customer price");
-      const operationalPrice = moneyOrNull(packageBody.operationalPrice, "Operational price");
-      const ratesInput = Array.isArray(packageBody.rates) ? packageBody.rates : [];
-      const rates: ServiceRateRecord[] = ratesInput.map((rate: Record<string, unknown>) => ({
-        id: randomUUID(),
-        label: String(rate.label || "").trim(),
-        customerPrice: money(rate.customerPrice, "Seasonal customer price"),
-        operationalPrice: moneyOrNull(rate.operationalPrice, "Seasonal operational price"),
-        startsOn: parseCalendarDay(String(rate.startsOn || "")),
-        endsOn:
-          rate.endsOn == null || rate.endsOn === ""
-            ? null
-            : parseCalendarDay(String(rate.endsOn)),
-        active: rate.active !== false,
-      }));
-      if (rates.some((rate) => !rate.label)) {
-        throw new ServicePackageValidationError("Each seasonal rate needs a label.", "SEASONAL_RATE_DATE");
-      }
-      assertSeasonalRatesDoNotOverlap(rates);
-
-      const saved = await prisma.$transaction(async (tx) => {
+    const saved = await prisma.$transaction(async (tx) => {
+      let packageAudit: Prisma.InputJsonObject | null = null;
+      if (preparedPackage) {
         const existing = await tx.propertyServicePackage.findFirst({
-          where: {
-            propertyId: property.id,
-            serviceCategory: packageBody.serviceCategory,
-            serviceType,
-          },
-          select: { id: true },
-        });
-        const pkg = existing
-          ? await tx.propertyServicePackage.update({
-              where: { id: existing.id },
-              data: {
-                customerPrice: decimal(customerPrice),
-                operationalPrice: operationalPrice == null ? null : decimal(operationalPrice),
-                includedScope: String(packageBody.includedScope || "").trim() || null,
-                exclusions: String(packageBody.exclusions || "").trim() || null,
-                active: packageBody.active !== false,
+          where: preparedPackage.packageId
+            ? { id: preparedPackage.packageId, propertyId: property.id }
+            : {
+                propertyId: property.id,
+                serviceCategory: preparedPackage.serviceCategory,
+                serviceType: preparedPackage.serviceType,
               },
-            })
+          include: { Rates: { select: { id: true } } },
+        });
+        if (preparedPackage.packageId && !existing) {
+          throw new ServicePackageValidationError(
+            "That package is no longer on this property. Reload it before saving again.",
+            "AGREEMENT_STALE"
+          );
+        }
+        if (existing && !sameInstant(existing.updatedAt, preparedPackage.updatedAt)) {
+          throw new ServicePackageValidationError(
+            "This agreement changed while you were editing it. Reload it before saving again.",
+            "AGREEMENT_STALE"
+          );
+        }
+        const pkg = existing
+          ? existing
           : await tx.propertyServicePackage.create({
               data: {
                 id: randomUUID(),
                 propertyId: property.id,
-                serviceCategory: packageBody.serviceCategory,
-                serviceType,
-                customerPrice: decimal(customerPrice),
-                operationalPrice: operationalPrice == null ? null : decimal(operationalPrice),
-                includedScope: String(packageBody.includedScope || "").trim() || null,
-                exclusions: String(packageBody.exclusions || "").trim() || null,
-                active: packageBody.active !== false,
+                serviceCategory: preparedPackage.serviceCategory,
+                serviceType: preparedPackage.serviceType,
+                ...preparedPackage.data,
               },
             });
-        await tx.propertyServiceRate.deleteMany({ where: { packageId: pkg.id } });
-        if (rates.length > 0) {
-          await tx.propertyServiceRate.createMany({
-            data: rates.map((rate) => ({
-              id: rate.id,
-              packageId: pkg.id,
-              label: rate.label,
-              customerPrice: decimal(rate.customerPrice),
-              operationalPrice:
-                rate.operationalPrice == null ? null : decimal(rate.operationalPrice),
-              startsOn: new Date(`${rate.startsOn}T00:00:00.000Z`),
-              endsOn: rate.endsOn ? new Date(`${rate.endsOn}T00:00:00.000Z`) : null,
-              active: rate.active,
-            })),
+        if (existing) {
+          const updated = await tx.propertyServicePackage.updateMany({
+            where: { id: existing.id, updatedAt: existing.updatedAt },
+            data: {
+              serviceCategory: preparedPackage.serviceCategory,
+              serviceType: preparedPackage.serviceType,
+              ...preparedPackage.data,
+            },
+          });
+          if (updated.count !== 1) {
+            throw new ServicePackageValidationError(
+              "This agreement changed while you were editing it. Reload it before saving again.",
+              "AGREEMENT_STALE"
+            );
+          }
+        }
+        const existingIds = new Set((existing?.Rates ?? []).map((rate) => rate.id));
+        const keptIds: string[] = [];
+        for (const rate of preparedPackage.rates) {
+          const rateData = {
+            label: rate.label,
+            customerPrice: decimal(rate.customerPrice),
+            operationalPrice: rate.operationalPrice == null ? null : decimal(rate.operationalPrice),
+            startsOn: new Date(`${rate.startsOn}T00:00:00.000Z`),
+            endsOn: rate.endsOn ? new Date(`${rate.endsOn}T00:00:00.000Z`) : null,
+            active: rate.active,
+          };
+          if (rate.id && existingIds.has(rate.id)) {
+            await tx.propertyServiceRate.update({ where: { id: rate.id }, data: rateData });
+            keptIds.push(rate.id);
+          } else {
+            const id = randomUUID();
+            await tx.propertyServiceRate.create({
+              data: { id, packageId: pkg.id, ...rateData },
+            });
+            keptIds.push(id);
+          }
+        }
+        const removedIds = [...existingIds].filter((id) => !keptIds.includes(id));
+        if (removedIds.length > 0) {
+          await tx.propertyServiceRate.deleteMany({
+            where: { packageId: pkg.id, id: { in: removedIds } },
           });
         }
-        return pkg;
-      });
-      packageAudit = {
-        packageId: saved.id,
-        serviceCategory: packageBody.serviceCategory,
-        serviceType,
-        customerPrice,
-        operationalPrice,
-        rateCount: rates.length,
-      };
-    }
-
-    if (preferenceBody) {
-      const preference = validatePaymentPreference({
-        propertyId: property.id,
-        allowedMethods: Array.isArray(preferenceBody.allowedMethods)
-          ? preferenceBody.allowedMethods
-          : [],
-        preferredMethod: String(preferenceBody.preferredMethod || ""),
-      });
-      await prisma.propertyPaymentPreference.upsert({
-        where: { propertyId: property.id },
-        create: {
-          id: randomUUID(),
-          propertyId: property.id,
-          allowedMethods: preference.allowedMethods,
-          preferredMethod: preference.preferredMethod,
-        },
-        update: {
-          allowedMethods: preference.allowedMethods,
-          preferredMethod: preference.preferredMethod,
-        },
-      });
-      preferenceAudit = {
-        allowedMethods: preference.allowedMethods,
-        preferredMethod: preference.preferredMethod,
-      };
-    }
+        packageAudit = {
+          packageId: pkg.id,
+          serviceCategory: preparedPackage.serviceCategory,
+          serviceType: preparedPackage.serviceType,
+          customerPrice: preparedPackage.customerPrice,
+          operationalPrice: preparedPackage.operationalPrice,
+          rateCount: preparedPackage.rates.length,
+        };
+      }
+      let preferenceAudit: Prisma.InputJsonObject | null = null;
+      if (preparedPreference) {
+        await tx.propertyPaymentPreference.upsert({
+          where: { propertyId: property.id },
+          create: {
+            id: randomUUID(),
+            propertyId: property.id,
+            allowedMethods: preparedPreference.allowedMethods,
+            preferredMethod: preparedPreference.preferredMethod,
+          },
+          update: {
+            allowedMethods: preparedPreference.allowedMethods,
+            preferredMethod: preparedPreference.preferredMethod,
+          },
+        });
+        preferenceAudit = {
+          allowedMethods: preparedPreference.allowedMethods,
+          preferredMethod: preparedPreference.preferredMethod,
+        };
+      }
+      return { packageAudit, preferenceAudit };
+    });
+    const packageAudit = saved.packageAudit;
+    const preferenceAudit = saved.preferenceAudit;
 
     const packageAuditId = packageAudit
       ? await logAuditEntry({
@@ -261,7 +338,8 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     if (error instanceof ServicePackageValidationError) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+      const status = error.code === "AGREEMENT_STALE" ? 409 : 400;
+      return NextResponse.json({ success: false, error: error.message }, { status });
     }
     const message = error instanceof Error ? error.message : "Failed to save the service agreement";
     const status = message.includes("Unauthorized") ? 401 : 500;

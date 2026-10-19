@@ -9,8 +9,10 @@ const mocks = vi.hoisted(() => ({
   packageFindFirst: vi.fn(),
   packageCreate: vi.fn(),
   packageUpdate: vi.fn(),
+  packageUpdateMany: vi.fn(),
   rateDeleteMany: vi.fn(),
-  rateCreateMany: vi.fn(),
+  rateUpdate: vi.fn(),
+  rateCreate: vi.fn(),
   preferenceUpsert: vi.fn(),
   jobUpdate: vi.fn(),
   logAuditEntry: vi.fn(),
@@ -24,25 +26,41 @@ vi.mock('@/lib/audit', () => ({
   logAuditEntry: (...args: unknown[]) => mocks.logAuditEntry(...args),
 }));
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    property: { findUnique: (...args: unknown[]) => mocks.propertyFindUnique(...args) },
-    propertyPaymentPreference: { upsert: (...args: unknown[]) => mocks.preferenceUpsert(...args) },
-    job: { update: (...args: unknown[]) => mocks.jobUpdate(...args) },
-    $transaction: async (callback: (tx: unknown) => Promise<unknown>) =>
-      callback({
-        propertyServicePackage: {
-          findFirst: mocks.packageFindFirst,
-          create: mocks.packageCreate,
-          update: mocks.packageUpdate,
-        },
-        propertyServiceRate: {
-          deleteMany: mocks.rateDeleteMany,
-          createMany: mocks.rateCreateMany,
-        },
-      }),
-  },
-}));
+vi.mock('@/lib/prisma', () => {
+  let inTransaction = false;
+  return {
+    prisma: {
+      property: { findUnique: (...args: unknown[]) => mocks.propertyFindUnique(...args) },
+      job: { update: (...args: unknown[]) => mocks.jobUpdate(...args) },
+      $transaction: async (callback: (tx: unknown) => Promise<unknown>) => {
+        inTransaction = true;
+        try {
+          return await callback({
+            propertyServicePackage: {
+              findFirst: mocks.packageFindFirst,
+              create: mocks.packageCreate,
+              update: mocks.packageUpdate,
+              updateMany: mocks.packageUpdateMany,
+            },
+            propertyServiceRate: {
+              deleteMany: mocks.rateDeleteMany,
+              update: mocks.rateUpdate,
+              create: mocks.rateCreate,
+            },
+            propertyPaymentPreference: {
+              upsert: (...args: unknown[]) => {
+                if (!inTransaction) throw new Error('preference write left the transaction');
+                return mocks.preferenceUpsert(...args);
+              },
+            },
+          });
+        } finally {
+          inTransaction = false;
+        }
+      },
+    },
+  };
+});
 
 import { PUT } from '../route';
 
@@ -61,8 +79,10 @@ describe('PUT service agreement', () => {
     mocks.propertyFindUnique.mockResolvedValue({ id: 'prop-1' });
     mocks.packageFindFirst.mockResolvedValue(null);
     mocks.packageCreate.mockResolvedValue({ id: 'package-1' });
+    mocks.packageUpdateMany.mockResolvedValue({ count: 1 });
     mocks.rateDeleteMany.mockResolvedValue({ count: 0 });
-    mocks.rateCreateMany.mockResolvedValue({ count: 1 });
+    mocks.rateUpdate.mockResolvedValue({ id: 'rate-keep' });
+    mocks.rateCreate.mockResolvedValue({ id: 'rate-new' });
     mocks.preferenceUpsert.mockResolvedValue({ id: 'pref-1' });
     mocks.logAuditEntry.mockResolvedValue('audit-1');
   });
@@ -103,6 +123,103 @@ describe('PUT service agreement', () => {
     expect(res.status).toBe(400);
     expect(json.error).toMatch(/Customer price is required/);
     expect(mocks.packageCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invalid preference before writing the package', async () => {
+    const res = await PUT(put({
+      package: {
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        customerPrice: 350,
+        rates: [],
+      },
+      paymentPreference: { allowedMethods: ['ZELLE'], preferredMethod: 'CARD' },
+    }), { params: { propertyId: 'prop-1' } });
+
+    expect(res.status).toBe(400);
+    expect(mocks.packageCreate).not.toHaveBeenCalled();
+    expect(mocks.preferenceUpsert).not.toHaveBeenCalled();
+  });
+
+  it('rejects a stale package edit before replacing seasonal rates', async () => {
+    mocks.packageFindFirst.mockResolvedValue({
+      id: 'package-1',
+      updatedAt: new Date('2026-10-19T12:00:00.000Z'),
+      Rates: [{ id: 'rate-keep' }],
+    });
+    const res = await PUT(put({
+      package: {
+        id: 'package-1',
+        updatedAt: '2026-10-18T12:00:00.000Z',
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        customerPrice: 350,
+        rates: [],
+      },
+    }), { params: { propertyId: 'prop-1' } });
+    const json = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(json.error).toMatch(/Reload/);
+    expect(mocks.packageUpdate).not.toHaveBeenCalled();
+    expect(mocks.rateDeleteMany).not.toHaveBeenCalled();
+    expect(mocks.rateCreate).not.toHaveBeenCalled();
+  });
+
+  it('updates a kept seasonal rate and deletes only the rate that was removed', async () => {
+    mocks.packageFindFirst.mockResolvedValue({
+      id: 'package-1',
+      updatedAt: new Date('2026-10-19T12:00:00.000Z'),
+      Rates: [{ id: 'rate-keep' }, { id: 'rate-drop' }],
+    });
+    mocks.packageUpdate.mockResolvedValue({ id: 'package-1' });
+    const res = await PUT(put({
+      package: {
+        id: 'package-1',
+        updatedAt: '2026-10-19T12:00:00.000Z',
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        customerPrice: 350,
+        rates: [
+          { id: 'rate-keep', label: 'December', customerPrice: 375, operationalPrice: 360, startsOn: '2026-12-01', endsOn: '2026-12-31', active: true },
+        ],
+      },
+    }), { params: { propertyId: 'prop-1' } });
+
+    expect(res.status).toBe(200);
+    expect(mocks.rateUpdate).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'rate-keep' } }));
+    expect(mocks.rateCreate).not.toHaveBeenCalled();
+    expect(mocks.rateDeleteMany).toHaveBeenCalledWith({
+      where: { packageId: 'package-1', id: { in: ['rate-drop'] } },
+    });
+    expect(mocks.packageUpdateMany).toHaveBeenCalledWith({
+      where: { id: 'package-1', updatedAt: new Date('2026-10-19T12:00:00.000Z') },
+      data: expect.any(Object),
+    });
+  });
+
+  it('does not change rates when a concurrent save already moved the package', async () => {
+    mocks.packageFindFirst.mockResolvedValue({
+      id: 'package-1',
+      updatedAt: new Date('2026-10-19T12:00:00.000Z'),
+      Rates: [{ id: 'rate-keep' }],
+    });
+    mocks.packageUpdateMany.mockResolvedValue({ count: 0 });
+    const res = await PUT(put({
+      package: {
+        id: 'package-1',
+        updatedAt: '2026-10-19T12:00:00.000Z',
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        customerPrice: 350,
+        rates: [],
+      },
+    }), { params: { propertyId: 'prop-1' } });
+
+    expect(res.status).toBe(409);
+    expect(mocks.rateDeleteMany).not.toHaveBeenCalled();
+    expect(mocks.rateUpdate).not.toHaveBeenCalled();
+    expect(mocks.preferenceUpsert).not.toHaveBeenCalled();
   });
 
   it('rejects a preferred method outside the allowed methods', async () => {

@@ -20,6 +20,7 @@ describe('displayProcessingAllowance', () => {
       ).toEqual({
         preferredMethod,
         estimatedAllowance: 0,
+        availability: 'zero',
         customerPriceUnchanged: true,
       });
     }
@@ -35,6 +36,22 @@ describe('displayProcessingAllowance', () => {
     ).toEqual({
       preferredMethod: 'CARD',
       estimatedAllowance: 15,
+      availability: 'estimated',
+      customerPriceUnchanged: true,
+    });
+  });
+
+  it('does not present a missing card policy as zero', () => {
+    expect(
+      displayProcessingAllowance({
+        preferredMethod: 'CARD',
+        operationalSubtotal: 350,
+        policy: null,
+      })
+    ).toEqual({
+      preferredMethod: 'CARD',
+      estimatedAllowance: null,
+      availability: 'unavailable',
       customerPriceUnchanged: true,
     });
   });
@@ -45,8 +62,8 @@ describe('displayProcessingAllowance', () => {
         preferredMethod: 'CARD',
         operationalSubtotal: 350,
         policy: { ...policy, enabled: false },
-      }).estimatedAllowance
-    ).toBe(0);
+      })
+    ).toMatchObject({ estimatedAllowance: 0, availability: 'zero' });
     expect(
       displayProcessingAllowance({
         preferredMethod: null,

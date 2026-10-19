@@ -675,6 +675,7 @@ describe('GET /api/admin/jobs/create-manual', () => {
     expect(json.processingAllowanceDisplay).toEqual({
       preferredMethod: null,
       estimatedAllowance: 0,
+      availability: 'zero',
       customerPriceUnchanged: true,
     });
     expect(mocks.jobCreate).not.toHaveBeenCalled();
@@ -724,8 +725,52 @@ describe('GET /api/admin/jobs/create-manual', () => {
     expect(json.processingAllowanceDisplay).toEqual({
       preferredMethod: 'CARD',
       estimatedAllowance: 15,
+      availability: 'estimated',
       customerPriceUnchanged: true,
     });
     expect(mocks.jobCreate).not.toHaveBeenCalled();
+  });
+
+  it('does not show a missing card policy as a zero allowance', async () => {
+    mocks.propertyFindUnique.mockResolvedValue({
+      id: TINA_PROPERTY_ID,
+      customerId: TINA_CUSTOMER_ID,
+    });
+    mocks.jobFindMany.mockResolvedValue([]);
+    mocks.preferenceFindUnique.mockResolvedValue({
+      propertyId: TINA_PROPERTY_ID,
+      allowedMethods: ['CARD'],
+      preferredMethod: 'CARD',
+    });
+    mocks.loadProcessingPolicy.mockResolvedValue(null);
+    mocks.packageFindMany.mockResolvedValue([
+      {
+        id: 'package-turnover',
+        propertyId: TINA_PROPERTY_ID,
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        customerPrice: 375,
+        operationalPrice: 350,
+        includedScope: null,
+        exclusions: null,
+        active: true,
+        Rates: [],
+      },
+    ]);
+
+    const res = await GET(
+      new NextRequest(
+        `http://localhost/api/admin/jobs/create-manual?propertyId=${TINA_PROPERTY_ID}&scheduledDate=2026-12-15&customerId=${TINA_CUSTOMER_ID}&serviceCategory=VACATION_RENTAL&serviceType=${encodeURIComponent('Vacation Rental Turnover')}`
+      )
+    );
+    const json = await res.json();
+
+    expect(json.packagePrice.customerPrice).toBe(375);
+    expect(json.processingAllowanceDisplay).toEqual({
+      preferredMethod: 'CARD',
+      estimatedAllowance: null,
+      availability: 'unavailable',
+      customerPriceUnchanged: true,
+    });
   });
 });

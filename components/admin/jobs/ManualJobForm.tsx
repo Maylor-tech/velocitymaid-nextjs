@@ -108,7 +108,8 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
   } | null>(null);
   const [allowanceDisplay, setAllowanceDisplay] = useState<{
     preferredMethod: string | null;
-    estimatedAllowance: number;
+    estimatedAllowance: number | null;
+    availability: "zero" | "estimated" | "unavailable";
   } | null>(null);
   const [form, setForm] = useState({
     clientFirstName: "",
@@ -254,10 +255,12 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
         );
         const display = data.processingAllowanceDisplay;
         setAllowanceDisplay(
-          display && Number.isFinite(Number(display.estimatedAllowance))
+          display && (display.availability === "zero" || display.availability === "estimated" || display.availability === "unavailable")
             ? {
                 preferredMethod: display.preferredMethod ?? null,
-                estimatedAllowance: Number(display.estimatedAllowance),
+                estimatedAllowance:
+                  display.estimatedAllowance == null ? null : Number(display.estimatedAllowance),
+                availability: display.availability,
               }
             : null
         );
@@ -996,9 +999,13 @@ export function ManualJobForm({ fetcher = fetch }: { fetcher?: typeof fetch }) {
                 <p className="mt-1 text-xs text-vm-muted">Use one-off price to change this visit.</p>
                 {allowanceDisplay && (
                   <p className="mt-2 font-body text-xs text-vm-muted">
-                    {allowanceDisplay.preferredMethod === "CARD"
-                      ? `Estimated card processing allowance: $${allowanceDisplay.estimatedAllowance.toFixed(2)}. The customer price stays $${packagePrice.customerPrice.toFixed(2)}.`
-                      : "Processing allowance: $0.00. Cash, check, and Zelle are not added to the customer price."}
+                    {allowanceDisplay.availability === "unavailable"
+                      ? `Card processing allowance is unavailable because the processing policy could not be loaded. The customer price stays $${packagePrice.customerPrice.toFixed(2)}.`
+                      : allowanceDisplay.availability === "estimated"
+                        ? `Estimated card processing allowance: $${Number(allowanceDisplay.estimatedAllowance).toFixed(2)}. The customer price stays $${packagePrice.customerPrice.toFixed(2)}.`
+                        : allowanceDisplay.preferredMethod === "CARD"
+                          ? `Card processing protection is off, so the allowance is $0.00. The customer price stays $${packagePrice.customerPrice.toFixed(2)}.`
+                          : "Processing allowance: $0.00. Cash, check, and Zelle are not added to the customer price."}
                   </p>
                 )}
               </div>

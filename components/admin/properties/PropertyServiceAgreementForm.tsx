@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import {
@@ -10,12 +10,34 @@ import {
 } from "@/lib/admin/manualJobCreate";
 
 type RateDraft = {
+  id: string | null;
   label: string;
   customerPrice: string;
   operationalPrice: string;
   startsOn: string;
   endsOn: string;
   active: boolean;
+};
+
+type StoredPackage = {
+  id: string;
+  updatedAt: string;
+  serviceCategory: ServiceCategory;
+  serviceType: string;
+  customerPrice: string | number;
+  operationalPrice: string | number | null;
+  includedScope: string | null;
+  exclusions: string | null;
+  active: boolean;
+  Rates: Array<{
+    id: string;
+    label: string;
+    customerPrice: string | number;
+    operationalPrice: string | number | null;
+    startsOn: string;
+    endsOn: string | null;
+    active: boolean;
+  }>;
 };
 
 type AgreementResponse = {
@@ -26,23 +48,7 @@ type AgreementResponse = {
     name: string;
     address: string;
     customerId: string;
-    ServicePackages: Array<{
-      serviceCategory: ServiceCategory;
-      serviceType: string;
-      customerPrice: string | number;
-      operationalPrice: string | number | null;
-      includedScope: string | null;
-      exclusions: string | null;
-      active: boolean;
-      Rates: Array<{
-        label: string;
-        customerPrice: string | number;
-        operationalPrice: string | number | null;
-        startsOn: string;
-        endsOn: string | null;
-        active: boolean;
-      }>;
-    }>;
+    ServicePackages: StoredPackage[];
     PaymentPreference: {
       allowedMethods: Array<"CASH" | "CHECK" | "ZELLE" | "CARD">;
       preferredMethod: "CASH" | "CHECK" | "ZELLE" | "CARD";
@@ -73,6 +79,9 @@ export function PropertyServiceAgreementForm({ propertyId }: { propertyId: strin
   const [propertyName, setPropertyName] = useState("");
   const [address, setAddress] = useState("");
   const [customerId, setCustomerId] = useState("");
+  const [packages, setPackages] = useState<StoredPackage[]>([]);
+  const [selection, setSelection] = useState("");
+  const [packageUpdatedAt, setPackageUpdatedAt] = useState<string | null>(null);
   const [category, setCategory] = useState<ServiceCategory>("VACATION_RENTAL");
   const [serviceType, setServiceType] = useState<string>(VACATION_RENTAL_SERVICE_TYPES[0]);
   const [customerPrice, setCustomerPrice] = useState("");
@@ -84,12 +93,47 @@ export function PropertyServiceAgreementForm({ propertyId }: { propertyId: strin
   const [allowed, setAllowed] = useState<string[]>([]);
   const [preferred, setPreferred] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`/api/admin/properties/${propertyId}/service-agreement`, { credentials: "include" })
+  const applyPackage = (pkg: StoredPackage | null) => {
+    if (!pkg) {
+      setSelection("new");
+      setPackageUpdatedAt(null);
+      setCategory("VACATION_RENTAL");
+      setServiceType(VACATION_RENTAL_SERVICE_TYPES[0]);
+      setCustomerPrice("");
+      setOperationalPrice("");
+      setIncludedScope("");
+      setExclusions("");
+      setActive(true);
+      setRates([]);
+      return;
+    }
+    setSelection(pkg.id);
+    setPackageUpdatedAt(pkg.updatedAt);
+    setCategory(pkg.serviceCategory);
+    setServiceType(pkg.serviceType);
+    setCustomerPrice(moneyText(pkg.customerPrice));
+    setOperationalPrice(moneyText(pkg.operationalPrice));
+    setIncludedScope(pkg.includedScope || "");
+    setExclusions(pkg.exclusions || "");
+    setActive(pkg.active);
+    setRates(
+      pkg.Rates.map((rate) => ({
+        id: rate.id,
+        label: rate.label,
+        customerPrice: moneyText(rate.customerPrice),
+        operationalPrice: moneyText(rate.operationalPrice),
+        startsOn: dayText(rate.startsOn),
+        endsOn: dayText(rate.endsOn),
+        active: rate.active,
+      }))
+    );
+  };
+
+  const load = useCallback(() => {
+    setLoading(true);
+    return fetch(`/api/admin/properties/${propertyId}/service-agreement`, { credentials: "include" })
       .then((response) => response.json())
       .then((data: AgreementResponse) => {
-        if (cancelled) return;
         if (!data.success || !data.property) {
           setError(data.error || "Could not load this property.");
           return;
@@ -97,46 +141,28 @@ export function PropertyServiceAgreementForm({ propertyId }: { propertyId: strin
         setPropertyName(data.property.name);
         setAddress(data.property.address);
         setCustomerId(data.property.customerId);
+        setPackages(data.property.ServicePackages);
         const preference = data.property.PaymentPreference;
-        if (preference) {
-          setAllowed(preference.allowedMethods);
-          setPreferred(preference.preferredMethod);
-        }
-        const first = data.property.ServicePackages[0];
-        if (first) {
-          setCategory(first.serviceCategory);
-          setServiceType(first.serviceType);
-          setCustomerPrice(moneyText(first.customerPrice));
-          setOperationalPrice(moneyText(first.operationalPrice));
-          setIncludedScope(first.includedScope || "");
-          setExclusions(first.exclusions || "");
-          setActive(first.active);
-          setRates(
-            first.Rates.map((rate) => ({
-              label: rate.label,
-              customerPrice: moneyText(rate.customerPrice),
-              operationalPrice: moneyText(rate.operationalPrice),
-              startsOn: dayText(rate.startsOn),
-              endsOn: dayText(rate.endsOn),
-              active: rate.active,
-            }))
-          );
-        }
+        setAllowed(preference?.allowedMethods ?? []);
+        setPreferred(preference?.preferredMethod ?? "");
+        setSelection("");
+        setPackageUpdatedAt(null);
       })
-      .catch(() => {
-        if (!cancelled) setError("Could not load this property.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .catch(() => setError("Could not load this property."))
+      .finally(() => setLoading(false));
   }, [propertyId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const types = category === "RESIDENTIAL" ? RESIDENTIAL_SERVICE_TYPES : VACATION_RENTAL_SERVICE_TYPES;
 
   const save = async () => {
+    if (selection !== "new" && !packages.some((pkg) => pkg.id === selection)) {
+      setError("Choose the package to edit, or start a new one.");
+      return;
+    }
     if (customerPrice.trim() === "") {
       setError("Customer price is required.");
       return;
@@ -151,6 +177,7 @@ export function PropertyServiceAgreementForm({ propertyId }: { propertyId: strin
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           package: {
+            ...(selection !== "new" ? { id: selection, updatedAt: packageUpdatedAt } : {}),
             serviceCategory: category,
             serviceType,
             customerPrice: Number(customerPrice),
@@ -159,6 +186,7 @@ export function PropertyServiceAgreementForm({ propertyId }: { propertyId: strin
             exclusions,
             active,
             rates: rates.map((rate) => ({
+              ...(rate.id ? { id: rate.id } : {}),
               label: rate.label,
               customerPrice: Number(rate.customerPrice),
               operationalPrice: rate.operationalPrice === "" ? null : Number(rate.operationalPrice),
@@ -178,6 +206,7 @@ export function PropertyServiceAgreementForm({ propertyId }: { propertyId: strin
         return;
       }
       setMessage("Service agreement saved. Existing jobs were not changed.");
+      await load();
     } catch {
       setError("Could not save the service agreement.");
     } finally {
@@ -211,6 +240,38 @@ export function PropertyServiceAgreementForm({ propertyId }: { propertyId: strin
       </p>
 
       <div className="mt-6 space-y-6 rounded-xl border border-vm-border bg-vm-white p-6">
+        <label className="block">
+          <span className={labelClass}>Package</span>
+          <select
+            className={inputClass}
+            value={selection}
+            onChange={(event) => {
+              const next = event.target.value;
+              if (next === "new") {
+                applyPackage(null);
+                return;
+              }
+              if (!next) {
+                setSelection("");
+                return;
+              }
+              const chosen = packages.find((pkg) => pkg.id === next);
+              if (chosen) applyPackage(chosen);
+            }}
+          >
+            <option value="">Choose a package…</option>
+            <option value="new">New package</option>
+            {packages.map((pkg) => (
+              <option key={pkg.id} value={pkg.id}>
+                {pkg.serviceCategory === "RESIDENTIAL" ? "Residential" : "Vacation rental"} · {pkg.serviceType}
+              </option>
+            ))}
+          </select>
+        </label>
+        {selection === "" ? (
+          <p className="font-body text-sm text-vm-muted">Choose a saved package or start a new one before editing prices.</p>
+        ) : (
+        <>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
             <span className={labelClass}>Category</span>
@@ -269,7 +330,7 @@ export function PropertyServiceAgreementForm({ propertyId }: { propertyId: strin
               onClick={() =>
                 setRates((current) => [
                   ...current,
-                  { label: "", customerPrice: "", operationalPrice: "", startsOn: "", endsOn: "", active: true },
+                  { id: null, label: "", customerPrice: "", operationalPrice: "", startsOn: "", endsOn: "", active: true },
                 ])
               }
             >
@@ -291,6 +352,8 @@ export function PropertyServiceAgreementForm({ propertyId }: { propertyId: strin
             ))}
           </div>
         </div>
+        </>
+        )}
 
         <fieldset>
           <legend className={labelClass}>Allowed payment methods</legend>
