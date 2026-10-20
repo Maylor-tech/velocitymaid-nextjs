@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { HostIntakePayload } from "@/lib/hostIntake/types";
 import {
+  PHONE_INVALID_MESSAGE,
   PHONE_REQUIRED_MESSAGE,
   validateFullHostIntake,
 } from "@/lib/hostIntake/validateFullIntake";
@@ -55,6 +56,18 @@ describe("validateFullHostIntake", () => {
     expect(errors.phone).toBe(PHONE_REQUIRED_MESSAGE);
     expect(errors.preferredPaymentMethod).toBeUndefined();
     expect(errors.willSendAccessDetails).toBeUndefined();
+  });
+
+  it("rejects junk phone numbers and accepts normal US formats", () => {
+    expect(validateFullHostIntake(validForm({ phone: "abc" })).phone).toBe(
+      PHONE_INVALID_MESSAGE
+    );
+    expect(validateFullHostIntake(validForm({ phone: "123" })).phone).toBe(
+      PHONE_INVALID_MESSAGE
+    );
+    expect(validateFullHostIntake(validForm({ phone: "(802) 555-0199" })).phone).toBeUndefined();
+    expect(validateFullHostIntake(validForm({ phone: "802-555-0199" })).phone).toBeUndefined();
+    expect(validateFullHostIntake(validForm({ phone: "+1 (802) 555-0199" })).phone).toBeUndefined();
   });
 
   it("does not require payment method, access confirmation, or later property notes", () => {

@@ -26,7 +26,7 @@ import type {
   HostSetupRequestPayload,
 } from "@/lib/hostIntake/types";
 import { buildHostIntakeDeepLink } from "@/lib/hostIntake/attribution";
-import { PHONE_REQUIRED_MESSAGE } from "@/lib/hostIntake/validateFullIntake";
+import { phoneValidationMessage } from "@/lib/hostIntake/validateFullIntake";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -54,8 +54,9 @@ function validateExistingRequiredFields(payload: HostIntakePayload): string | nu
     return "Missing required fields";
   }
 
-  if (!payload.phone) {
-    return PHONE_REQUIRED_MESSAGE;
+  const phoneError = phoneValidationMessage(payload.phone);
+  if (phoneError) {
+    return phoneError;
   }
 
   if (!isValidEmail(payload.email)) {

@@ -1,6 +1,23 @@
 import type { HostIntakePayload } from "./types";
 
 export const PHONE_REQUIRED_MESSAGE = "Phone number is required.";
+export const PHONE_INVALID_MESSAGE =
+  "Enter a valid phone number, such as (802) 555-0199.";
+
+const PHONE_CHARACTERS = /^[\d\s()+.-]+$/;
+
+/** Empty, junk, or a non-US number. Null means the phone is acceptable. */
+export function phoneValidationMessage(phone: string): string | null {
+  const trimmed = phone.trim();
+  if (!trimmed) return PHONE_REQUIRED_MESSAGE;
+  const digits = trimmed.replace(/\D/g, "");
+  const national =
+    digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
+  if (!PHONE_CHARACTERS.test(trimmed) || national.length !== 10) {
+    return PHONE_INVALID_MESSAGE;
+  }
+  return null;
+}
 
 export type FullIntakeFieldErrors = Partial<Record<keyof HostIntakePayload, string>>;
 
@@ -16,8 +33,9 @@ export function validateFullHostIntake(form: HostIntakePayload): FullIntakeField
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
     next.email = "Please enter a valid email address.";
   }
-  if (!form.phone.trim()) {
-    next.phone = PHONE_REQUIRED_MESSAGE;
+  const phoneError = phoneValidationMessage(form.phone);
+  if (phoneError) {
+    next.phone = phoneError;
   }
   if (!form.propertyAddress.trim()) {
     next.propertyAddress = "Property address is required.";

@@ -183,4 +183,20 @@ describe("POST /api/host-intake", () => {
     expect(data.error).toBe("Phone number is required.");
     expect(createDraftHostCustomer).not.toHaveBeenCalled();
   });
+
+  it("rejects junk phone numbers and accepts a formatted US number", async () => {
+    for (const phone of ["abc", "123"]) {
+      const res = await POST(req({ ...fullBody, phone }));
+      const data = await res.json();
+      expect(res.status).toBe(400);
+      expect(data.error).toBe("Enter a valid phone number, such as (802) 555-0199.");
+    }
+    expect(createDraftHostCustomer).not.toHaveBeenCalled();
+
+    const res = await POST(req({ ...fullBody, phone: "(802) 555-0199" }));
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(createDraftHostCustomer.mock.calls.at(-1)?.[0].phone).toBe("(802) 555-0199");
+  });
 });
