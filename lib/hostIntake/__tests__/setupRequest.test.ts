@@ -1,6 +1,8 @@
 /**
  * Setup-request → full intake enrichment (mocked Prisma).
  */
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { HostIntakePayload } from "@/lib/hostIntake/types";
 
@@ -195,5 +197,20 @@ describe("createSetupRequestHostCustomer", () => {
     expect(createOrUpdatePropertyFromHostIntake).toHaveBeenCalledOnce();
     const intakeCall = upsertPipelineLeadFromIntake.mock.calls[0];
     expect(intakeCall[2].attribution?.utm_source).toBe("property_card");
+  });
+});
+
+describe("Host setup request form phone validation", () => {
+  const source = readFileSync(
+    path.join(process.cwd(), "components/hosts/HostSetupRequestForm.tsx"),
+    "utf8"
+  );
+
+  it("uses the same US phone check and leaves the rest of the form in place", () => {
+    expect(source).toContain("phoneValidationMessage");
+    expect(source).not.toContain("Phone is required.");
+    expect(source).toContain("Request Property Setup");
+    expect(source).toContain("What do you need help with?");
+    expect(source).toContain("Vermont property town");
   });
 });

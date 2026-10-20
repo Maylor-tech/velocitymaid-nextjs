@@ -36,7 +36,8 @@ function validateSetupRequestFields(payload: HostIntakePayload): string | null {
   if (!payload.fullName) return "Name is required";
   if (!payload.email) return "Email is required";
   if (!isValidEmail(payload.email)) return "Invalid email address";
-  if (!payload.phone) return "Phone is required";
+  const phoneError = phoneValidationMessage(payload.phone);
+  if (phoneError) return phoneError;
   if (!payload.city) return "Vermont property town is required";
   if (!payload.serviceInterest) return "Service interest is required";
   return null;

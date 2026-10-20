@@ -14,6 +14,7 @@ import {
   writeStoredAttribution,
   type HostAttribution,
 } from "@/lib/hostIntake/attribution";
+import { phoneValidationMessage } from "@/lib/hostIntake/validateFullIntake";
 
 const SERVICE_INTEREST_OPTIONS = [
   "Vacation rental turnovers",
@@ -93,7 +94,8 @@ export function HostSetupRequestForm() {
     else if (!isValidEmail(form.email.trim())) {
       next.email = "Please enter a valid email address.";
     }
-    if (!form.phone.trim()) next.phone = "Phone is required.";
+    const phoneError = phoneValidationMessage(form.phone);
+    if (phoneError) next.phone = phoneError;
     if (!form.city.trim()) next.city = "Vermont property town is required.";
     if (!form.serviceInterest) {
       next.serviceInterest = "Please select what you need help with.";
