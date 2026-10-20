@@ -53,6 +53,27 @@ function decimal(amount: number): Prisma.Decimal {
   return new Prisma.Decimal(amount.toFixed(2));
 }
 
+const PACKAGE_IDENTITY_CONFLICT =
+  "This property already has a package for that service. Edit that package instead.";
+
+function isPackageIdentityConflict(error: unknown): boolean {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") {
+    return false;
+  }
+  const target = error.meta?.target;
+  const fields = Array.isArray(target)
+    ? target.map(String)
+    : typeof target === "string"
+      ? [target]
+      : [];
+  if (fields.includes("property_service_packages_identity_key")) return true;
+  return (
+    fields.includes("propertyId") &&
+    fields.includes("serviceCategory") &&
+    fields.includes("serviceType")
+  );
+}
+
 function sameInstant(stored: Date, submitted: string | null): boolean {
   if (!submitted) return false;
   const submittedTime = new Date(submitted).getTime();
@@ -340,6 +361,10 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     if (error instanceof ServicePackageValidationError) {
       const status = error.code === "AGREEMENT_STALE" ? 409 : 400;
       return NextResponse.json({ success: false, error: error.message }, { status });
+    }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      if (!isPackageIdentityConflict(error)) throw error;
+      return NextResponse.json({ success: false, error: PACKAGE_IDENTITY_CONFLICT }, { status: 409 });
     }
     const message = error instanceof Error ? error.message : "Failed to save the service agreement";
     const status = message.includes("Unauthorized") ? 401 : 500;

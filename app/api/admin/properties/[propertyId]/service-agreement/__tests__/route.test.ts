@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { Prisma } from '@prisma/client';
 
 const mocks = vi.hoisted(() => ({
   requireRole: vi.fn(),
@@ -257,6 +258,114 @@ describe('PUT service agreement', () => {
     expect(mocks.logAuditEntry).toHaveBeenCalledWith(expect.objectContaining({ action: 'SERVICE_PACKAGE_UPSERTED' }));
     expect(mocks.logAuditEntry).toHaveBeenCalledWith(expect.objectContaining({ action: 'SERVICE_RATE_UPSERTED' }));
     expect(mocks.logAuditEntry).toHaveBeenCalledWith(expect.objectContaining({ action: 'PAYMENT_PREFERENCE_UPDATED' }));
+  });
+
+  it('returns a plain 409 when an edit moves a package onto a service that already exists', async () => {
+    const stored = [
+      {
+        id: 'pkg-a',
+        propertyId: 'prop-1',
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        updatedAt: new Date('2026-10-19T12:00:00.000Z'),
+        customerPrice: 350,
+        Rates: [],
+      },
+      {
+        id: 'pkg-b',
+        propertyId: 'prop-1',
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Property Walkthrough',
+        updatedAt: new Date('2026-10-19T12:00:00.000Z'),
+        customerPrice: 80,
+        Rates: [],
+      },
+    ];
+    mocks.packageFindFirst.mockImplementation(async (args: { where: { id?: string; propertyId?: string } }) => {
+      return stored.find((pkg) => pkg.id === args.where.id && pkg.propertyId === args.where.propertyId) ?? null;
+    });
+    mocks.packageUpdateMany.mockImplementation(async (args: { where: { id: string }; data: { serviceType: string; serviceCategory: string } }) => {
+      const conflict = stored.some(
+        (pkg) =>
+          pkg.id !== args.where.id &&
+          pkg.serviceCategory === args.data.serviceCategory &&
+          pkg.serviceType === args.data.serviceType
+      );
+      if (conflict) {
+        throw new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+          code: 'P2002',
+          clientVersion: 'test',
+          meta: { target: ['propertyId', 'serviceCategory', 'serviceType'] },
+        });
+      }
+      return { count: 1 };
+    });
+
+    const res = await PUT(put({
+      package: {
+        id: 'pkg-b',
+        updatedAt: '2026-10-19T12:00:00.000Z',
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        customerPrice: 80,
+        rates: [],
+      },
+    }), { params: { propertyId: 'prop-1' } });
+    const json = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(json).toEqual({
+      success: false,
+      error: 'This property already has a package for that service. Edit that package instead.',
+    });
+    expect(stored.find((pkg) => pkg.id === 'pkg-b')?.serviceType).toBe('Property Walkthrough');
+    expect(mocks.rateUpdate).not.toHaveBeenCalled();
+    expect(mocks.rateCreate).not.toHaveBeenCalled();
+    expect(mocks.rateDeleteMany).not.toHaveBeenCalled();
+    expect(mocks.preferenceUpsert).not.toHaveBeenCalled();
+  });
+
+  it('returns the same 409 when creating a package hits the service unique key', async () => {
+    mocks.packageCreate.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+        meta: { target: 'property_service_packages_identity_key' },
+      })
+    );
+
+    const res = await PUT(put({
+      package: {
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        customerPrice: 100,
+        rates: [],
+      },
+    }), { params: { propertyId: 'prop-1' } });
+    const json = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(json.error).toBe('This property already has a package for that service. Edit that package instead.');
+    expect(mocks.rateCreate).not.toHaveBeenCalled();
+  });
+
+  it('does not turn a different unique-key failure into the package conflict', async () => {
+    mocks.packageCreate.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+        meta: { target: ['email'] },
+      })
+    );
+
+    await expect(PUT(put({
+      package: {
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        customerPrice: 100,
+        rates: [],
+      },
+    }), { params: { propertyId: 'prop-1' } })).rejects.toMatchObject({ code: 'P2002' });
   });
 
   it('does not reference jobs, Stripe, invoices, or guest QR', () => {
