@@ -127,6 +127,76 @@ describe("POST /api/host-intake", () => {
     expect(data.success).toBe(true);
     expect(data.mode).toBe("FULL");
     expect(createDraftHostCustomer).toHaveBeenCalledOnce();
+    const stored = createDraftHostCustomer.mock.calls[0][0];
+    expect(stored.preferredPaymentMethod).toBe("Card");
+    expect(stored.willSendAccessDetails).toBe(true);
     expect(createSetupRequestHostCustomer).not.toHaveBeenCalled();
+  });
+
+  it("accepts a shortened first-visit intake and keeps later fields when they are sent", async () => {
+    const shortened = {
+      ...fullBody,
+      willSendAccessDetails: false,
+      preferredPaymentMethod: "",
+      restrictedAreas: "",
+      supplyStorageLocation: "",
+      trashBinLocation: "",
+    };
+    const res = await POST(req(shortened));
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.success).toBe(true);
+    const stored = createDraftHostCustomer.mock.calls[0][0];
+    expect(stored.phone).toBe("2039549764");
+    expect(stored.preferredPaymentMethod).toBe("");
+    expect(stored.willSendAccessDetails).toBe(false);
+
+    vi.clearAllMocks();
+    createDraftHostCustomer.mockResolvedValue({ customer: { id: "c1" } });
+    sendHostIntakeConfirmationEmail.mockResolvedValue({ sent: true });
+    sendHostIntakeInternalNotification.mockResolvedValue({ sent: true });
+
+    const withLaterFields = await POST(
+      req({
+        ...shortened,
+        preferredPaymentMethod: "Zelle",
+        willSendAccessDetails: true,
+        restrictedAreas: "Office",
+        supplyStorageLocation: "Hall closet",
+        trashBinLocation: "Tuesday pickup",
+      })
+    );
+    expect(withLaterFields.status).toBe(200);
+    const kept = createDraftHostCustomer.mock.calls[0][0];
+    expect(kept.preferredPaymentMethod).toBe("Zelle");
+    expect(kept.willSendAccessDetails).toBe(true);
+    expect(kept.restrictedAreas).toBe("Office");
+    expect(kept.supplyStorageLocation).toBe("Hall closet");
+    expect(kept.trashBinLocation).toBe("Tuesday pickup");
+  });
+
+  it("rejects a full intake that is missing a phone number", async () => {
+    const res = await POST(req({ ...fullBody, phone: "  " }));
+    const data = await res.json();
+    expect(res.status).toBe(400);
+    expect(data.success).toBe(false);
+    expect(data.error).toBe("Phone number is required.");
+    expect(createDraftHostCustomer).not.toHaveBeenCalled();
+  });
+
+  it("rejects junk phone numbers and accepts a formatted US number", async () => {
+    for (const phone of ["abc", "123"]) {
+      const res = await POST(req({ ...fullBody, phone }));
+      const data = await res.json();
+      expect(res.status).toBe(400);
+      expect(data.error).toBe("Enter a valid phone number, such as (802) 555-0199.");
+    }
+    expect(createDraftHostCustomer).not.toHaveBeenCalled();
+
+    const res = await POST(req({ ...fullBody, phone: "(802) 555-0199" }));
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(createDraftHostCustomer.mock.calls.at(-1)?.[0].phone).toBe("(802) 555-0199");
   });
 });
