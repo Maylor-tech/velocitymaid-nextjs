@@ -120,6 +120,35 @@ describe("POST /api/host-intake", () => {
     expect(createDraftHostCustomer).not.toHaveBeenCalled();
   });
 
+  it("rejects junk setup-request phones and accepts a formatted US number", async () => {
+    const base = {
+      mode: "SETUP_REQUEST",
+      fullName: "Tiffany Mayo",
+      email: "host@example.com",
+      city: "Ludlow",
+      serviceInterest: "Vacation rental turnovers",
+    };
+    for (const phone of ["abc", "123"]) {
+      const res = await POST(req({ ...base, phone }));
+      const data = await res.json();
+      expect(res.status).toBe(400);
+      expect(data.error).toBe("Enter a valid phone number, such as (802) 555-0199.");
+    }
+    const missing = await POST(req({ ...base, phone: "  " }));
+    const missingData = await missing.json();
+    expect(missing.status).toBe(400);
+    expect(missingData.error).toBe("Phone number is required.");
+    expect(createSetupRequestHostCustomer).not.toHaveBeenCalled();
+
+    const res = await POST(req({ ...base, phone: "(802) 555-0199" }));
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(createSetupRequestHostCustomer.mock.calls.at(-1)?.[0].phone).toBe(
+      "(802) 555-0199"
+    );
+  });
+
   it("still accepts a valid full intake", async () => {
     const res = await POST(req(fullBody));
     const data = await res.json();
