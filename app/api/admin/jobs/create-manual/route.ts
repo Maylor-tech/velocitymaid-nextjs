@@ -25,7 +25,8 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { geocodeCustomerInBackground } from "@/lib/geocoding/geocodeCustomer";
 import { nextVmReference } from "@/lib/billing/numbering";
 import { awaitJobGoogleSync } from "@/lib/google/jobGoogleSync";
-import { protectOperationalPrice } from "@/lib/pricing/processingPolicy";
+import { loadProcessingPolicy, protectOperationalPrice } from "@/lib/pricing/processingPolicy";
+import { displayProcessingAllowance } from "@/lib/properties/processingAllowanceDisplay";
 import { resolveBillingPolicy } from "@/lib/billing/billingPolicy";
 import { logAuditEntry } from "@/lib/audit";
 import { parseServiceDateInput } from "@/lib/dates/serviceDate";
@@ -164,11 +165,15 @@ export async function GET(request: NextRequest) {
       operationalPrice: number | null;
       rateLabel: string;
     } | null = null;
+    let processingAllowanceDisplay: ReturnType<typeof displayProcessingAllowance> | null = null;
     if (serviceCategory && serviceType && isServiceCategory(serviceCategory)) {
-      const packageRows = await prisma.propertyServicePackage.findMany({
-        where: { propertyId: property.id },
-        include: { Rates: true },
-      });
+      const [packageRows, preferenceRow] = await Promise.all([
+        prisma.propertyServicePackage.findMany({
+          where: { propertyId: property.id },
+          include: { Rates: true },
+        }),
+        prisma.propertyPaymentPreference.findUnique({ where: { propertyId: property.id } }),
+      ]);
       const terms = resolvePropertyServiceTerms({
         propertyId: property.id,
         serviceCategory,
@@ -182,11 +187,26 @@ export async function GET(request: NextRequest) {
           operationalPrice: terms.operationalPrice,
           rateLabel: terms.rateLabel,
         };
+        const preferredMethod = preferenceRow?.preferredMethod ?? null;
+        let policy = null;
+        if (preferredMethod === "CARD") {
+          try {
+            policy = await loadProcessingPolicy();
+          } catch {
+            policy = null;
+          }
+        }
+        processingAllowanceDisplay = displayProcessingAllowance({
+          preferredMethod,
+          operationalSubtotal: terms.operationalPrice ?? terms.customerPrice,
+          policy,
+        });
       }
     }
     return NextResponse.json({
       success: true,
       packagePrice,
+      processingAllowanceDisplay,
       sameDayJobs: jobs.map((job) => ({
         id: job.id,
         jobReference: job.jobReference,

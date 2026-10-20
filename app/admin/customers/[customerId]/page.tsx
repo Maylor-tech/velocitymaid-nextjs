@@ -281,6 +281,24 @@ export default function AdminCustomerProfilePage() {
             <p className={labelClass}>Property address</p>
             <p className="font-body text-sm text-vm-text">{propertyAddress || '—'}</p>
           </div>
+          {(customer.Property ?? []).length > 0 && (
+            <div>
+              <p className={labelClass}>Service agreements</p>
+              <ul className="space-y-2">
+                {(customer.Property ?? []).map((property) => (
+                  <li key={property.id}>
+                    <Link
+                      href={`/admin/properties/${property.id}/service-agreement`}
+                      className="font-heading text-sm font-semibold text-vm-navy"
+                    >
+                      {property.name || property.address}
+                    </Link>
+                    <p className="font-body text-xs text-vm-muted">{property.address}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {customer.Branch && (
             <div>
               <p className={labelClass}>Branch</p>

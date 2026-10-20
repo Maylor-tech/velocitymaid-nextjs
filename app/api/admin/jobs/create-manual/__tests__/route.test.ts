@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   rateUpdate: vi.fn(),
   preferenceFindUnique: vi.fn(),
   protectOperationalPrice: vi.fn(),
+  loadProcessingPolicy: vi.fn(),
   nextVmReference: vi.fn(),
   awaitJobGoogleSync: vi.fn(),
   geocodeCustomerInBackground: vi.fn(),
@@ -62,6 +63,7 @@ vi.mock('@/lib/prisma', () => ({
 
 vi.mock('@/lib/pricing/processingPolicy', () => ({
   protectOperationalPrice: (...args: unknown[]) => mocks.protectOperationalPrice(...args),
+  loadProcessingPolicy: (...args: unknown[]) => mocks.loadProcessingPolicy(...args),
 }));
 
 vi.mock('@/lib/billing/numbering', () => ({
@@ -631,6 +633,7 @@ describe('GET /api/admin/jobs/create-manual', () => {
       customerId: TINA_CUSTOMER_ID,
     });
     mocks.jobFindMany.mockResolvedValue([]);
+    mocks.preferenceFindUnique.mockResolvedValue(null);
     mocks.packageFindMany.mockResolvedValue([
       {
         id: 'package-turnover',
@@ -669,6 +672,105 @@ describe('GET /api/admin/jobs/create-manual', () => {
       operationalPrice: 360,
       rateLabel: 'December',
     });
+    expect(json.processingAllowanceDisplay).toEqual({
+      preferredMethod: null,
+      estimatedAllowance: 0,
+      availability: 'zero',
+      customerPriceUnchanged: true,
+    });
     expect(mocks.jobCreate).not.toHaveBeenCalled();
+  });
+
+  it('shows a card allowance without changing the package customer price', async () => {
+    mocks.propertyFindUnique.mockResolvedValue({
+      id: TINA_PROPERTY_ID,
+      customerId: TINA_CUSTOMER_ID,
+    });
+    mocks.jobFindMany.mockResolvedValue([]);
+    mocks.preferenceFindUnique.mockResolvedValue({
+      propertyId: TINA_PROPERTY_ID,
+      allowedMethods: ['CARD'],
+      preferredMethod: 'CARD',
+    });
+    mocks.loadProcessingPolicy.mockResolvedValue({
+      enabled: true,
+      percentageRate: 0.0349,
+      fixedFee: 0.49,
+      roundingIncrement: 5,
+      policyVersion: 'pp-v1',
+    });
+    mocks.packageFindMany.mockResolvedValue([
+      {
+        id: 'package-turnover',
+        propertyId: TINA_PROPERTY_ID,
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        customerPrice: 375,
+        operationalPrice: 350,
+        includedScope: null,
+        exclusions: null,
+        active: true,
+        Rates: [],
+      },
+    ]);
+
+    const res = await GET(
+      new NextRequest(
+        `http://localhost/api/admin/jobs/create-manual?propertyId=${TINA_PROPERTY_ID}&scheduledDate=2026-12-15&customerId=${TINA_CUSTOMER_ID}&serviceCategory=VACATION_RENTAL&serviceType=${encodeURIComponent('Vacation Rental Turnover')}`
+      )
+    );
+    const json = await res.json();
+
+    expect(json.packagePrice.customerPrice).toBe(375);
+    expect(json.processingAllowanceDisplay).toEqual({
+      preferredMethod: 'CARD',
+      estimatedAllowance: 15,
+      availability: 'estimated',
+      customerPriceUnchanged: true,
+    });
+    expect(mocks.jobCreate).not.toHaveBeenCalled();
+  });
+
+  it('does not show a missing card policy as a zero allowance', async () => {
+    mocks.propertyFindUnique.mockResolvedValue({
+      id: TINA_PROPERTY_ID,
+      customerId: TINA_CUSTOMER_ID,
+    });
+    mocks.jobFindMany.mockResolvedValue([]);
+    mocks.preferenceFindUnique.mockResolvedValue({
+      propertyId: TINA_PROPERTY_ID,
+      allowedMethods: ['CARD'],
+      preferredMethod: 'CARD',
+    });
+    mocks.loadProcessingPolicy.mockResolvedValue(null);
+    mocks.packageFindMany.mockResolvedValue([
+      {
+        id: 'package-turnover',
+        propertyId: TINA_PROPERTY_ID,
+        serviceCategory: 'VACATION_RENTAL',
+        serviceType: 'Vacation Rental Turnover',
+        customerPrice: 375,
+        operationalPrice: 350,
+        includedScope: null,
+        exclusions: null,
+        active: true,
+        Rates: [],
+      },
+    ]);
+
+    const res = await GET(
+      new NextRequest(
+        `http://localhost/api/admin/jobs/create-manual?propertyId=${TINA_PROPERTY_ID}&scheduledDate=2026-12-15&customerId=${TINA_CUSTOMER_ID}&serviceCategory=VACATION_RENTAL&serviceType=${encodeURIComponent('Vacation Rental Turnover')}`
+      )
+    );
+    const json = await res.json();
+
+    expect(json.packagePrice.customerPrice).toBe(375);
+    expect(json.processingAllowanceDisplay).toEqual({
+      preferredMethod: 'CARD',
+      estimatedAllowance: null,
+      availability: 'unavailable',
+      customerPriceUnchanged: true,
+    });
   });
 });
