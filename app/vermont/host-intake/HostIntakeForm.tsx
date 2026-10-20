@@ -10,13 +10,13 @@ import {
   GUEST_CHECKIN_OPTIONS,
   GUEST_CHECKOUT_OPTIONS,
   LINEN_PROVIDER_OPTIONS,
-  PAYMENT_METHOD_OPTIONS,
   PROPERTY_ACTIVE_SEASON_OPTIONS,
   PROPERTY_AMENITY_OPTIONS,
   SAME_DAY_TURNOVER_OPTIONS,
   SQUARE_FOOTAGE_OPTIONS,
 } from "@/lib/hostIntake/constants";
 import type { HostIntakePayload } from "@/lib/hostIntake/types";
+import { validateFullHostIntake } from "@/lib/hostIntake/validateFullIntake";
 import {
   attributionAnalyticsParams,
   hasAttribution,
@@ -110,10 +110,6 @@ const inputClassName =
 
 const labelClassName = "font-body text-sm font-medium text-vm-text";
 
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return <p className="text-red-500 text-xs mt-1">{message}</p>;
@@ -176,53 +172,7 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
   }
 
   function validate(): FormErrors {
-    const next: FormErrors = {};
-    if (!form.propertyAddress.trim()) {
-      next.propertyAddress = "Property address is required.";
-    }
-    if (!form.city.trim()) {
-      next.city = "City / town is required.";
-    }
-    if (!form.bedrooms) {
-      next.bedrooms = "Please select the number of bedrooms.";
-    }
-    if (!form.bathrooms) {
-      next.bathrooms = "Please select the number of bathrooms.";
-    }
-    if (!form.fullName.trim()) {
-      next.fullName = "Full name is required.";
-    }
-    if (!form.email.trim()) {
-      next.email = "Email address is required.";
-    } else if (!isValidEmail(form.email.trim())) {
-      next.email = "Please enter a valid email address.";
-    }
-    if (!form.accessType) {
-      next.accessType = "Please select an access type.";
-    } else if (
-      form.accessType === "Other (please describe)" &&
-      !form.accessTypeOther.trim()
-    ) {
-      next.accessTypeOther = "Please describe your access type.";
-    }
-    if (!form.willSendAccessDetails) {
-      next.willSendAccessDetails =
-        "Please confirm you will send access details before the first service.";
-    }
-    if (!form.linenProvider) {
-      next.linenProvider = "Please select who provides linens and towels.";
-    }
-    if (!form.sameDayTurnovers) {
-      next.sameDayTurnovers = "Please select a same-day turnover preference.";
-    }
-    if (form.propertyActiveSeasons.length === 0) {
-      next.propertyActiveSeasons =
-        "Please select when your property is most active.";
-    }
-    if (!form.preferredPaymentMethod) {
-      next.preferredPaymentMethod = "Please select a preferred payment method.";
-    }
-    return next;
+    return validateFullHostIntake(form);
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -249,7 +199,12 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Submission failed");
+        setSubmitError(
+          typeof data.error === "string" && data.error
+            ? data.error
+            : "Something went wrong — please email us at hello@velocitymaid.com"
+        );
+        return;
       }
 
       const name = form.fullName.trim().split(/\s+/)[0] || "there";
@@ -293,10 +248,29 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
             <h1 className="font-heading font-semibold text-vm-navy text-2xl mb-4">
               You&apos;re all set, {firstName}!
             </h1>
-            <p className="font-body text-vm-muted text-sm leading-relaxed mb-8">
-              We&apos;ve received your details and sent a welcome summary to your email.
-              We&apos;ll follow up to confirm your quote and next steps.
+            <p className="font-body text-vm-muted text-sm leading-relaxed mb-4">
+              We&apos;ve received your property details. Next, we&apos;ll review them
+              and reply with your turnover quote within one business day. No card needed.
             </p>
+            <p className="font-body text-sm text-vm-text mb-4">
+              Prefer to talk it through now? Call or message us.
+            </p>
+            <div className="flex flex-col items-center justify-center gap-3 mb-8">
+              <a
+                href="tel:+18027335348"
+                className="inline-flex items-center justify-center border border-vm-border text-vm-navy font-heading font-semibold rounded-lg px-6 py-3 text-sm hover:bg-vm-surface transition w-full sm:w-auto"
+              >
+                Call (802) 733-5348
+              </a>
+              <a
+                href="https://wa.me/18027335348"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center border border-vm-border text-vm-navy font-heading font-semibold rounded-lg px-6 py-3 text-sm hover:bg-vm-surface transition w-full sm:w-auto"
+              >
+                WhatsApp
+              </a>
+            </div>
             <Link
               href="/vermont"
               className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-6 py-3 text-sm hover:bg-vm-cyan-dark transition"
@@ -365,7 +339,105 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
           noValidate
           className="max-w-[560px] mx-auto bg-white border border-vm-border rounded-xl p-6 sm:p-8 space-y-10"
         >
-          {/* Section 1 */}
+          <fieldset className="space-y-4">
+            <legend className="font-heading font-semibold text-vm-navy text-lg mb-2">
+              Your contact info
+            </legend>
+
+            <div>
+              <label htmlFor="fullName" className={labelClassName}>
+                Full name <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="fullName"
+                type="text"
+                required
+                value={form.fullName}
+                onChange={(e) => updateField("fullName", e.target.value)}
+                className={`${inputClassName} mt-1`}
+                autoComplete="name"
+              />
+              <FieldError message={errors.fullName} />
+            </div>
+
+            <div>
+              <label htmlFor="email" className={labelClassName}>
+                Email address <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={form.email}
+                onChange={(e) => updateField("email", e.target.value)}
+                className={`${inputClassName} mt-1`}
+                autoComplete="email"
+              />
+              <FieldError message={errors.email} />
+            </div>
+
+            <div>
+              <label htmlFor="phone" className={labelClassName}>
+                Phone number <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                required
+                value={form.phone}
+                onChange={(e) => updateField("phone", e.target.value)}
+                className={`${inputClassName} mt-1`}
+                autoComplete="tel"
+              />
+              <FieldError message={errors.phone} />
+            </div>
+
+            <div>
+              <p className={labelClassName}>Preferred contact method</p>
+              <div className="mt-2 flex flex-wrap gap-4">
+                {CONTACT_METHODS.map((method) => (
+                  <label
+                    key={method}
+                    className="flex items-center gap-2 font-body text-sm text-vm-text cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name="preferredContact"
+                      value={method}
+                      checked={form.preferredContact === method}
+                      onChange={(e) =>
+                        updateField("preferredContact", e.target.value)
+                      }
+                      className="border-vm-border text-vm-cyan focus:ring-vm-cyan"
+                    />
+                    {method}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="bestTimeToReach" className={labelClassName}>
+                Best time to reach you
+              </label>
+              <select
+                id="bestTimeToReach"
+                value={form.bestTimeToReach}
+                onChange={(e) =>
+                  updateField("bestTimeToReach", e.target.value)
+                }
+                className={`${inputClassName} mt-1`}
+              >
+                <option value="">Select…</option>
+                {BEST_TIME_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </fieldset>
+
           <fieldset className="space-y-4">
             <legend className="font-heading font-semibold text-vm-navy text-lg mb-2">
               Your property
@@ -511,24 +583,6 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
             </div>
 
             <div>
-              <label htmlFor="restrictedAreas" className={labelClassName}>
-                Restricted areas{" "}
-                <span className="text-vm-muted font-normal">(optional)</span>
-              </label>
-              <input
-                id="restrictedAreas"
-                type="text"
-                value={form.restrictedAreas}
-                onChange={(e) => updateField("restrictedAreas", e.target.value)}
-                placeholder="e.g. Office, basement storage room"
-                className={`${inputClassName} mt-1`}
-              />
-              <FieldHelper>
-                Areas cleaners should not enter without specific instruction
-              </FieldHelper>
-            </div>
-
-            <div>
               <p className={labelClassName}>Booking platform(s)</p>
               <div className="mt-2 space-y-2">
                 {BOOKING_PLATFORMS.map((platform) => (
@@ -599,29 +653,6 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
                 <FieldError message={errors.accessTypeOther} />
               </div>
             )}
-
-            <div>
-              <label className="flex items-start gap-2 font-body text-sm text-vm-text cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.willSendAccessDetails}
-                  onChange={(e) =>
-                    updateField("willSendAccessDetails", e.target.checked)
-                  }
-                  className="mt-0.5 rounded border-vm-border text-vm-cyan focus:ring-vm-cyan"
-                />
-                <span>
-                  I will send the access code or key instructions to
-                  VelocityMaid before the first service{" "}
-                  <span className="text-red-500">*</span>
-                </span>
-              </label>
-              <FieldHelper>
-                Send to hello@velocitymaid.com or through your client portal
-                after onboarding
-              </FieldHelper>
-              <FieldError message={errors.willSendAccessDetails} />
-            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -705,38 +736,6 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
                 />
               </div>
             )}
-
-            <div>
-              <label htmlFor="supplyStorageLocation" className={labelClassName}>
-                Supply storage location{" "}
-                <span className="text-vm-muted font-normal">(optional)</span>
-              </label>
-              <input
-                id="supplyStorageLocation"
-                type="text"
-                value={form.supplyStorageLocation}
-                onChange={(e) =>
-                  updateField("supplyStorageLocation", e.target.value)
-                }
-                placeholder="e.g. Locked cabinet in main bathroom, linen closet second floor"
-                className={`${inputClassName} mt-1`}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="trashBinLocation" className={labelClassName}>
-                Trash bin location and pickup day{" "}
-                <span className="text-vm-muted font-normal">(optional)</span>
-              </label>
-              <input
-                id="trashBinLocation"
-                type="text"
-                value={form.trashBinLocation}
-                onChange={(e) => updateField("trashBinLocation", e.target.value)}
-                placeholder="e.g. Bins behind garage, pickup Tuesday mornings"
-                className={`${inputClassName} mt-1`}
-              />
-            </div>
           </fieldset>
 
           {/* Section 2 */}
@@ -922,34 +921,6 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
                 </div>
                 <FieldError message={errors.propertyActiveSeasons} />
               </div>
-
-              <div>
-                <p className={labelClassName}>
-                  Preferred payment method{" "}
-                  <span className="text-red-500">*</span>
-                </p>
-                <div className="mt-2 space-y-2">
-                  {PAYMENT_METHOD_OPTIONS.map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-start gap-2 font-body text-sm text-vm-text cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name="preferredPaymentMethod"
-                        value={option}
-                        checked={form.preferredPaymentMethod === option}
-                        onChange={(e) =>
-                          updateField("preferredPaymentMethod", e.target.value)
-                        }
-                        className="mt-0.5 border-vm-border text-vm-cyan focus:ring-vm-cyan"
-                      />
-                      {option}
-                    </label>
-                  ))}
-                </div>
-                <FieldError message={errors.preferredPaymentMethod} />
-              </div>
             </fieldset>
 
             <div>
@@ -970,113 +941,17 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
             </div>
           </fieldset>
 
-          {/* Section 3 */}
-          <fieldset className="space-y-4">
-            <legend className="font-heading font-semibold text-vm-navy text-lg mb-2">
-              Your contact info
-            </legend>
-
-            <div>
-              <label htmlFor="fullName" className={labelClassName}>
-                Full name <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="fullName"
-                type="text"
-                required
-                value={form.fullName}
-                onChange={(e) => updateField("fullName", e.target.value)}
-                className={`${inputClassName} mt-1`}
-                autoComplete="name"
-              />
-              <FieldError message={errors.fullName} />
-            </div>
-
-            <div>
-              <label htmlFor="email" className={labelClassName}>
-                Email address <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={form.email}
-                onChange={(e) => updateField("email", e.target.value)}
-                className={`${inputClassName} mt-1`}
-                autoComplete="email"
-              />
-              <FieldError message={errors.email} />
-            </div>
-
-            <div>
-              <label htmlFor="phone" className={labelClassName}>
-                Phone number{" "}
-                <span className="text-vm-muted font-normal">(optional)</span>
-              </label>
-              <input
-                id="phone"
-                type="tel"
-                value={form.phone}
-                onChange={(e) => updateField("phone", e.target.value)}
-                className={`${inputClassName} mt-1`}
-                autoComplete="tel"
-              />
-            </div>
-
-            <div>
-              <p className={labelClassName}>Preferred contact method</p>
-              <div className="mt-2 flex flex-wrap gap-4">
-                {CONTACT_METHODS.map((method) => (
-                  <label
-                    key={method}
-                    className="flex items-center gap-2 font-body text-sm text-vm-text cursor-pointer"
-                  >
-                    <input
-                      type="radio"
-                      name="preferredContact"
-                      value={method}
-                      checked={form.preferredContact === method}
-                      onChange={(e) =>
-                        updateField("preferredContact", e.target.value)
-                      }
-                      className="border-vm-border text-vm-cyan focus:ring-vm-cyan"
-                    />
-                    {method}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="bestTimeToReach" className={labelClassName}>
-                Best time to reach you
-              </label>
-              <select
-                id="bestTimeToReach"
-                value={form.bestTimeToReach}
-                onChange={(e) =>
-                  updateField("bestTimeToReach", e.target.value)
-                }
-                className={`${inputClassName} mt-1`}
-              >
-                <option value="">Select…</option>
-                {BEST_TIME_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </fieldset>
-
           <div>
             <button
               type="submit"
               disabled={submitting}
               className="bg-vm-cyan text-vm-navy font-heading font-semibold w-full py-3 rounded-lg hover:bg-vm-cyan-dark transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {submitting ? "Sending…" : "HOST INTAKE"}
+              {submitting ? "Sending…" : "Request My Turnover Quote"}
             </button>
+            <p className="font-body text-xs text-vm-muted text-center mt-3">
+              No card needed. We&apos;ll reply within one business day.
+            </p>
             {submitError && (
               <p className="text-red-500 text-xs mt-3 text-center">
                 {submitError}

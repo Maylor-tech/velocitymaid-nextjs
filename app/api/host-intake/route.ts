@@ -26,6 +26,7 @@ import type {
   HostSetupRequestPayload,
 } from "@/lib/hostIntake/types";
 import { buildHostIntakeDeepLink } from "@/lib/hostIntake/attribution";
+import { PHONE_REQUIRED_MESSAGE } from "@/lib/hostIntake/validateFullIntake";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -53,6 +54,10 @@ function validateExistingRequiredFields(payload: HostIntakePayload): string | nu
     return "Missing required fields";
   }
 
+  if (!payload.phone) {
+    return PHONE_REQUIRED_MESSAGE;
+  }
+
   if (!isValidEmail(payload.email)) {
     return "Invalid email address";
   }
@@ -72,10 +77,6 @@ function validateNewRequiredFields(payload: HostIntakePayload): string | null {
     return "Please describe your access type";
   }
 
-  if (!payload.willSendAccessDetails) {
-    return "Please confirm you will send access details before the first service";
-  }
-
   if (!payload.linenProvider) {
     return "Please select who provides linens and towels";
   }
@@ -86,10 +87,6 @@ function validateNewRequiredFields(payload: HostIntakePayload): string | null {
 
   if (payload.propertyActiveSeasons.length === 0) {
     return "Please select when your property is most active";
-  }
-
-  if (!payload.preferredPaymentMethod) {
-    return "Please select a preferred payment method";
   }
 
   return null;
