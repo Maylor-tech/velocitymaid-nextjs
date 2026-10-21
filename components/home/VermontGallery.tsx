@@ -152,10 +152,10 @@ export default function VermontGallery({
             ))}
           </div>
           <Link
-            href="/estimate"
+            href="/vermont/host-intake"
             className="bg-vm-cyan text-vm-navy font-heading font-semibold text-sm px-5 py-2.5 rounded-lg hover:bg-vm-cyan-dark transition-colors flex-shrink-0"
           >
-            Get a Fast Estimate →
+            Get a Turnover Quote →
           </Link>
         </div>
       </div>

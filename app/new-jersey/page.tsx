@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   ...pageSocialMetadata({
     title,
     description:
-      "Recurring residential cleaning across Elaine's New Jersey territory. Deep cleans and move-in/move-out available. Request a quote.",
+      "Recurring residential cleaning across our Essex County service area. Deep cleans and move-in/move-out available. Request a quote.",
     path: "/new-jersey",
     image: "default",
   }),

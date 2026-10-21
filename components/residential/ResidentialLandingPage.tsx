@@ -2,12 +2,14 @@
 
 import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, Home, ShieldCheck, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Home, ShieldCheck } from "lucide-react";
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 import { ResidentialIntakeForm } from "@/components/residential/ResidentialIntakeForm";
 import { VERMONT_SUPPORT } from "@/lib/customer/marketSupport";
+import { VERMONT_HOST_INTAKE_PATH } from "@/lib/marketing/publicCtas";
 import {
   mergeAttributionFirstTouch,
   parseAttributionFromSearchParams,
@@ -54,17 +56,19 @@ export function ResidentialLandingPage() {
           <p className="mx-auto mt-4 max-w-2xl font-body text-sm leading-relaxed text-white/75 sm:text-base">
             One-time, recurring, deep, and move-in/move-out cleaning. Tell us
             about the home and we will confirm scope and pricing before work
-            begins. Vacation rental hosts should use Hosts, not this form.
+            begins.{" "}
+            <Link href={VERMONT_HOST_INTAKE_PATH} className="text-vm-cyan underline-offset-2 hover:underline">
+              Hosting guests? Get a turnover quote →
+            </Link>
           </p>
         </div>
       </section>
 
       <section className="px-4 py-10 sm:px-6">
-        <div className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-3">
+        <div className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-2">
           {[
-            { icon: Home, title: "Homes, not listings", text: "No Airbnb or guest-turnover questions." },
-            { icon: ShieldCheck, title: "Assessed, then quoted", text: "Unusual conditions are reviewed before extra labor is approved." },
-            { icon: Sparkles, title: "Invoice after approval", text: "Approved clients use the existing VelocityMaid portal — not prepaid booking." },
+            { icon: Home, title: "Built for homes", text: "A short form about your house, not a rental." },
+            { icon: ShieldCheck, title: "Pay after the clean", text: "No payment upfront. Pay by card or Zelle after your visit." },
           ].map((item) => (
             <article key={item.title} className="rounded-xl border border-vm-border bg-white p-5">
               <item.icon className="h-5 w-5 text-vm-cyan-dark" />
@@ -83,24 +87,11 @@ export function ResidentialLandingPage() {
             Request a residential estimate
           </h2>
           <p className="mt-2 font-body text-sm text-vm-muted">
-            Mobile-friendly. We use this to understand the home — not to charge
-            a card or create a scheduled job.
+            Tell us about your home. No card needed.
           </p>
-          <ul className="my-5 space-y-2 font-body text-sm text-vm-text">
-            {[
-              "Standard, recurring, deep, or move-in/out",
-              "Condition notes help us plan labor honestly",
-              "A small one-bedroom can still need five or more hours when condition is severe",
-            ].map((item) => (
-              <li key={item} className="flex gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-vm-cyan-dark" />
-                {item}
-              </li>
-            ))}
-          </ul>
           <ResidentialIntakeForm />
           <p className="mt-6 text-center font-body text-xs text-vm-muted">
-            Questions? Call Vermont support at {VERMONT_SUPPORT.phoneDisplay}.
+            Questions? Call or text {VERMONT_SUPPORT.phoneDisplay}.
           </p>
         </div>
       </section>

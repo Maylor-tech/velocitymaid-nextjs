@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from 'react';
-import { Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import SiteHeader from '@/components/layout/SiteHeader';
+import Footer from '@/components/Footer';
 import {
   NJ_FREQUENCY_OPTIONS,
   NJ_LEAD_SOURCES,
@@ -72,13 +74,12 @@ export default function LeadCapturePage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0A3D2F] to-[#083025] text-white flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white text-[#0A3D2F] rounded-2xl shadow-2xl p-8 text-center">
+      <div className="min-h-screen bg-vm-surface text-vm-navy">
+        <SiteHeader />
+        <div className="flex items-center justify-center px-4 py-16">
+        <div className="max-w-md w-full bg-white text-vm-navy rounded-2xl shadow-2xl p-8 text-center">
           <CheckCircle2 className="w-16 h-16 text-vm-success mx-auto mb-4" />
-          <h2
-            className="text-2xl font-bold mb-4"
-            style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}
-          >
+          <h2 className="font-heading text-2xl font-bold mb-4">
             Thank You!
           </h2>
           <p className="text-vm-text mb-6">
@@ -87,38 +88,25 @@ export default function LeadCapturePage() {
           </p>
           <Link
             href="/new-jersey"
-            className="inline-block bg-[#0A3D2F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#083025] transition"
+            className="inline-block bg-vm-navy text-white px-6 py-3 rounded-lg font-semibold hover:bg-vm-navy transition"
           >
             Back to New Jersey
           </Link>
         </div>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0A3D2F] to-[#083025]">
-      <header className="bg-white/10 backdrop-blur-sm border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/" className="flex items-center space-x-2">
-            <Sparkles className="w-8 h-8 text-[#F8C548]" />
-            <span
-              className="text-2xl font-bold text-white"
-              style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}
-            >
-              VelocityMaid
-            </span>
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-vm-surface">
+      <SiteHeader />
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
-          <h1
-            className="text-4xl font-bold text-[#0A3D2F] mb-2 text-center"
-            style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}
-          >
-            Get Your Free Quote
+          <h1 className="font-heading text-4xl font-bold text-vm-navy mb-2 text-center">
+            Get a Free Quote
           </h1>
           <p className="text-vm-muted text-center mb-2">
             Recurring residential cleaning first — then deep cleans and
@@ -129,16 +117,16 @@ export default function LeadCapturePage() {
           </p>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
-              <p className="text-red-600">{error}</p>
+            <div className="bg-vm-surface border border-vm-danger rounded-lg p-4 mb-6 flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-vm-danger mt-0.5" />
+              <p className="text-vm-danger">{error}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="name" className="block text-sm font-semibold text-vm-navy mb-2">
                   Full Name *
                 </label>
                 <input
@@ -147,11 +135,11 @@ export default function LeadCapturePage() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 />
               </div>
               <div>
-                <label htmlFor="phone" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="phone" className="block text-sm font-semibold text-vm-navy mb-2">
                   Phone Number *
                 </label>
                 <input
@@ -160,11 +148,11 @@ export default function LeadCapturePage() {
                   required
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="email" className="block text-sm font-semibold text-vm-navy mb-2">
                   Email Address *
                 </label>
                 <input
@@ -173,11 +161,11 @@ export default function LeadCapturePage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 />
               </div>
               <div>
-                <label htmlFor="referralSource" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="referralSource" className="block text-sm font-semibold text-vm-navy mb-2">
                   How did you hear about us? *
                 </label>
                 <select
@@ -187,7 +175,7 @@ export default function LeadCapturePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, referralSource: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 >
                   <option value="">Select</option>
                   {NJ_LEAD_SOURCES.map((s) => (
@@ -198,7 +186,7 @@ export default function LeadCapturePage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="city" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="city" className="block text-sm font-semibold text-vm-navy mb-2">
                   City / town *
                 </label>
                 <select
@@ -206,7 +194,7 @@ export default function LeadCapturePage() {
                   required
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 >
                   <option value="">Select</option>
                   {NJ_SERVICE_CITIES.map((c) => (
@@ -217,7 +205,7 @@ export default function LeadCapturePage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="zip" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="zip" className="block text-sm font-semibold text-vm-navy mb-2">
                   ZIP Code *
                 </label>
                 <input
@@ -226,14 +214,14 @@ export default function LeadCapturePage() {
                   required
                   value={formData.zip}
                   onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                   maxLength={5}
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="addressLine" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+              <label htmlFor="addressLine" className="block text-sm font-semibold text-vm-navy mb-2">
                 Property address *
               </label>
               <input
@@ -244,14 +232,14 @@ export default function LeadCapturePage() {
                 onChange={(e) =>
                   setFormData({ ...formData, addressLine: e.target.value })
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 placeholder="Street address, unit if applicable"
               />
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="serviceType" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="serviceType" className="block text-sm font-semibold text-vm-navy mb-2">
                   Service type *
                 </label>
                 <select
@@ -261,7 +249,7 @@ export default function LeadCapturePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, serviceType: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 >
                   {NJ_SERVICE_TYPE_OPTIONS.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -271,7 +259,7 @@ export default function LeadCapturePage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="frequency" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="frequency" className="block text-sm font-semibold text-vm-navy mb-2">
                   Frequency *
                 </label>
                 <select
@@ -281,7 +269,7 @@ export default function LeadCapturePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, frequency: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 >
                   {NJ_FREQUENCY_OPTIONS.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -291,7 +279,7 @@ export default function LeadCapturePage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="preferredDate" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="preferredDate" className="block text-sm font-semibold text-vm-navy mb-2">
                   Preferred date *
                 </label>
                 <input
@@ -302,11 +290,11 @@ export default function LeadCapturePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, preferredDate: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 />
               </div>
               <div>
-                <label htmlFor="urgency" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="urgency" className="block text-sm font-semibold text-vm-navy mb-2">
                   Timing preference *
                 </label>
                 <select
@@ -316,7 +304,7 @@ export default function LeadCapturePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, urgency: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 >
                   <option value="asap">As soon as possible</option>
                   <option value="this_week">This week</option>
@@ -325,7 +313,7 @@ export default function LeadCapturePage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="bedrooms" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="bedrooms" className="block text-sm font-semibold text-vm-navy mb-2">
                   Bedrooms *
                 </label>
                 <select
@@ -335,7 +323,7 @@ export default function LeadCapturePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, bedrooms: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 >
                   <option value="">Select</option>
                   <option value="1">1</option>
@@ -346,7 +334,7 @@ export default function LeadCapturePage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="bathrooms" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="bathrooms" className="block text-sm font-semibold text-vm-navy mb-2">
                   Bathrooms *
                 </label>
                 <select
@@ -356,7 +344,7 @@ export default function LeadCapturePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, bathrooms: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 >
                   <option value="">Select</option>
                   <option value="1">1</option>
@@ -366,7 +354,7 @@ export default function LeadCapturePage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="homeType" className="block text-sm font-semibold text-[#0A3D2F] mb-2">
+                <label htmlFor="homeType" className="block text-sm font-semibold text-vm-navy mb-2">
                   Home type *
                 </label>
                 <select
@@ -376,7 +364,7 @@ export default function LeadCapturePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, homeType: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C548] outline-none"
+                  className="w-full px-4 py-3 border border-vm-border rounded-lg focus:ring-2 focus:ring-vm-cyan outline-none"
                 >
                   <option value="">Select</option>
                   <option value="apartment">Apartment</option>
@@ -388,7 +376,7 @@ export default function LeadCapturePage() {
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-[#0A3D2F]">
+            <label className="flex items-center gap-2 text-sm text-vm-navy">
               <input
                 type="checkbox"
                 checked={formData.pets}
@@ -398,7 +386,7 @@ export default function LeadCapturePage() {
               />
               Pets in the home
             </label>
-            <label className="flex items-center gap-2 text-sm text-[#0A3D2F]">
+            <label className="flex items-center gap-2 text-sm text-vm-navy">
               <input
                 type="checkbox"
                 checked={formData.previousService}
@@ -412,13 +400,14 @@ export default function LeadCapturePage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#0A3D2F] text-white py-4 rounded-lg font-semibold hover:bg-[#083025] transition disabled:opacity-60"
+              className="w-full bg-vm-navy text-white py-4 rounded-lg font-semibold hover:bg-vm-navy transition disabled:opacity-60"
             >
-              {isSubmitting ? 'Submitting…' : 'Request my quote'}
+              {isSubmitting ? 'Submitting…' : 'Get a Free Quote'}
             </button>
           </form>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

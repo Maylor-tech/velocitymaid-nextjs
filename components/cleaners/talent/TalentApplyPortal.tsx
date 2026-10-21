@@ -467,7 +467,7 @@ export default function TalentApplyPortal() {
         </form>
 
         <p className="py-8 text-center font-body text-xs text-vm-muted">
-          VelocityMaid · Certified Cleaning Professionals · Vermont &amp; New Jersey
+          VelocityMaid · Certified Cleaning Professionals · Vermont and New Jersey
         </p>
       </div>
     </div>

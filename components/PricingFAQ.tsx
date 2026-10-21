@@ -5,15 +5,15 @@ const items = [
   },
   {
     q: "How do Vermont and New Jersey pricing differ?",
-    a: "Vermont service focuses on vacation-rental turnovers and property readiness, typically starting from $225. New Jersey service focuses on recurring residential cleaning (primary), deep cleaning, and move-in/move-out across Elaine's Essex County territory — pricing is confirmed after a quote review, not published as a starting rate.",
+    a: "Vermont service focuses on vacation-rental turnovers and property readiness, typically starting from $225. New Jersey service focuses on recurring residential cleaning (primary), deep cleaning, and move-in/move-out across our Essex County service area — pricing is confirmed after a quote review, not published as a starting rate.",
   },
   {
     q: "How do I get a Vermont quote?",
-    a: "Get a Fast Estimate, request a walkthrough, call or text (802) 733-5348, email hello@velocitymaid.com, or complete the Vermont host intake form so we can review your property details.",
+    a: "Get a turnover quote at the Vermont host form. Call or text (802) 733-5348, or email hello@velocitymaid.com.",
   },
   {
-    q: "Can I book New Jersey cleaning online?",
-    a: "Yes. New Jersey residential cleaning can be booked online. Scope and final price are confirmed for your home before service.",
+    q: "Can I request a New Jersey quote online?",
+    a: "Yes. Request a quote online in minutes. Scope and final price are confirmed for your home before service.",
   },
   {
     q: "What affects the final price?",

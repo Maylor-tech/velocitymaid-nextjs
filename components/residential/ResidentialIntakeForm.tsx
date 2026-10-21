@@ -215,11 +215,6 @@ export function ResidentialIntakeForm() {
           </select>
         </label>
       </div>
-      <p className="font-body text-xs text-vm-muted">
-        Recurring preference is noted for planning. Each visit is scheduled as
-        its own service — we do not auto-create a repeating series.
-      </p>
-
       <label className={labelClass}>
         Preferred service date
         <input type="date" className={inputClass} required value={form.preferredServiceDate} onChange={(e) => set("preferredServiceDate", e.target.value)} />

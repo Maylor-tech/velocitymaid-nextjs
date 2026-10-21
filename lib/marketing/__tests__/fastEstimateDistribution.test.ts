@@ -2,8 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  FAST_ESTIMATE_CTA_LABEL,
+  AREA_CHECK_LABEL,
   FAST_ESTIMATE_PATH,
+  HEADER_QUOTE_LABEL,
+  NJ_FREE_QUOTE_LABEL,
+  VERMONT_HOST_INTAKE_PATH,
+  VERMONT_TURNOVER_QUOTE_LABEL,
 } from "@/lib/marketing/publicCtas";
 import { NJ_LEAD_PATH } from "@/lib/markets/newJersey";
 
@@ -13,9 +17,7 @@ function readRepoFile(relativePath: string): string {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
-const CONVERSION_SURFACES = [
-  "components/layout/SiteHeader.tsx",
-  "components/Footer.tsx",
+const VERMONT_SURFACES = [
   "components/marketing/HomepageMarketing.tsx",
   "app/vermont/page.tsx",
   "components/vermont/VermontClusterLanding.tsx",
@@ -24,63 +26,76 @@ const CONVERSION_SURFACES = [
   "components/PricingCTA.tsx",
 ] as const;
 
-describe("Fast Estimate distribution — PR1 CTA wiring", () => {
-  it("exports the public estimate path and label", () => {
+describe("Public quote paths", () => {
+  it("keeps /estimate as the area check and names the two quote paths", () => {
     expect(FAST_ESTIMATE_PATH).toBe("/estimate");
-    expect(FAST_ESTIMATE_CTA_LABEL).toBe("Get a Fast Estimate");
+    expect(AREA_CHECK_LABEL).toBe("Check your area");
+    expect(VERMONT_HOST_INTAKE_PATH).toBe("/vermont/host-intake");
+    expect(VERMONT_TURNOVER_QUOTE_LABEL).toBe("Get a Turnover Quote");
+    expect(NJ_FREE_QUOTE_LABEL).toBe("Get a Free Quote");
+    expect(HEADER_QUOTE_LABEL).toBe("Get a Quote");
   });
 
-  it("wires Get a Fast Estimate through global, Vermont, hosts, and pricing surfaces", () => {
-    for (const file of CONVERSION_SURFACES) {
+  it("sends new Vermont hosts to host intake, not Fast Estimate", () => {
+    for (const file of VERMONT_SURFACES) {
       const source = readRepoFile(file);
       expect(source, file).toMatch(
-        /FAST_ESTIMATE_PATH|href=["']\/estimate["']|href:\s*["']\/estimate["']/
+        /VERMONT_TURNOVER_QUOTE_LABEL|Get a Turnover Quote/
       );
-      expect(source, file).toMatch(/FAST_ESTIMATE_CTA_LABEL|Get a Fast Estimate/);
+      expect(source, file).not.toContain("Get a Fast Estimate");
+      expect(source, file).not.toContain("Request Property Setup");
     }
   });
 
-  it("defaults the global header to Fast Estimate, not NJ Book Now", () => {
+  it("uses one header quote chooser on every page", () => {
     const header = readRepoFile("components/layout/SiteHeader.tsx");
-    expect(header).toContain("FAST_ESTIMATE_PATH");
-    expect(header).toContain("FAST_ESTIMATE_CTA_LABEL");
-    expect(header).not.toContain('bookingHref = "/lead/new-jersey"');
-    expect(header).not.toContain('bookingLabel = "Book Now"');
+    expect(header).toContain("HEADER_QUOTE_LABEL");
+    expect(header).toContain("VERMONT_HOST_INTAKE_PATH");
+    expect(header).toContain("NJ_LEAD_PATH");
+    expect(header).toContain('href: "/hosts"');
+    expect(header).not.toContain("Get a Fast Estimate");
+    expect(header).not.toContain("Work with us");
+    expect(header).not.toContain("Investor");
   });
 
   it("keeps New Jersey on its own quote path", () => {
     const home = readRepoFile("components/marketing/HomepageMarketing.tsx");
     expect(home).toContain("NJ_LEAD_PATH");
-    expect(home).toContain("New Jersey quote");
+    expect(home).toMatch(/NJ_FREE_QUOTE_LABEL|Get a Free Quote/);
+    expect(home).toContain("New Jersey Homes");
 
     const njLanding = readRepoFile("components/marketing/MarketingPageSections.tsx");
     expect(njLanding).toContain("NJ_LEAD_PATH");
-    expect(njLanding).toContain('bookingLabel="Request a Quote"');
+    expect(njLanding).toMatch(/NJ_FREE_QUOTE_LABEL|Get a Free Quote/);
 
     const pricing = readRepoFile("components/PricingTiers.tsx");
     expect(pricing).toContain(NJ_LEAD_PATH);
-    expect(pricing).toContain("New Jersey");
+    expect(pricing).toMatch(/NJ_FREE_QUOTE_LABEL|Get a Free Quote/);
   });
 
-  it("removes prepaid Book Now from estimate, pricing, gallery, and 404", () => {
+  it("routes the area check and keeps Book Now off public quote pages", () => {
     const estimate = readRepoFile("app/estimate/page.tsx");
     expect(estimate).not.toContain('href="/book"');
     expect(estimate).not.toContain("Book now");
-    expect(estimate).toContain('href="/vermont"');
+    expect(estimate).not.toContain("FastEstimate");
+    expect(estimate).toContain("VERMONT_HOST_INTAKE_PATH");
+    expect(estimate).toContain("NJ_LEAD_PATH");
+    expect(estimate).toContain("AREA_CHECK_LABEL");
 
     const pricingCta = readRepoFile("components/PricingCTA.tsx");
     expect(pricingCta).not.toContain("/book?branch=new-jersey");
-    expect(pricingCta).toContain("/estimate");
-    expect(pricingCta).toContain("/lead/new-jersey");
+    expect(pricingCta).toContain("VERMONT_HOST_INTAKE_PATH");
+    expect(pricingCta).toContain("NJ_LEAD_PATH");
 
     const gallery = readRepoFile("app/gallery/page.tsx");
     expect(gallery).not.toContain("/book?branch=new-jersey");
-    expect(gallery).toContain("/estimate");
-    expect(gallery).toContain("/lead/new-jersey");
+    expect(gallery).toContain("/vermont/host-intake");
+    expect(gallery).toContain(NJ_LEAD_PATH);
 
     const notFound = readRepoFile("app/not-found.tsx");
     expect(notFound).not.toContain('href="/book"');
     expect(notFound).toContain("/estimate");
+    expect(notFound).toContain("Check your area");
   });
 
   it("does not change estimate API or booking checkout wiring", () => {
@@ -90,5 +105,8 @@ describe("Fast Estimate distribution — PR1 CTA wiring", () => {
 
     const checkout = readRepoFile("app/api/checkout/route.ts");
     expect(checkout).toContain("/book/confirmation");
+
+    const setup = readRepoFile("app/api/host-intake/route.ts");
+    expect(setup).toContain("SETUP_REQUEST");
   });
 });

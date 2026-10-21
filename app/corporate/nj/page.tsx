@@ -1,15 +1,15 @@
 import { Metadata } from 'next';
-import { Building2, FileText, CheckCircle2, Download, ArrowRight, Sparkles, Star, Users, Clock, Shield } from 'lucide-react';
+import { Building2, FileText, CheckCircle2, Download, Sparkles, Star, Users, Clock, Shield } from 'lucide-react';
 import Link from 'next/link';
 import CorporateQuoteForm from './components/CorporateQuoteForm';
 
 export const metadata: Metadata = {
   title: 'Corporate Cleaning Services New Jersey | VelocityMaid',
-  description: 'Professional office cleaning, salon cleaning, and restaurant cleaning services in New Jersey. Customized commercial cleaning solutions for your business.',
-  keywords: 'office cleaning new jersey, commercial cleaning nj, salon cleaning, restaurant cleaning, corporate cleaning services',
+  description: 'Professional office cleaning, salon cleaning, and restaurant cleaning services in New Jersey. Customized cleaning solutions for your business.',
+  keywords: 'office cleaning new jersey, salon cleaning, restaurant cleaning, corporate cleaning services',
   openGraph: {
     title: 'Corporate Cleaning Services New Jersey | VelocityMaid',
-    description: 'Professional commercial cleaning solutions for offices, salons, and restaurants in New Jersey',
+    description: 'Professional office, salon, and restaurant cleaning in New Jersey',
     url: 'https://velocitymaid.com/corporate/nj',
     siteName: 'VelocityMaid',
     type: 'website',
@@ -27,7 +27,7 @@ export default function CorporateNJPage() {
             '@context': 'https://schema.org',
             '@type': 'Service',
             name: 'VelocityMaid Corporate Cleaning Services',
-            description: 'Professional commercial cleaning services for offices, salons, and restaurants',
+            description: 'Professional office, salon, and restaurant cleaning',
             provider: {
               '@type': 'LocalBusiness',
               name: 'VelocityMaid New Jersey',
@@ -76,7 +76,7 @@ export default function CorporateNJPage() {
                 Corporate Cleaning Services
               </h1>
               <p className="text-xl md:text-2xl text-vm-muted mb-8">
-                Professional commercial cleaning for New Jersey businesses
+                Professional office, salon, and restaurant cleaning for New Jersey businesses
               </p>
               <Link
                 href="#quote"

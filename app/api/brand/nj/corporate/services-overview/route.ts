@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
  * Generates corporate services overview as HTML (printable to PDF)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const brandColors = {
   primary: '#0A3D2F',
@@ -16,7 +16,7 @@ const brandColors = {
   gray: '#F1F1EB',
 };
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const html = generateServicesOverview();
 
@@ -26,10 +26,11 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="velocitymaid-nj-corporate-services-overview.html"',
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Generate services overview error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to generate services overview';
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to generate services overview' },
+      { success: false, error: message },
       { status: 500 }
     );
   }
@@ -170,7 +171,7 @@ function generateServicesOverview(): string {
     </div>
     <h1>Why Choose VelocityMaid for Your Business?</h1>
     <p>
-      VelocityMaid New Jersey provides professional commercial cleaning services tailored to 
+      VelocityMaid New Jersey provides professional office, salon, and restaurant cleaning tailored to 
       meet the unique needs of businesses across New Jersey. From offices to salons to 
       restaurants, we deliver consistent, high-quality cleaning that keeps your business 
       looking its best.
@@ -268,7 +269,7 @@ function generateServicesOverview(): string {
     </ul>
     <h2>Why VelocityMaid?</h2>
     <ul>
-      <li>Experienced team trained in commercial cleaning</li>
+      <li>Experienced team trained in office, salon, and restaurant cleaning</li>
       <li>Consistent quality with regular inspections</li>
       <li>Reliable scheduling that works around your business</li>
       <li>Eco-friendly products safe for employees and customers</li>

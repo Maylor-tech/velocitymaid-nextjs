@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays, CheckCircle2, Clock3, ShieldCheck } from "lucide-react";
 import SiteHeader from "@/components/layout/SiteHeader";
@@ -5,7 +6,6 @@ import Footer from "@/components/Footer";
 import { PropertyGalleryPreview } from "@/components/marketing/PropertyGalleryPreview";
 import { EditorialProof } from "@/components/marketing/EditorialProof";
 import { MarketingTestimonials } from "@/components/marketing/MarketingTestimonials";
-import { GuestReadyProcess } from "@/components/marketing/GuestReadyProcess";
 import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 import {
   LUDLOW_CARD_IMAGES,
@@ -15,8 +15,9 @@ import {
 import { HOMEPAGE_TESTIMONIALS } from "@/lib/marketing/testimonials";
 import { HOMEPAGE_PROOF } from "@/lib/marketing/portfolio";
 import {
-  FAST_ESTIMATE_CTA_LABEL,
-  FAST_ESTIMATE_PATH,
+  NJ_FREE_QUOTE_LABEL,
+  VERMONT_HOST_INTAKE_PATH,
+  VERMONT_TURNOVER_QUOTE_LABEL,
 } from "@/lib/marketing/publicCtas";
 import { NJ_LEAD_PATH } from "@/lib/markets/newJersey";
 
@@ -24,9 +25,6 @@ const primaryButton =
   "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
 const outlineButton =
   "inline-flex items-center justify-center rounded-md border border-white/40 px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-white transition hover:border-vm-cyan hover:text-vm-cyan";
-const outlineNavyButton =
-  "inline-flex items-center justify-center rounded-md border border-vm-border px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:border-vm-cyan hover:text-vm-cyan-dark";
-
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <p className="mb-3 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-vm-cyan-dark">
@@ -49,7 +47,7 @@ const homepageFaqs = [
   {
     question: "What happens after I contact VelocityMaid?",
     answer:
-      "For Vermont hosts, we review your property details, discuss a walkthrough or quote, and set a property-specific service standard before scheduled turnovers begin. New Jersey customers can book online and confirm scope before service.",
+      "For Vermont hosts, we review your property details and confirm one price before the clean. New Jersey customers can request a quote online in minutes and confirm scope before service.",
   },
   {
     question: "Can you work around guest check-in times?",
@@ -59,7 +57,7 @@ const homepageFaqs = [
   {
     question: "How do I get started?",
     answer:
-      "Vermont hosts can Get a Fast Estimate, request a walkthrough, call or text (802) 733-5348, or complete host intake. New Jersey customers can request a quote — not a prepaid booking from the homepage.",
+      "Vermont hosts can get a turnover quote. New Jersey customers can get a free quote. No card needed to request a quote.",
   },
 ];
 
@@ -68,28 +66,33 @@ export function HomepageMarketing() {
     <div className="min-h-screen bg-white">
       <SiteHeader homeAnchors />
       <main>
-        <section className="relative overflow-hidden bg-vm-navy px-5 py-20 text-center sm:py-24">
-          <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-vm-cyan/10 blur-3xl" />
+        <section className="relative min-h-[32rem] overflow-hidden bg-vm-navy px-5 py-20 text-center sm:py-24">
+          <Image
+            src="/images/vermont/24-perkinsville-living-room.jpg"
+            alt="Owner-approved photo of the Fern Hill living room in Perkinsville, Vermont"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-vm-navy/75" />
           <div className="relative mx-auto max-w-3xl">
             <p className="mb-4 font-body text-xs font-bold uppercase tracking-[0.24em] text-vm-cyan">
-              Vermont &amp; New Jersey
+              Vermont and New Jersey
             </p>
             <h1 className="font-heading text-4xl font-bold leading-tight text-white sm:text-6xl">
               Come Home to <span className="text-vm-cyan">Clean.</span>
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl font-body text-base leading-relaxed text-white/65 sm:text-lg">
+            <p className="mx-auto mt-5 max-w-2xl font-body text-base leading-relaxed text-white/90 sm:text-lg">
               Professional home care and property readiness—hospitality-level standards
               for vacation rentals, hosts, and busy households.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link href={FAST_ESTIMATE_PATH} className={primaryButton}>
-                {FAST_ESTIMATE_CTA_LABEL}
-              </Link>
-              <Link href="/vermont" className={outlineButton}>
-                Vermont hosts →
+              <Link href="/hosts" className={primaryButton}>
+                Vermont Hosts →
               </Link>
               <Link href={NJ_LEAD_PATH} className={outlineButton}>
-                New Jersey quote
+                New Jersey Homes →
               </Link>
             </div>
           </div>
@@ -98,10 +101,10 @@ export function HomepageMarketing() {
         <div className="border-b border-vm-border bg-vm-surface">
           <div className="mx-auto flex max-w-marketing flex-wrap justify-center gap-x-12 gap-y-3 px-5 py-6">
             {[
-              "Real Vermont property care",
-              "Guest-ready turnovers",
-              "Property-specific standards",
-              "Local operational support",
+              "Trusted local cleaners",
+              "Photo-documented visits",
+              "One price confirmed before we start",
+              "Real local support",
             ].map((item) => (
               <span
                 key={item}
@@ -118,7 +121,7 @@ export function HomepageMarketing() {
           <article className="px-6 py-14 sm:px-12 lg:px-20">
             <Eyebrow>Vermont</Eyebrow>
             <h2 className="font-heading text-3xl font-bold text-vm-navy">
-              For Hosts &amp; Property Managers
+              For Hosts and Property Managers
             </h2>
             <p className="mt-4 max-w-xl font-body leading-relaxed text-vm-muted">
               We help Vermont hosts keep properties guest-ready between stays through
@@ -136,25 +139,14 @@ export function HomepageMarketing() {
                 </li>
               ))}
             </ul>
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link href={FAST_ESTIMATE_PATH} className={primaryButton}>
-                {FAST_ESTIMATE_CTA_LABEL}
-              </Link>
-              <Link href="/hosts" className={outlineNavyButton}>
-                Request Property Setup
-              </Link>
-              <Link href="/residential" className={outlineNavyButton}>
-                Vermont Homes
-              </Link>
-              <Link href="/vermont" className={outlineNavyButton}>
-                Explore Vermont
-              </Link>
-            </div>
+            <Link href={VERMONT_HOST_INTAKE_PATH} className={primaryButton}>
+              {VERMONT_TURNOVER_QUOTE_LABEL}
+            </Link>
           </article>
           <article className="bg-vm-surface px-6 py-14 sm:px-12 lg:px-20">
             <Eyebrow>New Jersey</Eyebrow>
             <h2 className="font-heading text-3xl font-bold text-vm-navy">
-              For Homes &amp; Apartments
+              For Homes and Apartments
             </h2>
             <p className="mt-4 max-w-xl font-body leading-relaxed text-vm-muted">
               Recurring residential cleaning is our primary New Jersey offer —
@@ -177,12 +169,11 @@ export function HomepageMarketing() {
               Short-term rental cleaning available on request.
             </p>
             <Link href={NJ_LEAD_PATH} className={primaryButton}>
-              Request a quote
+              {NJ_FREE_QUOTE_LABEL}
             </Link>
           </article>
         </section>
 
-        <GuestReadyProcess tone="light" />
         <AfterTheClean />
 
         <section id="why-us" className="scroll-mt-20 bg-vm-navy px-5 py-16">
@@ -195,7 +186,8 @@ export function HomepageMarketing() {
             </h2>
             <p className="mx-auto mt-4 max-w-2xl font-body text-sm leading-relaxed text-white/65">
               Clear expectations, dependable scheduling, and property-ready results
-              across every market we serve.
+              across every market we serve. Not right? Tell us within 24 hours and
+              we&apos;ll come back to fix it.
             </p>
             <div className="mt-9 grid gap-4 text-left sm:grid-cols-2 lg:grid-cols-4">
               {[
@@ -238,14 +230,9 @@ export function HomepageMarketing() {
           featured={HOMEPAGE_PROOF.featured}
           supporting={HOMEPAGE_PROOF.supporting}
           actions={
-            <>
-              <Link href="/gallery" className={primaryButton}>
-                View Our Work
-              </Link>
-              <Link href={FAST_ESTIMATE_PATH} className={outlineButton}>
-                {FAST_ESTIMATE_CTA_LABEL}
-              </Link>
-            </>
+            <Link href="/gallery" className={primaryButton}>
+              View Our Work
+            </Link>
           }
         />
 
@@ -297,8 +284,8 @@ export function HomepageMarketing() {
                   Guest-ready resets for hosts and property managers in the Okemo Valley,
                   Middlebury, and surrounding towns.
                 </p>
-                <Link href={FAST_ESTIMATE_PATH} className={`${primaryButton} mt-6`}>
-                  {FAST_ESTIMATE_CTA_LABEL}
+                <Link href={VERMONT_HOST_INTAKE_PATH} className={`${primaryButton} mt-6`}>
+                  {VERMONT_TURNOVER_QUOTE_LABEL}
                 </Link>
               </article>
               <article className="rounded-xl border border-vm-border bg-white p-7">
@@ -313,11 +300,11 @@ export function HomepageMarketing() {
                 </p>
                 <p className="mt-3 font-body text-sm leading-relaxed text-vm-muted">
                   Recurring residential cleaning first, then deep cleans and
-                  move-in/move-out — across Elaine&apos;s Essex County territory.
+                  move-in/move-out — across our Essex County service area.
                   Pricing confirmed after review.
                 </p>
-                <Link href="/lead/new-jersey" className={`${primaryButton} mt-6`}>
-                  Request a quote
+                <Link href={NJ_LEAD_PATH} className={`${primaryButton} mt-6`}>
+                  {NJ_FREE_QUOTE_LABEL}
                 </Link>
               </article>
             </div>

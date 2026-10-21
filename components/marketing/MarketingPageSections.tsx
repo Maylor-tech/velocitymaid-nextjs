@@ -16,7 +16,6 @@ import {
   njCitiesHeroList,
   njCitiesShortList,
 } from "@/lib/markets/newJersey";
-import { NJ_WORK_WITH_US_PATH } from "@/lib/marketing/publicCtas";
 import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 
 const primaryButton =
@@ -147,12 +146,12 @@ export function NewJerseyBookingMockup({
               </p>
             </div>
             <Link href={NJ_LEAD_PATH} className={primaryButton}>
-              Request a quote
+              Get a Free Quote
             </Link>
           </div>
         </aside>
       )}
-      <SiteHeader bookingHref={NJ_LEAD_PATH} bookingLabel="Request a Quote" />
+      <SiteHeader />
       <main>
         <section className="bg-vm-navy px-5 py-16 text-center sm:py-20">
           <p className="font-body text-xs font-bold uppercase tracking-[0.24em] text-vm-cyan">
@@ -170,13 +169,7 @@ export function NewJerseyBookingMockup({
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href={NJ_LEAD_PATH} className={primaryButton}>
-              Request a quote
-            </Link>
-            <Link
-              href={NJ_WORK_WITH_US_PATH}
-              className="inline-flex items-center justify-center rounded-md border border-white/40 px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-white transition hover:border-vm-cyan hover:text-vm-cyan"
-            >
-              Work with us
+              Get a Free Quote
             </Link>
           </div>
         </section>
@@ -189,7 +182,7 @@ export function NewJerseyBookingMockup({
               Service area
             </p>
             <h2 className="font-heading text-3xl font-bold text-white">
-              Elaine&apos;s New Jersey territory
+              Our Essex County service area
             </h2>
             <p className="mt-4 font-body text-sm leading-relaxed text-white/65">
               {njCitiesShortList()}. Local follow-up from our New Jersey
@@ -197,7 +190,7 @@ export function NewJerseyBookingMockup({
               with VelocityMaid.
             </p>
             <Link href={NJ_LEAD_PATH} className={`${primaryButton} mt-8`}>
-              Request a quote
+              Get a Free Quote
             </Link>
           </div>
         </section>

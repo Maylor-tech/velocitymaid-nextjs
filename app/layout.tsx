@@ -45,17 +45,17 @@ const defaultSocialImage = socialImageMeta("default");
 
 export const metadata: Metadata = {
   metadataBase: new URL(`${SITE_ORIGIN}/`),
-  title: "VelocityMaid | Professional Cleaning Services in New Jersey & Vermont",
+  title: "VelocityMaid | Professional Cleaning Services in New Jersey and Vermont",
   description:
-    "VelocityMaid offers professional cleaning services in New Jersey and Vermont. Home and apartment cleaning for NJ families. Turnover cleaning for Vermont Airbnbs and short-term rentals. Book online in minutes.",
-  keywords: "cleaning services, maid service, house cleaning, commercial cleaning, New Jersey, Vermont, professional cleaners, Montclair cleaning, Newark cleaning, Bloomfield cleaning",
+    "VelocityMaid offers professional cleaning services in New Jersey and Vermont. Home and apartment cleaning for NJ families. Turnover cleaning for Vermont Airbnbs and short-term rentals. Request a quote online in minutes.",
+  keywords: "cleaning services, maid service, house cleaning, New Jersey, Vermont, professional cleaners, Montclair cleaning, Newark cleaning, Bloomfield cleaning",
   authors: [{ name: "VelocityMaid" }],
   creator: "VelocityMaid",
   publisher: "VelocityMaid",
   openGraph: {
-    title: "VelocityMaid | Professional Cleaning Services in New Jersey & Vermont",
+    title: "VelocityMaid | Professional Cleaning Services in New Jersey and Vermont",
     description:
-      "VelocityMaid offers professional cleaning services in New Jersey and Vermont. Home and apartment cleaning for NJ families. Turnover cleaning for Vermont Airbnbs and short-term rentals. Book online in minutes.",
+      "VelocityMaid offers professional cleaning services in New Jersey and Vermont. Home and apartment cleaning for NJ families. Turnover cleaning for Vermont Airbnbs and short-term rentals. Request a quote online in minutes.",
     type: "website",
     locale: "en_US",
     siteName: "VelocityMaid",

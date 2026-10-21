@@ -8,8 +8,6 @@ import { PAYOUT_RULES } from "@/lib/payoutRules";
 import { NJ_SERVICE_CITIES } from "@/lib/markets/newJersey";
 import {
   CLEANER_APPLY_NJ_PATH,
-  FAST_ESTIMATE_CTA_LABEL,
-  FAST_ESTIMATE_PATH,
   NJ_WORK_WITH_US_PATH,
   VERMONT_WORK_WITH_US_PATH,
 } from "@/lib/marketing/publicCtas";
@@ -34,10 +32,7 @@ const pct = Math.round(PAYOUT_RULES.cleanerPct * 100);
 export default function NewJerseyWorkWithUsPage() {
   return (
     <div className="min-h-screen bg-white">
-      <SiteHeader
-        bookingHref={FAST_ESTIMATE_PATH}
-        bookingLabel={FAST_ESTIMATE_CTA_LABEL}
-      />
+      <SiteHeader />
       <main>
         <section className="bg-vm-navy px-5 pb-12 pt-10 sm:pb-16 sm:pt-14">
           <div className="mx-auto max-w-3xl text-center">

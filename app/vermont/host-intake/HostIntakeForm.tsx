@@ -320,7 +320,7 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
             <li>Deep cleaning — starting at $325</li>
           </ul>
           <p className="font-body text-sm text-vm-muted leading-relaxed mb-2">
-            <strong className="text-vm-navy">Project cleaning &amp; custom quotes:</strong>{" "}
+            <strong className="text-vm-navy">Project cleaning and custom quotes:</strong>{" "}
             properties needing more than one cleaner, excessive debris,
             post-construction cleanup, neglected conditions, estate cleanouts,
             or labor beyond standard service levels are quoted individually —
@@ -608,7 +608,7 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
           {/* Access & Operations */}
           <fieldset className="space-y-4">
             <legend className="font-heading font-semibold text-vm-navy text-lg mb-2">
-              Access &amp; Operations
+              Access and Operations
             </legend>
 
             <div>

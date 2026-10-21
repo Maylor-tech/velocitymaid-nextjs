@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import BranchLandingNav from "@/components/layout/BranchLandingNav";
+import SiteHeader from "@/components/layout/SiteHeader";
+import Footer from "@/components/Footer";
 import VermontGallery from "@/components/home/VermontGallery";
 import { ServiceImageCard, TrustBadge } from "@/components/vermont/shared";
 import type { VermontClusterConfig } from "@/lib/vermont/clusters";
@@ -19,11 +20,8 @@ import {
 import { EditorialProof } from "@/components/marketing/EditorialProof";
 import { MIDDLEBURY_PROOF, TURNOVER_PROOF } from "@/lib/marketing/portfolio";
 import {
-  FAST_ESTIMATE_CTA_LABEL,
-  FAST_ESTIMATE_PATH,
   VERMONT_HOST_INTAKE_PATH,
-  VERMONT_WORK_WITH_US_LABEL,
-  VERMONT_WORK_WITH_US_PATH,
+  VERMONT_TURNOVER_QUOTE_LABEL,
 } from "@/lib/marketing/publicCtas";
 
 export interface VermontClusterLandingProps {
@@ -35,19 +33,7 @@ export default function VermontClusterLanding({
 }: VermontClusterLandingProps) {
   return (
     <div className="min-h-screen bg-white font-body">
-      <BranchLandingNav
-        bookingHref={FAST_ESTIMATE_PATH}
-        bookingLabel={FAST_ESTIMATE_CTA_LABEL}
-        secondaryHref={VERMONT_HOST_INTAKE_PATH}
-        secondaryLabel="Request a Quote"
-        phone="+18027335348"
-        phoneDisplay="(802) 733-5348"
-        email="hello@velocitymaid.com"
-        marketTagline="vermont"
-        extraNavLinks={[
-          { href: VERMONT_WORK_WITH_US_PATH, label: VERMONT_WORK_WITH_US_LABEL },
-        ]}
-      />
+      <SiteHeader />
 
       <section className="bg-vm-navy">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
@@ -65,28 +51,10 @@ export default function VermontClusterLanding({
               </p>
               <div className="flex flex-wrap gap-3 mb-6">
                 <Link
-                  href={FAST_ESTIMATE_PATH}
+                  href={VERMONT_HOST_INTAKE_PATH}
                   className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
                 >
-                  {FAST_ESTIMATE_CTA_LABEL}
-                </Link>
-                <Link
-                  href={VERMONT_HOST_INTAKE_PATH}
-                  className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
-                >
-                  Request a walkthrough
-                </Link>
-                <a
-                  href="tel:+18027335348"
-                  className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
-                >
-                  Call (802) 733-5348
-                </a>
-                <Link
-                  href="/vermont"
-                  className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
-                >
-                  All Vermont locations →
+                  {VERMONT_TURNOVER_QUOTE_LABEL}
                 </Link>
               </div>
               <div className="flex flex-wrap gap-4">
@@ -236,24 +204,6 @@ export default function VermontClusterLanding({
           <HowItWorksSection />
         </section>
 
-        <section className="rounded-xl border border-vm-border bg-vm-navy p-6 sm:p-8">
-          <p className="text-vm-cyan text-xs font-semibold uppercase tracking-widest font-body mb-2">
-            Live nearby?
-          </p>
-          <h2 className="font-heading font-bold text-white text-xl mb-2">
-            We are hiring in this cluster
-          </h2>
-          <p className="text-sm text-white/70 font-body mb-4 max-w-2xl">
-            See the job, typical pay, and how you get paid — then apply.
-          </p>
-          <Link
-            href={VERMONT_WORK_WITH_US_PATH}
-            className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
-          >
-            {VERMONT_WORK_WITH_US_LABEL}
-          </Link>
-        </section>
-
         <CtaSection clusterLabel={cluster.navLabel} />
 
         <section className="border-t border-vm-border pt-6 text-xs text-vm-muted font-body space-y-1">
@@ -269,6 +219,7 @@ export default function VermontClusterLanding({
           </p>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }
@@ -379,25 +330,24 @@ function HowItWorksSection() {
       </div>
       <ol className="space-y-3 text-sm text-vm-text font-body">
         <li>
-          <span className="font-semibold text-vm-navy">1. Property intake &amp; walkthrough:</span>{" "}
-          Call, email, or share property details so we can review scope and standards.
+          <span className="font-semibold text-vm-navy">1. Intake:</span>{" "}
+          Tell us the property. No card needed to request a quote.
         </li>
         <li>
-          <span className="font-semibold text-vm-navy">2. Property profile &amp; service standard:</span>{" "}
-          We confirm a property-specific checklist and quote before service begins.
+          <span className="font-semibold text-vm-navy">2. Property checklist:</span>{" "}
+          We confirm one price before we start.
         </li>
         <li>
-          <span className="font-semibold text-vm-navy">3. Scheduled turnover:</span>{" "}
+          <span className="font-semibold text-vm-navy">3. Turnover:</span>{" "}
           Cleaning is planned around checkout and check-in windows.
         </li>
         <li>
-          <span className="font-semibold text-vm-navy">4. Quality control &amp; host communication:</span>{" "}
-          Completion checks, documentation when included, and clear updates for the next arrival.
+          <span className="font-semibold text-vm-navy">4. Photos:</span>{" "}
+          The photos prove the home is guest-ready before arrival.
         </li>
         <li>
-          <span className="font-semibold text-vm-navy">5. Done + pay:</span>{" "}
-          You get photos and the invoice together. Pay by card or Zelle. We line up
-          the cleaner to be paid.
+          <span className="font-semibold text-vm-navy">5. One pay link:</span>{" "}
+          When we finish, you get photos of the work and one simple payment link.
         </li>
       </ol>
     </div>
@@ -415,38 +365,15 @@ function CtaSection({ clusterLabel }: { clusterLabel: string }) {
           Let&apos;s get your {clusterLabel} property guest-ready.
         </h2>
         <p className="text-sm text-vm-muted font-body max-w-xl">
-          Request a walkthrough or quote, call or text, or complete property intake
-          when you are ready.
+          We serve the Okemo Valley and Middlebury areas.
         </p>
       </div>
-      <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-        <Link
-          href={FAST_ESTIMATE_PATH}
-          className="inline-flex flex-1 sm:flex-none items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
-        >
-          {FAST_ESTIMATE_CTA_LABEL}
-        </Link>
-        <Link
-          href={VERMONT_HOST_INTAKE_PATH}
-          className="inline-flex flex-1 sm:flex-none items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-vm-surface transition"
-        >
-          Request a quote
-        </Link>
-        <a
-          href="tel:+18027335348"
-          className="inline-flex flex-1 sm:flex-none items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-vm-surface transition"
-        >
-          Call (802) 733-5348
-        </a>
-        <a
-          href="https://wa.me/18027335348"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex flex-1 sm:flex-none items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-vm-surface transition"
-        >
-          WhatsApp
-        </a>
-      </div>
+      <Link
+        href={VERMONT_HOST_INTAKE_PATH}
+        className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+      >
+        {VERMONT_TURNOVER_QUOTE_LABEL}
+      </Link>
     </section>
   );
 }
