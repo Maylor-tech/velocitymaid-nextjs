@@ -728,6 +728,7 @@ model HostReservation {
   Events                 HostReservationEvent[]
 
   @@unique([propertyId, guestCheckInDate, guestCheckOutDate], map: "host_reservations_stay_key")
+  @@unique([propertyId, sourceDocumentRef, sourceLineKey], map: "host_reservations_source_line_key")
   @@index([customerId])
   @@index([propertyId, proposedCleaningDate])
   @@index([status])

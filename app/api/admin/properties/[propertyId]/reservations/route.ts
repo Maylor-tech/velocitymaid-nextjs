@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth/requireRole";
+import { assertSuperAdmin, requireRole } from "@/lib/auth/requireRole";
 import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 import { serviceDayKey } from "@/lib/scheduling/hostScheduleReconciliation";
 import {
@@ -57,7 +57,7 @@ async function loadProperty(propertyId: string) {
 
 export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
-    await requireRole(request, "ADMIN");
+    assertSuperAdmin(await requireRole(request, "ADMIN"));
     const property = await loadProperty(params.propertyId);
     if (!property) return NextResponse.json({ error: "Property not found" }, { status: 404 });
 
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
 export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
-    await requireRole(request, "ADMIN");
+    assertSuperAdmin(await requireRole(request, "ADMIN"));
     const property = await loadProperty(params.propertyId);
     if (!property) return NextResponse.json({ error: "Property not found" }, { status: 404 });
 
@@ -218,6 +218,12 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   } catch (error) {
     const authResponse = rethrowIfAuthResponse(error);
     if (authResponse) return authResponse;
+    if (typeof error === "object" && error && "code" in error && error.code === "P2002") {
+      return NextResponse.json(
+        { error: "Import rolled back. A reservation with those dates or source line already exists." },
+        { status: 409 }
+      );
+    }
     console.error("[admin/properties/:id/reservations POST]", error);
     return NextResponse.json({ error: "Reservation import failed" }, { status: 500 });
   }

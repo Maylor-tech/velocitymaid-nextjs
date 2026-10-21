@@ -135,7 +135,7 @@ describe('host reservation import', () => {
     expect(result.writes).toEqual([]);
   });
 
-  it('holds changed dates until they are explicitly accepted', () => {
+  it('holds a date correction for manual review and does not create a second stay', () => {
     const stored: StoredReservation = {
       id: 'stay-8',
       customerId: CUSTOMER,
@@ -144,7 +144,7 @@ describe('host reservation import', () => {
       guestCheckOut: '2027-01-01',
       proposedCleaningDate: '2027-01-01',
       proposedCleaningWindow: null,
-      bookingSource: null,
+      bookingSource: 'Airbnb',
       status: 'HOST_CONFIRMATION_REQUIRED',
       jobId: 'linked-job',
       sourceDocumentRef: SOURCE,
@@ -156,28 +156,114 @@ describe('host reservation import', () => {
         guestCheckIn: '2026-12-30',
         guestCheckOut: '2027-01-01',
         proposedCleaningDate: '2027-01-01',
+        bookingSource: 'Airbnb',
         hostConfirmationRequired: true,
       },
     ];
-    const held = preview({ incoming, stored: [stored], jobs: [] });
+    const held = preview({ incoming, stored: [stored], jobs: [], options: { acceptDateChanges: true } });
     expect(held.rows[0]?.classification).toBe('CHANGED_DATES');
+    expect(held.rows[0]?.flags).toContain('manual-review-required');
     expect(held.writes).toEqual([]);
     expect(held.rows[0]?.reservationId).toBe('stay-8');
+  });
 
-    const accepted = preview({
-      incoming,
+  it('does not guess when the same line key is used by another booking source', () => {
+    const stored: StoredReservation = {
+      id: 'stay-vrbo',
+      customerId: CUSTOMER,
+      propertyId: PROPERTY,
+      guestCheckIn: '2026-11-05',
+      guestCheckOut: '2026-11-08',
+      proposedCleaningDate: '2026-11-08',
+      proposedCleaningWindow: null,
+      bookingSource: 'VRBO',
+      status: 'UNCONFIRMED',
+      jobId: null,
+      sourceDocumentRef: SOURCE,
+      sourceLineKey: '3',
+    };
+    const result = preview({
       stored: [stored],
       jobs: [],
-      options: { acceptDateChanges: true },
+      incoming: [
+        {
+          sourceLineKey: '3',
+          guestCheckIn: '2026-11-13',
+          guestCheckOut: '2026-11-15',
+          proposedCleaningDate: '2026-11-15',
+          bookingSource: 'Airbnb',
+        },
+      ],
     });
-    expect(accepted.writes).toHaveLength(1);
-    expect(accepted.writes[0]).toMatchObject({
-      action: 'update',
-      reservationId: 'stay-8',
-      guestCheckIn: '2026-12-30',
-      jobId: 'linked-job',
-      eventAction: 'DATE_CHANGED',
+    expect(result.rows[0]?.flags).toContain('ambiguous-source-identity');
+    expect(result.writes).toEqual([]);
+  });
+
+  it('keeps a reordered line key from rewriting the stay it lands on', () => {
+    const stored: StoredReservation[] = [
+      {
+        id: 'stay-a',
+        customerId: CUSTOMER,
+        propertyId: PROPERTY,
+        guestCheckIn: '2026-10-23',
+        guestCheckOut: '2026-10-25',
+        proposedCleaningDate: '2026-10-25',
+        proposedCleaningWindow: null,
+        bookingSource: null,
+        status: 'UNCONFIRMED',
+        jobId: null,
+        sourceDocumentRef: SOURCE,
+        sourceLineKey: '1',
+      },
+    ];
+    const result = preview({
+      stored,
+      jobs: [],
+      incoming: [
+        {
+          sourceLineKey: '9',
+          guestCheckIn: '2026-10-23',
+          guestCheckOut: '2026-10-25',
+          proposedCleaningDate: '2026-10-25',
+        },
+      ],
     });
+    expect(result.writes).toEqual([]);
+    expect(result.rows[0]?.flags).toContain('source-line-conflicts');
+    expect(result.rows[0]?.reservationId).toBe('stay-a');
+  });
+
+  it('does not rewrite a confirmed reservation from an import', () => {
+    const stored: StoredReservation = {
+      id: 'stay-confirmed',
+      customerId: CUSTOMER,
+      propertyId: PROPERTY,
+      guestCheckIn: '2026-11-05',
+      guestCheckOut: '2026-11-08',
+      proposedCleaningDate: '2026-11-08',
+      proposedCleaningWindow: '7:00 AM - 8:00 PM',
+      bookingSource: null,
+      status: 'CONFIRMED',
+      jobId: 'job-confirmed',
+      sourceDocumentRef: SOURCE,
+      sourceLineKey: '3',
+    };
+    const result = preview({
+      stored: [stored],
+      jobs: [],
+      incoming: [
+        {
+          sourceLineKey: '3',
+          guestCheckIn: '2026-11-05',
+          guestCheckOut: '2026-11-08',
+          proposedCleaningDate: '2026-11-09',
+          proposedCleaningWindow: '9:00 AM - 1:00 PM',
+        },
+      ],
+    });
+    expect(result.writes).toEqual([]);
+    expect(result.rows[0]?.flags).toContain('confirmed-stay-preserved');
+    expect(result.rows[0]?.reservationId).toBe('stay-confirmed');
   });
 
   it('keeps the January 1 stay on hold and does not treat January 2 as a same-day turn', () => {

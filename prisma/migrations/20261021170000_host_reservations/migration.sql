@@ -1,10 +1,12 @@
--- Host reservation planning. Additive only.
+-- Host reservation planning. Additive only. Does not alter Job, Invoice, or payment tables.
 -- Do not apply until a separate production approval.
 --
--- Rollback:
---   DROP TABLE IF EXISTS "host_reservation_events";
---   DROP TABLE IF EXISTS "host_reservations";
---   DROP TYPE IF EXISTS "HostReservationStatus";
+-- PostgreSQL runs this file in one transaction. A failure rolls the whole migration back.
+--
+-- Recovery before any reservation rows exist: revert the app deploy. The new tables
+-- are unused by existing job, invoice, payment, and dispatch code.
+-- Recovery after reservation rows exist: do not drop these tables. Revert the app
+-- deploy and leave the rows in place for a forward fix.
 
 CREATE TYPE "HostReservationStatus" AS ENUM (
   'UNCONFIRMED',
@@ -57,8 +59,8 @@ CREATE INDEX "host_reservations_propertyId_proposedCleaningDate_idx"
 
 CREATE INDEX "host_reservations_status_idx" ON "host_reservations"("status");
 
-CREATE INDEX "host_reservations_sourceDocumentRef_sourceLineKey_idx"
-  ON "host_reservations"("sourceDocumentRef", "sourceLineKey");
+CREATE UNIQUE INDEX "host_reservations_source_line_key"
+  ON "host_reservations"("propertyId", "sourceDocumentRef", "sourceLineKey");
 
 CREATE INDEX "host_reservation_events_reservationId_idx"
   ON "host_reservation_events"("reservationId");

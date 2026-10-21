@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth/requireRole";
+import { assertSuperAdmin, requireRole } from "@/lib/auth/requireRole";
 import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 import { parsePreferredTimeWindow } from "@/lib/dates/preferredClock";
 import { utcMidnightFromDateKey } from "@/lib/scheduling/hostReservationImport";
@@ -31,7 +31,7 @@ function rangedWindow(value: string): boolean {
 
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
-    await requireRole(request, "ADMIN");
+    assertSuperAdmin(await requireRole(request, "ADMIN"));
     const existing = await prisma.hostReservation.findFirst({
       where: { id: params.reservationId, propertyId: params.propertyId },
     });
@@ -135,25 +135,28 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       notes: existing.notes,
     };
 
-    const updated = await prisma.hostReservation.update({
-      where: { id: existing.id },
-      data,
-    });
-    await prisma.hostReservationEvent.create({
-      data: {
-        reservationId: updated.id,
-        action,
-        before,
-        after: {
-          guestCheckIn: serviceDayKey(updated.guestCheckInDate),
-          guestCheckOut: serviceDayKey(updated.guestCheckOutDate),
-          proposedCleaningDate: serviceDayKey(updated.proposedCleaningDate),
-          proposedCleaningWindow: updated.proposedCleaningWindow,
-          status: updated.status,
-          jobId: updated.jobId,
-          notes: updated.notes,
+    const updated = await prisma.$transaction(async (tx) => {
+      const saved = await tx.hostReservation.update({
+        where: { id: existing.id },
+        data,
+      });
+      await tx.hostReservationEvent.create({
+        data: {
+          reservationId: saved.id,
+          action,
+          before,
+          after: {
+            guestCheckIn: serviceDayKey(saved.guestCheckInDate),
+            guestCheckOut: serviceDayKey(saved.guestCheckOutDate),
+            proposedCleaningDate: serviceDayKey(saved.proposedCleaningDate),
+            proposedCleaningWindow: saved.proposedCleaningWindow,
+            status: saved.status,
+            jobId: saved.jobId,
+            notes: saved.notes,
+          },
         },
-      },
+      });
+      return saved;
     });
 
     return NextResponse.json({ success: true, id: updated.id, status: updated.status, jobId: updated.jobId });

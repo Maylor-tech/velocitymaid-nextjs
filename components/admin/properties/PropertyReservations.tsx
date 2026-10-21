@@ -31,6 +31,26 @@ type ReservationRow = {
   };
 };
 
+function formatStayDate(day: string | null): string {
+  if (!day) return "No date";
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  if (!match) return day;
+  const stamp = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(stamp);
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  UNCONFIRMED: "Unconfirmed plan",
+  HOST_CONFIRMATION_REQUIRED: "Host confirmation required",
+  CONFIRMED: "Access window confirmed",
+  HELD: "Scheduling conflict",
+  CANCELLED: "Cancelled",
+};
 const STATUS_OPTIONS = [
   "UNCONFIRMED",
   "HOST_CONFIRMATION_REQUIRED",
@@ -65,6 +85,13 @@ export function PropertyReservations({ propertyId }: { propertyId: string }) {
   }, [load]);
 
   const saveRow = async (row: ReservationRow, patch: Record<string, unknown>) => {
+    if (patch.status && patch.status !== row.status) {
+      const label = STATUS_LABEL[String(patch.status)] ?? String(patch.status);
+      const accepted = window.confirm(
+        `Change this guest reservation to "${label}"? This does not create a cleaning job, invoice, or assignment.`
+      );
+      if (!accepted) return;
+    }
     setBusy(true);
     setError(null);
     setMessage(null);
@@ -87,6 +114,12 @@ export function PropertyReservations({ propertyId }: { propertyId: string }) {
   };
 
   const runImport = async (mode: "preview" | "apply") => {
+    if (mode === "apply") {
+      const accepted = window.confirm(
+        "Save these reservation rows only? This does not create cleaning jobs, invoices, offers, or messages."
+      );
+      if (!accepted) return;
+    }
     setBusy(true);
     setError(null);
     setMessage(null);
@@ -107,9 +140,9 @@ export function PropertyReservations({ propertyId }: { propertyId: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Import failed");
       const lines = (data.preview?.rows ?? []).map(
-        (row: { sourceLineKey: string; classification: string; apply: boolean; suggestedJobId: string | null }) =>
-          `${row.sourceLineKey}: ${row.classification}${row.apply ? " (will save reservation)" : ""}${
-            row.suggestedJobId ? ` existing job ${row.suggestedJobId}` : ""
+        (row: { sourceLineKey: string; classification: string; apply: boolean; flags?: string[] }) =>
+          `${row.sourceLineKey}: ${row.classification}${row.apply ? " (will save reservation)" : " (no write)"}${
+            row.flags?.includes("manual-review-required") ? " — manual review" : ""
           }`
       );
       setPreviewText(lines.join("\n") || "No rows.");
@@ -133,8 +166,8 @@ export function PropertyReservations({ propertyId }: { propertyId: string }) {
         <p className="font-body text-xs uppercase tracking-wide text-vm-muted">Guest reservations</p>
         <h1 className="font-heading text-2xl text-vm-navy">{propertyName}</h1>
         <p className="mt-2 font-body text-sm text-vm-text">
-          Guest reservation, cleaning plan, and confirmed cleaning job are separate. An unconfirmed
-          reservation is not a cleaner assignment.
+          Guest reservation, cleaning plan, and confirmed cleaning job stay separate. An unconfirmed
+          reservation is not a cleaner assignment. Dates are calendar days in America/New_York.
         </p>
       </div>
 
@@ -150,13 +183,27 @@ export function PropertyReservations({ propertyId }: { propertyId: string }) {
               <div className="grid gap-3 md:grid-cols-3">
                 <div>
                   <p className="font-body text-xs uppercase text-vm-muted">Guest reservation</p>
-                  <p className="font-heading text-sm text-vm-navy">{row.layers.guestReservation}</p>
+                  <p className="font-heading text-sm text-vm-navy">
+                    {formatStayDate(row.guestCheckIn)} to {formatStayDate(row.guestCheckOut)}
+                  </p>
                   <p className="font-body text-xs text-vm-muted">{row.bookingSource || "Source not recorded"}</p>
                 </div>
                 <div>
                   <p className="font-body text-xs uppercase text-vm-muted">Cleaning plan</p>
-                  <p className="font-body text-sm text-vm-text">{row.layers.cleaningPlan}</p>
-                  <p className="font-body text-xs text-vm-muted">{row.status.replace(/_/g, " ")}</p>
+                  <p className="font-body text-sm text-vm-text">
+                    {`${row.status === "CONFIRMED" ? "Confirmed access window" : "Proposed only"} ${formatStayDate(row.proposedCleaningDate)}, ${row.proposedCleaningWindow || "Allowed window not recorded"}`}
+                  </p>
+                  <p
+                    className={`mt-1 inline-block rounded px-2 py-0.5 font-body text-xs ${
+                      row.status === "HELD" || row.status === "HOST_CONFIRMATION_REQUIRED"
+                        ? "bg-amber-100 text-amber-900"
+                        : row.status === "CONFIRMED"
+                          ? "bg-vm-success-bg text-vm-success"
+                          : "bg-vm-surface text-vm-muted"
+                    }`}
+                  >
+                    {STATUS_LABEL[row.status] ?? row.status}
+                  </p>
                 </div>
                 <div>
                   <p className="font-body text-xs uppercase text-vm-muted">Confirmed cleaning job</p>
@@ -185,7 +232,7 @@ export function PropertyReservations({ propertyId }: { propertyId: string }) {
                   >
                     {STATUS_OPTIONS.map((status) => (
                       <option key={status} value={status}>
-                        {status.replace(/_/g, " ")}
+                        {STATUS_LABEL[status]}
                       </option>
                     ))}
                   </select>

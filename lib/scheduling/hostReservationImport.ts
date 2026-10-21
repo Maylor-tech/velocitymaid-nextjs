@@ -161,6 +161,10 @@ function classificationForNew(status: HostReservationStatus): ImportClassificati
   return 'CREATE';
 }
 
+function sameBookingSource(stored: StoredReservation, incoming: ReservationImportRow): boolean {
+  return (stored.bookingSource ?? null) === (incoming.bookingSource ?? null);
+}
+
 function safeWindow(window: string | null | undefined, storedWindow: string | null): string | null {
   if (deadlinePlaceholder(window)) return storedWindow;
   const trimmed = window?.trim();
@@ -253,12 +257,14 @@ export function previewReservationImport(input: {
     const exact = propertyRows.filter(
       (stored) => stored.guestCheckIn === row.guestCheckIn && stored.guestCheckOut === row.guestCheckOut
     );
-    const byLine = propertyRows.filter(
+    const lineCandidates = propertyRows.filter(
       (stored) =>
         stored.sourceDocumentRef === input.sourceDocumentRef &&
         stored.sourceLineKey === row.sourceLineKey &&
         !exact.some((match) => match.id === stored.id)
     );
+    const byLine = lineCandidates.filter((stored) => sameBookingSource(stored, row));
+    const ambiguousLine = lineCandidates.filter((stored) => !sameBookingSource(stored, row));
     const conflict = flags.some((flag) =>
       ['same-day-turnover', 'shared-cleaning-date', 'clean-lands-on-next-arrival'].includes(flag)
     );
@@ -278,13 +284,13 @@ export function previewReservationImport(input: {
     }
 
     const lineMatch = byLine.length === 1 ? byLine[0] : null;
-    if (byLine.length > 1) {
+    if (byLine.length > 1 || ambiguousLine.length > 0) {
       rows.push({
         sourceLineKey: row.sourceLineKey,
-        classification: 'DUPLICATE',
-        reservationId: null,
+        classification: 'CHANGED_DATES',
+        reservationId: lineMatch?.id ?? null,
         suggestedJobId,
-        flags: [...flags, 'duplicate-source-line'],
+        flags: [...flags, ambiguousLine.length > 0 ? 'ambiguous-source-identity' : 'duplicate-source-line', 'manual-review-required'],
         plannedStatus: null,
         apply: false,
       });
@@ -295,13 +301,13 @@ export function previewReservationImport(input: {
       const collides = propertyRows.some(
         (stored) =>
           stored.id !== lineMatch.id &&
-          (stored.guestCheckIn === row.guestCheckIn && stored.guestCheckOut === row.guestCheckOut ||
+          ((stored.guestCheckIn === row.guestCheckIn && stored.guestCheckOut === row.guestCheckOut) ||
             nightsOverlap(row.guestCheckIn, row.guestCheckOut, stored.guestCheckIn, stored.guestCheckOut))
       );
-      const apply = !!options.acceptDateChanges && !collides && lineMatch.status !== 'CONFIRMED';
       if (collides) flags.push('date-change-collides');
       if (lineMatch.status === 'CONFIRMED') flags.push('confirmed-stay-preserved');
       if (lineMatch.jobId) flags.push('linked-job-preserved');
+      flags.push('manual-review-required');
       rows.push({
         sourceLineKey: row.sourceLineKey,
         classification: 'CHANGED_DATES',
@@ -309,11 +315,8 @@ export function previewReservationImport(input: {
         suggestedJobId: lineMatch.jobId ?? suggestedJobId,
         flags,
         plannedStatus: lineMatch.status,
-        apply,
+        apply: false,
       });
-      if (apply) {
-        writes.push(writeFrom(input, row, lineMatch, nextStatus === 'UNCONFIRMED' ? lineMatch.status : nextStatus, 'DATE_CHANGED', options, suggestedJobId));
-      }
       return;
     }
 
@@ -358,13 +361,20 @@ export function previewReservationImport(input: {
         ? stored.status
         : nextStatus;
     const windowValue = safeWindow(row.proposedCleaningWindow, stored.proposedCleaningWindow);
+    if (stored.sourceLineKey && stored.sourceLineKey !== row.sourceLineKey) {
+      flags.push('source-line-conflicts');
+    }
     const planChanged =
       stored.proposedCleaningDate !== row.proposedCleaningDate ||
       stored.proposedCleaningWindow !== windowValue ||
-      (stored.bookingSource ?? null) !== (row.bookingSource ?? stored.bookingSource ?? null) ||
-      stored.sourceLineKey !== row.sourceLineKey ||
+      (stored.bookingSource ?? null) !== (row.bookingSource ?? null) ||
       (stored.status === 'UNCONFIRMED' && protectedStatus !== 'UNCONFIRMED');
-    const canLink = !!options.linkExistingJobs && !stored.jobId && !!suggestedJobId;
+    const canLink =
+      !!options.linkExistingJobs &&
+      !stored.jobId &&
+      !!suggestedJobId &&
+      stored.status === 'UNCONFIRMED' &&
+      !conflict;
 
     let classification: ImportClassification = 'UNCHANGED';
     if (canLink && !planChanged) classification = 'LINK_EXISTING_JOB';
@@ -374,9 +384,12 @@ export function previewReservationImport(input: {
     } else if (stored.status === 'HOST_CONFIRMATION_REQUIRED') classification = 'HOST CONFIRMATION REQUIRED';
     else if (planChanged) classification = 'UPDATE';
 
-    const apply = planChanged || (classification === 'LINK_EXISTING_JOB' && canLink);
+    const apply =
+      stored.status === 'CONFIRMED'
+        ? false
+        : planChanged || (classification === 'LINK_EXISTING_JOB' && canLink);
     if (stored.jobId) flags.push('linked-job-preserved');
-    if (stored.status === 'CONFIRMED' && nextStatus !== 'CONFIRMED') flags.push('confirmation-preserved');
+    if (stored.status === 'CONFIRMED') flags.push('confirmed-stay-preserved');
     rows.push({
       sourceLineKey: row.sourceLineKey,
       classification,
@@ -427,11 +440,12 @@ function writeFrom(
   options: ImportOptions,
   suggestedJobId: string | null
 ): ReservationWrite {
-  const link = !!options.linkExistingJobs && !stored?.jobId && !!suggestedJobId;
+  const link = !!options.linkExistingJobs && !stored?.jobId && !!suggestedJobId && status === 'UNCONFIRMED';
   return {
     action: stored ? 'update' : 'create',
     reservationId: stored?.id ?? null,
-    sourceLineKey: row.sourceLineKey,
+    sourceLineKey:
+      stored?.sourceLineKey && stored.sourceLineKey !== row.sourceLineKey ? stored.sourceLineKey : row.sourceLineKey,
     customerId: input.customerId,
     propertyId: input.propertyId,
     guestCheckIn: row.guestCheckIn,
