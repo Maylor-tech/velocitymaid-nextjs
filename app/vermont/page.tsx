@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import BranchLandingNav from "@/components/layout/BranchLandingNav";
+import SiteHeader from "@/components/layout/SiteHeader";
+import Footer from "@/components/Footer";
 import { VERMONT_CLUSTER_LIST } from "@/lib/vermont/clusters";
 import { pageSocialMetadata } from "@/lib/seo/socialImages";
 import {
-  FAST_ESTIMATE_CTA_LABEL,
-  FAST_ESTIMATE_PATH,
   VERMONT_HOST_INTAKE_PATH,
-  VERMONT_WORK_WITH_US_LABEL,
-  VERMONT_WORK_WITH_US_PATH,
+  VERMONT_TURNOVER_QUOTE_LABEL,
 } from "@/lib/marketing/publicCtas";
 import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 import { ArrowRight, MapPin, Snowflake } from "lucide-react";
@@ -20,7 +18,7 @@ import {
 import { EditorialProof } from "@/components/marketing/EditorialProof";
 import { VERMONT_PROOF } from "@/lib/marketing/portfolio";
 
-const title = "Vermont Cleaning Services | VelocityMaid — Okemo Valley & Middlebury";
+const title = "Vermont Cleaning Services | VelocityMaid — Okemo Valley and Middlebury";
 const description =
   "VelocityMaid offers turnover cleaning, deep cleans, and property readiness across Vermont — Okemo Valley vacation rentals and Middlebury property readiness in Addison County.";
 
@@ -41,31 +39,19 @@ export const metadata: Metadata = {
 export default function VermontOverviewPage() {
   return (
     <div className="min-h-screen bg-white font-body">
-      <BranchLandingNav
-        bookingHref={FAST_ESTIMATE_PATH}
-        bookingLabel={FAST_ESTIMATE_CTA_LABEL}
-        secondaryHref={VERMONT_HOST_INTAKE_PATH}
-        secondaryLabel="Request a Quote"
-        phone="+18027335348"
-        phoneDisplay="(802) 733-5348"
-        email="hello@velocitymaid.com"
-        marketTagline="vermont"
-        extraNavLinks={[
-          { href: VERMONT_WORK_WITH_US_PATH, label: VERMONT_WORK_WITH_US_LABEL },
-        ]}
-      />
+      <SiteHeader />
 
       <section className="bg-vm-navy">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-3 py-1 text-xs font-body font-medium text-vm-cyan mb-4">
               <Snowflake className="w-3 h-3" />
-              <span>Vermont · Two service clusters</span>
+              <span>Vermont · Two service areas</span>
             </div>
             <h1 className="font-heading font-bold text-white text-3xl sm:text-4xl lg:text-5xl leading-tight mb-4">
               Vermont Cleaning for{" "}
               <span className="text-vm-cyan">
-                Vacation Rentals & Second Homes
+                Vacation Rentals and Second Homes
               </span>
             </h1>
             <p className="font-body text-white/70 text-base sm:text-lg mb-8">
@@ -75,29 +61,11 @@ export default function VermontOverviewPage() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href={FAST_ESTIMATE_PATH}
+                href={VERMONT_HOST_INTAKE_PATH}
                 className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
               >
-                {FAST_ESTIMATE_CTA_LABEL}
+                {VERMONT_TURNOVER_QUOTE_LABEL}
               </Link>
-              <Link
-                href={VERMONT_HOST_INTAKE_PATH}
-                className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
-              >
-                Request a walkthrough
-              </Link>
-              <a
-                href="tel:+18027335348"
-                className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
-              >
-                Call (802) 733-5348
-              </a>
-              <a
-                href="mailto:hello@velocitymaid.com"
-                className="inline-flex items-center justify-center border border-white/25 text-white font-heading rounded-lg px-5 py-3 text-sm hover:bg-white/10 transition"
-              >
-                Email us
-              </a>
             </div>
           </div>
         </div>
@@ -110,10 +78,10 @@ export default function VermontOverviewPage() {
             Service areas
           </p>
           <h2 className="font-heading font-bold text-vm-navy text-2xl mb-4">
-            Choose your Vermont cluster
+            Choose your Vermont area
           </h2>
           <p className="text-vm-muted font-body max-w-3xl mb-8">
-            Each cluster has dedicated local coverage and the same VelocityMaid operating
+            Each area has dedicated local coverage and the same VelocityMaid operating
             approach — property-specific standards, guest-ready timing, completion checks,
             and host communication.
           </p>
@@ -191,67 +159,19 @@ export default function VermontOverviewPage() {
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 space-y-16">
-        <section className="rounded-xl border border-vm-border bg-vm-navy p-6 sm:p-8">
-          <p className="text-vm-cyan text-xs font-semibold uppercase tracking-widest font-body mb-2">
-            Live in the Okemo Valley or Middlebury?
-          </p>
-          <h2 className="font-heading font-bold text-white text-xl mb-2">
-            We are hiring local cleaners
-          </h2>
-          <p className="text-sm text-white/70 font-body mb-4 max-w-2xl">
-            Job description, typical pay, and how you get paid — on one page. No
-            phone call required to decide.
-          </p>
-          <Link
-            href={VERMONT_WORK_WITH_US_PATH}
-            className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
-          >
-            {VERMONT_WORK_WITH_US_LABEL}
-          </Link>
-        </section>
-
         <section className="rounded-xl border border-vm-border bg-vm-surface/50 p-6 sm:p-8">
           <h2 className="font-heading font-bold text-vm-navy text-xl mb-2">
-            Not sure which cluster fits?
+            Not sure which area fits?
           </h2>
           <p className="text-sm text-vm-muted font-body mb-4 max-w-2xl">
-            Call or email to request a walkthrough or quote, or complete property intake
-            when you are ready. We&apos;ll confirm coverage, schedule, and pricing.
+            Tell us the town. We confirm one price before we start.
           </p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href={FAST_ESTIMATE_PATH}
-              className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
-            >
-              {FAST_ESTIMATE_CTA_LABEL}
-            </Link>
-            <Link
-              href={VERMONT_HOST_INTAKE_PATH}
-              className="inline-flex items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-white transition"
-            >
-              Request a quote
-            </Link>
-            <a
-              href="tel:+18027335348"
-              className="inline-flex items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-white transition"
-            >
-              Call (802) 733-5348
-            </a>
-            <a
-              href="https://wa.me/18027335348"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center border border-vm-border text-vm-navy font-heading rounded-lg px-5 py-3 text-sm hover:bg-white transition"
-            >
-              WhatsApp
-            </a>
-          </div>
-          <p className="mt-4 text-xs text-vm-muted font-body">
-            Prefer to share details first?{" "}
-            <Link href={VERMONT_HOST_INTAKE_PATH} className="text-vm-navy font-semibold hover:underline">
-              Complete property intake →
-            </Link>
-          </p>
+          <Link
+            href={VERMONT_HOST_INTAKE_PATH}
+            className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+          >
+            {VERMONT_TURNOVER_QUOTE_LABEL}
+          </Link>
         </section>
 
         <section className="border-t border-vm-border pt-6 text-xs text-vm-muted font-body space-y-1">
@@ -260,12 +180,13 @@ export default function VermontOverviewPage() {
             {VERMONT_OPERATIONS_SUPPORT_LINE2}
           </p>
           <p>
-            Serving Okemo Valley (Ludlow, Proctorsville, Cavendish, Chester) and
+            Serving Okemo Valley (Ludlow, Proctorsville, Cavendish, Chester, Perkinsville) and
             Middlebury / Addison County.
           </p>
         </section>
       </div>
       </main>
+      <Footer />
     </div>
   );
 }

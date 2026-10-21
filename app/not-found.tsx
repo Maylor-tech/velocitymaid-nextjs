@@ -38,7 +38,7 @@ export default function NotFound() {
             Home
           </Link>
           <Link href="/estimate" className="text-vm-muted hover:text-vm-cyan-dark transition">
-            Get a Fast Estimate
+            Check your area
           </Link>
           <Link href="/gallery" className="text-vm-muted hover:text-vm-cyan-dark transition">
             Gallery

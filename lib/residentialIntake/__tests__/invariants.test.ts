@@ -54,12 +54,13 @@ describe("residential v1 invariants", () => {
     );
   });
 
-  it("wires /residential in header and footer without replacing Fast Estimate", () => {
+  it("keeps residential cleaning in the footer and New Jersey homes in the header", () => {
     const header = readRepoFile("components/layout/SiteHeader.tsx");
     const footer = readRepoFile("components/Footer.tsx");
-    expect(header).toContain('href: "/residential"');
-    expect(header).toContain("FAST_ESTIMATE_PATH");
+    expect(header).toContain('href: "/hosts"');
+    expect(header).toContain("NJ_LEAD_PATH");
+    expect(header).not.toContain('href: "/residential"');
     expect(footer).toContain('href="/residential"');
-    expect(footer).toContain('href="/estimate"');
+    expect(footer).toContain("VERMONT_HOST_INTAKE_PATH");
   });
 });

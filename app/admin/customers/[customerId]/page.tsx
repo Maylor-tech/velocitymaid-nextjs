@@ -365,7 +365,6 @@ export default function AdminCustomerProfilePage() {
                 </p>
                 <p className="mb-3 font-body text-xs text-vm-muted">
                   Do not price deep cleans from bedroom count or square footage alone.
-                  A small one-bedroom can still need five or more hours when condition is severe.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <label className="font-body text-xs text-vm-muted">

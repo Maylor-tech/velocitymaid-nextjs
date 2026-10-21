@@ -92,18 +92,18 @@ export default function GalleryPage() {
             Ready for guest-ready results?
           </h2>
           <p className="mx-auto mt-4 max-w-xl font-body text-sm leading-relaxed text-white/65">
-            Vermont hosts can request property care. New Jersey households can
-            book residential cleaning online.
+            Vermont hosts can request a turnover quote. New Jersey households can
+            request a quote online in minutes.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/estimate" className={primaryButton}>
-              Get a Fast Estimate
+            <Link href="/vermont/host-intake" className={primaryButton}>
+              Get a Turnover Quote
             </Link>
             <Link
               href="/lead/new-jersey"
               className="inline-flex items-center justify-center rounded-md border border-white/40 px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-white transition hover:border-vm-cyan hover:text-vm-cyan"
             >
-              Request a New Jersey quote
+              Get a Free Quote
             </Link>
           </div>
         </section>

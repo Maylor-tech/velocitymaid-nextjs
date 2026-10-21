@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
  * GET /api/brand/nj/corporate/pricing-sheet
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const brandColors = {
   primary: '#0A3D2F',
@@ -14,7 +14,7 @@ const brandColors = {
   gray: '#F1F1EB',
 };
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const html = generatePricingSheet();
 
@@ -24,10 +24,11 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="velocitymaid-nj-corporate-pricing-sheet.html"',
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Generate pricing sheet error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to generate pricing sheet';
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to generate pricing sheet' },
+      { success: false, error: message },
       { status: 500 }
     );
   }
@@ -114,7 +115,7 @@ function generatePricingSheet(): string {
     <div class="logo">VelocityMaid</div>
     <div style="font-size: 18px; color: rgba(255,255,255,0.9);">New Jersey</div>
     <h1 class="title">Corporate Cleaning Pricing</h1>
-    <p style="font-size: 18px; margin: 10px 0 0 0;">Transparent pricing for commercial cleaning services</p>
+    <p style="font-size: 18px; margin: 10px 0 0 0;">Transparent pricing for office, salon, and restaurant cleaning</p>
   </div>
 
   <h2 style="color: ${brandColors.primary}; font-size: 24px; margin: 0 0 20px 0; font-family: 'Montserrat', 'Poppins', Arial, sans-serif;">

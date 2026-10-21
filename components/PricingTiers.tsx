@@ -11,8 +11,8 @@ const markets = [
     price: "$225",
     detail:
       "Guest-ready resets for hosts and property managers in the Okemo Valley, Middlebury, and surrounding towns.",
-    href: "/estimate",
-    cta: "Get a Fast Estimate",
+    href: "/vermont/host-intake",
+    cta: "Get a Turnover Quote",
   },
   {
     market: "New Jersey",
@@ -21,7 +21,7 @@ const markets = [
     detail:
       "Primary offer for Bloomfield, Montclair, Newark, East Orange, Irvington, South Orange, West Orange, and Nutley — plus deep cleans and move-in/move-out. Pricing confirmed after review.",
     href: "/lead/new-jersey",
-    cta: "Request a quote",
+    cta: "Get a Free Quote",
   },
 ] as const;
 

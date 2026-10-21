@@ -1,10 +1,8 @@
-import Link from "next/link";
-import { CalendarDays, CheckCircle2, Clock3, Home, ShieldCheck } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import { PropertyGalleryPreview } from "@/components/marketing/PropertyGalleryPreview";
 import { MarketingTestimonials } from "@/components/marketing/MarketingTestimonials";
-import { GuestReadyProcess } from "@/components/marketing/GuestReadyProcess";
 import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 import {
   LUDLOW_CARD_IMAGES,
@@ -13,15 +11,10 @@ import {
 } from "@/lib/vermont/middleburyPhotos";
 import { VERMONT_TESTIMONIALS } from "@/lib/marketing/testimonials";
 import { VERMONT_SUPPORT } from "@/lib/customer/marketSupport";
-import {
-  FAST_ESTIMATE_CTA_LABEL,
-  FAST_ESTIMATE_PATH,
-} from "@/lib/marketing/publicCtas";
+import { VERMONT_TURNOVER_QUOTE_LABEL } from "@/lib/marketing/publicCtas";
 
 const primaryButton =
   "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
-const outlineButton =
-  "inline-flex items-center justify-center rounded-md border border-white/40 px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-white transition hover:border-vm-cyan hover:text-vm-cyan";
 const outlineNavyButton =
   "inline-flex items-center justify-center rounded-md border border-vm-border px-5 py-2.5 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:border-vm-cyan hover:text-vm-cyan-dark";
 
@@ -90,52 +83,17 @@ function PricingCards() {
   );
 }
 
-function ValueStrip() {
-  const values = [
-    { title: "Reliable Scheduling", text: "Built around guest turnovers", icon: Clock3 },
-    { title: "Guest-Ready Checks", text: "Inspected before completion", icon: ShieldCheck },
-    {
-      title: "Same-Day Turnovers",
-      text: "Subject to schedule and property requirements",
-      icon: CalendarDays,
-    },
-    { title: "Host Communication", text: "Direct updates, no guesswork", icon: Home },
-  ];
-
-  return (
-    <section className="border-b border-vm-border bg-white">
-      <div className="mx-auto grid max-w-marketing grid-cols-2 md:grid-cols-4">
-        {values.map(({ title, text, icon: Icon }) => (
-          <div
-            key={title}
-            className="border-r border-vm-border p-5 text-center last:border-r-0 sm:p-7"
-          >
-            <span className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-vm-cyan-tint">
-              <Icon className="h-4 w-4 text-vm-cyan-dark" />
-            </span>
-            <h3 className="font-heading text-sm font-bold text-vm-navy">{title}</h3>
-            <p className="mt-1 font-body text-xs leading-relaxed text-vm-muted">{text}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export function VermontHostMarketing({ children }: { children: React.ReactNode }) {
   const phoneHref = `tel:+1${VERMONT_SUPPORT.phoneTel}`;
   const emailHref = `mailto:${VERMONT_SUPPORT.email}`;
 
   return (
     <div className="min-h-screen bg-white">
-      <SiteHeader
-        bookingHref={FAST_ESTIMATE_PATH}
-        bookingLabel={FAST_ESTIMATE_CTA_LABEL}
-      />
+      <SiteHeader />
       <main>
         <section className="bg-vm-navy px-5 py-16 text-center sm:py-20">
           <p className="font-body text-xs font-bold uppercase tracking-[0.24em] text-vm-cyan">
-            Vermont — Okemo Valley &amp; Middlebury
+            Vermont — Okemo Valley and Middlebury
           </p>
           <h1 className="mx-auto mt-4 max-w-3xl font-heading text-4xl font-bold leading-tight text-white sm:text-5xl">
             Guest-ready properties, <span className="text-vm-cyan">every turnover.</span>
@@ -144,31 +102,13 @@ export function VermontHostMarketing({ children }: { children: React.ReactNode }
             We help Vermont hosts keep their properties guest-ready between stays through
             documented turnovers, property-specific standards, and local operational support.
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
-            <Link href={FAST_ESTIMATE_PATH} className={primaryButton}>
-              {FAST_ESTIMATE_CTA_LABEL}
-            </Link>
-            <Link href="#walkthrough" className={outlineButton}>
-              Request a walkthrough
-            </Link>
-            <a href={phoneHref} className={outlineButton}>
-              Call {VERMONT_SUPPORT.phoneDisplay}
-            </a>
-            <a href={emailHref} className={outlineButton}>
-              Email us
+          <div className="mt-8">
+            <a href="#host-intake" className={primaryButton}>
+              {VERMONT_TURNOVER_QUOTE_LABEL}
             </a>
           </div>
-          <p className="mt-5 font-body text-xs text-white/50">
-            Prefer to share property details first?{" "}
-            <a href="#host-intake" className="text-vm-cyan underline-offset-2 hover:underline">
-              Complete property intake
-            </a>
-          </p>
         </section>
 
-        <ValueStrip />
-
-        <GuestReadyProcess tone="light" />
         <AfterTheClean />
 
         <PropertyGalleryPreview

@@ -4,8 +4,13 @@
  */
 
 export const FAST_ESTIMATE_PATH = '/estimate' as const;
-export const FAST_ESTIMATE_CTA_LABEL = 'Get a Fast Estimate' as const;
+/** Area check for old /estimate links. New hosts use the market quote paths. */
+export const AREA_CHECK_PATH = FAST_ESTIMATE_PATH;
+export const AREA_CHECK_LABEL = 'Check your area' as const;
+export const HEADER_QUOTE_LABEL = 'Get a Quote' as const;
 export const VERMONT_HOST_INTAKE_PATH = '/vermont/host-intake' as const;
+export const VERMONT_TURNOVER_QUOTE_LABEL = 'Get a Turnover Quote' as const;
+export const NJ_FREE_QUOTE_LABEL = 'Get a Free Quote' as const;
 export const VERMONT_WORK_WITH_US_PATH = '/vermont/work-with-us' as const;
 export const VERMONT_WORK_WITH_US_LABEL = 'Work with us' as const;
 export const CLEANER_APPLY_VERMONT_PATH = '/cleaners/apply?market=vermont' as const;

@@ -14,8 +14,6 @@ import { pageSocialMetadata } from "@/lib/seo/socialImages";
 import { calcPayout, PAYOUT_RULES } from "@/lib/payoutRules";
 import {
   CLEANER_APPLY_VERMONT_PATH,
-  FAST_ESTIMATE_CTA_LABEL,
-  FAST_ESTIMATE_PATH,
   VERMONT_WORK_WITH_US_PATH,
 } from "@/lib/marketing/publicCtas";
 
@@ -57,7 +55,7 @@ const DAY_STEPS = [
   },
   {
     title: "Drive and work the checklist",
-    text: "Guest-ready standard — not a wipe-down. Expect 30–60 minutes between homes in the same cluster.",
+    text: "Guest-ready standard — not a wipe-down. Expect 30–60 minutes between homes in the same area.",
   },
   {
     title: "Photo every job",
@@ -84,7 +82,7 @@ const FAQS = [
   },
   {
     q: "Where do you actually need people?",
-    a: "Two clusters: Okemo Valley (Ludlow, Proctorsville, Cavendish, Chester) and Middlebury / Addison County. They are a long drive apart. We hire local to each cluster so two cleans the same day are possible.",
+    a: "Two areas: Okemo Valley (Ludlow, Proctorsville, Cavendish, Chester, Perkinsville) and Middlebury / Addison County. They are a long drive apart. We hire local to each area so two cleans the same day are possible.",
   },
   {
     q: "What do I need to apply?",
@@ -143,10 +141,7 @@ export default function VermontWorkWithUsPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <SiteHeader
-        bookingHref={FAST_ESTIMATE_PATH}
-        bookingLabel={FAST_ESTIMATE_CTA_LABEL}
-      />
+      <SiteHeader />
 
       <main>
         <section className="bg-vm-navy px-5 pb-12 pt-10 sm:pb-16 sm:pt-14">
@@ -200,7 +195,7 @@ export default function VermontWorkWithUsPage() {
                 {
                   icon: MapPin,
                   title: "30–60 minutes between homes",
-                  text: "Jobs stay inside one cluster. We do not expect you to cover Okemo and Middlebury on the same day.",
+                  text: "Jobs stay inside one area. We do not expect you to cover Okemo and Middlebury on the same day.",
                 },
                 {
                   icon: ShieldCheck,
@@ -239,11 +234,11 @@ export default function VermontWorkWithUsPage() {
               id="where-heading"
               className="font-heading text-3xl font-bold text-vm-navy"
             >
-              Two clusters. Not “all of Vermont.”
+              Two areas. Not “all of Vermont.”
             </h2>
             <p className="mt-4 max-w-2xl font-body text-sm leading-relaxed text-vm-muted">
               Two cleans the same day only work when someone lives near each
-              cluster. That is why we hire locally instead of promising statewide
+              area. That is why we hire locally instead of promising statewide
               coverage.
             </p>
             <div className="mt-8 grid gap-4 md:grid-cols-2">

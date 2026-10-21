@@ -7,36 +7,49 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { BrandLogo } from "@/components/brand";
 import { cn } from "@/lib/utils";
 import {
-  FAST_ESTIMATE_CTA_LABEL,
-  FAST_ESTIMATE_PATH,
-  NJ_WORK_WITH_US_PATH,
-  VERMONT_WORK_WITH_US_LABEL,
-  VERMONT_WORK_WITH_US_PATH,
+  HEADER_QUOTE_LABEL,
+  NJ_FREE_QUOTE_LABEL,
+  VERMONT_HOST_INTAKE_PATH,
+  VERMONT_TURNOVER_QUOTE_LABEL,
 } from "@/lib/marketing/publicCtas";
+import { NJ_LEAD_PATH } from "@/lib/markets/newJersey";
 
 const LOCATIONS = [
   { href: "/new-jersey", label: "New Jersey" },
-  { href: "/vermont", label: "Vermont (Overview)" },
+  { href: "/vermont", label: "Vermont" },
   { href: "/vermont/okemo", label: "Okemo Valley" },
   { href: "/vermont/middlebury", label: "Middlebury" },
 ];
 
+const NAV_LINKS = [
+  { href: "/hosts", label: "Vermont Hosts" },
+  { href: NJ_LEAD_PATH, label: "NJ Homes" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/gallery", label: "Our Work" },
+  { href: "/contact", label: "Contact" },
+] as const;
+
+const QUOTE_CHOICES = [
+  {
+    href: VERMONT_HOST_INTAKE_PATH,
+    label: `Vermont host — ${VERMONT_TURNOVER_QUOTE_LABEL}`,
+  },
+  {
+    href: NJ_LEAD_PATH,
+    label: `New Jersey home — ${NJ_FREE_QUOTE_LABEL}`,
+  },
+] as const;
+
 export interface SiteHeaderProps {
-  /** Use hash links for homepage sections */
+  /** Kept so existing pages compile. Navigation is the same on every page. */
   homeAnchors?: boolean;
   bookingHref?: string;
-  bookingLabel?:
-    | "Book Now"
-    | "Host Intake"
-    | "Book Cleaning"
-    | "Request a Quote"
-    | "Request a Walkthrough"
-    | "Get a Fast Estimate";
+  bookingLabel?: string;
 }
 
 function isNavActive(href: string, pathname: string): boolean {
-  if (href.startsWith("/#")) return false;
   if (href === pathname) return true;
+  if (href === "/hosts" && pathname.startsWith("/vermont")) return false;
   if (href !== "/" && pathname.startsWith(href)) {
     if (href === "/vermont") return pathname === "/vermont";
     return true;
@@ -53,13 +66,11 @@ const navLinkClass = (active: boolean) =>
 const ctaClassName =
   "inline-flex items-center justify-center whitespace-nowrap rounded-md btn-tactile transition-[transform,background-color,border-color] duration-150 bg-vm-cyan text-vm-navy font-heading font-semibold uppercase tracking-wider text-xs hover:bg-vm-cyan-dark shadow-md px-4 py-2.5";
 
-export default function SiteHeader({
-  homeAnchors = false,
-  bookingHref = FAST_ESTIMATE_PATH,
-  bookingLabel = FAST_ESTIMATE_CTA_LABEL,
-}: SiteHeaderProps) {
+export default function SiteHeader(props: SiteHeaderProps) {
+  void props;
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [quoteOpen, setQuoteOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -67,28 +78,6 @@ export default function SiteHeader({
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  const workWithUsPath = pathname.startsWith("/new-jersey")
-    ? NJ_WORK_WITH_US_PATH
-    : VERMONT_WORK_WITH_US_PATH;
-
-  const navLinks = homeAnchors
-    ? [
-        { href: "/#services", label: "Services" },
-        { href: "/#why-us", label: "Why Us" },
-        { href: "/#testimonials", label: "Reviews" },
-        { href: "/#pricing", label: "Pricing" },
-        { href: "/#faq", label: "FAQ" },
-        { href: workWithUsPath, label: VERMONT_WORK_WITH_US_LABEL },
-      ]
-    : [
-        { href: "/hosts", label: "Hosts" },
-        { href: "/residential", label: "Homes" },
-        { href: "/pricing", label: "Pricing" },
-        { href: "/contact", label: "Contact" },
-        { href: "/partners", label: "Partners" },
-        { href: workWithUsPath, label: VERMONT_WORK_WITH_US_LABEL },
-      ];
 
   return (
     <header
@@ -110,9 +99,9 @@ export default function SiteHeader({
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6" aria-label="Main">
-            {navLinks.map((item) => (
+            {NAV_LINKS.map((item) => (
               <Link
-                key={item.label}
+                key={item.href}
                 href={item.href}
                 className={navLinkClass(isNavActive(item.href, pathname))}
               >
@@ -128,6 +117,7 @@ export default function SiteHeader({
                     ? "text-vm-cyan"
                     : "text-white hover:text-vm-cyan"
                 )}
+                aria-haspopup="true"
               >
                 Locations
                 <ChevronDown className="w-4 h-4" />
@@ -157,15 +147,42 @@ export default function SiteHeader({
             >
               Customer Portal
             </Link>
-            <Link href={bookingHref} className={ctaClassName}>
-              {bookingLabel}
-            </Link>
+            <div className="relative">
+              <button
+                type="button"
+                className={ctaClassName}
+                aria-expanded={quoteOpen}
+                aria-haspopup="true"
+                onClick={() => setQuoteOpen((open) => !open)}
+              >
+                {HEADER_QUOTE_LABEL}
+              </button>
+              {quoteOpen ? (
+                <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-lg border border-white/10 bg-vm-navy p-2 shadow-lg">
+                  {QUOTE_CHOICES.map((choice) => (
+                    <Link
+                      key={choice.href}
+                      href={choice.href}
+                      className="block rounded-md px-3 py-2 font-body text-sm text-white hover:bg-white/5 hover:text-vm-cyan"
+                      onClick={() => setQuoteOpen(false)}
+                    >
+                      {choice.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </nav>
 
           <div className="flex items-center gap-2 lg:hidden">
-            <Link href={bookingHref} className={cn(ctaClassName, "text-[10px] px-3 py-2")}>
-              {bookingLabel}
-            </Link>
+            <button
+              type="button"
+              className={cn(ctaClassName, "text-[10px] px-3 py-2")}
+              aria-expanded={quoteOpen}
+              onClick={() => setQuoteOpen((open) => !open)}
+            >
+              {HEADER_QUOTE_LABEL}
+            </button>
             <button
               type="button"
               className="p-2 text-white hover:text-vm-cyan transition-colors"
@@ -178,14 +195,29 @@ export default function SiteHeader({
           </div>
         </div>
 
+        {quoteOpen ? (
+          <div className="lg:hidden mt-3 rounded-lg border border-white/10 bg-white/5 p-2">
+            {QUOTE_CHOICES.map((choice) => (
+              <Link
+                key={choice.href}
+                href={choice.href}
+                className="block rounded-md px-3 py-2 font-body text-sm text-white hover:text-vm-cyan"
+                onClick={() => setQuoteOpen(false)}
+              >
+                {choice.label}
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
         {menuOpen && (
           <nav
             className="lg:hidden mt-4 pt-4 border-t border-white/10 pb-2 flex flex-col gap-1"
             aria-label="Mobile"
           >
-            {navLinks.map((item) => (
+            {NAV_LINKS.map((item) => (
               <Link
-                key={item.label}
+                key={item.href}
                 href={item.href}
                 className={cn("py-2 text-sm font-body", navLinkClass(isNavActive(item.href, pathname)))}
                 onClick={() => setMenuOpen(false)}

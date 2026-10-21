@@ -62,16 +62,17 @@ export const VERMONT_CLUSTERS: Record<VermontClusterSlug, VermontClusterConfig> 
     heroLocationLabel: "Okemo Valley, Vermont",
     heroLocationSub: "Ski rental · Vacation turnover",
     serviceAreaIntro:
-      "VelocityMaid serves Ludlow, Proctorsville, Cavendish, Chester, and the wider Okemo Valley:",
+      "VelocityMaid serves Ludlow, Proctorsville, Cavendish, Chester, Perkinsville, and the wider Okemo Valley:",
     serviceAreas: [
       "Ludlow",
       "Proctorsville",
       "Cavendish",
       "Chester",
+      "Perkinsville",
       "Okemo Valley",
     ],
     footerServing:
-      "Serving: Ludlow, Proctorsville, Cavendish, Chester, and Okemo Valley.",
+      "Serving: Ludlow, Proctorsville, Cavendish, Chester, Perkinsville, and Okemo Valley.",
     galleryRegionLabel: "Okemo Valley, Vermont",
     galleryHeadline: "Real Okemo Valley Rentals. Guest-Ready Results.",
     gallerySubheadline:
@@ -104,7 +105,7 @@ export const VERMONT_CLUSTERS: Record<VermontClusterSlug, VermontClusterConfig> 
       title:
         "Okemo Valley Vacation Rental Cleaning | VelocityMaid — Ludlow & Ludlow Area",
       description:
-        "VelocityMaid offers turnover cleaning, deep cleans, and property readiness for Okemo Valley vacation rentals in Ludlow, Proctorsville, Cavendish, Chester, and nearby communities.",
+        "VelocityMaid offers turnover cleaning, deep cleans, and property readiness for Okemo Valley vacation rentals in Ludlow, Proctorsville, Cavendish, Chester, Perkinsville, and nearby communities.",
       keywords:
         "Okemo Valley cleaning, vacation rental cleaning Ludlow VT, Airbnb turnover Okemo, ski rental cleaning Vermont, Ludlow VT cleaning, Proctorsville cleaning, Cavendish cleaning, Chester VT cleaning, short-term rental cleaning Okemo",
       openGraphDescription:

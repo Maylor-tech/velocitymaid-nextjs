@@ -1,4 +1,10 @@
 import Link from "next/link";
+import {
+  NJ_FREE_QUOTE_LABEL,
+  VERMONT_HOST_INTAKE_PATH,
+  VERMONT_TURNOVER_QUOTE_LABEL,
+} from "@/lib/marketing/publicCtas";
+import { NJ_LEAD_PATH } from "@/lib/markets/newJersey";
 
 const primaryButton =
   "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
@@ -16,14 +22,11 @@ export default function PricingCTA() {
         before service begins.
       </p>
       <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <Link href="/estimate" className={primaryButton}>
-          Get a Fast Estimate
+        <Link href={VERMONT_HOST_INTAKE_PATH} className={primaryButton}>
+          {VERMONT_TURNOVER_QUOTE_LABEL}
         </Link>
-        <Link href="/vermont/host-intake" className={outlineButton}>
-          Request a Vermont quote
-        </Link>
-        <Link href="/lead/new-jersey" className={outlineButton}>
-          Request a New Jersey quote
+        <Link href={NJ_LEAD_PATH} className={outlineButton}>
+          {NJ_FREE_QUOTE_LABEL}
         </Link>
       </div>
       <p className="mt-6 font-body text-sm text-vm-muted">

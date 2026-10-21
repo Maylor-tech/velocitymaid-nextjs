@@ -5,6 +5,12 @@ import {
   VERMONT_SUPPORT,
   VERMONT_WHATSAPP_URL,
 } from '@/lib/customer/marketSupport';
+import {
+  NJ_FREE_QUOTE_LABEL,
+  VERMONT_HOST_INTAKE_PATH,
+  VERMONT_TURNOVER_QUOTE_LABEL,
+} from "@/lib/marketing/publicCtas";
+import { NJ_LEAD_PATH } from "@/lib/markets/newJersey";
 /**
  * Footer — institutional pages, unified brand lockup
  */
@@ -26,13 +32,18 @@ export default function Footer() {
             <h4 className={footerHeadingClass}>Resources</h4>
             <ul className="space-y-2 text-sm font-body">
               <li>
-                <Link href="/estimate" className={footerLinkClass}>
-                  Get a Fast Estimate
+                <Link href={VERMONT_HOST_INTAKE_PATH} className={footerLinkClass}>
+                  {VERMONT_TURNOVER_QUOTE_LABEL}
+                </Link>
+              </li>
+              <li>
+                <Link href={NJ_LEAD_PATH} className={footerLinkClass}>
+                  {NJ_FREE_QUOTE_LABEL}
                 </Link>
               </li>
               <li>
                 <Link href="/hosts" className={footerLinkClass}>
-                  Hosts
+                  Vermont Hosts
                 </Link>
               </li>
               <li>
@@ -77,17 +88,17 @@ export default function Footer() {
             <ul className="space-y-2 text-sm font-body">
               <li>
                 <a href={`mailto:${SUPPORT_EMAIL}`} className={footerLinkClass}>
-                  New Jersey — {SUPPORT_EMAIL}
+                  Email — {SUPPORT_EMAIL}
                 </a>
               </li>
               <li>
                 <a href={`tel:+1${VERMONT_SUPPORT.phoneTel}`} className={footerLinkClass}>
-                  Vermont — {VERMONT_SUPPORT.phoneDisplay}
+                  Call or text — {VERMONT_SUPPORT.phoneDisplay}
                 </a>
               </li>
               <li>
                 <a href={VERMONT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className={footerLinkClass}>
-                  Vermont WhatsApp
+                  WhatsApp
                 </a>
               </li>
             </ul>

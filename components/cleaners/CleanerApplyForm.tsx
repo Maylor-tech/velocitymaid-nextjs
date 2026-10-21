@@ -853,8 +853,8 @@ export default function CleanerApplyForm() {
         </div>
 
         <p className="text-vm-muted text-xs text-center py-6 font-body max-w-xl">
-          VelocityMaid · Professional Cleaning &amp; Property Readiness · Vermont
-          &amp; New Jersey
+          VelocityMaid · Professional Cleaning and Property Readiness · Vermont
+          and New Jersey
         </p>
       </div>
     </div>

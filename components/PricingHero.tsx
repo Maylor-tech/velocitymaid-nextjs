@@ -3,7 +3,7 @@ export default function PricingHero() {
     <div className="border-b border-vm-border bg-vm-navy">
       <div className="mx-auto max-w-marketing px-4 py-16 text-center sm:px-6 sm:py-20 lg:px-8">
         <p className="font-body text-xs font-bold uppercase tracking-[0.24em] text-vm-cyan">
-          Cleaning &amp; property care
+          Cleaning and property care
         </p>
         <h1 className="mt-4 font-heading text-3xl font-bold tracking-tight text-white sm:text-5xl">
           Straightforward starting-at pricing

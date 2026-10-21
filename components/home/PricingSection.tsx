@@ -242,7 +242,7 @@ export default function PricingSection() {
         {market === "vermont" && (
           <div className="mt-10 max-w-2xl mx-auto rounded-2xl border border-vm-navy/10 bg-vm-white p-6 sm:p-8 text-center">
             <h3 className="text-lg font-heading font-bold text-vm-navy mb-2">
-              Project Cleaning &amp; Custom Quotes
+              Project Cleaning and Custom Quotes
             </h3>
             <p className="text-sm text-vm-muted font-body leading-relaxed">
               Jobs requiring more than one cleaner, excessive debris,
