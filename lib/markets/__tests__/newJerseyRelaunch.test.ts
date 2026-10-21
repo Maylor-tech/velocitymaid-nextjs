@@ -52,7 +52,7 @@ describe('NJ market relaunch', () => {
       'utf8'
     );
     expect(marketing).not.toMatch(/\$120|\$220/);
-    expect(marketing).toContain('Request a quote');
+    expect(marketing).toContain('Get a Free Quote');
     const pricing = readFileSync(
       join(process.cwd(), 'components/PricingTiers.tsx'),
       'utf8'
