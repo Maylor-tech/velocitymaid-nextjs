@@ -7,6 +7,43 @@ import {
 } from "@/lib/company/businessAddress";
 import { VERMONT_HOST_INTAKE_PATH } from "@/lib/marketing/publicCtas";
 
+function RequestHomeWatchActions({ onNavy }: { onNavy: boolean }) {
+  const note = onNavy ? "text-white/75" : "text-vm-text";
+  const link = onNavy
+    ? "font-semibold text-vm-cyan underline-offset-2 hover:underline"
+    : "font-semibold text-vm-navy underline-offset-2 hover:underline";
+  return (
+    <div className="mt-8">
+      <p className={`max-w-xl font-body text-sm leading-relaxed ${note}`}>
+        On the next page, tick Property inspection &amp; photo report and write Home
+        Watch in the notes. Questions about linens or turnovers can be answered
+        &apos;not needed&apos;.
+      </p>
+      <Link
+        href={VERMONT_HOST_INTAKE_PATH}
+        className="mt-4 inline-flex items-center justify-center rounded-lg bg-vm-cyan px-5 py-3 font-heading text-sm font-semibold text-vm-navy transition hover:bg-vm-cyan-dark"
+      >
+        Request Home Watch →
+      </Link>
+      <p className={`mt-4 font-body text-sm leading-relaxed ${note}`}>
+        Prefer to talk? Call or text{" "}
+        <a href="tel:+18027335348" className={link}>
+          (802) 733-5348
+        </a>
+        {" · "}
+        <a
+          href="https://wa.me/18027335348"
+          target="_blank"
+          rel="noreferrer"
+          className={link}
+        >
+          WhatsApp
+        </a>
+      </p>
+    </div>
+  );
+}
+
 const CHECKS = [
   "Heat and thermostat, so pipes stay above freezing",
   "Faucets run and toilets flushed to prevent freezing and dry traps",
@@ -36,12 +73,7 @@ export function VermontHomeWatch() {
               photo report after every visit, so you know your home is fine before you
               need to worry.
             </p>
-            <Link
-              href={VERMONT_HOST_INTAKE_PATH}
-              className="mt-8 inline-flex items-center justify-center rounded-lg bg-vm-cyan px-5 py-3 font-heading text-sm font-semibold text-vm-navy transition hover:bg-vm-cyan-dark"
-            >
-              Request Home Watch →
-            </Link>
+            <RequestHomeWatchActions onNavy />
           </div>
         </section>
 
@@ -87,12 +119,7 @@ export function VermontHomeWatch() {
             <p className="mt-4 font-body text-base leading-relaxed text-white/75">
               We can also get the house guest-ready before you or your renters arrive.
             </p>
-            <Link
-              href={VERMONT_HOST_INTAKE_PATH}
-              className="mt-8 inline-flex items-center justify-center rounded-lg bg-vm-cyan px-5 py-3 font-heading text-sm font-semibold text-vm-navy transition hover:bg-vm-cyan-dark"
-            >
-              Request Home Watch →
-            </Link>
+            <RequestHomeWatchActions onNavy />
           </div>
         </section>
 
