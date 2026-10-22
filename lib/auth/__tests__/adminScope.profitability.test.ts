@@ -15,12 +15,14 @@ describe('adminScope — owner profitability access', () => {
     ).toBe(true);
   });
 
-  it('still blocks unrelated finance APIs for branch-scoped admins', () => {
+  it('still blocks unrelated finance APIs and the reservation planner for branch-scoped admins', () => {
+    expect(isPathAllowedForBranchScopedAdminApi('/api/admin/finance/overview')).toBe(false);
+    expect(isPathAllowedForBranchScopedAdminApi('/api/admin/payouts/run')).toBe(false);
     expect(
-      isPathAllowedForBranchScopedAdminApi('/api/admin/finance/overview')
+      isPathAllowedForBranchScopedAdminApi('/api/admin/properties/property-1/reservations')
     ).toBe(false);
-    expect(
-      isPathAllowedForBranchScopedAdminApi('/api/admin/payouts/run')
-    ).toBe(false);
+    expect(isPathAllowedForBranchScopedAdmin('/admin/properties/property-1/reservations')).toBe(
+      false
+    );
   });
 });

@@ -306,6 +306,7 @@ model Customer {
   Receipt                                                  Receipt[]
   PipelineLead                                             PipelineLead?
   Property                                                 Property[]
+  HostReservation                                          HostReservation[]
 
   @@index([branchId])
   @@index([email])
@@ -367,6 +368,7 @@ model Property {
   ServiceFeedback        ServiceFeedback[]
   GuestTipAuthorization  GuestTipAuthorization[]
   PhotoSlots             PropertyPhotoSlot[]
+  HostReservation        HostReservation[]
   ServicePackages        PropertyServicePackage[]
   PaymentPreference      PropertyPaymentPreference?
 
@@ -645,6 +647,7 @@ model Job {
   JobOffer                 JobOffer[]
   Tip                      Tip[]
   GuestTipAuthorization    GuestTipAuthorization[]
+  HostReservation          HostReservation?
 
   @@index([appliedReferralCode])
   @@index([assignedCleanerId])
@@ -695,6 +698,56 @@ model PropertyPhotoSlot {
   @@unique([propertyId, key])
   @@index([propertyId])
   @@map("property_photo_slots")
+}
+
+/// Upcoming guest stay. Separate from Job. Creating or editing a row must not
+/// invoice, assign, notify, or create a calendar event.
+model HostReservation {
+  id                     String                 @id @default(cuid())
+  customerId             String
+  propertyId             String
+  /// Calendar day, UTC midnight. Same convention as Job.guestCheckInDate.
+  guestCheckInDate       DateTime
+  /// Calendar day, UTC midnight. Checkout morning is not an extra night.
+  guestCheckOutDate      DateTime
+  bookingSource          String?
+  proposedCleaningDate   DateTime?
+  /// Allowed or confirmed access window in America/New_York. A range, not a start clock.
+  proposedCleaningWindow String?
+  status                 HostReservationStatus  @default(UNCONFIRMED)
+  /// Set only after scheduling is approved and a Job already exists or is created later.
+  jobId                  String?                @unique
+  sourceDocumentRef      String?
+  sourceLineKey          String?
+  notes                  String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  Customer               Customer               @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  Property               Property               @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  Job                    Job?                   @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  Events                 HostReservationEvent[]
+
+  @@unique([propertyId, guestCheckInDate, guestCheckOutDate], map: "host_reservations_stay_key")
+  @@unique([propertyId, sourceDocumentRef, sourceLineKey], map: "host_reservations_source_line_key")
+  @@index([customerId])
+  @@index([propertyId, proposedCleaningDate])
+  @@index([status])
+  @@index([sourceDocumentRef, sourceLineKey])
+  @@map("host_reservations")
+}
+
+/// Append-only history. Reservation updates keep the same row and the linked job.
+model HostReservationEvent {
+  id            String          @id @default(cuid())
+  reservationId String
+  action        String
+  before        Json?
+  after         Json?
+  createdAt     DateTime        @default(now())
+  Reservation   HostReservation @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+
+  @@index([reservationId])
+  @@map("host_reservation_events")
 }
 
 /// Dispatch offer — source of truth until the cleaner accepts. Not a JobStatus.
@@ -1848,6 +1901,15 @@ enum BillingPolicy {
 enum PropertyUseType {
   HOST
   RESIDENTIAL
+}
+
+/// Planning state for a guest stay. This is not a JobStatus.
+enum HostReservationStatus {
+  UNCONFIRMED
+  HOST_CONFIRMATION_REQUIRED
+  CONFIRMED
+  HELD
+  CANCELLED
 }
 
 enum ServicePackageCategory {
