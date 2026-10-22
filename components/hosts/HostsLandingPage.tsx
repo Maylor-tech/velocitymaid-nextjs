@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import { AfterTheClean } from "@/components/marketing/AfterTheClean";
+import { HomeWatchLinkCard } from "@/components/marketing/HomeWatchLinkCard";
 import { MarketingTestimonials } from "@/components/marketing/MarketingTestimonials";
 import { VERMONT_TESTIMONIALS } from "@/lib/marketing/testimonials";
 import { trackEvent } from "@/lib/analytics/trackEvent";
@@ -75,6 +76,12 @@ export function HostsLandingPage() {
         </section>
 
         <AfterTheClean />
+
+        <section className="bg-white px-5 py-10">
+          <div className="mx-auto max-w-3xl">
+            <HomeWatchLinkCard />
+          </div>
+        </section>
 
         <MarketingTestimonials
           testimonials={VERMONT_TESTIMONIALS}

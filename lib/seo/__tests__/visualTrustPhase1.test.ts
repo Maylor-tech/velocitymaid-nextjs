@@ -69,6 +69,7 @@ describe("visual trust phase 1 wiring", () => {
       "app/vermont/okemo/page.tsx",
       "app/vermont/middlebury/page.tsx",
       "app/vermont/host-intake/page.tsx",
+      "app/vermont/home-watch/page.tsx",
     ];
     for (const file of files) {
       const source = readRepoFile(file);

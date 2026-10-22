@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
+import { HomeWatchLinkCard } from "@/components/marketing/HomeWatchLinkCard";
 
 const primaryButton =
   "inline-flex items-center justify-center rounded-md bg-vm-cyan px-5 py-2.5 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
@@ -132,6 +133,9 @@ export default function PricingTiers() {
           Deposits may apply for deep cleans, large properties, and first-time clients.
           Internal cleaner payout rates are not published publicly.
         </p>
+        <div className="mt-8 max-w-3xl">
+          <HomeWatchLinkCard />
+        </div>
       </div>
     </div>
   );

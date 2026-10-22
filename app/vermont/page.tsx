@@ -10,6 +10,7 @@ import {
   VERMONT_TURNOVER_QUOTE_LABEL,
 } from "@/lib/marketing/publicCtas";
 import { AfterTheClean } from "@/components/marketing/AfterTheClean";
+import { HomeWatchLinkCard } from "@/components/marketing/HomeWatchLinkCard";
 import { ArrowRight, MapPin, Snowflake } from "lucide-react";
 import {
   VERMONT_OPERATIONS_SUPPORT_LINE1,
@@ -136,6 +137,8 @@ export default function VermontOverviewPage() {
             ))}
           </div>
         </section>
+
+        <HomeWatchLinkCard />
       </div>
 
       <AfterTheClean />
