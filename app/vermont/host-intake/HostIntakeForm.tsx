@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { trackEvent } from "@/lib/analytics/trackEvent";
@@ -15,6 +15,11 @@ import {
   SAME_DAY_TURNOVER_OPTIONS,
   SQUARE_FOOTAGE_OPTIONS,
 } from "@/lib/hostIntake/constants";
+import {
+  HOME_WATCH_INTAKE_BANNER,
+  isHomeWatchIntake,
+  mergeHomeWatchDefaults,
+} from "@/lib/hostIntake/homeWatchIntake";
 import type { HostIntakePayload } from "@/lib/hostIntake/types";
 import { validateFullHostIntake } from "@/lib/hostIntake/validateFullIntake";
 import {
@@ -121,7 +126,11 @@ function FieldHelper({ children }: { children: React.ReactNode }) {
 
 export default function HostIntakeForm({ embedded = false }: { embedded?: boolean }) {
   const searchParams = useSearchParams();
-  const [form, setForm] = useState<FormFields>(initialForm);
+  const homeWatchRequest = isHomeWatchIntake(searchParams.get("service"));
+  const homeWatchDefaultsApplied = useRef(homeWatchRequest);
+  const [form, setForm] = useState<FormFields>(() =>
+    homeWatchRequest ? mergeHomeWatchDefaults(initialForm, "home-watch") : initialForm
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -134,15 +143,23 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
     const name = searchParams.get("name")?.trim() || "";
     const phone = searchParams.get("phone")?.trim() || "";
     const city = searchParams.get("city")?.trim() || "";
+    const applyHomeWatch =
+      isHomeWatchIntake(searchParams.get("service")) && !homeWatchDefaultsApplied.current;
+    if (applyHomeWatch) homeWatchDefaultsApplied.current = true;
 
-    if (email || name || phone || city) {
-      setForm((prev) => ({
-        ...prev,
-        email: email || prev.email,
-        fullName: name || prev.fullName,
-        phone: phone || prev.phone,
-        city: city || prev.city,
-      }));
+    if (email || name || phone || city || applyHomeWatch) {
+      setForm((prev) => {
+        const next = {
+          ...prev,
+          email: email || prev.email,
+          fullName: name || prev.fullName,
+          phone: phone || prev.phone,
+          city: city || prev.city,
+        };
+        return applyHomeWatch
+          ? mergeHomeWatchDefaults(next, searchParams.get("service"))
+          : next;
+      });
     }
 
     const fromUrl = parseAttributionFromSearchParams(searchParams);
@@ -339,6 +356,11 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
           noValidate
           className="max-w-[560px] mx-auto bg-white border border-vm-border rounded-xl p-6 sm:p-8 space-y-10"
         >
+          {homeWatchRequest ? (
+            <p className="rounded-lg border border-vm-border bg-vm-surface px-4 py-3 font-body text-sm leading-relaxed text-vm-text">
+              {HOME_WATCH_INTAKE_BANNER}
+            </p>
+          ) : null}
           <fieldset className="space-y-4">
             <legend className="font-heading font-semibold text-vm-navy text-lg mb-2">
               Your contact info
