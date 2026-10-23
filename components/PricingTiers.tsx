@@ -74,10 +74,9 @@ export default function PricingTiers() {
                   card.price
                 ) : (
                   <>
-                    {card.price}{" "}
-                    <span className="font-body text-xs font-medium text-vm-muted">
-                      starting
-                    </span>
+                    <span className="font-body text-base font-medium text-vm-muted">from </span>
+                    {card.price}
+                    <span className="font-body text-xs font-medium text-vm-muted"> per visit</span>
                   </>
                 )}
               </p>
@@ -114,8 +113,9 @@ export default function PricingTiers() {
               ) : null}
               <h3 className="font-heading text-lg font-bold text-vm-navy">{card.name}</h3>
               <p className="mt-2 font-heading text-3xl font-bold text-vm-navy">
-                {card.price}{" "}
-                <span className="font-body text-xs font-medium text-vm-muted">starting</span>
+                <span className="font-body text-base font-medium text-vm-muted">from </span>
+                {card.price}
+                <span className="font-body text-xs font-medium text-vm-muted"> per visit</span>
               </p>
               <p className="mt-2 font-body text-xs text-vm-muted">{card.detail}</p>
               <ul className="mt-5 space-y-2">

@@ -5,6 +5,7 @@ import {
   VERMONT_OPERATIONS_SUPPORT_LINE1,
   VERMONT_OPERATIONS_SUPPORT_LINE2,
 } from "@/lib/company/businessAddress";
+import { homeWatchIntakeHref } from "@/lib/hostIntake/homeWatchIntake";
 import { VERMONT_HOST_INTAKE_PATH } from "@/lib/marketing/publicCtas";
 
 function RequestHomeWatchActions({ onNavy }: { onNavy: boolean }) {
@@ -14,14 +15,9 @@ function RequestHomeWatchActions({ onNavy }: { onNavy: boolean }) {
     : "font-semibold text-vm-navy underline-offset-2 hover:underline";
   return (
     <div className="mt-8">
-      <p className={`max-w-xl font-body text-sm leading-relaxed ${note}`}>
-        On the next page, tick Property inspection &amp; photo report and write Home
-        Watch in the notes. Questions about linens or turnovers can be answered
-        &apos;not needed&apos;.
-      </p>
       <Link
-        href={VERMONT_HOST_INTAKE_PATH}
-        className="mt-4 inline-flex items-center justify-center rounded-lg bg-vm-cyan px-5 py-3 font-heading text-sm font-semibold text-vm-navy transition hover:bg-vm-cyan-dark"
+        href={homeWatchIntakeHref(VERMONT_HOST_INTAKE_PATH)}
+        className="inline-flex items-center justify-center rounded-lg bg-vm-cyan px-5 py-3 font-heading text-sm font-semibold text-vm-navy transition hover:bg-vm-cyan-dark"
       >
         Request Home Watch →
       </Link>

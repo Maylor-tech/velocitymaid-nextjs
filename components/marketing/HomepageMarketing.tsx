@@ -287,6 +287,14 @@ export function HomepageMarketing() {
                 <Link href={VERMONT_HOST_INTAKE_PATH} className={`${primaryButton} mt-6`}>
                   {VERMONT_TURNOVER_QUOTE_LABEL}
                 </Link>
+                <p className="mt-4 font-body text-sm leading-relaxed">
+                  <Link
+                    href="/vermont/home-watch"
+                    className="font-semibold text-vm-navy underline-offset-2 hover:underline"
+                  >
+                    Away for the winter? Home Watch →
+                  </Link>
+                </p>
               </article>
               <article className="rounded-xl border border-vm-border bg-white p-7">
                 <p className="font-body text-xs font-bold uppercase tracking-wider text-vm-cyan-dark">

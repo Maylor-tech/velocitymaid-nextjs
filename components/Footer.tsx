@@ -47,6 +47,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/vermont/home-watch" className={footerLinkClass}>
+                  Vermont Home Watch
+                </Link>
+              </li>
+              <li>
                 <Link href="/residential" className={footerLinkClass}>
                   Residential Cleaning
                 </Link>
