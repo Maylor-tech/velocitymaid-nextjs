@@ -343,7 +343,7 @@ function HowItWorksSection() {
         </li>
         <li>
           <span className="font-semibold text-vm-navy">4. Photos:</span>{" "}
-          The photos prove the home is guest-ready before arrival.
+          Photos document the work. Readiness is confirmed through checklist review and any open issues.
         </li>
         <li>
           <span className="font-semibold text-vm-navy">5. One pay link:</span>{" "}

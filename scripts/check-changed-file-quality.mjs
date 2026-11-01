@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Changed-file quality ratchet.
  *

@@ -6,7 +6,12 @@ import {
   buildInvoiceBrandedEmailText,
 } from './templates/invoiceBrandedEmail';
 import { logIntegrationEvent } from '@/lib/google/integrationLog';
+import { sendVerifiedEmail, EmailDeliveryError } from './sendVerifiedEmail';
 
+function escapeEmailHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 function appBaseUrl(): string {
   return (
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || 'https://velocitymaid.com'
@@ -23,7 +28,7 @@ export async function sendInvoiceSentEmail(
   const html = buildInvoiceBrandedEmailHtml(invoice, { variant: 'sent', viewUrl });
   const text = buildInvoiceBrandedEmailText(invoice, { variant: 'sent', viewUrl });
 
-  await resend.emails.send({
+  await sendVerifiedEmail({
     from: getResendFromEmail(),
     to: invoice.clientEmail,
     subject: `VelocityMaid — Invoice ${invoice.invoiceNumber}`,
@@ -62,7 +67,7 @@ export async function sendInvoiceReceiptEmail(
     paymentAmount,
   });
 
-  await resend.emails.send({
+  await sendVerifiedEmail({
     from: getResendFromEmail(),
     to: invoice.clientEmail,
     subject: `VelocityMaid Payment Receipt — ${invoice.invoiceNumber}`,
@@ -83,22 +88,36 @@ export async function sendInvoiceReceiptEmail(
 }
 
 export async function sendInvoiceReminderEmail(
-  invoice: SerializedInvoice
-): Promise<{ sent: boolean; skippedReason?: string }> {
+  invoice: SerializedInvoice,
+  options: { idempotencyKey?: string; message?: string; triggeredBy?: 'admin' | 'cron' } = {}
+): Promise<{ sent: boolean; skippedReason?: string; messageId?: string; error?: string; deliveryUnknown?: boolean }> {
   if (!resend) return { sent: false, skippedReason: 'RESEND_API_KEY not configured' };
   if (!invoice.clientEmail) return { sent: false, skippedReason: 'No client email' };
 
   const viewUrl = `${appBaseUrl()}/invoice/${invoice.publicToken}`;
-  const html = buildInvoiceBrandedEmailHtml(invoice, { variant: 'reminder', viewUrl });
-  const text = buildInvoiceBrandedEmailText(invoice, { variant: 'reminder', viewUrl });
+  const html = buildInvoiceBrandedEmailHtml(invoice, { variant: 'reminder', viewUrl, reminderMessage: options.message });
+  const text = buildInvoiceBrandedEmailText(invoice, { variant: 'reminder', viewUrl, reminderMessage: options.message });
 
-  await resend.emails.send({
-    from: getResendFromEmail(),
-    to: invoice.clientEmail,
-    subject: `VelocityMaid Invoice Reminder — ${invoice.invoiceNumber}`,
-    html,
-    text,
-  });
+  let messageId: string;
+  try {
+    ({ messageId } = await sendVerifiedEmail({
+      from: getResendFromEmail(),
+      to: invoice.clientEmail,
+      replyTo: 'hello@velocitymaid.com',
+      subject: `VelocityMaid Invoice Reminder — ${invoice.invoiceNumber}`,
+      html,
+      text,
+    }, options.idempotencyKey));
+  } catch (error) {
+    await logIntegrationEvent({
+      jobId: invoice.jobId, channel: 'EMAIL', action: 'SEND_INVOICE_REMINDER_EMAIL',
+      provider: 'RESEND', status: 'FAILED', recipient: invoice.clientEmail,
+      templateKey: 'invoice_reminder', triggeredBy: options.triggeredBy ?? 'admin',
+      errorSummary: error instanceof Error ? error.message : 'Email send failed',
+    });
+    return { sent: false, error: error instanceof Error ? error.message : 'Email send failed',
+      deliveryUnknown: error instanceof EmailDeliveryError ? error.deliveryUnknown : true };
+  }
   logIntegrationEvent({
     jobId: invoice.jobId,
     channel: 'EMAIL',
@@ -107,9 +126,9 @@ export async function sendInvoiceReminderEmail(
     status: 'SUCCESS',
     recipient: invoice.clientEmail,
     templateKey: 'invoice_reminder',
-    triggeredBy: 'cron',
+    triggeredBy: options.triggeredBy ?? 'admin',
   }).catch(() => {});
-  return { sent: true };
+  return { sent: true, messageId };
 }
 
 export async function sendPaymentConfirmationEmail(params: {
@@ -134,6 +153,9 @@ export async function sendPaymentConfirmationEmail(params: {
   const upcomingLine = params.nextJobDate
     ? `\n\nYour next scheduled service is ${params.nextJobDate} — we'll see you then.`
     : '';
+  const balanceLine = params.invoice.balanceDue > 0
+    ? `Your remaining invoice balance is ${formatUsd(params.invoice.balanceDue)}.`
+    : 'This invoice is paid in full. Thank you for choosing VelocityMaid.';
 
   const text = `Hi ${firstName},
 
@@ -143,7 +165,7 @@ Invoice: ${params.invoice.invoiceNumber}
 Date paid: ${paidDate}
 Amount: ${amountStr}
 
-You're all squared up. Thank you for choosing VelocityMaid.${upcomingLine}
+${balanceLine}${upcomingLine}
 
 Brian Maylor
 VelocityMaid
@@ -159,21 +181,21 @@ COME HOME TO CLEAN`;
     <div style="color:#fff;font-size:18px;font-weight:bold;margin-top:4px;">Payment received</div>
   </div>
   <div style="border:1px solid #E2E8F0;border-top:none;padding:24px;border-radius:0 0 12px 12px;background:#fff;">
-    <p style="font-size:15px;line-height:1.6;">Hi ${firstName},</p>
-    <p style="font-size:15px;line-height:1.6;">We've received your payment of <strong>${amountStr}</strong> for <strong>${params.invoice.serviceType}</strong> at ${params.invoice.propertyAddress}.</p>
+    <p style="font-size:15px;line-height:1.6;">Hi ${escapeEmailHtml(firstName)},</p>
+    <p style="font-size:15px;line-height:1.6;">We've received your payment of <strong>${amountStr}</strong> for <strong>${escapeEmailHtml(params.invoice.serviceType)}</strong> at ${escapeEmailHtml(params.invoice.propertyAddress)}.</p>
     <table style="width:100%;font-size:14px;margin:16px 0;border-collapse:collapse;">
-      <tr><td style="padding:4px 0;color:#6B7280;">Invoice</td><td style="padding:4px 0;font-weight:bold;">${params.invoice.invoiceNumber}</td></tr>
+      <tr><td style="padding:4px 0;color:#6B7280;">Invoice</td><td style="padding:4px 0;font-weight:bold;">${escapeEmailHtml(params.invoice.invoiceNumber)}</td></tr>
       <tr><td style="padding:4px 0;color:#6B7280;">Date paid</td><td style="padding:4px 0;font-weight:bold;">${paidDate}</td></tr>
       <tr><td style="padding:4px 0;color:#6B7280;">Amount</td><td style="padding:4px 0;font-weight:bold;color:#00C2CB;">${amountStr}</td></tr>
     </table>
-    <p style="font-size:15px;line-height:1.6;">You're all squared up. Thank you for choosing VelocityMaid.</p>
-    ${params.nextJobDate ? `<p style="font-size:14px;line-height:1.6;color:#374151;">Your next scheduled service is <strong>${params.nextJobDate}</strong> — we'll see you then.</p>` : ''}
+    <p style="font-size:15px;line-height:1.6;">${balanceLine}</p>
+    ${params.nextJobDate ? `<p style="font-size:14px;line-height:1.6;color:#374151;">Your next scheduled service is <strong>${escapeEmailHtml(params.nextJobDate)}</strong> — we'll see you then.</p>` : ''}
     <p style="font-size:14px;line-height:1.6;margin-top:20px;">Brian Maylor<br/>VelocityMaid<br/>(802) 733-5348<br/>hello@velocitymaid.com</p>
     <p style="font-size:11px;font-weight:bold;letter-spacing:2px;color:#00C2CB;margin-top:16px;">COME HOME TO CLEAN</p>
   </div>
 </div>`;
 
-  await resend.emails.send({
+  await sendVerifiedEmail({
     from: getResendFromEmail(),
     to: params.invoice.clientEmail,
     subject: `Payment received — thank you, ${firstName}`,

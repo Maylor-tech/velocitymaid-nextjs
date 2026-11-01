@@ -2,34 +2,24 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth/requireRole';
-import { prisma } from '@/lib/prisma';
+import { requireRole, assertSuperAdmin } from '@/lib/auth/requireRole';
 import { refreshInvoiceStatus } from '@/lib/invoices/invoiceService';
-import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
-import { sendInvoiceReminderEmail } from '@/lib/email/invoiceEmails';
+import { sendRecordedInvoiceReminder } from '@/lib/invoices/sendReminder';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
+    assertSuperAdmin(auth);
     await refreshInvoiceStatus(params.id);
-    const invoice = await prisma.invoice.findUnique({
-      where: { id: params.id },
-      include: { items: true, payments: true },
+    const emailResult = await sendRecordedInvoiceReminder(params.id, { triggeredBy: 'admin' });
+    return NextResponse.json({ success: emailResult.sent, email: emailResult,
+      error: emailResult.sent ? undefined : emailResult.skippedReason || 'Reminder delivery failed; review reminder history before retrying',
+    }, {
+      status: emailResult.sent ? 200 : emailResult.failed ? 502 : 409,
     });
-    if (!invoice) {
-      return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
-    }
-
-    const serialized = serializeInvoice(invoice, { forOutboundEmail: true });
-    if (serialized.balanceDue <= 0) {
-      return NextResponse.json({ success: false, error: 'Invoice has no balance due' }, { status: 400 });
-    }
-
-    const emailResult = await sendInvoiceReminderEmail(serialized);
-    return NextResponse.json({ success: true, email: emailResult });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to send reminder';

@@ -103,7 +103,7 @@ function loadMigrations(): { name: string; sql: string }[] {
 
 describe("public table RLS coverage", () => {
   const migrations = loadMigrations();
-  const latest = migrations[migrations.length - 1];
+  const latest = migrations.find((migration) => migration.name === "20261022220000_enable_rls_remaining_tables")!;
 
   it("leaves no public table without RLS after the migrations run", () => {
     expect(tablesWithoutRls(migrations)).toEqual([]);
@@ -129,5 +129,14 @@ describe("public table RLS coverage", () => {
     ]) {
       expect(latest.sql).toContain(`'${table}'`);
     }
+  });
+  it("protects the additive reminder ledger and preserves claim uniqueness", () => {
+    const ledger = migrations.find((migration) => migration.name === "20261031230000_invoice_reminder_deliveries");
+    expect(ledger).toBeDefined();
+    expect(ledger!.sql).toContain('ALTER TABLE "InvoiceReminderDelivery" ENABLE ROW LEVEL SECURITY');
+    expect(ledger!.sql).toContain('("invoiceId", "stage")');
+    expect(ledger!.sql).toContain('("recipientEmail", "contactDate")');
+    expect(ledger!.sql).toContain('ON DELETE RESTRICT ON UPDATE CASCADE');
+    expect(ledger!.sql).not.toMatch(/CREATE POLICY|FORCE ROW LEVEL SECURITY/i);
   });
 });

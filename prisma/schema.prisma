@@ -2047,12 +2047,14 @@ model Invoice {
   notes           String?
   sentAt          DateTime?
   reminderSentAt  DateTime?
+  remindersPaused Boolean        @default(false)
   paidAt          DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   items           InvoiceItem[]
   payments        InvoicePayment[]
   checkoutSessions InvoiceCheckoutSession[]
+  reminderDeliveries InvoiceReminderDelivery[]
   Job             Job?           @relation(fields: [jobId], references: [id])
   Customer        Customer?      @relation(fields: [customerId], references: [id])
   Receipts        Receipt[]
@@ -2065,6 +2067,26 @@ model Invoice {
   @@index([publicToken])
   @@index([jobId])
   @@index([customerId])
+}
+
+// Durable claims shared by manual and scheduled invoice reminders. UNKNOWN
+// outcomes are reconciled by an operator, never blindly resent.
+model InvoiceReminderDelivery {
+  id                String   @id @default(cuid())
+  invoiceId         String
+  stage             String
+  recipientEmail    String
+  contactDate       String
+  status            String   @default("PENDING")
+  providerMessageId String?
+  errorSummary      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  Invoice           Invoice  @relation(fields: [invoiceId], references: [id])
+
+  @@unique([invoiceId, stage])
+  @@unique([recipientEmail, contactDate])
+  @@index([status, updatedAt])
 }
 
 model InvoiceItem {

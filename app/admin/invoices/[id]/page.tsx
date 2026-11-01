@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { SerializedInvoice } from '@/lib/invoices/serializeInvoice';
 import { InvoiceDocument } from '@/components/invoices/InvoiceDocument';
+import { InvoiceReminderControls } from '@/components/admin/invoices/InvoiceReminderControls';
 import {
   SendInvoiceDialog,
   type SendInvoicePayload,
@@ -164,6 +165,7 @@ export default function InvoiceDetailPage() {
         </p>
       </div>
 
+      <InvoiceReminderControls invoiceId={id} />
       <InvoiceDocument invoice={invoice} />
 
       {invoice.payments.length > 0 && (

@@ -1,5 +1,6 @@
 import type { SerializedInvoice } from '@/lib/invoices/serializeInvoice';
 import { formatInvoiceDate } from '@/lib/invoices/invoiceUtils';
+import { contactDate } from '@/lib/invoices/reminderPolicy';
 import {
   getServiceInvoiceZelleDestination,
   SERVICE_INVOICE_ZELLE_SECONDARY,
@@ -73,11 +74,7 @@ export function parseInvoiceNotes(notes: string | null | undefined): {
 function dueDateLabel(invoice: SerializedInvoice): string {
   if (invoice.status === 'PAID') return 'Paid';
   if (!invoice.dueDate) return 'Due Now';
-  const due = new Date(invoice.dueDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  due.setHours(0, 0, 0, 0);
-  if (due <= today) return 'Due Now';
+  if (invoice.dueDate.slice(0, 10) <= contactDate(new Date())) return 'Due Now';
   return formatInvoiceDate(invoice.dueDate);
 }
 
@@ -150,6 +147,7 @@ export function buildInvoiceBrandedEmailHtml(
     variant?: InvoiceEmailVariant;
     viewUrl?: string;
     paymentAmount?: number;
+    reminderMessage?: string;
   } = {}
 ): string {
   const variant = options.variant ?? 'sent';
@@ -168,7 +166,7 @@ export function buildInvoiceBrandedEmailHtml(
   if (variant === 'reminder') {
     introBlock = `<tr><td style="padding:0 32px 16px;">
       <p style="font-family:${FONT};font-size:15px;color:${NAVY};line-height:1.6;margin:0;">
-        Hi ${escapeHtml(invoice.clientName.split(/\s+/)[0] || invoice.clientName)}, this is a friendly reminder that invoice
+        Hi ${escapeHtml(invoice.clientName.split(/\s+/)[0] || invoice.clientName)}, ${escapeHtml(options.reminderMessage || 'this is a reminder about your outstanding invoice.')} Invoice
         <strong>${escapeHtml(invoice.invoiceNumber)}</strong> has an outstanding balance of
         <strong>${escapeHtml(invoice.balanceDueFormatted)}</strong>.
       </p>
@@ -212,6 +210,7 @@ export function buildInvoiceBrandedEmailHtml(
           <td valign="middle">
             <div style="font-family:${FONT};font-size:20px;font-weight:bold;letter-spacing:1px;color:#FFFFFF;line-height:1;">VELOCITYMAID</div>
             <div style="font-family:${FONT};font-size:9px;font-weight:bold;letter-spacing:2.5px;color:${CYAN};line-height:1;padding-top:5px;">COME HOME TO CLEAN</div>
+
           </td>
           <td valign="middle" align="right" style="padding-left:40px;">
             <div style="font-family:${FONT};font-size:11px;font-weight:bold;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;">Invoice</div>
@@ -361,7 +360,7 @@ export function buildInvoiceBrandedEmailHtml(
 
 export function buildInvoiceBrandedEmailText(
   invoice: SerializedInvoice,
-  options: { variant?: InvoiceEmailVariant; viewUrl?: string; paymentAmount?: number } = {}
+  options: { variant?: InvoiceEmailVariant; viewUrl?: string; paymentAmount?: number; reminderMessage?: string } = {}
 ): string {
   const variant = options.variant ?? 'sent';
   const { closingNote, upcomingLines } = parseInvoiceNotes(invoice.notes);
@@ -378,6 +377,7 @@ export function buildInvoiceBrandedEmailText(
   ];
 
   if (variant === 'reminder') {
+    if (options.reminderMessage) lines.push('', options.reminderMessage);
     lines.push('', `Reminder: ${invoice.balanceDueFormatted} outstanding.`);
   }
 
