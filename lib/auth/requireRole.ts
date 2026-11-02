@@ -8,6 +8,7 @@ import { UserRole } from "@prisma/client";
 import { cookies } from "next/headers";
 import { allowLegacyAdminBypass, isLegacyAdminSession } from "./adminBypass";
 import { isBranchScopedAdmin } from "./adminScope";
+import { PREVIEW_ADMIN_EMAIL, verifyPreviewAdminSession } from './previewAdminSession';
 
 type CookieReader = { get(name: string): { value: string } | undefined };
 
@@ -88,6 +89,11 @@ export async function requireRole(
   if (requiredRole === "ADMIN") {
     const cookieStore = await cookies();
     const adminSessionRaw = readAdminCookie(cookieStore, request, "admin_session");
+    if (process.env.VERCEL_ENV === "preview") {
+      const auth = await getVerifiedPreviewAdmin(adminSessionRaw);
+      if (!auth) throw NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+      return auth;
+    }
     const adminId =
       readAdminCookie(cookieStore, request, "adminId") ||
       readAdminCookie(cookieStore, request, "adminSession") ||
@@ -255,6 +261,7 @@ export async function requireRole(
 export async function getAdminAuthFromCookies(): Promise<AuthContext | null> {
   const cookieStore = await cookies();
   const adminSessionRaw = cookieStore.get("admin_session")?.value;
+  if (process.env.VERCEL_ENV === "preview") return getVerifiedPreviewAdmin(adminSessionRaw);
   if (!adminSessionRaw || isLegacyAdminSession(adminSessionRaw)) return null;
   try {
     const session = JSON.parse(adminSessionRaw) as { userId?: string; branchId?: string };
@@ -345,3 +352,26 @@ export async function requireCleanerJobAssignment(
   return auth;
 }
 
+
+/** Revalidate the signed Preview identity and unchanged memberships against the DB. */
+async function getVerifiedPreviewAdmin(raw: string | undefined): Promise<AuthContext | null> {
+  const session = await verifyPreviewAdminSession(raw);
+  if (!session) return null;
+  const admin = await prisma.user.findUnique({
+    where: { id: session.userId, email: PREVIEW_ADMIN_EMAIL, role: UserRole.ADMIN, isActive: true },
+    select: { id: true, email: true },
+  });
+  if (!admin) return null;
+  const branches = await prisma.userBranch.findMany({
+    where: { userId: admin.id }, include: { Branch: true },
+  });
+  const currentIds = branches.map(b => b.branchId).sort();
+  if (!currentIds.length || JSON.stringify(currentIds) !== JSON.stringify([...session.branchIds].sort()) ||
+      session.isBranchScoped !== (currentIds.length === 1)) return null;
+  return {
+    userId: admin.id, role: 'ADMIN', email: admin.email,
+    ...(currentIds.length === 1 ? {
+      branchId: currentIds[0], branchName: branches[0].Branch.name,
+    } : {}),
+  };
+}

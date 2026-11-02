@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyPreviewAdminSession } from './lib/auth/previewAdminSession';
 import {
   COOKIE_NAME,
   verifyCustomerSessionToken,
@@ -35,6 +36,23 @@ function isAdminSessionValid(adminSession: string | undefined): boolean {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Preview rejects legacy identity cookies/headers before any existing admin path.
+  if (process.env.VERCEL_ENV === 'preview' &&
+      (pathname.startsWith('/api/admin') || pathname.startsWith('/admin') || pathname.startsWith('/dashboard'))) {
+    const session = await verifyPreviewAdminSession(req.cookies.get('admin_session')?.value);
+    if (!session && pathname !== '/admin/login') {
+      return pathname.startsWith('/api/admin')
+        ? NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        : NextResponse.redirect(new URL('/admin/login', req.url));
+    }
+    if (!session) return NextResponse.next();
+    // Route handlers must not select another identity through legacy aliases.
+    if (req.cookies.get('adminId') || req.cookies.get('adminSession') ||
+        req.headers.has('x-admin-id') || req.headers.has('authorization')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+  }
 
   // Branch-scoped admin API guard (jobs ops only)
   if (pathname.startsWith('/api/admin')) {

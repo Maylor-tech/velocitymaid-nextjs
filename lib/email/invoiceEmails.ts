@@ -1,3 +1,4 @@
+import { buildInvoiceViewUrl } from '@/lib/invoices/invoiceViewUrl';
 import { resend, getResendFromEmail } from './resendClient';
 import type { SerializedInvoice } from '@/lib/invoices/serializeInvoice';
 import { formatUsd } from '@/lib/invoices/invoiceUtils';
@@ -12,11 +13,6 @@ function escapeEmailHtml(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
-function appBaseUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || 'https://velocitymaid.com'
-  );
-}
 
 export async function sendInvoiceSentEmail(
   invoice: SerializedInvoice
@@ -24,7 +20,7 @@ export async function sendInvoiceSentEmail(
   if (!resend) return { sent: false, skippedReason: 'RESEND_API_KEY not configured' };
   if (!invoice.clientEmail) return { sent: false, skippedReason: 'No client email' };
 
-  const viewUrl = `${appBaseUrl()}/invoice/${invoice.publicToken}`;
+  const viewUrl = buildInvoiceViewUrl(invoice.publicToken);
   const html = buildInvoiceBrandedEmailHtml(invoice, { variant: 'sent', viewUrl });
   const text = buildInvoiceBrandedEmailText(invoice, { variant: 'sent', viewUrl });
 
@@ -55,7 +51,7 @@ export async function sendInvoiceReceiptEmail(
   if (!resend) return { sent: false, skippedReason: 'RESEND_API_KEY not configured' };
   if (!invoice.clientEmail) return { sent: false, skippedReason: 'No client email' };
 
-  const viewUrl = `${appBaseUrl()}/invoice/${invoice.publicToken}`;
+  const viewUrl = buildInvoiceViewUrl(invoice.publicToken);
   const html = buildInvoiceBrandedEmailHtml(invoice, {
     variant: 'receipt',
     viewUrl,
@@ -94,7 +90,7 @@ export async function sendInvoiceReminderEmail(
   if (!resend) return { sent: false, skippedReason: 'RESEND_API_KEY not configured' };
   if (!invoice.clientEmail) return { sent: false, skippedReason: 'No client email' };
 
-  const viewUrl = `${appBaseUrl()}/invoice/${invoice.publicToken}`;
+  const viewUrl = buildInvoiceViewUrl(invoice.publicToken);
   const html = buildInvoiceBrandedEmailHtml(invoice, { variant: 'reminder', viewUrl, reminderMessage: options.message });
   const text = buildInvoiceBrandedEmailText(invoice, { variant: 'reminder', viewUrl, reminderMessage: options.message });
 

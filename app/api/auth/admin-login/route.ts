@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
 import { safeError } from '@/lib/safeError';
+import { previewAdminLogin } from '@/lib/auth/previewAdminLogin';
 import {
   getScopedAdminPassword,
   isBranchScopedAdmin,
@@ -13,6 +14,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  if (process.env.VERCEL_ENV === 'preview') return previewAdminLogin(req);
   try {
     const body = await req.json();
     const { email, password } = body;
