@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
         return;
       }
 
-      router.push(data.previewDiagnostic === true ? '/api/admin/preview-isolation' : '/admin/jobs');
+      router.push('/admin/jobs');
     } catch (err: unknown) {
       console.error('Admin login issue:', err);
       setError(null);

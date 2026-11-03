@@ -68,7 +68,7 @@ describe('Preview administrator credentials', () => {
   it('requires password even with two memberships and issues only a signed HttpOnly session', async () => {
     const response = await POST(login({ email: 'staging.admin@example.test', password }));
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ success: true, previewDiagnostic: true });
+    expect(await response.json()).toEqual({ success: true });
     const [name, token, flags] = state.set.mock.calls[0];
     expect(name).toBe('admin_session');
     expect(flags).toMatchObject({ httpOnly: true, secure: true, sameSite: 'strict', maxAge: 1800 });

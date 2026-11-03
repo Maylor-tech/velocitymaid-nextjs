@@ -37,7 +37,9 @@ vi.mock('@/lib/invoices/serializeInvoice', () => ({
   serializeInvoice: (inv: unknown) => inv,
 }));
 
-import { PATCH } from '@/app/api/admin/invoices/[id]/route';
+import { NextResponse } from 'next/server';
+
+import { GET, PATCH } from '@/app/api/admin/invoices/[id]/route';
 
 const SENT_INVOICE = {
   id: 'inv1',
@@ -109,5 +111,30 @@ describe('PATCH invoice immutability', () => {
     const json = await res.json();
     expect(json.code).toBe('INVOICE_STATUS_TRANSITION_BLOCKED');
     expect(invoiceUpdate).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('invoice error privacy', () => {
+  const context = { params: { id: 'inv1' } };
+
+  it.each([
+    ['GET', GET, 'Failed to fetch invoice'],
+    ['PATCH', PATCH, 'Failed to update invoice'],
+  ] as const)('%s hides unexpected database error details', async (_method, handler, message) => {
+    invoiceFindUnique.mockRejectedValueOnce(new Error(
+      'permission denied for table Invoice; SQLSTATE 42501; postgres://fixture:secret@db.invalid/postgres'
+    ));
+    const response = await handler(req({ notes: 'test' }), context);
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ success: false, error: message });
+  });
+
+  it.each([GET, PATCH])('preserves explicit authorization responses', async (handler) => {
+    const denied = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    requireRole.mockRejectedValueOnce(denied);
+    const response = await handler(req({}), context);
+    expect(response).toBe(denied);
+    expect(invoiceFindUnique).not.toHaveBeenCalled();
   });
 });

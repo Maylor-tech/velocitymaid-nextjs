@@ -21,6 +21,7 @@ legacy cookies and identity headers. Data access revalidates active user and exa
 current memberships. Session changes and key rotation require a new login. Browser
 cookies must never be fabricated to bypass authentication.
 
+Historical diagnostic (removed by the cleanup change):
 GET /api/admin/preview-isolation:
 - Empty 404 outside Preview, before environment/auth/database reporting.
 - Signed administrator session required; no provider calls.
@@ -37,10 +38,21 @@ Broader pre-existing authentication issues (separate release blockers):
 - This temporary patch is not a full account/session/rate-limit/RBAC modernization.
 Keep Production release blocked pending a separately reviewed authentication remediation.
 
-Removal:
-After capturing authorized verification results, delete the temporary diagnostic route
-and its tests, redeploy protected Preview, verify 404 there and in Production, and remove
-any diagnostic-only constants. Do not remove signed-session/password protection merely
+Cleanup implementation:
+The temporary diagnostic route and its dedicated tests are deleted. Its constants were
+local to the deleted route. Signed-session/password protection and its regression tests
+remain. The diagnostic-only login response flag and redirect are removed; successful
+login uses the existing /admin/jobs destination. The restricted role is not authorized
+for job access, so do not use that page as a staging acceptance test; check /api/admin/me
+directly after login. Unexpected Invoice GET/PATCH errors now use fixed public messages; explicit
+authorization responses and known invoice validation responses remain intact.
+
+Deployment verification still required:
+Redeploy protected Preview, log in, verify /api/admin/me, then verify the removed
+/api/admin/preview-isolation path returns 404. Confirm a denied Invoice GET contains
+only the fixed error message, with no SQL, database identity or connection details.
+Do not exercise invoice writes using this read-only role. Production is not deployed
+or certified by this cleanup. Do not remove signed-session/password protection merely
 to remove diagnostics. Before merging/releasing, replace this temporary Preview-only
 auth repair with an approved broader auth solution; never revert to passwordless access.
 No production actions, migrations, account changes or reminder activation authorized.

@@ -35,8 +35,7 @@ export async function GET(
     return NextResponse.json({ success: true, invoice: serializeInvoice(invoice) });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Failed to fetch invoice';
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch invoice' }, { status: 500 });
   }
 }
 
@@ -168,7 +167,6 @@ export async function PATCH(
     return NextResponse.json({ success: true, invoice: serializeInvoice(refreshed!) });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Failed to update invoice';
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to update invoice' }, { status: 500 });
   }
 }

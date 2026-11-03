@@ -44,7 +44,7 @@ export async function previewAdminLogin(req: NextRequest): Promise<NextResponse>
       httpOnly: true, secure: true, sameSite: 'strict', path: '/',
       maxAge: PREVIEW_ADMIN_MAX_AGE,
     });
-    return NextResponse.json({ success: true, previewDiagnostic: true }, { headers: { 'Cache-Control': 'no-store' } });
+    return NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } });
   } catch {
     // Never log request credentials, session tokens, database URLs or error objects.
     return failure(503);
