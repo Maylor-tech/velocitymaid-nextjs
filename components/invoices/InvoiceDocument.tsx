@@ -12,19 +12,19 @@ interface InvoiceDocumentProps {
 export function InvoiceDocument({ invoice, showStatus = true }: InvoiceDocumentProps) {
   return (
     <div className="invoice-document mx-auto max-w-3xl rounded-2xl border border-vm-border bg-vm-white shadow-sm print:shadow-none">
-      <div className="rounded-t-2xl bg-vm-navy px-8 py-6 print:rounded-none">
+      <div className="rounded-t-2xl bg-vm-navy px-4 py-5 sm:px-8 sm:py-6 print:rounded-none">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <BrandLogo theme="dark" size="header" showTagline={false} />
           </div>
-          <div className="text-right">
+          <div className="min-w-0 text-right">
             <p className="font-heading text-lg font-bold text-vm-white">INVOICE</p>
-            <p className="font-body text-sm text-vm-white/80">#{invoice.invoiceNumber}</p>
+            <p className="break-words font-body text-sm text-vm-white/80">#{invoice.invoiceNumber}</p>
           </div>
         </div>
       </div>
 
-      <div className="space-y-6 px-8 py-6">
+      <div className="space-y-6 px-4 py-5 sm:px-8 sm:py-6">
         {showStatus && (
           <div className="flex justify-end">
             <span
@@ -62,19 +62,19 @@ export function InvoiceDocument({ invoice, showStatus = true }: InvoiceDocumentP
           <p className="font-heading text-sm font-semibold text-vm-navy">{invoice.serviceType}</p>
         </div>
 
-        <table className="w-full border-collapse">
+        <table className="w-full table-fixed border-collapse">
           <thead>
             <tr className="border-b border-vm-border">
-              <th className="py-2 text-left font-heading text-xs font-bold uppercase tracking-wide text-vm-muted">
+              <th className="w-[40%] py-2 text-left font-heading text-xs font-bold uppercase tracking-wide text-vm-muted">
                 Description
               </th>
-              <th className="py-2 text-right font-heading text-xs font-bold uppercase tracking-wide text-vm-muted">
+              <th className="w-[14%] py-2 text-right font-heading text-xs font-bold uppercase tracking-wide text-vm-muted">
                 Qty
               </th>
-              <th className="py-2 text-right font-heading text-xs font-bold uppercase tracking-wide text-vm-muted">
+              <th className="w-[23%] py-2 text-right font-heading text-xs font-bold uppercase tracking-wide text-vm-muted">
                 Rate
               </th>
-              <th className="py-2 text-right font-heading text-xs font-bold uppercase tracking-wide text-vm-muted">
+              <th className="w-[23%] py-2 text-right font-heading text-xs font-bold uppercase tracking-wide text-vm-muted">
                 Amount
               </th>
             </tr>
@@ -82,10 +82,10 @@ export function InvoiceDocument({ invoice, showStatus = true }: InvoiceDocumentP
           <tbody>
             {invoice.items.map((item) => (
               <tr key={item.id} className="border-b border-vm-border/60">
-                <td className="py-3 font-body text-sm text-vm-text">{item.description}</td>
-                <td className="py-3 text-right font-body text-sm text-vm-text">{item.quantity}</td>
-                <td className="py-3 text-right font-body text-sm text-vm-text">{item.unitPriceFormatted}</td>
-                <td className="py-3 text-right font-body text-sm font-medium text-vm-navy">
+                <td className="break-words py-3 pr-2 font-body text-xs text-vm-text sm:text-sm">{item.description}</td>
+                <td className="py-3 text-right font-body text-xs text-vm-text sm:text-sm">{item.quantity}</td>
+                <td className="py-3 text-right font-body text-xs text-vm-text sm:text-sm">{item.unitPriceFormatted}</td>
+                <td className="py-3 text-right font-body text-xs font-medium text-vm-navy sm:text-sm">
                   {item.lineTotalFormatted}
                 </td>
               </tr>
