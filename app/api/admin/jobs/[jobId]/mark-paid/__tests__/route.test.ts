@@ -44,7 +44,7 @@ function req(body: unknown) {
 describe('POST /api/admin/jobs/[jobId]/mark-paid (Phase 7B)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN' });
+    mocks.requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN', isOwner: true, branchIds: [] });
     mocks.logAuditEntry.mockResolvedValue(undefined);
     mocks.maybeCreatePayoutAfterTransition.mockResolvedValue({
       ok: true,

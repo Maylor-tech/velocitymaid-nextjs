@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { sendEmergencyCancelNoticeForJob } from '@/lib/notifications/emergencyCancelNotice';
 import { JobStatus } from '@prisma/client';
 import { awaitJobCalendarCancel } from '@/lib/google/jobGoogleSync';
@@ -25,6 +26,7 @@ export async function POST(
 ) {
   try {
     const auth = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(auth, params.jobId);
     const jobId = params.jobId;
     if (!jobId) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
@@ -65,7 +67,7 @@ export async function POST(
       assignedCleanerId: cancelResult.job.assignedCleanerId,
     });
   } catch (err) {
-    if (err instanceof NextResponse) throw err;
+    if (err instanceof NextResponse) return err;
     if (isDispatchError(err)) {
       return NextResponse.json(
         { error: err.message, code: err.code },

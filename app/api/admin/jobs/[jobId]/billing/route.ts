@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import type { InvoicePaymentMethod } from '@prisma/client';
 import {
   getJobBillingWorkflowStatus,
@@ -21,7 +22,8 @@ export async function GET(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(auth, params.jobId);
     const status = await getJobBillingWorkflowStatus(params.jobId);
     return NextResponse.json({ success: true, workflow: status });
   } catch (error: unknown) {
@@ -41,6 +43,7 @@ export async function POST(
 ) {
   try {
     const auth = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(auth, params.jobId);
     const body = await request.json();
     const action = body.action as string;
 

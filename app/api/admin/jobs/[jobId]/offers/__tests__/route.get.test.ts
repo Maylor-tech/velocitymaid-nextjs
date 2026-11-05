@@ -44,7 +44,7 @@ function getReq() {
 describe('GET /api/admin/jobs/[jobId]/offers notification status', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN' });
+    requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN', isOwner: true, branchIds: [] });
     jobFindUnique.mockResolvedValue({
       id: 'job-1',
       assignedCleanerId: null,

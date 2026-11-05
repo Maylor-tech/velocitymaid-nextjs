@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminPricingAccess } from '@/lib/middleware/pricingGuard';
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { applyDiscount, DISCOUNT_REASON_CODES } from '@/lib/pricing/discount';
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
@@ -33,6 +34,7 @@ export async function PATCH(
 ) {
   try {
     const auth = await requireAdminPricingAccess(request);
+    await assertAdminJobRecord(auth, params.jobId);
     const { jobId } = params;
 
     if (!jobId) {
@@ -154,6 +156,7 @@ export async function PATCH(
       message: 'Pricing updated successfully',
     });
   } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
     if (error instanceof Response) {
       throw error;
     }
@@ -179,7 +182,8 @@ export async function GET(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireAdminPricingAccess(request);
+    const auth = await requireAdminPricingAccess(request);
+    await assertAdminJobRecord(auth, params.jobId);
     const { jobId } = params;
 
     const job = await prisma.job.findUnique({
@@ -200,6 +204,7 @@ export async function GET(
       discountReasonCodes: DISCOUNT_REASON_CODES,
     });
   } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
     if (error instanceof Response) {
       throw error;
     }

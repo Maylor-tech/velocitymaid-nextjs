@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { logAuditEntry } from '@/lib/audit';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
 import { Resend } from 'resend';
@@ -26,6 +27,7 @@ export async function POST(
 ) {
   try {
     const auth = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(auth, params.jobId);
     const jobId = params.jobId;
 
     if (!jobId) {
@@ -121,6 +123,7 @@ We're looking forward to serving you.
 
     return NextResponse.json({ success: true });
   } catch (err) {
+    if (err instanceof NextResponse) return err;
     console.error('Confirm schedule error:', err);
     return NextResponse.json(
       { error: 'Failed to confirm schedule' },

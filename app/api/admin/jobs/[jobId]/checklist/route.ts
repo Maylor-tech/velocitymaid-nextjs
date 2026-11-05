@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 import { getJobChecklistState } from "@/lib/jobs/jobChecklist";
 import { prisma } from "@/lib/prisma";
@@ -16,7 +17,8 @@ export async function GET(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(request, "ADMIN");
+    const auth = await requireRole(request, "ADMIN");
+    await assertAdminJobRecord(auth, params.jobId);
 
     const job = await prisma.job.findUnique({
       where: { id: params.jobId },

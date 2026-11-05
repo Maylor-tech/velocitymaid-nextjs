@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { JobReviewStatus, JobStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { logAuditEntry } from '@/lib/audit';
 import { awaitJobGoogleSync } from '@/lib/google/jobGoogleSync';
 
@@ -18,6 +19,7 @@ export async function POST(
 ) {
   try {
     const auth = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(auth, params.jobId);
     const { jobId } = params;
 
     const job = await prisma.job.findUnique({ where: { id: jobId } });

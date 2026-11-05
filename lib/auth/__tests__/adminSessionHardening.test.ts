@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 const state = vi.hoisted(() => ({
   cookie: undefined as string | undefined,
   set: vi.fn(),
+  delete: vi.fn(),
   ownerActive: true,
   memberships: {
     'owner-1': ['fictional-vt', 'fictional-nj'],
@@ -16,6 +17,7 @@ vi.mock('next/headers', () => ({
   cookies: async () => ({
     get: (name: string) => name === 'admin_session' && state.cookie ? { value: state.cookie } : undefined,
     set: state.set,
+    delete: state.delete,
   }),
 }));
 
@@ -45,6 +47,7 @@ vi.mock('@/lib/prisma', () => ({
 import { signAdminSession, verifyAdminSession } from '../adminSession';
 import { assertOwnerAuthorization, getAdminAuthFromCookies, requireRole } from '../requireRole';
 import { POST } from '@/app/api/auth/admin-login/route';
+import { GET as logout } from '@/app/api/auth/admin-logout/route';
 import { middleware } from '@/middleware';
 import { requireAuth } from '../requireAuth';
 
@@ -96,21 +99,25 @@ describe('credentials for every active admin', () => {
     { email: 'nobody@example.test', password },
   ])('rejects passwordless or wrong credentials %j', async (body) => {
     expect((await POST(login(body))).status).toBe(401);
-    expect(state.set).not.toHaveBeenCalled();
+    expect(state.set.mock.calls.some((call) => call[0] === 'admin_session')).toBe(false);
   });
 
   it('rejects a cross-origin login and a missing signing secret', async () => {
     expect((await POST(login({ email: 'owner@example.test', password }, 'https://other.example.test'))).status).toBe(403);
     vi.stubEnv('ADMIN_SESSION_SECRET', '');
     expect((await POST(login({ email: 'owner@example.test', password }))).status).toBe(503);
-    expect(state.set).not.toHaveBeenCalled();
+    expect(state.set.mock.calls.some((call) => call[0] === 'admin_session')).toBe(false);
   });
 
   it('issues a signed session only after the owner password matches', async () => {
     const response = await POST(login({ email: 'owner@example.test', password }));
     expect(response.status).toBe(200);
-    const [name, token, flags] = state.set.mock.calls[0];
+    const sessionCall = state.set.mock.calls.find((call) => call[0] === 'admin_session');
+    expect(sessionCall).toBeTruthy();
+    const [name, token, flags] = sessionCall!;
     expect(name).toBe('admin_session');
+    expect(state.set.mock.calls.filter((call) => call[0] === 'adminId' || call[0] === 'adminSession')
+      .every((call) => call[2].maxAge === 0)).toBe(true);
     expect(flags).toMatchObject({ httpOnly: true, sameSite: 'strict', path: '/', maxAge: 1800 });
     expect(await verifyAdminSession(token)).toMatchObject({
       userId: 'owner-1', isOwner: true, isBranchScoped: false,
@@ -134,7 +141,9 @@ describe('forged cookies, headers, expiry, and live account checks', () => {
   it('rejects identity headers and legacy cookies without trusting them', async () => {
     expect((await middleware(request('/api/admin/me', undefined, { 'x-admin-id': 'owner-1' }))).status).toBe(401);
     expect((await middleware(request('/api/admin/me', undefined, { authorization: 'Bearer owner-1' }))).status).toBe(401);
-    expect((await middleware(request('/admin/jobs', undefined, { cookie: 'adminId=owner-1' }))).status).toBe(401);
+    const stalePage = await middleware(request('/admin/jobs', undefined, { cookie: 'adminId=owner-1' }));
+    expect(stalePage.status).toBeGreaterThanOrEqual(300);
+    expect(stalePage.headers.get('location')).toContain('/admin/login');
     expect((await requireAuth(request('/api/saas/me', undefined, { 'x-admin-id': 'owner-1' })).catch((error) => error)).status).toBe(401);
   });
 
@@ -203,5 +212,35 @@ describe('multi-branch admin global billing', () => {
     const owner = await requireRole(request('/api/admin/invoices'), 'ADMIN');
     expect(owner.isOwner).toBe(true);
     expect(() => assertOwnerAuthorization(owner)).not.toThrow();
+  });
+});
+
+describe('stale browser cookies and closed multi-branch routes', () => {
+  it('opens the login page with stale cookies and clears legacy aliases on login and logout', async () => {
+    const stale = 'admin_session=true; adminId=stale-admin; adminSession=legacy';
+    const loginPage = await middleware(request('/admin/login', undefined, { cookie: stale }));
+    expect(loginPage.status).toBe(200);
+    const jobs = await middleware(request('/admin/jobs', undefined, { cookie: stale }));
+    expect(jobs.status).toBeGreaterThanOrEqual(300);
+    expect(jobs.headers.get('location')).toContain('/admin/login');
+    expect((await middleware(request('/api/admin/jobs', undefined, { cookie: stale }))).status).toBe(401);
+
+    state.set.mockClear();
+    const response = await POST(login({ email: 'multi@example.test', password }));
+    expect(response.status).toBe(200);
+    expect(state.set.mock.calls.some((call) => call[0] === 'admin_session' && call[2].maxAge === 1800)).toBe(true);
+    expect(state.set.mock.calls.filter((call) => call[0] === 'adminId' || call[0] === 'adminSession')
+      .every((call) => call[2].maxAge === 0)).toBe(true);
+
+    state.set.mockClear();
+    const signed = await signAdminSession({
+      userId: 'multi-1', role: 'ADMIN', isOwner: false, isBranchScoped: false,
+      branchIds: ['fictional-nj', 'fictional-vt'],
+    });
+    expect((await middleware(request('/api/admin/payouts/run', signed))).status).toBe(403);
+    expect((await middleware(request('/api/admin/jobs', signed))).status).toBe(200);
+    await logout(request('/api/auth/admin-logout'));
+    expect(state.delete).toHaveBeenCalledWith('admin_session');
+    expect(state.set.mock.calls.map((call) => call[0])).toEqual(expect.arrayContaining(['adminId', 'adminSession']));
   });
 });

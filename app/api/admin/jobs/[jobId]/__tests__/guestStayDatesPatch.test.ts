@@ -81,7 +81,8 @@ describe('Gate 3 admin PATCH null/empty guest stay dates', () => {
     mocks.requireRole.mockResolvedValue({
       userId: 'admin-1',
       role: 'ADMIN',
-      branchId: null,
+      isOwner: true,
+      branchIds: [],
     });
     mocks.jobFindUnique.mockResolvedValue({
       id: 'job-1',

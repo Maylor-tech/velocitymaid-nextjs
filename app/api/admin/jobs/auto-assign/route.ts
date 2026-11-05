@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { autoAssignCleaner } from '@/lib/cleaner-assignment';
 
 /**
@@ -16,7 +17,7 @@ import { autoAssignCleaner } from '@/lib/cleaner-assignment';
  */
 export async function POST(request: NextRequest) {
   try {
-    await requireRole(request, "ADMIN");
+    const auth = await requireRole(request, "ADMIN");
     const body = await request.json();
     const { jobId } = body;
 
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call autoAssignCleaner
+    await assertAdminJobRecord(auth, jobId);
     const result = await autoAssignCleaner(jobId);
 
     return NextResponse.json({
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
       reason: result.reason,
     });
   } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
     console.error('Error in auto-assign endpoint:', error);
     return NextResponse.json(
       {

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
 import { isDispatchError } from '@/lib/dispatch/errors';
 import {
@@ -17,6 +18,7 @@ export async function POST(
 ) {
   try {
     const admin = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(admin, params.jobId);
     if (!canMutateDispatchOffers()) {
       return NextResponse.json(
         {

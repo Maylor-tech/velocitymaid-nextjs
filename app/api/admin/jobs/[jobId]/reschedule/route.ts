@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { logAuditEntry } from '@/lib/audit';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
 import { awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
@@ -19,6 +20,7 @@ export async function PATCH(
 ) {
   try {
     const auth = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(auth, params.jobId);
     const jobId = params.jobId;
 
     if (!jobId) {
@@ -108,6 +110,7 @@ If you have questions, just reply here.
       },
     });
   } catch (err) {
+    if (err instanceof NextResponse) return err;
     console.error('Admin reschedule error:', err);
     return NextResponse.json(
       { error: 'Failed to reschedule job' },

@@ -11,12 +11,14 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { jobBranchWhere } from "@/lib/auth/adminJobAccess";
 import { prisma } from '@/lib/prisma';
 import { ACTIVE_JOB_STATUS_EXCLUDE } from '@/lib/jobStatus';
 
 export async function POST(request: NextRequest) {
   try {
-    await requireRole(request, "ADMIN");
+    const auth = await requireRole(request, "ADMIN");
+    const branchWhere = jobBranchWhere(auth, null);
     const body = await request.json();
     const { cleanerId, preferredDate, preferredTime } = body;
 
@@ -136,6 +138,7 @@ export async function POST(request: NextRequest) {
     const jobsOnDate = await prisma.job.count({
       where: {
         assignedCleanerId: cleanerId,
+        ...branchWhere,
         preferredDate: {
           gte: dayStart,
           lte: dayEnd,
@@ -158,6 +161,7 @@ export async function POST(request: NextRequest) {
       const sameDayJobs = await prisma.job.findMany({
         where: {
           assignedCleanerId: cleanerId,
+          ...branchWhere,
           preferredDate: {
             gte: dayStart,
             lte: dayEnd,

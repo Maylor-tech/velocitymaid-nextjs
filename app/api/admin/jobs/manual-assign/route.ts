@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { prisma } from '@/lib/prisma';
 import { PaymentStatus } from '@prisma/client';
 import { isJobAssignable, resolveBillingPolicy } from '@/lib/billing/billingPolicy';
@@ -40,6 +41,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    await assertAdminJobRecord(adminAuth, jobId);
 
     // Phase 1: Get job with relations (using capitalized relation field name)
     const job = await prisma.job.findUnique({

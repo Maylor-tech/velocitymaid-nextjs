@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { prisma } from '@/lib/prisma';
 import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
 import { awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
@@ -18,7 +19,7 @@ import { notifyCleanerOfAssignmentByEmail } from '@/lib/notifications/cleanerAss
 
 export async function POST(request: NextRequest) {
   try {
-    await requireRole(request, "ADMIN");
+    const auth = await requireRole(request, "ADMIN");
     const body = await request.json();
     const { jobId, cleanerId, sendWhatsApp = true } = body;
 
@@ -31,6 +32,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    await assertAdminJobRecord(auth, jobId);
 
     // Get job with relations
     const job = await prisma.job.findUnique({

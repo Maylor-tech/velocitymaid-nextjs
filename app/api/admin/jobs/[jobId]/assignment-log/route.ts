@@ -10,6 +10,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireRole } from '@/lib/auth/requireRole';
+import { assertAdminJobRecord } from '@/lib/auth/adminJobAccess';
 
 export async function GET(
   request: NextRequest,
@@ -17,6 +19,8 @@ export async function GET(
 ) {
   try {
     const { jobId } = params;
+    const auth = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(auth, jobId);
 
     const logs = await prisma.assignmentLog.findMany({
       where: { jobId },
@@ -51,6 +55,7 @@ export async function GET(
       logs: formattedLogs,
     });
   } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
     console.error('Error fetching assignment logs:', error);
     return NextResponse.json(
       {

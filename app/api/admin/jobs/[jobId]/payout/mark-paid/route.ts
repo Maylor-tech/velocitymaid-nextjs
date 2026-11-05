@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { prisma } from '@/lib/prisma';
 import { markJobPayoutPaid } from '@/lib/booking/markJobPayoutPaid';
 
@@ -27,6 +28,7 @@ export async function POST(
 ) {
   try {
     const auth = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(auth, params.jobId);
     const jobId = params.jobId;
 
     const job = await prisma.job.findUnique({

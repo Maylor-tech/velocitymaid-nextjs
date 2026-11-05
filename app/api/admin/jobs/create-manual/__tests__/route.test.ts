@@ -123,7 +123,7 @@ function tinaBody(overrides: Record<string, unknown> = {}) {
 describe('POST /api/admin/jobs/create-manual', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireRole.mockResolvedValue({ userId: 'admin-1', branchId: null });
+    mocks.requireRole.mockResolvedValue({ userId: 'admin-1', branchId: null, isOwner: true, branchIds: [] });
     mocks.nextVmReference.mockResolvedValue('VM-TEST-0001');
     mocks.awaitJobGoogleSync.mockResolvedValue(undefined);
     mocks.logAuditEntry.mockResolvedValue('audit-1');
@@ -594,7 +594,7 @@ describe('POST /api/admin/jobs/create-manual', () => {
 describe('GET /api/admin/jobs/create-manual', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireRole.mockResolvedValue({ userId: 'admin-1', branchId: null });
+    mocks.requireRole.mockResolvedValue({ userId: 'admin-1', branchId: null, isOwner: true, branchIds: [] });
   });
 
   it('returns a same-day warning without creating a job', async () => {

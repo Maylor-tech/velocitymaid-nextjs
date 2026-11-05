@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 import { loadJobPhotoChecklist } from "@/lib/photos/jobPhotoChecklist";
 import { submitJobForQc } from "@/lib/jobs/submitJobForQc";
@@ -53,7 +54,8 @@ export async function GET(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(req, "ADMIN");
+    const auth = await requireRole(req, "ADMIN");
+    await assertAdminJobRecord(auth, params.jobId);
     const review = await loadReview(params.jobId);
     if (!review) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
@@ -81,6 +83,7 @@ export async function POST(
 ) {
   try {
     const admin = await requireRole(req, "ADMIN");
+    await assertAdminJobRecord(admin, params.jobId);
     const jobId = params.jobId;
     const body = await req.json();
     const action = String(body.action || "");

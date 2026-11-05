@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
+import { jobBranchWhere } from '@/lib/auth/adminJobAccess';
 import { JobStatus, Prisma } from '@prisma/client';
 
 export const runtime = 'nodejs';
@@ -27,18 +28,17 @@ type AdminJobRow = {
 
 export async function GET(req: NextRequest) {
   try {
-    await requireRole(req, 'ADMIN');
+    const auth = await requireRole(req, 'ADMIN');
     const { searchParams } = new URL(req.url);
 
     const status = searchParams.get('status');
     const branchId = searchParams.get('branchId');
 
-    const whereClause: Prisma.JobWhereInput = {};
+    const whereClause: Prisma.JobWhereInput = {
+      ...jobBranchWhere(auth, branchId),
+    };
     if (status && QUERYABLE_JOB_STATUSES.has(status)) {
       whereClause.status = status as JobStatus;
-    }
-    if (branchId) {
-      whereClause.branchId = branchId;
     }
 
     const jobs: AdminJobRow[] = await prisma.job.findMany({
@@ -87,6 +87,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ jobs: formattedJobs });
   } catch (err: unknown) {
+    if (err instanceof NextResponse) return err;
     console.error('[ADMIN JOBS] Error:', err);
     const message = err instanceof Error ? err.message : undefined;
     return NextResponse.json(

@@ -10,6 +10,9 @@ Verification for this change is local and uses fictional accounts only (`owner@e
 - Every active admin must present a configured password. A matching email alone, several branch memberships, or `admin_session=true` no longer signs a session.
 - Protected admin requests recheck that the user is an active `ADMIN` and that the signed branch ids still match `UserBranch`. A removed membership or inactive account fails closed.
 - Owner authority is `ADMIN_EMAIL` only. Branch count does not grant it. Global invoice routes and `assertOwnerAuthorization` reject everyone else, including a multi-branch admin.
+- A non-owner job query with no branch filter is limited to verified memberships. Naming an unassigned branch returns 403. Job detail and job mutations use that same record check.
+- Multi-branch admins can use job routes only. Other admin routes stay closed until branch selection is enforced.
+- `/admin/login` still renders when `adminId` or `adminSession` is present. Login and logout clear those aliases. They are not accepted as credentials.
 
 ## Session readers
 
@@ -40,20 +43,13 @@ Not admin-session identity, left unchanged:
 - Stored `adminId` columns on payout and audit rows
 - `scripts/billing-e2e-verify.ts` and `scripts/deposit-e2e-verify.ts`, which log in over HTTP. They need the new password and secret before they can run. They are not a production step.
 
-## Multi-branch access, unchanged pending selection
+## Multi-branch access
 
-A non-owner with more than one membership is not branch-scoped and is not the owner. This PR does not put them on the single-branch allowlist and does not add a branch picker. Their existing admin pages stay reachable. These routes are the ones that allowlist does **not** limit them to today:
+A non-owner with more than one membership is not the owner. Job queries with no branch filter are limited to that admin's verified memberships. A request for any other branch is rejected. Job detail and job mutation handlers load the job and apply the same check.
 
-Pages outside `/admin`, `/admin/jobs`, `/admin/feedback`, and `/admin/profitability`, including invoices, payouts, cleaners, customers, settings, and reports.
+Routes that do not enforce that membership scope stay closed for multi-branch admins. That includes invoices, payouts, finance, cleaners, customers, settings, feedback, and profitability. They can open `/admin/jobs` and call `/api/admin/jobs`. Global invoice actions remain owner-only.
 
-APIs outside the branch-scoped job, feedback, command-center, and owner-profitability allowlist, including payouts, finance overview, cleaners, customers, and settings.
-
-This PR does change two owner gates that branch count used to unlock:
-
-- `/api/admin/invoices` and nested invoice actions require `isOwner`
-- `assertSuperAdmin` / `assertOwnerAuthorization`, including `/api/admin/dashboard/operations`, requires `isOwner`
-
-A multi-branch admin can still open the invoice screens. The invoice API returns 403 until they are the explicit owner or a reviewed branch-selection model says otherwise.
+Branch selection is still not built. Do not open the closed routes until a reviewed selection model enforces one verified branch on each request.
 
 ## Proposed branch selection
 
@@ -76,7 +72,7 @@ Use a preview or other isolated environment first. Keep production unset.
 4. Confirm each active admin has at least one `UserBranch` row. Login returns 403 without one.
 5. Deploy only to the isolated preview. Unsigned cookies, `admin_session=true`, `adminId`, `adminSession`, `x-admin-id`, and bearer user ids fail. Everyone must sign in again.
 6. Sign in as the fictional or preview owner and as a single-branch admin. Confirm the owner can open invoices and the single-branch admin cannot.
-7. Sign in as a multi-branch non-owner. Confirm their existing non-invoice pages still open, and that `GET /api/admin/invoices` returns 403.
+7. Sign in as a multi-branch non-owner. Confirm `/admin/jobs` opens, an omitted branch filter stays inside their memberships, an unassigned branch is rejected, and a route outside jobs such as `GET /api/admin/invoices` or `GET /api/admin/payouts/run` returns 403.
 8. Deactivate a test admin and remove a test membership. The next request must reject the old cookie.
 9. Wait 30 minutes or rotate `ADMIN_SESSION_SECRET` and confirm the old cookie is rejected.
 10. Leave production `ADMIN_SESSION_SECRET` and production admin passwords unset until a separate release review. Rotating the secret or shipping this change forces every admin to log in again.

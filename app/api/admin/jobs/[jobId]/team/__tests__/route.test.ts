@@ -61,7 +61,7 @@ function getRequest(): NextRequest {
 describe('GET/PUT /api/admin/jobs/[jobId]/team', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN' });
+    requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN', isOwner: true, branchIds: [] });
     jobFindUnique.mockResolvedValue({ id: JOB_ID });
     deleteMany.mockResolvedValue({ count: 0 });
     createMany.mockResolvedValue({ count: 0 });

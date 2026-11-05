@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { JobStatus, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
+import { assertAssignedBranch } from "@/lib/auth/adminJobAccess";
 import { geocodeCustomerInBackground } from "@/lib/geocoding/geocodeCustomer";
 import { nextVmReference } from "@/lib/billing/numbering";
 import { awaitJobGoogleSync } from "@/lib/google/jobGoogleSync";
@@ -127,7 +128,7 @@ async function sameDayJobs(propertyId: string, preferredDate: Date) {
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(request, "ADMIN");
+    const auth = await requireRole(request, "ADMIN");
     const propertyId = request.nextUrl.searchParams.get("propertyId")?.trim();
     const scheduledDate = request.nextUrl.searchParams.get("scheduledDate")?.trim();
     const customerId = request.nextUrl.searchParams.get("customerId")?.trim();
@@ -146,10 +147,18 @@ export async function GET(request: NextRequest) {
     }
     const property = await prisma.property.findUnique({
       where: { id: propertyId },
-      select: { id: true, customerId: true },
+      select: { id: true, customerId: true, Customer: { select: { branchId: true } } },
     });
     if (!property) {
       return NextResponse.json({ success: false, error: "Property not found" }, { status: 404 });
+    }
+    const propertyBranchId = property.Customer?.branchId;
+    if (propertyBranchId) assertAssignedBranch(auth, propertyBranchId);
+    else if (!auth.isOwner) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: Branch is not assigned" },
+        { status: 403 }
+      );
     }
     if (customerId && property.customerId !== customerId) {
       return NextResponse.json(
@@ -494,12 +503,7 @@ export async function POST(request: NextRequest) {
       customerBilling = created.billingPolicy;
     }
 
-    if (auth.branchId && branch.id !== auth.branchId) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden: You can only create jobs in your assigned branch" },
-        { status: 403 }
-      );
-    }
+    assertAssignedBranch(auth, branch.id);
 
     let propertyId: string | null = null;
     let propertyBilling: string | null = null;

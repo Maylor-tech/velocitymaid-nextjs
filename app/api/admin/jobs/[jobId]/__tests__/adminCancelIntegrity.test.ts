@@ -11,6 +11,10 @@ const sendEmergencyCancelNoticeForJob = vi.fn();
 const refundDepositForRejectedJob = vi.fn();
 const logAuditEntry = vi.fn();
 const jobFindUnique = vi.fn();
+const scriptedJobs: unknown[] = [];
+function scriptJobLookups(...jobs: unknown[]) {
+  scriptedJobs.push(...jobs);
+}
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...a: unknown[]) => requireRole(...a),
@@ -83,10 +87,17 @@ function cancelResult(overrides: Record<string, unknown> = {}) {
 describe('admin cancellation routes — assignment integrity + notify order', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    scriptedJobs.length = 0;
     requireRole.mockResolvedValue({
       userId: 'admin-1',
       role: 'ADMIN',
-      branchId: null,
+      isOwner: true,
+      branchIds: [],
+    });
+    jobFindUnique.mockImplementation(async (args: { select?: Record<string, unknown> }) => {
+      const keys = Object.keys(args?.select ?? {});
+      if (keys.length === 1 && keys[0] === 'branchId') return { branchId: 'branch-vt' };
+      return scriptedJobs.shift();
     });
     awaitJobCalendarCancel.mockResolvedValue(undefined);
     notifyCleanerOfJobCancellation.mockResolvedValue({ sent: true });
@@ -144,14 +155,12 @@ describe('admin cancellation routes — assignment integrity + notify order', ()
   });
 
   it('reject cancels+clears before refund and notifies released cleaner', async () => {
-    jobFindUnique
-      .mockResolvedValueOnce({
+    scriptJobLookups({
         id: 'job-oct4',
         paymentStatus: 'DEPOSIT_PAID',
         assignedCleanerId: 'user-dorottya',
         status: JobStatus.ASSIGNED,
-      })
-      .mockResolvedValueOnce({
+      }, {
         id: 'job-oct4',
         status: JobStatus.CANCELLED,
         assignedCleanerId: null,
@@ -196,8 +205,7 @@ describe('admin cancellation routes — assignment integrity + notify order', ()
   });
 
   it('PATCH ASSIGNED → CANCELLED clears via shared helper and notifies', async () => {
-    jobFindUnique
-      .mockResolvedValueOnce({
+    scriptJobLookups({
         id: 'job-oct4',
         branchId: 'branch-vt',
         preferredDate: new Date('2026-10-04T14:00:00.000Z'),
@@ -212,8 +220,7 @@ describe('admin cancellation routes — assignment integrity + notify order', ()
         paymentStatus: 'PENDING',
         assignedCleanerId: 'user-dorottya',
         JobPayout: null,
-      })
-      .mockResolvedValueOnce({
+      }, {
         id: 'job-oct4',
         preferredDate: new Date('2026-10-04T14:00:00.000Z'),
         preferredTime: '10:00 AM',
@@ -265,8 +272,7 @@ describe('admin cancellation routes — assignment integrity + notify order', ()
         cancelledOpenOfferCount: 0,
       })
     );
-    jobFindUnique
-      .mockResolvedValueOnce({
+    scriptJobLookups({
         id: 'job-oct4',
         branchId: 'branch-vt',
         preferredDate: null,
@@ -281,8 +287,7 @@ describe('admin cancellation routes — assignment integrity + notify order', ()
         paymentStatus: 'PENDING',
         assignedCleanerId: null,
         JobPayout: null,
-      })
-      .mockResolvedValueOnce({
+      }, {
         id: 'job-oct4',
         preferredDate: null,
         preferredTime: null,
@@ -312,7 +317,7 @@ describe('admin cancellation routes — assignment integrity + notify order', ()
   });
 
   it('COMPLETED → PATCH CANCELLED returns 400 JOB_COMPLETED and skips notify', async () => {
-    jobFindUnique.mockResolvedValueOnce({
+    scriptJobLookups({
       id: 'job-oct4',
       branchId: 'branch-vt',
       preferredDate: null,
@@ -350,7 +355,7 @@ describe('admin cancellation routes — assignment integrity + notify order', ()
   });
 
   it('COMPLETED → PATCH CANCELLED_EMERGENCY returns 400 JOB_COMPLETED', async () => {
-    jobFindUnique.mockResolvedValueOnce({
+    scriptJobLookups({
       id: 'job-oct4',
       branchId: 'branch-vt',
       preferredDate: null,
@@ -405,7 +410,7 @@ describe('admin cancellation routes — assignment integrity + notify order', ()
   });
 
   it('COMPLETED → reject returns 400 JOB_COMPLETED and skips refund/notify', async () => {
-    jobFindUnique.mockResolvedValueOnce({
+    scriptJobLookups({
       id: 'job-oct4',
       paymentStatus: 'DEPOSIT_PAID',
       assignedCleanerId: 'user-dorottya',

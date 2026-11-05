@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { sendWeatherDelayAlertForJob } from '@/lib/notifications/weatherDelayAlert';
 import { prisma } from '@/lib/prisma';
 
@@ -17,7 +18,8 @@ export async function POST(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(auth, params.jobId);
     const jobId = params.jobId;
     if (!jobId) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
@@ -34,7 +36,7 @@ export async function POST(
     const sent = await sendWeatherDelayAlertForJob(jobId);
     return NextResponse.json({ ok: true, sent });
   } catch (err) {
-    if (err instanceof NextResponse) throw err;
+    if (err instanceof NextResponse) return err;
     console.error('[admin/jobs/weather-delay]', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Weather delay alert failed' },

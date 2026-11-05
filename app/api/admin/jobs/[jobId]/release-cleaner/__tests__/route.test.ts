@@ -10,6 +10,10 @@ vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...args: unknown[]) => requireRole(...args),
 }));
 
+vi.mock('@/lib/prisma', () => ({
+  prisma: { job: { findUnique: async () => ({ branchId: 'fictional-vt' }) } },
+}));
+
 vi.mock('@/lib/api/routeAuth', () => ({
   rethrowIfAuthResponse: (error: unknown) =>
     error instanceof NextResponse ? error : null,
@@ -37,7 +41,7 @@ function postReq(body: Record<string, unknown> = {}) {
 describe('POST /api/admin/jobs/[jobId]/release-cleaner', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN' });
+    requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN', isOwner: true, branchIds: [] });
     canMutateDispatchOffers.mockReturnValue(true);
     releaseAssignedCleaner.mockResolvedValue({
       job: {

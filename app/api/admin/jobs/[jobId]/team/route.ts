@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { prisma } from '@/lib/prisma';
 import { loadJobTeamMembers } from '@/lib/cleaners/internalCleanerService';
 import { awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
@@ -12,7 +13,8 @@ export async function GET(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(auth, params.jobId);
     const team = await loadJobTeamMembers(params.jobId);
     return NextResponse.json({ success: true, team });
   } catch (error: unknown) {
@@ -27,7 +29,8 @@ export async function PUT(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
+    await assertAdminJobRecord(auth, params.jobId);
     const body = await request.json();
     const cleanerIds = Array.isArray(body.cleanerIds) ? (body.cleanerIds as string[]) : [];
 

@@ -57,6 +57,8 @@ export interface AuthContext {
   branchName?: string;
   /** Explicit owner account. Independent of how many branches are assigned. */
   isOwner?: boolean;
+  /** Live UserBranch ids. Non-owners may only query these branches. */
+  branchIds?: string[];
 }
 
 /** Global billing and other owner actions require the explicit owner account. */
@@ -215,6 +217,7 @@ async function getVerifiedAdmin(raw: string | undefined): Promise<AuthContext | 
     role: "ADMIN",
     email: admin.email,
     isOwner,
+    branchIds: currentIds,
     ...resolveAdminBranchScope(admin.email, branches),
   };
 }

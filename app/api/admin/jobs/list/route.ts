@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
+import { jobBranchWhere } from '@/lib/auth/adminJobAccess';
 import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
 import { prisma } from '@/lib/prisma';
 import { computeOperationsSummary } from '@/lib/admin/jobsOperations';
@@ -55,13 +56,31 @@ export async function GET(request: NextRequest) {
     const { today, tomorrow } = jobsBoardDateBounds();
 
     const branchIdParam = searchParams.get('branchId');
-    const branchFilter =
-      auth.branchId ??
-      (branchIdParam && branchIdParam !== 'all' && branchIdParam !== ''
-        ? branchIdParam
-        : undefined);
-
     const BRANCH_SLUGS = new Set(['vermont', 'new-jersey']);
+    let branchConstraint: { branchId?: string | { in: string[] }; Branch?: { slug: string } } =
+      jobBranchWhere(auth, BRANCH_SLUGS.has(branchIdParam ?? '') ? null : branchIdParam);
+    if (branchIdParam && BRANCH_SLUGS.has(branchIdParam)) {
+      const matches = await prisma.branch.findMany({
+        where: { slug: branchIdParam },
+        select: { id: true },
+      });
+      const ids = matches.map((branch) => branch.id);
+      if (auth.isOwner) {
+        branchConstraint = { Branch: { slug: branchIdParam } };
+      } else {
+        const allowed = new Set(auth.branchIds ?? []);
+        const intersection = ids.filter((id) => allowed.has(id));
+        if (!intersection.length) {
+          return NextResponse.json(
+            { success: false, error: 'Forbidden: Branch is not assigned' },
+            { status: 403 }
+          );
+        }
+        branchConstraint = {
+          branchId: intersection.length === 1 ? intersection[0] : { in: intersection },
+        };
+      }
+    }
 
     const dateFrom = searchParams.get('dateFrom')
       ? new Date(searchParams.get('dateFrom')!)
@@ -96,13 +115,7 @@ export async function GET(request: NextRequest) {
       where.preferredDate = { lt: today };
     }
 
-    if (branchFilter) {
-      if (BRANCH_SLUGS.has(branchFilter)) {
-        where.Branch = { slug: branchFilter };
-      } else {
-        where.branchId = branchFilter;
-      }
-    }
+    Object.assign(where, branchConstraint);
 
     if (status && status !== 'all' && board !== 'inbox' && board !== 'completed' && board !== 'exceptions') {
       where.status = status;
@@ -417,12 +430,8 @@ export async function GET(request: NextRequest) {
       invoiceAwaitingCount
     );
 
-    const countBase: Record<string, unknown> = {};
+    const countBase: Record<string, unknown> = { ...branchConstraint };
     if (!includeArchived) countBase.archivedAt = null;
-    if (branchFilter) {
-      if (BRANCH_SLUGS.has(branchFilter)) countBase.Branch = { slug: branchFilter };
-      else countBase.branchId = branchFilter;
-    }
     if (customerId) countBase.customerId = customerId;
 
     const [inboxCount, todayCount, upcomingCount, completedCount, exceptionsCount] =

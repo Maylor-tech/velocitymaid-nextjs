@@ -28,6 +28,19 @@ function unauthorized() {
   return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 }
 
+function isLoginRoute(pathname: string): boolean {
+  return pathname === '/admin/login' || pathname.startsWith('/admin/login/');
+}
+
+/** Job routes enforce membership in the handler. Other multi-branch routes stay closed. */
+function isMembershipEnforcedPath(pathname: string): boolean {
+  return pathname === '/api/admin/me'
+    || pathname === '/admin/jobs'
+    || pathname.startsWith('/admin/jobs/')
+    || pathname === '/api/admin/jobs'
+    || pathname.startsWith('/api/admin/jobs/');
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const adminSurface =
@@ -36,20 +49,38 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/dashboard');
 
   if (adminSurface) {
-    if (hasLegacyAdminIdentity(req)) return unauthorized();
-    const session = await verifyAdminSession(req.cookies.get('admin_session')?.value);
-    const isLoginRoute = pathname === '/admin/login';
-    if (!session && !isLoginRoute) {
+    const loginRoute = isLoginRoute(pathname);
+    const legacy = hasLegacyAdminIdentity(req);
+    const session = legacy
+      ? null
+      : await verifyAdminSession(req.cookies.get('admin_session')?.value);
+    if (loginRoute) {
+      if (session) {
+        const dashUrl = req.nextUrl.clone();
+        dashUrl.pathname = '/admin';
+        return NextResponse.redirect(dashUrl);
+      }
+      const response = NextResponse.next();
+      response.headers.set('x-invoke-path', pathname);
+      return response;
+    }
+    if (!session) {
       if (pathname.startsWith('/api/')) return unauthorized();
       const loginUrl = req.nextUrl.clone();
       loginUrl.pathname = '/admin/login';
       if (pathname.startsWith('/dashboard')) loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
-    if (session && isLoginRoute) {
-      const dashUrl = req.nextUrl.clone();
-      dashUrl.pathname = '/admin';
-      return NextResponse.redirect(dashUrl);
+    if (session && !session.isOwner && !session.isBranchScoped && !isMembershipEnforcedPath(pathname)) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden: Branch scope is not enforced for this route' },
+          { status: 403 }
+        );
+      }
+      const jobsUrl = req.nextUrl.clone();
+      jobsUrl.pathname = '/admin/jobs';
+      return NextResponse.redirect(jobsUrl);
     }
     if (session?.isBranchScoped && pathname.startsWith('/dashboard')) {
       const jobsUrl = req.nextUrl.clone();

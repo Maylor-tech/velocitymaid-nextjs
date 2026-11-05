@@ -19,6 +19,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { logAuditEntry } from "@/lib/audit";
 import { maybeCreatePayoutAfterTransition } from "@/lib/booking/maybeCreatePayoutAfterTransition";
 
@@ -31,6 +32,7 @@ export async function POST(
 ) {
   try {
     const auth = await requireRole(request, "ADMIN");
+    await assertAdminJobRecord(auth, params.jobId);
     const { jobId } = params;
 
     if (!jobId) {

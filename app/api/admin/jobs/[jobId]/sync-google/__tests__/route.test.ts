@@ -16,6 +16,10 @@ vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...args: unknown[]) => requireRole(...args),
 }));
 
+vi.mock('@/lib/prisma', () => ({
+  prisma: { job: { findUnique: async () => ({ branchId: 'fictional-vt' }) } },
+}));
+
 vi.mock('@/lib/audit', () => ({
   logAuditEntry: (...args: unknown[]) => logAuditEntry(...args),
 }));
@@ -31,7 +35,7 @@ function makeRequest(): NextRequest {
 describe('POST /api/admin/jobs/[jobId]/sync-google', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN' });
+    requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN', isOwner: true, branchIds: [] });
     syncJobToGoogle.mockResolvedValue({
       jobId: 'job-1',
       drive: { status: 'synced', message: 'ok', folderId: 'f1' },

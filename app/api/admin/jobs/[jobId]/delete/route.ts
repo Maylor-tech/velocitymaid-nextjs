@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
+import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 
 async function setArchived(jobId: string, archivedAt: Date | null) {
   const job = await prisma.job.findUnique({
@@ -40,7 +41,8 @@ export async function DELETE(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(request, "ADMIN");
+    const auth = await requireRole(request, "ADMIN");
+    await assertAdminJobRecord(auth, params.jobId);
     const { jobId } = params;
     if (!jobId) {
       return NextResponse.json(
@@ -63,7 +65,8 @@ export async function POST(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    await requireRole(request, "ADMIN");
+    const auth = await requireRole(request, "ADMIN");
+    await assertAdminJobRecord(auth, params.jobId);
     const { jobId } = params;
     if (!jobId) {
       return NextResponse.json(

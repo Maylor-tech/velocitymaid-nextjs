@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
+import { jobBranchWhere } from '@/lib/auth/adminJobAccess';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,13 +12,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireRole(request, 'ADMIN');
-
-    if (!auth.branchId) {
-      return NextResponse.json(
-        { error: 'Branch context required' },
-        { status: 400 }
-      );
-    }
+    const branchWhere = jobBranchWhere(auth, request.nextUrl.searchParams.get('branchId'));
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -28,7 +23,7 @@ export async function GET(request: NextRequest) {
     const [todayCount, upcomingCount, attentionCount] = await Promise.all([
       prisma.job.count({
         where: {
-          branchId: auth.branchId,
+          ...branchWhere,
           preferredDate: {
             gte: today,
             lt: tomorrow,
@@ -39,7 +34,7 @@ export async function GET(request: NextRequest) {
 
       prisma.job.count({
         where: {
-          branchId: auth.branchId,
+          ...branchWhere,
           preferredDate: { gte: tomorrow },
           status: { in: ['CONFIRMED', 'ASSIGNED'] },
         },
@@ -47,7 +42,7 @@ export async function GET(request: NextRequest) {
 
       prisma.job.count({
         where: {
-          branchId: auth.branchId,
+          ...branchWhere,
           status: 'CONFIRMED',
           assignedCleanerId: null,
         },
@@ -59,10 +54,11 @@ export async function GET(request: NextRequest) {
       upcoming: upcomingCount,
       attention: attentionCount,
     });
-  } catch {
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
     return NextResponse.json(
       { error: 'Failed to load counters' },
-      { status: 401 }
+      { status: 500 }
     );
   }
 }
