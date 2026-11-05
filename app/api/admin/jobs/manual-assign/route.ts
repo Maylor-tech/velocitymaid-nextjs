@@ -22,6 +22,7 @@ import { APPROVED_CLEANER_APPLICATION_STATUSES } from '@/lib/cleaners/applicatio
 import { awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
 import { notifyCleanerOfAssignmentByEmail } from '@/lib/notifications/cleanerAssignmentEmail';
 import { isDispatchOffersEnabledForBranch } from '@/lib/dispatch/featureFlags';
+import { assertManualAssignmentCleaner } from '@/lib/cleaners/manualAssignmentEligibility';
 
 export async function POST(request: NextRequest) {
   try {
@@ -140,124 +141,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Phase 1: Get cleaner with branch information
-    // Must verify: role === "CLEANER" and isActive === true
-    // Note: Payment check (Phase 2A) already passed above, so we can proceed with cleaner validation
-    const cleaner = await prisma.user.findUnique({
-      where: { id: cleanerId, role: 'CLEANER' },
-      include: {
-        Branch_User_primaryBranchIdToBranch: {
-          select: {
-            id: true,
-            country: true,
-            slug: true,
-          },
-        },
-        UserBranch: {
-          include: {
-            Branch: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        },
-        TrainingStatus: {
-          select: {
-            overallStatus: true,
-          },
-        },
-        CleanerProfile: {
-          select: { isInternalTeam: true, publicDisplayName: true },
-        },
-      },
+    const cleaner = await assertManualAssignmentCleaner({
+      cleanerId,
+      jobBranchId: job.branchId,
+      jobCountry: job.Branch.country,
+      jobSlug: job.Branch.slug,
     });
-
-    if (!cleaner) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Cleaner not found or is not a CLEANER',
-          code: 'CLEANER_NOT_FOUND',
-        },
-        { status: 404 }
-      );
-    }
-
-    // Phase 1: Block assignment if cleaner is not active
-    // Assumption: Only active cleaners can be assigned to jobs
-    if (!cleaner.isActive) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Cleaner is not active and cannot be assigned to jobs',
-          code: 'CLEANER_INACTIVE',
-        },
-        { status: 403 }
-      );
-    }
-
-    const isInternalTeam = cleaner.CleanerProfile?.isInternalTeam === true;
-
-    // Phase 1: Check cleaner has APPROVED application (internal team exempt)
-    const approvedApplication = await prisma.cleanerApplication.findFirst({
-      where: {
-        email: cleaner.email,
-        status: { in: [...APPROVED_CLEANER_APPLICATION_STATUSES] },
-      },
-    });
-
-    if (!isInternalTeam && !approvedApplication) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Cleaner does not have an approved application',
-          code: 'NOT_APPROVED',
-        },
-        { status: 403 }
-      );
-    }
-
-    // Phase 1: Enforce branch consistency - cleaner must be in same branch as job
-    // Assumption: Cleaners can only be assigned to jobs in their assigned branch(es)
-    // Note: UserBranch uses capitalized 'Branch' relation field name (join table model)
-    const cleanerBranchIds = [
-      cleaner.primaryBranchId,
-      ...cleaner.UserBranch.map(ub => ub.Branch.id),
-    ].filter(Boolean) as string[];
-
-    if (!cleanerBranchIds.includes(job.branchId)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Cleaner must be in the same branch as the job',
-          code: 'BRANCH_MISMATCH',
-          jobBranchId: job.branchId,
-          cleanerBranchIds,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Phase 1: Check if Jamaica branch - verify training (existing logic preserved)
-    // Assumption: Jamaica branch requires additional training certification
-    const isJamaicaBranch =
-      job.Branch.country === 'Jamaica' ||
-      job.Branch.country === 'JM' ||
-      job.Branch.slug === 'port-antonio';
-
-    if (isJamaicaBranch) {
-      if (cleaner.TrainingStatus?.overallStatus !== 'PASSED') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Cleaner has not passed required training for Jamaica jobs',
-            code: 'TRAINING_REQUIRED',
-          },
-          { status: 403 }
-        );
-      }
-    }
 
     // Phase 1: Update job assignment
     // Requirements:

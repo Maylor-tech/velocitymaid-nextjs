@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
+import { assertManualAssignmentCleaner } from "@/lib/cleaners/manualAssignmentEligibility";
 import { computePayoutEligibility } from '@/lib/booking/payoutEligibility';
 import { resolveCompletionPaymentUpdate } from '@/lib/booking/jobPayment';
 import { maybeCreatePayoutAfterTransition } from '@/lib/booking/maybeCreatePayoutAfterTransition';
@@ -388,6 +389,7 @@ export async function PATCH(
         paymentStatus: true,
         assignedCleanerId: true,
         JobPayout: { select: { status: true } },
+        Branch: { select: { country: true, slug: true } },
       },
     });
 
@@ -479,6 +481,14 @@ export async function PATCH(
         }
       }
     }
+    if (body.totalPrice !== undefined || body.quotedTotal !== undefined) {
+      if (auth.isBranchScoped) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden: Access denied' },
+          { status: 403 }
+        );
+      }
+    }
     if (body.totalPrice !== undefined) {
       const amount = Number(body.totalPrice);
       if (Number.isNaN(amount) || amount < 0) {
@@ -489,13 +499,12 @@ export async function PATCH(
     }
     if (body.assignedCleanerId !== undefined) {
       if (body.assignedCleanerId) {
-        const cleaner = await prisma.user.findFirst({
-          where: { id: body.assignedCleanerId, role: 'CLEANER', isActive: true },
-          select: { id: true },
+        await assertManualAssignmentCleaner({
+          cleanerId: body.assignedCleanerId,
+          jobBranchId: existing.branchId,
+          jobCountry: existing.Branch?.country,
+          jobSlug: existing.Branch?.slug,
         });
-        if (!cleaner) {
-          return NextResponse.json({ success: false, error: 'Cleaner not found' }, { status: 400 });
-        }
       }
       data.assignedCleanerId = body.assignedCleanerId || null;
       if (body.assignedCleanerId && !existing.assignedCleanerId) {
