@@ -11,6 +11,8 @@ const createMany = vi.fn();
 const jobUpdate = vi.fn();
 const loadJobTeamMembers = vi.fn();
 const awaitJobCalendarSync = vi.fn();
+const userFindUnique = vi.fn();
+const applicationFindFirst = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...args: unknown[]) => requireRole(...args),
@@ -25,6 +27,12 @@ vi.mock('@/lib/prisma', () => ({
     jobTeamMember: {
       deleteMany: (...args: unknown[]) => deleteMany(...args),
       createMany: (...args: unknown[]) => createMany(...args),
+    },
+    user: {
+      findUnique: (...args: unknown[]) => userFindUnique(...args),
+    },
+    cleanerApplication: {
+      findFirst: (...args: unknown[]) => applicationFindFirst(...args),
     },
   },
 }));
@@ -62,11 +70,47 @@ describe('GET/PUT /api/admin/jobs/[jobId]/team', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     requireRole.mockResolvedValue({ userId: 'admin-1', role: 'ADMIN', isOwner: true, branchIds: [] });
-    jobFindUnique.mockResolvedValue({ id: JOB_ID });
+    jobFindUnique.mockResolvedValue({
+      id: JOB_ID,
+      branchId: 'branch-vt',
+      Branch: { country: 'US', slug: 'vermont' },
+    });
+    userFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) => ({
+      id: where.id,
+      email: `${where.id}@example.test`,
+      name: where.id,
+      isActive: true,
+      primaryBranchId: 'branch-vt',
+      UserBranch: [{ Branch: { id: 'branch-vt' } }],
+      TrainingStatus: null,
+      CleanerProfile: { isInternalTeam: true },
+    }));
+    applicationFindFirst.mockResolvedValue(null);
     deleteMany.mockResolvedValue({ count: 0 });
     createMany.mockResolvedValue({ count: 0 });
     jobUpdate.mockResolvedValue({});
     loadJobTeamMembers.mockResolvedValue([]);
+  });
+
+  it('rejects an ineligible cleaner before replacing the team', async () => {
+    userFindUnique.mockResolvedValue({
+      id: BRIAN,
+      email: 'brian@example.test',
+      name: 'Brian',
+      isActive: true,
+      primaryBranchId: 'branch-nj',
+      UserBranch: [{ Branch: { id: 'branch-nj' } }],
+      TrainingStatus: null,
+      CleanerProfile: { isInternalTeam: false },
+    });
+    const res = await PUT(putRequest({ cleanerIds: [BRIAN] }), {
+      params: { jobId: JOB_ID },
+    });
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.code).toBe('NOT_APPROVED');
+    expect(deleteMany).not.toHaveBeenCalled();
+    expect(jobUpdate).not.toHaveBeenCalled();
   });
 
   it('blocks unauthorized access', async () => {

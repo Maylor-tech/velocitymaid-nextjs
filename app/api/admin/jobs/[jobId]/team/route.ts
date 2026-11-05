@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
+import { assertManualAssignmentCleaner } from "@/lib/cleaners/manualAssignmentEligibility";
 import { prisma } from '@/lib/prisma';
 import { loadJobTeamMembers } from '@/lib/cleaners/internalCleanerService';
 import { awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
@@ -36,10 +37,23 @@ export async function PUT(
 
     const job = await prisma.job.findUnique({
       where: { id: params.jobId },
-      select: { id: true },
+      select: {
+        id: true,
+        branchId: true,
+        Branch: { select: { country: true, slug: true } },
+      },
     });
     if (!job) {
       return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
+    }
+
+    for (const cleanerId of cleanerIds) {
+      await assertManualAssignmentCleaner({
+        cleanerId,
+        jobBranchId: job.branchId,
+        jobCountry: job.Branch?.country,
+        jobSlug: job.Branch?.slug,
+      });
     }
 
     await prisma.jobTeamMember.deleteMany({ where: { jobId: params.jobId } });

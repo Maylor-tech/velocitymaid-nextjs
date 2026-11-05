@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
 import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
+import { assertManualAssignmentCleaner } from "@/lib/cleaners/manualAssignmentEligibility";
 import { prisma } from '@/lib/prisma';
 import { sendCleanerAssignment } from '@/lib/sendCleanerAssignment';
 import { awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
@@ -67,46 +68,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get cleaner
-    const cleaner = await prisma.user.findUnique({
-      where: { id: cleanerId, role: 'CLEANER' },
-      include: {
-        TrainingStatus: {
-          select: {
-            overallStatus: true,
-          },
-        },
-      },
+    const cleaner = await assertManualAssignmentCleaner({
+      cleanerId,
+      jobBranchId: job.branchId,
+      jobCountry: job.Branch.country,
+      jobSlug: job.Branch.slug,
     });
-
-    if (!cleaner) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Cleaner not found',
-        },
-        { status: 404 }
-      );
-    }
-
-    // Check if Jamaica branch - verify training
-    const isJamaicaBranch =
-      job.Branch.country === 'Jamaica' ||
-      job.Branch.country === 'JM' ||
-      job.Branch.slug === 'port-antonio';
-
-    if (isJamaicaBranch) {
-      if (cleaner.TrainingStatus?.overallStatus !== 'PASSED') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Cleaner has not passed required training for Jamaica jobs',
-            code: 'TRAINING_REQUIRED',
-          },
-          { status: 403 }
-        );
-      }
-    }
 
     // Update job assignment
     const updatedJob = await prisma.job.update({

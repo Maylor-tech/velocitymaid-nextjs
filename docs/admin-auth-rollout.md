@@ -12,6 +12,8 @@ Verification for this change is local and uses fictional accounts only (`owner@e
 - Owner authority is `ADMIN_EMAIL` only. Branch count does not grant it. Global invoice routes and `assertOwnerAuthorization` reject everyone else, including a multi-branch admin.
 - A non-owner job query with no branch filter is limited to verified memberships. Naming an unassigned branch returns 403. Job detail and job mutations use that same record check.
 - Multi-branch admins can use job routes only. Other admin routes stay closed until branch selection is enforced.
+- Changing `totalPrice` or `quotedTotal` on an existing job, through the general job PATCH or the dedicated pricing PATCH, requires the owner account. A multi-branch non-owner does not gain pricing authority.
+- Cleaner assignment through the general job PATCH, manual assign, team replacement, and change-cleaner uses the same eligibility rule: an active cleaner, an approved application or internal team, the job's branch, and Jamaica training when that market requires it.
 - `/admin/login` still renders when `adminId` or `adminSession` is present. Login and logout clear those aliases. They are not accepted as credentials.
 
 ## Session readers
