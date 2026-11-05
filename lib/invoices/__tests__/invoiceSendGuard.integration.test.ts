@@ -6,6 +6,7 @@
  *   - a concurrent second send cannot dispatch a second email (atomic claim).
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { NextResponse } from 'next/server';
 
 const requireRole = vi.fn();
 const invoiceFindUnique = vi.fn();
@@ -17,6 +18,14 @@ const logAuditEntry = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...a: unknown[]) => requireRole(...a),
+  assertOwnerAuthorization: (auth: { isOwner?: boolean }) => {
+    if (auth?.isOwner !== true) {
+      throw NextResponse.json(
+        { success: false, error: 'Forbidden: Owner authorization required' },
+        { status: 403 }
+      );
+    }
+  },
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -72,7 +81,7 @@ function req(body: unknown) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  requireRole.mockResolvedValue({ userId: 'admin1', role: 'ADMIN' });
+  requireRole.mockResolvedValue({ userId: 'admin1', role: 'ADMIN', isOwner: true });
   invoiceFindUnique.mockResolvedValue(DRAFT_INVOICE);
   invoiceFindMany.mockResolvedValue([]);
   invoiceCount.mockResolvedValue(0);

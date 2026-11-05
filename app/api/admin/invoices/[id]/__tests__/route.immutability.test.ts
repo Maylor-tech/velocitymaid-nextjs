@@ -3,6 +3,7 @@
  * Proves a SENT invoice cannot be financially mutated (chipman-silent-mutation-blocked).
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { NextResponse } from 'next/server';
 
 const requireRole = vi.fn();
 const invoiceFindUnique = vi.fn();
@@ -12,6 +13,14 @@ const invoiceItemCreateMany = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...a: unknown[]) => requireRole(...a),
+  assertOwnerAuthorization: (auth: { isOwner?: boolean }) => {
+    if (auth?.isOwner !== true) {
+      throw NextResponse.json(
+        { success: false, error: 'Forbidden: Owner authorization required' },
+        { status: 403 }
+      );
+    }
+  },
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -64,7 +73,7 @@ function req(body: unknown) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  requireRole.mockResolvedValue({ userId: 'admin1', role: 'ADMIN' });
+  requireRole.mockResolvedValue({ userId: 'admin1', role: 'ADMIN', isOwner: true });
   invoiceFindUnique.mockResolvedValue(SENT_INVOICE);
 });
 

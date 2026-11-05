@@ -7,12 +7,21 @@
  * only way to issue is the gated /[id]/send endpoint.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { NextResponse } from 'next/server';
 
 const requireRole = vi.fn();
 const invoiceCreate = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...a: unknown[]) => requireRole(...a),
+  assertOwnerAuthorization: (auth: { isOwner?: boolean }) => {
+    if (auth?.isOwner !== true) {
+      throw NextResponse.json(
+        { success: false, error: 'Forbidden: Owner authorization required' },
+        { status: 403 }
+      );
+    }
+  },
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -52,7 +61,7 @@ const VALID_BODY = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  requireRole.mockResolvedValue({ userId: 'admin1', role: 'ADMIN' });
+  requireRole.mockResolvedValue({ userId: 'admin1', role: 'ADMIN', isOwner: true });
   invoiceCreate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
     id: 'new1',
     invoiceNumber: 'VM-2026-0099',
