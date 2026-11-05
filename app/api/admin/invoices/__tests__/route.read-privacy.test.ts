@@ -2,7 +2,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 
 const mocks = vi.hoisted(() => ({ auth: vi.fn(), findMany: vi.fn(), aggregate: vi.fn(), count: vi.fn(), serialize: vi.fn() }));
-vi.mock('@/lib/auth/requireRole', () => ({ requireRole: mocks.auth }));
+vi.mock('@/lib/auth/requireRole', () => ({
+  requireRole: mocks.auth,
+  assertOwnerAuthorization: (auth: { isOwner?: boolean }) => {
+    if (auth?.isOwner !== true) {
+      throw NextResponse.json(
+        { success: false, error: 'Forbidden: Owner authorization required' },
+        { status: 403 }
+      );
+    }
+  },
+}));
 vi.mock('@/lib/prisma', () => ({ prisma: { invoice: { findMany: mocks.findMany, aggregate: mocks.aggregate, count: mocks.count } } }));
 vi.mock('@/lib/invoices/invoiceService', () => ({ buildInvoiceAmounts: vi.fn(), mapItemsForCreate: vi.fn() }));
 vi.mock('@/lib/invoices/invoiceUtils', () => ({ nextInvoiceNumber: vi.fn(), decimalToNumber: (v: unknown) => Number(v) }));
@@ -10,7 +20,7 @@ vi.mock('@/lib/invoices/serializeInvoice', () => ({ serializeInvoice: mocks.seri
 import { GET } from '../route';
 
 const request = () => new NextRequest('https://preview.example.test/api/admin/invoices?q=FICTIONAL-NO-MATCH');
-beforeEach(() => { vi.resetAllMocks(); mocks.auth.mockResolvedValue({ role: 'ADMIN' }); mocks.serialize.mockImplementation((v: unknown) => v); });
+beforeEach(() => { vi.resetAllMocks(); mocks.auth.mockResolvedValue({ role: 'ADMIN', isOwner: true }); mocks.serialize.mockImplementation((v: unknown) => v); });
 
 describe('invoice list error privacy', () => {
   it('passes each invoice alone to the serializer without the array index as options', async () => {

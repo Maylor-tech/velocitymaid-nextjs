@@ -46,8 +46,6 @@ vi.mock('@/lib/invoices/serializeInvoice', () => ({
   serializeInvoice: (inv: unknown) => inv,
 }));
 
-import { NextResponse } from 'next/server';
-
 import { GET, PATCH } from '@/app/api/admin/invoices/[id]/route';
 
 const SENT_INVOICE = {

@@ -24,8 +24,8 @@ The merge keeps signed admin sessions, password enforcement, branch restrictions
 
 ### Remaining technical work
 
-- Read the quality gate and Vercel result for PR #82 commit `8e29dd6` before approval.
-- Run the combined-tree checks under Node 22 in this worktree. Those results belong in the handoff, not in this file until they finish.
+- PR #82 commit `8e29dd6` quality gate and Vercel preview succeeded. The pull request remains draft.
+- Combined-tree checks under Node 22.23.4 in this local worktree: Prisma generate and schema validation passed against a dummy localhost URL. Focused auth, invoice, email, and cron tests: 223 passed, and 7 disposable-PostgreSQL tests skipped. Invoice immutability: 8 passed. `quality:changed` passed for 104 files. `git diff --check` passed. This is not a hosted Neon pass and not a production deploy.
 - A later merge of the two pull requests will conflict in login, middleware, `requireRole`, and the manual reminder route. Resolve them the same way as this worktree: keep the PR #82 auth files, and keep `sendRecordedInvoiceReminder` behind `assertSuperAdmin` (the owner-account alias).
 - Do not treat local or CI database tests as a hosted Neon pass.
 
