@@ -9,8 +9,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
-import { allowLegacyAdminBypass, isLegacyAdminSession } from './adminBypass';
-
 export interface AuthContext {
   userId: string;
   email: string;
@@ -21,8 +19,8 @@ export interface AuthContext {
 /**
  * Get authenticated user and their tenant
  *
- * This function checks for admin authentication via cookies/headers
- * and returns the user along with their tenantId
+ * SaaS authentication uses the SaaS JWT, then the legacy saas_user_id cookie.
+ * Admin portal cookies and identity headers are not accepted here.
  *
  * @param request - NextRequest object
  * @returns AuthContext with user info and tenantId
@@ -30,23 +28,8 @@ export interface AuthContext {
  */
 export async function requireAuth(request?: NextRequest): Promise<AuthContext> {
   const cookieStore = await cookies();
-  const adminSession = cookieStore.get('admin_session')?.value;
   const saasUserId = cookieStore.get('saas_user_id')?.value;
-  const adminId =
-    cookieStore.get('adminId')?.value ||
-    cookieStore.get('adminSession')?.value ||
-    request?.headers.get('x-admin-id') ||
-    request?.headers.get('authorization')?.replace('Bearer ', '');
-
-  // Legacy dev-only bypass — disabled in production
-  if (isLegacyAdminSession(adminSession) && allowLegacyAdminBypass()) {
-    return {
-      userId: 'local-admin',
-      email: process.env.ADMIN_EMAIL || 'dev-admin@localhost',
-      tenantId: null,
-      role: UserRole.ADMIN,
-    };
-  }
+  void request;
 
   // Check for SaaS JWT token (new method)
   const saasToken = cookieStore.get('saas_token')?.value;
@@ -106,38 +89,9 @@ export async function requireAuth(request?: NextRequest): Promise<AuthContext> {
     }
   }
 
-  if (!adminId) {
-    const response = NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
-    throw response;
-  }
-
-  const user = await prisma.user.findUnique({
-    where: {
-      id: adminId,
-      isActive: true,
-    },
-    select: {
-      id: true,
-      email: true,
-      role: true,
-    },
-  });
-
-  if (!user) {
-    const response = NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
-    throw response;
-  }
-
-  return {
-    userId: user.id,
-    email: user.email,
-    tenantId: null,
-    role: user.role,
-  };
+  const response = NextResponse.json(
+    { error: 'Unauthorized' },
+    { status: 401 }
+  );
+  throw response;
 }

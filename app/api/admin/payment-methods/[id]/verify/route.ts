@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/auth/requireRole";
 import { logPaymentMethodAction } from "@/lib/payoutDecryption";
 
 export const runtime = "nodejs";
@@ -19,26 +20,8 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const adminId = req.headers.get("x-admin-id");
-    
-    if (!adminId) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Verify admin user exists
-    const admin = await prisma.user.findUnique({
-      where: { id: adminId, role: "ADMIN" },
-    });
-
-    if (!admin) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const auth = await requireRole(req, "ADMIN");
+    const adminId = auth.userId;
 
     const body = await req.json().catch(() => ({}));
     const { action, note } = body;
@@ -109,6 +92,7 @@ export async function POST(
         : "Payment method rejected",
     });
   } catch (e: any) {
+    if (e instanceof NextResponse) return e;
     console.error("[ADMIN_PAYMENT_METHODS_VERIFY] Error:", e);
     return NextResponse.json(
       { success: false, error: e.message ?? "Failed to verify payment method" },

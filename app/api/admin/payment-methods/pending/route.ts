@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/auth/requireRole";
 import { maskPaymentDetails } from "@/lib/paymentMasking";
 
 export const runtime = "nodejs";
@@ -7,26 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const adminId = req.headers.get("x-admin-id");
-    
-    if (!adminId) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Verify admin user exists
-    const admin = await prisma.user.findUnique({
-      where: { id: adminId, role: "ADMIN" },
-    });
-
-    if (!admin) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    await requireRole(req, "ADMIN");
 
     const pending = await prisma.cleanerPaymentMethod.findMany({
       where: { 
@@ -53,6 +35,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, pending: maskedPending });
   } catch (e: any) {
+    if (e instanceof NextResponse) return e;
     return NextResponse.json(
       { success: false, error: e.message ?? "Failed" },
       { status: 401 }

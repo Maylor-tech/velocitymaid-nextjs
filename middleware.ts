@@ -4,65 +4,89 @@ import {
   verifyCustomerSessionToken,
 } from './lib/customerSession';
 import {
+  isGlobalBillingPath,
   isPathAllowedForBranchScopedAdmin,
   isPathAllowedForBranchScopedAdminApi,
-  type AdminSessionPayload,
 } from './lib/auth/adminScope';
+import { verifyAdminSession } from './lib/auth/adminSession';
 import {
   CUSTOMER_PORTAL_HOME,
   resolveCustomerPostLoginRedirect,
 } from './lib/customer/postLoginRedirect';
 
-function parseAdminSession(
-  adminSession: string | undefined
-): AdminSessionPayload | null {
-  if (!adminSession || adminSession === 'true') return null;
-  try {
-    const s = JSON.parse(adminSession) as AdminSessionPayload;
-    return s?.userId ? s : null;
-  } catch {
-    return null;
-  }
+function hasLegacyAdminIdentity(req: NextRequest): boolean {
+  const authorization = req.headers.get('authorization');
+  return Boolean(
+    req.cookies.get('adminId')?.value ||
+    req.cookies.get('adminSession')?.value ||
+    req.headers.get('x-admin-id') ||
+    (authorization && authorization.toLowerCase().startsWith('bearer '))
+  );
 }
 
-function isAdminSessionValid(adminSession: string | undefined): boolean {
-  if (!adminSession) return false;
-  if (adminSession === 'true') {
-    return process.env.NODE_ENV !== 'production';
-  }
-  return Boolean(parseAdminSession(adminSession)?.userId);
+function unauthorized() {
+  return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 }
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const adminSurface =
+    pathname.startsWith('/api/admin') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/dashboard');
 
-  // Branch-scoped admin API guard (jobs ops only)
-  if (pathname.startsWith('/api/admin')) {
-    const session = parseAdminSession(req.cookies.get('admin_session')?.value);
-    if (session?.isBranchScoped && !isPathAllowedForBranchScopedAdminApi(pathname)) {
+  if (adminSurface) {
+    if (hasLegacyAdminIdentity(req)) return unauthorized();
+    const session = await verifyAdminSession(req.cookies.get('admin_session')?.value);
+    const isLoginRoute = pathname === '/admin/login';
+    if (!session && !isLoginRoute) {
+      if (pathname.startsWith('/api/')) return unauthorized();
+      const loginUrl = req.nextUrl.clone();
+      loginUrl.pathname = '/admin/login';
+      if (pathname.startsWith('/dashboard')) loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (session && isLoginRoute) {
+      const dashUrl = req.nextUrl.clone();
+      dashUrl.pathname = '/admin';
+      return NextResponse.redirect(dashUrl);
+    }
+    if (session?.isBranchScoped && pathname.startsWith('/dashboard')) {
+      const jobsUrl = req.nextUrl.clone();
+      jobsUrl.pathname = '/admin/jobs';
+      return NextResponse.redirect(jobsUrl);
+    }
+    if (
+      session?.isBranchScoped &&
+      pathname.startsWith('/api/admin') &&
+      !isPathAllowedForBranchScopedAdminApi(pathname)
+    ) {
       return NextResponse.json(
         { success: false, error: 'Forbidden: Access denied' },
         { status: 403 }
       );
     }
-  }
-
-  // 🔐 OPS DASHBOARD — same session as admin
-  if (pathname.startsWith('/dashboard')) {
-    const adminSessionRaw = req.cookies.get('admin_session')?.value;
-    const session = parseAdminSession(adminSessionRaw);
-    const isAdminLoggedIn = isAdminSessionValid(adminSessionRaw);
-    if (!isAdminLoggedIn) {
-      const loginUrl = req.nextUrl.clone();
-      loginUrl.pathname = '/admin/login';
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
+    if (session && isGlobalBillingPath(pathname) && !session.isOwner) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Owner authorization required' },
+        { status: 403 }
+      );
     }
-    if (session?.isBranchScoped) {
+    if (
+      session?.isBranchScoped &&
+      pathname.startsWith('/admin') &&
+      !isPathAllowedForBranchScopedAdmin(pathname)
+    ) {
       const jobsUrl = req.nextUrl.clone();
       jobsUrl.pathname = '/admin/jobs';
       return NextResponse.redirect(jobsUrl);
     }
+    if (pathname.startsWith('/admin')) {
+      const response = NextResponse.next();
+      response.headers.set('x-invoke-path', pathname);
+      return response;
+    }
+    return NextResponse.next();
   }
 
   // 🔐 CLEANER PORTAL — shared cleanerId cookie
@@ -91,36 +115,6 @@ export async function middleware(req: NextRequest) {
       jobsUrl.searchParams.delete('redirect');
       return NextResponse.redirect(jobsUrl);
     }
-  }
-
-  // 🔐 ADMIN ROUTE PROTECTION
-  if (pathname.startsWith('/admin')) {
-    const isLoginRoute = pathname === '/admin/login';
-    const adminSessionRaw = req.cookies.get('admin_session')?.value;
-    const session = parseAdminSession(adminSessionRaw);
-    const isAdminLoggedIn = isAdminSessionValid(adminSessionRaw);
-
-    if (!isAdminLoggedIn && !isLoginRoute) {
-      const loginUrl = req.nextUrl.clone();
-      loginUrl.pathname = '/admin/login';
-      return NextResponse.redirect(loginUrl);
-    }
-    if (isAdminLoggedIn && isLoginRoute) {
-      const dashUrl = req.nextUrl.clone();
-      // Branch-scoped admins land on the command center (filtered to their branch)
-      dashUrl.pathname = '/admin';
-      return NextResponse.redirect(dashUrl);
-    }
-
-    if (session?.isBranchScoped && !isPathAllowedForBranchScopedAdmin(pathname)) {
-      const jobsUrl = req.nextUrl.clone();
-      jobsUrl.pathname = '/admin/jobs';
-      return NextResponse.redirect(jobsUrl);
-    }
-
-    const response = NextResponse.next();
-    response.headers.set('x-invoke-path', pathname);
-    return response;
   }
 
   // 🚫 OPTIONAL: block other private sections in production

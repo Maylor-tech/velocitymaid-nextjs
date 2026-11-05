@@ -1,6 +1,6 @@
-/** Legacy dev-only admin_session="true" bypass — disabled in production. */
+/** Unsigned admin_session="true" is never an admin session. */
 export function allowLegacyAdminBypass(): boolean {
-  return process.env.NODE_ENV !== "production";
+  return false;
 }
 
 export function isLegacyAdminSession(value: string | undefined): boolean {

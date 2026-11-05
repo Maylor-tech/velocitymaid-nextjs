@@ -2,12 +2,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth/requireRole';
+import { assertOwnerAuthorization, requireRole } from '@/lib/auth/requireRole';
 import { nextInvoiceNumber } from '@/lib/invoices/invoiceUtils';
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
+    assertOwnerAuthorization(auth);
     const invoiceNumber = await nextInvoiceNumber();
     return NextResponse.json({ success: true, invoiceNumber });
   } catch (error: unknown) {

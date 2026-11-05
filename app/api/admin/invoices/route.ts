@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth/requireRole';
+import { assertOwnerAuthorization, requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import type { InvoiceStatus } from '@prisma/client';
 import {
@@ -14,7 +14,8 @@ import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
+    assertOwnerAuthorization(auth);
     const { searchParams } = request.nextUrl;
     const status = searchParams.get('status');
     const q = (searchParams.get('q') || '').trim();
@@ -102,7 +103,8 @@ interface CreateBody {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
+    assertOwnerAuthorization(auth);
     const body = (await request.json()) as CreateBody;
 
     if (!body.clientName?.trim()) {

@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth/requireRole';
+import { assertOwnerAuthorization, requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import type { InvoicePaymentMethod } from '@prisma/client';
 import {
@@ -19,6 +19,7 @@ export async function POST(
 ) {
   try {
     const auth = await requireRole(request, 'ADMIN');
+    assertOwnerAuthorization(auth);
     const body = await request.json();
     const amount = Number(body.amount);
     const paymentMethod = body.paymentMethod as InvoicePaymentMethod;

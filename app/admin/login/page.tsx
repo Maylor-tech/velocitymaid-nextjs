@@ -16,8 +16,8 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError(null);
 
-    if (!email.trim()) {
-      setError('Please enter your email address.');
+    if (!email.trim() || !password) {
+      setError('Enter your email and password.');
       return;
     }
 
@@ -26,7 +26,7 @@ export default function AdminLoginPage() {
       const res = await fetch('/api/auth/admin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password: password || undefined }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
       const data = await res.json();
@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
         if (res.status === 403) {
           setError('You don\'t have admin access yet.');
         } else if (res.status === 401) {
-          setError('Email not found.');
+          setError('Invalid email or password.');
         } else {
           console.error('Admin login error:', data.error ?? res.status);
           setError(null);
@@ -85,9 +85,10 @@ export default function AdminLoginPage() {
               <input
                 type="password"
                 className={brandClasses.input}
-                placeholder="Required for branch managers"
+                placeholder="Required for every administrator"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
                 autoComplete="current-password"
               />
             </div>

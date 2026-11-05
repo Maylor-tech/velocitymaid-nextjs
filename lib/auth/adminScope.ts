@@ -1,13 +1,18 @@
 /**
- * Branch-scoped admin access — Vermont-only operators vs super admin (Brian).
+ * Branch-scoped admin access.
+ * Owner authority is the ADMIN_EMAIL account only. Membership count does not grant it.
+ * A non-owner with several branches stays unscoped in the page shell until an explicit
+ * branch selection is added. See docs/admin-auth-rollout.md.
  */
 
 export type AdminSessionPayload = {
   userId: string;
   role: string;
   branchId?: string;
-  /** True when admin is limited to a single branch (not owner / super admin). */
+  /** True when admin is limited to one assigned branch. */
   isBranchScoped?: boolean;
+  /** True only for the explicit owner account. */
+  isOwner?: boolean;
 };
 
 export function isSuperAdminEmail(email: string | null | undefined): boolean {
@@ -15,13 +20,22 @@ export function isSuperAdminEmail(email: string | null | undefined): boolean {
   return !!ownerEmail && !!email && email.trim().toLowerCase() === ownerEmail;
 }
 
-/** Single-branch admins (excluding owner email) are branch-scoped. */
+/** Explicit owner authorization. A larger branch count is not owner access. */
+export function isOwnerAdmin(email: string | null | undefined): boolean {
+  return isSuperAdminEmail(email);
+}
+
+/** Single-branch non-owners are limited to that branch. */
 export function isBranchScopedAdmin(
   email: string | null | undefined,
   branchCount: number
 ): boolean {
-  if (isSuperAdminEmail(email)) return false;
+  if (isOwnerAdmin(email)) return false;
   return branchCount === 1;
+}
+
+export function isGlobalBillingPath(pathname: string): boolean {
+  return pathname === '/api/admin/invoices' || pathname.startsWith('/api/admin/invoices/');
 }
 
 const BRANCH_SCOPED_PAGE_PREFIXES = [

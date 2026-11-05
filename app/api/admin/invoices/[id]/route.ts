@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth/requireRole';
+import { assertOwnerAuthorization, requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import type { InvoiceStatus } from '@prisma/client';
 import {
@@ -26,7 +26,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
+    assertOwnerAuthorization(auth);
     await refreshInvoiceStatus(params.id);
     const invoice = await loadInvoice(params.id);
     if (!invoice) {
@@ -60,7 +61,8 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
+    assertOwnerAuthorization(auth);
     const existing = await loadInvoice(params.id);
     if (!existing) {
       return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });

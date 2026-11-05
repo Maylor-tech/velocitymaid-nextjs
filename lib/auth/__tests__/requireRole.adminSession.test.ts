@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
-import { UserRole } from '@prisma/client';
 
 const cookieGet = vi.fn();
 const userFindUnique = vi.fn();
@@ -59,17 +58,16 @@ describe('requireRole ADMIN session cookie', () => {
     userFindUnique.mockResolvedValue({ id: 'admin-1', email: 'brian@velocitymaid.com' });
   });
 
-  it('authenticates when cookies() is empty but request.cookies has admin_session', async () => {
+  it('rejects an unsigned admin_session even when the request cookie is present', async () => {
     cookieGet.mockReturnValue(undefined);
 
-    const auth = await requireRole(requestWithCookie('admin_session=present'), 'ADMIN');
+    const error = await requireRole(requestWithCookie('admin_session=present'), 'ADMIN').catch(
+      (e) => e
+    );
 
-    expect(auth.userId).toBe('admin-1');
-    expect(auth.role).toBe('ADMIN');
-    expect(userFindUnique).toHaveBeenCalledWith({
-      where: { id: 'admin-1', role: UserRole.ADMIN },
-      select: { id: true, email: true },
-    });
+    expect(error).toBeInstanceOf(NextResponse);
+    expect((error as NextResponse).status).toBe(401);
+    expect(userFindUnique).not.toHaveBeenCalled();
   });
 
   it('returns 401 when no admin_session is present on either cookie store', async () => {

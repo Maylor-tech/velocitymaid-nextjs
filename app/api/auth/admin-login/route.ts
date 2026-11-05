@@ -1,98 +1,83 @@
+import { createHash, timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
-import { safeError } from '@/lib/safeError';
 import {
   getScopedAdminPassword,
   isBranchScopedAdmin,
-  type AdminSessionPayload,
+  isOwnerAdmin,
 } from '@/lib/auth/adminScope';
+import { ADMIN_SESSION_MAX_AGE, adminSessionSecret, signAdminSession } from '@/lib/auth/adminSession';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+function failure(status: number) {
+  const error = status === 503
+    ? 'Admin login is not configured'
+    : status === 403
+      ? 'No branch access assigned'
+      : 'Invalid email or password';
+  return NextResponse.json(
+    { success: false, error },
+    { status, headers: { 'Cache-Control': 'no-store' } }
+  );
+}
+
+function passwordsMatch(provided: string, expected: string): boolean {
+  const digest = (value: string) => createHash('sha256').update(value).digest();
+  return timingSafeEqual(digest(provided), digest(expected));
+}
+
 export async function POST(req: NextRequest) {
   try {
+    if (req.headers.get('origin') !== new URL(req.url).origin) return failure(403);
     const body = await req.json();
-    const { email, password } = body;
-
-    if (!email || typeof email !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'Email is required' },
-        { status: 400 }
-      );
-    }
-
+    const email = body?.email;
+    const password = body?.password;
+    if (typeof email !== 'string' || !email.trim()) return failure(401);
     const normalizedEmail = email.trim().toLowerCase();
+    if (!adminSessionSecret()) return failure(503);
 
-    // Check that user exists and has ADMIN role (e.g. created via scripts/createAdmin.ts)
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
-      select: { id: true, email: true, role: true },
+      select: { id: true, email: true, role: true, isActive: true },
     });
+    if (!user || user.role !== UserRole.ADMIN || !user.isActive) return failure(401);
 
-    if (!user || user.role !== UserRole.ADMIN) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid email address' },
-        { status: 401 }
-      );
-    }
+    const expectedPassword = getScopedAdminPassword(normalizedEmail);
+    if (!expectedPassword || expectedPassword.length < 16) return failure(503);
+    if (typeof password !== 'string' || password.length === 0 || password.length > 1024) return failure(401);
+    if (!passwordsMatch(password, expectedPassword)) return failure(401);
 
     const branches = await prisma.userBranch.findMany({
       where: { userId: user.id },
       select: { branchId: true },
     });
+    if (branches.length === 0) return failure(403);
 
-    if (branches.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'No branch access assigned' },
-        { status: 403 }
-      );
-    }
-
-    const branchScoped = isBranchScopedAdmin(normalizedEmail, branches.length);
-
-    if (branchScoped) {
-      const expectedPassword = getScopedAdminPassword(normalizedEmail);
-      if (!expectedPassword) {
-        console.error('[ADMIN LOGIN] Branch-scoped admin password not configured:', normalizedEmail);
-        return NextResponse.json(
-          { success: false, error: 'Admin login is not configured. Contact support.' },
-          { status: 503 }
-        );
-      }
-      if (!password || typeof password !== 'string' || password !== expectedPassword) {
-        return NextResponse.json(
-          { success: false, error: 'Invalid email or password' },
-          { status: 401 }
-        );
-      }
-    }
-
-    const session: AdminSessionPayload = {
+    const branchIds = branches.map((branch) => branch.branchId).sort();
+    const isOwner = isOwnerAdmin(user.email);
+    const isBranchScoped = isBranchScopedAdmin(user.email, branchIds.length);
+    const token = await signAdminSession({
       userId: user.id,
-      role: user.role,
-      isBranchScoped: branchScoped,
-      ...(branchScoped ? { branchId: branches[0].branchId } : {}),
-    };
-
+      role: 'ADMIN',
+      isOwner,
+      branchIds,
+      isBranchScoped,
+      ...(isBranchScoped ? { branchId: branchIds[0] } : {}),
+    });
     const cookieStore = await cookies();
-    cookieStore.set('admin_session', JSON.stringify(session), {
+    cookieStore.set('admin_session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: ADMIN_SESSION_MAX_AGE,
     });
-
-    return NextResponse.json({ success: true });
-  } catch (error: unknown) {
-    console.error('[ADMIN LOGIN] Error:', error);
-    return NextResponse.json(
-      { success: false, error: safeError() },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch {
+    return failure(503);
   }
 }
-

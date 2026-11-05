@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth/requireRole';
+import { assertOwnerAuthorization, requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
 import { refreshInvoiceStatus } from '@/lib/invoices/invoiceService';
 import { serializeInvoice } from '@/lib/invoices/serializeInvoice';
@@ -13,7 +13,8 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireRole(request, 'ADMIN');
+    const auth = await requireRole(request, 'ADMIN');
+    assertOwnerAuthorization(auth);
     await refreshInvoiceStatus(params.id);
     const invoice = await prisma.invoice.findUnique({
       where: { id: params.id },

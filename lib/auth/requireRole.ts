@@ -6,8 +6,8 @@ import { getAuthenticatedBranchOperator } from "./branchOperatorAuth";
 import { prisma } from "../prisma";
 import { UserRole } from "@prisma/client";
 import { cookies } from "next/headers";
-import { allowLegacyAdminBypass, isLegacyAdminSession } from "./adminBypass";
-import { isBranchScopedAdmin } from "./adminScope";
+import { isBranchScopedAdmin, isOwnerAdmin } from "./adminScope";
+import { verifyAdminSession } from "./adminSession";
 
 type CookieReader = { get(name: string): { value: string } | undefined };
 
@@ -29,15 +29,9 @@ export type RequiredRole = "ADMIN" | "CUSTOMER" | "CLEANER" | "BRANCH_OWNER" | "
 type AdminBranchRow = { branchId: string; Branch: { name: string } };
 
 /**
- * Resolve the branch scope for an admin user.
- *
- * Full-access ("super"/owner) admins are NOT scoped to a single branch — they
- * can see and manage jobs across every market. An admin is treated as
- * full-access when their email matches ADMIN_EMAIL (the owner account) or when
- * they have access to anything other than exactly one branch.
- *
- * Single-branch admins (e.g. a New-Jersey-only operator) stay scoped to that
- * branch, so their access is unchanged.
+ * Single-branch non-owners stay on that branch.
+ * The owner account is unscoped. Several memberships do not make someone the owner;
+ * those admins also stay unscoped until branch selection is implemented.
  */
 export function resolveAdminBranchScope(
   email: string | null | undefined,
@@ -61,18 +55,23 @@ export interface AuthContext {
   branchId?: string;
   /** Branch display name when branch-scoped */
   branchName?: string;
+  /** Explicit owner account. Independent of how many branches are assigned. */
+  isOwner?: boolean;
 }
 
-/** Reject branch-scoped admins from super-admin-only APIs (billing, payouts, etc.). */
-export function assertSuperAdmin(auth: AuthContext): void {
-  if (auth.branchId) {
+/** Global billing and other owner actions require the explicit owner account. */
+export function assertOwnerAuthorization(auth: AuthContext): void {
+  if (auth.isOwner !== true) {
     const response = NextResponse.json(
-      { success: false, error: "Forbidden: Super admin access required" },
+      { success: false, error: "Forbidden: Owner authorization required" },
       { status: 403 }
     );
     throw response;
   }
 }
+
+/** @deprecated Use assertOwnerAuthorization. Owner email, not an absent branch id. */
+export const assertSuperAdmin = assertOwnerAuthorization;
 
 /**
  * Require a specific role for API route access
@@ -88,85 +87,14 @@ export async function requireRole(
   if (requiredRole === "ADMIN") {
     const cookieStore = await cookies();
     const adminSessionRaw = readAdminCookie(cookieStore, request, "admin_session");
-    const adminId =
-      readAdminCookie(cookieStore, request, "adminId") ||
-      readAdminCookie(cookieStore, request, "adminSession") ||
-      request.headers.get("x-admin-id") ||
-      request.headers.get("authorization")?.replace("Bearer ", "");
-
-    // Branch-scoped session: { userId, role, branchId } from admin-login
-    if (adminSessionRaw) {
-      try {
-        const session = JSON.parse(adminSessionRaw) as { userId?: string; role?: string; branchId?: string };
-        if (session?.userId) {
-          const admin = await prisma.user.findUnique({
-            where: { id: session.userId, role: UserRole.ADMIN },
-            select: { id: true, email: true },
-          });
-          if (admin) {
-            const branches = await prisma.userBranch.findMany({
-              where: { userId: admin.id },
-              include: { Branch: true },
-            });
-            return {
-              userId: admin.id,
-              role: "ADMIN",
-              email: admin.email,
-              ...resolveAdminBranchScope(admin.email, branches),
-            };
-          }
-        }
-      } catch {
-        // not JSON, fall through
-      }
-      // Legacy dev bypass — disabled in production
-      if (isLegacyAdminSession(adminSessionRaw) && allowLegacyAdminBypass()) {
-        return {
-          userId: "local-admin",
-          role: "ADMIN",
-          email: process.env.ADMIN_EMAIL || "dev-admin@localhost",
-        };
-      }
-    }
-
-    if (!adminId) {
-      const response = NextResponse.json(
+    const auth = await getVerifiedAdmin(adminSessionRaw);
+    if (!auth) {
+      throw NextResponse.json(
         { success: false, error: "Unauthorized: Admin authentication required" },
         { status: 401 }
       );
-      throw response;
     }
-
-    const admin = await prisma.user.findUnique({
-      where: {
-        id: adminId,
-        role: UserRole.ADMIN,
-        isActive: true,
-      },
-      select: {
-        id: true,
-        email: true,
-      },
-    });
-
-    if (!admin) {
-      const response = NextResponse.json(
-        { success: false, error: "Forbidden: Admin access required" },
-        { status: 403 }
-      );
-      throw response;
-    }
-
-    const branches = await prisma.userBranch.findMany({
-      where: { userId: admin.id },
-      include: { Branch: true },
-    });
-    return {
-      userId: admin.id,
-      role: "ADMIN",
-      email: admin.email,
-      ...resolveAdminBranchScope(admin.email, branches),
-    };
+    return auth;
   }
 
   if (requiredRole === "CUSTOMER") {
@@ -254,29 +182,41 @@ export async function requireRole(
  */
 export async function getAdminAuthFromCookies(): Promise<AuthContext | null> {
   const cookieStore = await cookies();
-  const adminSessionRaw = cookieStore.get("admin_session")?.value;
-  if (!adminSessionRaw || isLegacyAdminSession(adminSessionRaw)) return null;
-  try {
-    const session = JSON.parse(adminSessionRaw) as { userId?: string; branchId?: string };
-    if (!session?.userId) return null;
-    const admin = await prisma.user.findUnique({
-      where: { id: session.userId, role: UserRole.ADMIN },
-      select: { id: true, email: true },
-    });
-    if (!admin) return null;
-    const branches = await prisma.userBranch.findMany({
-      where: { userId: admin.id },
-      include: { Branch: true },
-    });
-    return {
-      userId: admin.id,
-      role: "ADMIN",
-      email: admin.email,
-      ...resolveAdminBranchScope(admin.email, branches),
-    };
-  } catch {
+  return getVerifiedAdmin(cookieStore.get("admin_session")?.value);
+}
+
+/** Signature, expiry, active account, and current memberships. Cookie claims do not win. */
+async function getVerifiedAdmin(raw: string | undefined): Promise<AuthContext | null> {
+  const session = await verifyAdminSession(raw);
+  if (!session) return null;
+  const admin = await prisma.user.findUnique({
+    where: { id: session.userId, role: UserRole.ADMIN, isActive: true },
+    select: { id: true, email: true },
+  });
+  if (!admin) return null;
+  const branches = await prisma.userBranch.findMany({
+    where: { userId: admin.id },
+    include: { Branch: true },
+  });
+  const currentIds = branches.map((branch) => branch.branchId).sort();
+  const signedIds = [...session.branchIds].sort();
+  const isOwner = isOwnerAdmin(admin.email);
+  const isBranchScoped = isBranchScopedAdmin(admin.email, currentIds.length);
+  if (
+    !currentIds.length ||
+    JSON.stringify(currentIds) !== JSON.stringify(signedIds) ||
+    session.isOwner !== isOwner ||
+    session.isBranchScoped !== isBranchScoped
+  ) {
     return null;
   }
+  return {
+    userId: admin.id,
+    role: "ADMIN",
+    email: admin.email,
+    isOwner,
+    ...resolveAdminBranchScope(admin.email, branches),
+  };
 }
 
 /**
