@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     cookieStore.delete('admin_session');
 
     return NextResponse.redirect(new URL('/admin/login', req.url));
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[ADMIN LOGOUT] Error:', error);
     return NextResponse.redirect(new URL('/admin/login', req.url));
   }

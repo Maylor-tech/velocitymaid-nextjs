@@ -10,35 +10,27 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const auth = await requireRole(req, "ADMIN");
-    const adminId = auth.userId;
-
-    const body = await req.json().catch(() => ({}));
-    const note = typeof body?.note === "string" ? body.note.trim() : null;
+    await requireRole(req, "ADMIN");
 
     const updated = await prisma.cleanerPaymentMethod.update({
       where: { id: params.id },
       data: {
-        isActive: true, // Activate upon approval
-        verifiedAt: new Date(),
-        verifiedBy: adminId,
-        verificationNote: note,
+        isActive: true,
         updatedAt: new Date(),
       },
       select: {
         id: true,
         cleanerId: true,
         isActive: true,
-        verifiedAt: true,
-        verifiedBy: true,
       },
     });
 
     return NextResponse.json({ success: true, updated });
-  } catch (e: any) {
-    if (e instanceof NextResponse) return e;
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
+    const message = error instanceof Error ? error.message : "Failed";
     return NextResponse.json(
-      { success: false, error: e.message ?? "Failed" },
+      { success: false, error: message },
       { status: 400 }
     );
   }

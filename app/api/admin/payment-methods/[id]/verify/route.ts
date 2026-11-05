@@ -11,8 +11,7 @@ export const dynamic = "force-dynamic";
  * Approve or reject a payment method
  * 
  * Body: {
- *   "action": "approve" | "reject",
- *   "note": "Optional reason"
+ *   "action": "approve" | "reject"
  * }
  */
 export async function POST(
@@ -24,7 +23,7 @@ export async function POST(
     const adminId = auth.userId;
 
     const body = await req.json().catch(() => ({}));
-    const { action, note } = body;
+    const { action } = body;
 
     if (!["approve", "reject"].includes(action)) {
       return NextResponse.json(
@@ -48,17 +47,11 @@ export async function POST(
     const update =
       action === "approve"
         ? {
-            verifiedAt: new Date(),
-            verifiedBy: adminId,
             isActive: true,
-            verificationNote: note || null,
             updatedAt: new Date(),
           }
         : {
             isActive: false,
-            verifiedAt: null,
-            verifiedBy: null, // Clear verifiedBy on reject
-            verificationNote: note || "Rejected by admin",
             updatedAt: new Date(),
           };
 
@@ -70,9 +63,6 @@ export async function POST(
         cleanerId: true,
         methodType: true,
         isActive: true,
-        verifiedAt: true,
-        verifiedBy: true,
-        verificationNote: true,
       },
     });
 
@@ -91,11 +81,12 @@ export async function POST(
         ? "Payment method approved successfully" 
         : "Payment method rejected",
     });
-  } catch (e: any) {
-    if (e instanceof NextResponse) return e;
-    console.error("[ADMIN_PAYMENT_METHODS_VERIFY] Error:", e);
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
+    console.error("[ADMIN_PAYMENT_METHODS_VERIFY] Error:", error);
+    const message = error instanceof Error ? error.message : "Failed to verify payment method";
     return NextResponse.json(
-      { success: false, error: e.message ?? "Failed to verify payment method" },
+      { success: false, error: message },
       { status: 400 }
     );
   }

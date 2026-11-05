@@ -11,17 +11,11 @@ export async function POST(
 ) {
   try {
     await requireRole(req, "ADMIN");
-    const body = await req.json().catch(() => ({}));
-    const note =
-      typeof body?.note === "string" ? body.note.trim() : "Rejected by admin";
 
     const updated = await prisma.cleanerPaymentMethod.update({
       where: { id: params.id },
       data: {
         isActive: false,
-        verifiedAt: null,
-        verifiedBy: null, // Clear verifiedBy on reject
-        verificationNote: note,
         updatedAt: new Date(),
       },
       select: {
@@ -32,10 +26,11 @@ export async function POST(
     });
 
     return NextResponse.json({ success: true, updated });
-  } catch (e: any) {
-    if (e instanceof NextResponse) return e;
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
+    const message = error instanceof Error ? error.message : "Failed";
     return NextResponse.json(
-      { success: false, error: e.message ?? "Failed" },
+      { success: false, error: message },
       { status: 400 }
     );
   }

@@ -11,9 +11,8 @@ export async function GET(req: NextRequest) {
     await requireRole(req, "ADMIN");
 
     const pending = await prisma.cleanerPaymentMethod.findMany({
-      where: { 
-        isActive: false, 
-        verifiedAt: null 
+      where: {
+        isActive: false,
       },
       orderBy: { createdAt: "desc" },
       take: 100,
@@ -34,10 +33,11 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ success: true, pending: maskedPending });
-  } catch (e: any) {
-    if (e instanceof NextResponse) return e;
+  } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
+    const message = error instanceof Error ? error.message : "Failed";
     return NextResponse.json(
-      { success: false, error: e.message ?? "Failed" },
+      { success: false, error: message },
       { status: 401 }
     );
   }

@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
         paidThisMonth: decimalToNumber(paidThisMonth._sum.total),
         overdueCount,
       },
-      invoices: invoices.map(serializeInvoice),
+      invoices: invoices.map((invoice) => serializeInvoice(invoice)),
     });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
