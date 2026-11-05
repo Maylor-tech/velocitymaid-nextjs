@@ -1,114 +1,47 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { InvoiceStatus } from '@prisma/client';
-
-const findMany = vi.fn();
-const updateMany = vi.fn();
-const update = vi.fn();
-const sendEmail = vi.fn();
-const verifyCronAuth = vi.fn();
-
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    invoice: {
-      findMany: (...a: unknown[]) => findMany(...a),
-      updateMany: (...a: unknown[]) => updateMany(...a),
-      update: (...a: unknown[]) => update(...a),
-    },
-  },
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+const { findMany, send, auth } = vi.hoisted(() => ({ findMany: vi.fn(), send: vi.fn(), auth: vi.fn() }));
+vi.mock('@/lib/prisma', () => ({ prisma: { invoice: { findMany } } }));
+vi.mock('@/lib/cron/verifyCronAuth', () => ({ verifyCronAuth: auth }));
+vi.mock('@/lib/invoices/sendReminder', () => ({
+  REMINDABLE_STATUSES: ['SENT', 'OVERDUE', 'PARTIALLY_PAID'], sendRecordedInvoiceReminder: send,
 }));
-
-vi.mock('@/lib/cron/verifyCronAuth', () => ({
-  verifyCronAuth: (...a: unknown[]) => verifyCronAuth(...a),
-}));
-
-vi.mock('@/lib/email/cronAutomationEmails', () => ({
-  sendInvoiceOverdueReminderEmail: (...a: unknown[]) => sendEmail(...a),
-}));
-
-import { GET, __test } from '../invoice-reminders/route';
-
-describe('invoice-reminders cron (FIN-001)', () => {
+import { GET } from '../invoice-reminders/route';
+const request = () => new Request('http://localhost/api/cron/invoice-reminders') as never;
+describe('invoice reminder scheduling', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    verifyCronAuth.mockReturnValue(null);
-    sendEmail.mockResolvedValue({ sent: true });
-    updateMany.mockResolvedValue({ count: 1 });
-    update.mockResolvedValue({});
+    vi.resetAllMocks(); vi.useFakeTimers(); vi.setSystemTime(new Date('2026-10-31T15:00:00Z'));
+    vi.stubEnv('INVOICE_REMINDER_STAGES_ENABLED', 'false');
+    auth.mockReturnValue(null); findMany.mockResolvedValue([]); send.mockResolvedValue({ sent: true });
   });
-
-  it('includes SENT, OVERDUE, and PARTIALLY_PAID with balanceDue > 0', () => {
-    expect(__test.REMINDABLE_STATUSES).toEqual([
-      InvoiceStatus.SENT,
-      InvoiceStatus.OVERDUE,
-      InvoiceStatus.PARTIALLY_PAID,
-    ]);
-    const where = __test.buildOverdueWhere(new Date('2026-01-01'));
-    expect(where).toMatchObject({
-      status: { in: __test.REMINDABLE_STATUSES },
-      reminderSentAt: null,
-      balanceDue: { gt: 0 },
-    });
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs(); });
+  it('rejects unauthorized callers without querying invoices', async () => {
+    auth.mockReturnValue(new Response('unauthorized', { status: 401 }));
+    expect((await GET(request())).status).toBe(401); expect(findMany).not.toHaveBeenCalled();
   });
-
-  it('claims reminderSentAt before send and skips when claim lost', async () => {
+  it('does not run outside the customer send window', async () => {
+    vi.setSystemTime(new Date('2026-10-31T09:00:00Z'));
+    const body = await (await GET(request())).json();
+    expect(body.skipped).toContain('send window'); expect(findMany).not.toHaveBeenCalled();
+  });
+  it('retains the old overdue-only policy unless expanded stages are explicitly enabled', async () => {
+    findMany.mockResolvedValue([{ id: 'i1', dueDate: new Date('2026-10-20') }]);
+    const body = await (await GET(request())).json();
+    expect(body.expanded).toBe(false);
+    expect(findMany.mock.calls[0][0].where).toMatchObject({ reminderSentAt: null, remindersPaused: false, balanceDue: { gt: 0 } });
+    expect(send).toHaveBeenCalledWith('i1', expect.objectContaining({ stage: 'legacy_overdue' }));
+  });
+  it('uses the shared branded sender for due-soon, due-today and overdue stages', async () => {
+    vi.stubEnv('INVOICE_REMINDER_STAGES_ENABLED', 'true');
     findMany.mockResolvedValue([
-      {
-        id: 'inv-a',
-        clientEmail: 'a@example.com',
-        clientName: 'A',
-        invoiceNumber: 'INV-A',
-        balanceDue: 100,
-        dueDate: new Date('2025-12-01'),
-        serviceType: null,
-        jobDate: null,
-      },
-      {
-        id: 'inv-b',
-        clientEmail: 'b@example.com',
-        clientName: 'B',
-        invoiceNumber: 'INV-B',
-        balanceDue: 50,
-        dueDate: new Date('2025-12-01'),
-        serviceType: null,
-        jobDate: null,
-      },
+      { id: 'a', dueDate: new Date('2026-11-01') }, { id: 'b', dueDate: new Date('2026-10-31') },
+      { id: 'c', dueDate: new Date('2026-10-30') }, { id: 'd', dueDate: new Date('2026-10-24') },
     ]);
-    updateMany
-      .mockResolvedValueOnce({ count: 1 })
-      .mockResolvedValueOnce({ count: 0 });
-
-    const res = await GET(new Request('http://localhost/api/cron/invoice-reminders') as never);
-    const body = await res.json();
-
-    expect(updateMany).toHaveBeenCalledTimes(2);
-    expect(sendEmail).toHaveBeenCalledTimes(1);
-    expect(body.sent).toBe(1);
-    expect(body.skippedClaimed).toBe(1);
+    expect((await (await GET(request())).json()).sent).toBe(4);
+    expect(send.mock.calls.map(([, options]) => options.stage)).toEqual(['due_soon', 'due_today', 'overdue_1', 'overdue_7']);
   });
-
-  it('releases claim when email send fails so retries remain possible', async () => {
-    findMany.mockResolvedValue([
-      {
-        id: 'inv-fail',
-        clientEmail: 'fail@example.com',
-        clientName: 'Fail',
-        invoiceNumber: 'INV-F',
-        balanceDue: 20,
-        dueDate: new Date('2025-12-01'),
-        serviceType: null,
-        jobDate: null,
-      },
-    ]);
-    sendEmail.mockResolvedValue({ sent: false, error: 'resend down' });
-
-    const res = await GET(new Request('http://localhost/api/cron/invoice-reminders') as never);
-    const body = await res.json();
-
-    expect(update).toHaveBeenCalledWith({
-      where: { id: 'inv-fail' },
-      data: { reminderSentAt: null },
-    });
-    expect(body.failed).toBe(1);
-    expect(body.sent).toBe(0);
+  it('reports failed and suppressed attempts without claiming they were sent', async () => {
+    findMany.mockResolvedValue([{ id: 'a' }, { id: 'b' }]);
+    send.mockResolvedValueOnce({ sent: false, failed: true }).mockResolvedValueOnce({ sent: false, skippedReason: 'cooldown' });
+    expect(await (await GET(request())).json()).toMatchObject({ sent: 0, failed: 1, skipped: 1 });
   });
 });

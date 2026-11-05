@@ -1,5 +1,6 @@
 import type { SerializedInvoice } from '@/lib/invoices/serializeInvoice';
 import { formatInvoiceDate } from '@/lib/invoices/invoiceUtils';
+import { contactDate } from '@/lib/invoices/reminderPolicy';
 import {
   getServiceInvoiceZelleDestination,
   SERVICE_INVOICE_ZELLE_SECONDARY,
@@ -73,11 +74,7 @@ export function parseInvoiceNotes(notes: string | null | undefined): {
 function dueDateLabel(invoice: SerializedInvoice): string {
   if (invoice.status === 'PAID') return 'Paid';
   if (!invoice.dueDate) return 'Due Now';
-  const due = new Date(invoice.dueDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  due.setHours(0, 0, 0, 0);
-  if (due <= today) return 'Due Now';
+  if (invoice.dueDate.slice(0, 10) <= contactDate(new Date())) return 'Due Now';
   return formatInvoiceDate(invoice.dueDate);
 }
 
@@ -131,7 +128,7 @@ function upcomingHtml(lines: string[]): string {
     .join('');
 
   return `<tr>
-    <td style="padding:20px 32px 0;">
+    <td class="vm-pad" style="padding:20px 32px 0;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F4F6F9;border-radius:8px;">
         <tr><td style="padding:16px 20px;">
           <div style="font-family:${FONT};font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;color:${MUTED};margin-bottom:10px;">Upcoming Services</div>
@@ -150,6 +147,7 @@ export function buildInvoiceBrandedEmailHtml(
     variant?: InvoiceEmailVariant;
     viewUrl?: string;
     paymentAmount?: number;
+    reminderMessage?: string;
   } = {}
 ): string {
   const variant = options.variant ?? 'sent';
@@ -166,15 +164,15 @@ export function buildInvoiceBrandedEmailHtml(
 
   let introBlock = '';
   if (variant === 'reminder') {
-    introBlock = `<tr><td style="padding:0 32px 16px;">
+    introBlock = `<tr><td class="vm-pad" style="padding:0 32px 16px;">
       <p style="font-family:${FONT};font-size:15px;color:${NAVY};line-height:1.6;margin:0;">
-        Hi ${escapeHtml(invoice.clientName.split(/\s+/)[0] || invoice.clientName)}, this is a friendly reminder that invoice
+        Hi ${escapeHtml(invoice.clientName.split(/\s+/)[0] || invoice.clientName)}, ${escapeHtml(options.reminderMessage || 'this is a reminder about your outstanding invoice.')} Invoice
         <strong>${escapeHtml(invoice.invoiceNumber)}</strong> has an outstanding balance of
         <strong>${escapeHtml(invoice.balanceDueFormatted)}</strong>.
       </p>
     </td></tr>`;
   } else if (variant === 'receipt') {
-    introBlock = `<tr><td style="padding:0 32px 16px;">
+    introBlock = `<tr><td class="vm-pad" style="padding:0 32px 16px;">
       <p style="font-family:${FONT};font-size:15px;color:${NAVY};line-height:1.6;margin:0;">
         Hi ${escapeHtml(invoice.clientName.split(/\s+/)[0] || invoice.clientName)}, we received
         <strong>${escapeHtml(options.paymentAmount != null ? `$${options.paymentAmount.toFixed(2)}` : invoice.amountPaidFormatted)}</strong>
@@ -197,25 +195,37 @@ export function buildInvoiceBrandedEmailHtml(
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <meta name="x-apple-disable-message-reformatting"/>
 <title>VelocityMaid — Invoice ${escapeHtml(invoice.invoiceNumber)}</title>
+<style>
+  .vm-card { width: 100% !important; max-width: 600px !important; }
+  @media only screen and (max-width: 600px) {
+    .vm-pad { padding-left: 16px !important; padding-right: 16px !important; }
+    .vm-stack { display: block !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    .vm-stack-gap { padding-top: 16px !important; padding-left: 0 !important; text-align: left !important; }
+    .vm-pay { padding-top: 12px !important; }
+  }
+</style>
 </head>
-<body style="margin:0;padding:0;background-color:#F4F6F9;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<body style="margin:0;padding:16px 8px;background-color:#F4F6F9;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
 <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#F4F6F9;opacity:0;">${escapeHtml(previewText)}</div>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F4F6F9;">
-<tr><td align="center" style="padding:24px 12px;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;background-color:#FFFFFF;border-radius:12px;overflow:hidden;">
+<tr><td align="center" style="padding:0;">
+<!--[if mso]><table role="presentation" align="center" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" class="vm-card" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;max-width:600px;margin:0 auto;background-color:#FFFFFF;border-radius:12px;overflow:hidden;">
 
   <tr>
-    <td style="background-color:${NAVY};padding:24px 32px;">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+    <td class="vm-pad" style="background-color:${NAVY};padding:24px 32px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
-          <td valign="middle" style="padding-right:14px;">${HOUSE_ICON_HEADER}</td>
+          <td valign="middle" style="padding-right:14px;" width="40">${HOUSE_ICON_HEADER}</td>
           <td valign="middle">
             <div style="font-family:${FONT};font-size:20px;font-weight:bold;letter-spacing:1px;color:#FFFFFF;line-height:1;">VELOCITYMAID</div>
-            <div style="font-family:${FONT};font-size:9px;font-weight:bold;letter-spacing:2.5px;color:${CYAN};line-height:1;padding-top:5px;">COME HOME TO CLEAN</div>
+            <div style="font-family:${FONT};font-size:9px;font-weight:bold;letter-spacing:2px;color:${CYAN};line-height:1;padding-top:5px;">COME HOME TO CLEAN</div>
           </td>
-          <td valign="middle" align="right" style="padding-left:40px;">
+        </tr>
+        <tr>
+          <td colspan="2" style="padding-top:14px;">
             <div style="font-family:${FONT};font-size:11px;font-weight:bold;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;">Invoice</div>
-            <div style="font-family:${FONT};font-size:18px;font-weight:bold;color:${CYAN};margin-top:2px;">${escapeHtml(invoice.invoiceNumber)}</div>
+            <div style="font-family:${FONT};font-size:18px;font-weight:bold;color:${CYAN};margin-top:2px;word-break:break-word;">${escapeHtml(invoice.invoiceNumber)}</div>
           </td>
         </tr>
       </table>
@@ -223,19 +233,19 @@ export function buildInvoiceBrandedEmailHtml(
   </tr>
 
   <tr>
-    <td style="background-color:#FFFFFF;padding:28px 32px 0;">
+    <td class="vm-pad" style="background-color:#FFFFFF;padding:28px 32px 0;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
-          <td valign="top" width="50%">
+          <td class="vm-stack" valign="top" width="50%">
             <div style="font-family:${FONT};font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;color:${MUTED};margin-bottom:8px;">Billed To</div>
             <div style="font-family:${FONT};font-size:15px;font-weight:bold;color:${NAVY};">${escapeHtml(invoice.clientName)}</div>
             <div style="font-family:${FONT};font-size:13px;color:${MUTED};margin-top:2px;">${escapeHtml(street)}</div>
             ${cityLine ? `<div style="font-family:${FONT};font-size:13px;color:${MUTED};">${escapeHtml(cityLine)}</div>` : ''}
             ${invoice.clientEmail ? `<div style="font-family:${FONT};font-size:13px;color:${MUTED};margin-top:2px;">${escapeHtml(invoice.clientEmail)}</div>` : ''}
           </td>
-          <td valign="top" width="50%" align="right">
+          <td class="vm-stack vm-stack-gap" valign="top" width="50%" align="right">
             <div style="font-family:${FONT};font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;color:${MUTED};margin-bottom:8px;">Invoice Details</div>
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" align="right">
               <tr>
                 <td style="font-family:${FONT};font-size:12px;color:${MUTED};padding-right:12px;padding-bottom:4px;">Invoice #</td>
                 <td style="font-family:${FONT};font-size:12px;font-weight:bold;color:${NAVY};padding-bottom:4px;">${escapeHtml(invoice.invoiceNumber)}</td>
@@ -263,10 +273,10 @@ export function buildInvoiceBrandedEmailHtml(
 
   ${introBlock}
 
-  <tr><td style="padding:20px 32px 0;"><div style="height:1px;background-color:#E2E8F0;font-size:0;line-height:0;">&nbsp;</div></td></tr>
+  <tr><td class="vm-pad" style="padding:20px 32px 0;"><div style="height:1px;background-color:#E2E8F0;font-size:0;line-height:0;">&nbsp;</div></td></tr>
 
   <tr>
-    <td style="padding:20px 32px 0;">
+    <td class="vm-pad" style="padding:20px 32px 0;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
           <td style="font-family:${FONT};font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;color:${MUTED};padding-bottom:12px;">Service</td>
@@ -288,18 +298,18 @@ export function buildInvoiceBrandedEmailHtml(
   </tr>
 
   ${showPaymentBlock ? `<tr>
-    <td style="padding:24px 32px 0;">
+    <td class="vm-pad" style="padding:24px 32px 0;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${NAVY};border-radius:8px;">
         <tr>
-          <td style="padding:20px 24px;">
+          <td class="vm-stack" style="padding:20px 24px;">
             <div style="font-family:${FONT};font-size:13px;font-weight:bold;color:#FFFFFF;margin-bottom:6px;">Pay securely online</div>
             <div style="font-family:${FONT};font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6;">
               Pay by card on your invoice page. Amount due:
               <strong style="color:#FFFFFF;">${escapeHtml(invoice.balanceDueFormatted)}</strong>
             </div>
           </td>
-          <td align="right" valign="middle" style="padding:20px 24px;">
-            <a href="${escapeHtml(payByCardUrl)}" style="display:inline-block;font-family:${FONT};font-size:13px;font-weight:bold;color:${NAVY};background-color:${CYAN};text-decoration:none;padding:12px 24px;border-radius:6px;white-space:nowrap;">Pay by Card</a>
+          <td class="vm-stack vm-pay" align="right" valign="middle" style="padding:0 24px 20px;">
+            <a href="${escapeHtml(payByCardUrl)}" style="display:inline-block;font-family:${FONT};font-size:13px;font-weight:bold;color:${NAVY};background-color:${CYAN};text-decoration:none;padding:12px 24px;border-radius:6px;">Pay by Card</a>
           </td>
         </tr>
       </table>
@@ -314,14 +324,14 @@ export function buildInvoiceBrandedEmailHtml(
   ${upcomingHtml(upcomingLines)}
 
   <tr>
-    <td style="padding:20px 32px 24px;">
+    <td class="vm-pad" style="padding:20px 32px 24px;">
       <p style="font-family:${FONT};font-size:13px;color:${MUTED};line-height:1.65;margin:0;">${escapeHtml(closingNote || defaultClosingText)}</p>
       ${options.viewUrl ? `<p style="font-family:${FONT};font-size:13px;margin:16px 0 0;"><a href="${escapeHtml(options.viewUrl)}" style="color:${CYAN};font-weight:bold;">View invoice online</a></p>` : ''}
     </td>
   </tr>
 
   <tr>
-    <td style="background-color:#FFFFFF;padding:0 32px 28px;">
+    <td class="vm-pad" style="background-color:#FFFFFF;padding:0 32px 28px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td valign="top" style="border-left:4px solid ${CYAN};padding-left:16px;">
@@ -346,13 +356,14 @@ export function buildInvoiceBrandedEmailHtml(
   </tr>
 
   <tr>
-    <td align="center" style="background-color:${NAVY};padding:18px 32px;">
+    <td class="vm-pad" align="center" style="background-color:${NAVY};padding:18px 32px;">
       <div style="font-family:${FONT};font-size:11px;font-weight:bold;letter-spacing:2px;color:${CYAN};">COME HOME TO CLEAN</div>
       <div style="font-family:${FONT};font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">VelocityMaid &middot; Premium Cleaning &amp; Property Readiness &middot; Vermont &amp; New Jersey</div>
     </td>
   </tr>
 
 </table>
+<!--[if mso]></td></tr></table><![endif]-->
 </td></tr>
 </table>
 </body>
@@ -361,7 +372,7 @@ export function buildInvoiceBrandedEmailHtml(
 
 export function buildInvoiceBrandedEmailText(
   invoice: SerializedInvoice,
-  options: { variant?: InvoiceEmailVariant; viewUrl?: string; paymentAmount?: number } = {}
+  options: { variant?: InvoiceEmailVariant; viewUrl?: string; paymentAmount?: number; reminderMessage?: string } = {}
 ): string {
   const variant = options.variant ?? 'sent';
   const { closingNote, upcomingLines } = parseInvoiceNotes(invoice.notes);
@@ -378,6 +389,7 @@ export function buildInvoiceBrandedEmailText(
   ];
 
   if (variant === 'reminder') {
+    if (options.reminderMessage) lines.push('', options.reminderMessage);
     lines.push('', `Reminder: ${invoice.balanceDueFormatted} outstanding.`);
   }
 

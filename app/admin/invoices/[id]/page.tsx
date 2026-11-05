@@ -15,12 +15,14 @@ import {
 } from 'lucide-react';
 import type { SerializedInvoice } from '@/lib/invoices/serializeInvoice';
 import { InvoiceDocument } from '@/components/invoices/InvoiceDocument';
+import { InvoiceReminderControls } from '@/components/admin/invoices/InvoiceReminderControls';
 import {
   SendInvoiceDialog,
   type SendInvoicePayload,
   type SendInvoiceResponse,
 } from '@/components/admin/invoices/SendInvoiceDialog';
 import type { InvoicePaymentMethod } from '@prisma/client';
+import { canSendInvoiceReminder } from '@/lib/invoices/canSendInvoiceReminder';
 
 const PAYMENT_METHODS: InvoicePaymentMethod[] = [
   'CASH', 'CHECK', 'STRIPE', 'ZELLE', 'VENMO', 'BANK_TRANSFER', 'OTHER',
@@ -109,9 +111,10 @@ export default function InvoiceDetailPage() {
   }
 
   const publicUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/invoice/${invoice.publicToken}`;
+  const reminderDisabled = busy || !canSendInvoiceReminder(invoice);
 
   return (
-    <div className="p-7 print:p-0">
+    <div className="p-3 sm:p-7 print:p-0">
       <div className="mb-6 print:hidden">
         <Link href="/admin/invoices" className="inline-flex items-center gap-1 font-body text-sm text-vm-cyan-dark hover:underline">
           <ArrowLeft className="h-4 w-4" /> Invoices
@@ -135,8 +138,16 @@ export default function InvoiceDetailPage() {
             </button>
           )}
           {invoice.status !== 'DRAFT' && invoice.status !== 'CANCELLED' && (
-            <button type="button" disabled={busy} onClick={() => action('remind')}
-              className="inline-flex items-center gap-1 rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy">
+            <button
+              type="button"
+              disabled={reminderDisabled}
+              aria-disabled={reminderDisabled}
+              onClick={() => {
+                if (reminderDisabled) return;
+                void action('remind');
+              }}
+              className="inline-flex items-center gap-1 rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy disabled:cursor-not-allowed disabled:opacity-40"
+            >
               <Mail className="h-4 w-4" /> Send reminder
             </button>
           )}
@@ -164,6 +175,7 @@ export default function InvoiceDetailPage() {
         </p>
       </div>
 
+      <InvoiceReminderControls invoiceId={id} />
       <InvoiceDocument invoice={invoice} />
 
       {invoice.payments.length > 0 && (

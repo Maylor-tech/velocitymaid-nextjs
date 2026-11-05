@@ -18,12 +18,12 @@ const HOST_STEPS = [
   },
   {
     title: "Photos",
-    text: "The photos prove the home is guest-ready before arrival.",
+    text: "Photos document the work. Readiness is confirmed through checklist review and any open issues.",
     icon: Camera,
   },
   {
     title: "One pay link",
-    text: "Card or Zelle, after you see the photos.",
+    text: "Pay by card or Zelle under your agreed service terms.",
     icon: CircleDollarSign,
   },
 ] as const;
@@ -36,7 +36,7 @@ const HOME_STEPS = [
   },
   {
     title: "One price",
-    text: "We confirm one price before we start. No prepayment.",
+    text: "We confirm the scope, price and payment terms before we start.",
     icon: ListChecks,
   },
   {
@@ -46,7 +46,7 @@ const HOME_STEPS = [
   },
   {
     title: "Photos",
-    text: "Photos show the work is finished.",
+    text: "Photos document the work and support our service review.",
     icon: Camera,
   },
   {

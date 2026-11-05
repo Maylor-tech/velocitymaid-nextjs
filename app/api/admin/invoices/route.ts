@@ -75,8 +75,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Failed to list invoices';
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to list invoices' }, { status: 500 });
   }
 }
 

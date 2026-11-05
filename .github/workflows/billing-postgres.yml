@@ -1,0 +1,65 @@
+name: Billing PostgreSQL verification
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/billing-postgres.yml'
+      - 'scripts/billing-postgres-fixture.mjs'
+      - 'lib/invoices/**'
+      - 'lib/email/invoiceEmails.ts'
+      - 'lib/email/sendVerifiedEmail.ts'
+      - 'prisma/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: billing-postgres-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  postgres:
+    name: Isolated migration, RLS and concurrent claims
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: billing_test
+          POSTGRES_PASSWORD: billing_test_fixture
+          POSTGRES_DB: velocitymaid_billing_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U billing_test -d velocitymaid_billing_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      RUN_BILLING_POSTGRES_TESTS: '1'
+      DATABASE_URL: postgresql://billing_test:billing_test_fixture@127.0.0.1:5432/velocitymaid_billing_test
+      DIRECT_URL: postgresql://billing_test:billing_test_fixture@127.0.0.1:5432/velocitymaid_billing_test
+      VERCEL_ENV: preview
+      STAGING_NOTIFICATIONS_ENABLED: 'false'
+      RESEND_API_KEY: ''
+      INVOICE_REMINDER_STAGES_ENABLED: 'false'
+    steps:
+      - name: Checkout reviewed PR code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies without lifecycle hooks
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Generate the test client
+        run: npx prisma generate
+      - name: Initialize empty fixture and apply exact migration
+        run: node scripts/billing-postgres-fixture.mjs
+      - name: Verify real PostgreSQL behavior with mocked mail
+        run: npx vitest run lib/invoices/__tests__/billingPostgres.integration.test.ts

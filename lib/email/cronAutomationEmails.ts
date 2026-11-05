@@ -1,10 +1,6 @@
 import { resend, getResendFromEmail } from './resendClient';
 import { logIntegrationEvent } from '@/lib/google/integrationLog';
 
-function firstName(fullName: string): string {
-  return fullName.trim().split(/\s+/)[0] || 'there';
-}
-
 function formatDate(d: Date | null | undefined): string {
   if (!d) return '—';
   return d.toLocaleDateString('en-US', {
@@ -12,73 +8,6 @@ function formatDate(d: Date | null | undefined): string {
     day: 'numeric',
     year: 'numeric',
   });
-}
-
-export async function sendInvoiceOverdueReminderEmail(params: {
-  toEmail: string;
-  clientName: string;
-  invoiceNumber: string;
-  amount: number;
-  daysPastDue: number;
-  serviceType: string;
-  jobDate: Date | null;
-}): Promise<{ sent: boolean; skippedReason?: string; error?: string }> {
-  if (!resend) {
-    return { sent: false, skippedReason: 'RESEND_API_KEY not configured' };
-  }
-
-  const name = firstName(params.clientName);
-  const amountStr = params.amount.toFixed(2);
-  const serviceDate = formatDate(params.jobDate);
-
-  const text = `Hi ${name},
-
-Just a friendly reminder that invoice ${params.invoiceNumber} for $${amountStr} is now ${params.daysPastDue} days past due.
-
-Service: ${params.serviceType}
-Date: ${serviceDate}
-Amount due: $${amountStr}
-
-You can pay via PayPal to hello@velocitymaid.com.
-
-Questions? Just reply to this email.
-
-Thank you,
-Brian
-VelocityMaid`;
-
-  try {
-    await resend.emails.send({
-      from: getResendFromEmail(),
-      to: params.toEmail,
-      subject: `Friendly reminder — Invoice ${params.invoiceNumber} from VelocityMaid`,
-      text,
-      html: text.replace(/\n/g, '<br>'),
-    });
-    logIntegrationEvent({
-      channel: 'EMAIL',
-      action: 'SEND_INVOICE_OVERDUE_REMINDER_EMAIL',
-      provider: 'RESEND',
-      status: 'SUCCESS',
-      recipient: params.toEmail,
-      templateKey: 'invoice_overdue_reminder',
-      triggeredBy: 'cron',
-    }).catch(() => {});
-    return { sent: true };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Send failed';
-    logIntegrationEvent({
-      channel: 'EMAIL',
-      action: 'SEND_INVOICE_OVERDUE_REMINDER_EMAIL',
-      provider: 'RESEND',
-      status: 'FAILED',
-      recipient: params.toEmail,
-      templateKey: 'invoice_overdue_reminder',
-      triggeredBy: 'cron',
-      errorSummary: message,
-    }).catch(() => {});
-    return { sent: false, error: message };
-  }
 }
 
 export async function sendRebookingReminderEmail(params: {
