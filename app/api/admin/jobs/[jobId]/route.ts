@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireRole } from '@/lib/auth/requireRole';
+import { assertOwnerAuthorization, requireRole } from '@/lib/auth/requireRole';
 import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { assertManualAssignmentCleaner } from "@/lib/cleaners/manualAssignmentEligibility";
 import { computePayoutEligibility } from '@/lib/booking/payoutEligibility';
@@ -482,12 +482,7 @@ export async function PATCH(
       }
     }
     if (body.totalPrice !== undefined || body.quotedTotal !== undefined) {
-      if (auth.isBranchScoped) {
-        return NextResponse.json(
-          { success: false, error: 'Forbidden: Access denied' },
-          { status: 403 }
-        );
-      }
+      assertOwnerAuthorization(auth);
     }
     if (body.totalPrice !== undefined) {
       const amount = Number(body.totalPrice);

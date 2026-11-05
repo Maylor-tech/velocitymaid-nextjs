@@ -3,7 +3,7 @@
  * and assignedCleanerId uses the manual-assignment eligibility rule.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const mocks = vi.hoisted(() => ({
   requireRole: vi.fn(),
@@ -16,6 +16,14 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireRole: (...args: unknown[]) => mocks.requireRole(...args),
+  assertOwnerAuthorization: (auth: { isOwner?: boolean }) => {
+    if (auth?.isOwner !== true) {
+      throw NextResponse.json(
+        { success: false, error: 'Forbidden: Owner authorization required' },
+        { status: 403 }
+      );
+    }
+  },
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -137,6 +145,26 @@ describe('PATCH /api/admin/jobs/[jobId] price and assignment guards', () => {
   it('rejects a branch admin price change', async () => {
     const res = await PATCH(patch({ totalPrice: 275 }), { params: { jobId: 'job-1' } });
     expect(res.status).toBe(403);
+    expect(mocks.jobUpdate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a multi-branch non-owner price change on an assigned branch', async () => {
+    mocks.requireRole.mockResolvedValue({
+      userId: 'multi-1',
+      role: 'ADMIN',
+      isOwner: false,
+      isBranchScoped: false,
+      branchIds: ['fictional-vt', 'fictional-nj'],
+    });
+
+    const total = await PATCH(patch({ totalPrice: 275 }), { params: { jobId: 'job-1' } });
+    expect(total.status).toBe(403);
+    const totalJson = await total.json();
+    expect(totalJson.error).toBe('Forbidden: Owner authorization required');
+    expect(mocks.jobUpdate).not.toHaveBeenCalled();
+
+    const quoted = await PATCH(patch({ quotedTotal: 275 }), { params: { jobId: 'job-1' } });
+    expect(quoted.status).toBe(403);
     expect(mocks.jobUpdate).not.toHaveBeenCalled();
   });
 

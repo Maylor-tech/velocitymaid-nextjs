@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminPricingAccess } from '@/lib/middleware/pricingGuard';
+import { assertOwnerAuthorization } from '@/lib/auth/requireRole';
 import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
 import { applyDiscount, DISCOUNT_REASON_CODES } from '@/lib/pricing/discount';
 import { prisma } from '@/lib/prisma';
@@ -34,6 +35,7 @@ export async function PATCH(
 ) {
   try {
     const auth = await requireAdminPricingAccess(request);
+    assertOwnerAuthorization(auth);
     await assertAdminJobRecord(auth, params.jobId);
     const { jobId } = params;
 
