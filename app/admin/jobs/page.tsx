@@ -20,6 +20,12 @@ import {
   type JobsBoardView,
 } from "@/lib/admin/jobsBoard";
 import { useAdminShell } from "@/components/admin/shell/AdminShell";
+import {
+  JOBS_EMPTY_TITLE,
+  JOBS_UNAVAILABLE_TITLE,
+  presentJobsListResponse,
+  type JobsBoardCounts,
+} from "@/lib/admin/jobsListPresentation";
 
 type MarketTab = "all" | "vermont" | "new-jersey";
 
@@ -40,13 +46,7 @@ function AdminJobsPageContent() {
   const { isBranchScoped } = useAdminShell();
   const [allJobs, setAllJobs] = useState<AdminJobListItem[]>([]);
   const [summary, setSummary] = useState<OperationsSummary | null>(null);
-  const [boardCounts, setBoardCounts] = useState<Record<JobsBoardView, number>>({
-    inbox: 0,
-    today: 0,
-    upcoming: 0,
-    completed: 0,
-    exceptions: 0,
-  });
+  const [boardCounts, setBoardCounts] = useState<JobsBoardCounts | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const board: JobsBoardView = isJobsBoardView(searchParams.get("board"))
@@ -91,17 +91,20 @@ function AdminJobsPageContent() {
       params.append("board", board);
 
       const res = await fetch(`/api/admin/jobs/list?${params.toString()}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
+      const presented = presentJobsListResponse(res.status, data);
 
-      if (!data.success) {
+      if (!presented.available) {
         setAllJobs([]);
         setSummary(null);
+        setBoardCounts(null);
         setLoadFailed(true);
         return;
       }
-      setAllJobs(data.jobs ?? []);
-      setSummary(data.summary ?? null);
-      if (data.boardCounts) setBoardCounts(data.boardCounts);
+      setAllJobs(presented.jobs as AdminJobListItem[]);
+      setSummary((presented.summary as OperationsSummary | null) ?? null);
+      setBoardCounts(presented.boardCounts);
+      setLoadFailed(false);
     } catch {
       setLoadFailed(true);
       setAllJobs([]);
@@ -234,10 +237,10 @@ function AdminJobsPageContent() {
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-vm-cyan" />
             <p className="mt-3 font-body text-sm text-vm-muted">Loading jobs…</p>
           </div>
-        ) : loadFailed ? (
+        ) : loadFailed || boardCounts === null ? (
           <div className="rounded-xl border border-vm-border bg-vm-white p-8 text-center">
             <p className="font-heading text-lg text-vm-navy">
-              Jobs temporarily unavailable
+              {JOBS_UNAVAILABLE_TITLE}
             </p>
             <button type="button" onClick={fetchJobs} className={`mt-4 ${navyButton}`}>
               Retry
@@ -352,7 +355,7 @@ function AdminJobsPageContent() {
 
             {displayedJobs.length === 0 ? (
               <div className="rounded-xl border border-vm-border bg-vm-white py-16 text-center">
-                <p className="font-heading text-lg text-vm-navy">No jobs found</p>
+                <p className="font-heading text-lg text-vm-navy">{JOBS_EMPTY_TITLE}</p>
                 <p className="mt-1 font-body text-sm text-vm-muted">
                   Try adjusting your filters or add a job manually.
                 </p>

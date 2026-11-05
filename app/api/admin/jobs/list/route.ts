@@ -485,12 +485,13 @@ export async function GET(request: NextRequest) {
   } catch (err: unknown) {
     const authResponse = rethrowIfAuthResponse(err);
     if (authResponse) return authResponse;
-    console.error('Admin jobs API error:', err);
-    return NextResponse.json({
-      success: true,
-      jobs: [],
-      summary: null,
-      warning: 'Jobs temporarily unavailable',
-    });
+    const code = err && typeof err === 'object' && 'code' in err
+      ? String((err as { code?: unknown }).code)
+      : 'unknown';
+    console.error('Admin jobs list failed', code);
+    return NextResponse.json(
+      { success: false, error: 'Failed to list jobs' },
+      { status: 500 }
+    );
   }
 }
