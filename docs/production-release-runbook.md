@@ -48,7 +48,8 @@ Names and scopes only. No values belong in this document, in git, or in chat.
 | `ADMIN_PASSWORD_<EMAIL>` | Same environment, one name per active admin | `@` and `.` in the email become `_`, then the name is uppercased. Minimum 16 characters. |
 | `CARYLL_ADMIN_PASSWORD` | Same environment | Existing name for `caryll@velocitymaid.com` only. |
 | `PREVIEW_ADMIN_SESSION_SECRET` | Existing Preview protection | Not the credential for this release. The combined tree does not accept it as an admin session. |
-| `INVOICE_REMINDER_STAGES_ENABLED` | Production and Preview | Leave unset or false for the initial release. |
+| `INVOICE_REMINDER_STAGES_ENABLED` | Production and Preview | Leave unset or false for the initial release. It selects extra stages only. It does not turn sending off. |
+| `INVOICE_REMINDER_SENDING_ENABLED` | Production and Preview | Leave unset. Provider sends run only when this value is exactly `true`. |
 | `CRON_SECRET` | Existing cron bearer | Do not rotate it as part of this release. Invoice reminders stay on the existing daily schedule. |
 | `VERCEL_ENV` | Platform | Preview verification happens only where this is `preview`. |
 
@@ -65,11 +66,13 @@ The current production schema can run the old application without this table. Th
 
 ## Backup, recovery, and rollback
 
-Before the production migration, take a fresh backup. The recorded November 3 backup does not contain `InvoiceReminderDelivery`.
+The fresh logical archive is `C:\dev\velocitymaid-backups\velocitymaid-prod-logical-20261105200335.dump`, written 2026-11-05 8:04 PM America/New_York from Production project `chsahtnpwssyfrqzcncz`, database `postgres`, session port 5432. SHA-256 `97643BFDEA1E692D0900FDAD76D75476606D5289D3D60D8CD0695E56FDC9D8CB`. Size 1,017,039 bytes. `pg_restore -l` succeeded. Application-data recovery was verified: 127 of 128 archived table-data sections restored on localhost, including Invoice, Job, Customer, User, InvoicePayment, and `_prisma_migrations`. Vault restoration is incomplete: `vault.secrets` was not created because the local server has no `supabase_vault` extension. Role-dependent restoration is incomplete: 90 statements failed because `service_role` does not exist on that server. Those two limitations do not affect recovery of migration `20261031230000_invoice_reminder_deliveries`. That migration adds a column and an empty ledger table in `public`. It does not read Vault and it does not grant or policy `service_role`. The application role is `postgres`, which bypasses row-level security. Re-applying the migration, or restoring the public tables from this archive and then applying it, does not need the missing Vault rows or `service_role` policies.
 
 Apply the migration before deploying the new application. If the new application must be rolled back, redeploy the previous application commit and leave the new column and ledger table in place. Do not drop the ledger or delete reminder history as a rollback shortcut.
 
-Unsetting `INVOICE_REMINDER_STAGES_ENABLED` returns the scheduler to overdue-only selection. Per-invoice pause stops both manual and scheduled reminders for that invoice. Rotating `ADMIN_SESSION_SECRET` or deploying PR #82 ends every existing admin session.
+`INVOICE_REMINDER_SENDING_ENABLED` must be exactly `true` before `sendRecordedInvoiceReminder` calls the email provider. While it is unset, legacy cron, expanded stages, and the owner manual reminder return a disabled result. They do not set `reminderSentAt`, consume a cooldown, or write a delivery row. Pause, history, and external recording stay available. `INVOICE_REMINDER_STAGES_ENABLED` still only chooses which invoices the cron selects. Per-invoice pause remains the dispute and pending-transfer control. Rotating `ADMIN_SESSION_SECRET` or deploying the signed-session code ends every existing admin session.
+
+The open checkouts on `SMK-reuse-253636` and `SMK-recon-296711` stay unchanged. With sending held, they do not block this deployment. They remain part of later payment and reminder reconciliation.
 
 `PENDING` and `UNKNOWN` reminder rows block further automated contact for that recipient until an operator reconciles them against the provider record. This release has no one-click retry for an unknown send.
 
@@ -97,7 +100,7 @@ Creating a new manual job may still record its initial price. That is job creati
 Do this on an isolated Preview of the combined candidate. Do not use Production.
 
 1. Set `ADMIN_SESSION_SECRET`, `ADMIN_EMAIL`, and one password name per active admin in that Preview.
-2. Confirm `INVOICE_REMINDER_STAGES_ENABLED` is unset or false.
+2. Confirm `INVOICE_REMINDER_STAGES_ENABLED` is unset or false, and `INVOICE_REMINDER_SENDING_ENABLED` is unset.
 3. Sign in as the owner. Open invoices. Change a fictional job note and, on a fictional job only, a price.
 4. Sign in as a single-branch admin. Confirm invoices are refused and an ordinary job-note edit on an assigned branch still works.
 5. Sign in as a multi-branch non-owner. Confirm `/admin/jobs` opens, an omitted branch filter stays inside the memberships, an unassigned branch is rejected, a price change returns 403, and `GET /api/admin/invoices` returns 403.
@@ -108,13 +111,13 @@ Brian enters the secret into the Preview secret store and signs in himself. Do n
 
 ## Release with expanded reminders disabled
 
-Ship the application and the additive migration only after the Preview checks and a fresh backup. Leave `INVOICE_REMINDER_STAGES_ENABLED` unset. The daily invoice-reminder cron may continue to run overdue-only selection. Do not send a customer message to prove the deploy.
+Ship the application and the additive migration only after the Preview checks and the verified backup above. Leave `INVOICE_REMINDER_STAGES_ENABLED` and `INVOICE_REMINDER_SENDING_ENABLED` unset. The daily invoice-reminder cron may still select overdue invoices, and the shared sender returns disabled before any provider call. Do not send a customer message to prove the deploy.
 
-After deploy, confirm the production commit, that admin login demands the new session, and that the reminder flag is still unset. Do not change production data to create a test invoice.
+After deploy, confirm the production commit, that admin login demands the new session, and that both reminder flags are still unset. Do not change production data to create a test invoice. The open checkout rows stay as they are.
 
 ## Separate prerequisites for enabling customer reminders
 
-Do not enable `INVOICE_REMINDER_STAGES_ENABLED` in the same approval as the code release. All of the following stay outstanding:
+Do not enable `INVOICE_REMINDER_SENDING_ENABLED` or `INVOICE_REMINDER_STAGES_ENABLED` in the same approval as the code release. Sending stays off until the sending flag is exactly `true`. Expanded stages stay off until their own flag is exactly `true`. All of the following stay outstanding:
 
 - A separate written approval of the reminder cadence and contact policy.
 - Reconciliation of already-sent Gmail or text reminders onto the relevant invoices, and pauses for disputed or pending-transfer cases.

@@ -30,6 +30,7 @@ describe.runIf(process.env.RUN_BILLING_POSTGRES_TESTS === '1')('disposable Postg
     await db.$executeRawUnsafe('GRANT SELECT, INSERT, UPDATE, DELETE ON "InvoiceReminderDelivery" TO vm_billing_anon, vm_billing_authenticated, vm_billing_server');
   }, 30_000);
   beforeEach(async () => {
+    vi.stubEnv('INVOICE_REMINDER_SENDING_ENABLED', 'true');
     state.send.mockReset();
     state.send.mockResolvedValue({ sent: true, messageId: 'mock-provider-accepted' });
     await db.invoiceReminderDelivery.deleteMany({ where: { invoiceId: { startsWith: 'pg-test-' } } });
@@ -75,6 +76,16 @@ describe.runIf(process.env.RUN_BILLING_POSTGRES_TESTS === '1')('disposable Postg
     await expect(db.invoiceReminderDelivery.create({ data: { ...entry, recipientEmail: 'different@example.invalid' } })).rejects.toMatchObject({ code: 'P2002' });
     await expect(db.invoiceReminderDelivery.create({ data: { ...entry, invoiceId: b.id } })).rejects.toMatchObject({ code: 'P2002' });
     await expect(db.invoiceReminderDelivery.create({ data: { ...entry, invoiceId: 'pg-test-missing', recipientEmail: 'orphan@example.invalid' } })).rejects.toMatchObject({ code: 'P2003' });
+  });
+
+  it('does not record a delivery or cooldown when sending is disabled', async () => {
+    vi.stubEnv('INVOICE_REMINDER_SENDING_ENABLED', 'false');
+    const invoice = await seed('held');
+    const result = await sendRecordedInvoiceReminder(invoice.id, { ...options, stage: 'legacy_overdue' });
+    expect(result).toMatchObject({ sent: false, disabled: true });
+    expect(state.send).not.toHaveBeenCalled();
+    expect(await db.invoiceReminderDelivery.count({ where: { invoiceId: invoice.id } })).toBe(0);
+    expect((await db.invoice.findUnique({ where: { id: invoice.id } }))?.reminderSentAt).toBeNull();
   });
 
   it('allows one provider call across competing manual and cron sends', async () => {

@@ -39,6 +39,7 @@ export default function InvoiceDetailPage() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<InvoicePaymentMethod>('CHECK');
   const [toast, setToast] = useState('');
+  const [reminderNotice, setReminderNotice] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -90,7 +91,13 @@ export default function InvoiceDetailPage() {
         body: body ? JSON.stringify(body) : undefined,
       });
       const data = await res.json();
+      if (path === 'remind' && data.email?.disabled) {
+        setReminderNotice(data.error || 'Invoice reminder sending is disabled. No email was sent.');
+        setToast('');
+        return;
+      }
       if (!data.success) throw new Error(data.error);
+      setReminderNotice('');
       setToast('Done');
       if (data.invoice) setInvoice(data.invoice);
       else await load();
@@ -150,6 +157,9 @@ export default function InvoiceDetailPage() {
             >
               <Mail className="h-4 w-4" /> Send reminder
             </button>
+          )}
+          {reminderNotice && (
+            <p role="status" className="w-full font-body text-sm text-vm-navy">{reminderNotice}</p>
           )}
           {invoice.balanceDue > 0 && invoice.status !== 'CANCELLED' && (
             <>

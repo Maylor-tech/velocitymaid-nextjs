@@ -18,6 +18,7 @@ const options = { triggeredBy: 'cron' as const, stage: 'due_today', now: new Dat
 describe('shared invoice reminder delivery ledger', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.stubEnv('INVOICE_REMINDER_SENDING_ENABLED', 'true');
     db.$transaction.mockImplementation(async (arg) => typeof arg === 'function' ? arg(db) : Promise.all(arg));
     db.invoice.findUnique.mockResolvedValue(invoice);
     db.invoice.findFirst.mockResolvedValue(null);
@@ -93,5 +94,51 @@ describe('shared invoice reminder delivery ledger', () => {
     expect((await sendRecordedInvoiceReminder('i1', options)).sent).toBe(false);
     expect(send).not.toHaveBeenCalled();
     expect(db.invoiceReminderDelivery.update).toHaveBeenCalledWith({ where: { id: 'delivery1' }, data: { status: 'SKIPPED' } });
+  });
+});
+
+describe('invoice reminder sending hold', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.unstubAllEnvs();
+    delete process.env.INVOICE_REMINDER_SENDING_ENABLED;
+    db.$transaction.mockImplementation(async (arg) => typeof arg === 'function' ? arg(db) : Promise.all(arg));
+    db.invoice.findUnique.mockResolvedValue(invoice);
+    send.mockResolvedValue({ sent: true, messageId: 'provider1' });
+  });
+
+  it.each([
+    ['unset', undefined],
+    ['false', 'false'],
+    ['TRUE', 'TRUE'],
+    ['1', '1'],
+  ])('stays disabled when the flag is %s', async (_label, value) => {
+    if (value !== undefined) vi.stubEnv('INVOICE_REMINDER_SENDING_ENABLED', value);
+    const result = await sendRecordedInvoiceReminder('i1', options);
+    expect(result).toEqual({
+      sent: false,
+      disabled: true,
+      skippedReason: 'Invoice reminder sending is disabled. No email was sent.',
+    });
+    expect(send).not.toHaveBeenCalled();
+    expect(db.$transaction).not.toHaveBeenCalled();
+    expect(db.invoiceReminderDelivery.create).not.toHaveBeenCalled();
+    expect(db.invoiceReminderDelivery.update).not.toHaveBeenCalled();
+    expect(db.invoice.update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { triggeredBy: 'cron' as const, stage: 'legacy_overdue' },
+    { triggeredBy: 'cron' as const, stage: 'due_soon' },
+    { triggeredBy: 'cron' as const, stage: 'due_today' },
+    { triggeredBy: 'cron' as const, stage: 'overdue_1' },
+    { triggeredBy: 'cron' as const, stage: 'overdue_7' },
+    { triggeredBy: 'admin' as const },
+  ])('covers %j without a provider call', async (heldOptions) => {
+    const result = await sendRecordedInvoiceReminder('i1', heldOptions);
+    expect(result.disabled).toBe(true);
+    expect(result.sent).toBe(false);
+    expect(send).not.toHaveBeenCalled();
+    expect(db.invoice.findUnique).not.toHaveBeenCalled();
   });
 });

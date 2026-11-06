@@ -39,6 +39,18 @@ describe('invoice reminder scheduling', () => {
     expect((await (await GET(request())).json()).sent).toBe(4);
     expect(send.mock.calls.map(([, options]) => options.stage)).toEqual(['due_soon', 'due_today', 'overdue_1', 'overdue_7']);
   });
+  it('counts a disabled sender as skipped for the legacy cron and expanded stages', async () => {
+    const disabled = { sent: false, disabled: true, skippedReason: 'Invoice reminder sending is disabled. No email was sent.' };
+    findMany.mockResolvedValue([{ id: 'i1', dueDate: new Date('2026-10-20') }]);
+    send.mockResolvedValue(disabled);
+    expect(await (await GET(request())).json()).toMatchObject({ sent: 0, failed: 0, skipped: 1, expanded: false });
+    expect(send).toHaveBeenCalledWith('i1', expect.objectContaining({ stage: 'legacy_overdue' }));
+    vi.stubEnv('INVOICE_REMINDER_STAGES_ENABLED', 'true');
+    findMany.mockResolvedValue([{ id: 'a', dueDate: new Date('2026-11-01') }]);
+    const expanded = await (await GET(request())).json();
+    expect(expanded).toMatchObject({ sent: 0, failed: 0, skipped: 1, expanded: true });
+    expect(send).toHaveBeenCalledWith('a', expect.objectContaining({ stage: 'due_soon' }));
+  });
   it('reports failed and suppressed attempts without claiming they were sent', async () => {
     findMany.mockResolvedValue([{ id: 'a' }, { id: 'b' }]);
     send.mockResolvedValueOnce({ sent: false, failed: true }).mockResolvedValueOnce({ sent: false, skippedReason: 'cooldown' });

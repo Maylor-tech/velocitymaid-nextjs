@@ -8,13 +8,17 @@ vi.mock('@/lib/auth/requireRole', () => ({
   },
 }));
 vi.mock('@/lib/invoices/invoiceService', () => ({ refreshInvoiceStatus: refresh }));
-vi.mock('@/lib/invoices/sendReminder', () => ({ sendRecordedInvoiceReminder: send }));
+vi.mock('@/lib/invoices/sendReminder', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/invoices/sendReminder')>('@/lib/invoices/sendReminder');
+  return { ...actual, sendRecordedInvoiceReminder: send };
+});
 import { POST } from '../[id]/remind/route';
 const request = () => new NextRequest('http://localhost/api/admin/invoices/fictional/remind', { method: 'POST' });
 const context = { params: { id: 'fictional' } };
 describe('manual invoice reminder authorization and outcomes', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.stubEnv('INVOICE_REMINDER_SENDING_ENABLED', 'true');
     role.mockResolvedValue({ userId: 'owner', role: 'ADMIN' });
     send.mockResolvedValue({ sent: true, messageId: 'mock-message' });
   });
@@ -38,5 +42,18 @@ describe('manual invoice reminder authorization and outcomes', () => {
     const response = await POST(request(), context);
     expect(response.status).toBe(status);
     expect((await response.json()).success).toBe(result.sent);
+  });
+  it('shows a disabled message and does not refresh or send when the flag is unset', async () => {
+    vi.stubEnv('INVOICE_REMINDER_SENDING_ENABLED', '');
+    const response = await POST(request(), context);
+    const body = await response.json();
+    expect(response.status).toBe(409);
+    expect(body).toMatchObject({
+      success: false,
+      error: 'Invoice reminder sending is disabled. No email was sent.',
+      email: { sent: false, disabled: true },
+    });
+    expect(refresh).not.toHaveBeenCalled();
+    expect(send).not.toHaveBeenCalled();
   });
 });

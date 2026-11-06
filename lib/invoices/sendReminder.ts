@@ -6,6 +6,13 @@ import { contactDate } from './reminderPolicy';
 import { sendInvoiceReminderEmail } from '@/lib/email/invoiceEmails';
 
 export const REMINDABLE_STATUSES: InvoiceStatus[] = ['SENT', 'OVERDUE', 'PARTIALLY_PAID'];
+export const INVOICE_REMINDER_SENDING_DISABLED_MESSAGE =
+  'Invoice reminder sending is disabled. No email was sent.';
+
+/** Exact opt-in. Unset, false, and any other value keep provider sends off. */
+export function isInvoiceReminderSendingEnabled(): boolean {
+  return process.env.INVOICE_REMINDER_SENDING_ENABLED === 'true';
+}
 const DAY = 86_400_000;
 const messages: Record<string, string> = {
   due_soon: 'your invoice is due tomorrow.',
@@ -23,7 +30,10 @@ function eligible(invoice: { status: InvoiceStatus; remindersPaused: boolean; cl
 export async function sendRecordedInvoiceReminder(
   invoiceId: string,
   options: { triggeredBy: 'admin' | 'cron'; stage?: string; now?: Date }
-): Promise<{ sent: boolean; skippedReason?: string; deliveryUnknown?: boolean; messageId?: string; failed?: boolean }> {
+): Promise<{ sent: boolean; disabled?: boolean; skippedReason?: string; deliveryUnknown?: boolean; messageId?: string; failed?: boolean }> {
+  if (!isInvoiceReminderSendingEnabled()) {
+    return { sent: false, disabled: true, skippedReason: INVOICE_REMINDER_SENDING_DISABLED_MESSAGE };
+  }
   const now = options.now ?? new Date();
   const day = contactDate(now);
   const stage = options.stage ?? `manual:${day}`;
