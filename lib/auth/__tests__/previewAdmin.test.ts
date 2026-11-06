@@ -37,9 +37,16 @@ function request(path = '/api/admin/me', raw = state.cookie, extra: Record<strin
     ...(raw ? { cookie: 'admin_session=' + encodeURIComponent(raw) } : {}), ...extra,
   } });
 }
-function sessionCookie() {
-  const call = state.set.mock.calls.find((entry) => entry[0] === 'admin_session');
-  return call as [string, string, { httpOnly: boolean; secure: boolean; sameSite: string; maxAge: number }] | undefined;
+function sessionCookie(response?: Response) {
+  const header = response?.headers.getSetCookie?.().find((cookie) => cookie.startsWith('admin_session=') && cookie.includes('Max-Age=1800'));
+  if (!header) return undefined;
+  const token = decodeURIComponent(header.slice('admin_session='.length).split(';', 1)[0]);
+  return ['admin_session', token, {
+    httpOnly: header.includes('HttpOnly'),
+    secure: header.includes('Secure'),
+    sameSite: 'strict',
+    maxAge: 1800,
+  }] as [string, string, { httpOnly: boolean; secure: boolean; sameSite: string; maxAge: number }];
 }
 
 beforeEach(() => {
@@ -66,20 +73,24 @@ describe('combined administrator login', () => {
     [{ email: 'staging.admin@example.test', password: 'wrong' }, 401],
     [{ email: 'staging.vt.admin@example.test', password }, 503],
   ])('refuses a session for %j', async (body, status) => {
-    expect((await POST(login(body))).status).toBe(status);
-    expect(sessionCookie()).toBeUndefined();
+    const response = await POST(login(body));
+    expect(response.status).toBe(status);
+    expect(sessionCookie(response)).toBeUndefined();
   });
   it('requires the admin signing secret and the request origin', async () => {
-    expect((await POST(login({ email: 'staging.admin@example.test', password }, 'https://other.test'))).status).toBe(403);
+    const crossOrigin = await POST(login({ email: 'staging.admin@example.test', password }, 'https://other.test'));
+    expect(crossOrigin.status).toBe(403);
+    expect(sessionCookie(crossOrigin)).toBeUndefined();
     vi.stubEnv('ADMIN_SESSION_SECRET', '');
-    expect((await POST(login({ email: 'staging.admin@example.test', password }))).status).toBe(503);
-    expect(sessionCookie()).toBeUndefined();
+    const unconfigured = await POST(login({ email: 'staging.admin@example.test', password }));
+    expect(unconfigured.status).toBe(503);
+    expect(sessionCookie(unconfigured)).toBeUndefined();
   });
   it('requires a password for a multi-branch admin and issues a signed session', async () => {
     const response = await POST(login({ email: 'staging.admin@example.test', password }));
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ success: true });
-    const issued = sessionCookie();
+    const issued = sessionCookie(response);
     expect(issued?.[0]).toBe('admin_session');
     expect(issued?.[2]).toMatchObject({ httpOnly: true, sameSite: 'strict', maxAge: 1800 });
     expect(await verifyAdminSession(issued?.[1])).toMatchObject(payload);
@@ -89,13 +100,15 @@ describe('combined administrator login', () => {
   });
   it.each([false, null])('rejects an inactive or nonexistent administrator', async active => {
     state.user.mockResolvedValue(active === null ? null : { id: payload.userId, role: 'ADMIN', isActive: false });
-    expect((await POST(login({ email: 'staging.admin@example.test', password }))).status).toBe(401);
-    expect(sessionCookie()).toBeUndefined();
+    const response = await POST(login({ email: 'staging.admin@example.test', password }));
+    expect(response.status).toBe(401);
+    expect(sessionCookie(response)).toBeUndefined();
   });
   it('rejects no branch access', async () => {
     state.branches.mockResolvedValue([]);
-    expect((await POST(login({ email: 'staging.admin@example.test', password }))).status).toBe(403);
-    expect(sessionCookie()).toBeUndefined();
+    const response = await POST(login({ email: 'staging.admin@example.test', password }));
+    expect(response.status).toBe(403);
+    expect(sessionCookie(response)).toBeUndefined();
   });
   it('does not use the preview login handler as the admin route', async () => {
     vi.stubEnv('VERCEL_ENV', 'production');
@@ -134,7 +147,7 @@ describe('signed sessions at middleware and data access boundaries', () => {
   it('accepts a valid admin session and rechecks the live account', async () => {
     const response = await POST(login({ email: 'staging.admin@example.test', password }));
     expect(response.status).toBe(200);
-    state.cookie = sessionCookie()?.[1];
+    state.cookie = sessionCookie(response)?.[1];
     expect((await middleware(request())).status).toBe(200);
     expect(await requireRole(request(), 'ADMIN')).toMatchObject({
       userId: payload.userId,
@@ -155,7 +168,7 @@ describe('signed sessions at middleware and data access boundaries', () => {
     state.branches.mockResolvedValue([{ branchId: 'vt-test' }]);
     const response = await POST(login({ email: 'staging.admin@example.test', password }));
     expect(response.status).toBe(200);
-    state.cookie = sessionCookie()?.[1];
+    state.cookie = sessionCookie(response)?.[1];
     expect(await verifyAdminSession(state.cookie)).toMatchObject({
       isOwner: false,
       isBranchScoped: true,
