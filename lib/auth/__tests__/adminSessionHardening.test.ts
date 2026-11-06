@@ -72,6 +72,26 @@ function request(path: string, raw = state.cookie, extra: Record<string, string>
   });
 }
 
+function setCookieHeaders(response: Response): string[] {
+  return typeof response.headers.getSetCookie === 'function' ? response.headers.getSetCookie() : [];
+}
+
+function expectLegacyScopesCleared(response: Response) {
+  for (const name of ['adminId', 'adminSession'] as const) {
+    const clears = setCookieHeaders(response).filter((cookie) => cookie.startsWith(`${name}=`));
+    expect(clears).toHaveLength(2);
+    expect(clears.every((cookie) => cookie.includes('Path=/') && cookie.includes('Max-Age=0'))).toBe(true);
+    expect(clears.filter((cookie) => !cookie.includes('Domain='))).toHaveLength(1);
+    expect(clears.filter((cookie) => cookie.includes('Domain=velocitymaid.com'))).toHaveLength(1);
+  }
+}
+
+function issuedSession(response: Response): string {
+  const header = setCookieHeaders(response).find((cookie) => cookie.startsWith('admin_session=') && cookie.includes('Max-Age=1800'));
+  expect(header).toBeTruthy();
+  return decodeURIComponent(header!.slice('admin_session='.length).split(';', 1)[0]);
+}
+
 beforeEach(() => {
   vi.stubEnv('ADMIN_SESSION_SECRET', secret);
   vi.stubEnv('ADMIN_EMAIL', 'owner@example.test');
@@ -98,27 +118,34 @@ describe('credentials for every active admin', () => {
     { email: 'owner@example.test', password: 'wrong-password-value' },
     { email: 'nobody@example.test', password },
   ])('rejects passwordless or wrong credentials %j', async (body) => {
-    expect((await POST(login(body))).status).toBe(401);
-    expect(state.set.mock.calls.some((call) => call[0] === 'admin_session')).toBe(false);
+    const response = await POST(login(body));
+    expect(response.status).toBe(401);
+    expect(setCookieHeaders(response).some((cookie) => cookie.includes('Max-Age=1800'))).toBe(false);
+    expectLegacyScopesCleared(response);
   });
 
   it('rejects a cross-origin login and a missing signing secret', async () => {
-    expect((await POST(login({ email: 'owner@example.test', password }, 'https://other.example.test'))).status).toBe(403);
+    const crossOrigin = await POST(login({ email: 'owner@example.test', password }, 'https://other.example.test'));
+    expect(crossOrigin.status).toBe(403);
+    expectLegacyScopesCleared(crossOrigin);
     vi.stubEnv('ADMIN_SESSION_SECRET', '');
-    expect((await POST(login({ email: 'owner@example.test', password }))).status).toBe(503);
-    expect(state.set.mock.calls.some((call) => call[0] === 'admin_session')).toBe(false);
+    const unconfigured = await POST(login({ email: 'owner@example.test', password }));
+    expect(unconfigured.status).toBe(503);
+    expect(setCookieHeaders(unconfigured).some((cookie) => cookie.includes('Max-Age=1800'))).toBe(false);
+    expectLegacyScopesCleared(unconfigured);
   });
 
   it('issues a signed session only after the owner password matches', async () => {
     const response = await POST(login({ email: 'owner@example.test', password }));
     expect(response.status).toBe(200);
-    const sessionCall = state.set.mock.calls.find((call) => call[0] === 'admin_session');
-    expect(sessionCall).toBeTruthy();
-    const [name, token, flags] = sessionCall!;
-    expect(name).toBe('admin_session');
-    expect(state.set.mock.calls.filter((call) => call[0] === 'adminId' || call[0] === 'adminSession')
-      .every((call) => call[2].maxAge === 0)).toBe(true);
-    expect(flags).toMatchObject({ httpOnly: true, sameSite: 'strict', path: '/', maxAge: 1800 });
+    const token = issuedSession(response);
+    const sessionHeader = setCookieHeaders(response).find((cookie) => cookie.startsWith('admin_session='));
+    expect(sessionHeader).toContain('HttpOnly');
+    expect(sessionHeader).toContain('SameSite=strict');
+    expect(sessionHeader).toContain('Path=/');
+    expect(sessionHeader).toContain('Max-Age=1800');
+    expect(sessionHeader).not.toContain('Domain=');
+    expectLegacyScopesCleared(response);
     expect(await verifyAdminSession(token)).toMatchObject({
       userId: 'owner-1', isOwner: true, isBranchScoped: false,
     });
@@ -225,22 +252,49 @@ describe('stale browser cookies and closed multi-branch routes', () => {
     expect(jobs.headers.get('location')).toContain('/admin/login');
     expect((await middleware(request('/api/admin/jobs', undefined, { cookie: stale }))).status).toBe(401);
 
-    state.set.mockClear();
     const response = await POST(login({ email: 'multi@example.test', password }));
     expect(response.status).toBe(200);
-    expect(state.set.mock.calls.some((call) => call[0] === 'admin_session' && call[2].maxAge === 1800)).toBe(true);
-    expect(state.set.mock.calls.filter((call) => call[0] === 'adminId' || call[0] === 'adminSession')
-      .every((call) => call[2].maxAge === 0)).toBe(true);
-
-    state.set.mockClear();
-    const signed = await signAdminSession({
-      userId: 'multi-1', role: 'ADMIN', isOwner: false, isBranchScoped: false,
-      branchIds: ['fictional-nj', 'fictional-vt'],
-    });
+    expectLegacyScopesCleared(response);
+    const signed = issuedSession(response);
     expect((await middleware(request('/api/admin/payouts/run', signed))).status).toBe(403);
     expect((await middleware(request('/api/admin/jobs', signed))).status).toBe(200);
-    await logout(request('/api/auth/admin-logout'));
-    expect(state.delete).toHaveBeenCalledWith('admin_session');
-    expect(state.set.mock.calls.map((call) => call[0])).toEqual(expect.arrayContaining(['adminId', 'adminSession']));
+    const loggedOut = await logout(request('/api/auth/admin-logout'));
+    expectLegacyScopesCleared(loggedOut);
+    expect(setCookieHeaders(loggedOut).some((cookie) => cookie.startsWith('admin_session=') && cookie.includes('Max-Age=0'))).toBe(true);
+  });
+});
+
+describe('parent-domain legacy cookies', () => {
+  it('expires Domain=velocitymaid.com copies that a host-only clear does not match', async () => {
+    const response = await POST(login({ email: 'owner@example.test', password }));
+    expect(response.status).toBe(200);
+    const domainClears = setCookieHeaders(response).filter((cookie) => cookie.includes('Domain=velocitymaid.com'));
+    expect(domainClears.map((cookie) => cookie.split('=', 1)[0]).sort()).toEqual(['adminId', 'adminSession']);
+    expect(domainClears.every((cookie) => cookie.includes('Path=/') && cookie.includes('Max-Age=0'))).toBe(true);
+    const hostClears = setCookieHeaders(response).filter((cookie) => (
+      (cookie.startsWith('adminId=') || cookie.startsWith('adminSession=')) && !cookie.includes('Domain=')
+    ));
+    expect(hostClears).toHaveLength(2);
+
+    const token = issuedSession(response);
+    const surviving = `admin_session=${encodeURIComponent(token)}; adminId=parent-domain; adminSession=parent-domain`;
+    expect((await middleware(request('/api/admin/me', undefined, { cookie: surviving }))).status).toBe(401);
+    expect((await middleware(request('/admin/jobs', undefined, { cookie: surviving }))).status).toBeGreaterThanOrEqual(300);
+  });
+
+  it('accepts the signed session once the legacy names are no longer sent', async () => {
+    const response = await POST(login({ email: 'owner@example.test', password }));
+    const token = issuedSession(response);
+    state.cookie = token;
+    expect((await middleware(request('/api/admin/me'))).status).toBe(200);
+    expect((await requireRole(request('/api/admin/me'), 'ADMIN')).isOwner).toBe(true);
+  });
+
+  it('keeps a legacy-only request unauthorized', async () => {
+    const legacy = 'adminId=parent-domain; adminSession=parent-domain';
+    expect((await middleware(request('/api/admin/me', undefined, { cookie: legacy }))).status).toBe(401);
+    const page = await middleware(request('/admin/jobs', undefined, { cookie: legacy }));
+    expect(page.status).toBeGreaterThanOrEqual(300);
+    expect(page.headers.get('location')).toContain('/admin/login');
   });
 });
