@@ -88,7 +88,7 @@ Creating a new manual job may still record its initial price. That is job creati
 ## Integration Preview record — 2026-11-05
 
 - Login on the protected integration Preview as the fictional staging administrator: PASS. `/admin/jobs` opened on deployment `dpl_G3BzXeJNcxRZTTu6n86gNk6fS6Ge`.
-- Jobs API handling of a database denial: pending until the Preview that contains this fix is checked while signed in. The restricted role has no `SELECT` on `Job`. That denial must be a sanitized non-success response and the page must say “Jobs temporarily unavailable,” without count badges. A successful empty list remains “No jobs found.”
+- Jobs API handling of a database denial: PASS on the protected integration Preview at `68cb194`. The signed-in jobs page shows “Jobs temporarily unavailable” and a Retry action, with no board-count badges. A successful empty list remains “No jobs found” in the regression tests.
 - Hosted job visibility: untested. Do not grant `Job` access to make the board populate.
 - Checks the existing restricted role supports, on staging project `wfudxrziqyfvrdgnocky` as `vm_preview_readonly`: column `SELECT` on `User` (`id`, `email`, `role`, `isActive`) and `UserBranch` (`id`, `userId`, `branchId`, `createdAt`), and table `SELECT` on `Branch`. The active fictional administrator and both staging memberships were read. `Job` and `Invoice` have no table `SELECT`. The billing Preview database settings were not changed.
 
