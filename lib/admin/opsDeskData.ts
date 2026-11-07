@@ -98,12 +98,12 @@ function toRow(
     month: 'short',
     day: 'numeric',
   });
-  const timeLabel = job.preferredTime?.trim() || 'Time not set';
+  const timeLabel = job.preferredTime?.trim();
   const price = job.totalPrice == null ? '—' : formatUsd(Number(job.totalPrice));
   return {
     id: job.id,
     serviceDate,
-    when: `${dateLabel} · ${timeLabel} ET`,
+    when: timeLabel ? `${dateLabel} · ${timeLabel} ET` : `${dateLabel} · Time not set`,
     client: displayName(job),
     property: job.Property?.name || job.address || 'Property',
     service: job.serviceType || 'Cleaning',
