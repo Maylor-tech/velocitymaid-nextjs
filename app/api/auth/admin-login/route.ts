@@ -1,6 +1,5 @@
 import { createHash, timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
 import {
@@ -9,7 +8,7 @@ import {
   isOwnerAdmin,
 } from '@/lib/auth/adminScope';
 import { ADMIN_SESSION_MAX_AGE, adminSessionSecret, signAdminSession } from '@/lib/auth/adminSession';
-import { clearLegacyAdminCookies } from '@/lib/auth/legacyAdminCookies';
+import { appendLegacyAdminCookieClears } from '@/lib/auth/legacyAdminCookies';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,15 +19,12 @@ async function failure(status: number) {
     : status === 403
       ? 'No branch access assigned'
       : 'Invalid email or password';
-  try {
-    clearLegacyAdminCookies(await cookies());
-  } catch {
-    // The response still refuses the login.
-  }
-  return NextResponse.json(
+  const response = NextResponse.json(
     { success: false, error },
     { status, headers: { 'Cache-Control': 'no-store' } }
   );
+  appendLegacyAdminCookieClears(response.headers);
+  return response;
 }
 
 function passwordsMatch(provided: string, expected: string): boolean {
@@ -74,16 +70,18 @@ export async function POST(req: NextRequest) {
       isBranchScoped,
       ...(isBranchScoped ? { branchId: branchIds[0] } : {}),
     });
-    const cookieStore = await cookies();
-    clearLegacyAdminCookies(cookieStore);
-    cookieStore.set('admin_session', token, {
+    const response = NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } });
+    response.cookies.set('admin_session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
       maxAge: ADMIN_SESSION_MAX_AGE,
     });
-    return NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } });
+    // Append after the cookie jar. It keeps one Set-Cookie per name and would
+    // drop the parent-domain clear if these were written through cookies().set.
+    appendLegacyAdminCookieClears(response.headers);
+    return response;
   } catch {
     return await failure(503);
   }
