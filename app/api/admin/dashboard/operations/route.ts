@@ -17,6 +17,7 @@ import {
 } from '@/lib/admin/dateRanges';
 import { getBillingDashboardKpis } from '@/lib/billing/jobCompletionWorkflow';
 import { formatUsd } from '@/lib/invoices/invoiceUtils';
+import { countNeedsCleaner } from '@/lib/admin/opsDeskData';
 
 function jobRevenueUsd(totalPrice: unknown, currency: string | null): number {
   if (totalPrice == null) return 0;
@@ -75,9 +76,6 @@ export async function GET(request: NextRequest) {
     const lastWeekEnd = addDays(weekEnd, -7);
     const notCancelled: { notIn: JobStatus[] } = {
       notIn: [JobStatus.CANCELLED, JobStatus.CANCELLED_EMERGENCY],
-    };
-    const activeStatuses: { notIn: JobStatus[] } = {
-      notIn: [JobStatus.CANCELLED, JobStatus.CANCELLED_EMERGENCY, JobStatus.COMPLETED],
     };
 
     const [
@@ -139,15 +137,7 @@ export async function GET(request: NextRequest) {
           status: { in: ['PENDING', 'NEW', 'REVIEWING'] },
         },
       }),
-      prisma.job.count({
-        where: {
-          ...branchWhere,
-          archivedAt: null,
-          assignedCleanerId: null,
-          status: activeStatuses,
-          preferredDate: { gte: now },
-        },
-      }),
+      countNeedsCleaner(auth.branchId),
       prisma.cleanerApplication.count({
         where: {
           ...(auth.branchId ? { branchId: auth.branchId } : {}),

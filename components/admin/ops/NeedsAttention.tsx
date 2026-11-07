@@ -78,8 +78,7 @@ export function NeedsAttention({
             Needs attention
           </h2>
           <p className="mt-0.5 font-body text-xs text-vm-muted">
-            Only decisions for the next 24 hours. Everything else is automated or
-            lives in reports.
+            Next 48 hours stay open. This week follows. Later stays collapsed.
           </p>
         </div>
         {toast && (

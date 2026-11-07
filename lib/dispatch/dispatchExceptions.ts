@@ -195,8 +195,8 @@ export const DISPATCH_EXCEPTION_META: Record<
   },
   PAYMENT_REQUIRED: {
     id: 'dispatch-payment-required',
-    label: 'Payment required before staffing',
-    reason: 'Prepay booking — assignment stays blocked until payment clears.',
+    label: 'Waiting on client payment',
+    reason: 'Assignment stays blocked until this prepay job is paid or the deposit is approved.',
     cta: 'Open job',
     urgency: 'normal',
     priority: 65,
