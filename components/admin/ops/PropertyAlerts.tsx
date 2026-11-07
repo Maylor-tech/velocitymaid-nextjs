@@ -21,7 +21,7 @@ export function PropertyAlerts({
   return (
     <section id="property-alerts" className="mb-6 scroll-mt-6">
       <h2 className="mb-3 font-heading text-lg font-semibold text-vm-navy">
-        Property Alerts
+        Property exceptions
       </h2>
       {alerts.length === 0 ? (
         <div className="rounded-xl border border-vm-border bg-vm-white px-5 py-8 text-center font-body text-sm text-vm-muted">
@@ -42,11 +42,17 @@ export function PropertyAlerts({
                       {a.category}
                     </span>
                     <span className="font-body text-xs text-vm-muted">
-                      {new Date(a.createdAt).toLocaleString()}
+                      {new Date(a.createdAt).toLocaleString('en-US', {
+                        timeZone: 'America/New_York',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
                     </span>
                   </div>
-                  <p className="font-body text-sm text-vm-navy">{a.summary}</p>
-                  <p className="mt-0.5 font-body text-xs text-vm-muted">{a.property}</p>
+                  <p className="font-body text-sm font-semibold text-vm-navy">{a.property}</p>
+                  <p className="mt-0.5 font-body text-sm text-vm-text">{a.summary}</p>
                 </div>
                 {a.jobId && (
                   <Link

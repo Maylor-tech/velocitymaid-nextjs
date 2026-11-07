@@ -54,7 +54,7 @@ const REASON: Record<JobTriageKind, { label: string; tone: TriageTone }> = {
   needs_close: { label: 'Needs close', tone: 'warning' },
   overdue_payment: { label: 'Overdue payment', tone: 'danger' },
   needs_booking_approval: { label: 'Needs booking approval', tone: 'warning' },
-  payment_required: { label: 'Payment required before staffing', tone: 'warning' },
+  payment_required: { label: 'Waiting on client payment', tone: 'warning' },
   offer_expired: { label: 'Offer expired · restaff', tone: 'warning' },
   awaiting_offer: { label: 'Awaiting cleaner response', tone: 'cyan' },
   ready_to_staff: { label: 'Ready to staff', tone: 'navy' },

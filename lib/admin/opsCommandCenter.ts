@@ -25,6 +25,8 @@ import {
   groupDispatchExceptionItems,
 } from '@/lib/dispatch/dispatchExceptions';
 import { SEND_CLEANER_OFFER_EMAIL } from '@/lib/dispatch/offerNotification';
+import { isDashboardSmokeRecord } from '@/lib/admin/opsDesk';
+import { loadOpsDesk, type OpsDesk } from '@/lib/admin/opsDeskData';
 
 const CANCELLED: JobStatus[] = [JobStatus.CANCELLED, JobStatus.CANCELLED_EMERGENCY];
 const ACTIVE_JOB: JobStatus[] = Object.values(JobStatus).filter(
@@ -83,9 +85,12 @@ export type OpsCommandCenterPayload = {
   todayBrief: {
     jobsToday: number;
     unassignedToday: number;
+    /** Jobs that need a cleaner or are waiting on payment. Not a count of section rows. */
     exceptionCount: number;
     cashDueFormatted: string | null;
   };
+  /** Shared Eastern-time job desk. Cards, lists, and the sidebar count come from this. */
+  desk: OpsDesk;
   actionCenter: ActionItem[];
   kpis: {
     jobsThisWeek: number;
@@ -450,7 +455,7 @@ export async function getOpsCommandCenter(
   const [
     jobsThisWeek,
     monthJobs,
-    unassignedJobs,
+    _unassignedJobs,
     _jobsNext24h,
     todayJobs,
     activeCleaners,
@@ -495,13 +500,7 @@ export async function getOpsCommandCenter(
       },
       select: { totalPrice: true, currency: true, amountPaid: true },
     }),
-    prisma.job.count({
-      where: {
-        ...activeJobWhere,
-        assignedCleanerId: null,
-        preferredDate: { gte: todayStart },
-      },
-    }),
+    Promise.resolve(0),
     prisma.job.count({
       where: {
         ...activeJobWhere,
@@ -662,6 +661,15 @@ export async function getOpsCommandCenter(
         issuesFound: true,
         supplyRequests: true,
         createdAt: true,
+        Job: {
+          select: {
+            jobReference: true,
+            customerName: true,
+            address: true,
+            Customer: { select: { firstName: true, lastName: true } },
+            Property: { select: { name: true } },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       take: 30,
@@ -678,7 +686,15 @@ export async function getOpsCommandCenter(
         reason: true,
         notes: true,
         createdAt: true,
-        job: { select: { address: true } },
+        job: {
+          select: {
+            address: true,
+            jobReference: true,
+            customerName: true,
+            Customer: { select: { firstName: true, lastName: true } },
+            Property: { select: { name: true } },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       take: 20,
@@ -805,6 +821,7 @@ export async function getOpsCommandCenter(
   ]);
 
   // Retained for payload/report parity; not shown on the exception desk.
+  void _unassignedJobs;
   void _jobsNext24h;
   void _cleanerAppsNew;
 
@@ -880,12 +897,18 @@ export async function getOpsCommandCenter(
 
   const propertyAlerts: OpsCommandCenterPayload['propertyAlerts'] = [];
   for (const r of completionAlerts) {
+    if (isDashboardSmokeRecord({
+      jobReference: r.Job?.jobReference,
+      customerName: r.Job?.customerName,
+      firstName: r.Job?.Customer?.firstName,
+      lastName: r.Job?.Customer?.lastName,
+    })) continue;
     if (r.issuesFound?.trim()) {
       propertyAlerts.push({
         id: `cr-issue-${r.id}`,
         category: categorizePropertyAlertText(r.issuesFound, 'issues'),
         summary: r.issuesFound.trim().slice(0, 160),
-        property: r.propertyAddress,
+        property: r.Job?.Property?.name || r.propertyAddress,
         jobId: r.jobId,
         createdAt: r.createdAt.toISOString(),
       });
@@ -895,24 +918,29 @@ export async function getOpsCommandCenter(
         id: `cr-supply-${r.id}`,
         category: categorizePropertyAlertText(r.supplyRequests, 'supplies'),
         summary: r.supplyRequests.trim().slice(0, 160),
-        property: r.propertyAddress,
+        property: r.Job?.Property?.name || r.propertyAddress,
         jobId: r.jobId,
         createdAt: r.createdAt.toISOString(),
       });
     }
   }
   for (const c of complianceAlerts) {
+    if (isDashboardSmokeRecord({
+      jobReference: c.job?.jobReference,
+      customerName: c.job?.customerName,
+      firstName: c.job?.Customer?.firstName,
+      lastName: c.job?.Customer?.lastName,
+    })) continue;
     propertyAlerts.push({
       id: `ci-${c.id}`,
       category: 'Damage',
       summary: (c.notes || c.reason).slice(0, 160),
-      property: c.job?.address || 'Property',
+      property: c.job?.Property?.name || c.job?.address || 'Property',
       jobId: c.jobId,
       createdAt: c.createdAt.toISOString(),
     });
   }
 
-  const unassignedTodayJobs = todayJobs.filter((j) => !j.assignedCleanerId);
   const arDueCount = overdueMap.size + dueToday.length;
 
   const todayKey = businessDateKey(now);
@@ -978,7 +1006,6 @@ export async function getOpsCommandCenter(
     .filter((row): row is NonNullable<typeof row> => row != null);
 
   const dispatchExceptionItems = groupDispatchExceptionItems(classifiedDispatchJobs);
-  const dispatchExceptionCount = dispatchExceptionItems.filter((i) => i.count > 0).length;
 
   /** Exception desk only — vanity counts (coverage, 24h watch list, training) stay off home. */
   const actionCenter: ActionItem[] = [
@@ -1055,17 +1082,6 @@ export async function getOpsCommandCenter(
     },
   ];
 
-  const hqExceptionCount =
-    dispatchExceptionCount +
-    (propertyAlerts.length > 0 ? 1 : 0) +
-    (arDueCount > 0 ? 1 : 0) +
-    (newLeads > 0 ? 1 : 0) +
-    (quoteFollowUps > 0 ? 1 : 0) +
-    (invitedNeverLoggedIn.length > 0 ? 1 : 0);
-  const branchExceptionCount =
-    dispatchExceptionCount + (propertyAlerts.length > 0 ? 1 : 0);
-  const exceptionCount = branchId ? branchExceptionCount : hqExceptionCount;
-
   const recentActivity: OpsCommandCenterPayload['recentActivity'] = [];
   for (const j of recentCompletions) {
     if (!j.completedAt) continue;
@@ -1123,25 +1139,18 @@ export async function getOpsCommandCenter(
   );
 
   const potential = Number(pipelineRevenue._sum.estimatedRevenue ?? 0);
+  const desk = await loadOpsDesk(branchId, now);
 
   return {
     generatedAt: now.toISOString(),
     branchScoped: Boolean(branchId),
     todayBrief: {
-      jobsToday: todayJobs.length,
-      unassignedToday: unassignedTodayJobs.length,
-      exceptionCount,
-      cashDueFormatted: branchId
-        ? null
-        : arDueCount > 0
-          ? formatUsd(
-              [...overdueMap.values(), ...dueToday].reduce(
-                (sum, row) => sum + row.balanceDue,
-                0
-              )
-            )
-          : formatUsd(0),
+      jobsToday: desk.cards.today,
+      unassignedToday: desk.cards.needsCleaner,
+      exceptionCount: desk.jobsNeedingAction,
+      cashDueFormatted: desk.cards.unpaidInvoices?.formatted ?? null,
     },
+    desk,
     actionCenter,
     kpis: {
       jobsThisWeek,
@@ -1152,9 +1161,9 @@ export async function getOpsCommandCenter(
       outstandingInvoices: billing.outstandingInvoices.count,
       activeClients: activeClientRows.length,
       openLeads: openLeadsCount,
-      cleanerCoverage: `${activeCleaners} active · ${unassignedJobs} unassigned`,
+      cleanerCoverage: `${activeCleaners} active · ${desk.cards.needsCleaner} unassigned`,
       activeCleaners,
-      unassignedJobs,
+      unassignedJobs: desk.cards.needsCleaner,
     },
     todaySchedule: todayJobs.map((j) => ({
       id: j.id,
@@ -1210,7 +1219,7 @@ export async function getOpsCommandCenter(
     cleanerOps: {
       active: activeCleaners,
       available: availableCleaners,
-      unassignedJobs,
+      unassignedJobs: desk.cards.needsCleaner,
       trainingIncomplete,
       pendingPayouts,
     },

@@ -53,20 +53,12 @@ function AdminJobsPageContent() {
     ? (searchParams.get("board") as JobsBoardView)
     : "today";
 
-  const [marketTab, setMarketTab] = useState<MarketTab>(
-    isBranchScoped ? "vermont" : "all"
-  );
+  const [marketTab, setMarketTab] = useState<MarketTab>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [showArchived, setShowArchived] = useState(false);
   const [unassignedOnly, setUnassignedOnly] = useState(false);
   const customerIdFilter = searchParams.get("customerId") || "";
-
-  useEffect(() => {
-    if (isBranchScoped) {
-      setMarketTab("vermont");
-    }
-  }, [isBranchScoped]);
 
   useEffect(() => {
     if (searchParams.get("needsAssignment") === "1" || searchParams.get("unassignedOnly") === "true") {

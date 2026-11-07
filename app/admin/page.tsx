@@ -1,28 +1,42 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Loader2, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdminPageHeader } from '@/components/admin/shell/AdminShell';
-import { NeedsAttention } from '@/components/admin/ops/NeedsAttention';
-import { TodayStrip } from '@/components/admin/ops/TodayStrip';
-import { TodaySchedule } from '@/components/admin/ops/TodaySchedule';
-import { ArDueCompact } from '@/components/admin/ops/ArDueCompact';
+import { GrowthPanel } from '@/components/admin/ops/GrowthPanel';
+import { OpsDeskCards } from '@/components/admin/ops/OpsDeskCards';
+import { OpsJobList } from '@/components/admin/ops/OpsJobList';
 import { PropertyAlerts } from '@/components/admin/ops/PropertyAlerts';
 import type { OpsCommandCenterPayload } from '@/lib/admin/opsCommandCenter';
 
 function formatHeaderDate(branchScoped: boolean): string {
-  const now = new Date();
-  const day = now.toLocaleDateString('en-US', {
+  const day = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
+    timeZone: 'America/New_York',
   });
   return `${day} · ${branchScoped ? 'Your market' : 'NJ & Vermont'}`;
 }
 
 export default function OpsCommandCenterPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-vm-cyan" />
+      </div>
+    }>
+      <OpsCommandCenter />
+    </Suspense>
+  );
+}
+
+function OpsCommandCenter() {
+  const searchParams = useSearchParams();
+  const list = searchParams.get('list');
   const [data, setData] = useState<OpsCommandCenterPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +101,7 @@ export default function OpsCommandCenterPage() {
             <Loader2 className="h-8 w-8 animate-spin text-vm-cyan" />
           </div>
         ) : error && !data ? (
-          <div className="rounded-lg border border-red-200 bg-vm-danger-bg p-6 text-vm-danger">
+          <div className="rounded-lg border border-vm-danger bg-vm-danger-bg p-6 text-vm-danger">
             {error}
             <Button
               variant="navyOutline"
@@ -101,14 +115,9 @@ export default function OpsCommandCenterPage() {
           </div>
         ) : data ? (
           <div className="mx-auto max-w-5xl">
-            <TodayStrip brief={data.todayBrief} branchScoped={branchScoped} />
-            <NeedsAttention
-              items={data.actionCenter}
-              branchScoped={branchScoped}
-              onInviteSent={fetchData}
-            />
-            <TodaySchedule rows={data.todaySchedule} />
-            {!branchScoped ? <ArDueCompact data={data.accountsReceivable} /> : null}
+            <OpsDeskCards desk={data.desk} />
+            <OpsJobList desk={data.desk} list={list} />
+            {!branchScoped ? <GrowthPanel growth={data.desk.growth} /> : null}
             {data.propertyAlerts.length > 0 ? (
               <PropertyAlerts alerts={data.propertyAlerts} />
             ) : null}
