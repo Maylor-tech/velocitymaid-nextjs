@@ -128,7 +128,15 @@ describe('cron authorization and existing empty-run behavior', () => {
   it('keeps the review-request empty queue and the unresolved-url skip', async () => {
     const empty = await sendReviewRequests(request('/api/cron/send-review-requests', `Bearer ${SECRET}`));
     expect(empty.status).toBe(200);
-    expect(await empty.json()).toEqual({ success: true, processed: 0, sent: 0, failed: 0, skipped: 0 });
+    expect(await empty.json()).toEqual({
+      success: true,
+      processed: 0,
+      sent: 0,
+      failed: 0,
+      skipped: 0,
+      unknown: 0,
+      acceptedUnrecorded: 0,
+    });
 
     reviewFindMany.mockResolvedValue([{ id: 'r1', jobId: 'j1', clientEmail: 'guest@example.com' }]);
     jobFindMany.mockResolvedValue([]);
@@ -146,7 +154,13 @@ describe('cron authorization and existing empty-run behavior', () => {
       { jobId: 'j1', Job: { id: 'j1', branchId: 'b1', customerId: 'c1', Customer: { phone: '  ' } } },
     ]);
     const response = await referralNudge(request('/api/cron/referral-nudge', `Bearer ${SECRET}`));
-    expect(await response.json()).toEqual({ ok: true, sent: 0 });
+    expect(await response.json()).toEqual({
+      ok: true,
+      sent: 0,
+      failed: 0,
+      skipped: 1,
+      acceptedUnrecorded: 0,
+    });
     expect(sendWhatsApp).not.toHaveBeenCalled();
     expect(logAudit).not.toHaveBeenCalled();
   });

@@ -1,4 +1,5 @@
 import { resend, getResendFromEmail } from "./resendClient";
+import { EmailDeliveryError, sendVerifiedEmail } from "./sendVerifiedEmail";
 import { logIntegrationEvent } from "@/lib/google/integrationLog";
 
 export { DEFAULT_GOOGLE_REVIEW_URL } from "@/lib/reviews/googleReviewUrl";
@@ -8,6 +9,8 @@ export interface SendReviewRequestEmailParams {
   toName: string;
   /** Required: branch-resolved Google Business Profile review link. */
   reviewUrl: string;
+  /** Stable per ReviewRequest. A retry after a lost database write must reuse it. */
+  idempotencyKey?: string;
 }
 
 export interface SendReviewRequestEmailResult {
@@ -15,6 +18,8 @@ export interface SendReviewRequestEmailResult {
   id?: string;
   skippedReason?: string;
   error?: string;
+  /** True when the provider may already have accepted the message. Do not retry blindly. */
+  outcomeUnknown?: boolean;
 }
 
 const NAVY = "#0F1C2E";
@@ -141,25 +146,15 @@ export async function sendReviewRequestEmail(
   const html = buildHtml(params);
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: resolveFromEmail(),
-      to: params.toEmail,
-      subject,
-      html,
-    });
-    if (error) {
-      logIntegrationEvent({
-        channel: 'EMAIL',
-        action: 'SEND_REVIEW_REQUEST_EMAIL',
-        provider: 'RESEND',
-        status: 'FAILED',
-        recipient: params.toEmail,
-        templateKey: 'review_request',
-        triggeredBy: 'cron',
-        errorSummary: error.message,
-      }).catch(() => {});
-      return { sent: false, error: error.message };
-    }
+    const { messageId } = await sendVerifiedEmail(
+      {
+        from: resolveFromEmail(),
+        to: params.toEmail,
+        subject,
+        html,
+      },
+      params.idempotencyKey
+    );
     logIntegrationEvent({
       channel: 'EMAIL',
       action: 'SEND_REVIEW_REQUEST_EMAIL',
@@ -169,9 +164,20 @@ export async function sendReviewRequestEmail(
       templateKey: 'review_request',
       triggeredBy: 'cron',
     }).catch(() => {});
-    return { sent: true, id: data?.id };
+    return { sent: true, id: messageId };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to send email";
-    return { sent: false, error: message };
+    const outcomeUnknown = err instanceof EmailDeliveryError && err.deliveryUnknown;
+    logIntegrationEvent({
+      channel: 'EMAIL',
+      action: 'SEND_REVIEW_REQUEST_EMAIL',
+      provider: 'RESEND',
+      status: 'FAILED',
+      recipient: params.toEmail,
+      templateKey: 'review_request',
+      triggeredBy: 'cron',
+      errorSummary: message,
+    }).catch(() => {});
+    return { sent: false, error: message, outcomeUnknown };
   }
 }

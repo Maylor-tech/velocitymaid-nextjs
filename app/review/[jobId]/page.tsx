@@ -14,6 +14,7 @@ interface JobDetails {
   serviceType: string;
   serviceLocation: 'new_jersey' | 'vermont';
   address: string;
+  googleReviewUrl?: string | null;
 }
 
 export default function ReviewPage() {
@@ -53,8 +54,8 @@ export default function ReviewPage() {
       } else {
         setError(data.error || 'Failed to load job details');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to load job details');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load job details');
     } finally {
       setLoading(false);
     }
@@ -95,8 +96,8 @@ export default function ReviewPage() {
       } else {
         setError(data.error || 'Failed to submit review');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit review');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to submit review');
     } finally {
       setSubmitting(false);
     }
@@ -151,6 +152,14 @@ export default function ReviewPage() {
                 : 'Your feedback helps us improve our service.'}
             </p>
           </div>
+          {jobDetails?.googleReviewUrl && (
+            <a
+              href={jobDetails.googleReviewUrl}
+              className="mt-6 inline-block bg-vm-text text-white font-semibold px-5 py-3 rounded-lg"
+            >
+              Leave a Google review
+            </a>
+          )}
         </div>
       </div>
     );
@@ -235,6 +244,14 @@ export default function ReviewPage() {
                   {rating === 1 && 'Poor'}
                 </p>
               )}
+              {jobDetails.googleReviewUrl && (
+                <p className="text-center text-sm text-vm-muted mt-4">
+                  You can leave a public review at any rating.{' '}
+                  <a href={jobDetails.googleReviewUrl} className="text-vm-text underline font-medium">
+                    Leave a Google review
+                  </a>
+                </p>
+              )}
             </div>
 
             {/* Comment */}
@@ -264,7 +281,7 @@ export default function ReviewPage() {
               <label htmlFor="requestReclean" className="ml-3 text-sm text-vm-text">
                 Request a follow-up cleaning
                 <span className="block text-xs text-vm-muted mt-1">
-                  Check this if you'd like us to send someone back to address any issues
+                  Check this if you would like us to send someone back to address any issues
                 </span>
               </label>
             </div>

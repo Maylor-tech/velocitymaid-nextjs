@@ -6,7 +6,9 @@ export const runtime = 'nodejs';
  * GET /api/cron/referral-nudge
  *
  * Sends a one-time WhatsApp 24h after a 5⭐ review, with the customer's referral link.
- * Duplicates prevented via audit log.
+ * A claim row is written before the provider call. SENT is recorded only after
+ * Meta accepts the message. Skip and failure release the claim. Delivery
+ * confirmation is recorded later by the WhatsApp status webhook.
  *
  * Auth: Bearer CRON_SECRET. A missing or empty secret rejects the request.
  * Manual test: GET /api/cron/referral-nudge with Authorization: Bearer <CRON_SECRET>
@@ -17,6 +19,9 @@ import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
 import { logAuditEntry } from '@/lib/audit';
+
+const REFERRAL_NUDGE_SENT = 'REFERRAL_NUDGE_SENT';
+const REFERRAL_NUDGE_CLAIM = 'REFERRAL_NUDGE_CLAIM';
 
 const MS_PER_MIN = 60 * 1000;
 const TARGET_HOURS = 24;
@@ -60,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     const alreadySent = await prisma.auditLog.findMany({
       where: {
-        action: 'REFERRAL_NUDGE_SENT',
+        action: { in: [REFERRAL_NUDGE_SENT, REFERRAL_NUDGE_CLAIM] },
         entityType: 'Job',
         entityId: { in: jobIds },
       },
@@ -74,12 +79,18 @@ export async function GET(request: NextRequest) {
     );
 
     let sent = 0;
+    let failed = 0;
+    let skipped = 0;
+    let acceptedUnrecorded = 0;
     for (const r of ratings) {
       if (sentSet.has(r.jobId)) continue;
       const phone = r.Job?.Customer?.phone?.trim();
       const customerId = r.Job?.customerId;
       const branchId = r.Job?.branchId;
-      if (!phone) continue;
+      if (!phone) {
+        skipped++;
+        continue;
+      }
 
       let referralLink = '';
       if (customerId && branchId) {
@@ -108,20 +119,55 @@ export async function GET(request: NextRequest) {
         '— VelocityMaid',
       ].join('\n');
 
-      sendWhatsAppMessage({ to: phone, message }).catch(() => {});
-
-      await logAuditEntry({
-        action: 'REFERRAL_NUDGE_SENT',
+      const claimId = await logAuditEntry({
+        action: REFERRAL_NUDGE_CLAIM,
         entityType: 'Job',
         entityId: r.jobId,
-        description: 'Referral nudge WhatsApp sent after 5-star rating',
-        changes: { sentAt: new Date().toISOString() },
+        description: 'Referral nudge claimed before the WhatsApp provider call',
+        changes: { status: 'claimed' },
       });
+      if (!claimId) {
+        skipped++;
+        continue;
+      }
       sentSet.add(r.jobId);
-      sent++;
+
+      const result = await sendWhatsAppMessage({ to: phone, message });
+      if (result.status === 'accepted' && result.providerMessageId) {
+        try {
+          await prisma.auditLog.update({
+            where: { id: claimId },
+            data: {
+              action: REFERRAL_NUDGE_SENT,
+              description: 'Referral nudge accepted by the WhatsApp provider',
+              changes: {
+                status: 'accepted',
+                deliveryStatus: 'accepted',
+                providerMessageId: result.providerMessageId,
+                acceptedAt: new Date().toISOString(),
+              },
+            },
+          });
+          sent++;
+        } catch (error) {
+          console.error('[cron/referral-nudge] accepted message was not recorded', {
+            jobId: r.jobId,
+            message: error instanceof Error ? error.message : 'update failed',
+          });
+          acceptedUnrecorded++;
+        }
+        continue;
+      }
+
+      await prisma.auditLog.deleteMany({
+        where: { id: claimId, action: REFERRAL_NUDGE_CLAIM },
+      });
+      sentSet.delete(r.jobId);
+      if (result.status === 'failed') failed++;
+      else skipped++;
     }
 
-    return NextResponse.json({ ok: true, sent });
+    return NextResponse.json({ ok: true, sent, failed, skipped, acceptedUnrecorded });
   } catch (err) {
     console.error('[cron/referral-nudge]', err);
     return NextResponse.json(

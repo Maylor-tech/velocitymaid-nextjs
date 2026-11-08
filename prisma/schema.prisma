@@ -826,16 +826,22 @@ model JobTeamMember {
 }
 
 model ReviewRequest {
-  id           String    @id @default(cuid())
-  jobId        String
-  clientEmail  String
-  scheduledFor DateTime
-  sentAt       DateTime?
-  createdAt    DateTime  @default(now())
+  id                String    @id @default(cuid())
+  jobId             String
+  clientEmail       String
+  scheduledFor      DateTime
+  sentAt            DateTime?
+  /// CLAIMED, ACCEPTED, FAILED, or UNKNOWN. Null means never claimed.
+  sendStatus        String?
+  providerMessageId String?
+  sendError         String?
+  claimedAt         DateTime?
+  createdAt         DateTime  @default(now())
 
   @@index([jobId])
   @@index([scheduledFor])
   @@index([sentAt])
+  @@index([sendStatus, claimedAt])
   @@map("review_requests")
 }
 
