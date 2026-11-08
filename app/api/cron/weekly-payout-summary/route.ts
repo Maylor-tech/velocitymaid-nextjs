@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/cron/verifyCronAuth";
 import { buildWeeklyPayoutSummary } from "@/lib/payoutSummary";
 import {
   getWeeklyPayoutSummarySubject,
@@ -59,11 +60,8 @@ function getLastWeekRange(): { monday: Date; sunday: Date } {
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     // Validate email service is configured
     if (!process.env.RESEND_API_KEY) {

@@ -19,6 +19,7 @@ export const runtime = 'nodejs';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
 import { createAdminNotification, adminNotificationHelpers } from '@/lib/notifications/adminNotificationCenter';
@@ -34,11 +35,8 @@ function getTimeoutHours(): number {
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     const timeoutHours = getTimeoutHours();
     const cutoff = new Date(Date.now() - timeoutHours * 60 * 60 * 1000);

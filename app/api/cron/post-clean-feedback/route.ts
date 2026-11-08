@@ -13,6 +13,7 @@ export const runtime = 'nodejs';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
 import { logAuditEntry } from '@/lib/audit';
@@ -23,11 +24,8 @@ const WINDOW_HALF_MIN = 2; // 28–32 min
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     const now = new Date();
     const windowStart = new Date(now.getTime() - (TARGET_MIN + WINDOW_HALF_MIN) * MS_PER_MIN);

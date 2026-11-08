@@ -7,6 +7,7 @@ export const runtime = 'nodejs';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { prisma } from '@/lib/prisma';
 import {
   FEEDBACK_AUDIT,
@@ -20,11 +21,8 @@ const MAX_PER_RUN = 100;
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     const claimed = await claimFeedbackReminders(MAX_PER_RUN);
     let sent = 0;

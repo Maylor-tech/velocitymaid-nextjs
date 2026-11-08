@@ -9,7 +9,7 @@ export const runtime = "nodejs";
  * sent (sentAt is null), emails each client a Google review request, and
  * stamps sentAt. Runs daily at 10am (see vercel.json).
  *
- * Auth: Bearer CRON_SECRET (enforced only when CRON_SECRET is set).
+ * Auth: Bearer CRON_SECRET. A missing or empty secret rejects the request.
  * Manual test: GET with Authorization: Bearer <CRON_SECRET>.
  *
  * Google review URL is resolved per job branch (Vermont vs New Jersey).
@@ -17,6 +17,7 @@ export const runtime = "nodejs";
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/cron/verifyCronAuth";
 import { prisma } from "@/lib/prisma";
 import { sendReviewRequestEmail } from "@/lib/email/sendReviewRequestEmail";
 import {
@@ -28,11 +29,8 @@ const MAX_PER_RUN = 200;
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     const now = new Date();
     const due = await prisma.reviewRequest.findMany({

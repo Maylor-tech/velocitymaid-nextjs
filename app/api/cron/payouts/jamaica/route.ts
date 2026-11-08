@@ -9,30 +9,21 @@ export const dynamic = 'force-dynamic';
  * Runs weekly to auto-generate payouts for all active cleaners in Jamaica branches
  * Should be called by a cron service (e.g., Vercel Cron, external scheduler)
  * 
- * Security: Should be protected with a secret token in production
+ * Security: Bearer CRON_SECRET or x-cron-secret. A missing secret rejects the request.
+ * Query-string secrets are not accepted.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { prisma } from '@/lib/prisma';
 import { createPayout } from '@/app/services/payouts/jamaicaPayoutService';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';
 import { getCleanerPaymentMethod } from '@/app/services/payouts/jamaicaPayoutService';
 
-// Verify cron secret token (set in environment variables)
-const CRON_SECRET = process.env.CRON_SECRET || 'your-cron-secret-here';
-
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret (basic security)
-    const authHeader = request.headers.get('authorization');
-    const providedSecret = authHeader?.replace('Bearer ', '') || request.nextUrl.searchParams.get('secret');
-
-    if (providedSecret !== CRON_SECRET) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     // Calculate period (last 14 days)
     const periodEnd = new Date();

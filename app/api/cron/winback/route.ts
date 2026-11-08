@@ -13,6 +13,7 @@ export const runtime = 'nodejs';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
 import { logAuditEntry } from '@/lib/audit';
@@ -22,11 +23,8 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     const now = new Date();
     const cutoff = new Date(now.getTime() - INACTIVE_DAYS * MS_PER_DAY);

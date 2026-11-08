@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { prisma } from '@/lib/prisma';
 import { autoAssignCleaner } from '@/lib/cleaner-assignment';
 import { ACTIVE_JOB_STATUS_EXCLUDE } from '@/lib/jobStatus';
@@ -19,14 +20,8 @@ import { ACTIVE_JOB_STATUS_EXCLUDE } from '@/lib/jobStatus';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret
-    const cronSecret = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (cronSecret !== process.env.CRON_SECRET) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     // Get today's date (start of day)
     const today = new Date();
