@@ -16,12 +16,16 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/cron/verifyCronAuth";
 import { prisma } from "@/lib/prisma";
 import { processApprovedPayoutBatch } from "@/lib/payout/stripePayoutWorker";
 import { PayoutBatchStatus, PayoutTransferStatus } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   try {
+    const authError = verifyCronAuth(req);
+    if (authError) return authError;
+
     // Payouts are optional/staged - can be disabled via env var
     if (process.env.ENABLE_PAYOUTS !== "true") {
       return NextResponse.json({
@@ -29,23 +33,6 @@ export async function POST(req: NextRequest) {
         message: "Payouts disabled (staged feature)",
         processedBatches: 0,
       });
-    }
-
-    // Security: Verify cron secret
-    const secret = req.headers.get("x-cron-secret");
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (!cronSecret) {
-      console.error("[CRON_PROCESS_PAYOUTS] CRON_SECRET not configured");
-      return NextResponse.json(
-        { error: "Cron secret not configured" },
-        { status: 500 }
-      );
-    }
-
-    if (secret !== cronSecret) {
-      console.warn("[CRON_PROCESS_PAYOUTS] Unauthorized access attempt");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Optional: Dry-run mode (skip Stripe calls, log what would happen)
@@ -177,14 +164,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Support GET for health checks (returns status without processing)
+// Requires the cron credential. This reads the approved payout-batch count.
 export async function GET(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (secret !== cronSecret) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = verifyCronAuth(req);
+  if (authError) return authError;
 
   // Count approved batches (read-only check)
   const approvedCount = await prisma.payoutBatch.count({

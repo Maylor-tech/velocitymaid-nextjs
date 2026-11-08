@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import Stripe from 'stripe';
 import { send24HourReminder } from '@/lib/whatsapp';
 
@@ -13,7 +14,7 @@ import { send24HourReminder } from '@/lib/whatsapp';
  * Setup:
  * - Vercel Cron: Add to vercel.json
  * - External Cron: Use a service like cron-job.org to call this endpoint
- * - Manual Testing: Call GET /api/cron/reminder-24h?test=true
+ * Manual testing still requires Authorization: Bearer <CRON_SECRET>. ?test=true does not bypass it.
  */
 
 // Initialize Stripe
@@ -179,6 +180,9 @@ async function markReminderSent(sessionId: string): Promise<void> {
  * Main cron job handler
  */
 export async function GET(request: NextRequest) {
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
+
   const startTime = Date.now();
   const log: string[] = [];
   

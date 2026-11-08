@@ -4,10 +4,12 @@ import { verifyCronAuth } from '../verifyCronAuth';
 
 const SECRET = 'test-cron-secret';
 
-function request(authorization?: string) {
+function request(authorization?: string, extra?: { cronHeader?: string; secretQuery?: string }) {
   const headers = new Headers();
   if (authorization !== undefined) headers.set('authorization', authorization);
-  return new NextRequest('http://localhost/api/cron/test', { headers });
+  if (extra?.cronHeader !== undefined) headers.set('x-cron-secret', extra.cronHeader);
+  const query = extra?.secretQuery !== undefined ? `?secret=${encodeURIComponent(extra.secretQuery)}` : '';
+  return new NextRequest(`http://localhost/api/cron/test${query}`, { headers });
 }
 
 describe('verifyCronAuth', () => {
@@ -46,8 +48,24 @@ describe('verifyCronAuth', () => {
     }
   });
 
-  it('accepts the exact bearer token', () => {
+  it('rejects the literal bearer value produced when the variable is unset', () => {
+    vi.stubEnv('CRON_SECRET', SECRET);
+    const response = verifyCronAuth(request('Bearer undefined'));
+    expect(response?.status).toBe(401);
+  });
+
+  it('accepts the exact bearer token or the x-cron-secret header', () => {
     vi.stubEnv('CRON_SECRET', SECRET);
     expect(verifyCronAuth(request(`Bearer ${SECRET}`))).toBeNull();
+    expect(verifyCronAuth(request(undefined, { cronHeader: SECRET }))).toBeNull();
+  });
+
+  it('rejects a query-string secret and a wrong x-cron-secret header', async () => {
+    vi.stubEnv('CRON_SECRET', SECRET);
+    const fromQuery = verifyCronAuth(request(undefined, { secretQuery: SECRET }));
+    const wrongHeader = verifyCronAuth(request(undefined, { cronHeader: 'wrong-secret' }));
+    expect(fromQuery?.status).toBe(401);
+    expect(wrongHeader?.status).toBe(401);
+    expect(await fromQuery?.json()).toEqual({ error: 'Unauthorized' });
   });
 });

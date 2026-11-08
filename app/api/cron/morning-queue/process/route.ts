@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';
 import { getMorningFollowUpMessage } from '@/config/afterHoursMessages';
@@ -17,14 +18,8 @@ import { isAfterHours } from '@/lib/time/isAfterHours';
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret
-    const cronSecret = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (cronSecret !== process.env.CRON_SECRET) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     // Check if it's actually morning (after 8 AM EST)
     if (isAfterHours()) {

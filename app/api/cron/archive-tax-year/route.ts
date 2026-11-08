@@ -17,6 +17,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/cron/verifyCronAuth";
 import { prisma } from "@/lib/prisma";
 import { PayoutTransferStatus } from "@prisma/client";
 import {
@@ -244,22 +245,8 @@ async function get1099Readiness(year: number): Promise<{
 
 export async function POST(req: NextRequest) {
   try {
-    // Security: Verify cron secret
-    const secret = req.headers.get("x-cron-secret");
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (!cronSecret) {
-      console.error("[CRON_ARCHIVE_TAX_YEAR] CRON_SECRET not configured");
-      return NextResponse.json(
-        { error: "Cron secret not configured" },
-        { status: 500 }
-      );
-    }
-
-    if (secret !== cronSecret) {
-      console.warn("[CRON_ARCHIVE_TAX_YEAR] Unauthorized access attempt");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = verifyCronAuth(req);
+    if (authError) return authError;
 
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -342,7 +329,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * GET endpoint for health checks
+ * Static health check. Returns no records and performs no writes.
  */
 export async function GET() {
   return NextResponse.json({

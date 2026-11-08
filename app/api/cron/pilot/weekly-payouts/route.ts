@@ -13,18 +13,13 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/cron/verifyCronAuth";
 import { runWeeklyPayouts } from "@/workers/weekly-payouts";
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret
-    const cronSecret = request.headers.get("authorization")?.replace("Bearer ", "");
-    if (cronSecret !== process.env.CRON_SECRET) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const authError = verifyCronAuth(request);
+    if (authError) return authError;
 
     console.log("[WEEKLY_PAYOUTS_CRON] Starting weekly payout processing...");
 
