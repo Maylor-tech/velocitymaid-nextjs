@@ -6,9 +6,11 @@ export const runtime = "nodejs";
  * GET /api/cron/send-review-requests
  *
  * Finds due ReviewRequest rows, claims each one, then emails the client.
- * Every automatic retry uses the same Resend idempotency key. A claim older
- * than 15 minutes is retried only while that key is still inside Resend's
- * 24-hour retention. Older claims are marked UNKNOWN and are not sent again.
+ * Every automatic retry uses the same Resend idempotency key.
+ * firstProviderAttemptAt is set on the first claim and is never moved.
+ * A stale claim is retried only while that original attempt is inside the
+ * 22-hour safe window. A fresh claimedAt does not extend the window.
+ * Older attempts are marked UNKNOWN and are not sent again.
  * A late worker can record an outcome only while it still owns claimedAt.
  * Runs daily at 10am (see vercel.json).
  *

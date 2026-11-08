@@ -35,19 +35,29 @@ export function reviewRequestIdempotencyKey(reviewRequestId: string): string {
   return `review-request-${reviewRequestId}`;
 }
 
+export type ReviewRequestAttemptClock = {
+  /** Worker ownership. A reclaim replaces this. */
+  claimedAt: Date | null;
+  /** Idempotency-key start. A reclaim must not replace this. */
+  firstProviderAttemptAt: Date | null;
+};
+
 /**
- * A claim older than 15 minutes can be retried only while Resend will still
- * honor the original idempotency key. After that, hold the row.
+ * The 22-hour cutoff uses the original provider attempt. A fresh claimedAt
+ * does not extend it. A missing attempt timestamp cannot be retried safely.
  */
 export function reviewRequestAutomaticRetry(
-  claimedAt: Date | null,
+  input: ReviewRequestAttemptClock,
   now = new Date()
 ): ReviewRequestRetryDisposition {
-  if (!claimedAt || Number.isNaN(claimedAt.getTime())) return 'reconcile';
-  const age = now.getTime() - claimedAt.getTime();
-  if (age <= REVIEW_REQUEST_CLAIM_STALE_MS) return 'in_flight';
-  if (age <= REVIEW_REQUEST_SAFE_RETRY_MS) return 'retry';
-  return 'reconcile';
+  const attemptAt = input.firstProviderAttemptAt;
+  if (!attemptAt || Number.isNaN(attemptAt.getTime())) return 'reconcile';
+  const attemptAge = now.getTime() - attemptAt.getTime();
+  if (attemptAge > REVIEW_REQUEST_SAFE_RETRY_MS) return 'reconcile';
+  if (!input.claimedAt || Number.isNaN(input.claimedAt.getTime())) return 'retry';
+  const claimAge = now.getTime() - input.claimedAt.getTime();
+  if (claimAge <= REVIEW_REQUEST_CLAIM_STALE_MS) return 'in_flight';
+  return 'retry';
 }
 
 export function claimableReviewRequestWhere(now = new Date()) {
@@ -57,24 +67,37 @@ export function claimableReviewRequestWhere(now = new Date()) {
     sentAt: null,
     scheduledFor: { lte: now },
     OR: [
-      { sendStatus: null },
-      { sendStatus: 'FAILED' },
+      { sendStatus: null, firstProviderAttemptAt: null },
+      {
+        sendStatus: 'FAILED',
+        firstProviderAttemptAt: { gte: retryNotBefore },
+      },
       {
         sendStatus: 'CLAIMED',
-        claimedAt: { lt: staleBefore, gte: retryNotBefore },
+        claimedAt: { lt: staleBefore },
+        firstProviderAttemptAt: { gte: retryNotBefore },
       },
     ],
   };
 }
 
-export async function parkExpiredReviewClaims(now = new Date()): Promise<number> {
+/** Rows whose idempotency key can no longer be retried, including legacy claims with no attempt timestamp. */
+export function expiredReviewClaimWhere(now = new Date()) {
   const expiredBefore = new Date(now.getTime() - REVIEW_REQUEST_SAFE_RETRY_MS);
+  return {
+    sentAt: null,
+    OR: [
+      { sendStatus: 'CLAIMED', firstProviderAttemptAt: null },
+      { sendStatus: 'FAILED', firstProviderAttemptAt: null },
+      { sendStatus: 'CLAIMED', firstProviderAttemptAt: { lt: expiredBefore } },
+      { sendStatus: 'FAILED', firstProviderAttemptAt: { lt: expiredBefore } },
+    ],
+  };
+}
+
+export async function parkExpiredReviewClaims(now = new Date()): Promise<number> {
   const parked = await prisma.reviewRequest.updateMany({
-    where: {
-      sentAt: null,
-      sendStatus: 'CLAIMED',
-      OR: [{ claimedAt: null }, { claimedAt: { lt: expiredBefore } }],
-    },
+    where: expiredReviewClaimWhere(now),
     data: {
       sendStatus: 'UNKNOWN',
       sendError:
@@ -90,17 +113,30 @@ export async function claimReviewRequestSend(
 ): Promise<{ claimedAt: Date } | null> {
   const staleBefore = new Date(now.getTime() - REVIEW_REQUEST_CLAIM_STALE_MS);
   const retryNotBefore = new Date(now.getTime() - REVIEW_REQUEST_SAFE_RETRY_MS);
-  const claimed = await prisma.reviewRequest.updateMany({
+  const initial = await prisma.reviewRequest.updateMany({
     where: {
       id: reviewRequestId,
       sentAt: null,
+      sendStatus: null,
+      firstProviderAttemptAt: null,
+    },
+    data: {
+      sendStatus: 'CLAIMED',
+      claimedAt: now,
+      firstProviderAttemptAt: now,
+      sendError: null,
+    },
+  });
+  if (initial.count === 1) return { claimedAt: now };
+
+  const retry = await prisma.reviewRequest.updateMany({
+    where: {
+      id: reviewRequestId,
+      sentAt: null,
+      firstProviderAttemptAt: { gte: retryNotBefore },
       OR: [
-        { sendStatus: null },
         { sendStatus: 'FAILED' },
-        {
-          sendStatus: 'CLAIMED',
-          claimedAt: { lt: staleBefore, gte: retryNotBefore },
-        },
+        { sendStatus: 'CLAIMED', claimedAt: { lt: staleBefore } },
       ],
     },
     data: {
@@ -109,7 +145,7 @@ export async function claimReviewRequestSend(
       sendError: null,
     },
   });
-  if (claimed.count !== 1) return null;
+  if (retry.count !== 1) return null;
   return { claimedAt: now };
 }
 

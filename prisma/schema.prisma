@@ -832,16 +832,20 @@ model ReviewRequest {
   scheduledFor      DateTime
   sentAt            DateTime?
   /// CLAIMED, ACCEPTED, FAILED, or UNKNOWN. Null means never claimed.
-  sendStatus        String?
-  providerMessageId String?
-  sendError         String?
-  claimedAt         DateTime?
-  createdAt         DateTime  @default(now())
+  sendStatus             String?
+  providerMessageId      String?
+  sendError              String?
+  /// Current worker ownership token. Moves on every reclaim.
+  claimedAt              DateTime?
+  /// Start of the Resend idempotency key. Set once on the first claim.
+  firstProviderAttemptAt DateTime?
+  createdAt              DateTime  @default(now())
 
   @@index([jobId])
   @@index([scheduledFor])
   @@index([sentAt])
   @@index([sendStatus, claimedAt])
+  @@index([sendStatus, firstProviderAttemptAt])
   @@map("review_requests")
 }
 
