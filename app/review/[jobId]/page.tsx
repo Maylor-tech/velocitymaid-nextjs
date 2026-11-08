@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import LocationBadge from '@/app/cleaners/components/LocationBadge';
+import { publicGoogleReviewHref } from '@/lib/reviews/publicReviewAccess';
 
 interface JobDetails {
   id: string;
@@ -103,6 +104,8 @@ export default function ReviewPage() {
     }
   };
 
+  const googleReviewHref = publicGoogleReviewHref(rating, jobDetails?.googleReviewUrl);
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
@@ -152,9 +155,9 @@ export default function ReviewPage() {
                 : 'Your feedback helps us improve our service.'}
             </p>
           </div>
-          {jobDetails?.googleReviewUrl && (
+          {googleReviewHref && (
             <a
-              href={jobDetails.googleReviewUrl}
+              href={googleReviewHref}
               className="mt-6 inline-block bg-vm-text text-white font-semibold px-5 py-3 rounded-lg"
             >
               Leave a Google review
@@ -244,10 +247,10 @@ export default function ReviewPage() {
                   {rating === 1 && 'Poor'}
                 </p>
               )}
-              {jobDetails.googleReviewUrl && (
+              {googleReviewHref && (
                 <p className="text-center text-sm text-vm-muted mt-4">
                   You can leave a public review at any rating.{' '}
-                  <a href={jobDetails.googleReviewUrl} className="text-vm-text underline font-medium">
+                  <a href={googleReviewHref} className="text-vm-text underline font-medium">
                     Leave a Google review
                   </a>
                 </p>

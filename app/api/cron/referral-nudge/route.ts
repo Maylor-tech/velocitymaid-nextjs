@@ -6,9 +6,10 @@ export const runtime = 'nodejs';
  * GET /api/cron/referral-nudge
  *
  * Sends a one-time WhatsApp 24h after a 5⭐ review, with the customer's referral link.
- * A claim row is written before the provider call. SENT is recorded only after
- * Meta accepts the message. Skip and failure release the claim. Delivery
- * confirmation is recorded later by the WhatsApp status webhook.
+ * A claim row is written before the provider call and kept when Meta accepts
+ * the message or the outcome is unknown. A claim is deleted only for a
+ * pre-send skip or a definite provider rejection. Delivery receipts are not
+ * persisted. The WhatsApp webhook only logs them.
  *
  * Auth: Bearer CRON_SECRET. A missing or empty secret rejects the request.
  * Manual test: GET /api/cron/referral-nudge with Authorization: Bearer <CRON_SECRET>
@@ -18,10 +19,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
-import { logAuditEntry } from '@/lib/audit';
-
-const REFERRAL_NUDGE_SENT = 'REFERRAL_NUDGE_SENT';
-const REFERRAL_NUDGE_CLAIM = 'REFERRAL_NUDGE_CLAIM';
+import {
+  REFERRAL_NUDGE_BLOCKING_ACTIONS,
+  openReferralClaim,
+  referralPreSendSkip,
+  settleReferralClaim,
+} from '@/lib/whatsapp/referralNudgeClaim';
 
 const MS_PER_MIN = 60 * 1000;
 const TARGET_HOURS = 24;
@@ -65,7 +68,7 @@ export async function GET(request: NextRequest) {
 
     const alreadySent = await prisma.auditLog.findMany({
       where: {
-        action: { in: [REFERRAL_NUDGE_SENT, REFERRAL_NUDGE_CLAIM] },
+        action: { in: [...REFERRAL_NUDGE_BLOCKING_ACTIONS] },
         entityType: 'Job',
         entityId: { in: jobIds },
       },
@@ -81,6 +84,7 @@ export async function GET(request: NextRequest) {
     let sent = 0;
     let failed = 0;
     let skipped = 0;
+    let unknown = 0;
     let acceptedUnrecorded = 0;
     for (const r of ratings) {
       if (sentSet.has(r.jobId)) continue;
@@ -119,13 +123,13 @@ export async function GET(request: NextRequest) {
         '— VelocityMaid',
       ].join('\n');
 
-      const claimId = await logAuditEntry({
-        action: REFERRAL_NUDGE_CLAIM,
-        entityType: 'Job',
-        entityId: r.jobId,
-        description: 'Referral nudge claimed before the WhatsApp provider call',
-        changes: { status: 'claimed' },
-      });
+      const preSendSkip = referralPreSendSkip(phone);
+      if (preSendSkip) {
+        skipped++;
+        continue;
+      }
+
+      const claimId = await openReferralClaim(r.jobId);
       if (!claimId) {
         skipped++;
         continue;
@@ -133,41 +137,22 @@ export async function GET(request: NextRequest) {
       sentSet.add(r.jobId);
 
       const result = await sendWhatsAppMessage({ to: phone, message });
-      if (result.status === 'accepted' && result.providerMessageId) {
-        try {
-          await prisma.auditLog.update({
-            where: { id: claimId },
-            data: {
-              action: REFERRAL_NUDGE_SENT,
-              description: 'Referral nudge accepted by the WhatsApp provider',
-              changes: {
-                status: 'accepted',
-                deliveryStatus: 'accepted',
-                providerMessageId: result.providerMessageId,
-                acceptedAt: new Date().toISOString(),
-              },
-            },
-          });
-          sent++;
-        } catch (error) {
-          console.error('[cron/referral-nudge] accepted message was not recorded', {
-            jobId: r.jobId,
-            message: error instanceof Error ? error.message : 'update failed',
-          });
-          acceptedUnrecorded++;
-        }
-        continue;
-      }
-
-      await prisma.auditLog.deleteMany({
-        where: { id: claimId, action: REFERRAL_NUDGE_CLAIM },
-      });
-      sentSet.delete(r.jobId);
-      if (result.status === 'failed') failed++;
+      const settlement = await settleReferralClaim(claimId, result);
+      if (settlement === 'sent') sent++;
+      else if (settlement === 'unknown') unknown++;
+      else if (settlement === 'accepted_unrecorded') acceptedUnrecorded++;
+      else if (settlement === 'failed') failed++;
       else skipped++;
     }
 
-    return NextResponse.json({ ok: true, sent, failed, skipped, acceptedUnrecorded });
+    return NextResponse.json({
+      ok: true,
+      sent,
+      failed,
+      skipped,
+      unknown,
+      acceptedUnrecorded,
+    });
   } catch (err) {
     console.error('[cron/referral-nudge]', err);
     return NextResponse.json(

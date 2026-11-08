@@ -72,15 +72,47 @@ describe('WhatsApp provider outcomes', () => {
     });
   });
 
-  it('returns failed when the provider cannot be reached', async () => {
+  it('holds a network failure as unknown because the provider may have accepted it', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('network down'));
     vi.stubEnv('WHATSAPP_ACCESS_TOKEN', 'test-token');
     vi.stubEnv('WHATSAPP_PHONE_NUMBER_ID', 'phone-1');
     vi.stubEnv('DISPATCH_WHATSAPP_ALLOWLIST', '15551212');
 
     await expect(sendWhatsAppMessage({ to: '15551212', message: 'hello' })).resolves.toEqual({
-      status: 'failed',
+      status: 'unknown',
       reason: 'provider_unreachable',
+    });
+  });
+
+  it('holds a successful response that has no message id', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ messages: [] }),
+    });
+    vi.stubEnv('WHATSAPP_ACCESS_TOKEN', 'test-token');
+    vi.stubEnv('WHATSAPP_PHONE_NUMBER_ID', 'phone-1');
+    vi.stubEnv('DISPATCH_WHATSAPP_ALLOWLIST', '15551212');
+
+    await expect(sendWhatsAppMessage({ to: '15551212', message: 'hello' })).resolves.toEqual({
+      status: 'unknown',
+      reason: 'provider_missing_message_id',
+    });
+  });
+
+  it('holds a server error instead of treating it as a rejection', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: async () => ({ error: { message: 'unavailable' } }),
+    });
+    vi.stubEnv('WHATSAPP_ACCESS_TOKEN', 'test-token');
+    vi.stubEnv('WHATSAPP_PHONE_NUMBER_ID', 'phone-1');
+    vi.stubEnv('DISPATCH_WHATSAPP_ALLOWLIST', '15551212');
+
+    await expect(sendWhatsAppMessage({ to: '15551212', message: 'hello' })).resolves.toEqual({
+      status: 'unknown',
+      reason: 'unavailable',
     });
   });
 });

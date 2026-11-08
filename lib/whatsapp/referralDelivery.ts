@@ -16,8 +16,9 @@ export function whatsAppDeliveryStatus(providerStatus: string | null | undefined
 }
 
 /**
- * Update a referral nudge that was accepted by the provider when Meta later
- * reports delivery. Rows that were never accepted are left unchanged.
+ * Maps a Meta delivery receipt. Not called by the WhatsApp webhook.
+ * That route still logs receipts and has unrelated Job relation and status
+ * type errors, so delivery tracking is not active.
  */
 export async function recordReferralDeliveryStatus(input: {
   providerMessageId?: string | null;

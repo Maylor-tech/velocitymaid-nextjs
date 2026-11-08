@@ -6,9 +6,11 @@ export const runtime = "nodejs";
  * GET /api/cron/send-review-requests
  *
  * Finds due ReviewRequest rows, claims each one, then emails the client.
- * A second worker cannot claim the same row. Provider acceptance is recorded
- * with the message id. If that write fails, the claim stays and is not retried
- * as a fresh send. Runs daily at 10am (see vercel.json).
+ * Every automatic retry uses the same Resend idempotency key. A claim older
+ * than 15 minutes is retried only while that key is still inside Resend's
+ * 24-hour retention. Older claims are marked UNKNOWN and are not sent again.
+ * A late worker can record an outcome only while it still owns claimedAt.
+ * Runs daily at 10am (see vercel.json).
  *
  * Auth: Bearer CRON_SECRET. A missing or empty secret rejects the request.
  * Manual test: GET with Authorization: Bearer <CRON_SECRET>.
@@ -27,6 +29,7 @@ import {
 import {
   claimableReviewRequestWhere,
   deliverClaimedReviewRequest,
+  parkExpiredReviewClaims,
 } from "@/lib/reviews/reviewRequestClaim";
 
 const MAX_PER_RUN = 200;
@@ -37,6 +40,7 @@ export async function GET(request: NextRequest) {
     if (authError) return authError;
 
     const now = new Date();
+    const reconciled = await parkExpiredReviewClaims(now);
     const due = await prisma.reviewRequest.findMany({
       where: claimableReviewRequestWhere(now),
       orderBy: { scheduledFor: "asc" },
@@ -50,8 +54,9 @@ export async function GET(request: NextRequest) {
         sent: 0,
         failed: 0,
         skipped: 0,
-        unknown: 0,
+        unknown: reconciled,
         acceptedUnrecorded: 0,
+        reconciled,
       });
     }
 
@@ -121,7 +126,7 @@ export async function GET(request: NextRequest) {
       else if (outcome === "not_claimed") skipped++;
       else if (outcome === "unknown") unknown++;
       else if (outcome === "accepted_unrecorded") acceptedUnrecorded++;
-      else if (outcome === "skipped") skipped++;
+      else if (outcome === "skipped" || outcome === "superseded") skipped++;
       else failed++;
     }
 
@@ -131,8 +136,9 @@ export async function GET(request: NextRequest) {
       sent,
       failed,
       skipped,
-      unknown,
+      unknown: unknown + reconciled,
       acceptedUnrecorded,
+      reconciled,
       errors: errors.length ? errors : undefined,
     });
   } catch (error: unknown) {

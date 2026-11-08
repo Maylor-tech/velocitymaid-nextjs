@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { reviewFindMany, jobFindMany, reviewUpdate, sendReview, requireUrl, GoogleReviewUrlError } = vi.hoisted(() => {
+const { reviewFindMany, jobFindMany, reviewUpdate, reviewUpdateMany, sendReview, requireUrl, GoogleReviewUrlError } = vi.hoisted(() => {
   class GoogleReviewUrlError extends Error {
     constructor(message: string) {
       super(message);
@@ -12,6 +12,7 @@ const { reviewFindMany, jobFindMany, reviewUpdate, sendReview, requireUrl, Googl
     reviewFindMany: vi.fn(),
     jobFindMany: vi.fn(),
     reviewUpdate: vi.fn(),
+    reviewUpdateMany: vi.fn(),
     sendReview: vi.fn(),
     requireUrl: vi.fn(),
     GoogleReviewUrlError,
@@ -44,7 +45,7 @@ const { invoiceFindMany, sendInvoice } = vi.hoisted(() => ({
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
-    reviewRequest: { findMany: reviewFindMany, update: reviewUpdate },
+    reviewRequest: { findMany: reviewFindMany, update: reviewUpdate, updateMany: reviewUpdateMany },
     job: { findMany: jobFindMany, count: rebookingCount },
     cleanerRating: { findMany: ratingFindMany },
     auditLog: { findMany: auditFindMany },
@@ -87,6 +88,7 @@ describe('cron authorization and existing empty-run behavior', () => {
     vi.stubEnv('CRON_SECRET', SECRET);
     vi.stubEnv('INVOICE_REMINDER_STAGES_ENABLED', 'false');
     reviewFindMany.mockResolvedValue([]);
+    reviewUpdateMany.mockResolvedValue({ count: 0 });
     jobFindMany.mockResolvedValue([]);
     ratingFindMany.mockResolvedValue([]);
     auditFindMany.mockResolvedValue([]);
@@ -136,6 +138,7 @@ describe('cron authorization and existing empty-run behavior', () => {
       skipped: 0,
       unknown: 0,
       acceptedUnrecorded: 0,
+      reconciled: 0,
     });
 
     reviewFindMany.mockResolvedValue([{ id: 'r1', jobId: 'j1', clientEmail: 'guest@example.com' }]);
@@ -159,6 +162,7 @@ describe('cron authorization and existing empty-run behavior', () => {
       sent: 0,
       failed: 0,
       skipped: 1,
+      unknown: 0,
       acceptedUnrecorded: 0,
     });
     expect(sendWhatsApp).not.toHaveBeenCalled();

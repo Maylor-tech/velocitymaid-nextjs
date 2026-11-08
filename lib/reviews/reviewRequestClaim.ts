@@ -4,7 +4,20 @@ import {
   type SendReviewRequestEmailResult,
 } from '@/lib/email/sendReviewRequestEmail';
 
-/** A crashed claim can be retried with the same provider idempotency key. */
+/**
+ * Resend stores an idempotency key for 24 hours and replays the original
+ * response for the same key and the same payload.
+ * https://resend.com/docs/dashboard/emails/idempotency-keys
+ */
+export const RESEND_IDEMPOTENCY_RETENTION_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Automatic retries stop two hours before that retention ends, so the retry
+ * request itself is still inside the 24-hour window.
+ */
+export const REVIEW_REQUEST_SAFE_RETRY_MS = RESEND_IDEMPOTENCY_RETENTION_MS - 2 * 60 * 60 * 1000;
+
+/** Leave a live claim alone so a slow worker can finish. */
 export const REVIEW_REQUEST_CLAIM_STALE_MS = 15 * 60 * 1000;
 
 export type ReviewRequestDeliveryOutcome =
@@ -13,35 +26,70 @@ export type ReviewRequestDeliveryOutcome =
   | 'skipped'
   | 'unknown'
   | 'accepted_unrecorded'
+  | 'superseded'
   | 'not_claimed';
+
+export type ReviewRequestRetryDisposition = 'in_flight' | 'retry' | 'reconcile';
 
 export function reviewRequestIdempotencyKey(reviewRequestId: string): string {
   return `review-request-${reviewRequestId}`;
 }
 
+/**
+ * A claim older than 15 minutes can be retried only while Resend will still
+ * honor the original idempotency key. After that, hold the row.
+ */
+export function reviewRequestAutomaticRetry(
+  claimedAt: Date | null,
+  now = new Date()
+): ReviewRequestRetryDisposition {
+  if (!claimedAt || Number.isNaN(claimedAt.getTime())) return 'reconcile';
+  const age = now.getTime() - claimedAt.getTime();
+  if (age <= REVIEW_REQUEST_CLAIM_STALE_MS) return 'in_flight';
+  if (age <= REVIEW_REQUEST_SAFE_RETRY_MS) return 'retry';
+  return 'reconcile';
+}
+
 export function claimableReviewRequestWhere(now = new Date()) {
   const staleBefore = new Date(now.getTime() - REVIEW_REQUEST_CLAIM_STALE_MS);
+  const retryNotBefore = new Date(now.getTime() - REVIEW_REQUEST_SAFE_RETRY_MS);
   return {
     sentAt: null,
     scheduledFor: { lte: now },
     OR: [
       { sendStatus: null },
       { sendStatus: 'FAILED' },
-      { sendStatus: 'CLAIMED', claimedAt: { lt: staleBefore } },
+      {
+        sendStatus: 'CLAIMED',
+        claimedAt: { lt: staleBefore, gte: retryNotBefore },
+      },
     ],
   };
 }
 
-/**
- * Conditional claim. A second worker sees count 0 and must not send.
- * ACCEPTED and UNKNOWN stay claimed so a provider acceptance is not resent
- * merely because sentAt was not written.
- */
+export async function parkExpiredReviewClaims(now = new Date()): Promise<number> {
+  const expiredBefore = new Date(now.getTime() - REVIEW_REQUEST_SAFE_RETRY_MS);
+  const parked = await prisma.reviewRequest.updateMany({
+    where: {
+      sentAt: null,
+      sendStatus: 'CLAIMED',
+      OR: [{ claimedAt: null }, { claimedAt: { lt: expiredBefore } }],
+    },
+    data: {
+      sendStatus: 'UNKNOWN',
+      sendError:
+        'Claim is outside the Resend idempotency window. Held for manual reconciliation.',
+    },
+  });
+  return parked.count;
+}
+
 export async function claimReviewRequestSend(
   reviewRequestId: string,
   now = new Date()
-): Promise<boolean> {
+): Promise<{ claimedAt: Date } | null> {
   const staleBefore = new Date(now.getTime() - REVIEW_REQUEST_CLAIM_STALE_MS);
+  const retryNotBefore = new Date(now.getTime() - REVIEW_REQUEST_SAFE_RETRY_MS);
   const claimed = await prisma.reviewRequest.updateMany({
     where: {
       id: reviewRequestId,
@@ -49,7 +97,10 @@ export async function claimReviewRequestSend(
       OR: [
         { sendStatus: null },
         { sendStatus: 'FAILED' },
-        { sendStatus: 'CLAIMED', claimedAt: { lt: staleBefore } },
+        {
+          sendStatus: 'CLAIMED',
+          claimedAt: { lt: staleBefore, gte: retryNotBefore },
+        },
       ],
     },
     data: {
@@ -58,11 +109,13 @@ export async function claimReviewRequestSend(
       sendError: null,
     },
   });
-  return claimed.count === 1;
+  if (claimed.count !== 1) return null;
+  return { claimedAt: now };
 }
 
-async function recordOutcome(
+async function recordOwnedOutcome(
   reviewRequestId: string,
+  claimedAt: Date,
   data: {
     sendStatus: 'ACCEPTED' | 'FAILED' | 'UNKNOWN';
     providerMessageId?: string | null;
@@ -71,20 +124,15 @@ async function recordOutcome(
     claimedAt?: Date | null;
   }
 ): Promise<boolean> {
-  try {
-    await prisma.reviewRequest.update({
-      where: { id: reviewRequestId },
-      data,
-    });
-    return true;
-  } catch (error) {
-    console.error('[review-request] outcome was not recorded', {
-      reviewRequestId,
-      sendStatus: data.sendStatus,
-      message: error instanceof Error ? error.message : 'update failed',
-    });
-    return false;
-  }
+  const recorded = await prisma.reviewRequest.updateMany({
+    where: {
+      id: reviewRequestId,
+      sendStatus: 'CLAIMED',
+      claimedAt,
+    },
+    data,
+  });
+  return recorded.count === 1;
 }
 
 export async function deliverClaimedReviewRequest(input: {
@@ -100,19 +148,30 @@ export async function deliverClaimedReviewRequest(input: {
     idempotencyKey: string;
   }) => Promise<SendReviewRequestEmailResult>;
 }): Promise<ReviewRequestDeliveryOutcome> {
-  const claimed = await claimReviewRequestSend(input.id, input.now);
-  if (!claimed) return 'not_claimed';
+  const now = input.now ?? new Date();
+  const claim = await claimReviewRequestSend(input.id, now);
+  if (!claim) return 'not_claimed';
 
   const send = input.send ?? sendReviewRequestEmail;
-  const result = await send({
-    toEmail: input.toEmail,
-    toName: input.toName,
-    reviewUrl: input.reviewUrl,
-    idempotencyKey: reviewRequestIdempotencyKey(input.id),
-  });
+  const idempotencyKey = reviewRequestIdempotencyKey(input.id);
+  let result: SendReviewRequestEmailResult;
+  try {
+    result = await send({
+      toEmail: input.toEmail,
+      toName: input.toName,
+      reviewUrl: input.reviewUrl,
+      idempotencyKey,
+    });
+  } catch (error) {
+    const recorded = await recordOwnedOutcome(input.id, claim.claimedAt, {
+      sendStatus: 'UNKNOWN',
+      sendError: (error instanceof Error ? error.message : 'Send threw before a result').slice(0, 500),
+    });
+    return recorded ? 'unknown' : 'superseded';
+  }
 
   if (result.sent && result.id) {
-    const recorded = await recordOutcome(input.id, {
+    const recorded = await recordOwnedOutcome(input.id, claim.claimedAt, {
       sendStatus: 'ACCEPTED',
       providerMessageId: result.id,
       sendError: null,
@@ -123,17 +182,18 @@ export async function deliverClaimedReviewRequest(input: {
 
   const outcomeUnknown = result.outcomeUnknown === true || (result.sent && !result.id);
   if (outcomeUnknown) {
-    await recordOutcome(input.id, {
+    const recorded = await recordOwnedOutcome(input.id, claim.claimedAt, {
       sendStatus: 'UNKNOWN',
       sendError: (result.error || 'Provider outcome unknown after the send call').slice(0, 500),
     });
-    return 'unknown';
+    return recorded ? 'unknown' : 'superseded';
   }
 
-  await recordOutcome(input.id, {
+  const recorded = await recordOwnedOutcome(input.id, claim.claimedAt, {
     sendStatus: 'FAILED',
     sendError: (result.error || result.skippedReason || 'Send failed').slice(0, 500),
     claimedAt: null,
   });
+  if (!recorded) return 'superseded';
   return result.skippedReason ? 'skipped' : 'failed';
 }
