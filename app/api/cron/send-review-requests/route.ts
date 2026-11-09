@@ -5,9 +5,14 @@ export const runtime = "nodejs";
  * Send Review Requests (Cron)
  * GET /api/cron/send-review-requests
  *
- * Finds ReviewRequest records that are due (scheduledFor <= now) and not yet
- * sent (sentAt is null), emails each client a Google review request, and
- * stamps sentAt. Runs daily at 10am (see vercel.json).
+ * Finds due ReviewRequest rows, claims each one, then emails the client.
+ * Every automatic retry uses the same Resend idempotency key.
+ * firstProviderAttemptAt is set on the first claim and is never moved.
+ * A stale claim is retried only while that original attempt is inside the
+ * 22-hour safe window. A fresh claimedAt does not extend the window.
+ * Older attempts are marked UNKNOWN and are not sent again.
+ * A late worker can record an outcome only while it still owns claimedAt.
+ * Runs daily at 10am (see vercel.json).
  *
  * Auth: Bearer CRON_SECRET. A missing or empty secret rejects the request.
  * Manual test: GET with Authorization: Bearer <CRON_SECRET>.
@@ -19,11 +24,15 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCronAuth } from "@/lib/cron/verifyCronAuth";
 import { prisma } from "@/lib/prisma";
-import { sendReviewRequestEmail } from "@/lib/email/sendReviewRequestEmail";
 import {
   GoogleReviewUrlError,
   requireGoogleReviewUrl,
 } from "@/lib/reviews/googleReviewUrl";
+import {
+  claimableReviewRequestWhere,
+  deliverClaimedReviewRequest,
+  parkExpiredReviewClaims,
+} from "@/lib/reviews/reviewRequestClaim";
 
 const MAX_PER_RUN = 200;
 
@@ -33,11 +42,9 @@ export async function GET(request: NextRequest) {
     if (authError) return authError;
 
     const now = new Date();
+    const reconciled = await parkExpiredReviewClaims(now);
     const due = await prisma.reviewRequest.findMany({
-      where: {
-        sentAt: null,
-        scheduledFor: { lte: now },
-      },
+      where: claimableReviewRequestWhere(now),
       orderBy: { scheduledFor: "asc" },
       take: MAX_PER_RUN,
     });
@@ -49,6 +56,9 @@ export async function GET(request: NextRequest) {
         sent: 0,
         failed: 0,
         skipped: 0,
+        unknown: reconciled,
+        acceptedUnrecorded: 0,
+        reconciled,
       });
     }
 
@@ -68,6 +78,8 @@ export async function GET(request: NextRequest) {
     let sent = 0;
     let failed = 0;
     let skipped = 0;
+    let unknown = 0;
+    let acceptedUnrecorded = 0;
     const errors: Array<{ jobId: string; email: string; reason: string }> = [];
 
     for (const req of due) {
@@ -104,25 +116,20 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      const result = await sendReviewRequestEmail({
+      const outcome = await deliverClaimedReviewRequest({
+        id: req.id,
         toEmail: req.clientEmail,
         toName,
         reviewUrl,
+        now,
       });
 
-      if (result.sent) {
-        await prisma.reviewRequest.update({
-          where: { id: req.id },
-          data: { sentAt: new Date() },
-        });
-        sent++;
-      } else {
-        console.error(
-          `[send-review-requests] Failed for ${req.clientEmail}:`,
-          result.error || result.skippedReason
-        );
-        failed++;
-      }
+      if (outcome === "sent") sent++;
+      else if (outcome === "not_claimed") skipped++;
+      else if (outcome === "unknown") unknown++;
+      else if (outcome === "accepted_unrecorded") acceptedUnrecorded++;
+      else if (outcome === "skipped" || outcome === "superseded") skipped++;
+      else failed++;
     }
 
     return NextResponse.json({
@@ -131,6 +138,9 @@ export async function GET(request: NextRequest) {
       sent,
       failed,
       skipped,
+      unknown: unknown + reconciled,
+      acceptedUnrecorded,
+      reconciled,
       errors: errors.length ? errors : undefined,
     });
   } catch (error: unknown) {

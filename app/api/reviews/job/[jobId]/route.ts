@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getReviewsByJobId } from '@/utils/reviewData';
+import { requireGoogleReviewUrl } from '@/lib/reviews/googleReviewUrl';
 
 /**
  * Get Job Details for Review Page
@@ -45,6 +46,13 @@ export async function GET(
     }
 
     const metadata = session.metadata || {};
+    const serviceLocation = metadata.serviceLocation || 'new_jersey';
+    let googleReviewUrl: string | null = null;
+    try {
+      googleReviewUrl = requireGoogleReviewUrl({ serviceLocation, jobId }).url;
+    } catch {
+      googleReviewUrl = null;
+    }
     const firstName = metadata.firstName || '';
     const lastInitial = metadata.lastInitial || '';
     const customerName = `${firstName}${lastInitial ? ` ${lastInitial}` : ''}`.trim();
@@ -67,16 +75,18 @@ export async function GET(
         serviceDate: metadata.preferredDate || '',
         serviceTime: metadata.preferredTime || '',
         serviceType: metadata.serviceType || '',
-        serviceLocation: metadata.serviceLocation || 'new_jersey',
+        serviceLocation,
         address: metadata.address || '',
+        googleReviewUrl,
       },
       hasReview,
       existingReview: hasReview ? existingReviews[0] : null,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Get job details error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to fetch job details';
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch job details' },
+      { success: false, error: message },
       { status: 500 }
     );
   }

@@ -5,10 +5,9 @@ export const dynamic = 'force-dynamic';
  * Smart Review Filter API
  * POST /api/reviews/smart-filter
  * 
- * Routes reviews based on rating:
- * - Rating >= 5 → redirect to Google review URL
- * - Rating = 4 → save internal review + thank-you message
- * - Rating <= 3 → create complaint record + trigger WhatsApp apology workflow
+ * Saves internal feedback for every rating. Ratings of 3 or below still open
+ * a complaint and the apology workflow. Every rating from 1 to 5 includes the
+ * public Google review URL.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -18,8 +17,6 @@ import { createComplaint } from '@/utils/complaintData';
 import { sendWhatsAppMessage } from '@/app/services/whatsappService';
 
 import { getGoogleReviewUrl } from '@/lib/reviews/googleReviewUrl';
-
-const GOOGLE_REVIEW_URL = getGoogleReviewUrl();
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,8 +47,9 @@ export async function POST(request: NextRequest) {
     }
 
     const roundedRating = Math.round(rating);
+    const googleReviewUrl = getGoogleReviewUrl();
 
-    // Rating >= 5: Redirect to Google Review
+    // Rating >= 5: internal review plus the public Google review option
     if (roundedRating >= 5) {
       // Save internal review first
       const review = createReview({
@@ -76,9 +74,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         action: 'redirect_google',
-        googleReviewUrl: GOOGLE_REVIEW_URL,
+        googleReviewUrl,
         reviewId: review.id,
-        message: 'Thank you for the 5-star rating! Redirecting to Google...',
+        message: 'Thank you for the 5-star rating! You can also leave a public Google review.',
       });
     }
 
@@ -107,8 +105,9 @@ Is there anything we could improve? Reply to this message and we'll make it righ
       return NextResponse.json({
         success: true,
         action: 'saved_internal',
+        googleReviewUrl,
         reviewId: review.id,
-        message: 'Thank you for your feedback! We appreciate your review.',
+        message: 'Thank you for your feedback! You can also leave a public Google review.',
       });
     }
 
@@ -118,7 +117,7 @@ Is there anything we could improve? Reply to this message and we'll make it righ
       const job = await prisma.job.findUnique({
         where: { id: jobId },
         include: {
-          customer: {
+          Customer: {
             select: {
               firstName: true,
               lastName: true,
@@ -128,8 +127,8 @@ Is there anything we could improve? Reply to this message and we'll make it righ
         },
       });
 
-      const customerName = job?.customer
-        ? `${job.customer.firstName} ${job.customer.lastName}`
+      const customerName = job?.Customer
+        ? `${job.Customer.firstName} ${job.Customer.lastName}`
         : job?.customerName || 'Customer';
 
       // Save internal review
@@ -149,7 +148,7 @@ Is there anything we could improve? Reply to this message and we'll make it righ
         cleanerId,
         serviceLocation: 'new_jersey',
         customerName,
-        customerPhone: customerPhone || job?.customer?.phone || '',
+        customerPhone: customerPhone || job?.Customer?.phone || '',
         rating: roundedRating,
         comment: comment?.trim() || `Low rating: ${roundedRating} stars`,
         requestReclean: requestReclean || false,
@@ -182,9 +181,10 @@ Thank you for giving us the opportunity to improve. 🙏`;
       return NextResponse.json({
         success: true,
         action: 'complaint_created',
+        googleReviewUrl,
         reviewId: review.id,
         complaintId: complaint.id,
-        message: 'We apologize for the inconvenience. Our team will contact you shortly.',
+        message: 'We apologize for the inconvenience. Our team will contact you shortly. You can also leave a public Google review.',
       });
     }
 
@@ -192,10 +192,11 @@ Thank you for giving us the opportunity to improve. 🙏`;
       { success: false, error: 'Invalid rating' },
       { status: 400 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Smart review filter error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to process review';
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to process review' },
+      { success: false, error: message },
       { status: 500 }
     );
   }

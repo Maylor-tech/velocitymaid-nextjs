@@ -6,7 +6,10 @@ export const runtime = 'nodejs';
  * GET /api/cron/referral-nudge
  *
  * Sends a one-time WhatsApp 24h after a 5⭐ review, with the customer's referral link.
- * Duplicates prevented via audit log.
+ * A claim row is written before the provider call and kept when Meta accepts
+ * the message or the outcome is unknown. A claim is deleted only for a
+ * pre-send skip or a definite provider rejection. Delivery receipts are not
+ * persisted. The WhatsApp webhook only logs them.
  *
  * Auth: Bearer CRON_SECRET. A missing or empty secret rejects the request.
  * Manual test: GET /api/cron/referral-nudge with Authorization: Bearer <CRON_SECRET>
@@ -16,7 +19,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/sendMessage';
-import { logAuditEntry } from '@/lib/audit';
+import {
+  REFERRAL_NUDGE_BLOCKING_ACTIONS,
+  openReferralClaim,
+  referralPreSendSkip,
+  settleReferralClaim,
+} from '@/lib/whatsapp/referralNudgeClaim';
 
 const MS_PER_MIN = 60 * 1000;
 const TARGET_HOURS = 24;
@@ -60,7 +68,7 @@ export async function GET(request: NextRequest) {
 
     const alreadySent = await prisma.auditLog.findMany({
       where: {
-        action: 'REFERRAL_NUDGE_SENT',
+        action: { in: [...REFERRAL_NUDGE_BLOCKING_ACTIONS] },
         entityType: 'Job',
         entityId: { in: jobIds },
       },
@@ -74,12 +82,19 @@ export async function GET(request: NextRequest) {
     );
 
     let sent = 0;
+    let failed = 0;
+    let skipped = 0;
+    let unknown = 0;
+    let acceptedUnrecorded = 0;
     for (const r of ratings) {
       if (sentSet.has(r.jobId)) continue;
       const phone = r.Job?.Customer?.phone?.trim();
       const customerId = r.Job?.customerId;
       const branchId = r.Job?.branchId;
-      if (!phone) continue;
+      if (!phone) {
+        skipped++;
+        continue;
+      }
 
       let referralLink = '';
       if (customerId && branchId) {
@@ -108,20 +123,36 @@ export async function GET(request: NextRequest) {
         '— VelocityMaid',
       ].join('\n');
 
-      sendWhatsAppMessage({ to: phone, message }).catch(() => {});
+      const preSendSkip = referralPreSendSkip(phone);
+      if (preSendSkip) {
+        skipped++;
+        continue;
+      }
 
-      await logAuditEntry({
-        action: 'REFERRAL_NUDGE_SENT',
-        entityType: 'Job',
-        entityId: r.jobId,
-        description: 'Referral nudge WhatsApp sent after 5-star rating',
-        changes: { sentAt: new Date().toISOString() },
-      });
+      const claimId = await openReferralClaim(r.jobId);
+      if (!claimId) {
+        skipped++;
+        continue;
+      }
       sentSet.add(r.jobId);
-      sent++;
+
+      const result = await sendWhatsAppMessage({ to: phone, message });
+      const settlement = await settleReferralClaim(claimId, result);
+      if (settlement === 'sent') sent++;
+      else if (settlement === 'unknown') unknown++;
+      else if (settlement === 'accepted_unrecorded') acceptedUnrecorded++;
+      else if (settlement === 'failed') failed++;
+      else skipped++;
     }
 
-    return NextResponse.json({ ok: true, sent });
+    return NextResponse.json({
+      ok: true,
+      sent,
+      failed,
+      skipped,
+      unknown,
+      acceptedUnrecorded,
+    });
   } catch (err) {
     console.error('[cron/referral-nudge]', err);
     return NextResponse.json(
