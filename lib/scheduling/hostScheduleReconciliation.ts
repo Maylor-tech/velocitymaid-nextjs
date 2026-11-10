@@ -1,6 +1,7 @@
 /**
  * Dry-run reconciliation of a host reservation list against existing jobs.
  * Pure: it does not write, bill, assign, or notify.
+ * Reservation import planning lives in hostReservationImport.ts and never creates jobs.
  *
  * Service dates follow lib/dates/serviceDate.ts. UTC-midnight preferredDate
  * values keep their UTC calendar day. America/New_York is the business zone

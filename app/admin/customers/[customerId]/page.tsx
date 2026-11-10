@@ -293,6 +293,12 @@ export default function AdminCustomerProfilePage() {
                     >
                       {property.name || property.address}
                     </Link>
+                    <Link
+                      href={`/admin/properties/${property.id}/reservations`}
+                      className="ml-3 font-body text-sm text-vm-navy"
+                    >
+                      Reservations
+                    </Link>
                     <p className="font-body text-xs text-vm-muted">{property.address}</p>
                   </li>
                 ))}
