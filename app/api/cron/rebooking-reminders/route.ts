@@ -20,6 +20,10 @@ import {
   rebookingCandidateWhere,
   upcomingTurnoverWhere,
 } from '@/lib/cron/rebookingReminders';
+import {
+  isRebookingReminderSendingEnabled,
+  rebookingRemindersDisabledResponse,
+} from '@/lib/cron/rebookingReminderGuard';
 
 const MAX_PER_RUN = 100;
 
@@ -34,6 +38,12 @@ function dayWindow(daysFromToday: number): { start: Date; end: Date } {
 
 export async function GET(request: NextRequest) {
   try {
+    // Stay ahead of auth and every database or provider call. A disabled
+    // deployment can be verified without the cron secret and cannot send.
+    if (!isRebookingReminderSendingEnabled()) {
+      return NextResponse.json(rebookingRemindersDisabledResponse());
+    }
+
     const authError = verifyCronAuth(request);
     if (authError) return authError;
 
