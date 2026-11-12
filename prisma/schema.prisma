@@ -645,6 +645,7 @@ model Job {
   JobOffer                 JobOffer[]
   Tip                      Tip[]
   GuestTipAuthorization    GuestTipAuthorization[]
+  RebookingReminderDelivery RebookingReminderDelivery?
 
   @@index([appliedReferralCode])
   @@index([assignedCleanerId])
@@ -847,6 +848,27 @@ model ReviewRequest {
   @@index([sendStatus, claimedAt])
   @@index([sendStatus, firstProviderAttemptAt])
   @@map("review_requests")
+}
+
+/// One rebooking reminder attempt per job. UNKNOWN is never auto-retried.
+model RebookingReminderDelivery {
+  id                     String    @id @default(cuid())
+  jobId                  String    @unique
+  /// CLAIMED, ACCEPTED, FAILED, or UNKNOWN.
+  status                 String
+  providerMessageId      String?
+  sendError              String?
+  /// Current worker ownership token. Moves on every reclaim.
+  claimedAt              DateTime?
+  /// Start of the Resend idempotency key. Set once on the first claim.
+  firstProviderAttemptAt DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  Job                    Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([status, claimedAt])
+  @@index([status, firstProviderAttemptAt])
+  @@map("rebooking_reminder_deliveries")
 }
 
 model JobPayout {

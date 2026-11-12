@@ -32,9 +32,12 @@ const { leadFindMany, leadUpdate, sendLead } = vi.hoisted(() => ({
   sendLead: vi.fn(),
 }));
 
-const { rebookingCount, sendRebooking } = vi.hoisted(() => ({
+const { rebookingCount, sendRebooking, rebookingUpdateMany, rebookingFindMany, rebookingCreate } = vi.hoisted(() => ({
   rebookingCount: vi.fn(),
   sendRebooking: vi.fn(),
+  rebookingUpdateMany: vi.fn(),
+  rebookingFindMany: vi.fn(),
+  rebookingCreate: vi.fn(),
 }));
 
 const { expireOpenOffers } = vi.hoisted(() => ({ expireOpenOffers: vi.fn() }));
@@ -49,6 +52,11 @@ vi.mock('@/lib/prisma', () => ({
     job: { findMany: jobFindMany, count: rebookingCount },
     cleanerRating: { findMany: ratingFindMany },
     auditLog: { findMany: auditFindMany },
+    rebookingReminderDelivery: {
+      updateMany: rebookingUpdateMany,
+      findMany: rebookingFindMany,
+      create: rebookingCreate,
+    },
     customer: { findMany: leadFindMany, update: leadUpdate },
     invoice: { findMany: invoiceFindMany },
   },
@@ -92,6 +100,9 @@ describe('cron authorization and existing empty-run behavior', () => {
     jobFindMany.mockResolvedValue([]);
     ratingFindMany.mockResolvedValue([]);
     auditFindMany.mockResolvedValue([]);
+    rebookingUpdateMany.mockResolvedValue({ count: 0 });
+    rebookingFindMany.mockResolvedValue([]);
+    rebookingCreate.mockResolvedValue({});
     leadFindMany.mockResolvedValue([]);
     invoiceFindMany.mockResolvedValue([]);
     expireOpenOffers.mockResolvedValue({ expired: 0, offerIds: [] });
@@ -174,7 +185,7 @@ describe('cron authorization and existing empty-run behavior', () => {
       success: true, processed: 0, sent: 0, failed: 0,
     });
     expect(await (await rebookingReminders(request('/api/cron/rebooking-reminders', `Bearer ${SECRET}`))).json()).toEqual({
-      success: true, processed: 0, sent: 0, failed: 0,
+      success: true, processed: 0, sent: 0, failed: 0, skipped: 0, unknown: 0,
     });
     expect(sendLead).not.toHaveBeenCalled();
     expect(sendRebooking).not.toHaveBeenCalled();
