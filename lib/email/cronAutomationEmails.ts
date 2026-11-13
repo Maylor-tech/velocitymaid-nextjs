@@ -1,26 +1,43 @@
 import { resend, getResendFromEmail } from './resendClient';
+import { EmailDeliveryError, sendVerifiedEmail } from './sendVerifiedEmail';
 import { logIntegrationEvent } from '@/lib/google/integrationLog';
 
-function formatDate(d: Date | null | undefined): string {
-  if (!d) return '—';
-  return d.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
+const UTC_MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+] as const;
+
+/** Calendar date in UTC. The same instant always produces the same reminder body. */
+export function formatRebookingCheckoutDateUtc(date: Date): string {
+  return `${UTC_MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
 }
+
+export type SendRebookingReminderEmailResult = {
+  sent: boolean;
+  id?: string;
+  skippedReason?: string;
+  error?: string;
+  outcomeUnknown?: boolean;
+};
 
 export async function sendRebookingReminderEmail(params: {
   toEmail: string;
   hostFirstName: string;
   propertyAddress: string;
   checkoutDate: Date;
-}): Promise<{ sent: boolean; skippedReason?: string; error?: string }> {
-  if (!resend) {
-    return { sent: false, skippedReason: 'RESEND_API_KEY not configured' };
-  }
-
-  const checkout = formatDate(params.checkoutDate);
+  idempotencyKey: string;
+}): Promise<SendRebookingReminderEmailResult> {
+  const checkout = formatRebookingCheckoutDateUtc(params.checkoutDate);
 
   const text = `Hi ${params.hostFirstName},
 
@@ -37,13 +54,16 @@ Brian
 VelocityMaid`;
 
   try {
-    await resend.emails.send({
-      from: getResendFromEmail(),
-      to: params.toEmail,
-      subject: 'Guest checkout in 7 days — confirm your VelocityMaid turnover',
-      text,
-      html: text.replace(/\n/g, '<br>'),
-    });
+    const { messageId } = await sendVerifiedEmail(
+      {
+        from: getResendFromEmail(),
+        to: params.toEmail,
+        subject: 'Guest checkout in 7 days — confirm your VelocityMaid turnover',
+        text,
+        html: text.replace(/\n/g, '<br>'),
+      },
+      params.idempotencyKey
+    );
     logIntegrationEvent({
       channel: 'EMAIL',
       action: 'SEND_REBOOKING_REMINDER_EMAIL',
@@ -53,9 +73,10 @@ VelocityMaid`;
       templateKey: 'rebooking_reminder',
       triggeredBy: 'cron',
     }).catch(() => {});
-    return { sent: true };
+    return { sent: true, id: messageId };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Send failed';
+    const outcomeUnknown = err instanceof EmailDeliveryError && err.deliveryUnknown;
     logIntegrationEvent({
       channel: 'EMAIL',
       action: 'SEND_REBOOKING_REMINDER_EMAIL',
@@ -66,7 +87,7 @@ VelocityMaid`;
       triggeredBy: 'cron',
       errorSummary: message,
     }).catch(() => {});
-    return { sent: false, error: message };
+    return { sent: false, error: message, outcomeUnknown };
   }
 }
 

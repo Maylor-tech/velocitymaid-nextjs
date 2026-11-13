@@ -9,10 +9,13 @@ describe('rebooking reminder enablement', () => {
     expect(isRebookingReminderSendingEnabled('true')).toBe(true);
     expect(isRebookingReminderSendingEnabled('TRUE')).toBe(true);
     expect(isRebookingReminderSendingEnabled('yes')).toBe(true);
+    expect(isRebookingReminderSendingEnabled('1')).toBe(true);
+    expect(isRebookingReminderSendingEnabled('on')).toBe(true);
+    expect(isRebookingReminderSendingEnabled(' enabled ')).toBe(true);
   });
 
   it('turns off only for an explicit disable value', () => {
-    for (const value of ['false', ' FALSE ', '0', 'off', 'OFF', 'disabled']) {
+    for (const value of ['false', ' FALSE ', '0', '0 ', 'off', 'OFF', 'disabled', ' Disabled ']) {
       expect(isRebookingReminderSendingEnabled(value)).toBe(false);
     }
   });

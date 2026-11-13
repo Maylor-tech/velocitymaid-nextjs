@@ -21,7 +21,16 @@ describe('provider acceptance verification', () => {
   });
   it('requires a message ID even when no provider error is returned', async () => {
     send.mockResolvedValue({ data: null, error: null });
-    await expect(sendVerifiedEmail(payload)).rejects.toBeInstanceOf(EmailDeliveryError);
+    await expect(sendVerifiedEmail(payload)).rejects.toMatchObject({
+      deliveryUnknown: true,
+    });
+    expect(EmailDeliveryError).toBeTruthy();
+  });
+  it('parks 408, 409, and 5xx responses as uncertain', async () => {
+    for (const statusCode of [408, 409, 500]) {
+      send.mockResolvedValueOnce({ data: null, error: { statusCode, message: `status ${statusCode}` } });
+      await expect(sendVerifiedEmail(payload)).rejects.toMatchObject({ deliveryUnknown: true });
+    }
   });
   it('recognizes SDK-resolved network errors and server errors as uncertain', async () => {
     send.mockResolvedValue({ data: null, error: { name: 'application_error', statusCode: null, message: 'Unable to fetch data' } });

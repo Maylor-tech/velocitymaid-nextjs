@@ -12,7 +12,6 @@ export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyCronAuth } from '@/lib/cron/verifyCronAuth';
-import { sendRebookingReminderEmail } from '@/lib/email/cronAutomationEmails';
 import { logAuditEntry } from '@/lib/audit';
 import {
   evaluateRebookingReminder,
@@ -24,6 +23,11 @@ import {
   isRebookingReminderSendingEnabled,
   rebookingRemindersDisabledResponse,
 } from '@/lib/cron/rebookingReminderGuard';
+import {
+  backfillSentRebookingReminders,
+  deliverClaimedRebookingReminder,
+  parkExpiredRebookingClaims,
+} from '@/lib/cron/rebookingReminderClaim';
 
 const MAX_PER_RUN = 100;
 
@@ -46,6 +50,9 @@ export async function GET(request: NextRequest) {
 
     const authError = verifyCronAuth(request);
     if (authError) return authError;
+
+    await parkExpiredRebookingClaims();
+    await backfillSentRebookingReminders();
 
     const { start: checkoutStart, end: checkoutEnd } = dayWindow(7);
 
@@ -70,27 +77,35 @@ export async function GET(request: NextRequest) {
     });
 
     if (jobs.length === 0) {
-      return NextResponse.json({ success: true, processed: 0, sent: 0, failed: 0 });
+      return NextResponse.json({
+        success: true,
+        processed: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        unknown: 0,
+      });
     }
 
-    const alreadySent = await prisma.auditLog.findMany({
-      where: {
-        action: REBOOKING_REMINDER_ACTION,
-        entityType: 'Job',
-        entityId: { in: jobs.map((j) => j.id) },
-      },
-      select: { entityId: true },
+    const deliveries = await prisma.rebookingReminderDelivery.findMany({
+      where: { jobId: { in: jobs.map((job) => job.id) } },
+      select: { jobId: true, status: true },
     });
-    const sentSet = new Set(alreadySent.map((a) => a.entityId));
+    const settled = new Set(
+      deliveries
+        .filter((row) => row.status === 'ACCEPTED' || row.status === 'UNKNOWN')
+        .map((row) => row.jobId)
+    );
 
     let sent = 0;
     let failed = 0;
     let skipped = 0;
+    let unknown = 0;
 
     for (const job of jobs) {
       const precheck = evaluateRebookingReminder({
         job,
-        alreadyReminded: sentSet.has(job.id),
+        alreadyReminded: settled.has(job.id),
         upcomingTurnoverScheduled: false,
       });
       if (!precheck.send) {
@@ -132,14 +147,15 @@ export async function GET(request: NextRequest) {
         job.Customer?.addressLine1 ||
         'your property';
 
-      const result = await sendRebookingReminderEmail({
+      const outcome = await deliverClaimedRebookingReminder({
         toEmail: email,
         hostFirstName: job.Customer?.firstName || 'there',
         propertyAddress,
         checkoutDate: checkout,
+        jobId: job.id,
       });
 
-      if (result.sent) {
+      if (outcome === 'sent') {
         await logAuditEntry({
           action: REBOOKING_REMINDER_ACTION,
           entityType: 'Job',
@@ -148,12 +164,12 @@ export async function GET(request: NextRequest) {
           changes: { sentAt: new Date().toISOString() },
         });
         sent++;
-      } else {
-        console.error(
-          `[rebooking-reminders] Failed for job ${job.id}:`,
-          result.error || result.skippedReason
-        );
+      } else if (outcome === 'failed') {
         failed++;
+      } else if (outcome === 'unknown' || outcome === 'accepted_unrecorded') {
+        unknown++;
+      } else {
+        skipped++;
       }
     }
 
@@ -163,6 +179,7 @@ export async function GET(request: NextRequest) {
       sent,
       failed,
       skipped,
+      unknown,
     });
   } catch (error: unknown) {
     const message =
