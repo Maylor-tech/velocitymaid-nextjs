@@ -13,7 +13,6 @@ import {
 } from '@/lib/cron/rebookingPayloadFingerprint';
 import { readRebookingRuntimeIdentity } from '@/lib/cron/rebookingRuntimeIdentity';
 import { orderRebookingCandidates, REBOOKING_V2_BATCH_LIMIT } from '@/lib/cron/rebookingV2Run';
-import { rebookingReminderIdempotencyKey } from '@/lib/cron/rebookingReminderClaim';
 
 const DEPLOYMENT = 'dpl_AcceptedDeployment123';
 const SHA = 'e0dfe44cf94423910c9c5c9d2a05863db224fcfd';
