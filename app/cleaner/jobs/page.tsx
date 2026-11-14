@@ -115,68 +115,10 @@ export default function CleanerJobsPage() {
   };
 
   useEffect(() => {
-    // Local WR-2 visual fixtures only — never active off loopback.
-    if (typeof window !== "undefined") {
-      const host = window.location.hostname;
-      const fixture = new URLSearchParams(window.location.search).get(
-        "wr2Fixture"
-      );
-      const localOnly =
-        host === "127.0.0.1" || host === "localhost";
-      if (localOnly && fixture) {
-        setLoading(false);
-        if (fixture === "offers-error") {
-          setOffersState({
-            kind: "error",
-            message:
-              "Offers could not be loaded. Assigned jobs below may still be accurate.",
-          });
-          setTraining({
-            kind: "ready",
-            status: "CERTIFIED",
-            modulesCompleted: 6,
-            modulesTotal: 6,
-          });
-          return;
-        }
-        if (fixture === "offers-empty") {
-          setOffersState({ kind: "ready", offers: [] });
-          setJobs([]);
-          setTraining({
-            kind: "ready",
-            status: "CERTIFIED",
-            modulesCompleted: 6,
-            modulesTotal: 6,
-          });
-          return;
-        }
-        if (fixture === "training-unknown") {
-          setOffersState({ kind: "ready", offers: [] });
-          setTraining({
-            kind: "unknown",
-            message:
-              "Training status could not be verified. Retry before assuming you are certified.",
-          });
-          return;
-        }
-      }
-    }
     loadTraining();
   }, []);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const host = window.location.hostname;
-      const fixture = new URLSearchParams(window.location.search).get(
-        "wr2Fixture"
-      );
-      if (
-        (host === "127.0.0.1" || host === "localhost") &&
-        fixture
-      ) {
-        return;
-      }
-    }
     void fetchJobs();
     // statusFilter is the intentional refresh trigger for list fetches
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchJobs closes over statusFilter
@@ -330,7 +272,12 @@ export default function CleanerJobsPage() {
           <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-950">{training.message}</p>
+              <div>
+                <p className="text-sm font-medium text-amber-950">
+                  Training status unknown — not verified as certified
+                </p>
+                <p className="text-sm text-amber-950 mt-1">{training.message}</p>
+              </div>
             </div>
             <button
               type="button"
@@ -532,8 +479,9 @@ export default function CleanerJobsPage() {
               training.kind === "ready" &&
               training.status !== "CERTIFIED" && (
                 <p className="mt-3 font-body text-sm text-vm-navy">
-                  Training: {training.modulesCompleted}/{training.modulesTotal}{" "}
-                  modules — complete certification to stay eligible for offers.
+                  Certification modules: {training.modulesCompleted}/
+                  {training.modulesTotal} complete — finish required modules and
+                  the quiz before treating your account as certified.
                 </p>
               )}
           </div>
