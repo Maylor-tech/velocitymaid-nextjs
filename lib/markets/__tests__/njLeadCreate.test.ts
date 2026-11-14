@@ -226,6 +226,31 @@ describe('POST /api/leads/create NJ quote-first isolation', () => {
     expect(leadCreate).not.toHaveBeenCalled();
     expect(customerCreate).not.toHaveBeenCalled();
     expect(notifyNjLeadFollowUp).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('deduped NJ response does not initiate deposit, booking, or customer create side effects', async () => {
+    calculateLeadScore.mockReturnValue({
+      leadScore: 88,
+      leadTier: 'A',
+      riskFlags: [],
+      reasoning: [],
+    });
+    leadFindFirst.mockResolvedValue(mockNjLead({ id: 'lead-side-effect' }));
+
+    const body = await (await POST(leadRequest(njPayload))).json();
+    expect(body.deduped).toBe(true);
+    expect(body.lead.depositUrl).toBeNull();
+    expect(leadCreate).not.toHaveBeenCalled();
+    expect(customerCreate).not.toHaveBeenCalled();
+    expect(customerFindFirst).not.toHaveBeenCalled();
+    expect(leadUpdate).not.toHaveBeenCalled();
+    expect(notifyNjLeadFollowUp).not.toHaveBeenCalled();
+    expect(
+      automationFetches(fetchMock).some((u) =>
+        /deposit|whatsapp|nurture|checkout|booking/i.test(u)
+      )
+    ).toBe(false);
   });
 });
 
