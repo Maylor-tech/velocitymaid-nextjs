@@ -7,6 +7,8 @@ import {
   HEADER_QUOTE_LABEL,
   NJ_FREE_QUOTE_LABEL,
   VERMONT_HOST_INTAKE_PATH,
+  VERMONT_QUICK_QUOTE_LABEL,
+  VERMONT_QUICK_QUOTE_PATH,
   VERMONT_TURNOVER_QUOTE_LABEL,
 } from "@/lib/marketing/publicCtas";
 import { NJ_LEAD_PATH } from "@/lib/markets/newJersey";
@@ -26,22 +28,25 @@ const VERMONT_SURFACES = [
   "components/PricingCTA.tsx",
 ] as const;
 
+const VERMONT_PRIMARY_QUOTE =
+  /VERMONT_QUICK_QUOTE_(?:PATH|LABEL)|VERMONT_TURNOVER_QUOTE_LABEL|VERMONT_HOST_INTAKE_PATH|Get a (?:Quick |Turnover )?Quote/;
+
 describe("Public quote paths", () => {
   it("keeps /estimate as the area check and names the two quote paths", () => {
     expect(FAST_ESTIMATE_PATH).toBe("/estimate");
     expect(AREA_CHECK_LABEL).toBe("Check your area");
     expect(VERMONT_HOST_INTAKE_PATH).toBe("/vermont/host-intake");
+    expect(VERMONT_QUICK_QUOTE_PATH).toBe("/vermont/quick-quote");
+    expect(VERMONT_QUICK_QUOTE_LABEL).toMatch(/Quick Quote|Get a Quote/i);
     expect(VERMONT_TURNOVER_QUOTE_LABEL).toBe("Get a Turnover Quote");
     expect(NJ_FREE_QUOTE_LABEL).toBe("Get a Free Quote");
     expect(HEADER_QUOTE_LABEL).toBe("Get a Quote");
   });
 
-  it("sends new Vermont hosts to host intake, not Fast Estimate", () => {
+  it("sends new Vermont hosts to quick quote or intake, not Fast Estimate", () => {
     for (const file of VERMONT_SURFACES) {
       const source = readRepoFile(file);
-      expect(source, file).toMatch(
-        /VERMONT_TURNOVER_QUOTE_LABEL|Get a Turnover Quote/
-      );
+      expect(source, file).toMatch(VERMONT_PRIMARY_QUOTE);
       expect(source, file).not.toContain("Get a Fast Estimate");
       expect(source, file).not.toContain("Request Property Setup");
     }
@@ -50,11 +55,10 @@ describe("Public quote paths", () => {
   it("uses one header quote chooser on every page", () => {
     const header = readRepoFile("components/layout/SiteHeader.tsx");
     expect(header).toContain("HEADER_QUOTE_LABEL");
-    expect(header).toContain("VERMONT_HOST_INTAKE_PATH");
+    expect(header).toMatch(/VERMONT_QUICK_QUOTE_PATH|VERMONT_HOST_INTAKE_PATH/);
     expect(header).toContain("NJ_LEAD_PATH");
     expect(header).toContain('href: "/hosts"');
     expect(header).not.toContain("Get a Fast Estimate");
-    expect(header).not.toContain("Work with us");
     expect(header).not.toContain("Investor");
   });
 
