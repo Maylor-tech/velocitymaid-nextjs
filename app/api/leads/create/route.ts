@@ -20,10 +20,14 @@ import { prisma } from '@/lib/prisma';
 import { calculateLeadScore } from '@/lib/leadScoring';
 import { NJ_BRANCH_SLUG, NJ_OPS_ASSIGNEE } from '@/lib/markets/newJersey';
 import { notifyNjLeadFollowUp } from '@/lib/markets/notifyNjLeadFollowUp';
+import { validateNjQuotePayload } from '@/lib/markets/njQuoteValidation';
 
 function newLeadId(): string {
   return 'c' + randomBytes(12).toString('hex');
 }
+
+/** Short window to absorb double-taps without blocking legitimate re-quotes. */
+const NJ_DEDUP_WINDOW_MS = 90_000;
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,6 +51,7 @@ export async function POST(request: NextRequest) {
       preferredDate,
       pets,
       branch,
+      scheduleFlexible,
     } = body;
 
     if (!name || !phone || !zip || !urgency) {
@@ -60,24 +65,26 @@ export async function POST(request: NextRequest) {
     const isNj = branchSlug === NJ_BRANCH_SLUG;
 
     if (isNj) {
-      if (
-        !email ||
-        !city ||
-        !addressLine ||
-        !serviceType ||
-        !frequency ||
-        !preferredDate ||
-        !referralSource ||
-        bedrooms == null ||
-        bathrooms == null ||
-        !homeType
-      ) {
+      const njCheck = validateNjQuotePayload({
+        name,
+        phone,
+        email,
+        zip,
+        city,
+        addressLine,
+        bedrooms,
+        bathrooms,
+        homeType,
+        serviceType,
+        frequency,
+        preferredDate,
+        urgency,
+        referralSource,
+        scheduleFlexible,
+      });
+      if (njCheck.ok === false) {
         return NextResponse.json(
-          {
-            success: false,
-            error:
-              'NJ quotes require email, source, city, address, service type, home details, frequency, and preferred date',
-          },
+          { success: false, error: njCheck.error },
           { status: 400 }
         );
       }
@@ -101,7 +108,7 @@ export async function POST(request: NextRequest) {
       urgency,
       previousService,
       homeType,
-      referralSource,
+      referralSource: referralSource || undefined,
     });
 
     const preferredDateParsed = preferredDate
@@ -113,6 +120,40 @@ export async function POST(request: NextRequest) {
         : null;
 
     const now = new Date();
+
+    // NJ progressive quote: absorb double-taps within a short window.
+    if (isNj && email) {
+      const recent = await prisma.lead.findFirst({
+        where: {
+          branchId: branchRecord.id,
+          phone,
+          email,
+          createdAt: { gte: new Date(now.getTime() - NJ_DEDUP_WINDOW_MS) },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (recent) {
+        return NextResponse.json({
+          success: true,
+          deduped: true,
+          lead: {
+            id: recent.id,
+            leadScore: recent.leadScore,
+            leadTier: recent.leadTier,
+            status: recent.status,
+            followUpStatus: recent.followUpStatus,
+            opsAssignee: recent.opsAssignee,
+            depositUrl: null,
+          },
+          scoring: {
+            score: scoringResult.leadScore,
+            tier: scoringResult.leadTier,
+            riskFlags: scoringResult.riskFlags,
+            reasoning: scoringResult.reasoning,
+          },
+        });
+      }
+    }
 
     // Fast-estimate dedupe (Workstream B): a prospect re-running the public
     // instant estimate should refresh their existing lead instead of spawning
