@@ -15,9 +15,16 @@ import {
 import { HOMEPAGE_TESTIMONIALS } from "@/lib/marketing/testimonials";
 import { HOMEPAGE_PROOF } from "@/lib/marketing/portfolio";
 import {
+  CLEANER_APPLY_NJ_PATH,
+  CLEANER_APPLY_VERMONT_PATH,
   NJ_FREE_QUOTE_LABEL,
+  NJ_WORK_WITH_US_PATH,
+  VERMONT_HOME_WATCH_PATH,
   VERMONT_HOST_INTAKE_PATH,
+  VERMONT_QUICK_QUOTE_LABEL,
+  VERMONT_QUICK_QUOTE_PATH,
   VERMONT_TURNOVER_QUOTE_LABEL,
+  VERMONT_WORK_WITH_US_PATH,
 } from "@/lib/marketing/publicCtas";
 import { NJ_LEAD_PATH } from "@/lib/markets/newJersey";
 
@@ -95,6 +102,21 @@ export function HomepageMarketing() {
                 New Jersey Homes →
               </Link>
             </div>
+            <p className="mt-5 font-body text-sm text-white/80">
+              <Link
+                href={VERMONT_HOME_WATCH_PATH}
+                className="font-semibold text-vm-cyan underline-offset-2 hover:underline"
+              >
+                Away for winter? Home Watch →
+              </Link>
+              {" · "}
+              <Link
+                href={VERMONT_WORK_WITH_US_PATH}
+                className="font-semibold text-white underline-offset-2 hover:underline"
+              >
+                Work with us
+              </Link>
+            </p>
           </div>
         </section>
 
@@ -284,12 +306,12 @@ export function HomepageMarketing() {
                   Guest-ready resets for hosts and property managers in the Okemo Valley,
                   Middlebury, and surrounding towns.
                 </p>
-                <Link href={VERMONT_HOST_INTAKE_PATH} className={`${primaryButton} mt-6`}>
-                  {VERMONT_TURNOVER_QUOTE_LABEL}
+                <Link href={VERMONT_QUICK_QUOTE_PATH} className={`${primaryButton} mt-6`}>
+                  {VERMONT_QUICK_QUOTE_LABEL}
                 </Link>
                 <p className="mt-4 font-body text-sm leading-relaxed">
                   <Link
-                    href="/vermont/home-watch"
+                    href={VERMONT_HOME_WATCH_PATH}
                     className="font-semibold text-vm-navy underline-offset-2 hover:underline"
                   >
                     Away for the winter? Home Watch →
@@ -316,6 +338,25 @@ export function HomepageMarketing() {
                 </Link>
               </article>
             </div>
+            <div className="mt-8 rounded-xl border border-vm-border bg-white p-7 text-left">
+              <p className="font-body text-xs font-bold uppercase tracking-wider text-vm-cyan-dark">
+                Winter Home Watch
+              </p>
+              <h3 className="mt-3 font-heading text-2xl font-bold text-vm-navy">
+                Recurring checks while you&apos;re away
+              </h3>
+              <p className="mt-3 font-body text-sm leading-relaxed text-vm-muted">
+                Seasonal Check from $150/month · Weekly Watch from $275/month ·
+                Storm or emergency check $75 per visit. Visits are scheduled checks —
+                not continuous monitoring, repairs, or insurance certification.
+              </p>
+              <Link
+                href={`${VERMONT_QUICK_QUOTE_PATH}?service=home-watch`}
+                className={`${primaryButton} mt-6`}
+              >
+                Request Home Watch quote
+              </Link>
+            </div>
             <p className="mt-6">
               <Link
                 href="/pricing"
@@ -324,6 +365,59 @@ export function HomepageMarketing() {
                 Full pricing details →
               </Link>
             </p>
+          </div>
+        </section>
+
+        <section id="work-with-us" className="scroll-mt-20 bg-vm-navy px-5 py-16 text-white">
+          <div className="mx-auto max-w-5xl text-center">
+            <p className="mb-3 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-vm-cyan">
+              Careers
+            </p>
+            <h2 className="font-heading text-3xl font-bold text-white">
+              Work with VelocityMaid
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl font-body text-sm leading-relaxed text-white/70">
+              Local cleaners earn about 65% of the confirmed host price, with
+              exact compensation shown before you accept a job. No guaranteed
+              earnings or job volume.
+            </p>
+            <div className="mt-8 grid gap-4 text-left md:grid-cols-2">
+              <article className="rounded-xl border border-white/15 bg-white/5 p-6">
+                <h3 className="font-heading text-lg font-bold text-white">
+                  Vermont
+                </h3>
+                <p className="mt-2 font-body text-sm text-white/70">
+                  Turnovers, Home Watch visits, and guest-ready property care.
+                </p>
+                <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                  <Link href={VERMONT_WORK_WITH_US_PATH} className={primaryButton}>
+                    Vermont roles
+                  </Link>
+                  <Link
+                    href={CLEANER_APPLY_VERMONT_PATH}
+                    className={outlineButton}
+                  >
+                    Apply
+                  </Link>
+                </div>
+              </article>
+              <article className="rounded-xl border border-white/15 bg-white/5 p-6">
+                <h3 className="font-heading text-lg font-bold text-white">
+                  New Jersey
+                </h3>
+                <p className="mt-2 font-body text-sm text-white/70">
+                  Recurring residential cleaning across our Essex County area.
+                </p>
+                <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                  <Link href={NJ_WORK_WITH_US_PATH} className={primaryButton}>
+                    NJ roles
+                  </Link>
+                  <Link href={CLEANER_APPLY_NJ_PATH} className={outlineButton}>
+                    Apply
+                  </Link>
+                </div>
+              </article>
+            </div>
           </div>
         </section>
 
