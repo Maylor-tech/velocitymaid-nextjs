@@ -66,7 +66,7 @@ describe("host intake ?service=home-watch", () => {
 });
 
 describe("home watch finishing copy", () => {
-  it("wires the intake form to the parameter and leaves the header menu alone", () => {
+  it("wires intake, discovery surfaces, and published Home Watch pricing", () => {
     const form = readRepoFile("app/vermont/host-intake/HostIntakeForm.tsx");
     expect(form).toContain("isHomeWatchIntake");
     expect(form).toContain("mergeHomeWatchDefaults");
@@ -81,6 +81,7 @@ describe("home watch finishing copy", () => {
     expect(homeWatch).toContain("$150/month");
     expect(homeWatch).toContain("$275/month");
     expect(homeWatch).toContain("$75 per visit");
+    expect(homeWatch).toContain("not continuous monitoring");
 
     const footer = readRepoFile("components/Footer.tsx");
     expect(footer).toContain("Vermont Home Watch");
@@ -88,11 +89,15 @@ describe("home watch finishing copy", () => {
 
     const home = readRepoFile("components/marketing/HomepageMarketing.tsx");
     expect(home).toContain("Away for the winter? Home Watch →");
-    expect(home).toContain('href="/vermont/home-watch"');
+    expect(home).toContain("VERMONT_HOME_WATCH_PATH");
 
     const header = readRepoFile("components/layout/SiteHeader.tsx");
-    expect(header).not.toContain("/vermont/home-watch");
-    expect(header).not.toContain("Home Watch");
+    expect(header).toContain("VERMONT_HOME_WATCH_PATH");
+    expect(header).toContain("VERMONT_HOME_WATCH_LABEL");
+
+    const ctas = readRepoFile("lib/marketing/publicCtas.ts");
+    expect(ctas).toContain('VERMONT_HOME_WATCH_PATH = \'/vermont/home-watch\'');
+    expect(ctas).toContain("VERMONT_HOME_WATCH_LABEL = 'Home Watch'");
 
     const pricing = readRepoFile("components/PricingTiers.tsx");
     expect(pricing).toContain("Large Property Turnover");
