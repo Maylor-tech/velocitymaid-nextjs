@@ -115,10 +115,68 @@ export default function CleanerJobsPage() {
   };
 
   useEffect(() => {
+    // Local WR-2 visual fixtures only — never active off loopback.
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      const fixture = new URLSearchParams(window.location.search).get(
+        "wr2Fixture"
+      );
+      const localOnly =
+        host === "127.0.0.1" || host === "localhost";
+      if (localOnly && fixture) {
+        setLoading(false);
+        if (fixture === "offers-error") {
+          setOffersState({
+            kind: "error",
+            message:
+              "Offers could not be loaded. Assigned jobs below may still be accurate.",
+          });
+          setTraining({
+            kind: "ready",
+            status: "CERTIFIED",
+            modulesCompleted: 6,
+            modulesTotal: 6,
+          });
+          return;
+        }
+        if (fixture === "offers-empty") {
+          setOffersState({ kind: "ready", offers: [] });
+          setJobs([]);
+          setTraining({
+            kind: "ready",
+            status: "CERTIFIED",
+            modulesCompleted: 6,
+            modulesTotal: 6,
+          });
+          return;
+        }
+        if (fixture === "training-unknown") {
+          setOffersState({ kind: "ready", offers: [] });
+          setTraining({
+            kind: "unknown",
+            message:
+              "Training status could not be verified. Retry before assuming you are certified.",
+          });
+          return;
+        }
+      }
+    }
     loadTraining();
   }, []);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      const fixture = new URLSearchParams(window.location.search).get(
+        "wr2Fixture"
+      );
+      if (
+        (host === "127.0.0.1" || host === "localhost") &&
+        fixture
+      ) {
+        return;
+      }
+    }
     void fetchJobs();
     // statusFilter is the intentional refresh trigger for list fetches
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchJobs closes over statusFilter
