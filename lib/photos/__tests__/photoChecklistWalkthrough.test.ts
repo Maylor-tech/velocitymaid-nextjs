@@ -43,9 +43,14 @@ describe("photo checklist walkthrough", () => {
     const photos: Array<{ slotKey: string | null; category: string }> = [];
     let arrival: "NORMAL" | "ISSUES" | null = null;
 
-    const legacy = evaluateFinishPhotos({ arrivalCondition: arrival, slots, photos });
-    expect(legacy.ok).toBe(true);
-    expect(legacy.needsArrival).toBe(false);
+    const missingArrival = evaluateFinishPhotos({
+      arrivalCondition: arrival,
+      slots,
+      photos,
+    });
+    expect(missingArrival.ok).toBe(false);
+    expect(missingArrival.needsArrival).toBe(true);
+    expect(missingArrival.missingAfter.length).toBeGreaterThan(0);
 
     arrival = "ISSUES";
     expect(

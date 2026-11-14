@@ -8,6 +8,7 @@ const findUnique = vi.fn();
 const update = vi.fn();
 const logAuditEntry = vi.fn();
 const createAdminNotification = vi.fn();
+const loadJobPhotoChecklist = vi.fn();
 
 vi.mock('@/lib/auth/requireRole', () => ({
   requireCleanerJobAssignment: (...args: unknown[]) =>
@@ -42,15 +43,28 @@ vi.mock('@/lib/api/routeAuth', () => ({
 }));
 
 vi.mock('@/lib/photos/jobPhotoChecklist', () => ({
-  loadJobPhotoChecklist: async () => ({
-    finish: { ok: true, missingAfter: [], needsArrival: false, issuesNeedBefore: false },
-  }),
+  loadJobPhotoChecklist: (...args: unknown[]) => loadJobPhotoChecklist(...args),
 }));
 
 import { PATCH } from '@/app/api/cleaner/jobs/[jobId]/complete/route';
 
 const JOB_ID = 'job-1';
 const CLEANER_ID = 'cleaner-1';
+
+function assignedInProgress() {
+  return {
+    id: JOB_ID,
+    status: JobStatus.IN_PROGRESS,
+    paymentStatus: 'PENDING',
+    billingPolicy: 'INVOICE_AFTER_SERVICE',
+    assignedCleanerId: CLEANER_ID,
+    startedAt: new Date('2026-08-28T12:00:00.000Z'),
+    completedAt: null,
+    submittedForQcAt: null,
+    cleanDurationMins: null,
+    jobReference: 'VM-TEST-1',
+  };
+}
 
 describe('PATCH /api/cleaner/jobs/[jobId]/complete', () => {
   beforeEach(() => {
@@ -62,21 +76,18 @@ describe('PATCH /api/cleaner/jobs/[jobId]/complete', () => {
     });
     createAdminNotification.mockResolvedValue({ ok: true });
     logAuditEntry.mockResolvedValue(undefined);
+    loadJobPhotoChecklist.mockResolvedValue({
+      finish: {
+        ok: true,
+        missingAfter: [],
+        needsArrival: false,
+        issuesNeedBefore: false,
+      },
+    });
   });
 
   it('sets AWAITING_QC and does not mark COMPLETED or set completedAt', async () => {
-    findUnique.mockResolvedValue({
-      id: JOB_ID,
-      status: JobStatus.IN_PROGRESS,
-      paymentStatus: 'PENDING',
-      billingPolicy: 'INVOICE_AFTER_SERVICE',
-      assignedCleanerId: CLEANER_ID,
-      startedAt: new Date('2026-08-28T12:00:00.000Z'),
-      completedAt: null,
-      submittedForQcAt: null,
-      cleanDurationMins: null,
-      jobReference: 'VM-TEST-1',
-    });
+    findUnique.mockResolvedValue(assignedInProgress());
     update.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
       id: JOB_ID,
       status: data.status,
@@ -110,6 +121,87 @@ describe('PATCH /api/cleaner/jobs/[jobId]/complete', () => {
     );
     const updateData = update.mock.calls[0][0].data as Record<string, unknown>;
     expect(updateData).not.toHaveProperty('completedAt');
+  });
+
+  it('blocks finish when arrival is missing', async () => {
+    findUnique.mockResolvedValue(assignedInProgress());
+    loadJobPhotoChecklist.mockResolvedValue({
+      finish: {
+        ok: false,
+        missingAfter: [{ key: 'kitchen', label: 'Kitchen' }],
+        needsArrival: true,
+        issuesNeedBefore: false,
+      },
+    });
+
+    const res = await PATCH(
+      new NextRequest(`http://localhost/api/cleaner/jobs/${JOB_ID}/complete`, {
+        method: 'PATCH',
+      }),
+      { params: { jobId: JOB_ID } }
+    );
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.needsArrival).toBe(true);
+    expect(json.error).toMatch(/arrival/i);
+    expect(json.success).not.toBe(true);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('blocks finish when required AFTER photos are missing', async () => {
+    findUnique.mockResolvedValue(assignedInProgress());
+    loadJobPhotoChecklist.mockResolvedValue({
+      finish: {
+        ok: false,
+        missingAfter: [{ key: 'kitchen', label: 'Kitchen' }],
+        needsArrival: false,
+        issuesNeedBefore: false,
+      },
+    });
+
+    const res = await PATCH(
+      new NextRequest(`http://localhost/api/cleaner/jobs/${JOB_ID}/complete`, {
+        method: 'PATCH',
+      }),
+      { params: { jobId: JOB_ID } }
+    );
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.missingAfter).toEqual([
+      { key: 'kitchen', label: 'Kitchen' },
+    ]);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('rejects a cleaner finishing a job assigned to someone else', async () => {
+    findUnique.mockResolvedValue({
+      ...assignedInProgress(),
+      assignedCleanerId: 'other-cleaner',
+    });
+    const res = await PATCH(
+      new NextRequest(`http://localhost/api/cleaner/jobs/${JOB_ID}/complete`, {
+        method: 'PATCH',
+      }),
+      { params: { jobId: JOB_ID } }
+    );
+    expect(res.status).toBe(403);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('rejects finish when job is not IN_PROGRESS', async () => {
+    findUnique.mockResolvedValue({
+      ...assignedInProgress(),
+      status: JobStatus.ASSIGNED,
+    });
+    const res = await PATCH(
+      new NextRequest(`http://localhost/api/cleaner/jobs/${JOB_ID}/complete`, {
+        method: 'PATCH',
+      }),
+      { params: { jobId: JOB_ID } }
+    );
+    // Photo checklist gate only runs for IN_PROGRESS; submitJobForQc returns not-in-progress
+    expect(res.status).toBe(400);
+    expect(update).not.toHaveBeenCalled();
   });
 
   it('does not let a released former cleaner finish the job', async () => {
