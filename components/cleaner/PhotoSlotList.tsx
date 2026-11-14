@@ -88,7 +88,7 @@ export function PhotoSlotList({
             type="button"
             onClick={() => beforeRef.current?.click()}
             disabled={busyKey != null}
-            className="mt-2 inline-flex items-center gap-2 rounded-lg border border-vm-border px-3 py-2 text-sm text-vm-navy"
+            className="mt-2 inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-vm-border px-3 py-2 text-sm text-vm-navy"
           >
             {busyKey === "BEFORE" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
             Before photo
@@ -97,13 +97,13 @@ export function PhotoSlotList({
       )}
       <ul className="space-y-2">
         {slots.map((slot) => (
-          <li key={slot.key} className="flex items-center justify-between gap-3 rounded-lg border border-vm-border px-3 py-2">
-            <div>
+          <li key={slot.key} className="flex items-center justify-between gap-3 rounded-lg border border-vm-border px-3 py-3">
+            <div className="min-w-0">
               <p className="text-sm font-medium text-vm-navy">{slot.label}</p>
               <p className="text-xs text-vm-muted">
                 {slot.room}
                 {slot.required ? " · required after" : ""}
-                {slot.filled ? " · done" : ""}
+                {slot.filled ? " · done" : " · missing"}
               </p>
             </div>
             <input
@@ -124,7 +124,7 @@ export function PhotoSlotList({
               type="button"
               onClick={() => inputs.current[slot.key]?.click()}
               disabled={busyKey != null}
-              className="inline-flex items-center gap-2 rounded-lg bg-vm-navy px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-lg bg-vm-navy px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
             >
               {busyKey === slot.key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
               {slot.filled ? "Retake" : "Photo"}
