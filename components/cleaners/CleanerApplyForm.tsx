@@ -79,13 +79,17 @@ export default function CleanerApplyForm() {
   const isVermontBranch = selectedBranch?.slug === "vermont";
 
   useEffect(() => {
+    trackEvent("recruitment_start", {
+      market: market || "unknown",
+      surface: "cleaner_apply",
+    });
     fetch("/api/branches")
       .then((r) => r.json())
       .then((data) => {
         if (data.success) setBranches(data.branches);
       })
       .catch(console.error);
-  }, []);
+  }, [market]);
 
   useEffect(() => {
     if (usBranches.length === 0) return;
