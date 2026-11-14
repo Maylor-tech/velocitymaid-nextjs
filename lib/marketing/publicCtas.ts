@@ -9,7 +9,12 @@ export const AREA_CHECK_PATH = FAST_ESTIMATE_PATH;
 export const AREA_CHECK_LABEL = 'Check your area' as const;
 export const HEADER_QUOTE_LABEL = 'Get a Quote' as const;
 export const VERMONT_HOST_INTAKE_PATH = '/vermont/host-intake' as const;
+/** Short qualification quote — SETUP_REQUEST mode; FULL intake remains for onboarding. */
+export const VERMONT_QUICK_QUOTE_PATH = '/vermont/quick-quote' as const;
+export const VERMONT_QUICK_QUOTE_LABEL = 'Get a Quick Quote' as const;
 export const VERMONT_TURNOVER_QUOTE_LABEL = 'Get a Turnover Quote' as const;
+export const VERMONT_HOME_WATCH_PATH = '/vermont/home-watch' as const;
+export const VERMONT_HOME_WATCH_LABEL = 'Home Watch' as const;
 export const NJ_FREE_QUOTE_LABEL = 'Get a Free Quote' as const;
 export const VERMONT_WORK_WITH_US_PATH = '/vermont/work-with-us' as const;
 export const VERMONT_WORK_WITH_US_LABEL = 'Work with us' as const;

@@ -19,9 +19,11 @@ import {
 } from "@/lib/company/businessAddress";
 import { EditorialProof } from "@/components/marketing/EditorialProof";
 import { MIDDLEBURY_PROOF, TURNOVER_PROOF } from "@/lib/marketing/portfolio";
+import { HomeWatchLinkCard } from "@/components/marketing/HomeWatchLinkCard";
 import {
-  VERMONT_HOST_INTAKE_PATH,
-  VERMONT_TURNOVER_QUOTE_LABEL,
+  VERMONT_HOME_WATCH_PATH,
+  VERMONT_QUICK_QUOTE_LABEL,
+  VERMONT_QUICK_QUOTE_PATH,
 } from "@/lib/marketing/publicCtas";
 
 export interface VermontClusterLandingProps {
@@ -51,10 +53,16 @@ export default function VermontClusterLanding({
               </p>
               <div className="flex flex-wrap gap-3 mb-6">
                 <Link
-                  href={VERMONT_HOST_INTAKE_PATH}
-                  className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+                  href={VERMONT_QUICK_QUOTE_PATH}
+                  className="inline-flex min-h-[48px] items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
                 >
-                  {VERMONT_TURNOVER_QUOTE_LABEL}
+                  {VERMONT_QUICK_QUOTE_LABEL}
+                </Link>
+                <Link
+                  href={`${VERMONT_HOME_WATCH_PATH}?from=${cluster.slug}`}
+                  className="inline-flex min-h-[48px] items-center justify-center border border-white/30 text-white font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:border-vm-cyan hover:text-vm-cyan transition"
+                >
+                  Winter Home Watch
                 </Link>
               </div>
               <div className="flex flex-wrap gap-4">
@@ -121,6 +129,14 @@ export default function VermontClusterLanding({
         </section>
 
         <ServicesSection cluster={cluster} />
+
+        <section aria-label="Winter Home Watch">
+          <HomeWatchLinkCard />
+          <p className="mt-3 font-body text-sm text-vm-muted">
+            Seasonal Check $150/month · Weekly Watch $275/month · Storm check
+            $75/visit. Scheduled visits only — not continuous monitoring.
+          </p>
+        </section>
 
         {cluster.slug === "middlebury" ? (
           <EditorialProof
@@ -369,10 +385,10 @@ function CtaSection({ clusterLabel }: { clusterLabel: string }) {
         </p>
       </div>
       <Link
-        href={VERMONT_HOST_INTAKE_PATH}
-        className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+        href={VERMONT_QUICK_QUOTE_PATH}
+        className="inline-flex min-h-[48px] items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
       >
-        {VERMONT_TURNOVER_QUOTE_LABEL}
+        {VERMONT_QUICK_QUOTE_LABEL}
       </Link>
     </section>
   );

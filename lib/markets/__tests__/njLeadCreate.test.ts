@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 const branchFindUnique = vi.fn();
 const leadCreate = vi.fn();
 const leadUpdate = vi.fn();
+const leadFindFirst = vi.fn();
 const customerFindFirst = vi.fn();
 const customerCreate = vi.fn();
 const notifyNjLeadFollowUp = vi.fn();
@@ -13,6 +14,7 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     branch: { findUnique: (...a: unknown[]) => branchFindUnique(...a) },
     lead: {
+      findFirst: (...a: unknown[]) => leadFindFirst(...a),
       create: (...a: unknown[]) => leadCreate(...a),
       update: (...a: unknown[]) => leadUpdate(...a),
     },
@@ -99,6 +101,7 @@ describe('POST /api/leads/create NJ quote-first isolation', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
     branchFindUnique.mockResolvedValue({ id: 'branch-nj', slug: 'new-jersey' });
+    leadFindFirst.mockResolvedValue(null);
     customerFindFirst.mockResolvedValue(null);
     customerCreate.mockResolvedValue({ id: 'cust-should-not-exist' });
     leadUpdate.mockResolvedValue({});
@@ -200,6 +203,54 @@ describe('POST /api/leads/create NJ quote-first isolation', () => {
     expect(createData.opsAssignee).toBe(NJ_OPS_ASSIGNEE);
     expect(typeof createData.opsAssignee).toBe('string');
     expect(createData).not.toHaveProperty('opsAssigneeId');
+  });
+
+  it('identical NJ resubmit within dedupe window returns existing lead without create', async () => {
+    calculateLeadScore.mockReturnValue({
+      leadScore: 70,
+      leadTier: 'B',
+      riskFlags: [],
+      reasoning: [],
+    });
+    leadFindFirst.mockResolvedValue(
+      mockNjLead({ id: 'lead-recent', leadScore: 70, leadTier: 'B' })
+    );
+
+    const res = await POST(leadRequest(njPayload));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.deduped).toBe(true);
+    expect(body.lead.id).toBe('lead-recent');
+    expect(body.lead.depositUrl).toBeNull();
+    expect(leadCreate).not.toHaveBeenCalled();
+    expect(customerCreate).not.toHaveBeenCalled();
+    expect(notifyNjLeadFollowUp).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('deduped NJ response does not initiate deposit, booking, or customer create side effects', async () => {
+    calculateLeadScore.mockReturnValue({
+      leadScore: 88,
+      leadTier: 'A',
+      riskFlags: [],
+      reasoning: [],
+    });
+    leadFindFirst.mockResolvedValue(mockNjLead({ id: 'lead-side-effect' }));
+
+    const body = await (await POST(leadRequest(njPayload))).json();
+    expect(body.deduped).toBe(true);
+    expect(body.lead.depositUrl).toBeNull();
+    expect(leadCreate).not.toHaveBeenCalled();
+    expect(customerCreate).not.toHaveBeenCalled();
+    expect(customerFindFirst).not.toHaveBeenCalled();
+    expect(leadUpdate).not.toHaveBeenCalled();
+    expect(notifyNjLeadFollowUp).not.toHaveBeenCalled();
+    expect(
+      automationFetches(fetchMock).some((u) =>
+        /deposit|whatsapp|nurture|checkout|booking/i.test(u)
+      )
+    ).toBe(false);
   });
 });
 

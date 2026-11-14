@@ -6,7 +6,10 @@ import {
   VERMONT_OPERATIONS_SUPPORT_LINE2,
 } from "@/lib/company/businessAddress";
 import { homeWatchIntakeHref } from "@/lib/hostIntake/homeWatchIntake";
-import { VERMONT_HOST_INTAKE_PATH } from "@/lib/marketing/publicCtas";
+import {
+  VERMONT_HOST_INTAKE_PATH,
+  VERMONT_QUICK_QUOTE_PATH,
+} from "@/lib/marketing/publicCtas";
 
 function RequestHomeWatchActions({ onNavy }: { onNavy: boolean }) {
   const note = onNavy ? "text-white/75" : "text-vm-text";
@@ -15,12 +18,24 @@ function RequestHomeWatchActions({ onNavy }: { onNavy: boolean }) {
     : "font-semibold text-vm-navy underline-offset-2 hover:underline";
   return (
     <div className="mt-8">
-      <Link
-        href={homeWatchIntakeHref(VERMONT_HOST_INTAKE_PATH)}
-        className="inline-flex items-center justify-center rounded-lg bg-vm-cyan px-5 py-3 font-heading text-sm font-semibold text-vm-navy transition hover:bg-vm-cyan-dark"
-      >
-        Request Home Watch →
-      </Link>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <Link
+          href={homeWatchIntakeHref(VERMONT_QUICK_QUOTE_PATH)}
+          className="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-vm-cyan px-5 py-3 font-heading text-sm font-semibold text-vm-navy transition hover:bg-vm-cyan-dark"
+        >
+          Quick Home Watch quote →
+        </Link>
+        <Link
+          href={homeWatchIntakeHref(VERMONT_HOST_INTAKE_PATH)}
+          className={`inline-flex min-h-[48px] items-center justify-center rounded-lg border px-5 py-3 font-heading text-sm font-semibold transition ${
+            onNavy
+              ? "border-white/30 text-white hover:border-vm-cyan hover:text-vm-cyan"
+              : "border-vm-border text-vm-navy hover:border-vm-cyan"
+          }`}
+        >
+          Full property intake
+        </Link>
+      </div>
       <p className={`mt-4 font-body text-sm leading-relaxed ${note}`}>
         Prefer to talk? Call or text{" "}
         <a href="tel:+18027335348" className={link}>
@@ -98,13 +113,47 @@ export function VermontHomeWatch() {
 
         <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
           <h2 className="font-heading text-2xl font-bold text-vm-navy">Plans</h2>
-          <p className="mt-4 font-body text-base leading-relaxed text-vm-text">
-            Seasonal Check, every other week, $150/month · Weekly Watch, $275/month ·
-            Storm or emergency check, $75 per visit
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {[
+              {
+                name: "Seasonal Check",
+                price: "$150/month",
+                detail: "Every other week visits",
+              },
+              {
+                name: "Weekly Watch",
+                price: "$275/month",
+                detail: "Weekly scheduled visits",
+              },
+              {
+                name: "Storm / emergency",
+                price: "$75 per visit",
+                detail: "As-needed check visits",
+              },
+            ].map((plan) => (
+              <article
+                key={plan.name}
+                className="rounded-xl border border-vm-border bg-vm-surface p-5"
+              >
+                <h3 className="font-heading text-base font-bold text-vm-navy">
+                  {plan.name}
+                </h3>
+                <p className="mt-2 font-heading text-2xl font-bold text-vm-navy">
+                  {plan.price}
+                </p>
+                <p className="mt-2 font-body text-sm text-vm-muted">{plan.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="mt-4 font-body text-sm leading-relaxed text-vm-muted">
+            One price confirmed before we start. No long contracts. Serving Okemo
+            Valley and Middlebury / Addison County.
           </p>
-          <p className="mt-3 font-body text-sm leading-relaxed text-vm-muted">
-            One price confirmed before we start. No long contracts.
-          </p>
+          <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 font-body text-sm leading-relaxed text-amber-950">
+            Scheduled visits only. Home Watch is not continuous monitoring, not a
+            repair service, not insurance certification, and does not guarantee
+            emergency response or prevention of damage.
+          </div>
         </section>
 
         <section className="bg-vm-navy">

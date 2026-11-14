@@ -133,19 +133,22 @@ export function evaluateFinishPhotos(input: {
   slots: PhotoSlotView[];
   photos: PhotoForSlots[];
 }): FinishPhotoBlock {
-  // Legacy jobs started before this release have no arrival check. Do not block them.
+  const missingAfter = missingRequiredAfterSlots(input.slots, input.photos).map(
+    (item) => ({ key: item.key, label: item.label })
+  );
+
+  // Cleaner Finish requires arrival for photo-enforced jobs. Null arrival is not
+  // a silent bypass of required AFTER evidence. Stuck pre-arrival IN_PROGRESS
+  // jobs remain finishable via admin photo-review override-finish.
   if (input.arrivalCondition == null) {
     return {
-      ok: true,
-      missingAfter: [],
-      needsArrival: false,
+      ok: false,
+      missingAfter,
+      needsArrival: true,
       issuesNeedBefore: false,
     };
   }
 
-  const missingAfter = missingRequiredAfterSlots(input.slots, input.photos).map(
-    (item) => ({ key: item.key, label: item.label })
-  );
   const issuesNeedBefore =
     input.arrivalCondition === "ISSUES" && !hasBeforePhoto(input.photos);
   return {
