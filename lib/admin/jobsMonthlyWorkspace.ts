@@ -10,6 +10,7 @@ import {
   parseServiceDateInput,
   serviceDateKey,
 } from '@/lib/dates/serviceDate';
+import { parsePreferredClockTime } from '@/lib/dates/preferredClock';
 
 export const MONTH_KEY_RE = /^(\d{4})-(\d{2})$/;
 export const DAY_KEY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -49,6 +50,21 @@ export type MonthlyFocus =
 
 export type MonthlySummary = {
   totalInScope: number;
+  /**
+   * Open confirmed bookings in scope (CONFIRMED → AWAITING_QC).
+   * Excludes RECEIVED requests, COMPLETED, and cancelled.
+   */
+  confirmedBookings: number;
+  /** Active scheduled jobs with a valid assignedCleanerId. */
+  assignedJobs: number;
+  /**
+   * Future/today confirmed demand needing a cleaner (or ASSIGNED without cleaner).
+   * Excludes RECEIVED and past-incomplete.
+   */
+  needsCleaner: number;
+  /** Sum of totalPrice/quotedTotal for confirmed+completed priced jobs. */
+  confirmedServiceValue: number;
+  confirmedServiceValueJobCount: number;
   bookingRequests: number;
   confirmedServiceJobs: number;
   assignedServiceJobs: number;
@@ -56,14 +72,12 @@ export type MonthlySummary = {
   cancelledJobs: number;
   unassignedConfirmedDemand: number;
   qcPendingJobs: number;
+  pastIncompleteJobs: number;
   missingPrice: number;
   unscheduledJobs: number;
-  /** Sum of totalPrice/quotedTotal for confirmed+ jobs with a known price. */
+  /** @deprecated alias — use confirmedServiceValue */
   serviceValueCentsLike: number;
   serviceValueJobCount: number;
-  /** Deferred — Invoice↔Job scope not verified for R1. */
-  collectedRevenue: 'unavailable';
-  outstandingInvoices: 'unavailable';
 };
 
 export type MonthlyJobSortInput = {
@@ -192,17 +206,35 @@ export function isUnknownServiceTime(time: string | null | undefined): boolean {
   return normalizeServiceTime(time) === '';
 }
 
-/** Deterministic: service date ASC, time ASC (unknown last), id ASC. */
+/** Minutes from midnight for clock-parseable times; null if unknown/unparseable. */
+export function serviceTimeSortMinutes(
+  time: string | null | undefined
+): number | null {
+  const clock = parsePreferredClockTime(time);
+  if (!clock) return null;
+  return clock.hours * 60 + clock.minutes;
+}
+
+/** Deterministic: service date ASC, clock-normalized time ASC (unknown last), id ASC. */
 export function sortJobsDeterministic<T extends MonthlyJobSortInput>(jobs: T[]): T[] {
   return [...jobs].sort((a, b) => {
-    const da = a.preferredDate || '9999-99-99';
-    const db = b.preferredDate || '9999-99-99';
+    const da =
+      serviceDateKey(a.preferredDate) ||
+      (a.preferredDate ? a.preferredDate.slice(0, 10) : '9999-99-99');
+    const db =
+      serviceDateKey(b.preferredDate) ||
+      (b.preferredDate ? b.preferredDate.slice(0, 10) : '9999-99-99');
     if (da !== db) return da < db ? -1 : 1;
 
+    const ma = serviceTimeSortMinutes(a.preferredTime);
+    const mb = serviceTimeSortMinutes(b.preferredTime);
+    if (ma == null && mb != null) return 1;
+    if (ma != null && mb == null) return -1;
+    if (ma != null && mb != null && ma !== mb) return ma - mb;
+
+    // Same clock (or both unknown): stable secondary by raw string then id
     const ta = normalizeServiceTime(a.preferredTime);
     const tb = normalizeServiceTime(b.preferredTime);
-    if (!ta && tb) return 1;
-    if (ta && !tb) return -1;
     if (ta !== tb) return ta.localeCompare(tb);
 
     return a.id.localeCompare(b.id);
@@ -221,6 +253,11 @@ export type SummaryJobInput = {
 export function emptyMonthlySummary(): MonthlySummary {
   return {
     totalInScope: 0,
+    confirmedBookings: 0,
+    assignedJobs: 0,
+    needsCleaner: 0,
+    confirmedServiceValue: 0,
+    confirmedServiceValueJobCount: 0,
     bookingRequests: 0,
     confirmedServiceJobs: 0,
     assignedServiceJobs: 0,
@@ -228,12 +265,11 @@ export function emptyMonthlySummary(): MonthlySummary {
     cancelledJobs: 0,
     unassignedConfirmedDemand: 0,
     qcPendingJobs: 0,
+    pastIncompleteJobs: 0,
     missingPrice: 0,
     unscheduledJobs: 0,
     serviceValueCentsLike: 0,
     serviceValueJobCount: 0,
-    collectedRevenue: 'unavailable',
-    outstandingInvoices: 'unavailable',
   };
 }
 
@@ -256,15 +292,33 @@ export function computeMonthlySummary(
     const cancelled = CANCELLED_STATUSES.includes(
       status as (typeof CANCELLED_STATUSES)[number]
     );
-    const scheduled = ACTIVE_SCHEDULED_STATUSES.includes(
-      status as (typeof ACTIVE_SCHEDULED_STATUSES)[number]
-    );
+    const hasCleaner = Boolean(job.assignedCleanerId);
+    const day = job.preferredDate
+      ? serviceDateKey(job.preferredDate) ?? job.preferredDate.slice(0, 10)
+      : null;
+    const isFutureOrToday = !day || day >= today;
+    const isPast = Boolean(day && day < today);
 
     if (!job.preferredDate) summary.unscheduledJobs += 1;
     if (status === 'RECEIVED') summary.bookingRequests += 1;
     if (status === 'COMPLETED') summary.completedServiceJobs += 1;
     if (cancelled) summary.cancelledJobs += 1;
     if (status === 'AWAITING_QC') summary.qcPendingJobs += 1;
+
+    if (
+      !cancelled &&
+      status !== 'RECEIVED' &&
+      status !== 'COMPLETED' &&
+      isPast &&
+      day
+    ) {
+      summary.pastIncompleteJobs += 1;
+    }
+
+    // Open confirmed bookings (excludes completed + requests + cancelled)
+    if (ACTIVE_SCHEDULED_STATUSES.includes(status as (typeof ACTIVE_SCHEDULED_STATUSES)[number])) {
+      summary.confirmedBookings += 1;
+    }
 
     if (
       CONFIRMED_SERVICE_STATUSES.includes(
@@ -274,36 +328,36 @@ export function computeMonthlySummary(
       summary.confirmedServiceJobs += 1;
       if (!hasPrice) summary.missingPrice += 1;
       if (hasPrice) {
-        summary.serviceValueCentsLike += Number(price);
-        summary.serviceValueJobCount += 1;
+        summary.confirmedServiceValue += Number(price);
+        summary.confirmedServiceValueJobCount += 1;
       }
     }
 
+    // Assigned jobs: active scheduled with a real cleaner id
     if (
-      scheduled &&
-      (status === 'ASSIGNED' ||
-        status === 'ON_THE_WAY' ||
-        status === 'IN_PROGRESS' ||
-        status === 'AWAITING_QC')
+      ACTIVE_SCHEDULED_STATUSES.includes(status as (typeof ACTIVE_SCHEDULED_STATUSES)[number]) &&
+      hasCleaner
     ) {
+      summary.assignedJobs += 1;
       summary.assignedServiceJobs += 1;
     }
 
+    // Needs cleaner: future/today confirmed demand without cleaner (not RECEIVED)
     if (
-      (status === 'CONFIRMED' || status === 'ASSIGNED') &&
-      !job.assignedCleanerId &&
-      !cancelled
+      !cancelled &&
+      status !== 'RECEIVED' &&
+      status !== 'COMPLETED' &&
+      !hasCleaner &&
+      isFutureOrToday &&
+      (status === 'CONFIRMED' || status === 'ASSIGNED')
     ) {
-      // Unassigned confirmed demand: has a service date today or future, or unscheduled.
-      const day = job.preferredDate
-        ? serviceDateKey(job.preferredDate) ?? job.preferredDate.slice(0, 10)
-        : null;
-      if (!day || day >= today) {
-        summary.unassignedConfirmedDemand += 1;
-      }
+      summary.needsCleaner += 1;
+      summary.unassignedConfirmedDemand += 1;
     }
   }
 
+  summary.serviceValueCentsLike = summary.confirmedServiceValue;
+  summary.serviceValueJobCount = summary.confirmedServiceValueJobCount;
   return summary;
 }
 

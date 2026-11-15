@@ -4,20 +4,18 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Archive,
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   List,
   Loader2,
   Plus,
 } from 'lucide-react';
-import {
-  JobOperationsCard,
-  type AdminJobListItem,
-} from '@/components/admin/jobs/JobOperationsCard';
+import type { AdminJobListItem } from '@/components/admin/jobs/JobOperationsCard';
 import { JobsMonthCalendar } from '@/components/admin/jobs/JobsMonthCalendar';
 import { JobsMonthlySummaryStrip } from '@/components/admin/jobs/JobsMonthlySummaryStrip';
+import { JobsScheduleRow } from '@/components/admin/jobs/JobsScheduleRow';
 import { useAdminShell } from '@/components/admin/shell/AdminShell';
 import {
   addCalendarMonthKey,
@@ -25,16 +23,15 @@ import {
   emptyMonthlySummary,
   isDayKey,
   isMonthKey,
-  isUnknownServiceTime,
   type MonthlySummary,
 } from '@/lib/admin/jobsMonthlyWorkspace';
 import { easternDateKey, formatServiceDate } from '@/lib/dates/serviceDate';
 
 const navyButton =
-  'inline-flex items-center justify-center rounded-lg bg-vm-navy px-4 py-2 font-heading text-sm text-white transition-opacity hover:opacity-90 outline-none focus-visible:ring-2 focus-visible:ring-vm-cyan focus-visible:ring-offset-2';
+  'inline-flex min-h-[44px] items-center justify-center rounded-lg bg-vm-navy px-4 py-2 font-heading text-sm text-white transition-opacity hover:opacity-90 outline-none focus-visible:ring-2 focus-visible:ring-vm-cyan focus-visible:ring-offset-2';
 
 const ghostButton =
-  'inline-flex items-center justify-center rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none transition-colors hover:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan';
+  'inline-flex min-h-[40px] items-center justify-center rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none transition-colors hover:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan';
 
 type Pagination = {
   page: number;
@@ -43,6 +40,25 @@ type Pagination = {
   totalPages: number;
   hasMore: boolean;
 };
+
+const MONTH_OPTIONS = [
+  { value: '01', label: 'January' },
+  { value: '02', label: 'February' },
+  { value: '03', label: 'March' },
+  { value: '04', label: 'April' },
+  { value: '05', label: 'May' },
+  { value: '06', label: 'June' },
+  { value: '07', label: 'July' },
+  { value: '08', label: 'August' },
+  { value: '09', label: 'September' },
+  { value: '10', label: 'October' },
+  { value: '11', label: 'November' },
+  { value: '12', label: 'December' },
+];
+
+function yearOptions(centerYear: number): number[] {
+  return [centerYear - 1, centerYear, centerYear + 1, centerYear + 2];
+}
 
 function AdminJobsPageContent() {
   const searchParams = useSearchParams();
@@ -71,6 +87,7 @@ function AdminJobsPageContent() {
   const [jobs, setJobs] = useState<AdminJobListItem[]>([]);
   const [summary, setSummary] = useState<MonthlySummary>(emptyMonthlySummary());
   const [dayCounts, setDayCounts] = useState<Record<string, number>>({});
+  const [monthJobTotal, setMonthJobTotal] = useState(0);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
     pageSize: 50,
@@ -84,11 +101,10 @@ function AdminJobsPageContent() {
   const [searchDraft, setSearchDraft] = useState(search);
   const [customFrom, setCustomFrom] = useState(dateFrom);
   const [customTo, setCustomTo] = useState(dateTo);
-  const [confirmingArchiveId, setConfirmingArchiveId] = useState<string | null>(
-    null
-  );
-  const [busyJobId, setBusyJobId] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const monthPart = month.slice(5, 7);
+  const yearPart = Number(month.slice(0, 4));
 
   const replaceParams = useCallback(
     (mutate: (p: URLSearchParams) => void) => {
@@ -130,12 +146,21 @@ function AdminJobsPageContent() {
         setJobs([]);
         setSummary(emptyMonthlySummary());
         setDayCounts({});
+        setMonthJobTotal(0);
         setLoadFailed(true);
         return;
       }
       setJobs(data.jobs ?? []);
       setSummary(data.summary ?? emptyMonthlySummary());
       setDayCounts(data.dayCounts ?? {});
+      setMonthJobTotal(
+        typeof data.monthJobTotal === 'number'
+          ? data.monthJobTotal
+          : Object.values(data.dayCounts ?? {}).reduce(
+              (s: number, n) => s + Number(n),
+              0
+            )
+      );
       setPagination(
         data.pagination ?? {
           page: 1,
@@ -151,6 +176,7 @@ function AdminJobsPageContent() {
       setJobs([]);
       setSummary(emptyMonthlySummary());
       setDayCounts({});
+      setMonthJobTotal(0);
     } finally {
       setLoading(false);
     }
@@ -180,45 +206,20 @@ function AdminJobsPageContent() {
     setSearchDraft(search);
   }, [search]);
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 4000);
-  };
-
-  const archiveJob = async (id: string) => {
-    setBusyJobId(id);
-    try {
-      const res = await fetch(`/api/admin/jobs/${id}/delete`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || 'Archive failed');
-      setConfirmingArchiveId(null);
-      showToast('Job archived.');
-      await fetchJobs();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Archive failed');
-    } finally {
-      setBusyJobId(null);
-    }
-  };
-
-  const unarchiveJob = async (id: string) => {
-    setBusyJobId(id);
-    try {
-      const res = await fetch(`/api/admin/jobs/${id}/delete`, { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || 'Unarchive failed');
-      showToast('Job restored.');
-      await fetchJobs();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Unarchive failed');
-    } finally {
-      setBusyJobId(null);
-    }
-  };
-
   const goMonth = (delta: number) => {
     replaceParams((p) => {
       p.set('month', addCalendarMonthKey(month, delta));
+      p.delete('day');
+      p.delete('range');
+      p.delete('dateFrom');
+      p.delete('dateTo');
+      p.set('page', '1');
+    });
+  };
+
+  const setMonthYear = (nextYear: number, nextMonth: string) => {
+    replaceParams((p) => {
+      p.set('month', `${nextYear}-${nextMonth}`);
       p.delete('day');
       p.delete('range');
       p.delete('dateFrom');
@@ -260,11 +261,15 @@ function AdminJobsPageContent() {
     });
   };
 
+  const clearDay = () => {
+    replaceParams((p) => {
+      p.delete('day');
+      p.set('page', '1');
+    });
+  };
+
   const applyCustomRange = () => {
-    if (!isDayKey(customFrom) || !isDayKey(customTo)) {
-      showToast('Enter a valid From and To date (YYYY-MM-DD).');
-      return;
-    }
+    if (!isDayKey(customFrom) || !isDayKey(customTo)) return;
     replaceParams((p) => {
       p.set('range', 'custom');
       p.set('dateFrom', customFrom);
@@ -279,31 +284,26 @@ function AdminJobsPageContent() {
     router.replace(`/admin/jobs?month=${currentMonthKey()}&view=${view}`);
   };
 
-  const monthTitle = formatServiceDate(`${month}-01`, {
-    month: 'long',
-    year: 'numeric',
-  });
+  const scheduleHeading = day
+    ? formatServiceDate(day, {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : `Schedule · ${periodLabel}`;
 
   return (
-    <div className="p-4 pb-28 sm:p-7">
-      <div className="mx-auto max-w-7xl">
-        {toast && (
-          <div className="fixed right-4 top-4 z-50 rounded-lg bg-vm-navy px-5 py-3 font-body text-sm text-white shadow-lg">
-            {toast}
-          </div>
-        )}
-
-        <div className="mb-5 flex flex-col gap-4 border-b border-vm-border pb-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="font-heading text-xl font-bold text-vm-navy">
-              Jobs
-            </h1>
-            <p className="mt-1 font-body text-sm text-vm-muted">
-              Calendar-first monthly schedule. One job record per cleaning.
-              Requests are not confirmed revenue.
+    <div className="overflow-x-hidden p-3 pb-24 sm:p-5 lg:p-6">
+      <div className="mx-auto w-full max-w-[1600px]">
+        <div className="mb-3 flex flex-col gap-3 border-b border-vm-border pb-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="font-heading text-xl font-bold text-vm-navy">Jobs</h1>
+            <p className="mt-0.5 font-body text-sm text-vm-muted">
+              Calendar-first monthly schedule. Requests are not confirmed revenue.
             </p>
             {customerIdFilter && (
-              <p className="mt-2 font-body text-xs text-vm-cyan-dark">
+              <p className="mt-1 font-body text-xs text-vm-cyan-dark">
                 Filtered to one customer ·{' '}
                 <button
                   type="button"
@@ -320,15 +320,16 @@ function AdminJobsPageContent() {
               </p>
             )}
           </div>
-          <Link href="/admin/jobs/new" className={navyButton}>
+          <Link href="/admin/jobs/new" className={`${navyButton} shrink-0 self-start`}>
             <Plus className="mr-1 h-4 w-4" />
-            Add Job Manually
+            <span className="sm:hidden">Add job</span>
+            <span className="hidden sm:inline">Add Job Manually</span>
           </Link>
         </div>
 
         {/* Period navigation */}
-        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-vm-border bg-vm-white p-3 sm:flex-row sm:flex-wrap sm:items-center sm:p-4">
-          <div className="flex items-center gap-2">
+        <div className="mb-3 flex flex-col gap-2 rounded-xl border border-vm-border bg-vm-white p-3">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               aria-label="Previous month"
@@ -337,9 +338,39 @@ function AdminJobsPageContent() {
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <p className="min-w-[9rem] text-center font-heading text-base font-semibold text-vm-navy">
-              {monthTitle}
-            </p>
+
+            <label className="sr-only" htmlFor="jobs-month">
+              Month
+            </label>
+            <select
+              id="jobs-month"
+              value={monthPart}
+              onChange={(e) => setMonthYear(yearPart, e.target.value)}
+              className="min-h-[40px] rounded-lg border border-vm-border bg-vm-white px-2 py-1.5 font-heading text-sm font-semibold text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+            >
+              {MONTH_OPTIONS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+
+            <label className="sr-only" htmlFor="jobs-year">
+              Year
+            </label>
+            <select
+              id="jobs-year"
+              value={yearPart}
+              onChange={(e) => setMonthYear(Number(e.target.value), monthPart)}
+              className="min-h-[40px] rounded-lg border border-vm-border bg-vm-white px-2 py-1.5 font-heading text-sm font-semibold text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+            >
+              {yearOptions(yearPart).map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+
             <button
               type="button"
               aria-label="Next month"
@@ -348,186 +379,195 @@ function AdminJobsPageContent() {
             >
               <ChevronRight className="h-4 w-4" />
             </button>
+
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className={ghostButton} onClick={goToday}>
+                Today
+              </button>
+              <button type="button" className={ghostButton} onClick={goThisWeek}>
+                This week
+              </button>
+              <button type="button" className={ghostButton} onClick={goThisMonth}>
+                This month
+              </button>
+            </div>
+
+            <div className="ml-auto flex gap-2">
+              <button
+                type="button"
+                className={`${ghostButton} ${view === 'calendar' ? 'border-vm-cyan bg-vm-cyan/10' : ''}`}
+                onClick={() =>
+                  replaceParams((p) => {
+                    p.set('view', 'calendar');
+                  })
+                }
+              >
+                <CalendarDays className="mr-1 h-4 w-4" />
+                Calendar
+              </button>
+              <button
+                type="button"
+                className={`${ghostButton} ${view === 'list' ? 'border-vm-cyan bg-vm-cyan/10' : ''}`}
+                onClick={() =>
+                  replaceParams((p) => {
+                    p.set('view', 'list');
+                  })
+                }
+              >
+                <List className="mr-1 h-4 w-4" />
+                List
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className={ghostButton} onClick={goToday}>
-              Today
-            </button>
-            <button type="button" className={ghostButton} onClick={goThisWeek}>
-              This week
-            </button>
-            <button type="button" className={ghostButton} onClick={goThisMonth}>
-              This month
-            </button>
-          </div>
-
-          <div className="ml-auto flex gap-2">
-            <button
-              type="button"
-              className={`${ghostButton} ${view === 'calendar' ? 'border-vm-cyan bg-vm-cyan/10' : ''}`}
-              onClick={() =>
-                replaceParams((p) => {
-                  p.set('view', 'calendar');
-                })
-              }
-            >
-              <CalendarDays className="mr-1 h-4 w-4" />
-              Calendar
-            </button>
-            <button
-              type="button"
-              className={`${ghostButton} ${view === 'list' ? 'border-vm-cyan bg-vm-cyan/10' : ''}`}
-              onClick={() =>
-                replaceParams((p) => {
-                  p.set('view', 'list');
-                })
-              }
-            >
-              <List className="mr-1 h-4 w-4" />
-              List
-            </button>
-          </div>
-        </div>
-
-        {/* Custom range */}
-        <div className="mb-4 flex flex-wrap items-end gap-2 font-body text-sm">
-          <label className="flex flex-col gap-1 text-vm-muted">
-            From
-            <input
-              type="date"
-              value={customFrom}
-              onChange={(e) => setCustomFrom(e.target.value)}
-              className="rounded-lg border border-vm-border bg-vm-white px-2 py-1.5 text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+          <button
+            type="button"
+            className={`${ghostButton} w-full justify-between sm:w-auto`}
+            aria-expanded={filtersOpen}
+            onClick={() => setFiltersOpen((o) => !o)}
+          >
+            Filters & custom range
+            <ChevronDown
+              className={`ml-2 h-4 w-4 transition-transform ${filtersOpen ? 'rotate-180' : ''}`}
             />
-          </label>
-          <label className="flex flex-col gap-1 text-vm-muted">
-            To
-            <input
-              type="date"
-              value={customTo}
-              onChange={(e) => setCustomTo(e.target.value)}
-              className="rounded-lg border border-vm-border bg-vm-white px-2 py-1.5 text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
-            />
-          </label>
-          <button type="button" className={ghostButton} onClick={applyCustomRange}>
-            Apply range
           </button>
-        </div>
 
-        {/* Filters */}
-        <div className="mb-5 flex flex-wrap items-center gap-3">
-          <select
-            value={statusFilter}
-            onChange={(e) =>
-              replaceParams((p) => {
-                if (e.target.value === 'all') p.delete('status');
-                else p.set('status', e.target.value);
-                p.delete('focus');
-                p.set('page', '1');
-              })
-            }
-            className="rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
-          >
-            <option value="all">All statuses</option>
-            <option value="RECEIVED">Received</option>
-            <option value="CONFIRMED">Confirmed</option>
-            <option value="ASSIGNED">Assigned</option>
-            <option value="ON_THE_WAY">On the way</option>
-            <option value="IN_PROGRESS">In progress</option>
-            <option value="AWAITING_QC">QC pending</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="CANCELLED">Cancelled</option>
-            <option value="CANCELLED_EMERGENCY">Emergency cancel</option>
-          </select>
+          {filtersOpen && (
+            <div className="flex flex-wrap items-end gap-2 border-t border-vm-border pt-3">
+              <label className="flex flex-col gap-1 font-body text-xs text-vm-muted">
+                From
+                <input
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="min-h-[40px] rounded-lg border border-vm-border bg-vm-white px-2 py-1.5 text-sm text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+                />
+              </label>
+              <label className="flex flex-col gap-1 font-body text-xs text-vm-muted">
+                To
+                <input
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="min-h-[40px] rounded-lg border border-vm-border bg-vm-white px-2 py-1.5 text-sm text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+                />
+              </label>
+              <button type="button" className={ghostButton} onClick={applyCustomRange}>
+                Apply range
+              </button>
 
-          {!isBranchScoped && (
-            <select
-              value={branchFilter}
-              onChange={(e) =>
-                replaceParams((p) => {
-                  if (e.target.value === 'all') p.delete('branchId');
-                  else p.set('branchId', e.target.value);
-                  p.set('page', '1');
-                })
-              }
-              className="rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
-            >
-              <option value="all">All markets</option>
-              <option value="vermont">Vermont</option>
-              <option value="new-jersey">New Jersey</option>
-            </select>
-          )}
+              <select
+                value={statusFilter}
+                onChange={(e) =>
+                  replaceParams((p) => {
+                    if (e.target.value === 'all') p.delete('status');
+                    else p.set('status', e.target.value);
+                    p.delete('focus');
+                    p.set('page', '1');
+                  })
+                }
+                className="min-h-[40px] rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+              >
+                <option value="all">All statuses</option>
+                <option value="RECEIVED">Received</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="ASSIGNED">Assigned</option>
+                <option value="ON_THE_WAY">On the way</option>
+                <option value="IN_PROGRESS">In progress</option>
+                <option value="AWAITING_QC">QC pending</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+                <option value="CANCELLED_EMERGENCY">Emergency cancel</option>
+              </select>
 
-          <form
-            className="flex flex-wrap gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              replaceParams((p) => {
-                if (searchDraft.trim()) p.set('search', searchDraft.trim());
-                else p.delete('search');
-                p.set('page', '1');
-              });
-            }}
-          >
-            <input
-              type="search"
-              value={searchDraft}
-              onChange={(e) => setSearchDraft(e.target.value)}
-              placeholder="Search name, address, job ref…"
-              className="min-w-[12rem] flex-1 rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
-            />
-            <button type="submit" className={ghostButton}>
-              Search
-            </button>
-          </form>
-
-          <label className="flex cursor-pointer items-center gap-2 font-body text-sm text-vm-muted">
-            <input
-              type="checkbox"
-              checked={unassignedOnly}
-              onChange={(e) =>
-                replaceParams((p) => {
-                  if (e.target.checked) {
-                    p.set('unassignedOnly', 'true');
-                    p.set('focus', 'unassigned');
-                  } else {
-                    p.delete('unassignedOnly');
-                    p.delete('needsAssignment');
-                    if (p.get('focus') === 'unassigned') p.delete('focus');
+              {!isBranchScoped && (
+                <select
+                  value={branchFilter}
+                  onChange={(e) =>
+                    replaceParams((p) => {
+                      if (e.target.value === 'all') p.delete('branchId');
+                      else p.set('branchId', e.target.value);
+                      p.set('page', '1');
+                    })
                   }
-                  p.set('page', '1');
-                })
-              }
-              className="h-4 w-4 rounded border-vm-border"
-            />
-            Unassigned only
-          </label>
+                  className="min-h-[40px] rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+                >
+                  <option value="all">All markets</option>
+                  <option value="vermont">Vermont</option>
+                  <option value="new-jersey">New Jersey</option>
+                </select>
+              )}
 
-          <label className="flex cursor-pointer items-center gap-2 font-body text-sm text-vm-muted">
-            <input
-              type="checkbox"
-              checked={includeArchived}
-              onChange={(e) =>
-                replaceParams((p) => {
-                  if (e.target.checked) p.set('includeArchived', 'true');
-                  else p.delete('includeArchived');
-                  p.set('page', '1');
-                })
-              }
-              className="h-4 w-4 rounded border-vm-border"
-            />
-            <Archive className="h-3.5 w-3.5" />
-            Show archived
-          </label>
+              <form
+                className="flex min-w-[12rem] flex-1 flex-wrap gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  replaceParams((p) => {
+                    if (searchDraft.trim()) p.set('search', searchDraft.trim());
+                    else p.delete('search');
+                    p.set('page', '1');
+                  });
+                }}
+              >
+                <input
+                  type="search"
+                  value={searchDraft}
+                  onChange={(e) => setSearchDraft(e.target.value)}
+                  placeholder="Search name, address, job ref…"
+                  className="min-h-[40px] min-w-[10rem] flex-1 rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+                />
+                <button type="submit" className={ghostButton}>
+                  Search
+                </button>
+              </form>
 
-          <button type="button" className={`${ghostButton} ml-auto`} onClick={resetFilters}>
-            Reset
-          </button>
+              <label className="flex min-h-[40px] cursor-pointer items-center gap-2 font-body text-sm text-vm-muted">
+                <input
+                  type="checkbox"
+                  checked={unassignedOnly}
+                  onChange={(e) =>
+                    replaceParams((p) => {
+                      if (e.target.checked) {
+                        p.set('unassignedOnly', 'true');
+                        p.set('focus', 'unassigned');
+                      } else {
+                        p.delete('unassignedOnly');
+                        p.delete('needsAssignment');
+                        if (p.get('focus') === 'unassigned') p.delete('focus');
+                      }
+                      p.set('page', '1');
+                    })
+                  }
+                  className="h-4 w-4 rounded border-vm-border"
+                />
+                Unassigned only
+              </label>
+
+              <label className="flex min-h-[40px] cursor-pointer items-center gap-2 font-body text-sm text-vm-muted">
+                <input
+                  type="checkbox"
+                  checked={includeArchived}
+                  onChange={(e) =>
+                    replaceParams((p) => {
+                      if (e.target.checked) p.set('includeArchived', 'true');
+                      else p.delete('includeArchived');
+                      p.set('page', '1');
+                    })
+                  }
+                  className="h-4 w-4 rounded border-vm-border"
+                />
+                Show archived
+              </label>
+
+              <button type="button" className={ghostButton} onClick={resetFilters}>
+                Reset
+              </button>
+            </div>
+          )}
         </div>
 
         {loading ? (
-          <div className="py-20 text-center">
+          <div className="py-16 text-center">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-vm-cyan" />
             <p className="mt-3 font-body text-sm text-vm-muted">Loading schedule…</p>
           </div>
@@ -545,8 +585,20 @@ function AdminJobsPageContent() {
           </div>
         ) : (
           <>
+            <div className="flex flex-col gap-3">
+            <div className="order-2 sm:order-1">
             <JobsMonthlySummaryStrip
               summary={summary}
+              periodLabel={
+                day
+                  ? formatServiceDate(day, {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })
+                  : periodLabel
+              }
               hideFinancial={isBranchScoped}
               activeFocus={focus}
               onFocus={(next) =>
@@ -560,21 +612,28 @@ function AdminJobsPageContent() {
             />
 
             {focus === 'past_incomplete' && (
-              <div className="mb-4 rounded-lg border border-vm-warning/40 bg-vm-warning-bg px-4 py-3 font-body text-sm text-vm-navy">
+              <div className="mb-3 rounded-lg border border-vm-warning/40 bg-vm-warning-bg px-4 py-3 font-body text-sm text-vm-navy">
                 Past service date, not completed or cancelled. Confirm whether the
                 clean happened before closing. Do not auto-complete.
               </div>
             )}
+            </div>
 
             <div
-              className={`mb-5 grid gap-5 ${
-                view === 'calendar' ? 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]' : ''
+              className={`order-1 grid gap-4 sm:order-2 ${
+                view === 'calendar'
+                  ? 'xl:grid-cols-[minmax(280px,0.95fr)_minmax(0,1.25fr)]'
+                  : ''
               }`}
             >
               {view === 'calendar' && (
                 <JobsMonthCalendar
                   monthKey={month}
                   dayCounts={dayCounts}
+                  monthTotal={monthJobTotal}
+                  countScopeLabel={
+                    focus && focus !== 'all' ? 'matching filter' : 'this month'
+                  }
                   selectedDay={day}
                   onSelectDay={(key) =>
                     replaceParams((p) => {
@@ -586,30 +645,26 @@ function AdminJobsPageContent() {
                       p.set('page', '1');
                     })
                   }
-                  onSelectMonth={() =>
-                    replaceParams((p) => {
-                      p.delete('day');
-                      p.delete('range');
-                      p.delete('dateFrom');
-                      p.delete('dateTo');
-                      p.set('page', '1');
-                    })
-                  }
+                  onSelectMonth={clearDay}
                 />
               )}
 
-              <div>
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-heading text-sm font-semibold text-vm-navy">
-                    {day
-                      ? formatServiceDate(day, {
-                          weekday: 'long',
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })
-                      : `Schedule · ${periodLabel}`}
-                  </p>
+              <div className="min-w-0">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="font-heading text-sm font-semibold text-vm-navy">
+                      {scheduleHeading}
+                    </p>
+                    {day && (
+                      <button
+                        type="button"
+                        className="mt-0.5 font-body text-xs text-vm-cyan-dark outline-none hover:underline focus-visible:ring-2 focus-visible:ring-vm-cyan"
+                        onClick={clearDay}
+                      >
+                        Entire month · clear day selection
+                      </button>
+                    )}
+                  </div>
                   <p className="font-body text-xs text-vm-muted">
                     {pagination.total} job{pagination.total === 1 ? '' : 's'}
                     {pagination.totalPages > 1
@@ -619,7 +674,7 @@ function AdminJobsPageContent() {
                 </div>
 
                 {jobs.length === 0 ? (
-                  <div className="rounded-xl border border-vm-border bg-vm-white py-16 text-center">
+                  <div className="rounded-xl border border-vm-border bg-vm-white py-14 text-center">
                     <p className="font-heading text-lg text-vm-navy">
                       No jobs in this period
                     </p>
@@ -637,22 +692,7 @@ function AdminJobsPageContent() {
                 ) : (
                   <ul className="overflow-hidden rounded-xl border border-vm-border bg-vm-white shadow-sm">
                     {jobs.map((job) => (
-                      <li key={job.id} className="relative">
-                        {isUnknownServiceTime(job.preferredTime) && (
-                          <p className="border-b border-vm-border bg-vm-warning-bg px-4 py-1 font-body text-xs text-vm-navy">
-                            Service time unknown
-                          </p>
-                        )}
-                        <JobOperationsCard
-                          job={job}
-                          confirming={confirmingArchiveId === job.id}
-                          busy={busyJobId === job.id}
-                          onRequestArchive={() => setConfirmingArchiveId(job.id)}
-                          onCancelArchive={() => setConfirmingArchiveId(null)}
-                          onConfirmArchive={() => archiveJob(job.id)}
-                          onUnarchive={() => unarchiveJob(job.id)}
-                        />
-                      </li>
+                      <JobsScheduleRow key={job.id} job={job} />
                     ))}
                   </ul>
                 )}
@@ -689,6 +729,7 @@ function AdminJobsPageContent() {
                   </div>
                 )}
               </div>
+            </div>
             </div>
           </>
         )}

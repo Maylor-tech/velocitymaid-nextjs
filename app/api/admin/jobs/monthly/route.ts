@@ -219,20 +219,29 @@ export async function GET(request: NextRequest) {
 
     // Period resolution
     let periodLabel = '';
-    let monthKey = isMonthKey(monthParam) ? monthParam : currentMonthKey(now);
+    const selectedDay = isDayKey(dayParam) ? dayParam : null;
+    let monthKey = selectedDay
+      ? selectedDay.slice(0, 7)
+      : isMonthKey(monthParam)
+        ? monthParam
+        : currentMonthKey(now);
     let preferredDateFilter: Record<string, unknown> | null = null;
     let unscheduledOnly = focus === 'unscheduled';
+    const monthBounds = monthDateBounds(monthKey);
+    const monthDateFilter = {
+      gte: monthBounds.start,
+      lt: monthBounds.endExclusive,
+    };
 
     if (focus === 'unscheduled') {
       preferredDateFilter = null;
       unscheduledOnly = true;
       periodLabel = 'Unscheduled';
-    } else     if (isDayKey(dayParam)) {
-      const dayStart = parseServiceDateInput(dayParam)!;
-      const next = parseServiceDateInput(addCalendarDayKey(dayParam, 1))!;
+    } else if (selectedDay) {
+      const dayStart = parseServiceDateInput(selectedDay)!;
+      const next = parseServiceDateInput(addCalendarDayKey(selectedDay, 1))!;
       preferredDateFilter = { gte: dayStart, lt: next };
-      monthKey = dayParam.slice(0, 7);
-      periodLabel = dayParam;
+      periodLabel = selectedDay;
     } else if (range === 'week') {
       const week = easternWeekBounds(now);
       preferredDateFilter = { gte: week.start, lt: week.endExclusive };
@@ -250,8 +259,7 @@ export async function GET(request: NextRequest) {
       monthKey = dateFromParam.slice(0, 7);
       periodLabel = `${dateFromParam} → ${dateToParam}`;
     } else {
-      const bounds = monthDateBounds(monthKey);
-      preferredDateFilter = { gte: bounds.start, lt: bounds.endExclusive };
+      preferredDateFilter = monthDateFilter;
       periodLabel = monthKey;
     }
 
@@ -367,13 +375,36 @@ export async function GET(request: NextRequest) {
       Object.assign(summary, emptyMonthlySummary());
     }
 
+    // Month-level calendar markers stay on the full month even when a day is selected.
+    const calendarMonthBounds = monthDateBounds(monthKey);
+    const useListRowsForCalendar =
+      unscheduledOnly ||
+      focus === 'past_incomplete' ||
+      range === 'week' ||
+      range === 'custom' ||
+      !selectedDay;
+
+    const monthRows = useListRowsForCalendar
+      ? summaryRows
+      : await prisma.job.findMany({
+          where: {
+            ...where,
+            preferredDate: {
+              gte: calendarMonthBounds.start,
+              lt: calendarMonthBounds.endExclusive,
+            },
+          },
+          select: { preferredDate: true },
+        });
+
     const dayCounts: Record<string, number> = {};
-    for (const row of summaryRows) {
+    for (const row of monthRows) {
       if (!row.preferredDate) continue;
       const key = serviceDateKey(row.preferredDate);
       if (!key) continue;
       dayCounts[key] = (dayCounts[key] ?? 0) + 1;
     }
+    const monthJobTotal = Object.values(dayCounts).reduce((s, n) => s + n, 0);
 
     const total = summaryRows.length;
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -550,6 +581,7 @@ export async function GET(request: NextRequest) {
       jobs: jobsWithTeam,
       summary,
       dayCounts,
+      monthJobTotal,
       pagination: {
         page: safePage,
         pageSize,
