@@ -1,114 +1,184 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Archive, Loader2, Plus } from "lucide-react";
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  JobsOperationsKpis,
-  OperationsHealthScore,
-} from "@/components/admin/jobs/JobsOperationsKpis";
+  Archive,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  List,
+  Loader2,
+  Plus,
+} from 'lucide-react';
 import {
   JobOperationsCard,
   type AdminJobListItem,
-} from "@/components/admin/jobs/JobOperationsCard";
-import type { OperationsSummary } from "@/lib/admin/jobsOperations";
+} from '@/components/admin/jobs/JobOperationsCard';
+import { JobsMonthCalendar } from '@/components/admin/jobs/JobsMonthCalendar';
+import { JobsMonthlySummaryStrip } from '@/components/admin/jobs/JobsMonthlySummaryStrip';
+import { useAdminShell } from '@/components/admin/shell/AdminShell';
 import {
-  JOBS_BOARD_VIEWS,
-  isJobsBoardView,
-  sortJobsBoardView,
-  type JobsBoardView,
-} from "@/lib/admin/jobsBoard";
-import { useAdminShell } from "@/components/admin/shell/AdminShell";
-import {
-  JOBS_EMPTY_TITLE,
-  JOBS_UNAVAILABLE_TITLE,
-  presentJobsListResponse,
-  type JobsBoardCounts,
-} from "@/lib/admin/jobsListPresentation";
-
-type MarketTab = "all" | "vermont" | "new-jersey";
-
-const BOARD_LABEL: Record<JobsBoardView, string> = {
-  inbox: "Inbox",
-  today: "Today",
-  upcoming: "Upcoming",
-  completed: "Completed",
-  exceptions: "Exceptions",
-};
+  addCalendarMonthKey,
+  currentMonthKey,
+  emptyMonthlySummary,
+  isDayKey,
+  isMonthKey,
+  isUnknownServiceTime,
+  type MonthlySummary,
+} from '@/lib/admin/jobsMonthlyWorkspace';
+import { easternDateKey, formatServiceDate } from '@/lib/dates/serviceDate';
 
 const navyButton =
-  "inline-flex items-center justify-center rounded-lg bg-vm-navy px-4 py-2 font-heading text-sm text-white transition-opacity hover:opacity-90";
+  'inline-flex items-center justify-center rounded-lg bg-vm-navy px-4 py-2 font-heading text-sm text-white transition-opacity hover:opacity-90 outline-none focus-visible:ring-2 focus-visible:ring-vm-cyan focus-visible:ring-offset-2';
+
+const ghostButton =
+  'inline-flex items-center justify-center rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none transition-colors hover:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan';
+
+type Pagination = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+};
 
 function AdminJobsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isBranchScoped } = useAdminShell();
-  const [allJobs, setAllJobs] = useState<AdminJobListItem[]>([]);
-  const [summary, setSummary] = useState<OperationsSummary | null>(null);
-  const [boardCounts, setBoardCounts] = useState<JobsBoardCounts | null>(null);
+
+  const month = isMonthKey(searchParams.get('month'))
+    ? searchParams.get('month')!
+    : currentMonthKey();
+  const day = isDayKey(searchParams.get('day')) ? searchParams.get('day')! : null;
+  const view = searchParams.get('view') === 'list' ? 'list' : 'calendar';
+  const focus = searchParams.get('focus') || 'all';
+  const range = searchParams.get('range') || '';
+  const statusFilter = searchParams.get('status') || 'all';
+  const branchFilter = searchParams.get('branchId') || 'all';
+  const search = searchParams.get('search') || '';
+  const page = Math.max(1, Number(searchParams.get('page') || '1') || 1);
+  const includeArchived = searchParams.get('includeArchived') === 'true';
+  const unassignedOnly =
+    searchParams.get('unassignedOnly') === 'true' ||
+    searchParams.get('needsAssignment') === '1';
+  const customerIdFilter = searchParams.get('customerId') || '';
+  const dateFrom = searchParams.get('dateFrom') || '';
+  const dateTo = searchParams.get('dateTo') || '';
+
+  const [jobs, setJobs] = useState<AdminJobListItem[]>([]);
+  const [summary, setSummary] = useState<MonthlySummary>(emptyMonthlySummary());
+  const [dayCounts, setDayCounts] = useState<Record<string, number>>({});
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    pageSize: 50,
+    total: 0,
+    totalPages: 1,
+    hasMore: false,
+  });
+  const [periodLabel, setPeriodLabel] = useState(month);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
-  const board: JobsBoardView = isJobsBoardView(searchParams.get("board"))
-    ? (searchParams.get("board") as JobsBoardView)
-    : "today";
-
-  const [marketTab, setMarketTab] = useState<MarketTab>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [paymentFilter, setPaymentFilter] = useState<string>("all");
-  const [showArchived, setShowArchived] = useState(false);
-  const [unassignedOnly, setUnassignedOnly] = useState(false);
-  const customerIdFilter = searchParams.get("customerId") || "";
-
-  useEffect(() => {
-    if (searchParams.get("needsAssignment") === "1" || searchParams.get("unassignedOnly") === "true") {
-      setUnassignedOnly(true);
-      setStatusFilter("all");
-    }
-  }, [searchParams]);
-
+  const [searchDraft, setSearchDraft] = useState(search);
+  const [customFrom, setCustomFrom] = useState(dateFrom);
+  const [customTo, setCustomTo] = useState(dateTo);
   const [confirmingArchiveId, setConfirmingArchiveId] = useState<string | null>(
     null
   );
   const [busyJobId, setBusyJobId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  const replaceParams = useCallback(
+    (mutate: (p: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams.toString());
+      mutate(params);
+      const qs = params.toString();
+      router.replace(qs ? `/admin/jobs?${qs}` : '/admin/jobs');
+    },
+    [router, searchParams]
+  );
+
   const fetchJobs = useCallback(async () => {
     setLoading(true);
     setLoadFailed(false);
     try {
       const params = new URLSearchParams();
-      if (showArchived) params.append("includeArchived", "true");
-      if (customerIdFilter) params.append("customerId", customerIdFilter);
-      params.append("board", board);
+      params.set('month', month);
+      params.set('view', view);
+      params.set('page', String(page));
+      params.set('pageSize', '50');
+      if (day) params.set('day', day);
+      if (focus && focus !== 'all') params.set('focus', focus);
+      if (range) params.set('range', range);
+      if (dateFrom) params.set('dateFrom', dateFrom);
+      if (dateTo) params.set('dateTo', dateTo);
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (!isBranchScoped && branchFilter !== 'all') {
+        params.set('branchId', branchFilter);
+      }
+      if (search) params.set('search', search);
+      if (includeArchived) params.set('includeArchived', 'true');
+      if (unassignedOnly) params.set('unassignedOnly', 'true');
+      if (customerIdFilter) params.set('customerId', customerIdFilter);
 
-      const res = await fetch(`/api/admin/jobs/list?${params.toString()}`);
-      const data = await res.json().catch(() => null);
-      const presented = presentJobsListResponse(res.status, data);
+      const res = await fetch(`/api/admin/jobs/monthly?${params.toString()}`);
+      const data = await res.json();
 
-      if (!presented.available) {
-        setAllJobs([]);
-        setSummary(null);
-        setBoardCounts(null);
+      if (!res.ok || !data.success) {
+        setJobs([]);
+        setSummary(emptyMonthlySummary());
+        setDayCounts({});
         setLoadFailed(true);
         return;
       }
-      setAllJobs(presented.jobs as AdminJobListItem[]);
-      setSummary((presented.summary as OperationsSummary | null) ?? null);
-      setBoardCounts(presented.boardCounts);
-      setLoadFailed(false);
+      setJobs(data.jobs ?? []);
+      setSummary(data.summary ?? emptyMonthlySummary());
+      setDayCounts(data.dayCounts ?? {});
+      setPagination(
+        data.pagination ?? {
+          page: 1,
+          pageSize: 50,
+          total: 0,
+          totalPages: 1,
+          hasMore: false,
+        }
+      );
+      setPeriodLabel(data.periodLabel || month);
     } catch {
       setLoadFailed(true);
-      setAllJobs([]);
-      setSummary(null);
+      setJobs([]);
+      setSummary(emptyMonthlySummary());
+      setDayCounts({});
     } finally {
       setLoading(false);
     }
-  }, [showArchived, customerIdFilter, board]);
+  }, [
+    month,
+    day,
+    view,
+    focus,
+    range,
+    dateFrom,
+    dateTo,
+    statusFilter,
+    branchFilter,
+    search,
+    page,
+    includeArchived,
+    unassignedOnly,
+    customerIdFilter,
+    isBranchScoped,
+  ]);
 
   useEffect(() => {
     fetchJobs();
   }, [fetchJobs]);
+
+  useEffect(() => {
+    setSearchDraft(search);
+  }, [search]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -118,16 +188,14 @@ function AdminJobsPageContent() {
   const archiveJob = async (id: string) => {
     setBusyJobId(id);
     try {
-      const res = await fetch(`/api/admin/jobs/${id}/delete`, {
-        method: "DELETE",
-      });
+      const res = await fetch(`/api/admin/jobs/${id}/delete`, { method: 'DELETE' });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Archive failed");
+      if (!res.ok || !data.success) throw new Error(data.error || 'Archive failed');
       setConfirmingArchiveId(null);
-      showToast("Job archived.");
+      showToast('Job archived.');
       await fetchJobs();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Archive failed");
+      showToast(err instanceof Error ? err.message : 'Archive failed');
     } finally {
       setBusyJobId(null);
     }
@@ -136,63 +204,88 @@ function AdminJobsPageContent() {
   const unarchiveJob = async (id: string) => {
     setBusyJobId(id);
     try {
-      const res = await fetch(`/api/admin/jobs/${id}/delete`, {
-        method: "POST",
-      });
+      const res = await fetch(`/api/admin/jobs/${id}/delete`, { method: 'POST' });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Unarchive failed");
-      showToast("Job restored.");
+      if (!res.ok || !data.success) throw new Error(data.error || 'Unarchive failed');
+      showToast('Job restored.');
       await fetchJobs();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Unarchive failed");
+      showToast(err instanceof Error ? err.message : 'Unarchive failed');
     } finally {
       setBusyJobId(null);
     }
   };
 
-  const activeJobs = useMemo(
-    () => allJobs.filter((j) => !j.archivedAt),
-    [allJobs]
-  );
-
-  const marketCounts = useMemo(
-    () => ({
-      all: activeJobs.length,
-      vermont: activeJobs.filter((j) => j.branch?.slug === "vermont").length,
-      "new-jersey": activeJobs.filter((j) => j.branch?.slug === "new-jersey")
-        .length,
-    }),
-    [activeJobs]
-  );
-
-  const displayedJobs = useMemo(() => {
-    const filtered = allJobs.filter((job) => {
-      if (marketTab !== "all" && job.branch?.slug !== marketTab) return false;
-      if (statusFilter !== "all" && job.status !== statusFilter) return false;
-      if (paymentFilter !== "all" && job.paymentStatus !== paymentFilter)
-        return false;
-      if (
-        unassignedOnly &&
-        (job.assignedCleanerId ||
-          job.status === "CANCELLED" ||
-          job.status === "CANCELLED_EMERGENCY")
-      ) {
-        return false;
-      }
-      return true;
+  const goMonth = (delta: number) => {
+    replaceParams((p) => {
+      p.set('month', addCalendarMonthKey(month, delta));
+      p.delete('day');
+      p.delete('range');
+      p.delete('dateFrom');
+      p.delete('dateTo');
+      p.set('page', '1');
     });
-
-    return sortJobsBoardView(filtered, board);
-  }, [allJobs, marketTab, statusFilter, paymentFilter, unassignedOnly, board]);
-
-  const setBoard = (next: JobsBoardView) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("board", next);
-    router.replace(`/admin/jobs?${params.toString()}`);
   };
 
+  const goToday = () => {
+    const today = easternDateKey();
+    replaceParams((p) => {
+      p.set('month', today.slice(0, 7));
+      p.set('day', today);
+      p.delete('range');
+      p.delete('dateFrom');
+      p.delete('dateTo');
+      p.set('page', '1');
+    });
+  };
+
+  const goThisWeek = () => {
+    replaceParams((p) => {
+      p.set('range', 'week');
+      p.delete('day');
+      p.delete('dateFrom');
+      p.delete('dateTo');
+      p.set('page', '1');
+    });
+  };
+
+  const goThisMonth = () => {
+    replaceParams((p) => {
+      p.set('month', currentMonthKey());
+      p.delete('day');
+      p.delete('range');
+      p.delete('dateFrom');
+      p.delete('dateTo');
+      p.set('page', '1');
+    });
+  };
+
+  const applyCustomRange = () => {
+    if (!isDayKey(customFrom) || !isDayKey(customTo)) {
+      showToast('Enter a valid From and To date (YYYY-MM-DD).');
+      return;
+    }
+    replaceParams((p) => {
+      p.set('range', 'custom');
+      p.set('dateFrom', customFrom);
+      p.set('dateTo', customTo);
+      p.set('month', customFrom.slice(0, 7));
+      p.delete('day');
+      p.set('page', '1');
+    });
+  };
+
+  const resetFilters = () => {
+    router.replace(`/admin/jobs?month=${currentMonthKey()}&view=${view}`);
+  };
+
+  const monthTitle = formatServiceDate(`${month}-01`, {
+    month: 'long',
+    year: 'numeric',
+  });
+
   return (
-    <div className="p-7 pb-28">
+    <div className="p-4 pb-28 sm:p-7">
       <div className="mx-auto max-w-7xl">
         {toast && (
           <div className="fixed right-4 top-4 z-50 rounded-lg bg-vm-navy px-5 py-3 font-body text-sm text-white shadow-lg">
@@ -200,21 +293,30 @@ function AdminJobsPageContent() {
           </div>
         )}
 
-        <div className="mb-6 flex items-start justify-between gap-4 border-b border-vm-border pb-4">
+        <div className="mb-5 flex flex-col gap-4 border-b border-vm-border pb-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="font-heading text-xl font-bold text-vm-navy">
-              Jobs Operations
+              Jobs
             </h1>
             <p className="mt-1 font-body text-sm text-vm-muted">
-              Inbox for new requests. Today and Upcoming for scheduled work.
-              Completed stays closed. Exceptions need a human close — never auto-complete.
+              Calendar-first monthly schedule. One job record per cleaning.
+              Requests are not confirmed revenue.
             </p>
             {customerIdFilter && (
               <p className="mt-2 font-body text-xs text-vm-cyan-dark">
-                Filtered to one customer ·{" "}
-                <Link href="/admin/jobs" className="font-semibold hover:underline">
+                Filtered to one customer ·{' '}
+                <button
+                  type="button"
+                  className="font-semibold outline-none hover:underline focus-visible:ring-2 focus-visible:ring-vm-cyan"
+                  onClick={() =>
+                    replaceParams((p) => {
+                      p.delete('customerId');
+                      p.set('page', '1');
+                    })
+                  }
+                >
                   Clear filter
-                </Link>
+                </button>
               </p>
             )}
           </div>
@@ -224,15 +326,218 @@ function AdminJobsPageContent() {
           </Link>
         </div>
 
+        {/* Period navigation */}
+        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-vm-border bg-vm-white p-3 sm:flex-row sm:flex-wrap sm:items-center sm:p-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Previous month"
+              className={ghostButton}
+              onClick={() => goMonth(-1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <p className="min-w-[9rem] text-center font-heading text-base font-semibold text-vm-navy">
+              {monthTitle}
+            </p>
+            <button
+              type="button"
+              aria-label="Next month"
+              className={ghostButton}
+              onClick={() => goMonth(1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className={ghostButton} onClick={goToday}>
+              Today
+            </button>
+            <button type="button" className={ghostButton} onClick={goThisWeek}>
+              This week
+            </button>
+            <button type="button" className={ghostButton} onClick={goThisMonth}>
+              This month
+            </button>
+          </div>
+
+          <div className="ml-auto flex gap-2">
+            <button
+              type="button"
+              className={`${ghostButton} ${view === 'calendar' ? 'border-vm-cyan bg-vm-cyan/10' : ''}`}
+              onClick={() =>
+                replaceParams((p) => {
+                  p.set('view', 'calendar');
+                })
+              }
+            >
+              <CalendarDays className="mr-1 h-4 w-4" />
+              Calendar
+            </button>
+            <button
+              type="button"
+              className={`${ghostButton} ${view === 'list' ? 'border-vm-cyan bg-vm-cyan/10' : ''}`}
+              onClick={() =>
+                replaceParams((p) => {
+                  p.set('view', 'list');
+                })
+              }
+            >
+              <List className="mr-1 h-4 w-4" />
+              List
+            </button>
+          </div>
+        </div>
+
+        {/* Custom range */}
+        <div className="mb-4 flex flex-wrap items-end gap-2 font-body text-sm">
+          <label className="flex flex-col gap-1 text-vm-muted">
+            From
+            <input
+              type="date"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              className="rounded-lg border border-vm-border bg-vm-white px-2 py-1.5 text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-vm-muted">
+            To
+            <input
+              type="date"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              className="rounded-lg border border-vm-border bg-vm-white px-2 py-1.5 text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+            />
+          </label>
+          <button type="button" className={ghostButton} onClick={applyCustomRange}>
+            Apply range
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              replaceParams((p) => {
+                if (e.target.value === 'all') p.delete('status');
+                else p.set('status', e.target.value);
+                p.delete('focus');
+                p.set('page', '1');
+              })
+            }
+            className="rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+          >
+            <option value="all">All statuses</option>
+            <option value="RECEIVED">Received</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="ASSIGNED">Assigned</option>
+            <option value="ON_THE_WAY">On the way</option>
+            <option value="IN_PROGRESS">In progress</option>
+            <option value="AWAITING_QC">QC pending</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+            <option value="CANCELLED_EMERGENCY">Emergency cancel</option>
+          </select>
+
+          {!isBranchScoped && (
+            <select
+              value={branchFilter}
+              onChange={(e) =>
+                replaceParams((p) => {
+                  if (e.target.value === 'all') p.delete('branchId');
+                  else p.set('branchId', e.target.value);
+                  p.set('page', '1');
+                })
+              }
+              className="rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+            >
+              <option value="all">All markets</option>
+              <option value="vermont">Vermont</option>
+              <option value="new-jersey">New Jersey</option>
+            </select>
+          )}
+
+          <form
+            className="flex flex-wrap gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              replaceParams((p) => {
+                if (searchDraft.trim()) p.set('search', searchDraft.trim());
+                else p.delete('search');
+                p.set('page', '1');
+              });
+            }}
+          >
+            <input
+              type="search"
+              value={searchDraft}
+              onChange={(e) => setSearchDraft(e.target.value)}
+              placeholder="Search name, address, job ref…"
+              className="min-w-[12rem] flex-1 rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan focus-visible:ring-2 focus-visible:ring-vm-cyan"
+            />
+            <button type="submit" className={ghostButton}>
+              Search
+            </button>
+          </form>
+
+          <label className="flex cursor-pointer items-center gap-2 font-body text-sm text-vm-muted">
+            <input
+              type="checkbox"
+              checked={unassignedOnly}
+              onChange={(e) =>
+                replaceParams((p) => {
+                  if (e.target.checked) {
+                    p.set('unassignedOnly', 'true');
+                    p.set('focus', 'unassigned');
+                  } else {
+                    p.delete('unassignedOnly');
+                    p.delete('needsAssignment');
+                    if (p.get('focus') === 'unassigned') p.delete('focus');
+                  }
+                  p.set('page', '1');
+                })
+              }
+              className="h-4 w-4 rounded border-vm-border"
+            />
+            Unassigned only
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-2 font-body text-sm text-vm-muted">
+            <input
+              type="checkbox"
+              checked={includeArchived}
+              onChange={(e) =>
+                replaceParams((p) => {
+                  if (e.target.checked) p.set('includeArchived', 'true');
+                  else p.delete('includeArchived');
+                  p.set('page', '1');
+                })
+              }
+              className="h-4 w-4 rounded border-vm-border"
+            />
+            <Archive className="h-3.5 w-3.5" />
+            Show archived
+          </label>
+
+          <button type="button" className={`${ghostButton} ml-auto`} onClick={resetFilters}>
+            Reset
+          </button>
+        </div>
+
         {loading ? (
           <div className="py-20 text-center">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-vm-cyan" />
-            <p className="mt-3 font-body text-sm text-vm-muted">Loading jobs…</p>
+            <p className="mt-3 font-body text-sm text-vm-muted">Loading schedule…</p>
           </div>
-        ) : loadFailed || boardCounts === null ? (
+        ) : loadFailed ? (
           <div className="rounded-xl border border-vm-border bg-vm-white p-8 text-center">
             <p className="font-heading text-lg text-vm-navy">
-              {JOBS_UNAVAILABLE_TITLE}
+              Jobs temporarily unavailable
+            </p>
+            <p className="mt-1 font-body text-sm text-vm-muted">
+              This is not an empty schedule — the request failed.
             </p>
             <button type="button" onClick={fetchJobs} className={`mt-4 ${navyButton}`}>
               Retry
@@ -240,138 +545,151 @@ function AdminJobsPageContent() {
           </div>
         ) : (
           <>
-            {summary && (
-              <>
-                <JobsOperationsKpis summary={summary} hideFinancial={isBranchScoped} />
-                <OperationsHealthScore summary={summary} />
-              </>
-            )}
+            <JobsMonthlySummaryStrip
+              summary={summary}
+              hideFinancial={isBranchScoped}
+              activeFocus={focus}
+              onFocus={(next) =>
+                replaceParams((p) => {
+                  if (next === 'all') p.delete('focus');
+                  else p.set('focus', next);
+                  if (next === 'unscheduled') p.delete('day');
+                  p.set('page', '1');
+                })
+              }
+            />
 
-            <div className="mb-4 flex flex-wrap items-center gap-4 border-b border-vm-border">
-              {JOBS_BOARD_VIEWS.map((view) => (
-                <MarketTabButton
-                  key={view}
-                  label={BOARD_LABEL[view]}
-                  count={boardCounts[view]}
-                  active={board === view}
-                  onClick={() => setBoard(view)}
-                />
-              ))}
-            </div>
-
-            {board === "exceptions" && (
+            {focus === 'past_incomplete' && (
               <div className="mb-4 rounded-lg border border-vm-warning/40 bg-vm-warning-bg px-4 py-3 font-body text-sm text-vm-navy">
-                Past service date, not completed. Confirm the clean happened before
-                closing. Chris (Sep 16), Jeff (Sep 23), and Tiffany Mayo (Oct 11) stay
-                here until verified. Do not auto-complete.
+                Past service date, not completed or cancelled. Confirm whether the
+                clean happened before closing. Do not auto-complete.
               </div>
             )}
 
-            {board === "inbox" && (
-              <div className="mb-4 rounded-lg border border-vm-border bg-vm-white px-4 py-3 font-body text-sm text-vm-muted">
-                New requests (RECEIVED), newest first. A request is not a scheduled
-                cleaning until it is confirmed.
-              </div>
-            )}
-
-            {!isBranchScoped && (
-            <div className="mb-4 flex items-center gap-6 border-b border-vm-border">
-              <MarketTabButton
-                label="All Jobs"
-                count={marketCounts.all}
-                active={marketTab === "all"}
-                onClick={() => setMarketTab("all")}
-              />
-              <MarketTabButton
-                label="Vermont"
-                count={marketCounts.vermont}
-                active={marketTab === "vermont"}
-                onClick={() => setMarketTab("vermont")}
-              />
-              <MarketTabButton
-                label="New Jersey"
-                count={marketCounts["new-jersey"]}
-                active={marketTab === "new-jersey"}
-                onClick={() => setMarketTab("new-jersey")}
-              />
-            </div>
-            )}
-
-            <div className="mb-6 flex flex-wrap items-center gap-3">
-              {(board === "today" || board === "upcoming") && (
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan"
-              >
-                <option value="all">All Statuses</option>
-                <option value="CONFIRMED">Confirmed</option>
-                <option value="ASSIGNED">Scheduled</option>
-                <option value="IN_PROGRESS">In Progress</option>
-              </select>
-              )}
-              {!isBranchScoped && (
-              <select
-                value={paymentFilter}
-                onChange={(e) => setPaymentFilter(e.target.value)}
-                className="rounded-lg border border-vm-border bg-vm-white px-3 py-1.5 font-body text-sm text-vm-navy outline-none focus:border-vm-cyan"
-              >
-                <option value="all">All Payments</option>
-                <option value="PAID">Paid</option>
-                <option value="DEPOSIT_PAID">Deposit Paid</option>
-                <option value="PENDING">Pending</option>
-                <option value="BALANCE_DUE">Balance Due</option>
-                <option value="FAILED">Failed</option>
-              </select>
-              )}
-              <label className="ml-auto flex cursor-pointer items-center gap-2 font-body text-sm text-vm-muted">
-                <input
-                  type="checkbox"
-                  checked={unassignedOnly}
-                  onChange={(e) => setUnassignedOnly(e.target.checked)}
-                  className="h-4 w-4 rounded border-vm-border"
+            <div
+              className={`mb-5 grid gap-5 ${
+                view === 'calendar' ? 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]' : ''
+              }`}
+            >
+              {view === 'calendar' && (
+                <JobsMonthCalendar
+                  monthKey={month}
+                  dayCounts={dayCounts}
+                  selectedDay={day}
+                  onSelectDay={(key) =>
+                    replaceParams((p) => {
+                      p.set('day', key);
+                      p.set('month', key.slice(0, 7));
+                      p.delete('range');
+                      p.delete('dateFrom');
+                      p.delete('dateTo');
+                      p.set('page', '1');
+                    })
+                  }
+                  onSelectMonth={() =>
+                    replaceParams((p) => {
+                      p.delete('day');
+                      p.delete('range');
+                      p.delete('dateFrom');
+                      p.delete('dateTo');
+                      p.set('page', '1');
+                    })
+                  }
                 />
-                Unassigned only
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 font-body text-sm text-vm-muted">
-                <input
-                  type="checkbox"
-                  checked={showArchived}
-                  onChange={(e) => setShowArchived(e.target.checked)}
-                  className="h-4 w-4 rounded border-vm-border"
-                />
-                <Archive className="h-3.5 w-3.5" />
-                Show archived
-              </label>
-            </div>
+              )}
 
-            {displayedJobs.length === 0 ? (
-              <div className="rounded-xl border border-vm-border bg-vm-white py-16 text-center">
-                <p className="font-heading text-lg text-vm-navy">{JOBS_EMPTY_TITLE}</p>
-                <p className="mt-1 font-body text-sm text-vm-muted">
-                  Try adjusting your filters or add a job manually.
-                </p>
-                <Link href="/admin/jobs/new" className={`mt-5 inline-flex ${navyButton}`}>
-                  <Plus className="mr-1 h-4 w-4" />
-                  Add Job Manually
-                </Link>
+              <div>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-heading text-sm font-semibold text-vm-navy">
+                    {day
+                      ? formatServiceDate(day, {
+                          weekday: 'long',
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })
+                      : `Schedule · ${periodLabel}`}
+                  </p>
+                  <p className="font-body text-xs text-vm-muted">
+                    {pagination.total} job{pagination.total === 1 ? '' : 's'}
+                    {pagination.totalPages > 1
+                      ? ` · page ${pagination.page} of ${pagination.totalPages}`
+                      : ''}
+                  </p>
+                </div>
+
+                {jobs.length === 0 ? (
+                  <div className="rounded-xl border border-vm-border bg-vm-white py-16 text-center">
+                    <p className="font-heading text-lg text-vm-navy">
+                      No jobs in this period
+                    </p>
+                    <p className="mt-1 font-body text-sm text-vm-muted">
+                      Try another month, clear filters, or add a job manually.
+                    </p>
+                    <Link
+                      href="/admin/jobs/new"
+                      className={`mt-5 inline-flex ${navyButton}`}
+                    >
+                      <Plus className="mr-1 h-4 w-4" />
+                      Add Job Manually
+                    </Link>
+                  </div>
+                ) : (
+                  <ul className="overflow-hidden rounded-xl border border-vm-border bg-vm-white shadow-sm">
+                    {jobs.map((job) => (
+                      <li key={job.id} className="relative">
+                        {isUnknownServiceTime(job.preferredTime) && (
+                          <p className="border-b border-vm-border bg-vm-warning-bg px-4 py-1 font-body text-xs text-vm-navy">
+                            Service time unknown
+                          </p>
+                        )}
+                        <JobOperationsCard
+                          job={job}
+                          confirming={confirmingArchiveId === job.id}
+                          busy={busyJobId === job.id}
+                          onRequestArchive={() => setConfirmingArchiveId(job.id)}
+                          onCancelArchive={() => setConfirmingArchiveId(null)}
+                          onConfirmArchive={() => archiveJob(job.id)}
+                          onUnarchive={() => unarchiveJob(job.id)}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {pagination.totalPages > 1 && (
+                  <div className="mt-4 flex items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      className={ghostButton}
+                      disabled={pagination.page <= 1}
+                      onClick={() =>
+                        replaceParams((p) => {
+                          p.set('page', String(Math.max(1, pagination.page - 1)));
+                        })
+                      }
+                    >
+                      Previous
+                    </button>
+                    <span className="font-body text-sm text-vm-muted">
+                      Page {pagination.page} / {pagination.totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      className={ghostButton}
+                      disabled={!pagination.hasMore}
+                      onClick={() =>
+                        replaceParams((p) => {
+                          p.set('page', String(pagination.page + 1));
+                        })
+                      }
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </div>
-            ) : (
-              <ul className="overflow-hidden rounded-xl border border-vm-border bg-vm-white shadow-sm">
-                {displayedJobs.map((job) => (
-                  <JobOperationsCard
-                    key={job.id}
-                    job={job}
-                    confirming={confirmingArchiveId === job.id}
-                    busy={busyJobId === job.id}
-                    onRequestArchive={() => setConfirmingArchiveId(job.id)}
-                    onCancelArchive={() => setConfirmingArchiveId(null)}
-                    onConfirmArchive={() => archiveJob(job.id)}
-                    onUnarchive={() => unarchiveJob(job.id)}
-                  />
-                ))}
-              </ul>
-            )}
+            </div>
           </>
         )}
       </div>
@@ -390,38 +708,5 @@ export default function AdminJobsPage() {
     >
       <AdminJobsPageContent />
     </Suspense>
-  );
-}
-
-function MarketTabButton({
-  label,
-  count,
-  active,
-  onClick,
-}: {
-  label: string;
-  count: number;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`-mb-px border-b-2 px-1 pb-3 font-heading text-sm transition-colors ${
-        active
-          ? "border-vm-cyan font-semibold text-vm-navy"
-          : "border-transparent text-vm-muted hover:text-vm-navy"
-      }`}
-    >
-      {label}
-      <span
-        className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
-          active ? "bg-vm-cyan/15 text-vm-navy" : "bg-vm-surface text-vm-muted"
-        }`}
-      >
-        {count}
-      </span>
-    </button>
   );
 }

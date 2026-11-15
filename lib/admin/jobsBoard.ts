@@ -26,7 +26,13 @@ export const JOBS_BOARD_VIEWS = [
 export type JobsBoardView = (typeof JOBS_BOARD_VIEWS)[number];
 
 const CANCELLED = new Set(['CANCELLED', 'CANCELLED_EMERGENCY']);
-const SCHEDULED = new Set(['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS']);
+const SCHEDULED = new Set([
+  'CONFIRMED',
+  'ASSIGNED',
+  'ON_THE_WAY',
+  'IN_PROGRESS',
+  'AWAITING_QC',
+]);
 
 export type JobsBoardJob = {
   id: string;
