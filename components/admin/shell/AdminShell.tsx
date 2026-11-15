@@ -112,7 +112,7 @@ function SignOutButton({
       onClick={requestSignOut}
       disabled={signingOut}
       aria-busy={signingOut || undefined}
-      className={`${minHeightClass} ${className ?? ''}`}
+      className={`${minHeightClass} outline-none focus-visible:ring-2 focus-visible:ring-vm-cyan ${className ?? ''}`}
     >
       {signingOut ? 'Signing out…' : 'Sign out'}
     </button>
