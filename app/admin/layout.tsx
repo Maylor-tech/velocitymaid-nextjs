@@ -19,7 +19,12 @@ export default async function AdminLayout({
   const auth = await getAdminAuthFromCookies();
 
   return (
-    <AdminShell userEmail={auth?.email} branchName={auth?.branchName} isBranchScoped={!!auth?.branchId}>
+    <AdminShell
+      userEmail={auth?.email}
+      branchName={auth?.branchName}
+      isOwner={auth?.isOwner === true}
+      isBranchScoped={auth?.isBranchScoped === true}
+    >
       {children}
     </AdminShell>
   );
