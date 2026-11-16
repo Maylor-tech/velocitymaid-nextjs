@@ -1,4 +1,6 @@
 import { NextRequest } from 'next/server';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
@@ -47,9 +49,17 @@ vi.mock('@/lib/email/cronAutomationEmails', () => ({
 }));
 vi.mock('@/lib/audit', () => ({ logAuditEntry: logAudit }));
 
-import { GET as rebookingReminders } from '../rebooking-reminders/route';
+import { GET as rebookingGet, POST as rebookingPost } from '../rebooking-reminders/route';
 
 const SECRET = 'test-cron-secret';
+const DISABLED = {
+  success: true,
+  disabled: true,
+  processed: 0,
+  sent: 0,
+  failed: 0,
+  skipped: 0,
+};
 
 function request(authorization?: string) {
   const headers = new Headers();
@@ -57,27 +67,28 @@ function request(authorization?: string) {
   return new NextRequest('http://localhost/api/cron/rebooking-reminders', { headers });
 }
 
-describe('rebooking reminder guard', () => {
+describe('original rebooking route is disabled-only', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv('CRON_SECRET', SECRET);
-    delete process.env.REBOOKING_REMINDERS_ENABLED;
-    jobFindMany.mockResolvedValue([]);
-    auditFindMany.mockResolvedValue([]);
-    deliveryFindMany.mockResolvedValue([]);
-    deliveryCreate.mockResolvedValue({});
-    deliveryUpdateMany.mockResolvedValue({ count: 0 });
+    vi.stubEnv('REBOOKING_REMINDERS_ENABLED', 'true');
   });
 
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  it('rejects an unauthorized request while sending remains enabled', async () => {
-    const response = await rebookingReminders(request());
-    expect(response.status).toBe(401);
-    expect(await response.json()).toEqual({ error: 'Unauthorized' });
-    expect(verifyCronAuth).toHaveBeenCalled();
+  it('returns the disabled body for GET and POST without auth, ledger, or provider work', async () => {
+    for (const handler of [rebookingGet, rebookingPost]) {
+      const anonymous = await handler(request());
+      const authorized = await handler(request(`Bearer ${SECRET}`));
+      const wrong = await handler(request('Bearer wrong-secret'));
+      for (const response of [anonymous, authorized, wrong]) {
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual(DISABLED);
+      }
+    }
+    expect(verifyCronAuth).not.toHaveBeenCalled();
     expect(jobFindMany).not.toHaveBeenCalled();
     expect(jobCount).not.toHaveBeenCalled();
     expect(auditFindMany).not.toHaveBeenCalled();
@@ -88,55 +99,11 @@ describe('rebooking reminder guard', () => {
     expect(logAudit).not.toHaveBeenCalled();
   });
 
-  it('keeps the authorized empty run when the control is unset', async () => {
-    const response = await rebookingReminders(request(`Bearer ${SECRET}`));
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({
-      success: true,
-      processed: 0,
-      sent: 0,
-      failed: 0,
-      skipped: 0,
-      unknown: 0,
-    });
-    expect(verifyCronAuth).toHaveBeenCalled();
-    expect(deliveryUpdateMany).toHaveBeenCalled();
-    expect(auditFindMany).toHaveBeenCalled();
-    expect(jobFindMany).toHaveBeenCalledTimes(1);
-    expect(deliveryCreate).not.toHaveBeenCalled();
-    expect(sendRebooking).not.toHaveBeenCalled();
-    expect(logAudit).not.toHaveBeenCalled();
+  it('does not import the sender, the ledger claim helper, or Prisma', () => {
+    const source = readFileSync(join(process.cwd(), 'app/api/cron/rebooking-reminders/route.ts'), 'utf8');
+    expect(source).not.toContain('deliverClaimedRebookingReminder');
+    expect(source).not.toContain('sendRebookingReminderEmail');
+    expect(source).not.toContain("from '@/lib/prisma'");
+    expect(source).toContain('rebookingRemindersDisabledResponse');
   });
-
-  it.each(['false', '0', 'off', 'disabled', ' FALSE ', ' Off ', ' Disabled '])(
-    'returns before auth, database, recovery, or sends when the control is %j',
-    async (value) => {
-      vi.stubEnv('REBOOKING_REMINDERS_ENABLED', value);
-
-      const anonymous = await rebookingReminders(request());
-      const authorized = await rebookingReminders(request(`Bearer ${SECRET}`));
-      const wrong = await rebookingReminders(request('Bearer wrong-secret'));
-
-      for (const response of [anonymous, authorized, wrong]) {
-        expect(response.status).toBe(200);
-        expect(await response.json()).toEqual({
-          success: true,
-          disabled: true,
-          processed: 0,
-          sent: 0,
-          failed: 0,
-          skipped: 0,
-        });
-      }
-      expect(verifyCronAuth).not.toHaveBeenCalled();
-      expect(jobFindMany).not.toHaveBeenCalled();
-      expect(jobCount).not.toHaveBeenCalled();
-      expect(auditFindMany).not.toHaveBeenCalled();
-      expect(deliveryFindMany).not.toHaveBeenCalled();
-      expect(deliveryCreate).not.toHaveBeenCalled();
-      expect(deliveryUpdateMany).not.toHaveBeenCalled();
-      expect(sendRebooking).not.toHaveBeenCalled();
-      expect(logAudit).not.toHaveBeenCalled();
-    }
-  );
 });

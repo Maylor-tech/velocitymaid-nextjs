@@ -30,15 +30,24 @@ export type SendRebookingReminderEmailResult = {
   outcomeUnknown?: boolean;
 };
 
-export async function sendRebookingReminderEmail(params: {
+export type RebookingProviderRequest = {
+  from: string;
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  idempotencyKey: string;
+};
+
+export function buildRebookingReminderProviderRequest(params: {
   toEmail: string;
   hostFirstName: string;
   propertyAddress: string;
   checkoutDate: Date;
   idempotencyKey: string;
-}): Promise<SendRebookingReminderEmailResult> {
+  from?: string;
+}): RebookingProviderRequest {
   const checkout = formatRebookingCheckoutDateUtc(params.checkoutDate);
-
   const text = `Hi ${params.hostFirstName},
 
 Just a heads up — your guest at ${params.propertyAddress} is scheduled to check out on ${checkout}.
@@ -52,24 +61,36 @@ Or reply to this email and we'll get it scheduled.
 
 Brian
 VelocityMaid`;
+  return {
+    from: params.from ?? getResendFromEmail(),
+    to: params.toEmail,
+    subject: 'Guest checkout in 7 days — confirm your VelocityMaid turnover',
+    text,
+    html: text.replace(/\n/g, '<br>'),
+    idempotencyKey: params.idempotencyKey,
+  };
+}
 
+export async function sendBuiltRebookingReminder(
+  request: RebookingProviderRequest
+): Promise<SendRebookingReminderEmailResult> {
   try {
     const { messageId } = await sendVerifiedEmail(
       {
-        from: getResendFromEmail(),
-        to: params.toEmail,
-        subject: 'Guest checkout in 7 days — confirm your VelocityMaid turnover',
-        text,
-        html: text.replace(/\n/g, '<br>'),
+        from: request.from,
+        to: request.to,
+        subject: request.subject,
+        text: request.text,
+        html: request.html,
       },
-      params.idempotencyKey
+      request.idempotencyKey
     );
     logIntegrationEvent({
       channel: 'EMAIL',
       action: 'SEND_REBOOKING_REMINDER_EMAIL',
       provider: 'RESEND',
       status: 'SUCCESS',
-      recipient: params.toEmail,
+      recipient: request.to,
       templateKey: 'rebooking_reminder',
       triggeredBy: 'cron',
     }).catch(() => {});
@@ -82,13 +103,23 @@ VelocityMaid`;
       action: 'SEND_REBOOKING_REMINDER_EMAIL',
       provider: 'RESEND',
       status: 'FAILED',
-      recipient: params.toEmail,
+      recipient: request.to,
       templateKey: 'rebooking_reminder',
       triggeredBy: 'cron',
       errorSummary: message,
     }).catch(() => {});
     return { sent: false, error: message, outcomeUnknown };
   }
+}
+
+export async function sendRebookingReminderEmail(params: {
+  toEmail: string;
+  hostFirstName: string;
+  propertyAddress: string;
+  checkoutDate: Date;
+  idempotencyKey: string;
+}): Promise<SendRebookingReminderEmailResult> {
+  return sendBuiltRebookingReminder(buildRebookingReminderProviderRequest(params));
 }
 
 export async function sendLeadFollowUpEmail(params: {

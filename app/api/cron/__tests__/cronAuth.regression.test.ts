@@ -117,7 +117,6 @@ describe('cron authorization and existing empty-run behavior', () => {
     ['send-review-requests', sendReviewRequests, reviewFindMany],
     ['referral-nudge', referralNudge, ratingFindMany],
     ['lead-followup', leadFollowup, leadFindMany],
-    ['rebooking-reminders', rebookingReminders, jobFindMany],
     ['dispatch-offer-expire', expireOffers, expireOpenOffers],
     ['invoice-reminders', invoiceReminders, invoiceFindMany],
   ] as const)('rejects %s when the secret is missing, empty, or wrong', async (path, handler, probe) => {
@@ -180,15 +179,18 @@ describe('cron authorization and existing empty-run behavior', () => {
     expect(logAudit).not.toHaveBeenCalled();
   });
 
-  it('keeps an authorized empty lead follow-up and rebooking run', async () => {
+  it('keeps an authorized empty lead follow-up and leaves rebooking disabled', async () => {
     expect(await (await leadFollowup(request('/api/cron/lead-followup', `Bearer ${SECRET}`))).json()).toEqual({
       success: true, processed: 0, sent: 0, failed: 0,
     });
-    expect(await (await rebookingReminders(request('/api/cron/rebooking-reminders', `Bearer ${SECRET}`))).json()).toEqual({
-      success: true, processed: 0, sent: 0, failed: 0, skipped: 0, unknown: 0,
+    const rebooking = await rebookingReminders(request('/api/cron/rebooking-reminders', `Bearer ${SECRET}`));
+    expect(rebooking.status).toBe(200);
+    expect(await rebooking.json()).toEqual({
+      success: true, disabled: true, processed: 0, sent: 0, failed: 0, skipped: 0,
     });
     expect(sendLead).not.toHaveBeenCalled();
     expect(sendRebooking).not.toHaveBeenCalled();
+    expect(jobFindMany).not.toHaveBeenCalled();
   });
 
   it('keeps an authorized offer-expiry run on the existing result', async () => {

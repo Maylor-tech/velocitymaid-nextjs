@@ -862,6 +862,8 @@ model RebookingReminderDelivery {
   claimedAt              DateTime?
   /// Start of the Resend idempotency key. Set once on the first claim.
   firstProviderAttemptAt DateTime?
+  /// SHA-256 of the canonical provider request. Set on the first claim and never replaced.
+  payloadFingerprint     String?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   Job                    Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
@@ -869,6 +871,22 @@ model RebookingReminderDelivery {
   @@index([status, claimedAt])
   @@index([status, firstProviderAttemptAt])
   @@map("rebooking_reminder_deliveries")
+}
+
+/// Singleton authorization for the rebooking v2 worker.
+/// generation starts at 0 while disabled. Authorization and revocation each
+/// increment it. An enabled row is valid only with a deployment id, commit,
+/// positive generation, and operator attribution.
+model RebookingExecutionControl {
+  workerKey            String   @id
+  enabled              Boolean  @default(false)
+  approvedDeploymentId String?
+  approvedCommitSha    String?
+  generation           Int      @default(0)
+  updatedAt            DateTime @updatedAt
+  updatedBy            String
+
+  @@map("rebooking_execution_controls")
 }
 
 model JobPayout {
