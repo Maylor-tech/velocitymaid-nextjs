@@ -103,10 +103,14 @@ export async function GET(request: NextRequest) {
         OR: [{ preferredDate: null }, { preferredDate: { gte: today } }],
       });
     } else if (board === 'today') {
-      where.status = { in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS'] };
+      where.status = {
+        in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS', 'AWAITING_QC'],
+      };
       where.preferredDate = { gte: today, lt: tomorrow };
     } else if (board === 'upcoming') {
-      where.status = { in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS'] };
+      where.status = {
+        in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS', 'AWAITING_QC'],
+      };
       where.preferredDate = { gte: tomorrow };
     } else if (board === 'completed') {
       where.status = 'COMPLETED';
@@ -446,14 +450,18 @@ export async function GET(request: NextRequest) {
         prisma.job.count({
           where: {
             ...countBase,
-            status: { in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS'] },
+            status: {
+              in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS', 'AWAITING_QC'],
+            },
             preferredDate: { gte: today, lt: tomorrow },
           },
         }),
         prisma.job.count({
           where: {
             ...countBase,
-            status: { in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS'] },
+            status: {
+              in: ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS', 'AWAITING_QC'],
+            },
             preferredDate: { gte: tomorrow },
           },
         }),

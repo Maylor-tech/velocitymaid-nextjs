@@ -657,16 +657,19 @@ export function getStatusBadge(status: string): { label: string; cls: string } {
     case 'CONFIRMED':
       return { label: 'Confirmed', cls: 'bg-vm-cyan-tint text-vm-navy' };
     case 'ASSIGNED':
-      return { label: 'Scheduled', cls: 'bg-purple-100 text-purple-700' };
+      return { label: 'Assigned', cls: 'bg-purple-100 text-purple-700' };
     case 'ON_THE_WAY':
       return { label: 'On the way', cls: 'bg-purple-100 text-purple-700' };
     case 'IN_PROGRESS':
       return { label: 'In progress', cls: 'bg-vm-warning-bg text-vm-warning' };
+    case 'AWAITING_QC':
+      return { label: 'QC pending', cls: 'bg-vm-warning-bg text-vm-warning' };
     case 'RECEIVED':
       return { label: 'Received', cls: 'bg-vm-surface text-vm-muted' };
     case 'CANCELLED':
-    case 'CANCELLED_EMERGENCY':
       return { label: 'Cancelled', cls: 'bg-vm-danger-bg text-vm-danger' };
+    case 'CANCELLED_EMERGENCY':
+      return { label: 'Emergency cancel', cls: 'bg-vm-danger-bg text-vm-danger' };
     default:
       return { label: status, cls: 'bg-vm-surface text-vm-muted' };
   }

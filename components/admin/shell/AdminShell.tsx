@@ -1,21 +1,46 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BrandLogo } from '@/components/brand';
 import { isPathAllowedForBranchScopedAdmin } from '@/lib/auth/adminScope';
 import { ADMIN_NAV_GROUPS, type AdminNavGroup } from './adminNav';
+import {
+  adminRoleLabel,
+  beginAdminSignOut,
+  isAdminSignOutPending,
+} from './adminSignOut';
 
-const AdminShellContext = createContext<{
+type AdminShellContextValue = {
   userEmail?: string;
+  isOwner?: boolean;
   isBranchScoped?: boolean;
-}>({});
+  branchName?: string;
+  signingOut: boolean;
+  signOutError: string | null;
+  requestSignOut: () => void;
+};
+
+const AdminShellContext = createContext<AdminShellContextValue>({
+  signingOut: false,
+  signOutError: null,
+  requestSignOut: () => {},
+});
 
 interface AdminShellProps {
   children: React.ReactNode;
   userEmail?: string;
   branchName?: string;
+  isOwner?: boolean;
   isBranchScoped?: boolean;
 }
 
@@ -73,17 +98,147 @@ function NavLinks({
   );
 }
 
+function SignOutButton({
+  className,
+  minHeightClass = 'min-h-11',
+}: {
+  className?: string;
+  minHeightClass?: string;
+}) {
+  const { signingOut, requestSignOut } = useAdminShell();
+  return (
+    <button
+      type="button"
+      onClick={requestSignOut}
+      disabled={signingOut}
+      aria-busy={signingOut || undefined}
+      className={`${minHeightClass} outline-none focus-visible:ring-2 focus-visible:ring-vm-cyan ${className ?? ''}`}
+    >
+      {signingOut ? 'Signing out…' : 'Sign out'}
+    </button>
+  );
+}
+
+function AccountMenu() {
+  const { userEmail, isOwner, isBranchScoped, signingOut, requestSignOut } =
+    useAdminShell();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelId = useId();
+  const role = adminRoleLabel({ isOwner, isBranchScoped });
+
+  const initials =
+    userEmail
+      ?.split('@')[0]
+      ?.split(/[._-]/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase())
+      .join('') || 'AU';
+
+  const close = useCallback(() => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        close();
+      }
+    };
+    const onPointer = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onPointer);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onPointer);
+    };
+  }, [open, close]);
+
+  useEffect(() => {
+    if (signingOut) setOpen(false);
+  }, [signingOut]);
+
+  return (
+    <div className="relative" ref={rootRef}>
+      <button
+        ref={triggerRef}
+        type="button"
+        className="flex h-11 min-w-11 items-center justify-center rounded-full bg-vm-navy font-heading text-xs font-bold text-vm-white outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-vm-cyan"
+        aria-expanded={open}
+        aria-controls={panelId}
+        aria-haspopup="true"
+        aria-label={`Admin account menu (${role}${userEmail ? `, ${userEmail}` : ''})`}
+        onClick={() => setOpen((value) => !value)}
+      >
+        {initials}
+      </button>
+      {open && (
+        <div
+          id={panelId}
+          role="region"
+          aria-label="Admin account"
+          className="absolute right-0 z-40 mt-2 w-64 rounded-lg border border-vm-navy/15 bg-vm-navy p-3 shadow-lg"
+        >
+          <p className="font-heading text-sm font-bold text-vm-white">Admin account</p>
+          <p className="mt-0.5 font-body text-xs text-vm-white/60">
+            {role}
+            {userEmail ? ` · ${userEmail}` : ''}
+          </p>
+          <div className="mt-3 border-t border-vm-white/10 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                requestSignOut();
+              }}
+              disabled={signingOut}
+              aria-busy={signingOut || undefined}
+              className="flex min-h-11 w-full items-center rounded-md px-2 font-body text-sm font-semibold text-red-300 outline-none hover:bg-vm-white/5 focus-visible:ring-2 focus-visible:ring-vm-cyan disabled:opacity-60"
+            >
+              {signingOut ? 'Signing out…' : 'Sign out'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AdminShell({
   children,
   userEmail,
   branchName,
+  isOwner = false,
   isBranchScoped = false,
 }: AdminShellProps) {
   const pathname = usePathname();
   const [needsCleaner, setNeedsCleaner] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
   const groups = groupsFor(isBranchScoped);
   const homeHref = '/admin';
+  const role = adminRoleLabel({ isOwner, isBranchScoped });
+
+  const requestSignOut = useCallback(() => {
+    if (signingOut || isAdminSignOutPending()) return;
+    setSignOutError(null);
+    setSigningOut(true);
+    const started = beginAdminSignOut();
+    if (!started) {
+      setSigningOut(false);
+      setSignOutError('Could not sign out. Try again.');
+    }
+  }, [signingOut]);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,7 +275,17 @@ export function AdminShell({
     ) : null;
 
   return (
-    <AdminShellContext.Provider value={{ userEmail, isBranchScoped }}>
+    <AdminShellContext.Provider
+      value={{
+        userEmail,
+        isOwner,
+        isBranchScoped,
+        branchName,
+        signingOut,
+        signOutError,
+        requestSignOut,
+      }}
+    >
       <div className="flex min-h-screen flex-col bg-vm-surface md:flex-row">
         <header className="flex items-center justify-between border-b border-vm-navy bg-vm-navy px-4 py-3 md:hidden">
           <Link href={homeHref} aria-label="VelocityMaid Admin home" className="block max-w-[160px]">
@@ -128,8 +293,9 @@ export function AdminShell({
           </Link>
           <button
             type="button"
-            className="rounded-md px-3 py-2 font-heading text-xs font-bold uppercase tracking-wide text-vm-white"
+            className="min-h-11 rounded-md px-3 py-2 font-heading text-xs font-bold uppercase tracking-wide text-vm-white"
             onClick={() => setMenuOpen((open) => !open)}
+            aria-expanded={menuOpen}
           >
             {menuOpen ? 'Close' : 'Menu'}
           </button>
@@ -141,6 +307,18 @@ export function AdminShell({
             )}
             <NavLinks groups={groups} pathname={pathname} onNavigate={() => setMenuOpen(false)} />
             {assignmentNote}
+            <div className="mt-4 border-t border-vm-white/10 px-1 pt-3">
+              <p className="px-2 font-body text-[11px] text-vm-white/50">
+                {role}
+                {userEmail ? ` · ${userEmail}` : ''}
+              </p>
+              <SignOutButton className="mt-1 w-full rounded-md px-3 text-left font-body text-sm font-semibold text-red-300 hover:bg-vm-white/5 disabled:opacity-60" />
+              {signOutError && (
+                <p className="mt-2 px-2 font-body text-xs text-red-300" role="alert">
+                  {signOutError}
+                </p>
+              )}
+            </div>
           </div>
         )}
 
@@ -155,6 +333,18 @@ export function AdminShell({
           </div>
           <NavLinks groups={groups} pathname={pathname} />
           {assignmentNote}
+          <div className="mt-auto border-t border-vm-white/10 px-1 pt-4">
+            <p className="px-2 font-body text-[11px] text-vm-white/50">
+              {role}
+              {userEmail ? ` · ${userEmail}` : ''}
+            </p>
+            <SignOutButton className="mt-1 w-full rounded-md px-3 text-left font-body text-sm font-semibold text-red-300 hover:bg-vm-white/5 disabled:opacity-60" />
+            {signOutError && (
+              <p className="mt-2 px-2 font-body text-xs text-red-300" role="alert">
+                {signOutError}
+              </p>
+            )}
+          </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">{children}</div>
@@ -167,24 +357,14 @@ export function AdminPageHeader({
   title,
   subtitle,
   actions,
-  userEmail: userEmailProp,
 }: {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  /** @deprecated Identity comes from AdminShell context. */
   userEmail?: string;
 }) {
-  const { userEmail: userEmailFromShell } = useContext(AdminShellContext);
-  const userEmail = userEmailProp ?? userEmailFromShell;
-
-  const initials =
-    userEmail
-      ?.split('@')[0]
-      ?.split(/[._-]/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase())
-      .join('') || 'AU';
+  const shell = useAdminShell();
 
   return (
     <header className="flex flex-col gap-3 border-b border-vm-border bg-vm-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
@@ -196,12 +376,12 @@ export function AdminPageHeader({
       </div>
       <div className="flex items-center gap-3.5">
         {actions}
-        <div
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-vm-navy font-heading text-xs font-bold text-vm-white"
-          title={userEmail}
-        >
-          {initials}
-        </div>
+        <AccountMenu />
+        {shell.signOutError && (
+          <span className="sr-only" role="alert">
+            {shell.signOutError}
+          </span>
+        )}
       </div>
     </header>
   );
