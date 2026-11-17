@@ -19,12 +19,14 @@ import {
 
 const inter = Inter({
   subsets: ["latin"],
+  weight: ["400", "600", "700"],
   variable: "--font-inter",
   display: "swap",
 });
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
+  weight: ["500", "700"],
   variable: "--font-space-grotesk",
   display: "swap",
 });
@@ -86,13 +88,16 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: '/brand/velocitymaid/favicon.ico', sizes: 'any' },
+      { url: '/brand/velocitymaid/web/favicon.svg', type: 'image/svg+xml' },
       { url: '/brand/velocitymaid/favicon-32.png', sizes: '32x32', type: 'image/png' },
       { url: '/brand/velocitymaid/icon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/brand/velocitymaid/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: '/brand/velocitymaid/favicon-180.png',
-    shortcut: '/brand/velocitymaid/favicon-32.png',
+    apple: '/brand/velocitymaid/apple-touch-icon.png',
+    shortcut: '/brand/velocitymaid/favicon.ico',
   },
+  themeColor: '#0F1C2E',
 };
 
 export default function RootLayout({

@@ -315,7 +315,7 @@ function JobDetailsContent() {
           </p>
           <a
             href={job.invoicePayUrl}
-            className="mt-4 inline-flex items-center justify-center rounded-lg bg-vm-cyan px-5 py-2.5 font-heading text-sm font-semibold text-vm-navy hover:bg-vm-cyan-dark"
+            className="mt-4 inline-flex items-center justify-center rounded-lg bg-vm-cyan px-5 py-2.5 font-heading text-sm font-semibold text-vm-navy hover:bg-vm-cyan/90"
           >
             Pay now
           </a>

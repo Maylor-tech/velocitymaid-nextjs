@@ -21,7 +21,7 @@ function RequestHomeWatchActions({ onNavy }: { onNavy: boolean }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <Link
           href={homeWatchIntakeHref(VERMONT_QUICK_QUOTE_PATH)}
-          className="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-vm-cyan px-5 py-3 font-heading text-sm font-semibold text-vm-navy transition hover:bg-vm-cyan-dark"
+          className="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-vm-cyan px-5 py-3 font-heading text-sm font-semibold text-vm-navy transition hover:bg-vm-cyan/90"
         >
           Quick Home Watch quote →
         </Link>

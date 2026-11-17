@@ -336,7 +336,7 @@ export function ResidentialIntakeForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="inline-flex w-full items-center justify-center rounded-md bg-vm-cyan px-5 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy hover:bg-vm-cyan-dark disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center rounded-md bg-vm-cyan px-5 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy hover:bg-vm-cyan/90 disabled:opacity-60"
       >
         {submitting ? "Sending…" : "Request a Residential Estimate"}
       </button>

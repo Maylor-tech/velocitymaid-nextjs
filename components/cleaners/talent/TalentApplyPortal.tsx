@@ -155,7 +155,7 @@ export default function TalentApplyPortal() {
             <button
               type="button"
               onClick={() => scrollTo('personal')}
-              className="btn-tactile mt-8 inline-flex items-center gap-2 rounded-lg bg-vm-cyan px-6 py-3.5 font-heading text-sm font-bold uppercase tracking-wider text-vm-navy shadow-md transition-colors hover:bg-vm-cyan-dark"
+              className="btn-tactile mt-8 inline-flex items-center gap-2 rounded-lg bg-vm-cyan px-6 py-3.5 font-heading text-sm font-bold uppercase tracking-wider text-vm-navy shadow-md transition-colors hover:bg-vm-cyan/90"
             >
               Start Application
               <ArrowRight className="h-4 w-4" />

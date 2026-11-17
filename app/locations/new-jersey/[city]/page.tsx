@@ -229,7 +229,7 @@ export default async function CityLandingPage({ params }: PageProps) {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   href={`/booking?branch=new-jersey&city=${citySlug}`}
-                  className="bg-vm-cyan text-vm-navy px-8 py-4 rounded-xl font-heading font-bold text-lg hover:bg-vm-cyan-dark transition shadow-lg"
+                  className="bg-vm-cyan text-vm-navy px-8 py-4 rounded-xl font-heading font-bold text-lg hover:bg-vm-cyan/90 transition shadow-lg"
                 >
                   Book a Cleaning
                 </Link>
@@ -395,7 +395,7 @@ export default async function CityLandingPage({ params }: PageProps) {
             </p>
             <Link
               href={`/booking?branch=new-jersey&city=${citySlug}`}
-              className="inline-flex items-center gap-2 bg-vm-cyan text-vm-navy px-8 py-4 rounded-xl font-heading font-bold text-lg hover:bg-vm-cyan-dark transition shadow-lg"
+              className="inline-flex items-center gap-2 bg-vm-cyan text-vm-navy px-8 py-4 rounded-xl font-heading font-bold text-lg hover:bg-vm-cyan/90 transition shadow-lg"
             >
               Book Now
               <ArrowRight className="w-5 h-5" />

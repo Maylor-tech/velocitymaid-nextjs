@@ -53,7 +53,7 @@ Products / surfaces represented in this system:
 
 ## 3. Visual foundations
 
-**Palette (approved — never extend the hue set):** Navy `#0F1C2E`, Cyan `#00C2CB`, Dark Cyan `#00A8B0` (cyan hover/press), Surface `#F4F6F9`, Text `#1A1A2E`, Muted `#6B7280`, White `#FFFFFF`. Derived-only: cyan tint `#E6FAFB` (selected/soft highlight), border `#E2E8F0`. Status tints are intentionally **calm** (muted green/amber/red on pale backgrounds), never neon — see `tokens/colors.css`. The **one sanctioned non-navy/cyan accent** is `--vm-progress #4338CA` (indigo), used *only* for the `in_progress` job state so the active state stays distinguishable from scheduled/cyan; it is a named token, not an ad-hoc literal.
+**Palette (approved v2.3 — never extend the hue set):** Navy `#0F1C2E`, Cyan `#00C2CB` (fills/borders), Cyan-dark `#007B84` (text/links on white only), Surface/canvas `#F5F7FA`, Text `#1B2D42`, Muted `#65778C`, White `#FFFFFF`. Text on cyan is always navy — white-on-cyan is not accessible. Derived-only: cyan tint `#E7F8F9`, line `#E1E8EF`. Status tints are intentionally **calm** — see `tokens/colors.css` and `styles/velocitymaid-tokens.css`. The **one sanctioned non-navy/cyan accent** is `--vm-progress #4338CA` (indigo), used *only* for the `in_progress` job state.
 
 - **Color usage:** Navy is the anchor — headers, footers, primary CTA fill, dark hero sections, sidebars. Cyan is the *accent*, used sparingly for highlights, secondary CTAs, selected states, icons, and the logo sparkle. White/Surface carry the generous negative space. Navy and cyan never compete; on a navy field cyan does the pointing.
 - **Typography:** **Space Grotesk** for all headings, display, button labels, table headers, and the wordmark (700; large display tightens to `-0.02em`). **Inter** for body and UI text (400/500/600). Line-height 1.5–1.65 for body, 1.05–1.15 for display. See `tokens/typography.css`.
@@ -61,7 +61,7 @@ Products / surfaces represented in this system:
 - **Corners:** rounded throughout. Buttons/inputs 6px, cards 8–12px, feature/pricing cards 16px, pills/badges/avatars fully round. Nothing sharp-cornered.
 - **Elevation:** minimal, soft, **navy-tinted** shadows (`rgba(15,28,46,…)`) — never gray or harsh. Default cards sit on a 1px `#E2E8F0` border + `shadow-sm`; they lift to `shadow-lg` on hover. A cyan glow (`--shadow-cyan`) is reserved for accent CTAs (e.g. the mobile FAB). See `tokens/spacing.css` + the Elevation card.
 - **Cards:** white surface, hairline border, soft shadow, rounded. The "selected"/"most popular" treatment is a **2px cyan ring** (and cyan-tint fill for selectable option cards). No colored left-border-accent cards, no heavy drop shadows.
-- **Backgrounds:** mostly flat white and `#F4F6F9` surface. The one sanctioned gradient is a subtle **navy→darker-navy** vertical on hero/CTA bands (`#0F1C2E → #13243b`) — never bright/rainbow gradients. Photography (homes, cleaning detail) should read clean and bright with cool-neutral white balance; the uniform kit shows the physical-brand photographic tone.
+- **Backgrounds:** mostly flat white and `#F5F7FA` canvas. The one sanctioned gradient is a subtle **navy→darker-navy** vertical on hero/CTA bands (`#0F1C2E → #13243b`) — never bright/rainbow gradients. Photography (homes, cleaning detail) should read clean and bright with cool-neutral white balance; the uniform kit shows the physical-brand photographic tone.
 - **Hover / press:** links and nav fade navy/white → **cyan**. Filled buttons darken slightly (navy → 90%, cyan → dark-cyan). Press uses the tactile `translateY(1px) scale(0.99)` (`.btn-tactile`). Cards lift `-2px` with a larger shadow. Inputs show a cyan border + soft cyan focus ring.
 - **Motion:** quiet and functional. `--duration-fast 150ms` for interactive feedback, `--duration-base 300ms` for hover/card transitions, all on `cubic-bezier(0.4,0,0.2,1)`. Fades and small translates only — **no bounces, no infinite decorative loops**. Respect `prefers-reduced-motion`.
 - **Transparency/blur:** sparing. White/cyan at low opacity for borders and secondary text on navy (`rgba(255,255,255,0.1–0.7)`). No glassmorphism.
@@ -86,9 +86,9 @@ The approved digital identity is the **VelocityMaid Final Approval Pack** (PNG m
 
 Canonical runtime path: `/public/brand/velocitymaid/` (see that folder’s README). Docs cards and `BrandLogo.jsx` reference those masters.
 
-- **Light backgrounds:** `velocitymaid-primary.png` / `velocitymaid-mark.png` (`<BrandLogo theme="light" />`)
-- **Navy/dark backgrounds:** `velocitymaid-reversed-clear.png` / `velocitymaid-mark-white.png` (`<BrandLogo theme="dark" />`)
-- **Compact / favicon:** VM service mark (`velocitymaid-mark-*.png`, `favicon-32.png`)
+- **Light backgrounds:** `vm-primary-horizontal.svg` / `vm-compact-light.svg` / `vm-servicemark-transparent.svg` (`<BrandLogo theme="light" />`)
+- **Navy/dark backgrounds:** `vm-reversed-dark.svg` / `vm-compact-reversed.svg` / `vm-servicemark-dark.svg` (`<BrandLogo theme="dark" />`)
+- **Compact / favicon:** `vm-favicon.svg` + `web/*` icons
 - **Tagline (verbatim):** **COME HOME TO CLEAN**
 - **Don'ts:** never recolor outside navy/cyan/white, never stretch/rotate/shadow the mark, never hand-draw the wordmark, and never use retired house-SVG or V-chevron approximations.
 
@@ -155,7 +155,7 @@ Findings from auditing the `components/` codebase against the approved brand. Th
 
 ## 8. Accessibility standards
 
-- **Contrast:** navy/text on white and white on navy clear WCAG AA. Cyan `#00C2CB` is an *accent*, not a text color on white — pair cyan **fills with navy text** (the approved cyan CTA), and use **dark-cyan `#00A8B0`** for cyan-colored text/links on light surfaces.
+- **Contrast:** navy/text on white and white on navy clear WCAG AA. Cyan `#00C2CB` is an *accent* fill — pair cyan **fills with navy text**. Use **cyan-dark `#007B84`** for cyan-colored text/links on white. White-on-cyan is not accessible.
 - **Focus:** every interactive element shows the 2px cyan focus ring (`:focus-visible`). Never remove outlines without a replacement.
 - **Targets:** ≥44px touch targets (buttons default to 44px tall; mobile tab/FAB sized accordingly).
 - **Semantics:** real `<button>`/`<a>`/`<label>` elements; `aria-label` on icon-only buttons (`IconButton` requires it); status messages use `role="status"`/`role="alert"`.

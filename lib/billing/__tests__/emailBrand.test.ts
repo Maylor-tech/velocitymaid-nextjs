@@ -21,7 +21,7 @@ describe('emailBrand', () => {
   it('builds full branded HTML shell with image header', () => {
     const html = brandHtmlBlock('Test', '<p>Hello</p>');
     expect(html).toContain('<img');
-    expect(html).toContain('/brand/velocitymaid/velocitymaid-reversed.png');
+    expect(html).toContain('/brand/velocitymaid/vm-reversed-dark.svg');
     expect(html).toContain('<p>Hello</p>');
   });
 });

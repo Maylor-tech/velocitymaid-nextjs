@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { HomepageMarketing } from "@/components/marketing/HomepageMarketing";
-import { pageSocialMetadata } from "@/lib/seo/socialImages";
+import { Homepage } from "@/components/vm/Homepage";
+import { pageSocialMetadata, SITE_ORIGIN } from "@/lib/seo/socialImages";
 
 const title =
-  "VelocityMaid | Professional Cleaning Services in New Jersey and Vermont";
+  "VelocityMaid — Vacation-rental turnovers & home cleaning in Vermont and New Jersey";
 const description =
-  "VelocityMaid offers professional cleaning services in New Jersey and Vermont. Home and apartment cleaning for NJ families. Turnover cleaning for Vermont Airbnbs and short-term rentals. Request a quote online in minutes.";
+  "Hotel-standard turnovers and home cleaning with a photo report after every clean. Insured, background-checked team, re-clean guarantee.";
 
 export const metadata: Metadata = {
   title,
@@ -18,6 +18,31 @@ export const metadata: Metadata = {
   }),
 };
 
+/** LocalBusiness JSON-LD — no aggregate ratings / review stars (handoff §5). */
+const localBusinessJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: "VelocityMaid",
+  url: SITE_ORIGIN,
+  email: "hello@velocitymaid.com",
+  telephone: ["+18027335348", "+19732809190"],
+  areaServed: [
+    { "@type": "State", name: "Vermont" },
+    { "@type": "State", name: "New Jersey" },
+  ],
+  description,
+};
+
 export default function HomePage() {
-  return <HomepageMarketing />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(localBusinessJsonLd),
+        }}
+      />
+      <Homepage />
+    </>
+  );
 }

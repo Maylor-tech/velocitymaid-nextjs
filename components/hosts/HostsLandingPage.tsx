@@ -23,7 +23,7 @@ import {
 } from "@/lib/hostIntake/attribution";
 
 const primaryButton =
-  "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
+  "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan/90";
 
 function HostsAnalyticsBootstrap() {
   const searchParams = useSearchParams();

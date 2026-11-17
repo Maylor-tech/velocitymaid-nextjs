@@ -14,7 +14,7 @@ import { VERMONT_SUPPORT } from "@/lib/customer/marketSupport";
 import { VERMONT_TURNOVER_QUOTE_LABEL } from "@/lib/marketing/publicCtas";
 
 const primaryButton =
-  "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
+  "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan/90";
 const outlineNavyButton =
   "inline-flex items-center justify-center rounded-md border border-vm-border px-5 py-2.5 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:border-vm-cyan hover:text-vm-cyan-dark";
 

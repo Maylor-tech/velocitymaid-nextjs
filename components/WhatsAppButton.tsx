@@ -62,9 +62,12 @@ export default function WhatsAppButton({
       ? 'left-4 sm:left-6'
       : 'right-4 sm:right-6';
 
+  // FAB sits over SiteFooter navy bottom pad (homepage) / page bottom elsewhere.
+  const bottomPosition = 'bottom-6';
+
   return (
     <div
-      className={`fixed bottom-20 sm:bottom-6 ${horizontalPosition} z-50 ${className}`}
+      className={`fixed ${bottomPosition} ${horizontalPosition} z-50 ${className}`}
     >
       {/* Tooltip */}
       {showPopup && showTooltip && (
@@ -79,7 +82,7 @@ export default function WhatsAppButton({
         onClick={handleClick}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        className="bg-vm-cyan hover:bg-vm-cyan-dark text-vm-navy p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
+        className="bg-vm-cyan hover:bg-vm-cyan/90 text-vm-navy p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
         aria-label="Chat on WhatsApp"
       >
         <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true" fill="currentColor">

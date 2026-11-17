@@ -24,27 +24,35 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         className={cn(
-          "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center whitespace-nowrap rounded-vm-md text-sm font-medium disabled:pointer-events-none disabled:opacity-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan focus-visible:ring-0",
           variant === "navy" ||
             variant === "cyan" ||
-            variant === "navyOutline"
+            variant === "navyOutline" ||
+            variant === "destructive" ||
+            variant === "link"
             ? "btn-tactile transition-[transform,background-color,border-color] duration-150"
             : "transition-colors",
           {
             "bg-primary text-primary-foreground hover:bg-primary/90": variant === "default",
-            "bg-destructive text-destructive-foreground hover:bg-destructive/90": variant === "destructive",
+            // Danger — brand danger token
+            "bg-vm-danger text-vm-white hover:bg-vm-danger/90 font-heading font-bold tracking-tight min-h-touch":
+              variant === "destructive",
             "border border-input bg-background hover:bg-accent hover:text-accent-foreground": variant === "outline",
-            "bg-secondary text-secondary-foreground hover:bg-secondary/80": variant === "secondary",
+            // Secondary white surface
+            "bg-vm-surface text-vm-text border border-vm-field-border hover:border-vm-navy/40 font-heading font-bold tracking-tight min-h-touch":
+              variant === "secondary",
             "hover:bg-accent hover:text-accent-foreground": variant === "ghost",
-            "text-primary underline-offset-4 hover:underline": variant === "link",
-            // Approved — Navy primary CTA (lib/brand/buttons.ts → buttonTokens.primary)
-            "bg-vm-navy text-vm-white font-heading font-bold uppercase tracking-wider text-xs hover:bg-vm-navy/90 shadow-md":
+            // Link — cyan-dark text on white
+            "text-vm-cyan-dark underline-offset-4 hover:underline font-heading font-bold tracking-tight":
+              variant === "link",
+            // Primary navy
+            "bg-vm-navy text-vm-white font-heading font-bold tracking-tight text-sm hover:bg-vm-navy/90 shadow-md min-h-touch":
               variant === "navy",
-            // Approved — Cyan accent CTA (lib/brand/buttons.ts → buttonTokens.accent)
-            "bg-vm-cyan text-vm-navy font-heading font-bold uppercase tracking-wider text-xs hover:bg-vm-cyan-dark shadow-md":
+            // Accent cyan + navy text (never white on cyan)
+            "bg-vm-cyan text-vm-navy font-heading font-bold tracking-tight text-sm hover:bg-vm-cyan/90 shadow-md min-h-touch":
               variant === "cyan",
-            // Approved — Navy outline (lib/brand/buttons.ts → buttonTokens.outline)
-            "border border-vm-navy/20 hover:border-vm-navy text-vm-navy font-heading font-bold uppercase tracking-wider text-xs bg-transparent":
+            // Outline
+            "border border-vm-navy/20 hover:border-vm-navy text-vm-navy font-heading font-bold tracking-tight text-sm bg-transparent min-h-touch":
               variant === "navyOutline",
           },
           {

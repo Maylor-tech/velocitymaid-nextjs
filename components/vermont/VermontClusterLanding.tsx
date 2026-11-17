@@ -54,7 +54,7 @@ export default function VermontClusterLanding({
               <div className="flex flex-wrap gap-3 mb-6">
                 <Link
                   href={VERMONT_QUICK_QUOTE_PATH}
-                  className="inline-flex min-h-[48px] items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+                  className="inline-flex min-h-[48px] items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan/90 transition"
                 >
                   {VERMONT_QUICK_QUOTE_LABEL}
                 </Link>
@@ -386,7 +386,7 @@ function CtaSection({ clusterLabel }: { clusterLabel: string }) {
       </div>
       <Link
         href={VERMONT_QUICK_QUOTE_PATH}
-        className="inline-flex min-h-[48px] items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+        className="inline-flex min-h-[48px] items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan/90 transition"
       >
         {VERMONT_QUICK_QUOTE_LABEL}
       </Link>

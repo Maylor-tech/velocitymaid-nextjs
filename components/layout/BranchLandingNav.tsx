@@ -29,7 +29,7 @@ const navLinkClass =
   "font-body text-sm text-white hover:text-vm-cyan transition-colors";
 
 const ctaClassName =
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md btn-tactile transition-[transform,background-color,border-color] duration-150 bg-vm-cyan text-vm-navy font-heading font-semibold uppercase tracking-wider text-xs hover:bg-vm-cyan-dark shadow-md px-4 py-2.5";
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md btn-tactile transition-[transform,background-color,border-color] duration-150 bg-vm-cyan text-vm-navy font-heading font-semibold uppercase tracking-wider text-xs hover:bg-vm-cyan/90 shadow-md px-4 py-2.5";
 
 export default function BranchLandingNav({
   bookingHref,

@@ -90,7 +90,7 @@ function TipPaymentForm({
         className={`mt-8 w-full rounded-lg py-4 text-base font-heading font-semibold transition ${
           !stripe || submitting
             ? 'bg-vm-cyan/40 text-vm-navy/60 cursor-not-allowed'
-            : 'bg-vm-cyan text-vm-navy hover:bg-vm-cyan-dark'
+            : 'bg-vm-cyan text-vm-navy hover:bg-vm-cyan/90'
         }`}
       >
         {submitting ? 'Processing…' : `Leave a $${formattedAmount} tip`}
@@ -574,7 +574,7 @@ export default function TipFlow({
         disabled={!canContinue || loading}
         className={`mt-8 w-full rounded-lg py-4 text-base transition-colors ${
           canContinue && !loading
-            ? 'bg-vm-cyan text-vm-navy font-heading font-semibold hover:bg-vm-cyan-dark cursor-pointer'
+            ? 'bg-vm-cyan text-vm-navy font-heading font-semibold hover:bg-vm-cyan/90 cursor-pointer'
             : 'bg-vm-cyan/30 text-vm-navy/50 cursor-not-allowed'
         }`}
       >
