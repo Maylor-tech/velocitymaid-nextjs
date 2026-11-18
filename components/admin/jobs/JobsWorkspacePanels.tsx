@@ -4,6 +4,10 @@ import Link from 'next/link';
 import type { AdminJobListItem } from '@/components/admin/jobs/JobOperationsCard';
 import { attentionRowTitle } from '@/lib/admin/attentionRowTitle';
 import {
+  describeReportInvoice,
+  orderCompletedReportInvoiceJobs,
+} from '@/lib/admin/jobsMonthlyWorkspace';
+import {
   formatOfferLifecycleLabel,
   offerLifecyclePill,
 } from '@/lib/dispatch/offerLifecycleLabel';
@@ -105,6 +109,16 @@ export function JobsWorkspacePanels({
   sampleData?: boolean;
 }) {
   const attention = buildAttentionRows(jobs);
+  const reportRows = orderCompletedReportInvoiceJobs(
+    jobs.map((job) => ({
+      id: job.id,
+      status: job.status,
+      preferredDate: job.preferredDate,
+      completionReport: job.completionReport ?? null,
+      invoice: job.invoice ?? null,
+      title: rowTitle(job),
+    }))
+  );
 
   return (
     <>
@@ -155,11 +169,68 @@ export function JobsWorkspacePanels({
         <p className="mt-3 font-body text-sm text-vm-muted">Nothing flagged yet.</p>
       </section>
 
-      <section className="rounded-[14px] border border-vm-line bg-vm-surface p-[23px]">
-        <h2 className="mb-1.5 font-heading text-lg font-bold leading-[1.2] tracking-tight text-vm-navy">
+      <section
+        id="desk-reports"
+        className="rounded-[14px] border border-vm-line bg-vm-surface p-[23px]"
+        aria-labelledby="desk-reports-heading"
+      >
+        <h2
+          id="desk-reports-heading"
+          className="mb-1.5 font-heading text-lg font-bold leading-[1.2] tracking-tight text-vm-navy"
+        >
           Reports and invoices
         </h2>
-        <p className="mt-3 font-body text-sm text-vm-muted">No reports waiting.</p>
+        {reportRows.length === 0 ? (
+          <p className="mt-3 font-body text-sm text-vm-text">No reports waiting.</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-vm-line">
+            {reportRows.map((job) => {
+              const described = describeReportInvoice(job);
+              return (
+                <li
+                  key={job.id}
+                  className={`flex flex-col items-start gap-1 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3 ${
+                    described.warn
+                      ? '-mx-2 rounded-[10px] border border-vm-warning-border bg-vm-warning-bg px-2'
+                      : ''
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <p className="font-body text-sm font-semibold text-vm-navy">
+                      {job.title}
+                    </p>
+                    <p className="font-body text-sm text-vm-text">{described.reportLabel}</p>
+                    <p className="font-body text-sm text-vm-text">{described.invoiceLabel}</p>
+                    {described.warn ? (
+                      <p className="font-body text-sm font-semibold text-vm-warning">
+                        Invoice went out before the report.
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
+                    <Link
+                      href={`/admin/jobs/${job.id}`}
+                      className="inline-flex min-h-[44px] items-center font-body text-sm font-bold text-vm-cyan-dark outline-none hover:text-vm-navy focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan sm:order-2"
+                    >
+                      Open →
+                    </Link>
+                    {described.warn ? (
+                      <Link
+                        href={`/admin/jobs/${job.id}/complete`}
+                        className="inline-flex min-h-[44px] items-center rounded-[10px] bg-vm-navy px-3.5 font-heading text-sm font-semibold text-vm-white no-underline outline-none hover:opacity-90 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan sm:order-1"
+                      >
+                        Send report
+                      </Link>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <p className="mt-2.5 rounded-[10px] border border-vm-cyan-border bg-vm-cyan-tint px-3.5 py-3 font-body text-sm text-vm-navy">
+          Hosts get the report first, then the invoice.
+        </p>
       </section>
     </>
   );

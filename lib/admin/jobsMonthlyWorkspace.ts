@@ -9,6 +9,7 @@ import {
   easternDateKey,
   parseServiceDateInput,
   serviceDateKey,
+  serviceDayRelativeToEastern,
 } from '@/lib/dates/serviceDate';
 import { parsePreferredClockTime } from '@/lib/dates/preferredClock';
 
@@ -493,4 +494,143 @@ export function clampPageSize(raw: number | null | undefined, fallback = 50): nu
 export function clampPage(raw: number | null | undefined): number {
   if (!raw || Number.isNaN(raw) || raw < 1) return 1;
   return Math.floor(raw);
+}
+
+/** Fields the monthly jobs payload must carry for the Reports and invoices panel. */
+export const monthlyJobReportInvoiceSelect = {
+  CompletionReport: {
+    select: { status: true, sentAt: true },
+  },
+  Invoice: {
+    select: { status: true, sentAt: true },
+  },
+} as const;
+
+export type MonthlyReportSend = {
+  status: string;
+  sentAt: string | null;
+};
+
+export type ReportInvoiceJob = {
+  id: string;
+  status: string;
+  preferredDate: string | null;
+  completionReport: MonthlyReportSend | null;
+  invoice: { status: string; sentAt: string | null } | null;
+};
+
+export type ReportInvoiceDescription = {
+  reportSentAt: string | null;
+  invoiceSentAt: string | null;
+  reportLabel: string;
+  invoiceLabel: string;
+  warn: boolean;
+};
+
+function parseSentInstant(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return null;
+  return new Date(time).toISOString();
+}
+
+/** Eastern clock time. Invalid or missing values stay blank so the UI can say the item was not sent. */
+export function formatDeskSentAt(value: string | null | undefined): string | null {
+  const iso = parseSentInstant(value);
+  if (!iso) return null;
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+    .format(new Date(iso))
+    .replace(/\u202f/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function monthlyReportInvoiceFields(row: {
+  CompletionReport: { status: string; sentAt: Date | null } | null;
+  Invoice: { status: string; sentAt: Date | null } | null;
+}): Pick<ReportInvoiceJob, 'completionReport' | 'invoice'> {
+  return {
+    completionReport: row.CompletionReport
+      ? {
+          status: row.CompletionReport.status,
+          sentAt: row.CompletionReport.sentAt?.toISOString() ?? null,
+        }
+      : null,
+    invoice: row.Invoice
+      ? {
+          status: row.Invoice.status,
+          sentAt: row.Invoice.sentAt?.toISOString() ?? null,
+        }
+      : null,
+  };
+}
+
+/**
+ * Report is sent only when sentAt is a real instant.
+ * Status alone never supplies a time.
+ */
+export function describeReportInvoice(
+  job: Pick<ReportInvoiceJob, 'completionReport' | 'invoice'>
+): ReportInvoiceDescription {
+  const reportSentAt = parseSentInstant(job.completionReport?.sentAt);
+  const invoiceSentAt = parseSentInstant(job.invoice?.sentAt);
+  const reportClock = formatDeskSentAt(reportSentAt);
+  const invoiceClock = formatDeskSentAt(invoiceSentAt);
+  const warn =
+    invoiceSentAt != null &&
+    (reportSentAt == null ||
+      new Date(reportSentAt).getTime() > new Date(invoiceSentAt).getTime());
+
+  return {
+    reportSentAt,
+    invoiceSentAt,
+    reportLabel: reportClock ? `Report sent ${reportClock}` : 'Report not sent',
+    invoiceLabel: invoiceClock ? `Invoice sent ${invoiceClock}` : 'Invoice not sent',
+    warn,
+  };
+}
+
+function reportInvoiceRank(described: ReportInvoiceDescription): number {
+  if (described.warn) return 0;
+  if (!described.reportSentAt) return 1;
+  return 2;
+}
+
+/**
+ * Completed jobs whose service date is today or earlier in Eastern time.
+ * A missing service date is not treated as today.
+ */
+export function isReportInvoiceListed(
+  job: Pick<ReportInvoiceJob, 'status' | 'preferredDate'>,
+  asOf: Date = new Date()
+): boolean {
+  if (job.status !== 'COMPLETED') return false;
+  const relation = serviceDayRelativeToEastern(job.preferredDate, asOf);
+  return relation === 'today' || relation === 'past';
+}
+
+/** Listed jobs only. Warnings first, then reports not sent, then report-before-invoice. */
+export function orderCompletedReportInvoiceJobs<T extends ReportInvoiceJob>(
+  jobs: T[],
+  asOf: Date = new Date()
+): T[] {
+  return jobs
+    .filter((job) => isReportInvoiceListed(job, asOf))
+    .map((job) => ({ job, described: describeReportInvoice(job) }))
+    .sort((a, b) => {
+      const rank = reportInvoiceRank(a.described) - reportInvoiceRank(b.described);
+      if (rank !== 0) return rank;
+      const dateA = a.job.preferredDate ?? '9999-99-99';
+      const dateB = b.job.preferredDate ?? '9999-99-99';
+      if (dateA !== dateB) return dateA < dateB ? -1 : 1;
+      if (a.job.id === b.job.id) return 0;
+      return a.job.id < b.job.id ? -1 : 1;
+    })
+    .map((entry) => entry.job);
 }

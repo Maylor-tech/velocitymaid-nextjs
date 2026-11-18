@@ -12,9 +12,8 @@ Visual / layout work for admin Jobs (Prompt 4 + QA round 1) stays within existin
 
 ### Reports and invoices panel
 
-- **Available today:** `Job.reviewStatus` (QC) and Invoice rows with `sentAt` / payment status.
-- **Missing for this desk:** a first-class customer/host **report-sent** timestamp separate from invoice send, so the desk can honestly order “report first, then the invoice.”
-- **UI until approved:** plain empty copy — “No reports waiting.” The “Hosts get the report first, then the invoice.” callout stays **hidden** until a report-sent timestamp exists on the job/report model.
+- **Available today:** `CompletionReport.status` and `CompletionReport.sentAt`. Both are set together (`SENT` plus the send time) only after the report email succeeds, in `lib/billing/jobCompletionWorkflow.ts` and `lib/billing/jobBillingSteps.ts`. Invoice rows already have their own `sentAt`. `Job.reviewStatus` is QC, separate from report send.
+- **Desk:** the panel lists completed jobs whose service date is today or earlier. Each row shows “Report not sent” or “Report sent” with that time, and “Invoice not sent” or “Invoice sent” with the invoice time. A null timestamp stays “not sent”; the desk does not invent a clock time. The callout “Hosts get the report first, then the invoice.” is shown because this timestamp is real. An amber row means the invoice went out with no report time, or the report time is later than the invoice time. That row links to the job’s existing completion step (“Send report”). The link does not send the report.
 
 ### Offer lifecycle on the monthly jobs payload
 

@@ -39,6 +39,8 @@ import {
   isDayKey,
   isMonthKey,
   monthDateBounds,
+  monthlyJobReportInvoiceSelect,
+  monthlyReportInvoiceFields,
   sortJobsDeterministic,
   type MonthlyFocus,
   type MonthlyWorkspaceView,
@@ -161,6 +163,7 @@ const JOB_SELECT = {
     where: { completed: true },
     select: { id: true },
   },
+  ...monthlyJobReportInvoiceSelect,
 } satisfies Prisma.JobSelect;
 
 function parseFocus(raw: string | null): MonthlyFocus {
@@ -538,6 +541,7 @@ export async function GET(request: NextRequest) {
       checklistTotal: job._count.JobChecklistItem,
       checklistCompleted: job.JobChecklistItem.length,
       auditActions: auditByJob.get(job.id) ?? [],
+      ...monthlyReportInvoiceFields(job),
     }));
 
     const teamMap = await loadJobTeamBatch(jobIds);
