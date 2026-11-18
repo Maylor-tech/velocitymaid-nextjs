@@ -36,26 +36,26 @@ export function JobsMonthCalendar({
   const total = typeof monthTotal === 'number' ? monthTotal : computedTotal;
 
   return (
-    <div className="rounded-xl border border-vm-border bg-vm-white p-3 sm:p-4">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="font-heading text-sm font-semibold text-vm-navy">
+    <div className="rounded-[14px] border border-vm-line bg-vm-surface p-3 sm:p-[23px]">
+      <div className="mb-3.5 flex items-center justify-between gap-2">
+        <h2 className="font-heading text-lg font-bold leading-[1.2] tracking-tight text-vm-navy">
           {formatServiceDate(`${monthKey}-01`, { month: 'long', year: 'numeric' })}
-        </p>
+        </h2>
         <button
           type="button"
           onClick={onSelectMonth}
-          className="rounded-md px-2 py-1 font-body text-xs text-vm-cyan-dark outline-none ring-vm-cyan hover:underline focus-visible:ring-2"
+          className="min-h-[44px] rounded-md px-2 py-1 font-body text-xs font-bold text-vm-cyan-dark outline-none ring-vm-cyan hover:underline focus-visible:ring-2"
         >
           {total} {countScopeLabel}
           {selectedDay ? ' · show all' : ''}
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center">
+      <div className="grid grid-cols-7 gap-1 text-center sm:gap-[5px]">
         {WEEKDAYS.map((d) => (
           <div
             key={d}
-            className="py-1 font-body text-[10px] uppercase tracking-wide text-vm-muted sm:text-xs"
+            className="py-1 font-body text-[10px] font-bold uppercase tracking-wide text-vm-muted sm:text-xs"
           >
             {d}
           </div>
@@ -86,6 +86,7 @@ function DayCell({
   onSelect: () => void;
 }) {
   const muted = !cell.inMonth;
+  const hasJobs = count > 0;
   return (
     <button
       type="button"
@@ -93,11 +94,13 @@ function DayCell({
       disabled={muted && count === 0}
       aria-label={`${cell.key}${count ? `, ${count} jobs` : ''}`}
       aria-pressed={selected}
-      className={`flex min-h-[2.75rem] flex-col items-center justify-start rounded-lg border px-0.5 py-1 font-body outline-none transition-colors focus-visible:ring-2 focus-visible:ring-vm-cyan sm:min-h-[3.5rem] ${
+      className={`flex min-h-[2.75rem] flex-col items-center justify-start rounded-lg border px-0.5 py-2 font-body outline-none transition-colors focus-visible:ring-2 focus-visible:ring-vm-cyan sm:min-h-[90px] ${
         selected
-          ? 'border-vm-cyan bg-vm-cyan/15 text-vm-navy'
+          ? 'border-vm-cyan bg-vm-cyan/20 text-vm-navy'
+          : hasJobs && cell.inMonth
+            ? 'border-vm-cyan/50 bg-vm-cyan-tint text-vm-navy'
           : cell.isToday
-            ? 'border-vm-navy/40 bg-vm-surface text-vm-navy'
+            ? 'border-vm-navy/40 bg-vm-canvas text-vm-navy'
             : 'border-transparent hover:border-vm-border hover:bg-vm-surface'
       } ${muted ? 'opacity-40' : ''}`}
     >

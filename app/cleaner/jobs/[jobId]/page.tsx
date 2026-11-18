@@ -11,6 +11,12 @@ import { JobPhotoCapture } from "@/components/cleaner/JobPhotoCapture";
 import { EscalateIssueCard } from "@/components/cleaner/EscalateIssueCard";
 import { JobPacketCard } from "@/components/cleaner/JobPacketCard";
 import { isOfferExpiredByTimestamp } from "@/lib/dispatch/offerExpiry";
+import { CleanerPortalChrome } from "@/components/cleaner/CleanerPortalChrome";
+import {
+  CleanerOfferCard,
+  formatOfferLifecycleForCleaner,
+  formatRespondByLabel,
+} from "@/components/cleaner/CleanerOfferCard";
 
 interface CustomerInfo {
   id: string;
@@ -81,6 +87,7 @@ interface Job {
 interface OfferPayload {
   offerId: string;
   jobId: string;
+  status?: string;
   serviceType: string | null;
   serviceDate: string;
   preferredTime: string | null;
@@ -464,114 +471,63 @@ export default function CleanerJobDetailPage() {
   if ((access === "OFFER" || access === "EXPIRED") && offer) {
     const offerExpired =
       access === "EXPIRED" || isOfferExpiredByTimestamp(offer, new Date(nowMs));
+    const amount = offer.compensation?.amount ?? offer.compensationAmount;
+    const currency =
+      offer.compensation?.currency || offer.compensationCurrency || "USD";
+    const basisLabel =
+      offer.compensation?.basisLabel ||
+      (offer.compensationBasis === "HOURLY"
+        ? "Hourly"
+        : offer.compensationBasis === "OTHER"
+          ? "Other"
+          : "Flat rate");
+    const area = offer.location.areaLabel || "Property";
+    const title = `${area} · ${offer.serviceDate}`;
+    const scheduleText = offer.preferredTime
+      ? `Service window ${offer.preferredTime}`
+      : "Check-out / next check-in window not listed on this offer";
+    const jobBits = [
+      offer.serviceType || "Cleaning",
+      offer.estimatedDurationMins != null
+        ? `~${offer.estimatedDurationMins} min`
+        : null,
+      "Checklist and photos required",
+    ].filter(Boolean);
+
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-4xl mx-auto">
-          <Link
-            href="/cleaner/jobs"
-            className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
-          >
-            ← Back to Jobs
-          </Link>
-          <h1 className="text-2xl font-semibold mb-2">
-            {offerExpired ? "Offer expired" : "Job offer"}
-          </h1>
-          <p className="text-vm-muted mb-6">
-            {offerExpired
-              ? "This offer has expired. Accept and Decline are disabled. Ops may send you another offer."
-              : "Accept to be assigned. Access codes and full address are shown after you accept."}
-          </p>
-          {error && (
-            <div className="mb-4 bg-vm-danger-bg border border-red-300 text-red-800 px-4 py-3 rounded">
-              {error}
-            </div>
+      <CleanerPortalChrome activeNav="Offers">
+        <CleanerOfferCard
+          title={title}
+          respondByLabel={formatRespondByLabel(
+            offer.expiresAt,
+            offerExpired,
+            new Date(nowMs)
           )}
-          {feedback && (
-            <div className="mb-4 bg-vm-success-bg border border-vm-success/30 text-vm-success px-4 py-3 rounded">
-              {feedback}
-            </div>
-          )}
-          <div className="bg-white rounded-lg shadow p-6 mb-6 space-y-3">
-            <p><span className="text-vm-muted">Service:</span> {offer.serviceType || "Cleaning"}</p>
-            <p><span className="text-vm-muted">Date:</span> {offer.serviceDate} {offer.preferredTime ? `at ${offer.preferredTime}` : ""}</p>
-            <p><span className="text-vm-muted">Area:</span> {offer.location.areaLabel || "See details after accept"}</p>
-            {offer.estimatedDurationMins != null && (
-              <p><span className="text-vm-muted">Est. duration:</span> {offer.estimatedDurationMins} min</p>
-            )}
-            <p>
-              <span className="text-vm-muted">Your pay:</span>{" "}
-              {formatPrice(
-                offer.compensation?.amount ?? offer.compensationAmount,
-                offer.compensation?.currency || offer.compensationCurrency
-              )}
-              {offer.compensation?.basisLabel
-                ? ` (${offer.compensation.basisLabel})`
-                : ""}
-            </p>
-            <p>
-              <span className="text-vm-muted">
-                {offerExpired ? "Expired at:" : "Respond by:"}
-              </span>{" "}
-              {new Date(offer.expiresAt).toLocaleString()}
-            </p>
-            {offer.operationalNotes && (
-              <p className="whitespace-pre-wrap"><span className="text-vm-muted">Notes:</span> {offer.operationalNotes}</p>
-            )}
-          </div>
-          {offerExpired ? (
-            <div className="space-y-3">
-              <p className="font-medium text-red-700">Expired — you cannot accept or decline this offer.</p>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  disabled
-                  className="px-6 py-3 rounded-lg font-semibold text-white bg-gray-400 cursor-not-allowed"
-                >
-                  Accept offer
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  className="px-6 py-3 rounded-lg font-semibold text-white bg-gray-400 cursor-not-allowed"
-                >
-                  Decline
-                </button>
-              </div>
-            </div>
-          ) : (
-          <div className="space-y-3">
-            <label className="block text-sm text-vm-muted">
-              Optional decline reason
-              <input
-                type="text"
-                value={declineReason}
-                onChange={(e) => setDeclineReason(e.target.value)}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-vm-text"
-                placeholder="Not needed if you accept"
-              />
-            </label>
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => void handleAcceptOffer()}
-                disabled={processing}
-                className="px-6 py-3 rounded-lg font-semibold text-white bg-vm-success disabled:bg-gray-400"
-              >
-                {processing ? "Processing..." : "Accept offer"}
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleDeclineOffer()}
-                disabled={processing}
-                className="px-6 py-3 rounded-lg font-semibold text-white bg-vm-danger disabled:bg-gray-400"
-              >
-                Decline
-              </button>
-            </div>
-          </div>
-          )}
-        </div>
-      </div>
+          compensationDisplay={formatPrice(amount, currency)}
+          compensationBasisLabel={basisLabel}
+          scheduleText={scheduleText}
+          jobTypeText={jobBits.join(" · ")}
+          lifecycleLabel={formatOfferLifecycleForCleaner({
+            status: offer.status || (offerExpired ? "EXPIRED" : "OFFERED"),
+            expiresAt: offer.expiresAt,
+            expired: offerExpired,
+          })}
+          expired={offerExpired}
+          processing={processing}
+          declineReason={declineReason}
+          onDeclineReasonChange={setDeclineReason}
+          onAccept={() => void handleAcceptOffer()}
+          onDecline={() => void handleDeclineOffer()}
+          error={error}
+          feedback={feedback}
+        />
+        <Link
+          href="/cleaner/jobs"
+          className="font-body text-sm font-semibold text-vm-cyan-dark outline-none hover:underline focus-visible:ring-2 focus-visible:ring-vm-cyan"
+        >
+          ← Back to jobs
+        </Link>
+      </CleanerPortalChrome>
     );
   }
 

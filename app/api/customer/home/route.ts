@@ -231,7 +231,7 @@ export async function GET(request: NextRequest) {
             teamLine:
               assignedTeam.length > 0
                 ? assignedTeam.map((t) => t.name).join(' · ')
-                : 'VelocityMaid certified team',
+                : 'Cleaned by VelocityMaid',
             href: `/customer/jobs/${nextJob.id}`,
           }
         : null,

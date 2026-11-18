@@ -15,6 +15,7 @@ export async function GET(
       Job: {
         select: {
           arrivalCondition: true,
+          reviewStatus: true,
           Invoice: { select: { publicToken: true } },
         },
       },
@@ -27,6 +28,7 @@ export async function GET(
     success: true,
     report: serializeCompletionReport(report, {
       arrivalCondition: report.Job.arrivalCondition,
+      reviewStatus: report.Job.reviewStatus,
       invoicePublicToken: report.Job.Invoice?.publicToken ?? null,
     }),
   });

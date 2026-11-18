@@ -51,7 +51,7 @@ function splitPhotos(
 function teamLabel(
   members: Awaited<ReturnType<typeof loadJobTeamMembers>>
 ): string {
-  if (members.length === 0) return 'VelocityMaid certified team';
+  if (members.length === 0) return 'Cleaned by VelocityMaid';
   return members
     .map((m) => m.publicDisplayName || m.name || 'Team member')
     .join(', ');

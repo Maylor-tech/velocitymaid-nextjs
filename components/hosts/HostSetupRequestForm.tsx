@@ -19,7 +19,7 @@ import { phoneValidationMessage } from "@/lib/hostIntake/validateFullIntake";
 const SERVICE_INTEREST_OPTIONS = [
   "Vacation rental turnovers",
   "Deep cleaning and property resets",
-  "Guest-ready inspections",
+  "Photo report according to your booked service package.",
   "Property manager support",
   "Not sure yet — help me figure it out",
 ] as const;

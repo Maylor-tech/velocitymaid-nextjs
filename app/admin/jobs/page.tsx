@@ -10,17 +10,19 @@ import {
   ChevronRight,
   List,
   Loader2,
-  Plus,
 } from 'lucide-react';
 import type { AdminJobListItem } from '@/components/admin/jobs/JobOperationsCard';
 import { JobsMonthCalendar } from '@/components/admin/jobs/JobsMonthCalendar';
 import { JobsMonthlySummaryStrip } from '@/components/admin/jobs/JobsMonthlySummaryStrip';
 import { JobsScheduleRow } from '@/components/admin/jobs/JobsScheduleRow';
+import { JobsWeekCalendar } from '@/components/admin/jobs/JobsWeekCalendar';
+import { JobsWorkspacePanels } from '@/components/admin/jobs/JobsWorkspacePanels';
 import { useAdminShell } from '@/components/admin/shell/AdminShell';
 import {
   addCalendarMonthKey,
   currentMonthKey,
   emptyMonthlySummary,
+  easternWeekBounds,
   isDayKey,
   isMonthKey,
   type MonthlySummary,
@@ -293,14 +295,25 @@ function AdminJobsPageContent() {
       })
     : `Schedule · ${periodLabel}`;
 
+  const sampleData =
+    (process.env.NEXT_PUBLIC_ENVIRONMENT || process.env.NODE_ENV) !==
+    'production';
+
+  const weekAnchor =
+    day ||
+    (range === 'week' ? easternWeekBounds().startKey : null) ||
+    easternDateKey();
+
   return (
-    <div className="overflow-x-hidden p-3 pb-24 sm:p-5 lg:p-6">
+    <div className="overflow-x-hidden p-4 pb-24 sm:p-6 lg:p-8">
       <div className="mx-auto w-full max-w-[1600px]">
-        <div className="mb-3 flex flex-col gap-3 border-b border-vm-border pb-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="mb-4 border-b border-vm-line pb-4">
           <div className="min-w-0">
-            <h1 className="font-heading text-xl font-bold text-vm-navy">Jobs</h1>
-            <p className="mt-0.5 font-body text-sm text-vm-muted">
-              Calendar-first monthly schedule. Requests are not confirmed revenue.
+            <h1 className="font-heading text-[33px] font-bold leading-[1.2] tracking-tight text-vm-navy">
+              Jobs & Calendar
+            </h1>
+            <p className="mt-2 font-body text-sm text-vm-text">
+              Calendar-first scheduling, dispatch and service status.
             </p>
             {customerIdFilter && (
               <p className="mt-1 font-body text-xs text-vm-cyan-dark">
@@ -320,11 +333,6 @@ function AdminJobsPageContent() {
               </p>
             )}
           </div>
-          <Link href="/admin/jobs/new" className={`${navyButton} shrink-0 self-start`}>
-            <Plus className="mr-1 h-4 w-4" />
-            <span className="sm:hidden">Add job</span>
-            <span className="hidden sm:inline">Add Job Manually</span>
-          </Link>
         </div>
 
         {/* Period navigation */}
@@ -610,6 +618,27 @@ function AdminJobsPageContent() {
                 })
               }
             />
+
+            <div className="mb-4 grid grid-cols-1 gap-[18px] lg:grid-cols-2">
+              <JobsWeekCalendar
+                anchorDay={weekAnchor}
+                jobs={jobs}
+                dayCounts={dayCounts}
+                selectedDay={day}
+                sampleData={sampleData}
+                onSelectDay={(key) =>
+                  replaceParams((p) => {
+                    p.set('day', key);
+                    p.set('month', key.slice(0, 7));
+                    p.delete('range');
+                    p.delete('dateFrom');
+                    p.delete('dateTo');
+                    p.set('page', '1');
+                  })
+                }
+              />
+              <JobsWorkspacePanels jobs={jobs} sampleData={sampleData} />
+            </div>
 
             {focus === 'past_incomplete' && (
               <div className="mb-3 rounded-lg border border-vm-warning/40 bg-vm-warning-bg px-4 py-3 font-body text-sm text-vm-navy">

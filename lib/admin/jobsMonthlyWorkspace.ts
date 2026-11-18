@@ -378,6 +378,113 @@ export function dayCountsFromJobs(
   return counts;
 }
 
+/** Sunday–Saturday week grid containing `anchorKey` (YYYY-MM-DD). */
+export function buildWeekCalendarGrid(
+  anchorKey: string,
+  now: Date = new Date()
+): CalendarCell[] {
+  const day = isDayKey(anchorKey) ? anchorKey : easternDateKey(now);
+  const parsed = parseServiceDateInput(day);
+  if (!parsed) return [];
+  const dow = parsed.getUTCDay(); // 0=Sun
+  const startKey = addCalendarDayKey(day, -dow);
+  const todayKey = easternDateKey(now);
+  const monthKey = day.slice(0, 7);
+  const cells: CalendarCell[] = [];
+  for (let i = 0; i < 7; i += 1) {
+    const key = addCalendarDayKey(startKey, i);
+    cells.push({
+      key,
+      dayOfMonth: Number(key.slice(8, 10)),
+      inMonth: key.startsWith(monthKey),
+      isToday: key === todayKey,
+    });
+  }
+  return cells;
+}
+
+export type WeekJobLabelInput = {
+  preferredDate: string | null;
+  property?: { name?: string | null; guestDisplayName?: string | null } | null;
+  customerName?: string | null;
+  serviceType?: string | null;
+};
+
+function weekJobChipLabel(job: WeekJobLabelInput): string {
+  return (
+    job.property?.name ||
+    job.property?.guestDisplayName ||
+    job.customerName ||
+    job.serviceType ||
+    'Job'
+  );
+}
+
+/** All job chip labels per day (full labels, no truncation). */
+export function weekDayJobChipsFromJobs(
+  jobs: WeekJobLabelInput[]
+): Record<string, string[]> {
+  const byDay: Record<string, string[]> = {};
+  for (const job of jobs) {
+    if (!job.preferredDate) continue;
+    const key =
+      serviceDateKey(job.preferredDate) ??
+      (typeof job.preferredDate === 'string'
+        ? job.preferredDate.slice(0, 10)
+        : null);
+    if (!key) continue;
+    if (!byDay[key]) byDay[key] = [];
+    byDay[key].push(weekJobChipLabel(job));
+  }
+  return byDay;
+}
+
+/**
+ * Visible chips for a calendar day: up to `maxVisible` property labels,
+ * then a "+N more" overflow chip. Never uses "×N" on the first label.
+ */
+export function weekDayVisibleChips(
+  chips: string[],
+  maxVisible = 2
+): { shown: string[]; moreLabel: string | null } {
+  if (chips.length <= maxVisible) {
+    return { shown: chips, moreLabel: null };
+  }
+  const overflow = chips.length - maxVisible;
+  return {
+    shown: chips.slice(0, maxVisible),
+    moreLabel: `+${overflow} more`,
+  };
+}
+
+/**
+ * @deprecated Prefer weekDayJobChipsFromJobs + weekDayVisibleChips.
+ * Kept for single-label call sites; multi-job days return the first label only.
+ */
+export function weekDayLabelsFromJobs(
+  jobs: WeekJobLabelInput[]
+): Record<string, string> {
+  const byDay = weekDayJobChipsFromJobs(jobs);
+  const out: Record<string, string> = {};
+  for (const [key, labels] of Object.entries(byDay)) {
+    out[key] = labels[0];
+  }
+  return out;
+}
+
+/** Title fragment like "week of the 15th" for the week starting at startKey. */
+export function weekOfLabel(startKey: string): string {
+  if (!isDayKey(startKey)) return 'this week';
+  const day = Number(startKey.slice(8, 10));
+  const j = day % 10;
+  const k = day % 100;
+  let suffix = 'th';
+  if (j === 1 && k !== 11) suffix = 'st';
+  else if (j === 2 && k !== 12) suffix = 'nd';
+  else if (j === 3 && k !== 13) suffix = 'rd';
+  return `week of the ${day}${suffix}`;
+}
+
 export function clampPageSize(raw: number | null | undefined, fallback = 50): number {
   if (!raw || Number.isNaN(raw)) return fallback;
   return Math.min(100, Math.max(1, Math.floor(raw)));
