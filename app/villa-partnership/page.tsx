@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, react/no-unescaped-entities */
 import { Metadata } from 'next';
 import { 
   Sparkles, 

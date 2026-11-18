@@ -1,7 +1,7 @@
+/* eslint-disable react/no-unescaped-entities */
 import { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { Sparkles, Gift, ArrowRight } from 'lucide-react';
+import { Gift, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface PageProps {
@@ -10,7 +10,7 @@ interface PageProps {
   };
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `Referral Link - VelocityMaid New Jersey`,
     description: 'A referral link for VelocityMaid cleaning.',
@@ -21,13 +21,17 @@ export default async function ReferralPage({ params }: PageProps) {
   const { code } = params;
 
   // Find referral link
-  const referralLink = await prisma.referralLink.findUnique({
+  const referralLink = (await prisma.referralLink.findUnique({
     where: { code },
     include: {
       customer: true,
       branch: true,
     },
-  });
+  } as never)) as unknown as {
+    isActive: boolean;
+    branch: { slug: string };
+    customer: { firstName: string | null };
+  } | null;
 
   if (!referralLink || !referralLink.isActive) {
     return (

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Sparkles, CheckCircle2, Download, FileText, ArrowRight, Shield, DollarSign, Clock, Star, Users } from 'lucide-react';

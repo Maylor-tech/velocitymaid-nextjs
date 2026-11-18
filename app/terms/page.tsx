@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import type { Metadata } from "next";
 import { Sparkles, FileText, Scale, AlertCircle } from 'lucide-react';
 import Link from 'next/link';

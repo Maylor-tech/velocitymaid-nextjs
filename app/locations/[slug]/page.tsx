@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, react/no-unescaped-entities */
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 

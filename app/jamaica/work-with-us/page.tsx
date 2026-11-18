@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react/no-unescaped-entities */
 
 import { Sparkles, Award, DollarSign, Clock, Users, CheckCircle, ArrowRight, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';

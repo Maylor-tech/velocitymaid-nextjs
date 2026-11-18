@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MessageCircle, X, Clock, Phone } from 'lucide-react';
+import { MessageCircle, X, Clock } from 'lucide-react';
 
 interface WhatsAppWidgetProps {
   phoneNumber: string;
