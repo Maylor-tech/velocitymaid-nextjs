@@ -49,7 +49,7 @@ const homepageFaqs = [
   {
     question: "How is final pricing confirmed?",
     answer:
-      "Website prices are starting points. We confirm the final scope and price after reviewing your home, property, schedule, and requested services.",
+      "We confirm the final scope and price after reviewing your home, property, schedule, and requested services. We reply within one business day.",
   },
   {
     question: "What happens after I contact VelocityMaid?",
@@ -153,7 +153,7 @@ export function HomepageMarketing() {
               {[
                 "Vacation rental turnovers",
                 "Deep cleaning and property resets",
-                "Guest-ready inspections",
+                "Photo report according to your booked service package.",
               ].map((item) => (
                 <li key={item} className="flex gap-2">
                   <CheckCircle2 className="h-5 w-5 text-vm-cyan-dark" />
@@ -284,7 +284,7 @@ export function HomepageMarketing() {
 
         <section id="pricing" className="scroll-mt-20 bg-vm-surface px-5 py-16">
           <div className="mx-auto max-w-5xl text-center">
-            <Eyebrow>Starting-at pricing</Eyebrow>
+            <Eyebrow>Quotes</Eyebrow>
             <h2 className="font-heading text-3xl font-bold text-vm-navy">Choose your market</h2>
             <p className="mx-auto mt-3 max-w-2xl font-body text-sm leading-relaxed text-vm-muted">
               Every property is different. Final pricing is confirmed after reviewing the
@@ -298,9 +298,8 @@ export function HomepageMarketing() {
                 <h3 className="mt-3 font-heading text-2xl font-bold text-vm-navy">
                   Vacation rental turnovers
                 </h3>
-                <p className="mt-3 font-heading text-3xl font-bold text-vm-navy">
-                  $225{" "}
-                  <span className="font-body text-xs font-medium text-vm-muted">starting</span>
+                <p className="mt-3 font-heading text-xl font-bold text-vm-navy">
+                  Get a quote — we reply within one business day.
                 </p>
                 <p className="mt-3 font-body text-sm leading-relaxed text-vm-muted">
                   Guest-ready resets for hosts and property managers in the Okemo Valley,
@@ -346,8 +345,7 @@ export function HomepageMarketing() {
                 Recurring checks while you&apos;re away
               </h3>
               <p className="mt-3 font-body text-sm leading-relaxed text-vm-muted">
-                Seasonal Check from $150/month · Weekly Watch from $275/month ·
-                Storm or emergency check $75 per visit. Visits are scheduled checks —
+                Get a quote — we reply within one business day. Visits are scheduled checks —
                 not continuous monitoring, repairs, or insurance certification.
               </p>
               <Link

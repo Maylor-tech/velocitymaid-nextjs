@@ -148,8 +148,7 @@ export default function SaaSLandingPage() {
             >
               <h3 className="text-2xl font-bold text-vm-text mb-2">Starter</h3>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-vm-text">$99</span>
-                <span className="text-vm-muted">/month</span>
+                <span className="text-2xl font-bold text-vm-text">Custom quote</span>
               </div>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start">
@@ -188,8 +187,7 @@ export default function SaaSLandingPage() {
               </div>
               <h3 className="text-2xl font-bold text-vm-text mb-2">Pro</h3>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-vm-cyan-dark">$199</span>
-                <span className="text-vm-muted">/month</span>
+                <span className="text-2xl font-bold text-vm-cyan-dark">Custom quote</span>
               </div>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start">
@@ -227,8 +225,7 @@ export default function SaaSLandingPage() {
             >
               <h3 className="text-2xl font-bold text-vm-text mb-2">Business</h3>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-vm-text">$399</span>
-                <span className="text-vm-muted">/month</span>
+                <span className="text-2xl font-bold text-vm-text">Custom quote</span>
               </div>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start">

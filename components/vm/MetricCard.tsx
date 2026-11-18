@@ -7,7 +7,7 @@ export interface MetricCardProps extends React.HTMLAttributes<HTMLDivElement> {
   hint?: string;
 }
 
-/** MetricCard — cyan 36×4 accent bar (handoff admin metrics). */
+/** MetricCard — cyan 36×4 accent bar inside padding (12px above label). */
 export function MetricCard({
   label,
   value,
@@ -18,14 +18,14 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-vm-lg border border-vm-line bg-vm-surface p-5 shadow-vm-card",
+        "rounded-vm-lg border border-vm-line bg-vm-surface p-5 shadow-vm-card",
         className
       )}
       {...props}
     >
       <span
         aria-hidden
-        className="absolute left-0 top-0 h-1 w-9 bg-vm-cyan"
+        className="mb-3 block rounded-[3px] bg-vm-cyan"
         style={{ width: 36, height: 4 }}
       />
       <p className="font-body text-xs font-semibold uppercase tracking-wide text-vm-muted">

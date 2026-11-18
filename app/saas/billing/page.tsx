@@ -130,9 +130,9 @@ export default function BillingPage() {
         {/* Pricing Plans */}
         <div className="grid md:grid-cols-3 gap-8">
           {[
-            { plan: 'starter' as const, name: 'Starter', price: '$99', contractors: 'Up to 25 contractors' },
-            { plan: 'pro' as const, name: 'Pro', price: '$199', contractors: 'Up to 100 contractors', popular: true },
-            { plan: 'business' as const, name: 'Business', price: '$399', contractors: 'Unlimited contractors' },
+            { plan: 'starter' as const, name: 'Starter', price: 'Custom quote', contractors: 'Up to 25 contractors' },
+            { plan: 'pro' as const, name: 'Pro', price: 'Custom quote', contractors: 'Up to 100 contractors', popular: true },
+            { plan: 'business' as const, name: 'Business', price: 'Custom quote', contractors: 'Unlimited contractors' },
           ].map((tier) => (
             <div
               key={tier.plan}

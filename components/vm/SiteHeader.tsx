@@ -22,7 +22,15 @@ const quoteClass = cn(
 export interface SiteHeaderProps {
   className?: string;
   quoteHref?: string;
+  /** Label of the current section, e.g. "Vacation rentals" — navy bold + cyan underline. */
+  activeNav?: string;
 }
+
+const navLinkBase =
+  "font-body text-sm min-h-touch inline-flex items-center";
+const navLinkIdle = "font-semibold text-vm-text hover:text-vm-cyan-dark";
+const navLinkActive =
+  "font-bold text-vm-navy shadow-[inset_0_-2px_0_rgb(var(--vm-cyan))] [text-decoration:none]";
 
 /**
  * Redesign SiteHeader (handoff §5.2) — white sticky, compact light logo @40px,
@@ -32,6 +40,7 @@ export interface SiteHeaderProps {
 export function SiteHeader({
   className,
   quoteHref = "/contact",
+  activeNav,
 }: SiteHeaderProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -64,8 +73,10 @@ export function SiteHeader({
             <Link
               key={item.href}
               href={item.href}
+              aria-current={activeNav === item.label ? "page" : undefined}
               className={cn(
-                "font-body text-sm font-semibold text-vm-text hover:text-vm-cyan-dark min-h-touch inline-flex items-center",
+                navLinkBase,
+                activeNav === item.label ? navLinkActive : navLinkIdle,
                 vmFocusRing
               )}
             >
@@ -107,8 +118,12 @@ export function SiteHeader({
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={activeNav === item.label ? "page" : undefined}
                 className={cn(
-                  "min-h-touch inline-flex items-center rounded-vm-md px-3 font-body text-sm font-semibold text-vm-text hover:bg-vm-canvas",
+                  "min-h-touch inline-flex items-center rounded-vm-md px-3 font-body text-sm hover:bg-vm-canvas",
+                  activeNav === item.label
+                    ? "font-bold text-vm-navy"
+                    : "font-semibold text-vm-text",
                   vmFocusRing
                 )}
                 onClick={() => setOpen(false)}

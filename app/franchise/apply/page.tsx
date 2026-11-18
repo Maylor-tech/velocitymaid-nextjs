@@ -352,10 +352,10 @@ export default function FranchiseApplicationPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
                 >
                   <option value="">Select range</option>
-                  <option value="25k-50k">$25,000 - $50,000</option>
-                  <option value="50k-100k">$50,000 - $100,000</option>
-                  <option value="100k-200k">$100,000 - $200,000</option>
-                  <option value="200k+">$200,000+</option>
+                  <option value="25k-50k">25,000 - 50,000</option>
+                  <option value="50k-100k">50,000 - 100,000</option>
+                  <option value="100k-200k">100,000 - 200,000</option>
+                  <option value="200k+">200,000+</option>
                 </select>
               </div>
               <div>
@@ -369,10 +369,10 @@ export default function FranchiseApplicationPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
                 >
                   <option value="">Select range</option>
-                  <option value="25k-50k">$25,000 - $50,000</option>
-                  <option value="50k-100k">$50,000 - $100,000</option>
-                  <option value="100k-200k">$100,000 - $200,000</option>
-                  <option value="200k+">$200,000+</option>
+                  <option value="25k-50k">25,000 - 50,000</option>
+                  <option value="50k-100k">50,000 - 100,000</option>
+                  <option value="100k-200k">100,000 - 200,000</option>
+                  <option value="200k+">200,000+</option>
                 </select>
               </div>
               <div>
@@ -385,10 +385,10 @@ export default function FranchiseApplicationPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
                 >
                   <option value="">Select range</option>
-                  <option value="100k-250k">$100,000 - $250,000</option>
-                  <option value="250k-500k">$250,000 - $500,000</option>
-                  <option value="500k-1m">$500,000 - $1,000,000</option>
-                  <option value="1m+">$1,000,000+</option>
+                  <option value="100k-250k">100,000 - 250,000</option>
+                  <option value="250k-500k">250,000 - 500,000</option>
+                  <option value="500k-1m">500,000 - 1,000,000</option>
+                  <option value="1m+">1,000,000+</option>
                 </select>
               </div>
               <div className="flex items-center gap-3 pt-8">
@@ -455,10 +455,10 @@ export default function FranchiseApplicationPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
                 >
                   <option value="">Select range</option>
-                  <option value="50k-100k">$50,000 - $100,000</option>
-                  <option value="100k-250k">$100,000 - $250,000</option>
-                  <option value="250k-500k">$250,000 - $500,000</option>
-                  <option value="500k+">$500,000+</option>
+                  <option value="50k-100k">50,000 - 100,000</option>
+                  <option value="100k-250k">100,000 - 250,000</option>
+                  <option value="250k-500k">250,000 - 500,000</option>
+                  <option value="500k+">500,000+</option>
                 </select>
               </div>
               <div>

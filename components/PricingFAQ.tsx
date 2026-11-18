@@ -1,11 +1,11 @@
 const items = [
   {
     q: "Are these prices fixed?",
-    a: "No. Website prices are starting points. Final pricing is confirmed after reviewing the property, service scope, schedule, condition, and requested services.",
+    a: "Yes, for Okemo Valley turnovers. The price is set by bedroom count. Homes with 5+ bedrooms, Middlebury and outlying towns get a custom quote. New Jersey cleaning is quoted after a quick review.",
   },
   {
     q: "How do Vermont and New Jersey pricing differ?",
-    a: "Vermont service focuses on vacation-rental turnovers and property readiness, typically starting from $225. New Jersey service focuses on recurring residential cleaning (primary), deep cleaning, and move-in/move-out across our Essex County service area — pricing is confirmed after a quote review, not published as a starting rate.",
+    a: "Vermont service is vacation-rental turnovers and property readiness. New Jersey service is recurring residential cleaning, deep cleaning, and move-in/move-out across our Essex County service area. Get a quote — we reply within one business day.",
   },
   {
     q: "How do I get a Vermont quote?",
@@ -17,7 +17,7 @@ const items = [
   },
   {
     q: "What affects the final price?",
-    a: "Property size, condition, occupancy, laundry/linen needs, add-on services, access timing, and whether the visit is a standard turnover or a deeper reset.",
+    a: "Okemo Valley turnovers are set by bedroom count. Homes with 5+ bedrooms, Middlebury and outlying towns get a custom quote. New Jersey cleaning is quoted after a quick review.",
   },
 ];
 

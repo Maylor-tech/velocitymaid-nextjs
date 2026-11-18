@@ -88,16 +88,8 @@ export default function TermsOfService() {
             </p>
 
             <h3 className="text-xl font-semibold text-vm-text mb-3">Pricing</h3>
-            <p className="text-vm-text leading-relaxed mb-4">
-              Our base pricing is as follows:
-            </p>
-            <ul className="list-disc pl-6 text-vm-text space-y-2 mb-4">
-              <li>Basic Cleaning: $120</li>
-              <li>Deep Cleaning: $220</li>
-              <li>Move In/Out Cleaning: $320</li>
-            </ul>
             <p className="text-vm-text leading-relaxed">
-              Add-on services are priced separately. Final pricing may vary based on home size, condition, and specific requirements. We will provide a clear estimate before service begins.
+              Get a quote — we reply within one business day. Final pricing is confirmed for the home before service begins.
             </p>
           </section>
 

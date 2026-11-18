@@ -35,6 +35,9 @@ export function SiteFooter({ className }: SiteFooterProps) {
           <p className="font-body text-xs tracking-wide text-vm-brand-tagline">
             COME HOME TO CLEAN.
           </p>
+          <p className="font-body text-sm leading-relaxed text-vm-nav-text">
+            Serving New Jersey and Vermont. Trusted since 2025.
+          </p>
         </div>
 
         <div className="flex flex-col gap-2.5 font-body text-sm">

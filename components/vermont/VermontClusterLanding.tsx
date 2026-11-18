@@ -133,8 +133,8 @@ export default function VermontClusterLanding({
         <section aria-label="Winter Home Watch">
           <HomeWatchLinkCard />
           <p className="mt-3 font-body text-sm text-vm-muted">
-            Seasonal Check $150/month · Weekly Watch $275/month · Storm check
-            $75/visit. Scheduled visits only — not continuous monitoring.
+            Get a quote — we reply within one business day. Scheduled visits
+            only — not continuous monitoring.
           </p>
         </section>
 

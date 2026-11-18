@@ -18,7 +18,7 @@ interface PricingPlan {
 const njPricing: PricingPlan[] = [
   {
     name: "Basic clean",
-    price: "$120",
+    price: "Custom quote",
     per: "per service",
     description: "Perfect for regular maintenance",
     features: [
@@ -34,7 +34,7 @@ const njPricing: PricingPlan[] = [
   },
   {
     name: "Deep clean",
-    price: "$220",
+    price: "Custom quote",
     per: "per service",
     description: "Thorough top-to-bottom clean",
     features: [
@@ -50,7 +50,7 @@ const njPricing: PricingPlan[] = [
   },
   {
     name: "Move-in / out",
-    price: "$320",
+    price: "Custom quote",
     per: "per service",
     description: "Full property reset",
     features: [
@@ -69,10 +69,10 @@ const njPricing: PricingPlan[] = [
 const vermontPricing: PricingPlan[] = [
   {
     name: "Vacation rental turnover",
-    price: "$225",
+    price: "Custom quote",
     per: "per turn",
-    startingAt: true,
-    description: "Between-guest reset for STRs — aligned with Vermont starting rates",
+    startingAt: false,
+    description: "Between-guest reset for STRs",
     features: [
       "Full kitchen reset",
       "All bathrooms cleaned",
@@ -86,9 +86,9 @@ const vermontPricing: PricingPlan[] = [
   },
   {
     name: "Deep cleaning",
-    price: "$325",
+    price: "Custom quote",
     per: "per visit",
-    startingAt: true,
+    startingAt: false,
     description: "First visit or post-season reset",
     features: [
       "Full-day service",
@@ -103,9 +103,9 @@ const vermontPricing: PricingPlan[] = [
   },
   {
     name: "Large property turnover",
-    price: "$275",
+    price: "Custom quote",
     per: "per turn",
-    startingAt: true,
+    startingAt: false,
     description: "4+ bedrooms or extended cleaning",
     features: [
       "Everything in Standard Turnover",

@@ -214,7 +214,7 @@ export default function VillaPartnershipPage() {
             <div className="grid md:grid-cols-3 gap-8">
               <div className="bg-white p-8 rounded-xl shadow-md">
                 <h3 className="text-2xl font-bold text-vm-text mb-4">Standard Turnover</h3>
-                <p className="text-4xl font-bold text-blue-600 mb-2">JMD $7,500</p>
+                <p className="text-2xl font-bold text-blue-600 mb-2">Custom quote</p>
                 <p className="text-vm-muted mb-6">Per turnover</p>
                 <ul className="space-y-2 text-vm-text">
                   <li className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export default function VillaPartnershipPage() {
                   Most Popular
                 </div>
                 <h3 className="text-2xl font-bold text-vm-text mb-4">Turnover + Linen</h3>
-                <p className="text-4xl font-bold text-blue-600 mb-2">JMD $9,500</p>
+                <p className="text-2xl font-bold text-blue-600 mb-2">Custom quote</p>
                 <p className="text-vm-muted mb-6">Per turnover</p>
                 <ul className="space-y-2 text-vm-text">
                   <li className="flex items-center gap-2">
@@ -255,7 +255,7 @@ export default function VillaPartnershipPage() {
               </div>
               <div className="bg-white p-8 rounded-xl shadow-md">
                 <h3 className="text-2xl font-bold text-vm-text mb-4">Full Service</h3>
-                <p className="text-4xl font-bold text-blue-600 mb-2">JMD $12,000</p>
+                <p className="text-2xl font-bold text-blue-600 mb-2">Custom quote</p>
                 <p className="text-vm-muted mb-6">Per turnover</p>
                 <ul className="space-y-2 text-vm-text">
                   <li className="flex items-center gap-2">

@@ -12,9 +12,15 @@ export type MarketingReview = {
   secondQuote?: string;
   name: string;
   context: string;
-  stars: number;
+  /** Only set when the client supplied or approved a rating. */
+  stars?: number;
   /** Full Google Maps (or Google) review URL when available. */
   sourceUrl: string;
+  /**
+   * Market-specific reviews (e.g. "vermont") render only on that market's page.
+   * Reviews without a market are general and may appear on the homepage.
+   */
+  market?: string;
 };
 
 export const reviews: MarketingReview[] = [
@@ -29,4 +35,22 @@ export const reviews: MarketingReview[] = [
     // Approved mockup currently uses "#"; replace with the live Google Maps review URL when Brian confirms it.
     sourceUrl: "#",
   },
+  {
+    quote: "Thorough and a great job — the photos looked awesome!",
+    name: "Tiffany P.",
+    context: "Ludlow, VT",
+    market: "vermont",
+    // Permission granted for website use (see lib/marketing/testimonials.ts). No rating supplied.
+    sourceUrl: "#",
+  },
 ];
+
+/** Reviews for a given market page, in file order. */
+export function reviewsForMarket(market: string): MarketingReview[] {
+  return reviews.filter((r) => !r.market || r.market === market);
+}
+
+/** Reviews with no market tag (homepage). */
+export function generalReviews(): MarketingReview[] {
+  return reviews.filter((r) => !r.market);
+}

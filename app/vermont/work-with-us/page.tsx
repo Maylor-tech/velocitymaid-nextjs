@@ -11,7 +11,7 @@ import {
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import { pageSocialMetadata } from "@/lib/seo/socialImages";
-import { calcPayout, PAYOUT_RULES } from "@/lib/payoutRules";
+import { PAYOUT_RULES } from "@/lib/payoutRules";
 import {
   CLEANER_APPLY_VERMONT_PATH,
   VERMONT_WORK_WITH_US_PATH,
@@ -33,20 +33,6 @@ export const metadata: Metadata = {
     image: "vermont",
   }),
 };
-
-const HOST_TIERS = [
-  { label: "Standard turnover", hostPrice: 225 },
-  { label: "Larger home", hostPrice: 275 },
-  { label: "Deep / premium", hostPrice: 325 },
-] as const;
-
-function usd(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Math.round(amount));
-}
 
 const DAY_STEPS = [
   {
@@ -74,7 +60,7 @@ const FAQS = [
   },
   {
     q: "How much do I earn?",
-    a: `You earn ${Math.round(PAYOUT_RULES.cleanerPct * 100)}% of the job total. On a typical $${HOST_TIERS[0].hostPrice} guest-ready turnover, that is about ${usd(calcPayout(HOST_TIERS[0].hostPrice).cleanerAmount)}. Larger homes and deep cleans pay more. You see the exact payout before you accept. Tips are extra.`,
+    a: `You earn ${Math.round(PAYOUT_RULES.cleanerPct * 100)}% of the job total. You see the exact payout before you accept. Tips are extra.`,
   },
   {
     q: "When do I get paid?",
@@ -280,30 +266,9 @@ export default function VermontWorkWithUsPage() {
               {Math.round(PAYOUT_RULES.cleanerPct * 100)}% of the job total
             </h2>
             <p className="mt-4 max-w-2xl font-body text-sm leading-relaxed text-vm-muted">
-              These examples use published host starting prices. Your exact payout
+              Get a quote — we reply within one business day. Your exact payout
               is shown on each job before you accept. Tips are separate and extra.
             </p>
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {HOST_TIERS.map((tier) => {
-                const payout = calcPayout(tier.hostPrice);
-                return (
-                  <article
-                    key={tier.label}
-                    className="rounded-xl border border-vm-border bg-white p-6"
-                  >
-                    <h3 className="font-heading text-sm font-bold text-vm-navy">
-                      {tier.label}
-                    </h3>
-                    <p className="mt-3 font-heading text-3xl font-bold text-vm-navy">
-                      {usd(payout.cleanerAmount)}
-                    </p>
-                    <p className="mt-1 font-body text-xs text-vm-muted">
-                      Your share on a {usd(tier.hostPrice)} job
-                    </p>
-                  </article>
-                );
-              })}
-            </div>
             <div className="mt-6 flex items-start gap-3 rounded-xl border border-vm-border bg-vm-surface p-5">
               <DollarSign className="mt-0.5 h-5 w-5 shrink-0 text-vm-cyan-dark" aria-hidden />
               <p className="font-body text-sm leading-relaxed text-vm-text">

@@ -13,7 +13,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   return {
     title: `Referral Link - VelocityMaid New Jersey`,
-    description: 'Get $20 off your first cleaning with this referral link!',
+    description: 'A referral link for VelocityMaid cleaning.',
   };
 }
 
@@ -57,10 +57,8 @@ export default async function ReferralPage({ params }: PageProps) {
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'Offer',
-            name: 'VelocityMaid Referral Discount',
-            description: 'Get $20 off your first cleaning with this referral link',
-            price: '20',
-            priceCurrency: 'USD',
+            name: 'VelocityMaid Referral',
+            description: 'A referral link for VelocityMaid cleaning',
             url: `https://velocitymaid.com/ref/${code}`,
           }),
         }}
@@ -74,15 +72,14 @@ export default async function ReferralPage({ params }: PageProps) {
               You've Been Referred!
             </h1>
             <p className="text-xl md:text-2xl text-vm-muted mb-8">
-              Get $20 OFF your first VelocityMaid cleaning
+              Book a VelocityMaid cleaning with this referral
             </p>
           </div>
 
           <div className="bg-white text-[#0A3D2F] rounded-2xl shadow-xl p-8 md:p-12 mb-8">
             <div className="text-center mb-8">
               <div className="bg-[#F8C548] text-[#0A3D2F] px-8 py-4 rounded-xl inline-block mb-6">
-                <div className="text-5xl font-bold">$20</div>
-                <div className="text-xl font-semibold">OFF First Clean</div>
+                <div className="text-2xl font-bold">Referral saved</div>
               </div>
               <p className="text-lg text-vm-text mb-6">
                 Your friend {referralLink.customer.firstName} referred you to VelocityMaid!
@@ -100,7 +97,7 @@ export default async function ReferralPage({ params }: PageProps) {
                   </div>
                   <div>
                     <h3 className="font-bold mb-1">Click "Book Now" below</h3>
-                    <p className="text-vm-muted">Your $20 discount will be automatically applied</p>
+                    <p className="text-vm-muted">This referral stays attached to the booking link</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -109,7 +106,7 @@ export default async function ReferralPage({ params }: PageProps) {
                   </div>
                   <div>
                     <h3 className="font-bold mb-1">Complete your booking</h3>
-                    <p className="text-vm-muted">Enjoy professional cleaning at a discounted rate</p>
+                    <p className="text-vm-muted">We confirm the price before service</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -117,8 +114,8 @@ export default async function ReferralPage({ params }: PageProps) {
                     3
                   </div>
                   <div>
-                    <h3 className="font-bold mb-1">Your friend gets $20 too!</h3>
-                    <p className="text-vm-muted">They'll receive a $20 credit for referring you</p>
+                    <h3 className="font-bold mb-1">Your friend is credited after the clean</h3>
+                    <p className="text-vm-muted">The referral is recorded on the completed booking</p>
                   </div>
                 </div>
               </div>
@@ -129,11 +126,11 @@ export default async function ReferralPage({ params }: PageProps) {
                 href={bookingUrl}
                 className="btn-jamaica inline-flex items-center gap-2 text-lg px-8 py-4"
               >
-                Book Now - $20 OFF
+                Book now
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <p className="text-sm text-vm-muted mt-4">
-                Discount automatically applied at checkout
+                We reply within one business day.
               </p>
             </div>
           </div>

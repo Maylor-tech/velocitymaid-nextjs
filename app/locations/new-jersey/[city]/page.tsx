@@ -93,11 +93,7 @@ export default async function CityLandingPage({ params }: PageProps) {
   // Get branch data
   const branch = await prisma.branch.findUnique({
     where: { slug: 'new-jersey' },
-    include: {
-      BranchServicePackage: {
-        where: { isActive: true },
-        orderBy: { name: 'asc' },
-      },
+      include: {
       BranchLandingContent: true,
     },
   });
@@ -109,23 +105,6 @@ export default async function CityLandingPage({ params }: PageProps) {
   // Get city-specific content
   const cityContent = cityContentMap(branch.BranchLandingContent?.cityContent);
   const cityData = cityContent[citySlug] || {};
-
-  // Default pricing
-  const defaultPricing = {
-    basic: 120,
-    deep: 220,
-    moveInOut: 320,
-  };
-
-  const getServicePrice = (code: string): number => {
-    if (!branch.BranchServicePackage) return defaultPricing[code as keyof typeof defaultPricing] || 0;
-    const pkg = branch.BranchServicePackage.find(p => p.code.toLowerCase().includes(code.toLowerCase()));
-    return pkg ? Number(pkg.basePrice) : defaultPricing[code as keyof typeof defaultPricing] || 0;
-  };
-
-  const basicPrice = getServicePrice('basic');
-  const deepPrice = getServicePrice('deep');
-  const moveInOutPrice = getServicePrice('moveinout');
 
   // City ZIPs
   const cityZips = getZipsForCity(citySlug);
@@ -148,7 +127,7 @@ export default async function CityLandingPage({ params }: PageProps) {
     },
     {
       question: `How much does cleaning cost in ${cityName}?`,
-      answer: `Our pricing is transparent and flat-rate. Basic cleaning starts at $${basicPrice} for 1 bedroom.`,
+      answer: "Get a quote — we reply within one business day.",
     },
     {
       question: `How do I book a cleaning in ${cityName}?`,
@@ -256,7 +235,7 @@ export default async function CityLandingPage({ params }: PageProps) {
                 <h3 className="text-2xl font-heading font-bold text-vm-navy mb-4">
                   Basic Cleaning
                 </h3>
-                <p className="text-vm-muted font-body mb-6">Starting at ${basicPrice}</p>
+                <p className="text-vm-muted font-body mb-6">Custom quote</p>
                 <ul className="text-left text-vm-text font-body space-y-2 mb-6">
                   <li>✓ Dusting & vacuuming</li>
                   <li>✓ Bathroom sanitization</li>
@@ -270,7 +249,7 @@ export default async function CityLandingPage({ params }: PageProps) {
                 <h3 className="text-2xl font-heading font-bold text-vm-navy mb-4">
                   Deep Cleaning
                 </h3>
-                <p className="text-vm-muted font-body mb-6">Starting at ${deepPrice}</p>
+                <p className="text-vm-muted font-body mb-6">Custom quote</p>
                 <ul className="text-left text-vm-text font-body space-y-2 mb-6">
                   <li>✓ Everything in basic</li>
                   <li>✓ Inside appliances</li>
@@ -284,12 +263,12 @@ export default async function CityLandingPage({ params }: PageProps) {
                 <h3 className="text-2xl font-heading font-bold text-vm-navy mb-4">
                   Move-In/Out
                 </h3>
-                <p className="text-vm-muted font-body mb-6">Starting at ${moveInOutPrice}</p>
+                <p className="text-vm-muted font-body mb-6">Custom quote</p>
                 <ul className="text-left text-vm-text font-body space-y-2 mb-6">
                   <li>✓ Comprehensive deep clean</li>
                   <li>✓ Cabinet interiors</li>
                   <li>✓ Window cleaning</li>
-                  <li>✓ Final inspection</li>
+                  <li>✓ Photo report according to your booked service package.</li>
                 </ul>
               </div>
             </div>

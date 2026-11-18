@@ -191,38 +191,38 @@ export default function CorporateNJPage() {
                     <tr className="border-b border-gray-200">
                       <td className="p-4 font-semibold">Office</td>
                       <td className="p-4">Up to 2,500 sq ft</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$400</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$1,200</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
                     </tr>
                     <tr className="border-b border-gray-200 bg-gray-50">
                       <td className="p-4 font-semibold">Office</td>
                       <td className="p-4">2,501 - 5,000 sq ft</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$750</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$2,200</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
                     </tr>
                     <tr className="border-b border-gray-200">
                       <td className="p-4 font-semibold">Salon</td>
                       <td className="p-4">1-3 Stations</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$180</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$520</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
                     </tr>
                     <tr className="border-b border-gray-200 bg-gray-50">
                       <td className="p-4 font-semibold">Salon</td>
                       <td className="p-4">4-6 Stations</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$320</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$960</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
                     </tr>
                     <tr className="border-b border-gray-200">
                       <td className="p-4 font-semibold">Restaurant</td>
                       <td className="p-4">Up to 1,500 sq ft</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$250/night</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$4,000</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
                     </tr>
                     <tr className="bg-gray-50">
                       <td className="p-4 font-semibold">Restaurant</td>
                       <td className="p-4">1,501 - 3,000 sq ft</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$400/night</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$6,400</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
                     </tr>
                   </tbody>
                 </table>

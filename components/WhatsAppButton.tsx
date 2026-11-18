@@ -35,8 +35,22 @@ export default function WhatsAppButton({
     pathname != null &&
     NJ_WHATSAPP_HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
-  const isAdmin = pathname != null && pathname.startsWith('/admin');
-  const isMapPage = pathname === '/admin/map';
+  /** Public marketing site only — never on ops portals or local-dev fixtures. */
+  const hiddenOnPortal =
+    pathname != null &&
+    (pathname.startsWith('/admin') ||
+      pathname.startsWith('/cleaner') ||
+      pathname.startsWith('/cleaners') ||
+      pathname.startsWith('/customer') ||
+      pathname.startsWith('/report') ||
+      pathname.startsWith('/invoice') ||
+      pathname.startsWith('/dev'));
+
+  // On a phone this control sat on the host intake form and on the price table.
+  const hiddenOnHostIntakeForm =
+    pathname != null && pathname.startsWith('/vermont/host-intake');
+  const hideOnMobile =
+    hiddenOnHostIntakeForm || pathname === '/pricing';
 
   useEffect(() => {
     // Show button after a short delay for better UX
@@ -55,19 +69,20 @@ export default function WhatsAppButton({
     window.open(whatsappUrl, '_blank');
   };
 
-  if (hiddenForNj || isAdmin || isMapPage || !isVisible) return null;
+  if (hiddenForNj || hiddenOnPortal || !isVisible) return null;
 
-  const horizontalPosition =
-    position === 'left'
-      ? 'left-4 sm:left-6'
-      : 'right-4 sm:right-6';
+  const horizontalPosition = hiddenOnHostIntakeForm || position === 'left'
+    ? 'left-4 sm:left-6'
+    : 'right-4 sm:right-6';
 
   // FAB sits over SiteFooter navy bottom pad (homepage) / page bottom elsewhere.
   const bottomPosition = 'bottom-6';
 
   return (
     <div
-      className={`fixed ${bottomPosition} ${horizontalPosition} z-50 ${className}`}
+      className={`fixed ${bottomPosition} ${horizontalPosition} z-50 ${
+        hideOnMobile ? 'max-md:hidden' : ''
+      } ${className}`}
     >
       {/* Tooltip */}
       {showPopup && showTooltip && (

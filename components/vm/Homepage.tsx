@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { reviews } from "@/lib/marketing/reviews";
+import { generalReviews } from "@/lib/marketing/reviews";
 import { TrustStrip } from "./TrustStrip";
 import { SiteHeader } from "./SiteHeader";
 import { SiteFooter } from "./SiteFooter";
 import { StatusPill } from "./StatusPill";
 import { vmFocusRing } from "./focus";
 import { cn } from "@/lib/utils";
+
+/** Homepage shows general reviews only; market-tagged reviews live on their market page. */
+const reviews = generalReviews();
 
 const VT_INTAKE = "/vermont/host-intake";
 const NJ_BOOK = "/book?branch=new-jersey";
@@ -75,6 +78,7 @@ export function Homepage() {
       <TrustStrip />
       <SiteHeader quoteHref={QUOTE_ANCHOR} className="max-w-none" />
 
+      <main>
       {/* 5.3 Hero */}
       <section className="bg-vm-navy text-vm-white">
         <div className="mx-auto grid max-w-[1200px] items-center gap-10 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-14">
@@ -145,7 +149,7 @@ export function Homepage() {
                   <strong>32 of 32 done</strong>
                 </div>
                 <div className="flex justify-between border-b border-vm-line pb-2">
-                  <span className="text-vm-muted">Flagged for you</span>
+                  <span className="text-vm-muted">Noted during the clean</span>
                   <strong>Paper towels low</strong>
                 </div>
                 <div className="flex justify-between">
@@ -183,13 +187,25 @@ export function Homepage() {
               </a>
             </div>
             <p className="text-vm-muted">
-              Turnovers between check-out and check-in, from $225. Deep cleans,
-              post-construction cleans and residential cleaning by quote.
+              Turnovers between check-out and check-in.{" "}
+              <Link
+                href="/pricing"
+                className={cn(
+                  "font-bold text-vm-cyan-dark underline-offset-2 hover:text-vm-navy hover:underline",
+                  vmFocusRing
+                )}
+              >
+                Flat price by bedroom count — see pricing.
+              </Link>{" "}
+              Deep cleans, post-construction cleans and residential cleaning by
+              quote.
             </p>
             <ul className="flex list-disc flex-col gap-1 pl-5 text-vm-text">
-              <li>Beds made, linens reset, kitchen and baths guest-ready</li>
+              <li>Beds and linens reset, kitchen and baths guest-ready</li>
               <li>Photo report after QC, before you&apos;re invoiced</li>
-              <li>We flag damage and low supplies we find</li>
+              <li>
+                Anything we notice during the clean is noted in your report
+              </li>
             </ul>
             <Link href={VT_INTAKE} className={cn(ctaAccent, "mt-1.5 self-start")}>
               Start host intake →
@@ -216,7 +232,7 @@ export function Homepage() {
               Recurring and one-time home cleaning, deep cleans and move-outs.
             </p>
             <ul className="flex list-disc flex-col gap-1 pl-5 text-vm-text">
-              <li>Same checklist and photo report as our rentals</li>
+              <li>Checklist and photos, based on the service you book</li>
               <li>Choose your date and pay securely online</li>
               <li>Re-clean guarantee on every visit</li>
             </ul>
@@ -259,7 +275,7 @@ export function Homepage() {
             {
               n: "04",
               title: "Your report, then the invoice",
-              body: "See the work first. Damage and low supplies are flagged.",
+              body: "See the work first, plus anything we noticed during the clean.",
             },
           ].map((step) => (
             <li
@@ -342,9 +358,9 @@ export function Homepage() {
                     <div
                       className="flex gap-0.5 text-vm-navy"
                       role="img"
-                      aria-label={`${review.stars} out of 5 stars`}
+                      aria-label={`${review.stars ?? 0} out of 5 stars`}
                     >
-                      {Array.from({ length: review.stars }).map((_, i) => (
+                      {Array.from({ length: review.stars ?? 0 }).map((_, i) => (
                         <StarIcon key={i} />
                       ))}
                     </div>
@@ -454,6 +470,7 @@ export function Homepage() {
           </div>
         </div>
       </section>
+      </main>
 
       <SiteFooter />
     </div>

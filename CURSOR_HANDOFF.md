@@ -1,6 +1,6 @@
 # VelocityMaid — Website & Dashboard Redesign Handoff for Cursor
 
-**Version:** 1.1 · 17 Nov 2026 (adds first real review, post-construction service) · **Owner:** Brian Bruce Maylor, VelocityMaid LLC
+**Version:** 1.2 · 17 Nov 2026 (launch decisions; Vermont hosts page; no starting prices) · **Owner:** Brian Bruce Maylor, VelocityMaid LLC
 **Design source of truth:** the VelocityMaid design system (tokens, logo v2.3) and the "VelocityMaid Brand in Use" canvas.
 
 ---
@@ -93,14 +93,14 @@ Build these sections in this order. The copy below is final unless it's in [brac
 - Sub: *Vacation-rental turnovers and home cleaning, run by a 13-year hospitality veteran. You see every room before you pay.*
 - Buttons: `I host in Vermont →` (cyan, → `/vermont/host-intake`) · `Clean my home in NJ →` (white, → `/book?branch=new-jersey`)
 - Check list: Insured · Background-checked team · Re-clean guarantee
-- Right: **sample turnover report card**: 3 photo thumbnails, "Checklist 32 of 32 done", "Flagged for you: Paper towels low", "Guest-ready 2:40 pm", "QC approved". Label it `TURNOVER REPORT · EXAMPLE`. Replace the grey boxes with 3 real, cropped job photos (no guest belongings, no addresses).
+- Right: **sample turnover report card**: 3 photo thumbnails, "Checklist 32 of 32 done", "Noted during the clean: Paper towels low", "Guest-ready 2:40 pm", "QC approved". Label it `TURNOVER REPORT · EXAMPLE`. Replace the grey boxes with 3 real, cropped job photos (no guest belongings, no addresses).
 
 **5.4 Choose your area** — two cards
-- **Vermont hosts** · (802) 733-5348 · "Turnovers between check-out and check-in, from $225. Deep cleans, post-construction cleans and residential cleaning by quote." Bullets: beds and linens reset, kitchen and baths guest-ready · photo report after QC, before you're invoiced · we flag damage and low supplies we find. Button `Start host intake →`. Small print: "Invoiced after the clean passes QC."
-- **New Jersey homes** · (973) 280-9190 · "Recurring and one-time home cleaning, deep cleans and move-outs." Bullets: same checklist and photo report as our rentals · choose your date and pay securely online · re-clean guarantee on every visit. Button `Book in New Jersey →`. Small print: "Pay online when you book. Price confirmed before you pay."
+- **Vermont hosts** · (802) 733-5348 · "Turnovers between check-out and check-in, quoted per property. Deep cleans, post-construction cleans and residential cleaning by quote." Bullets: beds and linens reset, kitchen and baths guest-ready · photo report after QC, before you're invoiced · anything we notice during the clean is noted in your report. Button `Start host intake →`. Small print: "Invoiced after the clean passes QC."
+- **New Jersey homes** · (973) 280-9190 · "Recurring and one-time home cleaning, deep cleans and move-outs." Bullets: checklist and photos, based on the service you book · choose your date and pay securely online · re-clean guarantee on every visit. Button `Book in New Jersey →`. Small print: "Pay online when you book. Price confirmed before you pay."
 
 **5.5 What happens on every clean** — 4 numbered steps
-01 Room-by-room checklist · 02 Before and after photos · 03 Quality check · 04 Your report, then the invoice.
+01 Room-by-room checklist · 02 Before and after photos · 03 Quality check · 04 Your report, then the invoice ("See the work first, plus anything we noticed during the clean.").
 
 **5.6 Founder** — photo + story
 - Eyebrow `WHY WE CLEAN LIKE THIS`, H2 **Thirteen years of hospitality, in every room.**
@@ -128,6 +128,25 @@ Build these sections in this order. The copy below is final unless it's in [brac
 - Add `LocalBusiness` JSON-LD (name, phones, url, areaServed: Vermont, New Jersey). Never add review stars until real reviews exist.
 
 ---
+
+## 5B. Vermont hosts page spec — `/vermont/host-intake`, `reference/vermont-hosts.html`
+
+Replace the current page layout. Keep the route, the intake API, every field name and the validation rules. This is presentation, copy and form flow only.
+
+1. **Shared chrome:** the same TrustStrip, SiteHeader and SiteFooter as the homepage (`components/vm/*`). "Vacation rentals" shows as the active nav item. Remove the old 9-item navy header from all marketing pages.
+2. **Hero** (navy, left-aligned): eyebrow `VERMONT HOSTS · OKEMO VALLEY & MIDDLEBURY`. H1 **Guest-ready properties, every turnover.** ("every turnover." in cyan). Sub: "Turnovers that follow your property's own checklist, with a photo report after every clean. You see the work before you pay." Buttons: `Get my turnover quote` (cyan, scrolls to the form) · `Call or text (802) 733-5348` (outline, `tel:`). Small: "No card needed to get a quote." Right: "What you get · Example" report card (Checklist: your property's list, completed · Photos: room by room · Noted during the clean: Paper towels low · Then: one payment link · pill "QC approved").
+3. **Reviews** directly under the hero: Jeffrey L. (featured, verbatim) and Tiffany P., Ludlow, VT ("Thorough and a great job — the photos looked awesome!", existing review on the current page). Both come from `lib/marketing/reviews.ts`; add Tiffany there with `market: "vermont"`.
+4. **How it works**, 4 steps: Tell us about the property (two minutes, no card) · One price, agreed first · The turnover · Photo report, then pay.
+5. **What a turnover covers:** kitchen and bathrooms reset · beds made and trash removed · your property's own checklist · photos of finished rooms · anything we notice during the clean, noted in your report. **Also available** (no prices): large-property turnovers, deep and seasonal cleans, post-construction cleans, guest welcome setup. Pricing line: "Every property is different, so we quote after a quick review of size, scope and schedule. You get one price before we start."
+6. **REMOVE the whole "Turnover pricing" section** ($225 / $275 / $325 starting prices and all add-on prices) until Brian approves prices. Remove "Guest-ready inspection" everywhere: no inspection promise.
+7. **Gallery:** keep the existing approved photos, 3 across, with captions (Fern Hill · Perkinsville; Ludlow · Okemo Valley; Middlebury · Addison County).
+8. **Intake form, two steps on one page.** Same endpoint, same field names, single submit at the end.
+   - Step 1 "Your property": full name, mobile, email, property address (+ town), bedrooms, bathrooms, "What do you need?" chips (Turnovers, Deep / seasonal, Post-construction, Welcome setup; maps to the existing service-type values). Button "Continue to turnover details →" validates step 1 only.
+   - Step 2 "Turnover details": the existing required fields (access type, linens, same-day turnovers, busy season), then everything optional (contact preference, best time, square footage, beds, amenities, platforms, check-in/out times, frequency, current cleaner, notice period, notes) inside a collapsed "Add more details (optional)" section.
+   - Submit: "Request my turnover quote". Under it: "No card needed." Keep "We'll reply within one business day" ONLY if Brian confirms it.
+   - Step indicator pills, a Back link on step 2, errors shown inline, focus moves to the first error. Works with keyboard and at 375px.
+9. **Contact block** beside the form: call or text, email, WhatsApp.
+10. **Host FAQ:** areas covered · how pricing is set · who provides linens · how do I pay · what if something is missed (24-hour re-clean) · calendar sync (coming soon).
 
 ## 6. Admin dashboard spec — `reference/admin-jobs.html`
 
@@ -157,10 +176,12 @@ Keep every existing route, permission, query and state transition. These are **v
 These are in the design but need a yes from you, or real content:
 
 - [ ] Re-clean guarantee wording: "tell us within 24 hours and we'll come back and fix it, free"
-- [ ] "We flag damage and low supplies we find": is this part of every Vermont turnover today?
-- [ ] New Jersey gets the same checklist and photo report as Vermont rentals
+- [x] Issues: report what's noticed during service; never promise a full inspection (decision Nov 17)
+- [x] NJ checklist and photo report: provided according to the booked service package (decision Nov 17)
 - [ ] NJ service list: recurring, one-time, deep cleans, move-outs
-- [ ] Vermont turnovers still start at $225
+- [x] Vermont pricing: **no starting prices on the site** until Brian approves (decision Nov 17)
+- [ ] Vermont payment methods for the FAQ (card / Zelle / PayPal?)
+- [ ] "We'll reply within one business day": confirm or remove
 - [ ] 3 real job photos for the hero report card (no guest items, no addresses)
 - [ ] Founder photo
 - [x] First real review received (Jeffrey Lajoie, Google, 5★). Courtesy: let Jeff know you're quoting him on the site
@@ -190,6 +211,9 @@ Paste one prompt, review the diff, run the app, then move on.
 
 **Prompt 6 — QA pass**
 > Audit the changed pages against Section 10 of `CURSOR_HANDOFF.md`. Report each item as pass or fail with the file and line. Fix only visual or accessibility failures. List anything else for me to decide.
+
+**Prompt 7 — Launch decisions + Vermont hosts page (v1.2)**
+> Apply the v1.2 launch decisions to the homepage (Section 5.3/5.4/5.5 wording, no $225), then rebuild /vermont/host-intake per Section 5B and reference/vermont-hosts.html. Keep the route, intake API, field names and validation. Remove the pricing section and every "inspection" promise. Grep the public site for "$225", "$275", "$325", "starting" and "inspection" and list every hit. Screenshots vermont-hosts-1440-v1.png and vermont-hosts-375-v1.png (and the form on step 2). Tests, list files changed, stop.
 
 ---
 

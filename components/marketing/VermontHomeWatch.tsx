@@ -117,17 +117,14 @@ export function VermontHomeWatch() {
             {[
               {
                 name: "Seasonal Check",
-                price: "$150/month",
                 detail: "Every other week visits",
               },
               {
                 name: "Weekly Watch",
-                price: "$275/month",
                 detail: "Weekly scheduled visits",
               },
               {
                 name: "Storm / emergency",
-                price: "$75 per visit",
                 detail: "As-needed check visits",
               },
             ].map((plan) => (
@@ -138,8 +135,8 @@ export function VermontHomeWatch() {
                 <h3 className="font-heading text-base font-bold text-vm-navy">
                   {plan.name}
                 </h3>
-                <p className="mt-2 font-heading text-2xl font-bold text-vm-navy">
-                  {plan.price}
+                <p className="mt-2 font-body text-sm font-semibold leading-relaxed text-vm-navy">
+                  Get a quote — we reply within one business day.
                 </p>
                 <p className="mt-2 font-body text-sm text-vm-muted">{plan.detail}</p>
               </article>

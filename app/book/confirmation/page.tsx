@@ -294,7 +294,7 @@ function BookingConfirmationContent() {
         </h1>
         <p className="text-lg text-vm-muted mb-6">
           {paymentMode === 'deposit'
-            ? 'Your $25 booking deposit was received. We’ll review and confirm your cleaning shortly.'
+            ? 'Your booking deposit was received. We’ll review and confirm your cleaning shortly.'
             : 'Your payment was successful and your cleaning has been booked.'}
         </p>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
