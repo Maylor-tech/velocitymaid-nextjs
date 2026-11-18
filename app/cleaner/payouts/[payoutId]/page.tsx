@@ -211,12 +211,6 @@ export default function CleanerPayoutReceiptPage() {
                   <span className="text-vm-muted">Job ID:</span>{" "}
                   <span className="font-mono">{payout.jobId}</span>
                 </div>
-                {payout.Job?.customerName && (
-                  <div>
-                    <span className="text-vm-muted">Customer:</span>{" "}
-                    <span>{payout.Job.customerName}</span>
-                  </div>
-                )}
                 {payout.Job?.serviceType && (
                   <div>
                     <span className="text-vm-muted">Service:</span>{" "}

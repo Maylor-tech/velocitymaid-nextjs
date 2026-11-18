@@ -140,7 +140,7 @@ export function PhotoSlotList({
             <p className="font-body text-sm text-vm-text">
               {slot.room}
               {slot.required ? " · required after" : ""}
-              {slot.filled ? " · done" : " · missing"}
+              {slot.filled ? " · done" : " · needed"}
             </p>
             <input
               ref={(node) => {

@@ -85,7 +85,7 @@ export function resolvePropertyPhotoSlots(
       label: override.label,
       room: override.room,
       sortOrder: override.sortOrder,
-      required: override.required,
+      required: true,
       source: "property" as const,
     };
   });
@@ -98,7 +98,7 @@ export function resolvePropertyPhotoSlots(
       label: row.label,
       room: row.room,
       sortOrder: row.sortOrder,
-      required: row.required,
+      required: true,
       source: "property" as const,
     }));
 
@@ -169,7 +169,7 @@ export function finishPhotoBlockMessage(block: FinishPhotoBlock): string {
   }
   if (block.missingAfter.length > 0) {
     parts.push(
-      `Missing required after photos: ${block.missingAfter.map((item) => item.label).join(", ")}.`
+      `Needed after photos: ${block.missingAfter.map((item) => item.label).join(", ")}.`
     );
   }
   return parts.join(" ");

@@ -1,5 +1,8 @@
+/** Cleaner share of the agreed customer price. One source for offer pay and payouts. */
+export const CLEANER_SHARE = 0.65;
+
 export const PAYOUT_RULES = {
-  cleanerPct: 0.65,
+  cleanerPct: CLEANER_SHARE,
   platformPct: 0.35,
 } as const;
 

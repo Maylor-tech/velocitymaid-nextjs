@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, Calendar, MapPin, DollarSign, CheckCircle, XCircle, Phone, Mail } from "lucide-react";
+import { Loader2, Calendar, MapPin, DollarSign, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import { JobChecklistPanel } from "@/components/cleaner/JobChecklistPanel";
 import { formatServiceDate } from "@/lib/dates/serviceDate";
@@ -15,17 +15,8 @@ import { finishPhotoBlockMessage } from "@/lib/photos/propertyPhotoSlots";
 import { CleanerPortalChrome } from "@/components/cleaner/CleanerPortalChrome";
 import {
   CleanerOfferCard,
-  formatOfferLifecycleForCleaner,
   formatRespondByLabel,
 } from "@/components/cleaner/CleanerOfferCard";
-
-interface CustomerInfo {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string | null;
-}
 
 interface PropertyInstructions {
   id: string;
@@ -52,7 +43,6 @@ interface Job {
   id: string;
   status: string;
   paymentStatus?: string;
-  customerName: string | null;
   serviceType: string | null;
   preferredDate: string | null;
   preferredTime: string | null;
@@ -77,7 +67,6 @@ interface Job {
   submittedForQcAt?: string | null;
   jobSpecificNotes?: string | null;
   property?: PropertyInstructions | null;
-  Customer?: CustomerInfo | null;
   location?: { city: string | null; state: string | null; areaLabel: string | null };
   Branch: {
     id: string;
@@ -398,11 +387,6 @@ export default function CleanerJobDetailPage() {
     return colors[status] || "bg-gray-100 text-vm-text";
   };
 
-  const customerDisplayName =
-    job?.Customer
-      ? `${job.Customer.firstName} ${job.Customer.lastName}`.trim()
-      : job?.customerName;
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -496,16 +480,6 @@ export default function CleanerJobDetailPage() {
           : "Flat rate");
     const area = offer.location.areaLabel || "Property";
     const title = `${area} · ${offer.serviceDate}`;
-    const scheduleText = offer.preferredTime
-      ? `Service window ${offer.preferredTime}`
-      : "Check-out / next check-in window not listed on this offer";
-    const jobBits = [
-      offer.serviceType || "Cleaning",
-      offer.estimatedDurationMins != null
-        ? `~${offer.estimatedDurationMins} min`
-        : null,
-      "Checklist and photos required",
-    ].filter(Boolean);
 
     return (
       <CleanerPortalChrome activeNav="Offers">
@@ -526,13 +500,7 @@ export default function CleanerJobDetailPage() {
               ? `${offer.estimatedDurationMins} min`
               : "Duration not listed"
           }
-          scheduleText={scheduleText}
-          jobTypeText={jobBits.join(" · ")}
-          lifecycleLabel={formatOfferLifecycleForCleaner({
-            status: offer.status || (offerExpired ? "EXPIRED" : "OFFERED"),
-            expiresAt: offer.expiresAt,
-            expired: offerExpired,
-          })}
+          jobTypeText={offer.serviceType || "Cleaning"}
           expired={offerExpired}
           processing={processing}
           declineReason={declineReason}
@@ -565,7 +533,7 @@ export default function CleanerJobDetailPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold mb-2">
-                {customerDisplayName || "Job Details"}
+                {job.property?.name?.trim() || "Job"}
               </h1>
               <p className="break-all font-mono text-sm text-vm-muted">{job.id}</p>
             </div>
@@ -654,30 +622,6 @@ export default function CleanerJobDetailPage() {
                   <XCircle className="w-5 h-5" />
                   {processing ? "Processing..." : "Decline Job"}
                 </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {access === "ASSIGNED" && job.Customer && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="font-semibold text-lg mb-4">Customer</h2>
-            <div className="space-y-3">
-              {job.Customer?.email && (
-                <div className="flex items-center gap-2 text-vm-text">
-                  <Mail className="w-4 h-4 text-vm-muted" />
-                  <a href={`mailto:${job.Customer.email}`} className="hover:underline">
-                    {job.Customer.email}
-                  </a>
-                </div>
-              )}
-              {job.Customer?.phone && (
-                <div className="flex items-center gap-2 text-vm-text">
-                  <Phone className="w-4 h-4 text-vm-muted" />
-                  <a href={`tel:${job.Customer.phone}`} className="hover:underline">
-                    {job.Customer.phone}
-                  </a>
-                </div>
               )}
             </div>
           </div>

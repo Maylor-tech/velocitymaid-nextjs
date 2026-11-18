@@ -11,7 +11,7 @@ import { formatServiceDate } from "@/lib/dates/serviceDate";
 interface Job {
   id: string;
   status: string;
-  customerName: string | null;
+  propertyName: string | null;
   serviceType: string | null;
   preferredDate: string | null;
   preferredTime: string | null;
@@ -316,7 +316,7 @@ export default function CleanerJobsPage() {
               Next assignment
             </p>
             <h2 className="mt-1 text-lg font-semibold text-vm-navy">
-              {nextJob.customerName || "Customer"} ·{" "}
+              {nextJob.propertyName || "Job"} ·{" "}
               {nextJob.serviceType || "Cleaning"}
             </h2>
             <p className="mt-2 text-sm text-vm-muted">
@@ -497,7 +497,7 @@ export default function CleanerJobsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       <h3 className="text-lg font-semibold">
-                        {job.customerName || "Customer"}
+                        {job.propertyName || "Job"}
                       </h3>
                       <span
                         className={`rounded px-2 py-1 font-body text-sm font-medium ${getStatusBadgeColor(

@@ -138,6 +138,9 @@ describe('GET /api/cleaner/jobs/[jobId] property instructions', () => {
     expect(json.job.guestCheckOutDate).toBeNull();
     const assignedBlob = JSON.stringify(json);
     expect(assignedBlob).not.toMatch(/quotedTotal|totalPrice|operationalTotal|337\.8|platformFee/);
+    expect(assignedBlob).not.toMatch(/loulouslandingvt@gmail.com|2039549764/);
+    expect(json.job.Customer).toBeUndefined();
+    expect(json.job.customerName).toBeUndefined();
   });
 
   it('returns guest stay dates separately from preferredDate for assigned cleaner', async () => {

@@ -57,7 +57,7 @@ export default function JobCard({ job, onStatusUpdate }: JobCardProps) {
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold text-vm-text">{job.customerName}</h3>
+            <h3 className="text-lg font-semibold text-vm-text">{job.address || "Job"}</h3>
             <LocationBadge location={job.serviceLocation} />
             <StatusBadge status={job.status} />
           </div>
@@ -81,19 +81,6 @@ export default function JobCard({ job, onStatusUpdate }: JobCardProps) {
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-xs font-medium text-yellow-800 mb-1">Special Instructions:</p>
           <p className="text-sm text-yellow-900">{job.specialInstructions}</p>
-        </div>
-      )}
-
-      {job.phone && (
-        <div className="mb-4 text-sm text-vm-muted">
-          <span className="font-medium">Customer Phone:</span> {job.phone}
-        </div>
-      )}
-
-      {job.totalPrice && (
-        <div className="mb-4 text-sm">
-          <span className="text-vm-muted">Total:</span>
-          <span className="ml-2 font-semibold text-vm-text">${job.totalPrice.toFixed(2)}</span>
         </div>
       )}
 

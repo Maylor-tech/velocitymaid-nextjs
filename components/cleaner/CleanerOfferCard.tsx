@@ -12,9 +12,7 @@ export type CleanerOfferCardProps = {
   timeWindowText: string;
   areaText: string;
   durationText: string;
-  scheduleText: string;
   jobTypeText: string;
-  lifecycleLabel: string;
   expired?: boolean;
   processing?: boolean;
   declineReason: string;
@@ -36,9 +34,7 @@ export function CleanerOfferCard({
   timeWindowText,
   areaText,
   durationText,
-  scheduleText,
   jobTypeText,
-  lifecycleLabel,
   expired = false,
   processing = false,
   declineReason,
@@ -123,23 +119,9 @@ export function CleanerOfferCard({
 
         <div className="border-t border-vm-line pt-3">
           <p className="font-body text-sm font-bold uppercase tracking-wide text-vm-muted">
-            Schedule
-          </p>
-          <p className="font-body text-sm text-vm-text">{scheduleText}</p>
-        </div>
-
-        <div className="border-t border-vm-line pt-3">
-          <p className="font-body text-sm font-bold uppercase tracking-wide text-vm-muted">
-            Job
+            Job type
           </p>
           <p className="font-body text-sm text-vm-text">{jobTypeText}</p>
-        </div>
-
-        <div className="border-t border-vm-line pt-3">
-          <p className="font-body text-sm font-bold uppercase tracking-wide text-vm-muted">
-            Offer state
-          </p>
-          <p className="font-body text-sm text-vm-text">{lifecycleLabel}</p>
         </div>
       </section>
 

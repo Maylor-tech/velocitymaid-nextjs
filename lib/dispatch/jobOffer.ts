@@ -25,6 +25,12 @@ import {
   parseApprovedCompensation,
   parseCompensationBasis,
 } from '@/lib/dispatch/compensation';
+import {
+  defaultCleanerDurationMins,
+  defaultCleanerOfferPay,
+  isLargeFourBedroom,
+  resolvePayOverrideReason,
+} from '@/lib/dispatch/cleanerOfferDefaults';
 import { DispatchError } from '@/lib/dispatch/errors';
 import { resolveOfferExpiration, type DispatchUrgencyValue } from '@/lib/dispatch/offerTtl';
 import { notifyCleanerOfOffer } from '@/lib/dispatch/notifyOffer';
@@ -48,6 +54,8 @@ const OFFER_JOB_SELECT = {
   operationalTotal: true,
   quotedTotal: true,
   totalPrice: true,
+  agreedCustomerPrice: true,
+  serviceType: true,
   estimatedDurationMins: true,
   internalNotes: true,
   dispatchUrgency: true,
@@ -55,6 +63,8 @@ const OFFER_JOB_SELECT = {
   preferredTime: true,
   Customer: { select: { billingPolicy: true } },
   Branch: { select: { id: true, slug: true, country: true } },
+  Property: { select: { bedrooms: true, name: true } },
+  _count: { select: { JobTeamMember: true } },
 } as const;
 
 export type CreateOfferInput = {
@@ -63,6 +73,7 @@ export type CreateOfferInput = {
   compensationAmount: unknown;
   compensationBasis?: unknown;
   estimatedDurationMins?: number | null;
+  compensationOverrideReason?: string | null;
   operationalNotes?: string | null;
   ttlMinutes?: number | null;
   channel?: 'EMAIL' | 'PORTAL';
@@ -224,6 +235,36 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
     throw err;
   }
 
+  const defaultPay = defaultCleanerOfferPay({
+    agreedCustomerPrice: job.agreedCustomerPrice,
+    totalPrice: job.totalPrice,
+  });
+  let compensationOverrideReason: string | null;
+  try {
+    compensationOverrideReason = resolvePayOverrideReason({
+      amount: compensationAmount,
+      defaultPay,
+      reason: input.compensationOverrideReason,
+    });
+  } catch (err) {
+    if (err instanceof CompensationRequiredError) {
+      throw new DispatchError(err.message, err.code, 400);
+    }
+    throw err;
+  }
+
+  const cleanerCount = job._count?.JobTeamMember ?? 1;
+  const durationLabel = [job.Property?.name, job.serviceType].filter(Boolean).join(' ');
+  const defaultDuration = defaultCleanerDurationMins({
+    bedrooms: job.Property?.bedrooms,
+    largeFourBedroom: isLargeFourBedroom(durationLabel),
+    cleanerCount,
+  });
+  const estimatedDurationMins =
+    input.estimatedDurationMins != null && Number.isFinite(input.estimatedDurationMins)
+      ? Math.round(input.estimatedDurationMins)
+      : defaultDuration ?? job.estimatedDurationMins ?? null;
+
   const now = new Date();
   const liveOpen = await prisma.jobOffer.findFirst({
     where: {
@@ -294,8 +335,8 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
         compensationAmount,
         compensationCurrency: 'USD',
         compensationBasis,
-        estimatedDurationMins:
-          input.estimatedDurationMins ?? job.estimatedDurationMins ?? null,
+        compensationOverrideReason,
+        estimatedDurationMins,
         operationalNotes: input.operationalNotes ?? job.internalNotes ?? null,
         channel: input.channel ?? 'EMAIL',
         createdByAdminId: adminId,
@@ -324,6 +365,7 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
       cleanerId: cleaner.id,
       compensationAmount,
       compensationBasis,
+      compensationOverrideReason,
       expiresAt: expiresAt.toISOString(),
       ttlMinutes,
       ttlSource: ttl.source,

@@ -33,9 +33,6 @@ export default function JobsTable({ jobs }: JobsTableProps) {
               Job ID
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
-              Customer
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
               Date
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-vm-muted uppercase tracking-wider">
@@ -54,9 +51,6 @@ export default function JobsTable({ jobs }: JobsTableProps) {
             <tr key={job.id} className="hover:bg-gray-50">
               <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-text">
                 {job.sessionId.substring(0, 12)}...
-              </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-vm-text">
-                {job.customerName}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm text-vm-muted">
                 {formatDate(job.preferredDate)}

@@ -714,6 +714,8 @@ model JobOffer {
   compensationAmount     Decimal         @db.Decimal(10, 2)
   compensationCurrency   String          @default("USD")
   compensationBasis      CompensationBasis @default(FLAT)
+  /// Set only when ops sends a pay amount other than the 65% default.
+  compensationOverrideReason String?
   estimatedDurationMins  Int?
   operationalNotes       String?
   channel                String          @default("EMAIL")

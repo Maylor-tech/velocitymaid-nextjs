@@ -19,9 +19,7 @@ export function CleanerOfferVisualClient() {
         timeWindowText="10:00–16:00"
         areaText="Stowe"
         durationText="150 min"
-        scheduleText="Check-out 10:00 · next check-in 16:00"
-        jobTypeText="Vacation-rental turnover · 4 bed / 2.5 bath · checklist and photos required"
-        lifecycleLabel="Offer created · notification unknown · not yet accepted"
+        jobTypeText="Vacation-rental turnover"
         processing={processing}
         declineReason={declineReason}
         onDeclineReasonChange={setDeclineReason}
