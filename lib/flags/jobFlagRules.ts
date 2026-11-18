@@ -65,6 +65,14 @@ export function photoFlagNoteError(
   return null;
 }
 
+/** Arrival Issues uses the same short note as a photo flag. */
+export function arrivalNoteError(note: string | null | undefined): string | null {
+  const trimmed = note?.trim() ?? '';
+  if (!trimmed) return 'Add a short note about what you noticed.';
+  if (trimmed.length > FLAG_NOTE_MAX) return 'Keep the note to 140 characters.';
+  return null;
+}
+
 export function requirePhotoFlagNote(
   category: string | null | undefined,
   caption: string | null | undefined
@@ -153,14 +161,24 @@ export async function ensureArrivalFlag(
   const existing = await db.jobFlag.findFirst({
     where: { jobId: input.jobId, kind: 'ARRIVAL' },
   });
-  if (existing) return { id: existing.id, created: false };
+  const trimmed = input.note?.trim() ?? '';
+  if (existing) {
+    if (trimmed && existing.note === CUSTOMER_FLAG_NOTICE && existing.note !== trimmed) {
+      const updated = await db.jobFlag.update({
+        where: { id: existing.id },
+        data: { note: trimmed },
+      });
+      return { id: updated.id, created: false };
+    }
+    return { id: existing.id, created: false };
+  }
 
   try {
     const created = await db.jobFlag.create({
       data: {
         jobId: input.jobId,
         kind: 'ARRIVAL',
-        note: flagNote(input.note),
+        note: trimmed || CUSTOMER_FLAG_NOTICE,
         createdById: input.createdById ?? null,
       },
     });

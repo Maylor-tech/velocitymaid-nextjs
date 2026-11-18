@@ -10,6 +10,7 @@ import {
   MAX_VIDEO_UPLOAD_BYTES,
   parseCleanPhotoCategory,
   photoStoragePath,
+  stablePhotoStoragePath,
   type CleanPhotoCategoryValue,
 } from "./cleanPhotoStorage";
 
@@ -63,6 +64,7 @@ export async function createCleanPhotoSignedUpload(params: {
   filename: string;
   contentType: string;
   fileSize: number;
+  attemptId?: string | null;
 }) {
   if (!isAllowedUploadContentType(params.contentType)) {
     throw new Error(
@@ -73,11 +75,14 @@ export async function createCleanPhotoSignedUpload(params: {
   validateUploadSize(params.contentType, params.fileSize);
   await ensureCleanPhotosBucket();
 
-  const path = photoStoragePath(params.jobId, params.filename);
+  const attemptId = params.attemptId?.trim() || "";
+  const path = attemptId
+    ? stablePhotoStoragePath(params.jobId, attemptId, params.filename)
+    : photoStoragePath(params.jobId, params.filename);
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase.storage
     .from(CLEAN_PHOTOS_BUCKET)
-    .createSignedUploadUrl(path, { upsert: false });
+    .createSignedUploadUrl(path, { upsert: Boolean(attemptId) });
 
   if (error || !data) {
     throw new Error(error?.message || "Failed to create upload URL");
@@ -121,6 +126,35 @@ export async function registerCleanPhoto(params: {
   const slotKey = params.slotKey?.trim() || null;
   if (slotKey) {
     await assertSlotKeyForJob(params.jobId, slotKey);
+  }
+
+  const existing = await prisma.cleanPhoto.findFirst({
+    where: { jobId: params.jobId, url: publicUrl },
+    select: {
+      id: true,
+      url: true,
+      uploadedAt: true,
+      category: true,
+      slotKey: true,
+      customerVisible: true,
+    },
+  });
+  if (existing) {
+    await recordPhotoFlag({
+      jobId: params.jobId,
+      photoId: existing.id,
+      category: existing.category,
+      caption: params.caption,
+      createdById: params.createdById?.trim() || null,
+    });
+    return {
+      id: existing.id,
+      url: existing.url,
+      uploadedAt: existing.uploadedAt.toISOString(),
+      category: existing.category,
+      slotKey: existing.slotKey,
+      customerVisible: existing.customerVisible,
+    };
   }
 
   const record = await prisma.cleanPhoto.create({

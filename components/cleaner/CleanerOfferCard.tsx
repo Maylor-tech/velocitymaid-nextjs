@@ -8,6 +8,10 @@ export type CleanerOfferCardProps = {
   respondByLabel: string;
   compensationDisplay: string;
   compensationBasisLabel: string;
+  dateText: string;
+  timeWindowText: string;
+  areaText: string;
+  durationText: string;
   scheduleText: string;
   jobTypeText: string;
   lifecycleLabel: string;
@@ -28,6 +32,10 @@ export function CleanerOfferCard({
   respondByLabel,
   compensationDisplay,
   compensationBasisLabel,
+  dateText,
+  timeWindowText,
+  areaText,
+  durationText,
   scheduleText,
   jobTypeText,
   lifecycleLabel,
@@ -51,14 +59,14 @@ export function CleanerOfferCard({
 
       {error ? (
         <div
-          className="rounded-[10px] border border-vm-danger/30 bg-vm-danger-bg px-3.5 py-3 font-body text-[13px] text-vm-danger"
+          className="rounded-[10px] border border-vm-danger/30 bg-vm-danger-bg px-3.5 py-3 font-body text-sm text-vm-danger"
           role="alert"
         >
           {error}
         </div>
       ) : null}
       {feedback ? (
-        <div className="rounded-[10px] border border-vm-success/30 bg-vm-success/10 px-3.5 py-3 font-body text-[13px] text-vm-success">
+        <div className="rounded-[10px] border border-vm-success/30 bg-vm-success/10 px-3.5 py-3 font-body text-sm text-vm-success">
           {feedback}
         </div>
       ) : null}
@@ -68,39 +76,67 @@ export function CleanerOfferCard({
           <h2 className="font-heading text-lg font-bold leading-[1.2] tracking-tight text-vm-navy">
             {title}
           </h2>
-          <span className="rounded-full bg-vm-warning-bg px-2.5 py-1 font-body text-[11px] font-bold text-vm-warning">
+          <span className="rounded-full bg-vm-warning-bg px-2.5 py-1 font-body text-sm font-bold text-vm-warning">
             {respondByLabel}
           </span>
         </div>
 
         <div className="border-t border-vm-line pt-3">
-          <p className="font-body text-xs font-bold uppercase tracking-wide text-vm-muted">
-            Compensation
+          <p className="font-body text-sm font-bold uppercase tracking-wide text-vm-muted">
+            Your pay
           </p>
           <p className="font-heading text-[26px] font-bold text-vm-navy">
             {compensationDisplay}{' '}
-            <span className="text-[13px] font-normal text-vm-muted">
+            <span className="font-body text-sm font-normal text-vm-muted">
               {compensationBasisLabel.toLowerCase()}
             </span>
           </p>
         </div>
 
         <div className="border-t border-vm-line pt-3">
-          <p className="font-body text-xs font-bold uppercase tracking-wide text-vm-muted">
+          <p className="font-body text-sm font-bold uppercase tracking-wide text-vm-muted">
+            Date
+          </p>
+          <p className="font-body text-sm text-vm-text">{dateText}</p>
+        </div>
+
+        <div className="border-t border-vm-line pt-3">
+          <p className="font-body text-sm font-bold uppercase tracking-wide text-vm-muted">
+            Time window
+          </p>
+          <p className="font-body text-sm text-vm-text">{timeWindowText}</p>
+        </div>
+
+        <div className="border-t border-vm-line pt-3">
+          <p className="font-body text-sm font-bold uppercase tracking-wide text-vm-muted">
+            Area
+          </p>
+          <p className="font-body text-sm text-vm-text">{areaText}</p>
+        </div>
+
+        <div className="border-t border-vm-line pt-3">
+          <p className="font-body text-sm font-bold uppercase tracking-wide text-vm-muted">
+            Est. duration
+          </p>
+          <p className="font-body text-sm text-vm-text">{durationText}</p>
+        </div>
+
+        <div className="border-t border-vm-line pt-3">
+          <p className="font-body text-sm font-bold uppercase tracking-wide text-vm-muted">
             Schedule
           </p>
           <p className="font-body text-sm text-vm-text">{scheduleText}</p>
         </div>
 
         <div className="border-t border-vm-line pt-3">
-          <p className="font-body text-xs font-bold uppercase tracking-wide text-vm-muted">
+          <p className="font-body text-sm font-bold uppercase tracking-wide text-vm-muted">
             Job
           </p>
           <p className="font-body text-sm text-vm-text">{jobTypeText}</p>
         </div>
 
         <div className="border-t border-vm-line pt-3">
-          <p className="font-body text-xs font-bold uppercase tracking-wide text-vm-muted">
+          <p className="font-body text-sm font-bold uppercase tracking-wide text-vm-muted">
             Offer state
           </p>
           <p className="font-body text-sm text-vm-text">{lifecycleLabel}</p>
@@ -109,7 +145,7 @@ export function CleanerOfferCard({
 
       {!expired && confirmingDecline ? (
         <>
-          <label className="block font-body text-xs text-vm-muted">
+          <label className="block font-body text-sm text-vm-muted">
             Optional decline reason
             <input
               type="text"
@@ -120,7 +156,15 @@ export function CleanerOfferCard({
               placeholder="Optional"
             />
           </label>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="flex flex-col gap-2.5">
+            <button
+              type="button"
+              onClick={onDecline}
+              disabled={processing}
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-vm-navy font-body text-sm font-bold text-white outline-none focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {processing ? 'Working…' : 'Confirm decline'}
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -128,42 +172,34 @@ export function CleanerOfferCard({
                 onDeclineReasonChange('');
               }}
               disabled={processing}
-              className="min-h-12 rounded-[10px] border border-vm-field-border bg-white font-body text-sm font-bold text-vm-navy outline-none focus-visible:ring-2 focus-visible:ring-vm-cyan disabled:opacity-50"
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border border-vm-field-border bg-white font-body text-sm font-bold text-vm-navy outline-none focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan disabled:opacity-50"
             >
               Cancel
-            </button>
-            <button
-              type="button"
-              onClick={onDecline}
-              disabled={processing}
-              className="min-h-12 rounded-[10px] bg-vm-navy font-body text-sm font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-vm-cyan focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {processing ? 'Working…' : 'Confirm decline'}
             </button>
           </div>
         </>
       ) : (
-        <div className="grid grid-cols-2 gap-2.5">
-          <button
-            type="button"
-            onClick={() => setConfirmingDecline(true)}
-            disabled={expired || processing}
-            className="min-h-12 rounded-[10px] border border-vm-field-border bg-white font-body text-sm font-bold text-vm-navy outline-none focus-visible:ring-2 focus-visible:ring-vm-cyan disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Decline
-          </button>
+        <div className="flex flex-col gap-2.5">
           <button
             type="button"
             onClick={onAccept}
             disabled={expired || processing}
-            className="min-h-12 rounded-[10px] bg-vm-navy font-body text-sm font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-vm-cyan focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-vm-navy font-body text-sm font-bold text-white outline-none focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan disabled:cursor-not-allowed disabled:opacity-50"
           >
             {processing ? 'Working…' : 'Accept offer'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmingDecline(true)}
+            disabled={expired || processing}
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border border-vm-field-border bg-white font-body text-sm font-bold text-vm-navy outline-none focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Decline
           </button>
         </div>
       )}
 
-      <div className="rounded-[10px] border border-vm-cyan-border bg-vm-cyan-tint px-3.5 py-3 font-body text-[13px] text-vm-navy">
+      <div className="rounded-[10px] border border-vm-cyan-border bg-vm-cyan-tint px-3.5 py-3 font-body text-sm text-vm-navy">
         You&apos;re assigned only after you accept.
         {sampleNote ? ' Sample offer, not live.' : ''}
       </div>

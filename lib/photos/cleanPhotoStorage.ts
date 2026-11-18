@@ -24,6 +24,17 @@ export function photoStoragePath(jobId: string, filename: string): string {
   return `${jobId}/${Date.now()}-${sanitizePhotoFilename(filename)}`;
 }
 
+/** Same attempt retries the same object so a weak signal cannot create a second photo. */
+export function stablePhotoStoragePath(
+  jobId: string,
+  attemptId: string,
+  filename: string
+): string {
+  const attempt = attemptId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+  if (!attempt) return photoStoragePath(jobId, filename);
+  return `${jobId}/attempt-${attempt}-${sanitizePhotoFilename(filename)}`;
+}
+
 export const CLEAN_PHOTO_CATEGORIES = [
   "BEFORE",
   "AFTER",

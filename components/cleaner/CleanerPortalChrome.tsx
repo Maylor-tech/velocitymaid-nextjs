@@ -44,7 +44,7 @@ export function CleanerPortalChrome({
           height={38}
           className="h-auto w-[150px] object-contain object-left"
         />
-        <span className="font-body text-[13px] text-vm-nav-text">Cleaner</span>
+        <span className="font-body text-sm text-vm-nav-text">Cleaner</span>
       </header>
 
       <main className="flex flex-1 flex-col gap-3.5 px-4 py-5">{children}</main>
@@ -62,7 +62,7 @@ export function CleanerPortalChrome({
             <Link
               key={item.label}
               href={item.href}
-              className={`flex min-h-11 min-w-[60px] items-center justify-center px-1 font-body text-[11px] no-underline ${
+              className={`flex min-h-12 min-w-[64px] items-center justify-center px-1 font-body text-sm no-underline ${
                 active
                   ? 'font-extrabold text-vm-cyan-dark'
                   : 'font-medium text-vm-muted'

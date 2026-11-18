@@ -70,7 +70,7 @@ export function useJobPhotoUpload(jobId: string, category?: string) {
       const warning = getVideoSizeWarning(file);
       if (warning) warnings.push(warning);
       accepted.push({
-        key: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        key: `upl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
         file,
         preview: previewForFile(file),
         status: "ready",
@@ -118,6 +118,7 @@ export function useJobPhotoUpload(jobId: string, category?: string) {
           uploadedBy,
           category,
           caption,
+          attemptId: item.key,
         });
         if (item.preview) URL.revokeObjectURL(item.preview);
         updateItem(key, {

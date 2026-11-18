@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, Calendar, MapPin, DollarSign, CheckCircle, XCircle, Phone, Mail } from "lucide-react";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import { JobPhotoCapture } from "@/components/cleaner/JobPhotoCapture";
 import { EscalateIssueCard } from "@/components/cleaner/EscalateIssueCard";
 import { JobPacketCard } from "@/components/cleaner/JobPacketCard";
 import { isOfferExpiredByTimestamp } from "@/lib/dispatch/offerExpiry";
+import { finishPhotoBlockMessage } from "@/lib/photos/propertyPhotoSlots";
 import { CleanerPortalChrome } from "@/components/cleaner/CleanerPortalChrome";
 import {
   CleanerOfferCard,
@@ -132,6 +133,8 @@ export default function CleanerJobDetailPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [declineReason, setDeclineReason] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<"way" | "start" | "finish" | null>(null);
+  const [finishBlock, setFinishBlock] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -227,10 +230,7 @@ export default function CleanerJobDetailPage() {
   };
 
   const handleAccept = async () => {
-    if (!confirm("Accept this job? You'll be marked as on the way.")) {
-      return;
-    }
-
+    setConfirmAction(null);
     setProcessing(true);
     try {
       const res = await fetch(`/api/cleaner/jobs/${jobId}/accept`, {
@@ -244,7 +244,7 @@ export default function CleanerJobDetailPage() {
       }
 
       await fetchJob();
-      alert("Job accepted! You're now on the way.");
+      setFeedback("You're on the way.");
     } catch (err: unknown) {
       console.error("Failed to accept job:", err);
       alert(err instanceof Error ? err.message : "Failed to accept job");
@@ -254,10 +254,7 @@ export default function CleanerJobDetailPage() {
   };
 
   const handleStart = async () => {
-    if (!confirm("Start the job? This marks the service as in progress.")) {
-      return;
-    }
-
+    setConfirmAction(null);
     setProcessing(true);
     try {
       const res = await fetch(`/api/cleaner/jobs/${jobId}/start`, {
@@ -271,7 +268,7 @@ export default function CleanerJobDetailPage() {
       }
 
       await fetchJob();
-      alert("Job started! Service is now in progress.");
+      setFeedback("Job started. Service is in progress.");
     } catch (err: unknown) {
       console.error("Failed to start job:", err);
       alert(err instanceof Error ? err.message : "Failed to start job");
@@ -280,15 +277,29 @@ export default function CleanerJobDetailPage() {
     }
   };
 
-  const handleComplete = async () => {
-    if (
-      !confirm(
-        "Submit this job for QC? This does not invoice the customer. Admin reviews photos and checklist before billing."
-      )
-    ) {
-      return;
+  const loadFinishBlock = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/cleaner/jobs/${jobId}/photo-checklist`);
+      const data = await res.json();
+      if (!res.ok || !data.checklist?.finish) return;
+      setFinishBlock(
+        data.checklist.finish.ok ? null : finishPhotoBlockMessage(data.checklist.finish)
+      );
+    } catch {
+      setFinishBlock(null);
     }
+  }, [jobId]);
 
+  useEffect(() => {
+    if (job?.status === "IN_PROGRESS" && access === "ASSIGNED") {
+      void loadFinishBlock();
+    } else {
+      setFinishBlock(null);
+    }
+  }, [job?.status, access, jobId, loadFinishBlock]);
+
+  const handleComplete = async () => {
+    setConfirmAction(null);
     setProcessing(true);
     try {
       const res = await fetch(`/api/cleaner/jobs/${jobId}/complete`, {
@@ -301,15 +312,17 @@ export default function CleanerJobDetailPage() {
         const missing = Array.isArray(data.missingAfter)
           ? data.missingAfter.map((item: { label?: string }) => item.label).filter(Boolean)
           : [];
-        throw new Error(
+        const message =
           missing.length > 0
             ? `${data.error || "Finish blocked"} (${missing.join(", ")})`
-            : data.error || "Failed to complete job"
-        );
+            : data.error || "Failed to complete job";
+        setFinishBlock(message);
+        throw new Error(message);
       }
 
       await fetchJob();
-      alert(
+      setFinishBlock(null);
+      setFeedback(
         data.message ||
           "Submitted for QC. Admin still reviews completion before invoicing."
       );
@@ -376,7 +389,7 @@ export default function CleanerJobDetailPage() {
   const getStatusBadgeColor = (status: string) => {
     const colors: Record<string, string> = {
       ASSIGNED: "bg-vm-navy/10 text-vm-navy",
-      ON_THE_WAY: "bg-vm-cyan-tint text-blue-800",
+      ON_THE_WAY: "bg-vm-cyan-tint text-vm-navy",
       IN_PROGRESS: "bg-vm-warning-bg text-yellow-800",
       AWAITING_QC: "bg-amber-100 text-amber-900",
       COMPLETED: "bg-vm-success-bg text-vm-success",
@@ -393,7 +406,7 @@ export default function CleanerJobDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-vm-navy" />
       </div>
     );
   }
@@ -404,7 +417,7 @@ export default function CleanerJobDetailPage() {
         <div className="max-w-4xl mx-auto">
           <Link
             href="/cleaner/jobs"
-            className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+            className="mb-4 inline-flex min-h-11 items-center font-body text-sm font-semibold text-vm-cyan-dark outline-none hover:underline focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
           >
             ← Back to Jobs
           </Link>
@@ -414,7 +427,7 @@ export default function CleanerJobDetailPage() {
           {error?.includes("log in") && (
             <Link
               href="/cleaners/login"
-              className="mt-4 inline-block text-blue-600 hover:text-blue-800 font-medium"
+              className="mt-4 inline-flex min-h-11 items-center font-body text-sm font-semibold text-vm-cyan-dark outline-none hover:underline focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
             >
               Go to cleaner login →
             </Link>
@@ -442,7 +455,7 @@ export default function CleanerJobDetailPage() {
         <div className="max-w-4xl mx-auto">
           <Link
             href="/cleaner/jobs"
-            className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+            className="mb-4 inline-flex min-h-11 items-center font-body text-sm font-semibold text-vm-cyan-dark outline-none hover:underline focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
           >
             ← Back to Jobs
           </Link>
@@ -505,6 +518,14 @@ export default function CleanerJobDetailPage() {
           )}
           compensationDisplay={formatPrice(amount, currency)}
           compensationBasisLabel={basisLabel}
+          dateText={offer.serviceDate}
+          timeWindowText={offer.preferredTime || "Window not listed"}
+          areaText={area}
+          durationText={
+            offer.estimatedDurationMins != null
+              ? `${offer.estimatedDurationMins} min`
+              : "Duration not listed"
+          }
           scheduleText={scheduleText}
           jobTypeText={jobBits.join(" · ")}
           lifecycleLabel={formatOfferLifecycleForCleaner({
@@ -532,12 +553,12 @@ export default function CleanerJobDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen overflow-x-hidden bg-gray-50 p-4">
+      <div className="mx-auto max-w-4xl">
         <div className="mb-6">
           <Link
             href="/cleaner/jobs"
-            className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+            className="mb-4 inline-flex min-h-11 items-center font-body text-sm font-semibold text-vm-cyan-dark outline-none hover:underline focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
           >
             ← Back to Jobs
           </Link>
@@ -546,7 +567,7 @@ export default function CleanerJobDetailPage() {
               <h1 className="text-2xl font-semibold mb-2">
                 {customerDisplayName || "Job Details"}
               </h1>
-              <p className="text-vm-muted text-sm font-mono">{job.id}</p>
+              <p className="break-all font-mono text-sm text-vm-muted">{job.id}</p>
             </div>
             <span
               className={`px-3 py-1 rounded text-sm font-medium ${getStatusBadgeColor(
@@ -566,59 +587,69 @@ export default function CleanerJobDetailPage() {
 
         {(canAccept || canStart || canComplete || canDecline) && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="font-semibold mb-4">Actions</h2>
-            <div className="flex flex-wrap gap-4">
-              {canAccept && (
+            <h2 className="mb-4 font-body text-base font-semibold">Actions</h2>
+            {finishBlock ? (
+              <p className="mb-3 font-body text-sm text-vm-navy" role="status">
+                {finishBlock}
+              </p>
+            ) : null}
+            {confirmAction === "way" ? (
+              <div className="mb-3 flex flex-col gap-2">
+                <p className="font-body text-sm text-vm-navy">Mark yourself on the way?</p>
+                <button type="button" onClick={() => void handleAccept()} disabled={processing} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-vm-navy font-body text-sm font-semibold text-white">Yes</button>
+                <button type="button" onClick={() => setConfirmAction(null)} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border border-vm-line bg-white font-body text-sm font-semibold text-vm-navy">Cancel</button>
+              </div>
+            ) : null}
+            {confirmAction === "start" ? (
+              <div className="mb-3 flex flex-col gap-2">
+                <p className="font-body text-sm text-vm-navy">Start the job?</p>
+                <button type="button" onClick={() => void handleStart()} disabled={processing} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-vm-navy font-body text-sm font-semibold text-white">Yes</button>
+                <button type="button" onClick={() => setConfirmAction(null)} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border border-vm-line bg-white font-body text-sm font-semibold text-vm-navy">Cancel</button>
+              </div>
+            ) : null}
+            {confirmAction === "finish" ? (
+              <div className="mb-3 flex flex-col gap-2">
+                <p className="font-body text-sm text-vm-navy">Submit for QC? This does not invoice the customer.</p>
+                <button type="button" onClick={() => void handleComplete()} disabled={processing || Boolean(finishBlock)} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-vm-navy font-body text-sm font-semibold text-white disabled:opacity-50">Yes</button>
+                <button type="button" onClick={() => setConfirmAction(null)} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border border-vm-line bg-white font-body text-sm font-semibold text-vm-navy">Cancel</button>
+              </div>
+            ) : null}
+            <div className="flex flex-col gap-3">
+              {canAccept && confirmAction !== "way" && (
                 <button
-                  onClick={handleAccept}
+                  onClick={() => setConfirmAction("way")}
                   disabled={processing}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
-                    processing
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-vm-success hover:bg-vm-success"
-                  }`}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  <CheckCircle className="w-5 h-5" />
-                  {processing ? "Processing..." : "Accept & On The Way"}
+                  <CheckCircle className="h-5 w-5" />
+                  {processing ? "Processing..." : "Accept and on the way"}
                 </button>
               )}
-              {canStart && (
+              {canStart && confirmAction !== "start" && (
                 <button
-                  onClick={handleStart}
+                  onClick={() => setConfirmAction("start")}
                   disabled={processing}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
-                    processing
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-vm-navy hover:bg-vm-navy"
-                  }`}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  <CheckCircle className="w-5 h-5" />
-                  {processing ? "Processing..." : "Start Job"}
+                  <CheckCircle className="h-5 w-5" />
+                  {processing ? "Processing..." : "Start job"}
                 </button>
               )}
-              {canComplete && (
+              {canComplete && confirmAction !== "finish" && (
                 <button
-                  onClick={handleComplete}
-                  disabled={processing}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
-                    processing
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-vm-success hover:bg-vm-success/90"
-                  }`}
+                  onClick={() => setConfirmAction("finish")}
+                  disabled={processing || Boolean(finishBlock)}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  <CheckCircle className="w-5 h-5" />
-                  {processing ? "Processing..." : "Finish Job (submit for QC)"}
+                  <CheckCircle className="h-5 w-5" />
+                  {processing ? "Processing..." : "Finish job"}
                 </button>
               )}
               {canDecline && (
                 <button
                   onClick={handleDecline}
                   disabled={processing}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
-                    processing
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-vm-danger hover:bg-vm-danger"
-                  }`}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-vm-danger px-4 font-body text-sm font-semibold text-white disabled:opacity-50"
                 >
                   <XCircle className="w-5 h-5" />
                   {processing ? "Processing..." : "Decline Job"}
@@ -765,6 +796,9 @@ export default function CleanerJobDetailPage() {
                 jobId={jobId}
                 uploadedBy="cleaner"
                 slotMode={job.status === "IN_PROGRESS"}
+                onChanged={() => {
+                  if (job.status === "IN_PROGRESS") void loadFinishBlock();
+                }}
               />
               <EscalateIssueCard jobId={jobId} />
             </>

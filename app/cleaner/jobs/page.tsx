@@ -209,7 +209,7 @@ export default function CleanerJobsPage() {
   const getStatusBadgeColor = (status: string) => {
     const colors: Record<string, string> = {
       ASSIGNED: "bg-vm-navy/10 text-vm-navy",
-      ON_THE_WAY: "bg-vm-cyan-tint text-blue-800",
+      ON_THE_WAY: "bg-vm-cyan-tint text-vm-navy",
       IN_PROGRESS: "bg-vm-warning-bg text-yellow-800",
       AWAITING_QC: "bg-amber-100 text-amber-900",
       COMPLETED: "bg-vm-success-bg text-vm-success",
@@ -221,7 +221,7 @@ export default function CleanerJobsPage() {
   const getStatusAction = (status: string) => {
     if (status === "ASSIGNED") {
       return (
-        <span className="text-sm text-blue-600 font-medium">Action Required</span>
+        <span className="text-sm font-medium text-vm-cyan-dark">Action Required</span>
       );
     }
     if (status === "ON_THE_WAY") {
@@ -312,7 +312,7 @@ export default function CleanerJobsPage() {
 
         {nextJob && !statusFilter ? (
           <div className="mb-6 rounded-xl border border-vm-navy/20 bg-white p-4 sm:p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-vm-cyan-dark">
+            <p className="font-body text-sm font-bold uppercase tracking-wider text-vm-cyan-dark">
               Next assignment
             </p>
             <h2 className="mt-1 text-lg font-semibold text-vm-navy">
@@ -421,7 +421,7 @@ export default function CleanerJobsPage() {
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-vm-navy/10 text-vm-navy">
+                        <span className="rounded px-2 py-1 font-body text-sm font-medium bg-vm-navy/10 text-vm-navy">
                           Offer
                         </span>
                         <h3 className="text-lg font-semibold mt-2">
@@ -454,7 +454,7 @@ export default function CleanerJobsPage() {
                           </p>
                         )}
                       </div>
-                      <span className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-vm-navy px-4 py-2 text-sm font-semibold text-white">
+                      <span className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white sm:w-auto">
                         Review offer →
                       </span>
                     </div>
@@ -500,7 +500,7 @@ export default function CleanerJobsPage() {
                         {job.customerName || "Customer"}
                       </h3>
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeColor(
+                        className={`rounded px-2 py-1 font-body text-sm font-medium ${getStatusBadgeColor(
                           job.status
                         )}`}
                       >
@@ -548,7 +548,7 @@ export default function CleanerJobsPage() {
                       )}
 
                       {job.Branch && (
-                        <p className="text-xs text-vm-muted">
+                        <p className="font-body text-sm text-vm-muted">
                           Branch: {job.Branch.name}
                         </p>
                       )}
@@ -557,7 +557,7 @@ export default function CleanerJobsPage() {
 
                   <div className="sm:ml-4 sm:text-right flex flex-row sm:flex-col items-center sm:items-end gap-2">
                     {getStatusAction(job.status)}
-                    <span className="inline-flex min-h-[44px] items-center rounded-lg bg-vm-navy px-4 py-2 text-sm font-semibold text-white">
+                    <span className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white sm:w-auto">
                       Open Job →
                     </span>
                   </div>

@@ -6,6 +6,7 @@ import {
   ensurePhotoFlag,
   flagKindForPhoto,
   flagNote,
+  arrivalNoteError,
   photoFlagNoteError,
   markHostNotified,
   resolveFlag,
@@ -88,6 +89,9 @@ describe('job flags', () => {
     );
     expect(photoFlagNoteError('ISSUE', 'Cracked lamp shade, living room')).toBeNull();
     expect(photoFlagNoteError('BEFORE', '')).toBeNull();
+    expect(arrivalNoteError('  ')).toBe('Add a short note about what you noticed.');
+    expect(arrivalNoteError('Cracked lamp shade, living room')).toBeNull();
+    expect('Add a short note about what you noticed.'.toLowerCase()).not.toMatch(/inspect/);
   });
 
   it('flags damage, supply, and issue photos only', () => {
@@ -139,6 +143,10 @@ describe('job flags', () => {
     expect(first.created).toBe(true);
     expect(second).toEqual({ id: first.id, created: false });
     expect(db.rows).toHaveLength(1);
+    expect(db.rows[0]?.note).toBe('again');
+    const kept = await ensureArrivalFlag(db, { jobId: 'job-1', note: 'different note' });
+    expect(kept.id).toBe(first.id);
+    expect(db.rows[0]?.note).toBe('again');
   });
 
   it('records the channel once and does not invent a time when none exists', async () => {

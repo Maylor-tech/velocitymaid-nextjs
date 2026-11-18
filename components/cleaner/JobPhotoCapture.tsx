@@ -36,10 +36,12 @@ export function JobPhotoCapture({
   jobId,
   uploadedBy,
   slotMode = false,
+  onChanged,
 }: {
   jobId: string;
   uploadedBy?: string;
   slotMode?: boolean;
+  onChanged?: () => void;
 }) {
   const [category, setCategory] = useState('AFTER');
   const upload = useJobPhotoUpload(jobId, category);
@@ -105,7 +107,10 @@ export function JobPhotoCapture({
             onIssueNote={setIssueNote}
             showIssueNote={checklist?.arrivalCondition === "ISSUES"}
             uploadedBy={uploadedBy}
-            onUploaded={() => void loadChecklist()}
+            onUploaded={() => {
+              void loadChecklist();
+              onChanged?.();
+            }}
           />
         </>
       )}
@@ -144,6 +149,7 @@ export function JobPhotoCapture({
         ref={inputRef}
         type="file"
         accept="image/*,video/mp4,video/quicktime"
+        capture="environment"
         multiple
         className="hidden"
         onChange={(e) => {
@@ -154,7 +160,7 @@ export function JobPhotoCapture({
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="inline-flex min-h-[44px] items-center gap-2 rounded-[10px] border border-vm-line px-4 py-2"
+        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] border border-vm-line px-4 font-body text-sm font-semibold text-vm-navy"
       >
         <Camera className="h-4 w-4" />
         Add more photos
@@ -173,7 +179,7 @@ export function JobPhotoCapture({
           type="button"
           onClick={() => void handleUpload()}
           disabled={upload.uploading}
-          className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-[10px] bg-vm-navy px-4 py-2 text-white disabled:opacity-50"
+          className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white disabled:opacity-50"
         >
           {upload.uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Upload {upload.readyCount}

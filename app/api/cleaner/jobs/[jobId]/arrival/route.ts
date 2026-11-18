@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
 import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
 import { recordArrivalFlag } from "@/lib/flags/jobFlags.server";
+import { arrivalNoteError } from "@/lib/flags/jobFlagRules";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,6 +40,16 @@ export async function PATCH(
       );
     }
 
+    let arrivalNote: string | null = null;
+    if (arrival === ArrivalCondition.ISSUES) {
+      arrivalNote = typeof body.note === "string" ? body.note : "";
+      const noteError = arrivalNoteError(arrivalNote);
+      if (noteError) {
+        return NextResponse.json({ error: noteError }, { status: 400 });
+      }
+      arrivalNote = arrivalNote.trim();
+    }
+
     const updated = await prisma.job.update({
       where: { id: jobId },
       data: { arrivalCondition: arrival },
@@ -46,7 +57,11 @@ export async function PATCH(
     });
 
     if (arrival === ArrivalCondition.ISSUES) {
-      await recordArrivalFlag({ jobId, createdById: cleaner.userId });
+      await recordArrivalFlag({
+        jobId,
+        createdById: cleaner.userId,
+        note: arrivalNote,
+      });
     }
 
     return NextResponse.json({ success: true, job: updated });

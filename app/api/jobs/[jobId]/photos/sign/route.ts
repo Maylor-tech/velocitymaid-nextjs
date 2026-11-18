@@ -36,6 +36,7 @@ export async function POST(
       filename,
       contentType,
       fileSize,
+      attemptId: typeof body.attemptId === "string" ? body.attemptId : null,
     });
 
     return NextResponse.json(signed);
