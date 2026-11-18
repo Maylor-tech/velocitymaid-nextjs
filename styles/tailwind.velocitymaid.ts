@@ -1,0 +1,50 @@
+// Tailwind theme.extend mirror of styles/velocitymaid-tokens.css.
+// Colour values live ONLY in velocitymaid-tokens.css — this file references CSS vars.
+export const velocitymaid = {
+  colors: {
+    vm: {
+      navy: "var(--vm-navy)",
+      cyan: "var(--vm-cyan)",
+      "cyan-dark": "var(--vm-cyan-dark)",
+      "cyan-ink": "var(--vm-cyan-ink)",
+      "cyan-tint": "var(--vm-cyan-tint)",
+      "cyan-border": "var(--vm-cyan-border)",
+      "event-border": "var(--vm-event-border)",
+      canvas: "var(--vm-canvas)",
+      surface: "var(--vm-surface)",
+      text: "var(--vm-text)",
+      muted: "var(--vm-muted)",
+      line: "var(--vm-line)",
+      "field-border": "var(--vm-field-border)",
+      "chip-border": "var(--vm-chip-border)",
+      success: "var(--vm-success)",
+      warning: "var(--vm-warning)",
+      "warning-bg": "var(--vm-warning-bg)",
+      "warning-border": "var(--vm-warning-border)",
+      danger: "var(--vm-danger)",
+      "danger-bg": "var(--vm-danger-bg)",
+      "demo-ink": "var(--vm-demo-ink)",
+      "nav-active": "var(--vm-nav-active)",
+      "nav-text": "var(--vm-nav-text)",
+      "nav-muted": "var(--vm-nav-muted)",
+      "brand-tagline": "var(--vm-brand-tagline)",
+      overlay: "var(--vm-overlay)",
+    },
+  },
+  fontFamily: {
+    display: ['"Space Grotesk"', "Inter", '"Segoe UI"', "sans-serif"],
+    sans: ["Inter", '"Segoe UI"', "Arial", "sans-serif"],
+  },
+  borderRadius: {
+    "vm-sm": "var(--vm-radius-sm)",
+    "vm-md": "var(--vm-radius-md)",
+    "vm-lg": "var(--vm-radius-lg)",
+    "vm-xl": "var(--vm-radius-xl)",
+  },
+  boxShadow: {
+    "vm-card": "var(--vm-shadow-card)",
+    "vm-toast": "var(--vm-shadow-toast)",
+    "vm-dialog": "var(--vm-shadow-dialog)",
+  },
+  minHeight: { touch: "var(--vm-touch-target)" },
+};

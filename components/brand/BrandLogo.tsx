@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import {
   brandAssets,
   brandAssetSize,
@@ -35,8 +34,8 @@ export interface BrandLogoProps {
   /** Use VM service mark only (compact / mobile / favicon-style). */
   iconOnly?: boolean;
   /**
-   * When false, uses cropped horizontal masters without the tagline band.
-   * When true, uses full approved lockup including COME HOME TO CLEAN.
+   * When false, uses compact masters (recommended under ~300px wide).
+   * When true, uses full horizontal lockup including COME HOME TO CLEAN.
    */
   showTagline?: boolean;
   /**
@@ -53,7 +52,7 @@ const HEIGHT_PX: Record<BrandLogoSize, number> = {
   xs: 24,
   sm: 28,
   portal: 28,
-  header: 36,
+  header: 40,
   auth: 40,
   md: 44,
   lg: 64,
@@ -70,6 +69,36 @@ const MARK_PX: Record<BrandLogoSize, number> = {
   lg: 56,
 };
 
+function LogoImg({
+  src,
+  alt,
+  width,
+  height,
+  className,
+  priority,
+}: {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  className?: string;
+  priority?: boolean;
+}) {
+  // SVG masters — native img avoids next/image SVG restrictions.
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      className={className}
+      decoding="async"
+      {...(priority ? { fetchPriority: 'high' as const } : {})}
+    />
+  );
+}
+
 export default function BrandLogo({
   variant,
   theme,
@@ -85,7 +114,7 @@ export default function BrandLogo({
 
   const wordmarkSrc = isDarkBg
     ? showTagline
-      ? brandAssets.reversed
+      ? brandAssets.reversedPlate
       : brandAssets.reversedNoTag
     : showTagline
       ? brandAssets.primary
@@ -97,8 +126,7 @@ export default function BrandLogo({
   const markH = MARK_PX[size];
   const wordAspect = showTagline
     ? brandAssetSize.horizontal.width / brandAssetSize.horizontal.height
-    : brandAssetSize.horizontalNoTag.width /
-      brandAssetSize.horizontalNoTag.height;
+    : brandAssetSize.compact.width / brandAssetSize.compact.height;
   const wordW = Math.round(h * wordAspect);
 
   const alt = showTagline
@@ -111,7 +139,7 @@ export default function BrandLogo({
         className={`inline-flex shrink-0 items-center ${className}`}
         style={{ height: markH, width: markH }}
       >
-        <Image
+        <LogoImg
           src={markSrc}
           alt={BRAND_NAME}
           width={markH}
@@ -126,7 +154,7 @@ export default function BrandLogo({
   if (responsiveMark) {
     return (
       <span className={`inline-flex shrink-0 items-center ${className}`}>
-        <Image
+        <LogoImg
           src={markSrc}
           alt={alt}
           width={markH}
@@ -134,12 +162,12 @@ export default function BrandLogo({
           className="h-8 w-8 object-contain md:hidden"
           priority={priority}
         />
-        <Image
-          src={wordmarkSrc}
+        <LogoImg
+          src={isDarkBg ? brandAssets.compactReversed : brandAssets.compactLight}
           alt={alt}
           width={wordW}
           height={h}
-          className="hidden h-9 w-auto max-w-[200px] object-contain object-left md:block lg:max-w-[240px]"
+          className="hidden h-10 w-auto max-w-[200px] object-contain object-left md:block lg:max-w-[240px]"
           priority={priority}
         />
       </span>
@@ -149,9 +177,15 @@ export default function BrandLogo({
   return (
     <span
       className={`inline-flex shrink-0 items-center ${className}`}
-      style={{ height: h, maxWidth: Math.min(wordW, size === 'sm' || size === 'portal' ? 180 : 260) }}
+      style={{
+        height: h,
+        maxWidth: Math.min(
+          wordW,
+          size === 'sm' || size === 'portal' ? 180 : 260
+        ),
+      }}
     >
-      <Image
+      <LogoImg
         src={wordmarkSrc}
         alt={alt}
         width={wordW}

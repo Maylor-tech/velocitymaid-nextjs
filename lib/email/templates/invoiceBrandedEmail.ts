@@ -129,7 +129,7 @@ function upcomingHtml(lines: string[]): string {
 
   return `<tr>
     <td class="vm-pad" style="padding:20px 32px 0;">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F4F6F9;border-radius:8px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F5F7FA;border-radius:8px;">
         <tr><td style="padding:16px 20px;">
           <div style="font-family:${FONT};font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;color:${MUTED};margin-bottom:10px;">Upcoming Services</div>
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">${rows}</table>
@@ -205,9 +205,9 @@ export function buildInvoiceBrandedEmailHtml(
   }
 </style>
 </head>
-<body style="margin:0;padding:16px 8px;background-color:#F4F6F9;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-<div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#F4F6F9;opacity:0;">${escapeHtml(previewText)}</div>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F4F6F9;">
+<body style="margin:0;padding:16px 8px;background-color:#F5F7FA;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#F5F7FA;opacity:0;">${escapeHtml(previewText)}</div>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F5F7FA;">
 <tr><td align="center" style="padding:0;">
 <!--[if mso]><table role="presentation" align="center" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 <table role="presentation" class="vm-card" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;max-width:600px;margin:0 auto;background-color:#FFFFFF;border-radius:12px;overflow:hidden;">
@@ -345,9 +345,9 @@ export function buildInvoiceBrandedEmailHtml(
               </tr>
             </table>
             <div style="font-family:${FONT};font-size:12px;color:#374151;line-height:1.9;padding-top:10px;">
-              <a href="tel:+18027335348" style="color:#374151;text-decoration:none;"><span style="color:#00A8B0;font-weight:bold;">P</span>&nbsp;&nbsp;(802) 733-5348</a><br/>
-              <a href="mailto:hello@velocitymaid.com" style="color:#374151;text-decoration:none;"><span style="color:#00A8B0;font-weight:bold;">E</span>&nbsp;&nbsp;hello@velocitymaid.com</a><br/>
-              <a href="https://velocitymaid.com" style="color:#374151;text-decoration:none;"><span style="color:#00A8B0;font-weight:bold;">W</span>&nbsp;&nbsp;velocitymaid.com</a>
+              <a href="tel:+18027335348" style="color:#374151;text-decoration:none;"><span style="color:#007B84;font-weight:bold;">P</span>&nbsp;&nbsp;(802) 733-5348</a><br/>
+              <a href="mailto:hello@velocitymaid.com" style="color:#374151;text-decoration:none;"><span style="color:#007B84;font-weight:bold;">E</span>&nbsp;&nbsp;hello@velocitymaid.com</a><br/>
+              <a href="https://velocitymaid.com" style="color:#374151;text-decoration:none;"><span style="color:#007B84;font-weight:bold;">W</span>&nbsp;&nbsp;velocitymaid.com</a>
             </div>
           </td>
         </tr>

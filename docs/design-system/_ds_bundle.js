@@ -4170,7 +4170,7 @@ function MarketingFooter() {
       marginTop: 12,
       lineHeight: 1.6
     }
-  }, "Serving New Jersey and Vermont. Trusted since 2024.")), [["Resources", ["Partners", "Investor Materials", "Pricing"]], ["Contact", ["New Jersey — (973) 280-9190", "Vermont — (802) 733-5348", "hello@velocitymaid.com"]]].map(([h, items]) => /*#__PURE__*/React.createElement("div", {
+  }, "Serving New Jersey and Vermont. Trusted since 2025.")), [["Resources", ["Partners", "Investor Materials", "Pricing"]], ["Contact", ["New Jersey — (973) 280-9190", "Vermont — (802) 733-5348", "hello@velocitymaid.com"]]].map(([h, items]) => /*#__PURE__*/React.createElement("div", {
     key: h
   }, /*#__PURE__*/React.createElement("h4", {
     style: {

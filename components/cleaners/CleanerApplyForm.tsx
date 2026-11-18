@@ -841,7 +841,7 @@ export default function CleanerApplyForm() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-vm-cyan text-vm-navy font-heading font-semibold py-4 rounded-lg hover:bg-vm-cyan-dark transition-colors duration-200 mt-2 inline-flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full bg-vm-cyan text-vm-navy font-heading font-semibold py-4 rounded-lg hover:bg-vm-cyan/90 transition-colors duration-200 mt-2 inline-flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {submitting ? (
                 <>

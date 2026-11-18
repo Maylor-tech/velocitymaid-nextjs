@@ -31,10 +31,10 @@ export type QuoteEmailData = {
 
 const NAVY = "#0F1C2E";
 const CYAN = "#00C2CB";
-const CYAN_DARK = "#00A8B0";
-const SURFACE = "#F4F6F9";
-const MUTED = "#6B7280";
-const TEXT = "#1A1A2E";
+const CYAN_DARK = "#007B84";
+const SURFACE = "#F5F7FA";
+const MUTED = "#65778C";
+const TEXT = "#1B2D42";
 const BODY = "#374151";
 const FONT = "'Helvetica Neue',Helvetica,Arial,sans-serif";
 

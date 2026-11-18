@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react/no-unescaped-entities */
 
 import { useState } from 'react';
 import { Star, QrCode, ExternalLink, Sparkles, Gift } from 'lucide-react';
@@ -175,7 +176,7 @@ export default function ReviewUsPage() {
 
             <Gift className="w-12 h-12 mx-auto mb-3" />
 
-            <h3 className="text-xl font-bold mb-2">Refer a Friend & Get $20</h3>
+            <h3 className="text-xl font-bold mb-2">Refer a friend</h3>
 
             <Link
 

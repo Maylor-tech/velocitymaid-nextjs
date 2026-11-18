@@ -5,17 +5,22 @@ import PricingTiers from "@/components/PricingTiers";
 import PricingFAQ from "@/components/PricingFAQ";
 import PricingCTA from "@/components/PricingCTA";
 import MarketingShell from "@/components/layout/MarketingShell";
+import { VermontTurnoverPrices } from "@/components/marketing/VermontTurnoverPrices";
+import { VERMONT_HOST_INTAKE_PATH } from "@/lib/marketing/publicCtas";
 
 export const metadata: Metadata = {
-  title: "Cleaning Pricing | VelocityMaid — Vermont & New Jersey",
+  title: "Get a quote | VelocityMaid — Vermont & New Jersey",
   description:
-    "Starting-at pricing for Vermont vacation-rental turnovers and New Jersey residential cleaning. Final quotes confirmed after property review.",
+    "Get a quote — we reply within one business day. Vermont vacation-rental turnovers and New Jersey residential cleaning.",
 };
 
 export default function PricingPage() {
   return (
     <MarketingShell>
       <PricingHero />
+      <Section>
+        <VermontTurnoverPrices bookHref={`${VERMONT_HOST_INTAKE_PATH}#get-quote`} />
+      </Section>
       <Section>
         <PricingTiers />
       </Section>

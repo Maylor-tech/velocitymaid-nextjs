@@ -6,11 +6,11 @@ export default function PricingHero() {
           Cleaning and property care
         </p>
         <h1 className="mt-4 font-heading text-3xl font-bold tracking-tight text-white sm:text-5xl">
-          Straightforward starting-at pricing
+          Simple, flat turnover pricing.
         </h1>
         <p className="mx-auto mt-4 max-w-2xl font-body text-base leading-relaxed text-white/65 sm:text-lg">
-          Vermont vacation-rental turnovers and New Jersey residential cleaning—
-          priced for real homes, then confirmed for your property.
+          Vermont vacation-rental turnovers priced by bedroom count. New Jersey
+          home cleaning quoted after a quick review. We reply within one business day.
         </p>
       </div>
     </div>

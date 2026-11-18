@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react/no-unescaped-entities */
 
 import { Sparkles, Award, DollarSign, Clock, Users, CheckCircle, ArrowRight, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
@@ -44,7 +45,7 @@ const faqs = [
   },
   {
     question: 'How much can I earn?',
-    answer: 'Our cleaners earn competitive rates starting at JMD $7,500 per standard cleaning job, with opportunities for bonuses and performance incentives. Deep clean and move-in/out jobs pay more.',
+    answer: 'Pay is shown on each job before you accept. Deep clean and move-in/out jobs pay more.',
   },
   {
     question: 'What training do you provide?',
@@ -189,18 +190,18 @@ export default function WorkWithUsPage() {
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-xl shadow-md">
                 <h3 className="text-xl font-bold text-vm-text mb-2">Standard Clean</h3>
-                <p className="text-3xl font-bold text-blue-600 mb-2">JMD $7,500</p>
+                <p className="text-2xl font-bold text-blue-600 mb-2">Shown on the job</p>
                 <p className="text-vm-muted">Per service</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-md border-2 border-blue-600">
                 <div className="text-sm font-semibold text-blue-600 mb-2">MOST POPULAR</div>
                 <h3 className="text-xl font-bold text-vm-text mb-2">Deep Clean</h3>
-                <p className="text-3xl font-bold text-blue-600 mb-2">JMD $12,000</p>
+                <p className="text-2xl font-bold text-blue-600 mb-2">Shown on the job</p>
                 <p className="text-vm-muted">Per service</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-md">
                 <h3 className="text-xl font-bold text-vm-text mb-2">Move In/Out</h3>
-                <p className="text-3xl font-bold text-blue-600 mb-2">JMD $20,000</p>
+                <p className="text-2xl font-bold text-blue-600 mb-2">Shown on the job</p>
                 <p className="text-vm-muted">Per service</p>
               </div>
             </div>
@@ -216,16 +217,16 @@ export default function WorkWithUsPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-vm-text">
                     <span>2 Standard Cleans</span>
-                    <span className="font-semibold">JMD $15,000</span>
+                    <span className="font-semibold">Shown on the job</span>
                   </div>
                   <div className="flex justify-between text-vm-text">
                     <span>1 Deep Clean</span>
-                    <span className="font-semibold">JMD $12,000</span>
+                    <span className="font-semibold">Shown on the job</span>
                   </div>
                   <div className="border-t border-gray-200 pt-2 mt-2">
                     <div className="flex justify-between text-lg font-bold text-vm-success">
                       <span>Daily Total</span>
-                      <span>JMD $27,000</span>
+                      <span>Shown on the job</span>
                     </div>
                   </div>
                 </div>
@@ -235,20 +236,20 @@ export default function WorkWithUsPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-vm-text">
                     <span>10 Standard Cleans</span>
-                    <span className="font-semibold">JMD $75,000</span>
+                    <span className="font-semibold">Shown on the job</span>
                   </div>
                   <div className="flex justify-between text-vm-text">
                     <span>3 Deep Cleans</span>
-                    <span className="font-semibold">JMD $36,000</span>
+                    <span className="font-semibold">Shown on the job</span>
                   </div>
                   <div className="flex justify-between text-vm-text">
                     <span>1 Move In/Out</span>
-                    <span className="font-semibold">JMD $20,000</span>
+                    <span className="font-semibold">Shown on the job</span>
                   </div>
                   <div className="border-t border-gray-200 pt-2 mt-2">
                     <div className="flex justify-between text-lg font-bold text-blue-600">
                       <span>Weekly Total</span>
-                      <span>JMD $131,000</span>
+                      <span>Shown on the job</span>
                     </div>
                   </div>
                 </div>

@@ -1,34 +1,45 @@
-/* VelocityMaid Design System — Phase 0 runtime tokens.
- * Source: migration/phase-0-1/changed/globals.tokens.css. Declared above the
- * Tailwind directives so the --vm-* custom properties (consumed by the
- * tailwind.config vm-* color utilities) resolve at runtime. The radii / shadow /
- * font / container vars are defined here for upcoming phases; only --vm-* is
- * wired into Tailwind in Phase 0-1. Values are the approved palette. */
+/* VelocityMaid Design System — v2.3 runtime tokens.
+ * Hex source of truth: styles/velocitymaid-tokens.css (handoff).
+ * RGB channel bridges below keep Tailwind opacity modifiers working
+ * (bg-vm-navy/10 → rgb(var(--vm-navy) / <alpha-value>)). */
+@import "../styles/velocitymaid-tokens.css";
+
 :root {
-  /* Stored as space-separated RGB channels so Tailwind opacity modifiers
-   * (bg-vm-navy/10, etc.) work via rgb(var(--vm-x) / <alpha-value>). */
+  /* Override hex tokens with channel form for Tailwind rgb(var(--vm-*) / α).
+   * Values match styles/velocitymaid-tokens.css (Brian-approved v2.3). */
   --vm-navy: 15 28 46;          /* #0F1C2E */
   --vm-cyan: 0 194 203;         /* #00C2CB */
-  --vm-cyan-dark: 0 168 176;    /* #00A8B0 */
-  --vm-surface: 244 246 249;    /* #F4F6F9 */
-  --vm-text: 26 26 46;          /* #1A1A2E */
-  --vm-muted: 107 114 128;      /* #6B7280 */
+  --vm-cyan-dark: 0 123 132;    /* #007B84 — text/links on white only */
+  --vm-surface: 245 247 250;    /* #F5F7FA page canvas (Brian); panels use white utilities */
+  --vm-canvas: 245 247 250;     /* #F5F7FA — alias for page background */
+  --vm-text: 27 45 66;          /* #1B2D42 */
+  --vm-muted: 101 119 140;      /* #65778C */
   --vm-white: 255 255 255;      /* #FFFFFF */
-  --vm-border: 226 232 240;     /* #E2E8F0 */
+  --vm-border: 225 232 239;     /* #E1E8EF (line) */
+  --vm-line: 225 232 239;       /* #E1E8EF */
+  --vm-field-border: 204 215 224; /* #CCD7E0 */
+  --vm-cyan-ink: 0 108 117;     /* #006C75 */
+  --vm-cyan-tint: 231 248 249;  /* #E7F8F9 */
+  --vm-cyan-border: 181 229 232; /* #B5E5E8 */
+  --vm-event-border: 166 218 221; /* #A6DADD */
+  --vm-nav-active: 37 67 91;    /* #25435B */
+  --vm-nav-text: 220 231 239;   /* #DCE7EF */
+  --vm-nav-muted: 185 203 214;  /* #B9CBD6 */
+  --vm-brand-tagline: 170 196 209; /* #AAC4D1 */
 
-  /* Canonical aliases (Brand Deployment Pass v1.0) — same channels as --vm-* */
+  /* Canonical aliases */
   --velocity-navy: #0F1C2E;
   --velocity-cyan: #00C2CB;
   --velocity-white: #FFFFFF;
 
-  /* Semantic status tints (calm — never neon) */
-  --vm-cyan-tint:   230 250 251; /* #E6FAFB */
-  --vm-success:     31 138 91;   /* #1F8A5B */
-  --vm-success-bg:  231 245 238; /* #E7F5EE */
-  --vm-warning:     183 121 31;  /* #B7791F */
-  --vm-warning-bg:  251 243 226; /* #FBF3E2 */
-  --vm-danger:      192 57 43;   /* #C0392B */
-  --vm-danger-bg:   252 237 236; /* #FCEDEC */
+  /* Semantic status tints (handoff v2.3) */
+  --vm-success:     21 116 92;   /* #15745C */
+  --vm-success-bg:  231 245 238; /* calm success wash */
+  --vm-warning:     154 91 9;    /* #9A5B09 */
+  --vm-warning-bg:  255 243 223; /* #FFF3DF */
+  --vm-warning-border: 238 211 167; /* #EED3A7 */
+  --vm-danger:      180 35 50;   /* #B42332 */
+  --vm-danger-bg:   253 235 236; /* #FDEBEC */
   --vm-info:        var(--vm-cyan);
   --vm-info-bg:     var(--vm-cyan-tint);
   /* "In progress" is the one sanctioned non-navy/cyan accent (indigo) */
@@ -38,9 +49,10 @@
   --font-heading: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* Align radii with handoff tokens */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   --radius-xl: 16px;
 
   --container-marketing: 1200px;
@@ -63,12 +75,9 @@
    * Playfair/Plus Jakarta Sans fonts below are NOT part of the approved
    * velocitymaid-brand-guidelines.docx. Approved tokens live in
    * lib/brand/colors.ts (Navy #0F1C2E / Cyan #00C2CB / White) and are wired
-   * into Tailwind as vm-navy / vm-cyan / vm-cyan-dark / vm-surface /
-   * vm-white / vm-text / vm-muted (see tailwind.config.ts). Approved fonts
-   * are Space Grotesk (font-heading) and Inter (font-body), already loaded
-   * in app/layout.tsx. This block is left functionally unchanged — ~32
-   * files still depend on it — see the Brand Audit Report and Component
-   * Standardization Plan for the migration path. Do not add new usages.
+   * into Tailwind as vm-* (see tailwind.config.ts + styles/tailwind.velocitymaid.ts).
+   * Approved fonts are Space Grotesk (font-heading) and Inter (font-body).
+   * This legacy block is left functionally unchanged — do not add new usages.
    */
   --font-serif: "Playfair Display", Georgia, ui-serif, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
@@ -139,15 +148,15 @@
   }
 
   .btn-brand-primary {
-    @apply bg-vm-navy text-vm-white font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md hover:bg-vm-navy/90 btn-tactile;
+    @apply bg-vm-navy text-vm-white font-heading font-bold tracking-tight text-sm px-6 py-3 rounded-vm-md shadow-md hover:bg-vm-navy/90 btn-tactile min-h-touch;
   }
 
   .btn-brand-secondary {
-    @apply bg-vm-cyan hover:bg-vm-cyan-dark text-vm-navy font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded shadow-md btn-tactile;
+    @apply bg-vm-cyan hover:bg-vm-cyan/90 text-vm-navy font-heading font-bold tracking-tight text-sm px-6 py-3 rounded-vm-md shadow-md btn-tactile min-h-touch;
   }
 
   .btn-brand-outline {
-    @apply border border-vm-navy/20 hover:border-vm-navy text-vm-navy font-sans font-bold uppercase tracking-wider text-xs px-6 py-3 rounded bg-transparent btn-tactile;
+    @apply border border-vm-navy/20 hover:border-vm-navy text-vm-navy font-heading font-bold tracking-tight text-sm px-6 py-3 rounded-vm-md bg-transparent btn-tactile min-h-touch;
   }
 
   .card-brand {

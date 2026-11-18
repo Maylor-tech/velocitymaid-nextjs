@@ -1,0 +1,40 @@
+---
+description: VelocityMaid brand, copy and safety rules for every UI change
+alwaysApply: true
+---
+
+# VelocityMaid — rules for every change
+
+## Brand
+- Colours come ONLY from `styles/velocitymaid-tokens.css` (`--vm-*`) or the Tailwind `vm-*` theme. No new hex values.
+- Navy `#0F1C2E` = frame and primary buttons. Cyan `#00C2CB` = accent only. Navy text on cyan, NEVER white on cyan. Cyan text on white uses `vm-cyan-dark` (#007B84).
+- Headings: Space Grotesk 700, letter-spacing -0.025em. Body: Inter 14–17px, line-height 1.55.
+- Corners: 10px controls, 14px cards, 16px dialogs and hero cards, pills 999px.
+- Logos: only files in `public/brand/`. Below ~300px wide use `vm-compact-light.svg` (light ground) or `vm-compact-reversed.svg` (navy ground). Never re-type, recolour or stretch the wordmark.
+
+## Copy
+- Plain, calm, exact. Name the real state ("Offer created · not yet accepted"), never a hopeful one ("Booked!").
+- Confirmed trust claims (OK to use): insured; background-checked team; re-clean guarantee (missed item reported within 24 hours → free fix); founder's 13 years with Royal Caribbean.
+- NEVER invent reviews, ratings, review counts, awards, "bonded", "eco-friendly", response times or availability. Review slots stay hidden until real reviews are added.
+- Calendar sync with Airbnb/VRBO: say "coming soon" only.
+- Only these approved Vermont turnover prices may appear: 2 bed $195, 3 bed $325, 4 bed $390, large 4 bed $455. No other prices, no "starting at", no surcharge/fee/discount text.
+- Never promise an inspection. Say "anything we notice during the clean is noted in your report".
+- NJ checklist/photos: "based on the service you book". Never "same as Vermont".
+- Sentence case for headings and buttons. Uppercase only for small eyebrow labels and the tagline "COME HOME TO CLEAN."
+
+## Routing (do not change)
+- Vermont CTAs → `/vermont/host-intake` (invoice after service and approved QC).
+- New Jersey CTAs → `/book?branch=new-jersey` (prepaid online booking).
+- Never merge the two payment journeys.
+
+## Platform safety
+- Do not change auth, Prisma schema, Supabase policies, payout logic, dispatch logic or job state transitions unless the task explicitly says so.
+- Offer lifecycle states stay separate: created → notification attempted → delivered / failed / unknown → accepted / declined / expired → assigned.
+- No retry may create a duplicate offer or customer message.
+- VelocityMaid, Bornfidis Provisions and Bornfidis Sportswear are separate entities: never share Stripe keys, accounts or data.
+- Work on a branch. Never deploy to production without explicit approval.
+
+## Accessibility
+- Every control ≥44px tall; visible focus ring (3px cyan outline, 3px offset); real `<button>`, `<a href>`, `<label for>`.
+- Text contrast ≥4.5:1. Muted grey (#65778C) is allowed on white only, not on the #F5F7FA canvas below 14px bold.
+- Respect `prefers-reduced-motion`.

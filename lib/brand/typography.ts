@@ -27,8 +27,8 @@ export const approvedType = {
   body: "font-body font-normal text-base leading-relaxed text-vm-text",
   /** Caption / helper — Inter 400, 8–9pt / 12–13px, Muted color */
   caption: "font-body font-normal text-xs text-vm-muted",
-  /** Button / CTA — Space Grotesk 700, 10–12pt / 14–16px, +2% tracking */
-  button: "font-heading font-bold uppercase tracking-wider text-xs",
+  /** Button / CTA — Space Grotesk 700, sentence case (no uppercase transform) */
+  button: "font-heading font-bold tracking-tight text-sm",
 } as const;
 
 /**

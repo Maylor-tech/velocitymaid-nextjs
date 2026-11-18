@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { Metadata } from 'next';
 import { Download, FileText, Printer } from 'lucide-react';
 
@@ -45,7 +46,7 @@ const printMaterials = [
   },
   {
     name: 'Referral Card (Back)',
-    description: '3.5" x 2" - "Give $20, Get $20" referral promo',
+    description: '3.5" x 2" - referral card back',
     route: '/api/brand/nj/print/referral-card?side=back',
     size: '3.5" x 2"',
   },

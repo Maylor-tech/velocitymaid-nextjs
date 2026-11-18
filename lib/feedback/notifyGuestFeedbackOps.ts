@@ -124,8 +124,8 @@ export async function notifyGuestFeedbackOpsAlert(
           : `[CONCERN] Guest Stay feedback — ${input.propertyGuestDisplayName}`;
 
       const commentBlock = input.comment
-        ? `<p style="margin:16px 0;padding:12px;background:#F4F6F9;border-radius:8px;color:#0F1C2E;font-size:14px;line-height:1.5;white-space:pre-wrap;">${escapeHtml(input.comment)}</p>`
-        : `<p style="color:#6B7280;font-size:14px;">(No written message)</p>`;
+        ? `<p style="margin:16px 0;padding:12px;background:#F5F7FA;border-radius:8px;color:#0F1C2E;font-size:14px;line-height:1.5;white-space:pre-wrap;">${escapeHtml(input.comment)}</p>`
+        : `<p style="color:#65778C;font-size:14px;">(No written message)</p>`;
 
       const html = `<!DOCTYPE html><html><body style="font-family:Helvetica,Arial,sans-serif;color:#0F1C2E;">
   <h2 style="margin:0 0 12px;">Guest Stay Card feedback — ${escapeHtml(input.opsClass)}</h2>
@@ -138,7 +138,7 @@ export async function notifyGuestFeedbackOpsAlert(
   <p style="margin:16px 0 8px;"><strong>Guest message:</strong></p>
   ${commentBlock}
   <p style="margin:24px 0;"><a href="${escapeHtml(reviewUrl)}" style="background:#00C2CB;color:#0F1C2E;padding:10px 16px;border-radius:999px;text-decoration:none;font-weight:700;">Review in admin</a></p>
-  <p style="color:#6B7280;font-size:12px;">Internal ops only — do not forward to host or cleaner automatically. VelocityMaid Stay feedback is private.</p>
+  <p style="color:#65778C;font-size:12px;">Internal ops only — do not forward to host or cleaner automatically. VelocityMaid Stay feedback is private.</p>
 </body></html>`;
 
       const { error: sendError } = await resend.emails.send({

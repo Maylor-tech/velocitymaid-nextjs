@@ -21,7 +21,7 @@ function RequestHomeWatchActions({ onNavy }: { onNavy: boolean }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <Link
           href={homeWatchIntakeHref(VERMONT_QUICK_QUOTE_PATH)}
-          className="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-vm-cyan px-5 py-3 font-heading text-sm font-semibold text-vm-navy transition hover:bg-vm-cyan-dark"
+          className="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-vm-cyan px-5 py-3 font-heading text-sm font-semibold text-vm-navy transition hover:bg-vm-cyan/90"
         >
           Quick Home Watch quote →
         </Link>
@@ -117,17 +117,14 @@ export function VermontHomeWatch() {
             {[
               {
                 name: "Seasonal Check",
-                price: "$150/month",
                 detail: "Every other week visits",
               },
               {
                 name: "Weekly Watch",
-                price: "$275/month",
                 detail: "Weekly scheduled visits",
               },
               {
                 name: "Storm / emergency",
-                price: "$75 per visit",
                 detail: "As-needed check visits",
               },
             ].map((plan) => (
@@ -138,8 +135,8 @@ export function VermontHomeWatch() {
                 <h3 className="font-heading text-base font-bold text-vm-navy">
                   {plan.name}
                 </h3>
-                <p className="mt-2 font-heading text-2xl font-bold text-vm-navy">
-                  {plan.price}
+                <p className="mt-2 font-body text-sm font-semibold leading-relaxed text-vm-navy">
+                  Get a quote — we reply within one business day.
                 </p>
                 <p className="mt-2 font-body text-sm text-vm-muted">{plan.detail}</p>
               </article>

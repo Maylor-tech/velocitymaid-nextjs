@@ -50,7 +50,7 @@ export default function NewJerseyWorkWithUsPage() {
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href={CLEANER_APPLY_NJ_PATH}
-                className="inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark"
+                className="inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan/90"
               >
                 Apply for New Jersey
               </Link>
@@ -122,7 +122,7 @@ export default function NewJerseyWorkWithUsPage() {
         <section className="px-5 py-14 text-center">
           <Link
             href={CLEANER_APPLY_NJ_PATH}
-            className="inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark"
+            className="inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan/90"
           >
             Apply for New Jersey
           </Link>

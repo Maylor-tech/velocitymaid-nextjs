@@ -28,7 +28,7 @@ export default function TipSuccess({ amountDollars }: TipSuccessProps) {
         cleaning team.
       </p>
       <p className="mt-6 bg-white/8 rounded-xl px-8 py-4 text-vm-cyan font-heading text-2xl font-bold text-center">
-        You tipped ${formattedAmount}
+        You tipped {formattedAmount}
       </p>
       <p className="text-vm-cyan/40 font-heading text-xs tracking-widest text-center mt-12 uppercase">
         COME HOME TO CLEAN

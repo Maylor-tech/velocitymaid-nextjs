@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, react/no-unescaped-entities */
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
@@ -335,7 +336,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
                 <div className="grid md:grid-cols-3 gap-6">
                   <div className="bg-gray-50 p-8 rounded-xl border-2 border-gray-200">
                     <h3 className="text-2xl font-bold text-vm-text mb-2">Standard Clean</h3>
-                    <p className="text-4xl font-bold text-blue-600 mb-4">JMD $7,500</p>
+                    <p className="text-2xl font-bold text-blue-600 mb-4">Custom quote</p>
                     <p className="text-vm-muted mb-6">Perfect for regular maintenance cleaning</p>
                     <ul className="space-y-2 mb-6">
                       <li className="flex items-center text-vm-text">
@@ -365,7 +366,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
                       </span>
                     </div>
                     <h3 className="text-2xl font-bold text-vm-text mb-2">Deep Clean</h3>
-                    <p className="text-4xl font-bold text-blue-600 mb-4">JMD $12,000</p>
+                    <p className="text-2xl font-bold text-blue-600 mb-4">Custom quote</p>
                     <p className="text-vm-muted mb-6">Thorough top-to-bottom cleaning service</p>
                     <ul className="space-y-2 mb-6">
                       <li className="flex items-center text-vm-text">
@@ -390,7 +391,7 @@ export default async function BranchLandingPage({ params }: PageProps) {
                   </div>
                   <div className="bg-gray-50 p-8 rounded-xl border-2 border-gray-200">
                     <h3 className="text-2xl font-bold text-vm-text mb-2">Move In/Out</h3>
-                    <p className="text-4xl font-bold text-blue-600 mb-4">JMD $20,000</p>
+                    <p className="text-2xl font-bold text-blue-600 mb-4">Custom quote</p>
                     <p className="text-vm-muted mb-6">Complete property cleaning for transitions</p>
                     <ul className="space-y-2 mb-6">
                       <li className="flex items-center text-vm-text">

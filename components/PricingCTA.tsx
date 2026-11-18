@@ -2,12 +2,11 @@ import Link from "next/link";
 import {
   NJ_FREE_QUOTE_LABEL,
   VERMONT_HOST_INTAKE_PATH,
-  VERMONT_TURNOVER_QUOTE_LABEL,
 } from "@/lib/marketing/publicCtas";
 import { NJ_LEAD_PATH } from "@/lib/markets/newJersey";
 
 const primaryButton =
-  "inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark";
+  "inline-flex min-h-[48px] items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-base font-bold tracking-tight text-vm-navy transition hover:bg-vm-cyan/90";
 const outlineButton =
   "inline-flex items-center justify-center rounded-md border border-vm-border px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:border-vm-cyan hover:text-vm-cyan-dark";
 
@@ -18,12 +17,12 @@ export default function PricingCTA() {
         Ready for a quote?
       </h2>
       <p className="mx-auto mt-3 max-w-xl font-body text-sm leading-relaxed text-vm-muted">
-        Tell us about your property or home. We&apos;ll confirm scope, timing, and pricing
-        before service begins.
+        Vermont turnovers are flat-priced by bedroom count. New Jersey homes are
+        quoted after a quick review.
       </p>
       <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Link href={VERMONT_HOST_INTAKE_PATH} className={primaryButton}>
-          {VERMONT_TURNOVER_QUOTE_LABEL}
+          Book a turnover
         </Link>
         <Link href={NJ_LEAD_PATH} className={outlineButton}>
           {NJ_FREE_QUOTE_LABEL}

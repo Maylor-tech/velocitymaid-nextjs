@@ -1,21 +1,18 @@
-# Logo assets (docs mirror)
+# Logo assets (v2.3)
 
-Digital logo examples in this design-system package **must** use the approved
-Final Approval Pack masters from the app:
+Canonical masters live in `/public/brand/velocitymaid/`.
 
-`/public/brand/velocitymaid/`
+| Role | File |
+|------|------|
+| Compact light (headers) | `vm-compact-light.svg` |
+| Compact reversed (navy chrome) | `vm-compact-reversed.svg` |
+| Primary horizontal | `vm-primary-horizontal.svg` |
+| Reversed dark plate | `vm-reversed-dark.svg` |
+| Service mark transparent | `vm-servicemark-transparent.svg` |
+| Service mark dark | `vm-servicemark-dark.svg` |
+| One-color navy / white | `vm-onecolor-navy.svg` / `vm-onecolor-white.svg` |
+| App icon / favicon | `vm-appicon-fullbleed.svg` / `vm-favicon.svg` + `web/*` |
 
-Do not use HTML/CSS/SVG approximations of the VelocityMaid wordmark or VM mark.
+Archived PNG Final Approval Pack: `/public/brand/velocitymaid/_archive-v2.2/` (do not delete).
 
-| Docs reference | Canonical file |
-|----------------|----------------|
-| Primary horizontal | `velocitymaid-primary.png` |
-| Reversed (dark UI) | `velocitymaid-reversed-clear.png` |
-| Service mark | `velocitymaid-mark.png` |
-| Service mark white | `velocitymaid-mark-white.png` |
-| Service mark dark plate | `velocitymaid-mark-dark.png` |
-| One-color navy | `velocitymaid-mark-navy.png` / `velocitymaid-onecolor-navy.png` |
-| Favicon | `favicon-32.png` |
-
-Embroidery / uniform adaptations are production-only and are not web runtime assets.
-See the brand deployment README under `public/brand/velocitymaid/README.md`.
+Use `<BrandLogo />` / `lib/brand/assets.ts` — never re-type or recolour the wordmark.

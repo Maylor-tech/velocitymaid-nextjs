@@ -186,7 +186,7 @@ export function HostSetupRequestForm() {
         </p>
         <Link
           href={nextUrl}
-          className="mt-7 inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark"
+          className="mt-7 inline-flex items-center justify-center rounded-md bg-vm-cyan px-6 py-3 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan/90"
           onClick={() =>
             trackEvent("hosts_cta_click", {
               ...analyticsDims,
@@ -333,7 +333,7 @@ export function HostSetupRequestForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="mt-6 w-full rounded-md bg-vm-cyan px-6 py-3.5 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan-dark disabled:opacity-60"
+        className="mt-6 w-full rounded-md bg-vm-cyan px-6 py-3.5 font-heading text-xs font-bold uppercase tracking-wider text-vm-navy transition hover:bg-vm-cyan/90 disabled:opacity-60"
       >
         {submitting ? "Sending…" : "Request Property Setup"}
       </button>

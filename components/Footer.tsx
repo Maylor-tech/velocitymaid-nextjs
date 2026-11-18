@@ -25,7 +25,7 @@ export default function Footer() {
               COME HOME TO CLEAN
             </p>
             <p className="mt-3 text-sm font-body text-white/60 leading-relaxed">
-              Serving New Jersey and Vermont. Trusted since 2024.
+              Serving New Jersey and Vermont. Trusted since 2025.
             </p>
           </div>
           <div>
@@ -59,11 +59,6 @@ export default function Footer() {
               <li>
                 <Link href="/partners" className={footerLinkClass}>
                   Partners
-                </Link>
-              </li>
-              <li>
-                <Link href="/investors/materials" className={footerLinkClass}>
-                  Investor Materials
                 </Link>
               </li>
               <li>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MessageCircle, X, Clock, Phone } from 'lucide-react';
+import { MessageCircle, X, Clock } from 'lucide-react';
 
 interface WhatsAppWidgetProps {
   phoneNumber: string;
@@ -91,7 +91,7 @@ export default function WhatsAppWidget({
               
               <button
                 onClick={handleSendMessage}
-                className="w-full bg-vm-cyan hover:bg-vm-cyan-dark text-vm-navy py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                className="w-full bg-vm-cyan hover:bg-vm-cyan/90 text-vm-navy py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>Send on WhatsApp</span>

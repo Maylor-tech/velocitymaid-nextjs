@@ -1,0 +1,50 @@
+/* VelocityMaid design tokens — generated from the VelocityMaid design system (tokens.json). Do not hand-edit values; change the design system. */
+:root {
+  --vm-navy: #0f1c2e; /* Primary brand colour. */
+  --vm-cyan: #00c2cb; /* Accent brand colour. */
+  --vm-cyan-dark: #007b84; /* Cyan for text and links on white: link buttons (Explore →, View job →). */
+  --vm-cyan-ink: #006c75; /* Text on cyan-tint: tags, pills, active tab label, calendar event label. */
+  --vm-cyan-tint: #e7f8f9; /* Info surfaces: default tag fill, note callout, active tab fill, calendar event day, VDES pill. */
+  --vm-cyan-border: #b5e5e8; /* Border of the note callout. */
+  --vm-event-border: #a6dadd; /* Border of a calendar day that holds a job. */
+  --vm-canvas: #f5f7fa; /* Page background behind panels; empty calendar day fill. */
+  --vm-surface: #ffffff; /* Panels, metric cards, top bar, inputs, secondary buttons, dialogs. */
+  --vm-text: #1b2d42; /* Body and heading text on surface and canvas. */
+  --vm-muted: #65778c; /* Secondary text: descriptions, row helper lines, field labels, metric labels. */
+  --vm-line: #e1e8ef; /* Hairline borders: panels, metric cards, row dividers, top bar, tabs. */
+  --vm-field-border: #ccd7e0; /* Borders of inputs, selects and secondary buttons. */
+  --vm-chip-border: #d9e3ea; /* Border of inactive role-switch chips. */
+  --vm-success: #15745c; /* Positive state text and icons (completed, approved, paid). */
+  --vm-warning: #9a5b09; /* Caution state text: 'Awaiting acceptance' tags, warning callout text. */
+  --vm-warning-bg: #fff3df; /* Warning tag and warning callout fill; PROTOTYPE ONLY badge fill. */
+  --vm-warning-border: #eed3a7; /* Border of the warning callout. */
+  --vm-danger: #b42332; /* Destructive button fill and error-state text. */
+  --vm-danger-bg: #fdebec; /* Error tag fill. */
+  --vm-demo-ink: #825700; /* Text of the PROTOTYPE ONLY badge on warning-bg. */
+  --vm-nav-active: #25435b; /* Sidebar item hover and active fill on navy. */
+  --vm-nav-text: #dce7ef; /* Sidebar item text on navy. */
+  --vm-nav-muted: #b9cbd6; /* Sidebar footer text on navy. */
+  --vm-brand-tagline: #aac4d1; /* The COME HOME TO CLEAN. */
+  --vm-overlay: #0f1c2e8c; /* Scrim behind dialogs (navy at 55%). */
+  --vm-space-1: 4px;
+  --vm-space-2: 8px;
+  --vm-space-3: 12px;
+  --vm-space-4: 16px;
+  --vm-space-6: 24px;
+  --vm-space-8: 32px;
+  --vm-space-12: 48px;
+  --vm-radius-sm: 8px;
+  --vm-radius-md: 10px;
+  --vm-radius-lg: 14px;
+  --vm-radius-xl: 16px;
+  --vm-radius-pill: 999px;
+  --vm-shadow-card: 0 3px 15px #0f1c2e05;
+  --vm-shadow-toast: 0 12px 30px #00000033;
+  --vm-shadow-dialog: 0 25px 70px #00000033;
+  --vm-touch-target: 44px;
+  --vm-sidebar-width: 250px;
+  --vm-topbar-height: 77px;
+  --vm-content-max: 1500px;
+  --vm-font-display: "Space Grotesk", Inter, "Segoe UI", sans-serif;
+  --vm-font-sans: Inter, "Segoe UI", Arial, sans-serif;
+}

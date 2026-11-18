@@ -1,10 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Inter,
-  Space_Grotesk,
-  Playfair_Display,
-  Plus_Jakarta_Sans,
-} from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Script from "next/script";
 import WhatsAppButton from "../components/WhatsAppButton";
@@ -17,26 +12,78 @@ import {
   socialImageMeta,
 } from "@/lib/seo/socialImages";
 
-const inter = Inter({
-  subsets: ["latin"],
+const inter = localFont({
+  src: [
+    { path: "./fonts/inter-latin-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/inter-latin-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/inter-latin-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-inter",
   display: "swap",
 });
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
+const spaceGrotesk = localFont({
+  src: [
+    {
+      path: "./fonts/space-grotesk-latin-500.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "./fonts/space-grotesk-latin-700.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   variable: "--font-space-grotesk",
   display: "swap",
 });
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
+const playfair = localFont({
+  src: [
+    {
+      path: "./fonts/playfair-display-latin-400.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/playfair-display-latin-600.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "./fonts/playfair-display-latin-700.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   variable: "--font-serif",
   display: "swap",
 });
 
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
+const plusJakarta = localFont({
+  src: [
+    {
+      path: "./fonts/plus-jakarta-sans-latin-400.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/plus-jakarta-sans-latin-500.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "./fonts/plus-jakarta-sans-latin-600.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "./fonts/plus-jakarta-sans-latin-700.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   variable: "--font-sans",
   display: "swap",
 });
@@ -86,13 +133,16 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: '/brand/velocitymaid/favicon.ico', sizes: 'any' },
+      { url: '/brand/velocitymaid/web/favicon.svg', type: 'image/svg+xml' },
       { url: '/brand/velocitymaid/favicon-32.png', sizes: '32x32', type: 'image/png' },
       { url: '/brand/velocitymaid/icon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/brand/velocitymaid/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: '/brand/velocitymaid/favicon-180.png',
-    shortcut: '/brand/velocitymaid/favicon-32.png',
+    apple: '/brand/velocitymaid/apple-touch-icon.png',
+    shortcut: '/brand/velocitymaid/favicon.ico',
   },
+  themeColor: '#0F1C2E',
 };
 
 export default function RootLayout({

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Sparkles, CheckCircle2, Download, FileText, ArrowRight, Shield, DollarSign, Clock, Star, Users } from 'lucide-react';
@@ -118,7 +119,7 @@ export default function ApartmentPartnersPage() {
                 <h3 className="text-xl font-bold text-[#0A3D2F] mb-2" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
                   Volume Discounts
                 </h3>
-                <p className="text-vm-muted">Partnership pricing provides significant savings compared to individual bookings.</p>
+                <p className="text-vm-muted">Partnership pricing is confirmed after we review the property.</p>
               </div>
             </div>
           </div>
@@ -139,42 +140,32 @@ export default function ApartmentPartnersPage() {
                   <thead>
                     <tr className="bg-[#0A3D2F] text-white">
                       <th className="p-4 text-left font-bold">Apartment Size</th>
-                      <th className="p-4 text-left font-bold">Standard Rate</th>
-                      <th className="p-4 text-left font-bold">Partnership Rate</th>
-                      <th className="p-4 text-left font-bold">Savings</th>
+                      <th className="p-4 text-left font-bold">Rate</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="border-b border-gray-200">
                       <td className="p-4 font-semibold">Studio/1 Bedroom</td>
-                      <td className="p-4">$320</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$280</td>
-                      <td className="p-4">$40 (12.5%)</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
                     </tr>
                     <tr className="border-b border-gray-200 bg-gray-50">
                       <td className="p-4 font-semibold">2 Bedroom</td>
-                      <td className="p-4">$380</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$330</td>
-                      <td className="p-4">$50 (13.2%)</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
                     </tr>
                     <tr className="border-b border-gray-200">
                       <td className="p-4 font-semibold">3 Bedroom</td>
-                      <td className="p-4">$450</td>
-                      <td className="p-4 text-[#F8C548] font-bold">$390</td>
-                      <td className="p-4">$60 (13.3%)</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
                     </tr>
                     <tr className="bg-gray-50">
                       <td className="p-4 font-semibold">4+ Bedroom</td>
-                      <td className="p-4">Custom Quote</td>
-                      <td className="p-4 text-[#F8C548] font-bold">15% Discount</td>
-                      <td className="p-4">Applied</td>
+                      <td className="p-4 text-[#F8C548] font-bold">Custom quote</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <div className="mt-8 p-4 bg-[#F8C548] rounded-lg text-center">
                 <p className="text-[#0A3D2F] font-bold text-lg">
-                  Additional discounts available for properties with 50+ units or guaranteed monthly volume
+                  Larger properties and monthly volume are quoted separately
                 </p>
               </div>
             </div>

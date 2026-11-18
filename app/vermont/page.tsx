@@ -63,7 +63,7 @@ export default function VermontOverviewPage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href={VERMONT_HOST_INTAKE_PATH}
-                className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+                className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan/90 transition"
               >
                 {VERMONT_TURNOVER_QUOTE_LABEL}
               </Link>
@@ -154,7 +154,7 @@ export default function VermontOverviewPage() {
         actions={
           <Link
             href="/gallery"
-            className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+            className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan/90 transition"
           >
             View Our Work
           </Link>
@@ -171,7 +171,7 @@ export default function VermontOverviewPage() {
           </p>
           <Link
             href={VERMONT_HOST_INTAKE_PATH}
-            className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan-dark transition"
+            className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-5 py-3 text-sm hover:bg-vm-cyan/90 transition"
           >
             {VERMONT_TURNOVER_QUOTE_LABEL}
           </Link>

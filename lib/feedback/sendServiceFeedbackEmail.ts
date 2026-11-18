@@ -4,8 +4,8 @@ import { feedbackPublicUrl } from '@/lib/feedback/serviceFeedback';
 
 const NAVY = '#0F1C2E';
 const CYAN = '#00C2CB';
-const SURFACE = '#F4F6F9';
-const MUTED = '#6B7280';
+const SURFACE = '#F5F7FA';
+const MUTED = '#65778C';
 const FONT = "'Helvetica Neue', Arial, sans-serif";
 
 function escapeHtml(value: string): string {

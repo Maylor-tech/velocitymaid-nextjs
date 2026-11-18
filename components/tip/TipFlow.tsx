@@ -81,7 +81,7 @@ function TipPaymentForm({
         ← Back
       </button>
       <p className="text-5xl font-heading font-bold text-vm-cyan text-center mb-8">
-        ${formattedAmount}
+        {formattedAmount}
       </p>
       <PaymentElement />
       <button
@@ -90,10 +90,10 @@ function TipPaymentForm({
         className={`mt-8 w-full rounded-lg py-4 text-base font-heading font-semibold transition ${
           !stripe || submitting
             ? 'bg-vm-cyan/40 text-vm-navy/60 cursor-not-allowed'
-            : 'bg-vm-cyan text-vm-navy hover:bg-vm-cyan-dark'
+            : 'bg-vm-cyan text-vm-navy hover:bg-vm-cyan/90'
         }`}
       >
-        {submitting ? 'Processing…' : `Leave a $${formattedAmount} tip`}
+        {submitting ? 'Processing…' : `Leave a ${formattedAmount} tip`}
       </button>
       {error ? (
         <p className="mt-3 text-center text-sm text-red-400 font-body">{error}</p>
@@ -334,7 +334,7 @@ export default function TipFlow({
           Optional thank-you — tipping is never required.
         </p>
         <p className="mt-8 text-5xl font-heading font-bold text-vm-cyan text-center">
-          ${(zelleInfo.amountCents / 100).toFixed(2)}
+          {(zelleInfo.amountCents / 100).toFixed(2)}
         </p>
         <div className="mt-8 space-y-3 rounded-lg border border-white/15 bg-white/5 p-4 font-body text-sm">
           <p>
@@ -490,7 +490,7 @@ export default function TipFlow({
                   : 'bg-white/8 border border-white/15 text-white hover:bg-white/15 rounded-lg py-3 font-heading transition-all cursor-pointer'
               }
             >
-              ${amount}
+              {amount}
             </button>
           );
         })}
@@ -518,7 +518,7 @@ export default function TipFlow({
           step={1}
           value={customAmount}
           onChange={(event) => setCustomAmount(event.target.value)}
-          placeholder="Enter amount in $"
+          placeholder="Enter amount"
           className="w-full mt-3 bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white font-body placeholder:text-white/35 focus:outline-none focus:border-vm-cyan text-center text-xl"
         />
       ) : null}
@@ -574,7 +574,7 @@ export default function TipFlow({
         disabled={!canContinue || loading}
         className={`mt-8 w-full rounded-lg py-4 text-base transition-colors ${
           canContinue && !loading
-            ? 'bg-vm-cyan text-vm-navy font-heading font-semibold hover:bg-vm-cyan-dark cursor-pointer'
+            ? 'bg-vm-cyan text-vm-navy font-heading font-semibold hover:bg-vm-cyan/90 cursor-pointer'
             : 'bg-vm-cyan/30 text-vm-navy/50 cursor-not-allowed'
         }`}
       >

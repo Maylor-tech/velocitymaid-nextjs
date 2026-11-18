@@ -1,22 +1,22 @@
-# VelocityMaid Brand Assets (v1.0)
+# VelocityMaid Brand Assets (v2.3)
 
-Canonical production masters from **VelocityMaid_Brand_Final_Approval_Pack**.
+Canonical production masters from the VelocityMaid Cursor Handoff (logo v2.3).
 
-Do not recreate these lockups with HTML/CSS/icons.
+Do not recreate these lockups with HTML/CSS/icons. Do not recolour or stretch.
 
-| File | Source |
-|------|--------|
-| velocitymaid-primary.png | 01_VM_Primary_Horizontal |
-| velocitymaid-reversed.png | 02_VM_Reversed_Dark (navy plate) |
-| velocitymaid-reversed-clear.png | 02 with plate knocked out for dark UI |
-| velocitymaid-onecolor-navy.png | 03_VM_OneColor_Navy |
-| velocitymaid-onecolor-white.png | 04_VM_OneColor_White (navy plate) |
-| velocitymaid-mark-dark.png | 05_VM_ServiceMark_Dark |
-| velocitymaid-mark.png | 06_VM_ServiceMark_Transparent |
-| velocitymaid-mark-navy.png | 07_VM_ServiceMark_OneColor_Navy |
-| velocitymaid-mark-white.png | 08_VM_ServiceMark_OneColor_White |
-| *-notag.png | Cropped horizontal (wordmark + swoosh, no tagline) for nav |
+| File | Use |
+|------|-----|
+| `vm-compact-light.svg` | Website / customer header (~40px), light grounds |
+| `vm-compact-reversed.svg` | Admin / cleaner navy chrome, website footer |
+| `vm-primary-horizontal.svg` | Large placements on light grounds |
+| `vm-reversed-dark.svg` | Large placements on navy (includes navy plate) |
+| `vm-servicemark-dark.svg` | Square avatar, email signature, social |
+| `vm-servicemark-transparent.svg` | Transparent service mark |
+| `vm-onecolor-navy.svg` / `vm-onecolor-white.svg` | One-color lockups |
+| `vm-appicon-fullbleed.svg` | App / home-screen icon source |
+| `vm-favicon.svg` | Favicon mark |
+| `web/*` | `favicon.ico`, `favicon.svg`, apple-touch, PWA icons |
 
-Embroidery assets (09/10) are intentionally **not** included in the web app.
+Archived v2.2 PNG Final Approval Pack: `_archive-v2.2/` (do not delete).
 
-Colors: Navy `#0F1C2E` · Cyan `#00C2CB` · White `#FFFFFF`
+Colors: Navy `#0F1C2E` · Cyan `#00C2CB` · Cyan-dark (text on white) `#007B84` · Canvas `#F5F7FA` · Text `#1B2D42` · Muted `#65778C`

@@ -57,7 +57,8 @@ describe('NJ market relaunch', () => {
       join(process.cwd(), 'components/PricingTiers.tsx'),
       'utf8'
     );
-    expect(pricing).toContain('Custom quote');
-    expect(pricing).not.toMatch(/price: "\$120"/);
+    expect(pricing).toContain('Get a quote — we reply within one business day.');
+    expect(pricing).toContain('Get a Free Quote');
+    expect(pricing).not.toMatch(/\$\d/);
   });
 });

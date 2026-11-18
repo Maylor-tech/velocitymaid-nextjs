@@ -290,7 +290,7 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
             </div>
             <Link
               href="/vermont"
-              className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-6 py-3 text-sm hover:bg-vm-cyan-dark transition"
+              className="inline-flex items-center justify-center bg-vm-cyan text-vm-navy font-heading font-semibold rounded-lg px-6 py-3 text-sm hover:bg-vm-cyan/90 transition"
             >
               Back to Vermont page
             </Link>
@@ -967,7 +967,7 @@ export default function HostIntakeForm({ embedded = false }: { embedded?: boolea
             <button
               type="submit"
               disabled={submitting}
-              className="bg-vm-cyan text-vm-navy font-heading font-semibold w-full py-3 rounded-lg hover:bg-vm-cyan-dark transition disabled:opacity-60 disabled:cursor-not-allowed"
+              className="bg-vm-cyan text-vm-navy font-heading font-semibold w-full py-3 rounded-lg hover:bg-vm-cyan/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting ? "Sending…" : "Request My Turnover Quote"}
             </button>

@@ -54,3 +54,10 @@ Thumbs.db
 
 .local/
 
+# one-off ops scripts, generated reports, and local agent files
+scripts/_*
+reports/
+.agents/
+skills-lock.json
+.cursor/settings.json
+

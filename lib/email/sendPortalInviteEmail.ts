@@ -23,8 +23,8 @@ export interface SendPortalInviteEmailResult {
 
 const NAVY = "#0F1C2E";
 const CYAN = "#00C2CB";
-const SURFACE = "#F4F6F9";
-const MUTED = "#6B7280";
+const SURFACE = "#F5F7FA";
+const MUTED = "#65778C";
 const FONT = "'Helvetica Neue', Arial, sans-serif";
 
 function resolveFromEmail(): string {
@@ -44,6 +44,13 @@ function escapeHtml(value: string): string {
 }
 
 const LOGO_SVG = `<svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="${CYAN}" fill-rule="evenodd" d="M8,42 L50,10 L92,42 L92,92 L8,92 Z M39,64 L61,64 L61,92 L39,92 Z" /></svg>`;
+
+/** Exported for local HTML preview scripts — do not use to send mail. */
+export function renderPortalInviteEmailHtml(
+  params: SendPortalInviteEmailParams
+): string {
+  return buildHtml(params);
+}
 
 function buildHtml(params: SendPortalInviteEmailParams): string {
   const { toName, loginUrl, accessLink } = params;
