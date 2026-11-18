@@ -624,6 +624,7 @@ model Job {
   archivedAt               DateTime?
   AssignmentLog            AssignmentLog[]
   photos                   CleanPhoto[]
+  JobFlag                  JobFlag[]
   CleanerBalanceLedger     CleanerBalanceLedger[]
   CleanerRating            CleanerRating?
   ServiceFeedback          ServiceFeedback[]
@@ -675,6 +676,7 @@ model CleanPhoto {
   slotKey         String?
   customerVisible Boolean            @default(false)
   Job             Job                @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  JobFlag         JobFlag?
 
   @@index([jobId])
   @@index([jobId, category])
@@ -1352,6 +1354,9 @@ model User {
   TipsAsBeneficiary                   Tip[]                  @relation("TipBeneficiary")
   TipsConfirmed                       Tip[]                  @relation("TipConfirmedBy")
   TipsPaidOut                         Tip[]                  @relation("TipPaidOutBy")
+  JobFlagsCreated                     JobFlag[]              @relation("JobFlagCreatedBy")
+  JobFlagsHostNotified                JobFlag[]              @relation("JobFlagHostNotifiedBy")
+  JobFlagsResolved                    JobFlag[]              @relation("JobFlagResolvedBy")
   TipAllocations                      TipAllocation[]        @relation("TipAllocationCleaner")
   TipAllocationsPaidOut               TipAllocation[]        @relation("TipAllocationPaidOutBy")
   WorkerAgreements                    WorkerAgreement[]      @relation("WorkerAgreementCleaner")
@@ -1946,6 +1951,45 @@ enum CleanPhotoCategory {
 enum ArrivalCondition {
   NORMAL
   ISSUES
+}
+
+enum JobFlagKind {
+  DAMAGE
+  SUPPLY
+  ISSUE
+  ARRIVAL
+}
+
+enum HostNotifyChannel {
+  EMAIL
+  TEXT
+  CALL
+  IN_REPORT
+}
+
+/// One cleaner-raised flag. Additive. Existing tables are unchanged.
+model JobFlag {
+  id                  String             @id @default(cuid())
+  jobId               String
+  kind                JobFlagKind
+  note                String
+  photoId             String?            @unique
+  createdById         String?
+  createdAt           DateTime           @default(now())
+  hostNotifiedAt      DateTime?
+  hostNotifiedById    String?
+  hostNotifiedChannel HostNotifyChannel?
+  resolvedAt          DateTime?
+  resolvedById        String?
+  Job                 Job                @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Photo               CleanPhoto?        @relation(fields: [photoId], references: [id], onDelete: SetNull)
+  CreatedBy           User?              @relation("JobFlagCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  HostNotifiedBy      User?              @relation("JobFlagHostNotifiedBy", fields: [hostNotifiedById], references: [id], onDelete: SetNull)
+  ResolvedBy          User?              @relation("JobFlagResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([jobId])
+  @@index([hostNotifiedAt, resolvedAt])
+  @@map("job_flags")
 }
 
 model Tip {
