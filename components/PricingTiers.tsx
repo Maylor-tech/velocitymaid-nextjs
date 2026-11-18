@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { HomeWatchLinkCard } from "@/components/marketing/HomeWatchLinkCard";
+import { VERMONT_HOST_INTAKE_PATH } from "@/lib/marketing/publicCtas";
 
 const primaryButton =
   "inline-flex min-h-[44px] items-center justify-center rounded-md bg-vm-cyan px-5 py-2.5 font-heading text-sm font-bold text-vm-navy transition hover:bg-vm-cyan/90";
@@ -12,7 +13,7 @@ const markets = [
     priceLine: "Flat price by bedroom count — see the table above.",
     detail:
       "Guest-ready resets for hosts and property managers in the Okemo Valley, Middlebury, and surrounding towns.",
-    href: "/vermont/host-intake",
+    href: VERMONT_HOST_INTAKE_PATH,
     cta: "Book a turnover",
   },
   {

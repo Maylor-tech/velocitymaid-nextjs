@@ -78,9 +78,8 @@ describe("home watch finishing copy", () => {
     expect(homeWatch).not.toContain("tick Property inspection");
     expect(homeWatch).toContain("tel:+18027335348");
     expect(homeWatch).toContain("https://wa.me/18027335348");
-    expect(homeWatch).toContain("$150/month");
-    expect(homeWatch).toContain("$275/month");
-    expect(homeWatch).toContain("$75 per visit");
+    expect(homeWatch).toContain("Get a quote — we reply within one business day.");
+    expect(homeWatch).not.toMatch(/\$\d/);
     expect(homeWatch).toContain("not continuous monitoring");
 
     const footer = readRepoFile("components/Footer.tsx");
@@ -101,10 +100,11 @@ describe("home watch finishing copy", () => {
 
     const pricing = readRepoFile("components/PricingTiers.tsx");
     expect(pricing).toContain("Large Property Turnover");
-    expect(pricing).toContain('price: "$275"');
-    expect(pricing).toContain("from ");
-    expect(pricing).toContain(" per visit");
-    expect(pricing).toContain("Vermont turnover starting points");
-    expect(pricing).not.toContain(">starting<");
+    expect(pricing).toContain("Get a quote — we reply within one business day.");
+    expect(pricing).not.toMatch(/\$\d/);
+    expect(pricing).not.toMatch(/starting/i);
+    expect(pricing).toContain(
+      "Photo report according to your booked service package."
+    );
   });
 });
