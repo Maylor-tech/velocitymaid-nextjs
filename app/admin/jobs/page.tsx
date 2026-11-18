@@ -10,6 +10,7 @@ import {
   ChevronRight,
   List,
   Loader2,
+  Plus,
 } from 'lucide-react';
 import type { AdminJobListItem } from '@/components/admin/jobs/JobOperationsCard';
 import { JobsMonthCalendar } from '@/components/admin/jobs/JobsMonthCalendar';
@@ -17,6 +18,7 @@ import { JobsMonthlySummaryStrip } from '@/components/admin/jobs/JobsMonthlySumm
 import { JobsScheduleRow } from '@/components/admin/jobs/JobsScheduleRow';
 import { JobsWeekCalendar } from '@/components/admin/jobs/JobsWeekCalendar';
 import { JobsWorkspacePanels } from '@/components/admin/jobs/JobsWorkspacePanels';
+import type { DeskJobFlag } from '@/lib/flags/jobFlagDisplay';
 import { useAdminShell } from '@/components/admin/shell/AdminShell';
 import {
   addCalendarMonthKey,
@@ -87,6 +89,7 @@ function AdminJobsPageContent() {
   const dateTo = searchParams.get('dateTo') || '';
 
   const [jobs, setJobs] = useState<AdminJobListItem[]>([]);
+  const [openFlags, setOpenFlags] = useState<DeskJobFlag[]>([]);
   const [summary, setSummary] = useState<MonthlySummary>(emptyMonthlySummary());
   const [dayCounts, setDayCounts] = useState<Record<string, number>>({});
   const [monthJobTotal, setMonthJobTotal] = useState(0);
@@ -146,6 +149,7 @@ function AdminJobsPageContent() {
 
       if (!res.ok || !data.success) {
         setJobs([]);
+        setOpenFlags([]);
         setSummary(emptyMonthlySummary());
         setDayCounts({});
         setMonthJobTotal(0);
@@ -153,6 +157,7 @@ function AdminJobsPageContent() {
         return;
       }
       setJobs(data.jobs ?? []);
+      setOpenFlags(Array.isArray(data.openFlags) ? data.openFlags : []);
       setSummary(data.summary ?? emptyMonthlySummary());
       setDayCounts(data.dayCounts ?? {});
       setMonthJobTotal(
@@ -176,6 +181,7 @@ function AdminJobsPageContent() {
     } catch {
       setLoadFailed(true);
       setJobs([]);
+      setOpenFlags([]);
       setSummary(emptyMonthlySummary());
       setDayCounts({});
       setMonthJobTotal(0);
@@ -637,7 +643,11 @@ function AdminJobsPageContent() {
                   })
                 }
               />
-              <JobsWorkspacePanels jobs={jobs} sampleData={sampleData} />
+              <JobsWorkspacePanels
+                jobs={jobs}
+                openFlags={openFlags}
+                sampleData={sampleData}
+              />
             </div>
 
             {focus === 'past_incomplete' && (

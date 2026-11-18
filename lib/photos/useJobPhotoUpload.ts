@@ -100,7 +100,11 @@ export function useJobPhotoUpload(jobId: string, category?: string) {
   }, []);
 
   const uploadOne = useCallback(
-    async (key: string, uploadedBy?: string): Promise<UploadedJobPhoto | null> => {
+    async (
+      key: string,
+      uploadedBy?: string,
+      caption?: string
+    ): Promise<UploadedJobPhoto | null> => {
       const item = itemsRef.current.find((i) => i.key === key);
       if (!item || item.status === "done") return item?.photo ?? null;
 
@@ -113,6 +117,7 @@ export function useJobPhotoUpload(jobId: string, category?: string) {
           file: item.file,
           uploadedBy,
           category,
+          caption,
         });
         if (item.preview) URL.revokeObjectURL(item.preview);
         updateItem(key, {
@@ -136,7 +141,8 @@ export function useJobPhotoUpload(jobId: string, category?: string) {
 
   const uploadAll = useCallback(
     async (
-      uploadedBy?: string
+      uploadedBy?: string,
+      caption?: string
     ): Promise<{ uploaded: UploadedJobPhoto[]; hasFailures: boolean }> => {
       const pending = itemsRef.current.filter(
         (i) => i.status === "ready" || i.status === "failed"
@@ -150,7 +156,7 @@ export function useJobPhotoUpload(jobId: string, category?: string) {
       const uploaded: UploadedJobPhoto[] = [];
 
       for (const item of pending) {
-        const photo = await uploadOne(item.key, uploadedBy);
+        const photo = await uploadOne(item.key, uploadedBy, caption);
         if (photo) uploaded.push(photo);
       }
 
@@ -162,7 +168,8 @@ export function useJobPhotoUpload(jobId: string, category?: string) {
   );
 
   const retryOne = useCallback(
-    (key: string, uploadedBy?: string) => uploadOne(key, uploadedBy),
+    (key: string, uploadedBy?: string, caption?: string) =>
+      uploadOne(key, uploadedBy, caption),
     [uploadOne]
   );
 

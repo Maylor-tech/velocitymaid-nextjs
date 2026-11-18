@@ -6,6 +6,7 @@ import { JobsWorkspacePanels } from '@/components/admin/jobs/JobsWorkspacePanels
 import { JobsMonthlySummaryStrip } from '@/components/admin/jobs/JobsMonthlySummaryStrip';
 import type { AdminJobListItem } from '@/components/admin/jobs/JobOperationsCard';
 import { emptyMonthlySummary } from '@/lib/admin/jobsMonthlyWorkspace';
+import type { DeskJobFlag } from '@/lib/flags/jobFlagDisplay';
 
 const summary = {
   ...emptyMonthlySummary(),
@@ -191,6 +192,45 @@ const fixtureJobs: AdminJobListItem[] = [
   },
 ];
 
+const fixtureFlags: DeskJobFlag[] = [
+  {
+    id: 'flag-damage',
+    jobId: 'fixture-invoice-first',
+    propertyName: 'Fern Hill',
+    kind: 'DAMAGE',
+    note: 'Cracked lamp shade, living room',
+    photoUrl: '/images/portfolio/vermont/velocitymaid-vermont-living-detail.jpg',
+    createdAt: '2026-11-18T18:00:00.000Z',
+    hostNotifiedAt: null,
+    hostNotifiedChannel: null,
+    resolvedAt: null,
+  },
+  {
+    id: 'flag-supply',
+    jobId: 'fixture-report-then-invoice',
+    propertyName: 'Birch Cottage',
+    kind: 'SUPPLY',
+    note: 'Paper towels are out, kitchen',
+    photoUrl: null,
+    createdAt: '2026-11-18T16:30:00.000Z',
+    hostNotifiedAt: '2026-11-18T16:30:00.000Z',
+    hostNotifiedChannel: 'EMAIL',
+    resolvedAt: null,
+  },
+  {
+    id: 'flag-legacy',
+    jobId: 'fixture-qc',
+    propertyName: 'Maple Ridge',
+    kind: 'ARRIVAL',
+    note: '',
+    photoUrl: null,
+    createdAt: '2026-11-16T15:00:00.000Z',
+    hostNotifiedAt: null,
+    hostNotifiedChannel: null,
+    resolvedAt: null,
+  },
+];
+
 const dayCounts: Record<string, number> = {
   '2026-11-16': 1,
   '2026-11-18': 1,
@@ -232,7 +272,12 @@ export function AdminJobsVisualClient() {
               dayCounts={dayCounts}
               sampleData
             />
-            <JobsWorkspacePanels jobs={fixtureJobs} sampleData />
+            <JobsWorkspacePanels
+              jobs={fixtureJobs}
+              openFlags={fixtureFlags}
+              flagsPreview
+              sampleData
+            />
           </div>
         </div>
       </div>

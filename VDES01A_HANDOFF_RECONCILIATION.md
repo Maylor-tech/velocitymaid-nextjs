@@ -6,9 +6,9 @@ Visual / layout work for admin Jobs (Prompt 4 + QA round 1) stays within existin
 
 ### Flagged in reports panel
 
-- **Available today:** `CleanPhoto` categories such as DAMAGE / SUPPLY / ISSUE (and related photo records on a job).
-- **Missing for this desk:** a durable flag record that includes host-notification state (whether the host has been told), and a Notify-host action feed scoped to Jobs & Calendar.
-- **UI until approved:** plain empty copy — “Nothing flagged yet.”
+- **Available today:** `JobFlag` (`job_flags`). A cleaner DAMAGE, SUPPLY, or ISSUE photo creates one flag for that photo. Marking arrival as ISSUES creates one ARRIVAL flag for the job. Repeating the same photo or arrival does not create a second flag.
+- **Desk:** open flags, newest first. Each row shows the property, kind, note, photo when there is one, and “Host not told yet” or “Host told” with the time and channel. An admin can mark the host notified (email, text, call, or in the report) or resolve the flag. The action records the admin. It does not send a message.
+- **Host wording:** a damage, supply, or issue photo requires the cleaner’s note (140 characters). That note is the photo caption and the main line on the desk. A flag with no note still shows “Noticed during the clean.” Do not say inspection or inspected.
 
 ### Reports and invoices panel
 

@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { recordPhotoFlag } from "@/lib/flags/jobFlags.server";
+import { photoFlagNoteError } from "@/lib/flags/jobFlagRules";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { assertSlotKeyForJob } from "@/lib/photos/jobPhotoChecklist";
 import {
@@ -99,6 +101,7 @@ export async function registerCleanPhoto(params: {
   category?: unknown;
   slotKey?: string | null;
   caption?: string | null;
+  createdById?: string | null;
 }) {
   if (!params.storagePath.startsWith(`${params.jobId}/`)) {
     throw new Error("Invalid storage path for this job");
@@ -113,6 +116,8 @@ export async function registerCleanPhoto(params: {
   } = supabase.storage.from(CLEAN_PHOTOS_BUCKET).getPublicUrl(params.storagePath);
 
   const category: CleanPhotoCategoryValue = parseCleanPhotoCategory(params.category);
+  const noteError = photoFlagNoteError(category, params.caption);
+  if (noteError) throw new Error(noteError);
   const slotKey = params.slotKey?.trim() || null;
   if (slotKey) {
     await assertSlotKeyForJob(params.jobId, slotKey);
@@ -136,6 +141,14 @@ export async function registerCleanPhoto(params: {
       slotKey: true,
       customerVisible: true,
     },
+  });
+
+  await recordPhotoFlag({
+    jobId: params.jobId,
+    photoId: record.id,
+    category: record.category,
+    caption: params.caption,
+    createdById: params.createdById?.trim() || null,
   });
 
   return {

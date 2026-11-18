@@ -12,6 +12,8 @@ import {
   offerLifecyclePill,
 } from '@/lib/dispatch/offerLifecycleLabel';
 import { formatServiceDate } from '@/lib/dates/serviceDate';
+import { FlaggedReportsPanel } from '@/components/admin/jobs/FlaggedReportsPanel';
+import type { DeskJobFlag } from '@/lib/flags/jobFlagDisplay';
 
 /**
  * Read-only Jobs workspace panels (handoff §6).
@@ -103,8 +105,13 @@ function buildAttentionRows(jobs: AdminJobListItem[]) {
 
 export function JobsWorkspacePanels({
   jobs,
+  openFlags = [],
+  flagsPreview = false,
 }: {
   jobs: AdminJobListItem[];
+  openFlags?: DeskJobFlag[];
+  /** Visual fixture. Flag actions stay on screen and do not call the API. */
+  flagsPreview?: boolean;
   /** @deprecated Empty states no longer surface sample-data notes. */
   sampleData?: boolean;
 }) {
@@ -160,14 +167,7 @@ export function JobsWorkspacePanels({
         )}
       </section>
 
-      <section className="rounded-[14px] border border-vm-line bg-vm-surface p-[23px]">
-        <div className="mb-1.5 flex items-center justify-between gap-3">
-          <h2 className="font-heading text-lg font-bold leading-[1.2] tracking-tight text-vm-navy">
-            Flagged in reports
-          </h2>
-        </div>
-        <p className="mt-3 font-body text-sm text-vm-muted">Nothing flagged yet.</p>
-      </section>
+      <FlaggedReportsPanel flags={openFlags} preview={flagsPreview} />
 
       <section
         id="desk-reports"
