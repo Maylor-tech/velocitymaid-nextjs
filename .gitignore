@@ -58,4 +58,6 @@ Thumbs.db
 scripts/_*
 reports/
 .agents/
+skills-lock.json
+.cursor/settings.json
 
