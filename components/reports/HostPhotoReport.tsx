@@ -27,12 +27,12 @@ function PhotoFrame({
   );
 }
 
-function ZellePay({ handle, recipient }: { handle: string; recipient: string }) {
+function CopyValue({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(handle);
+      await navigator.clipboard.writeText(value);
       setCopied(true);
     } catch {
       setCopied(false);
@@ -40,18 +40,45 @@ function ZellePay({ handle, recipient }: { handle: string; recipient: string }) 
   }
 
   return (
+    <button
+      type="button"
+      onClick={() => void copy()}
+      aria-label={label}
+      className={`inline-flex min-h-11 shrink-0 items-center justify-center rounded-[10px] border border-vm-line bg-white px-4 font-body text-sm font-semibold text-vm-navy ${FOCUS}`}
+    >
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  );
+}
+
+function ZellePay({
+  handle,
+  phone,
+  recipient,
+}: {
+  handle: string | null;
+  phone: string | null;
+  recipient: string;
+}) {
+  return (
     <div>
       <p className="font-body text-base text-vm-text">Zelle is our preferred way to pay.</p>
-      <p className="mt-1 font-body text-base font-semibold text-vm-navy">{recipient}</p>
-      <div className="mt-2 flex items-center justify-between gap-3">
-        <p className="min-w-0 break-all font-body text-base text-vm-navy">{handle}</p>
-        <button
-          type="button"
-          onClick={() => void copy()}
-          className={`inline-flex min-h-11 shrink-0 items-center justify-center rounded-[10px] border border-vm-line bg-white px-4 font-body text-sm font-semibold text-vm-navy ${FOCUS}`}
-        >
-          {copied ? 'Copied' : 'Copy'}
-        </button>
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-2 font-body text-base text-vm-text">
+        <span>Send to</span>
+        {handle ? (
+          <>
+            <span className="font-semibold text-vm-navy">{handle}</span>
+            <CopyValue value={handle} label={`Copy ${handle}`} />
+          </>
+        ) : null}
+        {handle && phone ? <span>or</span> : null}
+        {phone ? (
+          <>
+            <span className="font-semibold text-vm-navy">{phone}</span>
+            <CopyValue value={phone} label={`Copy ${phone}`} />
+          </>
+        ) : null}
+        <span>({recipient})</span>
       </div>
     </div>
   );
@@ -265,9 +292,11 @@ export function HostPhotoReport({ report }: { report: HostPhotoReport }) {
                 <p className="font-body text-sm text-vm-text">Paid.</p>
               ) : (
                 <>
-                  {report.payment.zelleHandle && report.payment.zelleRecipient ? (
+                  {(report.payment.zelleHandle || report.payment.zellePhone) &&
+                  report.payment.zelleRecipient ? (
                     <ZellePay
                       handle={report.payment.zelleHandle}
+                      phone={report.payment.zellePhone}
                       recipient={report.payment.zelleRecipient}
                     />
                   ) : null}

@@ -78,6 +78,7 @@ const base = {
   },
   paymentConfig: {
     zelleHandle: 'pay@velocitymaid.test',
+    zellePhone: '802-733-5348',
     paypalUrl: 'https://paypal.me/velocitymaid',
     cardEnabled: true,
   },
@@ -197,8 +198,11 @@ describe('host photo report', () => {
   it('shows the invoice amount and only configured payment options', () => {
     const report = buildHostPhotoReport(base);
     expect(ZELLE_RECIPIENT_NAME).toBe('VelocityMaid LLC');
-    expect(paypalAmountUrl('https://paypal.me/velocitymaid/', 390)).toBe(
-      'https://paypal.me/velocitymaid/390.00'
+    expect(paypalAmountUrl('https://www.paypal.me/VelocityMaidVT/', 390)).toBe(
+      'https://www.paypal.me/VelocityMaidVT/390USD'
+    );
+    expect(paypalAmountUrl('https://paypal.me/velocitymaid', 126.75)).toBe(
+      'https://paypal.me/velocitymaid/126.75USD'
     );
     expect(paypalAmountUrl(null, 390)).toBeNull();
     expect(report.payment).toEqual({
@@ -207,19 +211,21 @@ describe('host photo report', () => {
       dueLabel: 'Due on receipt',
       paid: false,
       zelleHandle: 'pay@velocitymaid.test',
+      zellePhone: '802-733-5348',
       zelleRecipient: 'VelocityMaid LLC',
-      paypalUrl: 'https://paypal.me/velocitymaid/390.00',
+      paypalUrl: 'https://paypal.me/velocitymaid/390USD',
       cardToken: 'inv_public_token_00000001',
     });
     const hidden = buildHostPhotoReport({
       ...base,
-      paymentConfig: { zelleHandle: null, paypalUrl: null, cardEnabled: false },
+      paymentConfig: { zelleHandle: null, zellePhone: null, paypalUrl: null, cardEnabled: false },
     });
     expect(hidden.payment).toMatchObject({
       amount: '$390.00',
       invoiceNumber: 'STG-INV-WALK-01',
       dueLabel: 'Due on receipt',
       zelleHandle: null,
+      zellePhone: null,
       zelleRecipient: null,
       paypalUrl: null,
       cardToken: null,
@@ -240,24 +246,28 @@ describe('host payment config', () => {
       PAYPAL_EMAIL: 'hello@velocitymaid.com',
     });
     expect(config.zelleHandle).toBeNull();
+    expect(config.zellePhone).toBeNull();
     expect(config.paypalUrl).toBeNull();
     expect(config.cardEnabled).toBe(false);
     expect(missingHostPaymentDetails(config)).toEqual([
-      'Zelle recipient (VELOCITYMAID_ZELLE_HANDLE or ZELLE_HANDLE)',
+      'Zelle email (VELOCITYMAID_ZELLE_HANDLE or ZELLE_HANDLE)',
+      'Zelle phone (VELOCITYMAID_ZELLE_PHONE)',
       'PayPal link (PAYPAL_ME_URL)',
       'Card checkout (STRIPE_SECRET_KEY)',
     ]);
   });
 
-  it('reads a configured handle, https PayPal link, and card switch', () => {
+  it('reads a configured handle, phone, https PayPal link, and card switch', () => {
     const config = readHostPaymentConfig({
-      ZELLE_HANDLE: ' pay@velocitymaid.test ',
-      PAYPAL_ME_URL: 'https://paypal.me/velocitymaid',
+      VELOCITYMAID_ZELLE_HANDLE: ' hello@velocitymaid.com ',
+      VELOCITYMAID_ZELLE_PHONE: ' 802-733-5348 ',
+      PAYPAL_ME_URL: 'https://www.paypal.me/VelocityMaidVT',
       STRIPE_SECRET_KEY: 'sk_test_present',
     });
     expect(config).toEqual({
-      zelleHandle: 'pay@velocitymaid.test',
-      paypalUrl: 'https://paypal.me/velocitymaid',
+      zelleHandle: 'hello@velocitymaid.com',
+      zellePhone: '802-733-5348',
+      paypalUrl: 'https://www.paypal.me/VelocityMaidVT',
       cardEnabled: true,
     });
   });

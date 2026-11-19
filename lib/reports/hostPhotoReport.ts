@@ -27,6 +27,7 @@ export type HostReportPayment = {
   dueLabel: string | null;
   paid: boolean;
   zelleHandle: string | null;
+  zellePhone: string | null;
   zelleRecipient: string | null;
   paypalUrl: string | null;
   cardToken: string | null;
@@ -103,7 +104,9 @@ export function paypalAmountUrl(base: string | null | undefined, amount: number)
     const url = new URL(trimmed);
     if (url.protocol !== 'https:') return null;
     const path = url.pathname.replace(/\/+$/, '');
-    url.pathname = `${path}/${amount.toFixed(2)}`;
+    const cents = Math.round(amount * 100);
+    const amountText = cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
+    url.pathname = `${path}/${amountText}USD`;
     url.search = '';
     url.hash = '';
     return url.toString();
@@ -233,7 +236,11 @@ export function buildHostPhotoReport(input: {
             dueLabel: paid ? null : 'Due on receipt',
             paid: Boolean(paid),
             zelleHandle: paid ? null : input.paymentConfig.zelleHandle,
-            zelleRecipient: paid || !input.paymentConfig.zelleHandle ? null : ZELLE_RECIPIENT_NAME,
+            zellePhone: paid ? null : input.paymentConfig.zellePhone,
+            zelleRecipient:
+              paid || (!input.paymentConfig.zelleHandle && !input.paymentConfig.zellePhone)
+                ? null
+                : ZELLE_RECIPIENT_NAME,
             paypalUrl: paid
               ? null
               : paypalAmountUrl(input.paymentConfig.paypalUrl, amountSource),
