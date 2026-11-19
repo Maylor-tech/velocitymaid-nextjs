@@ -25,6 +25,8 @@ export interface CareChecklistProps {
   title?: string;
   defaultExpanded?: boolean;
   className?: string;
+  /** Cleaner phone walk-through: 14px text and 48px controls. */
+  readable?: boolean;
 }
 
 export function CareChecklist({
@@ -35,6 +37,7 @@ export function CareChecklist({
   title = "50-Point Hospitality Standards",
   defaultExpanded = true,
   className = "",
+  readable = false,
 }: CareChecklistProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const completedSet = useMemo(() => new Set(completedIds), [completedIds]);
@@ -51,19 +54,19 @@ export function CareChecklist({
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between gap-4 text-left"
+        className={`flex w-full items-center justify-between gap-4 text-left ${readable ? "min-h-12" : ""}`}
         aria-expanded={expanded}
       >
         <div>
           <h3 className="text-xl font-serif font-bold tracking-tight text-vm-navy">
             {title}
           </h3>
-          <p className="text-xs font-sans font-bold uppercase tracking-wider text-vm-text/60 mt-1">
+          <p className={`${readable ? "font-body text-sm text-vm-text" : "text-xs font-sans font-bold uppercase tracking-wider text-vm-text/60"} mt-1`}>
             {progress.completed} of {CARE_CHECKLIST_TOTAL} certified
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <span className="trust-badge text-[10px] font-sans font-bold uppercase tracking-wider text-vm-cyan">
+          <span className={`trust-badge font-sans font-bold uppercase tracking-wider ${readable ? "font-body text-sm text-vm-cyan-dark" : "text-[10px] text-vm-cyan"}`}>
             {progress.percent}%
           </span>
           {expanded ? (
@@ -89,7 +92,7 @@ export function CareChecklist({
             );
             return (
               <section key={category.id}>
-                <h4 className="text-xs font-sans font-bold uppercase tracking-wider text-vm-navy mb-3">
+                <h4 className={`${readable ? "font-body text-sm font-bold text-vm-navy" : "text-xs font-sans font-bold uppercase tracking-wider text-vm-navy"} mb-3`}>
                   {category.title}
                 </h4>
                 <ul className="space-y-2">
@@ -132,7 +135,7 @@ export function CareChecklist({
                     if (mode === "interactive") {
                       return (
                         <li key={item.id}>
-                          <label className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-vm-navy/10 bg-white hover:border-vm-navy/20 cursor-pointer min-h-[44px]">
+                          <label className={`flex cursor-pointer items-center gap-3 rounded-lg border border-vm-navy/10 bg-white px-3 hover:border-vm-navy/20 ${readable ? "min-h-12 py-3" : "min-h-[44px] py-2.5"}`}>
                             <input
                               type="checkbox"
                               checked={done}

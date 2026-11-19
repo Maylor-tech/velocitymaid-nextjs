@@ -117,6 +117,7 @@ describe('createJobOffer', () => {
         jobId: 'job-1',
         cleanerId: 'cleaner-1',
         compensationAmount: 130,
+        compensationOverrideReason: 'Staging rate',
       })
     ).rejects.toMatchObject({ code: 'PAYMENT_REQUIRED' });
   });
@@ -127,6 +128,7 @@ describe('createJobOffer', () => {
       jobId: 'job-1',
       cleanerId: 'cleaner-1',
       compensationAmount: 130,
+      compensationOverrideReason: 'Staging rate',
     });
     expect(offer.status).toBe(JobOfferStatus.OFFERED);
     expect(offerCreate).toHaveBeenCalled();
@@ -134,6 +136,30 @@ describe('createJobOffer', () => {
     expect(offerCreate.mock.calls[0][0].data).toMatchObject({
       compensationAmount: 130,
       compensationBasis: 'FLAT',
+      compensationOverrideReason: 'Staging rate',
+    });
+  });
+
+  it('stores the 65% default without a reason and the bedroom duration', async () => {
+    jobFindUnique.mockResolvedValue(
+      baseJob({
+        agreedCustomerPrice: 390,
+        totalPrice: 195,
+        estimatedDurationMins: null,
+        serviceType: 'Turnover',
+        Property: { bedrooms: 4, name: 'Cabin' },
+        _count: { JobTeamMember: 1 },
+      })
+    );
+    await createJobOffer({
+      jobId: 'job-1',
+      cleanerId: 'cleaner-1',
+      compensationAmount: 253.5,
+    });
+    expect(offerCreate.mock.calls[0][0].data).toMatchObject({
+      compensationAmount: 253.5,
+      compensationOverrideReason: null,
+      estimatedDurationMins: 360,
     });
   });
 
@@ -144,6 +170,7 @@ describe('createJobOffer', () => {
       cleanerId: 'cleaner-1',
       compensationAmount: 130,
       compensationBasis: 'HOURLY',
+      compensationOverrideReason: 'Hourly agreement',
     });
     expect(offerCreate.mock.calls[0][0].data.compensationBasis).toBe('HOURLY');
   });
@@ -176,6 +203,7 @@ describe('createJobOffer', () => {
       jobId: 'job-1',
       cleanerId: 'cleaner-1',
       compensationAmount: 90,
+      compensationOverrideReason: 'Shorter visit',
     });
 
     expect(offerUpdate).toHaveBeenCalledWith(
@@ -195,6 +223,7 @@ describe('createJobOffer', () => {
         jobId: 'job-1',
         cleanerId: 'cleaner-1',
         compensationAmount: 180,
+        compensationOverrideReason: 'Return visit',
       })
     ).rejects.toMatchObject({ code: 'ALREADY_ASSIGNED', status: 409 });
     expect(offerCreate).not.toHaveBeenCalled();
@@ -218,6 +247,7 @@ describe('createJobOffer', () => {
       jobId: 'job-1',
       cleanerId: 'cleaner-1',
       compensationAmount: 190,
+      compensationOverrideReason: 'New offer after release',
     });
 
     expect(offer.id).toBe('offer-new-2');

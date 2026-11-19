@@ -48,7 +48,7 @@ export function PhotoQueueGrid({
 
           {item.status !== "ready" && (
             <div className="absolute inset-x-0 bottom-0 bg-vm-navy/85 px-2 py-1.5">
-              <p className="flex items-center gap-1 font-body text-[10px] text-vm-white">
+              <p className="flex items-center gap-1 font-body text-sm text-vm-white">
                 {(item.status === "preparing" || item.status === "uploading") && (
                   <Loader2 className="h-3 w-3 animate-spin flex-shrink-0" />
                 )}
@@ -67,10 +67,10 @@ export function PhotoQueueGrid({
             <button
               type="button"
               onClick={() => onRemove(item.key)}
-              className="absolute right-1.5 top-1.5 rounded-full bg-vm-navy/80 p-1.5 text-vm-white"
+              className="absolute right-1 top-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-vm-navy/80 text-vm-white outline-none focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
               aria-label={`Remove ${item.file.name}`}
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-5 w-5" />
             </button>
           )}
 
@@ -79,7 +79,7 @@ export function PhotoQueueGrid({
               type="button"
               onClick={() => onRetry(item.key)}
               disabled={retryingKey === item.key}
-              className="absolute right-1.5 top-1.5 rounded-full bg-vm-cyan px-2 py-1 font-body text-[10px] font-semibold text-vm-navy disabled:opacity-60"
+              className="absolute right-1.5 top-1.5 inline-flex min-h-11 items-center rounded-full bg-vm-cyan px-3 font-body text-sm font-semibold text-vm-navy outline-none focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan disabled:opacity-60"
             >
               {retryingKey === item.key ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -105,7 +105,7 @@ export function PhotoQueueMessages({ messages }: { messages: string[] }) {
       {messages.map((msg) => (
         <p
           key={msg}
-          className="rounded-lg bg-vm-danger-bg px-3 py-2 font-body text-xs text-vm-danger"
+          className="rounded-lg bg-vm-danger-bg px-3 py-2 font-body text-sm text-vm-danger"
         >
           {msg}
         </p>
@@ -123,7 +123,7 @@ export function PhotoQueueItemErrors({ items }: { items: PhotoQueueItem[] }) {
       {failed.map((item) => (
         <p
           key={item.key}
-          className="rounded-lg bg-vm-danger-bg px-3 py-2 font-body text-xs text-vm-danger"
+          className="rounded-lg bg-vm-danger-bg px-3 py-2 font-body text-sm text-vm-danger"
         >
           {item.error}
         </p>
@@ -141,7 +141,7 @@ export function PhotoQueueWarnings({ items }: { items: PhotoQueueItem[] }) {
       {warnings.map((item) => (
         <p
           key={`warn-${item.key}`}
-          className="rounded-lg border border-vm-border bg-vm-surface px-3 py-2 font-body text-xs text-vm-muted"
+          className="rounded-lg border border-vm-border bg-vm-surface px-3 py-2 font-body text-sm text-vm-text"
         >
           {item.warning}
         </p>

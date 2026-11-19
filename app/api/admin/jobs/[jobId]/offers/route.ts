@@ -13,7 +13,11 @@ import {
 } from '@/lib/dispatch/environmentSafety';
 import { createJobOffer } from '@/lib/dispatch/jobOffer';
 import { isDispatchError } from '@/lib/dispatch/errors';
-import { previewCompensationFromOperationalTotal } from '@/lib/dispatch/compensation';
+import {
+  defaultCleanerDurationMins,
+  defaultCleanerOfferPay,
+  isLargeFourBedroom,
+} from '@/lib/dispatch/cleanerOfferDefaults';
 import { deriveDispatchUiState } from '@/lib/dispatch/dispatchState';
 import { effectiveOfferStatus, isEffectivelyOpen } from '@/lib/dispatch/offerExpiry';
 import {
@@ -42,12 +46,17 @@ export async function GET(
         id: true,
         assignedCleanerId: true,
         operationalTotal: true,
+        agreedCustomerPrice: true,
+        totalPrice: true,
+        serviceType: true,
         dispatchUrgency: true,
         estimatedDurationMins: true,
         preferredDate: true,
         preferredTime: true,
         Branch: { select: { slug: true } },
         User: { select: { name: true } },
+        Property: { select: { bedrooms: true, name: true } },
+        _count: { select: { JobTeamMember: true } },
       },
     });
     if (!job) {
@@ -100,6 +109,7 @@ export async function GET(
         compensationCurrency: o.compensationCurrency,
         compensationBasis: o.compensationBasis,
         estimatedDurationMins: o.estimatedDurationMins,
+        compensationOverrideReason: o.compensationOverrideReason,
         operationalNotes: o.operationalNotes,
         channel: o.channel,
       };
@@ -148,7 +158,17 @@ export async function GET(
       dispatchOffersEnabled: isDispatchOffersEnabledForBranch(job.Branch?.slug),
       dispatchUrgency: job.dispatchUrgency,
       estimatedDurationMins: job.estimatedDurationMins,
-      compensationPreview: previewCompensationFromOperationalTotal(job.operationalTotal),
+      compensationPreview: defaultCleanerOfferPay({
+        agreedCustomerPrice: job.agreedCustomerPrice,
+        totalPrice: job.totalPrice,
+      }),
+      durationPreviewMins: defaultCleanerDurationMins({
+        bedrooms: job.Property?.bedrooms,
+        largeFourBedroom: isLargeFourBedroom(
+          [job.Property?.name, job.serviceType].filter(Boolean).join(' ')
+        ),
+        cleanerCount: job._count?.JobTeamMember ?? 1,
+      }),
       assignedCleanerId: job.assignedCleanerId,
       assignedCleanerName: job.User?.name ?? null,
       ui,
@@ -227,6 +247,10 @@ export async function POST(
       compensationBasis: body.compensationBasis,
       estimatedDurationMins:
         body.estimatedDurationMins != null ? Number(body.estimatedDurationMins) : null,
+      compensationOverrideReason:
+        typeof body.compensationOverrideReason === 'string'
+          ? body.compensationOverrideReason
+          : null,
       operationalNotes:
         typeof body.operationalNotes === 'string' ? body.operationalNotes : null,
       ttlMinutes: body.ttlMinutes != null ? Number(body.ttlMinutes) : null,

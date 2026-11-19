@@ -1,9 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Loader2, CheckCircle, XCircle, Send, AlertCircle, Download } from "lucide-react";
+import { useParams } from "next/navigation";
+import { Loader2, CheckCircle } from "lucide-react";
 import Link from "next/link";
+
+type PaymentMethodSnapshot = {
+  methodType?: string;
+  bankName?: string;
+  accountNumber?: string;
+  routingNumber?: string;
+  handle?: string;
+  email?: string;
+  phone?: string;
+};
 
 interface PayoutReceipt {
   id: string;
@@ -15,7 +25,7 @@ interface PayoutReceipt {
   platformFee: number;
   currency: string;
   status: string;
-  paymentMethodSnapshot: any;
+  paymentMethodSnapshot: PaymentMethodSnapshot | null;
   createdAt: string;
   paidAt: string | null;
   executedAt: string | null;
@@ -36,7 +46,6 @@ interface PayoutReceipt {
 
 export default function CleanerPayoutReceiptPage() {
   const params = useParams();
-  const router = useRouter();
   const payoutId = params.payoutId as string;
 
   const [payout, setPayout] = useState<PayoutReceipt | null>(null);
@@ -61,9 +70,9 @@ export default function CleanerPayoutReceiptPage() {
       }
 
       setPayout(data.payout);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to fetch payout:", err);
-      setError(err.message || "Failed to load payout receipt");
+      setError(err instanceof Error ? err.message : "Failed to load payout receipt");
     } finally {
       setLoading(false);
     }
@@ -99,7 +108,7 @@ export default function CleanerPayoutReceiptPage() {
     return colors[status] || "bg-gray-100 text-vm-text";
   };
 
-  const renderPaymentMethod = (snapshot: any) => {
+  const renderPaymentMethod = (snapshot: PaymentMethodSnapshot | null) => {
     if (!snapshot) return <span className="text-vm-muted">—</span>;
 
     if (snapshot.methodType === "BANK") {
@@ -211,12 +220,6 @@ export default function CleanerPayoutReceiptPage() {
                   <span className="text-vm-muted">Job ID:</span>{" "}
                   <span className="font-mono">{payout.jobId}</span>
                 </div>
-                {payout.Job?.customerName && (
-                  <div>
-                    <span className="text-vm-muted">Customer:</span>{" "}
-                    <span>{payout.Job.customerName}</span>
-                  </div>
-                )}
                 {payout.Job?.serviceType && (
                   <div>
                     <span className="text-vm-muted">Service:</span>{" "}

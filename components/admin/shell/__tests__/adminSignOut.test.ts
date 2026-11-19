@@ -60,17 +60,18 @@ describe('beginAdminSignOut', () => {
 });
 
 describe('branch-scoped nav filtering unchanged', () => {
-  it('still hides money group and non-allowlisted paths for branch-scoped admins', () => {
+  it('filters handoff nav to allowlisted paths for branch-scoped admins', () => {
     const groups = ADMIN_NAV_GROUPS.flatMap((group) => {
-      if (group.id === 'money') return [];
       const items = group.items.filter((item) =>
         isPathAllowedForBranchScopedAdmin(item.href)
       );
       return items.length ? [{ ...group, items }] : [];
     });
-    expect(groups.some((g) => g.id === 'money')).toBe(false);
     const hrefs = groups.flatMap((g) => g.items.map((i) => i.href));
-    expect(hrefs.every((href) => isPathAllowedForBranchScopedAdmin(href))).toBe(true);
+    expect(hrefs.every((href) => isPathAllowedForBranchScopedAdmin(href))).toBe(
+      true
+    );
     expect(hrefs).not.toContain('/admin/settings');
+    expect(hrefs).not.toContain('/admin/invoices');
   });
 });

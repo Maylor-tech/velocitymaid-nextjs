@@ -27,6 +27,7 @@ type OfferRow = {
   compensationAmount: number;
   compensationCurrency: string;
   compensationBasis?: 'FLAT' | 'HOURLY' | 'OTHER';
+  compensationOverrideReason?: string | null;
 };
 
 type DispatchPayload = {
@@ -35,6 +36,7 @@ type DispatchPayload = {
   dispatchUrgency: 'STANDARD' | 'SAME_DAY' | 'URGENT';
   estimatedDurationMins: number | null;
   compensationPreview: number | null;
+  durationPreviewMins?: number | null;
   assignedCleanerId?: string | null;
   assignedCleanerName?: string | null;
   ui: { state: string; label: string };
@@ -133,6 +135,8 @@ export function DispatchPanel({
   const [releaseNotes, setReleaseNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [compensation, setCompensation] = useState('');
+  const [payReason, setPayReason] = useState('');
+  const [durationMins, setDurationMins] = useState('');
   const [compensationBasis, setCompensationBasis] = useState<'FLAT' | 'HOURLY' | 'OTHER'>('FLAT');
   const [ttlMinutes, setTtlMinutes] = useState('');
   const [urgency, setUrgency] = useState<'STANDARD' | 'SAME_DAY' | 'URGENT'>('STANDARD');
@@ -156,6 +160,11 @@ export function DispatchPanel({
         current || json.compensationPreview == null
           ? current
           : String(json.compensationPreview)
+      );
+      setDurationMins((current) =>
+        current || json.durationPreviewMins == null
+          ? current
+          : String(json.durationPreviewMins)
       );
       setError(null);
     } catch (err) {
@@ -196,6 +205,14 @@ export function DispatchPanel({
       setError('Enter the approved cleaner compensation before sending.');
       return;
     }
+    const preview = data?.compensationPreview;
+    const amount = Number(compensation);
+    const matchesDefault =
+      preview != null && Math.round(amount * 100) === Math.round(preview * 100);
+    if (!matchesDefault && !payReason.trim()) {
+      setError('Add a short reason when cleaner pay is not the 65% default.');
+      return;
+    }
     setSending(true);
     setError(null);
     try {
@@ -206,6 +223,8 @@ export function DispatchPanel({
           cleanerId: selectedCleanerId,
           compensationAmount: Number(compensation),
           compensationBasis,
+          compensationOverrideReason: payReason.trim() || undefined,
+          estimatedDurationMins: durationMins.trim() ? Number(durationMins) : undefined,
           ttlMinutes: ttlMinutes ? Number(ttlMinutes) : undefined,
         }),
       });
@@ -382,11 +401,45 @@ export function DispatchPanel({
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               />
-              <p className="text-xs text-vm-muted mt-1">
-                Ops-approved snapshot. Never auto-filled from a customer invoice total.
+              <p className="mt-1 font-body text-sm text-vm-muted">
+                Default is 65% of the agreed customer price, rounded to the cent.
                 {data?.compensationPreview != null
-                  ? ` Operational preview: ${formatMoney(data.compensationPreview)}.`
-                  : ' No operational total — enter the amount manually.'}
+                  ? ` Suggested pay: ${formatMoney(data.compensationPreview)}.`
+                  : ' No agreed price on this job — enter the amount and a reason.'}
+              </p>
+              <label className="mt-3 block font-body text-sm font-medium text-vm-text" htmlFor="pay-override-reason">
+                Override reason
+              </label>
+              <input
+                id="pay-override-reason"
+                type="text"
+                value={payReason}
+                onChange={(e) => setPayReason(e.target.value)}
+                placeholder="Required only when pay is not the 65% default"
+                className="mt-1 min-h-11 w-full rounded-[10px] border border-gray-300 px-3 font-body text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-vm-text mb-1" htmlFor="offer-duration">
+                Est. duration (minutes)
+              </label>
+              <input
+                id="offer-duration"
+                type="number"
+                min="1"
+                step="1"
+                value={durationMins}
+                onChange={(e) => setDurationMins(e.target.value)}
+                placeholder={
+                  data?.durationPreviewMins != null
+                    ? `Default ${data.durationPreviewMins} min`
+                    : 'Enter minutes'
+                }
+                className="min-h-11 w-full rounded-[10px] border border-gray-300 px-3 font-body text-sm"
+              />
+              <p className="mt-1 font-body text-sm text-vm-muted">
+                Default from bedrooms: 2 bed 3h, 3 bed 5h, 4 bed 6h, large 4 bed 7h.
+                Split across the crew when more than one cleaner is assigned. Change it here to override.
               </p>
             </div>
             <div>
@@ -618,6 +671,7 @@ export function DispatchPanel({
                     <span>
                       {o.cleanerName || o.cleanerEmail} · {effectiveOfferStatus(o, clock)}
                       {o.declineReason ? ` — ${o.declineReason}` : ''}
+                      {o.compensationOverrideReason ? ` — ${o.compensationOverrideReason}` : ''}
                     </span>
                     <span className="text-vm-muted">{formatMoney(o.compensationAmount)}</span>
                   </li>

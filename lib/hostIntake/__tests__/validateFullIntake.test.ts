@@ -90,14 +90,16 @@ describe("Vermont host intake form copy", () => {
     "utf8"
   );
 
-  it("asks for contact info before the property and uses the quote button", () => {
-    const contactAt = source.indexOf("Your contact info");
-    const propertyAt = source.indexOf("Your property");
-    expect(contactAt).toBeGreaterThan(-1);
-    expect(propertyAt).toBeGreaterThan(contactAt);
-    expect(source).toContain("Request My Turnover Quote");
-    expect(source).toContain("No card needed. We&apos;ll reply within one business day.");
+  it("is a two-step form with the quote button and the confirmed reply line", () => {
+    expect(source).toContain("Your property");
+    expect(source).toContain("Turnover details");
+    expect(source).toContain("Continue to turnover details →");
+    expect(source).toContain("Add more details (optional)");
+    expect(source).toContain("Request my turnover quote");
+    expect(source).toContain("No card needed. We reply within one business day.");
     expect(source).not.toContain("HOST INTAKE");
+    expect(source).not.toMatch(/inspection/i);
+    expect(source).not.toMatch(/surcharge|processing fee|discount/i);
   });
 
   it("stops asking for fields collected later and still shows phone and WhatsApp after submit", () => {
@@ -108,6 +110,5 @@ describe("Vermont host intake form copy", () => {
     expect(source).not.toContain("Restricted areas");
     expect(source).toContain('href="tel:+18027335348"');
     expect(source).toContain('href="https://wa.me/18027335348"');
-    expect(source).toContain("within one business day");
   });
 });

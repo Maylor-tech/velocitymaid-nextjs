@@ -49,6 +49,14 @@ export interface JobOperationsInput {
     expiresAt: string | null;
     cleanerName: string | null;
   } | null;
+  completionReport?: {
+    status: string;
+    sentAt: string | null;
+  } | null;
+  invoice?: {
+    status: string;
+    sentAt: string | null;
+  } | null;
 }
 
 export interface WorkflowStep {

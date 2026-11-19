@@ -37,6 +37,7 @@ export async function POST(
       category: body.category,
       slotKey: typeof body.slotKey === "string" ? body.slotKey : null,
       caption: typeof body.caption === "string" ? body.caption : null,
+      createdById: actor.userId,
     });
 
     return NextResponse.json(photo);

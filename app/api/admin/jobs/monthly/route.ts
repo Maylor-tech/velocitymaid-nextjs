@@ -39,10 +39,13 @@ import {
   isDayKey,
   isMonthKey,
   monthDateBounds,
+  monthlyJobReportInvoiceSelect,
+  monthlyReportInvoiceFields,
   sortJobsDeterministic,
   type MonthlyFocus,
   type MonthlyWorkspaceView,
 } from '@/lib/admin/jobsMonthlyWorkspace';
+import type { DeskJobFlag } from '@/lib/flags/jobFlagDisplay';
 
 const COMM_ACTIONS = [
   'SCHEDULE_CONFIRMED',
@@ -161,6 +164,7 @@ const JOB_SELECT = {
     where: { completed: true },
     select: { id: true },
   },
+  ...monthlyJobReportInvoiceSelect,
 } satisfies Prisma.JobSelect;
 
 function parseFocus(raw: string | null): MonthlyFocus {
@@ -538,6 +542,7 @@ export async function GET(request: NextRequest) {
       checklistTotal: job._count.JobChecklistItem,
       checklistCompleted: job.JobChecklistItem.length,
       auditActions: auditByJob.get(job.id) ?? [],
+      ...monthlyReportInvoiceFields(job),
     }));
 
     const teamMap = await loadJobTeamBatch(jobIds);
@@ -571,6 +576,47 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    const openFlagRows = await prisma.jobFlag.findMany({
+      where: { resolvedAt: null, Job: where as Prisma.JobWhereInput },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: 40,
+      select: {
+        id: true,
+        jobId: true,
+        kind: true,
+        note: true,
+        createdAt: true,
+        hostNotifiedAt: true,
+        hostNotifiedChannel: true,
+        resolvedAt: true,
+        Photo: { select: { url: true } },
+        Job: {
+          select: {
+            address: true,
+            customerName: true,
+            Property: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    const openFlags: DeskJobFlag[] = openFlagRows.map((flag) => ({
+      id: flag.id,
+      jobId: flag.jobId,
+      propertyName:
+        flag.Job.Property?.name?.trim() ||
+        flag.Job.address?.trim() ||
+        flag.Job.customerName?.trim() ||
+        'Property',
+      kind: flag.kind,
+      note: flag.note,
+      photoUrl: flag.Photo?.url ?? null,
+      createdAt: flag.createdAt.toISOString(),
+      hostNotifiedAt: flag.hostNotifiedAt?.toISOString() ?? null,
+      hostNotifiedChannel: flag.hostNotifiedChannel,
+      resolvedAt: flag.resolvedAt?.toISOString() ?? null,
+    }));
+
     return NextResponse.json({
       success: true,
       view,
@@ -579,6 +625,7 @@ export async function GET(request: NextRequest) {
       periodLabel,
       day: isDayKey(dayParam) ? dayParam : null,
       jobs: jobsWithTeam,
+      openFlags,
       summary,
       dayCounts,
       monthJobTotal,

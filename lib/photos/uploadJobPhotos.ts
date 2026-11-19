@@ -15,6 +15,8 @@ export interface UploadSingleJobPhotoOptions {
   category?: string;
   slotKey?: string;
   caption?: string;
+  attemptId?: string;
+  onStage?: (stage: "preparing" | "uploading" | "saving") => void;
 }
 
 async function parseJsonResponse(res: Response): Promise<Record<string, unknown>> {
@@ -56,9 +58,11 @@ function mapStorageUploadError(message: string, fileName: string): string {
 export async function uploadSingleJobPhoto(
   options: UploadSingleJobPhotoOptions
 ): Promise<UploadedJobPhoto> {
-  const { jobId, file, uploadedBy, category, slotKey, caption } = options;
+  const { jobId, file, uploadedBy, category, slotKey, caption, attemptId, onStage } =
+    options;
   const rawName = file.name;
 
+  onStage?.("preparing");
   let prepared: File;
   try {
     prepared = await preparePhotoFile(file);
@@ -77,6 +81,7 @@ export async function uploadSingleJobPhoto(
       filename: prepared.name,
       contentType: prepared.type || "image/jpeg",
       fileSize: prepared.size,
+      attemptId: attemptId || undefined,
     }),
   });
 
@@ -104,6 +109,7 @@ export async function uploadSingleJobPhoto(
 
   const path = String(signData.path);
   const token = String(signData.token);
+  onStage?.("uploading");
 
   let supabase;
   try {
@@ -126,6 +132,7 @@ export async function uploadSingleJobPhoto(
     throw new Error(mapStorageUploadError(uploadError.message, rawName));
   }
 
+  onStage?.("saving");
   const registerRes = await fetch(`/api/jobs/${jobId}/photos/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

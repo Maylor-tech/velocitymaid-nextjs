@@ -3,6 +3,8 @@ import { ArrivalCondition } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireCleanerJobAssignment } from "@/lib/auth/requireRole";
 import { rethrowIfAuthResponse } from "@/lib/api/routeAuth";
+import { recordArrivalFlag } from "@/lib/flags/jobFlags.server";
+import { arrivalNoteError } from "@/lib/flags/jobFlagRules";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +16,7 @@ export async function PATCH(
 ) {
   try {
     const jobId = params.jobId;
-    await requireCleanerJobAssignment(req, jobId);
+    const cleaner = await requireCleanerJobAssignment(req, jobId);
     const body = await req.json();
     const arrival = body.arrivalCondition;
     if (arrival !== ArrivalCondition.NORMAL && arrival !== ArrivalCondition.ISSUES) {
@@ -38,11 +40,29 @@ export async function PATCH(
       );
     }
 
+    let arrivalNote: string | null = null;
+    if (arrival === ArrivalCondition.ISSUES) {
+      arrivalNote = typeof body.note === "string" ? body.note : "";
+      const noteError = arrivalNoteError(arrivalNote);
+      if (noteError) {
+        return NextResponse.json({ error: noteError }, { status: 400 });
+      }
+      arrivalNote = arrivalNote.trim();
+    }
+
     const updated = await prisma.job.update({
       where: { id: jobId },
       data: { arrivalCondition: arrival },
       select: { id: true, arrivalCondition: true },
     });
+
+    if (arrival === ArrivalCondition.ISSUES) {
+      await recordArrivalFlag({
+        jobId,
+        createdById: cleaner.userId,
+        note: arrivalNote,
+      });
+    }
 
     return NextResponse.json({ success: true, job: updated });
   } catch (err: unknown) {

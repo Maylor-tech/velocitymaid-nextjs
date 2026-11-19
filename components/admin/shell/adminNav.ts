@@ -3,11 +3,8 @@ import {
   Calendar,
   Users,
   UserCircle,
-  MapPin,
-  Map,
   DollarSign,
   Settings,
-  Target,
   Bell,
   Star,
   type LucideIcon,
@@ -21,85 +18,61 @@ export interface AdminNavItem {
 }
 
 export interface AdminNavGroup {
-  id: 'daily' | 'people' | 'money' | 'setup';
+  id: 'daily' | 'people' | 'money' | 'setup' | 'handoff';
   label: string;
   items: AdminNavItem[];
 }
 
-const dashboard: AdminNavItem = {
+const overview: AdminNavItem = {
   href: '/admin',
-  label: 'Dashboard',
+  label: 'Overview',
   icon: LayoutDashboard,
   match: (p) => p === '/admin',
 };
 const jobs: AdminNavItem = {
   href: '/admin/jobs',
-  label: 'Jobs',
+  label: 'Jobs & Calendar',
   icon: Calendar,
   match: (p) => p.startsWith('/admin/jobs'),
 };
-const leadCenter: AdminNavItem = {
-  href: '/admin/lead-center',
-  label: 'Lead Center',
-  icon: Target,
-  match: (p) => p.startsWith('/admin/lead-center'),
-};
 const customers: AdminNavItem = {
   href: '/admin/customers',
-  label: 'Customers',
+  label: 'Customers & Properties',
   icon: UserCircle,
   match: (p) => p.startsWith('/admin/customers'),
 };
 const cleaners: AdminNavItem = {
   href: '/admin/cleaners',
-  label: 'Cleaners',
+  label: 'Cleaning Specialists',
   icon: Users,
   match: (p) => p.startsWith('/admin/cleaners'),
 };
-const invoices: AdminNavItem = {
+const quality: AdminNavItem = {
+  href: '/admin/feedback',
+  label: 'Quality & Reports',
+  icon: Star,
+  match: (p) => p.startsWith('/admin/feedback'),
+};
+const finance: AdminNavItem = {
   href: '/admin/invoices',
-  label: 'Invoices',
+  label: 'Finance',
   icon: DollarSign,
   match: (p) =>
     p.startsWith('/admin/payouts') ||
     p.startsWith('/admin/taxes') ||
-    p.startsWith('/admin/invoices'),
+    p.startsWith('/admin/invoices') ||
+    p.startsWith('/admin/profitability') ||
+    p.startsWith('/admin/tips'),
 };
-const profitability: AdminNavItem = {
-  href: '/admin/profitability',
-  label: 'Profitability',
-  icon: DollarSign,
-  match: (p) => p.startsWith('/admin/profitability'),
-};
-const tips: AdminNavItem = {
-  href: '/admin/tips',
-  label: 'Tips',
-  icon: DollarSign,
-  match: (p) => p.startsWith('/admin/tips'),
-};
-const branches: AdminNavItem = {
-  href: '/admin/branches',
-  label: 'Branches',
-  icon: MapPin,
-  match: (p) => p.startsWith('/admin/branches'),
-};
-const map: AdminNavItem = {
-  href: '/admin/map',
-  label: 'Map',
-  icon: Map,
-  match: (p) => p.startsWith('/admin/map'),
-};
-const notifications: AdminNavItem = {
+const communications: AdminNavItem = {
   href: '/admin/notifications',
-  label: 'Notifications',
+  label: 'Communications',
   icon: Bell,
-  match: (p) => p.startsWith('/admin/notifications'),
-};
-const feedback: AdminNavItem = {
-  href: '/admin/feedback',
-  label: 'Feedback',
-  icon: Star,
-  match: (p) => p.startsWith('/admin/feedback'),
+  match: (p) =>
+    p.startsWith('/admin/notifications') ||
+    p.startsWith('/admin/lead-center') ||
+    p.startsWith('/admin/inbox') ||
+    p.startsWith('/admin/contact'),
 };
 const settings: AdminNavItem = {
   href: '/admin/settings',
@@ -107,15 +80,37 @@ const settings: AdminNavItem = {
   icon: Settings,
   match: (p) =>
     p.startsWith('/admin/settings') ||
-    p.startsWith('/admin/contact') ||
-    p.startsWith('/admin/inbox'),
+    p.startsWith('/admin/branches') ||
+    p.startsWith('/admin/map'),
 };
 
-export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
-  { id: 'daily', label: 'Daily', items: [dashboard, jobs, leadCenter] },
-  { id: 'people', label: 'People', items: [customers, cleaners] },
-  { id: 'money', label: 'Money', items: [invoices, profitability, tips] },
-  { id: 'setup', label: 'Setup', items: [branches, map, notifications, feedback, settings] },
+/**
+ * Handoff §6 / reference/admin-jobs.html — eight primary sections.
+ * Role- and branch-scoped filtering is applied in AdminShell.
+ */
+export const ADMIN_HANDOFF_NAV: AdminNavItem[] = [
+  overview,
+  jobs,
+  customers,
+  cleaners,
+  quality,
+  finance,
+  communications,
+  settings,
 ];
 
-export const ADMIN_NAV: AdminNavItem[] = ADMIN_NAV_GROUPS.flatMap((group) => group.items);
+/** Flat handoff nav as a single unlabeled group for NavLinks rendering. */
+export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
+  { id: 'handoff', label: '', items: ADMIN_HANDOFF_NAV },
+];
+
+export const ADMIN_NAV: AdminNavItem[] = ADMIN_HANDOFF_NAV;
+
+/** Which handoff nav item is active for a pathname (at most one). */
+export function activeAdminNavItem(
+  pathname: string
+): AdminNavItem | undefined {
+  return ADMIN_HANDOFF_NAV.find((item) =>
+    item.match ? item.match(pathname) : pathname === item.href
+  );
+}

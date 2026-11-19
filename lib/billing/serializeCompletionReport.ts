@@ -12,6 +12,8 @@ export type ReportPhoto = {
 export interface CompletionReportContext {
   arrivalCondition?: "NORMAL" | "ISSUES" | null;
   invoicePublicToken?: string | null;
+  /** Existing Job.reviewStatus — presentation only for customer report. */
+  reviewStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
 }
 
 export function serializeCompletionReport(
@@ -38,6 +40,7 @@ export function serializeCompletionReport(
     afterPhotos,
     arrivalCondition: context.arrivalCondition ?? null,
     invoicePublicToken: context.invoicePublicToken ?? null,
+    reviewStatus: context.reviewStatus ?? null,
     status: report.status,
     sentAt: report.sentAt?.toISOString() ?? null,
     createdAt: report.createdAt.toISOString(),
@@ -80,7 +83,7 @@ export function renderCompletionReportHtml(report: SerializedCompletionReport): 
     </div>
     <div>
       <p class="label">Assigned team</p>
-      <p class="value">${escapeHtml(report.teamSummary || 'VelocityMaid certified team')}</p>
+      <p class="value">${escapeHtml(report.teamSummary || 'Cleaned by VelocityMaid')}</p>
     </div>
     <div>
       <p class="label">Arrival</p>

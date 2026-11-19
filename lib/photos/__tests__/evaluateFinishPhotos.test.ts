@@ -28,7 +28,7 @@ describe("evaluateFinishPhotos", () => {
       expect.arrayContaining(["kitchen", "bathroom-1", "bedroom-1"])
     );
     expect(finishPhotoBlockMessage(block)).toMatch(/Choose arrival/i);
-    expect(finishPhotoBlockMessage(block)).toMatch(/Missing required after photos/i);
+    expect(finishPhotoBlockMessage(block)).toMatch(/Needed after photos/i);
   });
 
   it("blocks NORMAL arrival with missing required AFTER photos", () => {
@@ -75,5 +75,32 @@ describe("evaluateFinishPhotos", () => {
     });
     expect(withBefore.ok).toBe(true);
     expect(withBefore.issuesNeedBefore).toBe(false);
+  });
+
+  it("treats stored slots as required even when the row says otherwise", () => {
+    const resolved = resolvePropertyPhotoSlots(
+      [
+        {
+          key: "bathroom-1",
+          label: "Bathroom 1",
+          room: "Bathroom",
+          sortOrder: 21,
+          required: false,
+        },
+      ],
+      1,
+      1
+    );
+    expect(resolved.every((slot) => slot.required)).toBe(true);
+    const block = evaluateFinishPhotos({
+      arrivalCondition: "NORMAL",
+      slots: resolved,
+      photos: resolved
+        .filter((slot) => slot.key !== "bathroom-1")
+        .map((slot) => ({ slotKey: slot.key, category: "AFTER" })),
+    });
+    expect(block.ok).toBe(false);
+    expect(block.missingAfter.map((item) => item.label)).toEqual(["Bathroom 1"]);
+    expect(finishPhotoBlockMessage(block)).toMatch(/Needed after photos: Bathroom 1/i);
   });
 });

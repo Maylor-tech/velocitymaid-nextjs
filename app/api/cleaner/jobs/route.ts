@@ -44,7 +44,6 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         status: true,
-        customerName: true,
         serviceType: true,
         serviceLocation: true,
         preferredDate: true,
@@ -62,6 +61,7 @@ export async function GET(req: NextRequest) {
             name: true,
           },
         },
+        Property: { select: { name: true } },
         JobOffer: {
           where: {
             cleanerId,
@@ -78,7 +78,8 @@ export async function GET(req: NextRequest) {
     });
 
     const formattedJobs = jobs.map((job) => {
-      const accepted = job.JobOffer[0] ?? null;
+      const { JobOffer, Property, ...rest } = job;
+      const accepted = JobOffer[0] ?? null;
       const compensation = accepted
         ? toCleanerCompensationView({
             amount: accepted.compensationAmount,
@@ -86,9 +87,9 @@ export async function GET(req: NextRequest) {
             basis: accepted.compensationBasis,
           })
         : null;
-      const { JobOffer: _offers, ...rest } = job;
       return {
         ...rest,
+        propertyName: Property?.name ?? null,
         preferredDate: job.preferredDate?.toISOString() ?? null,
         assignedAt: job.assignedAt?.toISOString() ?? null,
         startedAt: job.startedAt?.toISOString() ?? null,

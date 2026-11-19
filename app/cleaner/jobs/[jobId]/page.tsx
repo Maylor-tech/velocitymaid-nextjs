@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, Calendar, MapPin, DollarSign, CheckCircle, XCircle, Phone, Mail } from "lucide-react";
+import { Loader2, Calendar, MapPin, DollarSign, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import { JobChecklistPanel } from "@/components/cleaner/JobChecklistPanel";
 import { formatServiceDate } from "@/lib/dates/serviceDate";
@@ -11,14 +11,13 @@ import { JobPhotoCapture } from "@/components/cleaner/JobPhotoCapture";
 import { EscalateIssueCard } from "@/components/cleaner/EscalateIssueCard";
 import { JobPacketCard } from "@/components/cleaner/JobPacketCard";
 import { isOfferExpiredByTimestamp } from "@/lib/dispatch/offerExpiry";
-
-interface CustomerInfo {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string | null;
-}
+import { formatOfferDuration } from "@/lib/dispatch/cleanerOfferDefaults";
+import { finishPhotoBlockMessage } from "@/lib/photos/propertyPhotoSlots";
+import { CleanerPortalChrome } from "@/components/cleaner/CleanerPortalChrome";
+import {
+  CleanerOfferCard,
+  formatRespondByLabel,
+} from "@/components/cleaner/CleanerOfferCard";
 
 interface PropertyInstructions {
   id: string;
@@ -45,7 +44,6 @@ interface Job {
   id: string;
   status: string;
   paymentStatus?: string;
-  customerName: string | null;
   serviceType: string | null;
   preferredDate: string | null;
   preferredTime: string | null;
@@ -70,7 +68,6 @@ interface Job {
   submittedForQcAt?: string | null;
   jobSpecificNotes?: string | null;
   property?: PropertyInstructions | null;
-  Customer?: CustomerInfo | null;
   location?: { city: string | null; state: string | null; areaLabel: string | null };
   Branch: {
     id: string;
@@ -81,6 +78,7 @@ interface Job {
 interface OfferPayload {
   offerId: string;
   jobId: string;
+  status?: string;
   serviceType: string | null;
   serviceDate: string;
   preferredTime: string | null;
@@ -125,6 +123,8 @@ export default function CleanerJobDetailPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [declineReason, setDeclineReason] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<"way" | "start" | "finish" | null>(null);
+  const [finishBlock, setFinishBlock] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -220,10 +220,7 @@ export default function CleanerJobDetailPage() {
   };
 
   const handleAccept = async () => {
-    if (!confirm("Accept this job? You'll be marked as on the way.")) {
-      return;
-    }
-
+    setConfirmAction(null);
     setProcessing(true);
     try {
       const res = await fetch(`/api/cleaner/jobs/${jobId}/accept`, {
@@ -237,7 +234,7 @@ export default function CleanerJobDetailPage() {
       }
 
       await fetchJob();
-      alert("Job accepted! You're now on the way.");
+      setFeedback("You're on the way.");
     } catch (err: unknown) {
       console.error("Failed to accept job:", err);
       alert(err instanceof Error ? err.message : "Failed to accept job");
@@ -247,10 +244,7 @@ export default function CleanerJobDetailPage() {
   };
 
   const handleStart = async () => {
-    if (!confirm("Start the job? This marks the service as in progress.")) {
-      return;
-    }
-
+    setConfirmAction(null);
     setProcessing(true);
     try {
       const res = await fetch(`/api/cleaner/jobs/${jobId}/start`, {
@@ -264,7 +258,7 @@ export default function CleanerJobDetailPage() {
       }
 
       await fetchJob();
-      alert("Job started! Service is now in progress.");
+      setFeedback("Job started. Service is in progress.");
     } catch (err: unknown) {
       console.error("Failed to start job:", err);
       alert(err instanceof Error ? err.message : "Failed to start job");
@@ -273,15 +267,29 @@ export default function CleanerJobDetailPage() {
     }
   };
 
-  const handleComplete = async () => {
-    if (
-      !confirm(
-        "Submit this job for QC? This does not invoice the customer. Admin reviews photos and checklist before billing."
-      )
-    ) {
-      return;
+  const loadFinishBlock = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/cleaner/jobs/${jobId}/photo-checklist`);
+      const data = await res.json();
+      if (!res.ok || !data.checklist?.finish) return;
+      setFinishBlock(
+        data.checklist.finish.ok ? null : finishPhotoBlockMessage(data.checklist.finish)
+      );
+    } catch {
+      setFinishBlock(null);
     }
+  }, [jobId]);
 
+  useEffect(() => {
+    if (job?.status === "IN_PROGRESS" && access === "ASSIGNED") {
+      void loadFinishBlock();
+    } else {
+      setFinishBlock(null);
+    }
+  }, [job?.status, access, jobId, loadFinishBlock]);
+
+  const handleComplete = async () => {
+    setConfirmAction(null);
     setProcessing(true);
     try {
       const res = await fetch(`/api/cleaner/jobs/${jobId}/complete`, {
@@ -294,15 +302,17 @@ export default function CleanerJobDetailPage() {
         const missing = Array.isArray(data.missingAfter)
           ? data.missingAfter.map((item: { label?: string }) => item.label).filter(Boolean)
           : [];
-        throw new Error(
+        const message =
           missing.length > 0
             ? `${data.error || "Finish blocked"} (${missing.join(", ")})`
-            : data.error || "Failed to complete job"
-        );
+            : data.error || "Failed to complete job";
+        setFinishBlock(message);
+        throw new Error(message);
       }
 
       await fetchJob();
-      alert(
+      setFinishBlock(null);
+      setFeedback(
         data.message ||
           "Submitted for QC. Admin still reviews completion before invoicing."
       );
@@ -369,7 +379,7 @@ export default function CleanerJobDetailPage() {
   const getStatusBadgeColor = (status: string) => {
     const colors: Record<string, string> = {
       ASSIGNED: "bg-vm-navy/10 text-vm-navy",
-      ON_THE_WAY: "bg-vm-cyan-tint text-blue-800",
+      ON_THE_WAY: "bg-vm-cyan-tint text-vm-navy",
       IN_PROGRESS: "bg-vm-warning-bg text-yellow-800",
       AWAITING_QC: "bg-amber-100 text-amber-900",
       COMPLETED: "bg-vm-success-bg text-vm-success",
@@ -378,15 +388,10 @@ export default function CleanerJobDetailPage() {
     return colors[status] || "bg-gray-100 text-vm-text";
   };
 
-  const customerDisplayName =
-    job?.Customer
-      ? `${job.Customer.firstName} ${job.Customer.lastName}`.trim()
-      : job?.customerName;
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-vm-navy" />
       </div>
     );
   }
@@ -397,7 +402,7 @@ export default function CleanerJobDetailPage() {
         <div className="max-w-4xl mx-auto">
           <Link
             href="/cleaner/jobs"
-            className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+            className="mb-4 inline-flex min-h-11 items-center font-body text-sm font-semibold text-vm-cyan-dark outline-none hover:underline focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
           >
             ← Back to Jobs
           </Link>
@@ -407,7 +412,7 @@ export default function CleanerJobDetailPage() {
           {error?.includes("log in") && (
             <Link
               href="/cleaners/login"
-              className="mt-4 inline-block text-blue-600 hover:text-blue-800 font-medium"
+              className="mt-4 inline-flex min-h-11 items-center font-body text-sm font-semibold text-vm-cyan-dark outline-none hover:underline focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
             >
               Go to cleaner login →
             </Link>
@@ -435,7 +440,7 @@ export default function CleanerJobDetailPage() {
         <div className="max-w-4xl mx-auto">
           <Link
             href="/cleaner/jobs"
-            className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+            className="mb-4 inline-flex min-h-11 items-center font-body text-sm font-semibold text-vm-cyan-dark outline-none hover:underline focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
           >
             ← Back to Jobs
           </Link>
@@ -464,133 +469,72 @@ export default function CleanerJobDetailPage() {
   if ((access === "OFFER" || access === "EXPIRED") && offer) {
     const offerExpired =
       access === "EXPIRED" || isOfferExpiredByTimestamp(offer, new Date(nowMs));
+    const amount = offer.compensation?.amount ?? offer.compensationAmount;
+    const currency =
+      offer.compensation?.currency || offer.compensationCurrency || "USD";
+    const basisLabel =
+      offer.compensation?.basisLabel ||
+      (offer.compensationBasis === "HOURLY"
+        ? "Hourly"
+        : offer.compensationBasis === "OTHER"
+          ? "Other"
+          : "Flat rate");
+    const area = offer.location.areaLabel || "Property";
+    const title = `${area} · ${offer.serviceDate}`;
+
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-4xl mx-auto">
-          <Link
-            href="/cleaner/jobs"
-            className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
-          >
-            ← Back to Jobs
-          </Link>
-          <h1 className="text-2xl font-semibold mb-2">
-            {offerExpired ? "Offer expired" : "Job offer"}
-          </h1>
-          <p className="text-vm-muted mb-6">
-            {offerExpired
-              ? "This offer has expired. Accept and Decline are disabled. Ops may send you another offer."
-              : "Accept to be assigned. Access codes and full address are shown after you accept."}
-          </p>
-          {error && (
-            <div className="mb-4 bg-vm-danger-bg border border-red-300 text-red-800 px-4 py-3 rounded">
-              {error}
-            </div>
+      <CleanerPortalChrome activeNav="Offers">
+        <CleanerOfferCard
+          title={title}
+          respondByLabel={formatRespondByLabel(
+            offer.expiresAt,
+            offerExpired,
+            new Date(nowMs)
           )}
-          {feedback && (
-            <div className="mb-4 bg-vm-success-bg border border-vm-success/30 text-vm-success px-4 py-3 rounded">
-              {feedback}
-            </div>
-          )}
-          <div className="bg-white rounded-lg shadow p-6 mb-6 space-y-3">
-            <p><span className="text-vm-muted">Service:</span> {offer.serviceType || "Cleaning"}</p>
-            <p><span className="text-vm-muted">Date:</span> {offer.serviceDate} {offer.preferredTime ? `at ${offer.preferredTime}` : ""}</p>
-            <p><span className="text-vm-muted">Area:</span> {offer.location.areaLabel || "See details after accept"}</p>
-            {offer.estimatedDurationMins != null && (
-              <p><span className="text-vm-muted">Est. duration:</span> {offer.estimatedDurationMins} min</p>
-            )}
-            <p>
-              <span className="text-vm-muted">Your pay:</span>{" "}
-              {formatPrice(
-                offer.compensation?.amount ?? offer.compensationAmount,
-                offer.compensation?.currency || offer.compensationCurrency
-              )}
-              {offer.compensation?.basisLabel
-                ? ` (${offer.compensation.basisLabel})`
-                : ""}
-            </p>
-            <p>
-              <span className="text-vm-muted">
-                {offerExpired ? "Expired at:" : "Respond by:"}
-              </span>{" "}
-              {new Date(offer.expiresAt).toLocaleString()}
-            </p>
-            {offer.operationalNotes && (
-              <p className="whitespace-pre-wrap"><span className="text-vm-muted">Notes:</span> {offer.operationalNotes}</p>
-            )}
-          </div>
-          {offerExpired ? (
-            <div className="space-y-3">
-              <p className="font-medium text-red-700">Expired — you cannot accept or decline this offer.</p>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  disabled
-                  className="px-6 py-3 rounded-lg font-semibold text-white bg-gray-400 cursor-not-allowed"
-                >
-                  Accept offer
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  className="px-6 py-3 rounded-lg font-semibold text-white bg-gray-400 cursor-not-allowed"
-                >
-                  Decline
-                </button>
-              </div>
-            </div>
-          ) : (
-          <div className="space-y-3">
-            <label className="block text-sm text-vm-muted">
-              Optional decline reason
-              <input
-                type="text"
-                value={declineReason}
-                onChange={(e) => setDeclineReason(e.target.value)}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-vm-text"
-                placeholder="Not needed if you accept"
-              />
-            </label>
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => void handleAcceptOffer()}
-                disabled={processing}
-                className="px-6 py-3 rounded-lg font-semibold text-white bg-vm-success disabled:bg-gray-400"
-              >
-                {processing ? "Processing..." : "Accept offer"}
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleDeclineOffer()}
-                disabled={processing}
-                className="px-6 py-3 rounded-lg font-semibold text-white bg-vm-danger disabled:bg-gray-400"
-              >
-                Decline
-              </button>
-            </div>
-          </div>
-          )}
-        </div>
-      </div>
+          compensationDisplay={formatPrice(amount, currency)}
+          compensationBasisLabel={basisLabel}
+          dateText={offer.serviceDate}
+          timeWindowText={offer.preferredTime || "Window not listed"}
+          areaText={area}
+          durationText={
+            formatOfferDuration(offer.estimatedDurationMins) ?? "Duration not listed"
+          }
+          jobTypeText={offer.serviceType || "Cleaning"}
+          expired={offerExpired}
+          processing={processing}
+          declineReason={declineReason}
+          onDeclineReasonChange={setDeclineReason}
+          onAccept={() => void handleAcceptOffer()}
+          onDecline={() => void handleDeclineOffer()}
+          error={error}
+          feedback={feedback}
+        />
+        <Link
+          href="/cleaner/jobs"
+          className="font-body text-sm font-semibold text-vm-cyan-dark outline-none hover:underline focus-visible:ring-2 focus-visible:ring-vm-cyan"
+        >
+          ← Back to jobs
+        </Link>
+      </CleanerPortalChrome>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen overflow-x-hidden bg-gray-50 p-4">
+      <div className="mx-auto max-w-4xl">
         <div className="mb-6">
           <Link
             href="/cleaner/jobs"
-            className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+            className="mb-4 inline-flex min-h-11 items-center font-body text-sm font-semibold text-vm-cyan-dark outline-none hover:underline focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
           >
             ← Back to Jobs
           </Link>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold mb-2">
-                {customerDisplayName || "Job Details"}
+                {job.property?.name?.trim() || "Job"}
               </h1>
-              <p className="text-vm-muted text-sm font-mono">{job.id}</p>
+              <p className="break-all font-mono text-sm text-vm-muted">{job.id}</p>
             </div>
             <span
               className={`px-3 py-1 rounded text-sm font-medium ${getStatusBadgeColor(
@@ -610,87 +554,73 @@ export default function CleanerJobDetailPage() {
 
         {(canAccept || canStart || canComplete || canDecline) && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="font-semibold mb-4">Actions</h2>
-            <div className="flex flex-wrap gap-4">
-              {canAccept && (
+            <h2 className="mb-4 font-body text-base font-semibold">Actions</h2>
+            {finishBlock ? (
+              <p className="mb-3 font-body text-sm text-vm-navy" role="status">
+                {finishBlock}
+              </p>
+            ) : null}
+            {confirmAction === "way" ? (
+              <div className="mb-3 flex flex-col gap-2">
+                <p className="font-body text-sm text-vm-navy">Mark yourself on the way?</p>
+                <button type="button" onClick={() => void handleAccept()} disabled={processing} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-vm-navy font-body text-sm font-semibold text-white">Yes</button>
+                <button type="button" onClick={() => setConfirmAction(null)} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border border-vm-line bg-white font-body text-sm font-semibold text-vm-navy">Cancel</button>
+              </div>
+            ) : null}
+            {confirmAction === "start" ? (
+              <div className="mb-3 flex flex-col gap-2">
+                <p className="font-body text-sm text-vm-navy">Start the job?</p>
+                <button type="button" onClick={() => void handleStart()} disabled={processing} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-vm-navy font-body text-sm font-semibold text-white">Yes</button>
+                <button type="button" onClick={() => setConfirmAction(null)} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border border-vm-line bg-white font-body text-sm font-semibold text-vm-navy">Cancel</button>
+              </div>
+            ) : null}
+            {confirmAction === "finish" ? (
+              <div className="mb-3 flex flex-col gap-2">
+                <p className="font-body text-sm text-vm-navy">Submit for QC? This does not invoice the customer.</p>
+                <button type="button" onClick={() => void handleComplete()} disabled={processing || Boolean(finishBlock)} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-vm-navy font-body text-sm font-semibold text-white disabled:opacity-50">Yes</button>
+                <button type="button" onClick={() => setConfirmAction(null)} className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border border-vm-line bg-white font-body text-sm font-semibold text-vm-navy">Cancel</button>
+              </div>
+            ) : null}
+            <div className="flex flex-col gap-3">
+              {canAccept && confirmAction !== "way" && (
                 <button
-                  onClick={handleAccept}
+                  onClick={() => setConfirmAction("way")}
                   disabled={processing}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
-                    processing
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-vm-success hover:bg-vm-success"
-                  }`}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  <CheckCircle className="w-5 h-5" />
-                  {processing ? "Processing..." : "Accept & On The Way"}
+                  <CheckCircle className="h-5 w-5" />
+                  {processing ? "Processing..." : "Accept and on the way"}
                 </button>
               )}
-              {canStart && (
+              {canStart && confirmAction !== "start" && (
                 <button
-                  onClick={handleStart}
+                  onClick={() => setConfirmAction("start")}
                   disabled={processing}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
-                    processing
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-vm-navy hover:bg-vm-navy"
-                  }`}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  <CheckCircle className="w-5 h-5" />
-                  {processing ? "Processing..." : "Start Job"}
+                  <CheckCircle className="h-5 w-5" />
+                  {processing ? "Processing..." : "Start job"}
                 </button>
               )}
-              {canComplete && (
+              {canComplete && confirmAction !== "finish" && (
                 <button
-                  onClick={handleComplete}
-                  disabled={processing}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
-                    processing
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-vm-success hover:bg-vm-success/90"
-                  }`}
+                  onClick={() => setConfirmAction("finish")}
+                  disabled={processing || Boolean(finishBlock)}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  <CheckCircle className="w-5 h-5" />
-                  {processing ? "Processing..." : "Finish Job (submit for QC)"}
+                  <CheckCircle className="h-5 w-5" />
+                  {processing ? "Processing..." : "Finish job"}
                 </button>
               )}
               {canDecline && (
                 <button
                   onClick={handleDecline}
                   disabled={processing}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
-                    processing
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-vm-danger hover:bg-vm-danger"
-                  }`}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-vm-danger px-4 font-body text-sm font-semibold text-white disabled:opacity-50"
                 >
                   <XCircle className="w-5 h-5" />
                   {processing ? "Processing..." : "Decline Job"}
                 </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {access === "ASSIGNED" && job.Customer && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="font-semibold text-lg mb-4">Customer</h2>
-            <div className="space-y-3">
-              {job.Customer?.email && (
-                <div className="flex items-center gap-2 text-vm-text">
-                  <Mail className="w-4 h-4 text-vm-muted" />
-                  <a href={`mailto:${job.Customer.email}`} className="hover:underline">
-                    {job.Customer.email}
-                  </a>
-                </div>
-              )}
-              {job.Customer?.phone && (
-                <div className="flex items-center gap-2 text-vm-text">
-                  <Phone className="w-4 h-4 text-vm-muted" />
-                  <a href={`tel:${job.Customer.phone}`} className="hover:underline">
-                    {job.Customer.phone}
-                  </a>
-                </div>
               )}
             </div>
           </div>
@@ -809,6 +739,9 @@ export default function CleanerJobDetailPage() {
                 jobId={jobId}
                 uploadedBy="cleaner"
                 slotMode={job.status === "IN_PROGRESS"}
+                onChanged={() => {
+                  if (job.status === "IN_PROGRESS") void loadFinishBlock();
+                }}
               />
               <EscalateIssueCard jobId={jobId} />
             </>

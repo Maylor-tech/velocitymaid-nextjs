@@ -86,7 +86,7 @@ export function JobChecklistPanel({ jobId, active = true }: JobChecklistPanelPro
     return (
       <div className="mt-4 flex items-center gap-2 text-vm-text/70">
         <Loader2 className="w-4 h-4 animate-spin" />
-        <span className="text-xs font-sans">Loading checklist…</span>
+        <span className="font-body text-sm">Loading checklist…</span>
       </div>
     );
   }
@@ -98,7 +98,7 @@ export function JobChecklistPanel({ jobId, active = true }: JobChecklistPanelPro
         <button
           type="button"
           onClick={fetchChecklist}
-          className="mt-2 text-xs font-bold uppercase tracking-wider text-vm-navy"
+          className="mt-2 inline-flex min-h-12 items-center font-body text-sm font-bold text-vm-navy"
         >
           Retry
         </button>
@@ -110,19 +110,19 @@ export function JobChecklistPanel({ jobId, active = true }: JobChecklistPanelPro
     <div className="mt-4">
       <div className="flex items-center justify-between gap-2 mb-2 min-h-[20px]">
         {panelState === "saving" && (
-          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-vm-text/50 flex items-center gap-1">
+          <span className="flex items-center gap-1 font-body text-sm font-bold text-vm-text">
             <Loader2 className="w-3 h-3 animate-spin" />
             Saving…
           </span>
         )}
         {savedHint && panelState === "ready" && (
-          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-vm-cyan flex items-center gap-1 ml-auto">
+          <span className="ml-auto flex items-center gap-1 font-body text-sm font-bold text-vm-cyan-dark">
             <Check className="w-3 h-3" />
             Saved
           </span>
         )}
         {error && panelState === "ready" && (
-          <span className="text-[10px] font-sans text-destructive ml-auto">{error}</span>
+          <span className="ml-auto font-body text-sm text-vm-danger">{error}</span>
         )}
       </div>
       <CareChecklist
@@ -130,6 +130,7 @@ export function JobChecklistPanel({ jobId, active = true }: JobChecklistPanelPro
         completedIds={completedIds}
         onToggle={handleToggle}
         title="50-Point Service Checklist"
+        readable
         defaultExpanded={false}
       />
     </div>

@@ -30,9 +30,9 @@ export function JobTimer({
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <p className="text-xs uppercase tracking-wide text-vm-muted">On-site time</p>
+      <p className="font-body text-sm uppercase tracking-wide text-vm-muted">On-site time</p>
       <p className="text-2xl font-semibold text-vm-navy mt-1 font-mono">{label}</p>
-      <p className="text-xs text-vm-muted mt-1">
+      <p className="mt-1 font-body text-sm text-vm-muted">
         From server start {new Date(startedAt).toLocaleTimeString()}
         {completedAt ? ` to ${new Date(completedAt).toLocaleTimeString()}` : ' (live from server timestamp)'}
       </p>

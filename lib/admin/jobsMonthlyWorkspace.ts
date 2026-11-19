@@ -9,6 +9,7 @@ import {
   easternDateKey,
   parseServiceDateInput,
   serviceDateKey,
+  serviceDayRelativeToEastern,
 } from '@/lib/dates/serviceDate';
 import { parsePreferredClockTime } from '@/lib/dates/preferredClock';
 
@@ -378,6 +379,113 @@ export function dayCountsFromJobs(
   return counts;
 }
 
+/** Sunday–Saturday week grid containing `anchorKey` (YYYY-MM-DD). */
+export function buildWeekCalendarGrid(
+  anchorKey: string,
+  now: Date = new Date()
+): CalendarCell[] {
+  const day = isDayKey(anchorKey) ? anchorKey : easternDateKey(now);
+  const parsed = parseServiceDateInput(day);
+  if (!parsed) return [];
+  const dow = parsed.getUTCDay(); // 0=Sun
+  const startKey = addCalendarDayKey(day, -dow);
+  const todayKey = easternDateKey(now);
+  const monthKey = day.slice(0, 7);
+  const cells: CalendarCell[] = [];
+  for (let i = 0; i < 7; i += 1) {
+    const key = addCalendarDayKey(startKey, i);
+    cells.push({
+      key,
+      dayOfMonth: Number(key.slice(8, 10)),
+      inMonth: key.startsWith(monthKey),
+      isToday: key === todayKey,
+    });
+  }
+  return cells;
+}
+
+export type WeekJobLabelInput = {
+  preferredDate: string | null;
+  property?: { name?: string | null; guestDisplayName?: string | null } | null;
+  customerName?: string | null;
+  serviceType?: string | null;
+};
+
+function weekJobChipLabel(job: WeekJobLabelInput): string {
+  return (
+    job.property?.name ||
+    job.property?.guestDisplayName ||
+    job.customerName ||
+    job.serviceType ||
+    'Job'
+  );
+}
+
+/** All job chip labels per day (full labels, no truncation). */
+export function weekDayJobChipsFromJobs(
+  jobs: WeekJobLabelInput[]
+): Record<string, string[]> {
+  const byDay: Record<string, string[]> = {};
+  for (const job of jobs) {
+    if (!job.preferredDate) continue;
+    const key =
+      serviceDateKey(job.preferredDate) ??
+      (typeof job.preferredDate === 'string'
+        ? job.preferredDate.slice(0, 10)
+        : null);
+    if (!key) continue;
+    if (!byDay[key]) byDay[key] = [];
+    byDay[key].push(weekJobChipLabel(job));
+  }
+  return byDay;
+}
+
+/**
+ * Visible chips for a calendar day: up to `maxVisible` property labels,
+ * then a "+N more" overflow chip. Never uses "×N" on the first label.
+ */
+export function weekDayVisibleChips(
+  chips: string[],
+  maxVisible = 2
+): { shown: string[]; moreLabel: string | null } {
+  if (chips.length <= maxVisible) {
+    return { shown: chips, moreLabel: null };
+  }
+  const overflow = chips.length - maxVisible;
+  return {
+    shown: chips.slice(0, maxVisible),
+    moreLabel: `+${overflow} more`,
+  };
+}
+
+/**
+ * @deprecated Prefer weekDayJobChipsFromJobs + weekDayVisibleChips.
+ * Kept for single-label call sites; multi-job days return the first label only.
+ */
+export function weekDayLabelsFromJobs(
+  jobs: WeekJobLabelInput[]
+): Record<string, string> {
+  const byDay = weekDayJobChipsFromJobs(jobs);
+  const out: Record<string, string> = {};
+  for (const [key, labels] of Object.entries(byDay)) {
+    out[key] = labels[0];
+  }
+  return out;
+}
+
+/** Title fragment like "week of the 15th" for the week starting at startKey. */
+export function weekOfLabel(startKey: string): string {
+  if (!isDayKey(startKey)) return 'this week';
+  const day = Number(startKey.slice(8, 10));
+  const j = day % 10;
+  const k = day % 100;
+  let suffix = 'th';
+  if (j === 1 && k !== 11) suffix = 'st';
+  else if (j === 2 && k !== 12) suffix = 'nd';
+  else if (j === 3 && k !== 13) suffix = 'rd';
+  return `week of the ${day}${suffix}`;
+}
+
 export function clampPageSize(raw: number | null | undefined, fallback = 50): number {
   if (!raw || Number.isNaN(raw)) return fallback;
   return Math.min(100, Math.max(1, Math.floor(raw)));
@@ -386,4 +494,143 @@ export function clampPageSize(raw: number | null | undefined, fallback = 50): nu
 export function clampPage(raw: number | null | undefined): number {
   if (!raw || Number.isNaN(raw) || raw < 1) return 1;
   return Math.floor(raw);
+}
+
+/** Fields the monthly jobs payload must carry for the Reports and invoices panel. */
+export const monthlyJobReportInvoiceSelect = {
+  CompletionReport: {
+    select: { status: true, sentAt: true },
+  },
+  Invoice: {
+    select: { status: true, sentAt: true },
+  },
+} as const;
+
+export type MonthlyReportSend = {
+  status: string;
+  sentAt: string | null;
+};
+
+export type ReportInvoiceJob = {
+  id: string;
+  status: string;
+  preferredDate: string | null;
+  completionReport: MonthlyReportSend | null;
+  invoice: { status: string; sentAt: string | null } | null;
+};
+
+export type ReportInvoiceDescription = {
+  reportSentAt: string | null;
+  invoiceSentAt: string | null;
+  reportLabel: string;
+  invoiceLabel: string;
+  warn: boolean;
+};
+
+function parseSentInstant(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return null;
+  return new Date(time).toISOString();
+}
+
+/** Eastern clock time. Invalid or missing values stay blank so the UI can say the item was not sent. */
+export function formatDeskSentAt(value: string | null | undefined): string | null {
+  const iso = parseSentInstant(value);
+  if (!iso) return null;
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+    .format(new Date(iso))
+    .replace(/\u202f/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function monthlyReportInvoiceFields(row: {
+  CompletionReport: { status: string; sentAt: Date | null } | null;
+  Invoice: { status: string; sentAt: Date | null } | null;
+}): Pick<ReportInvoiceJob, 'completionReport' | 'invoice'> {
+  return {
+    completionReport: row.CompletionReport
+      ? {
+          status: row.CompletionReport.status,
+          sentAt: row.CompletionReport.sentAt?.toISOString() ?? null,
+        }
+      : null,
+    invoice: row.Invoice
+      ? {
+          status: row.Invoice.status,
+          sentAt: row.Invoice.sentAt?.toISOString() ?? null,
+        }
+      : null,
+  };
+}
+
+/**
+ * Report is sent only when sentAt is a real instant.
+ * Status alone never supplies a time.
+ */
+export function describeReportInvoice(
+  job: Pick<ReportInvoiceJob, 'completionReport' | 'invoice'>
+): ReportInvoiceDescription {
+  const reportSentAt = parseSentInstant(job.completionReport?.sentAt);
+  const invoiceSentAt = parseSentInstant(job.invoice?.sentAt);
+  const reportClock = formatDeskSentAt(reportSentAt);
+  const invoiceClock = formatDeskSentAt(invoiceSentAt);
+  const warn =
+    invoiceSentAt != null &&
+    (reportSentAt == null ||
+      new Date(reportSentAt).getTime() > new Date(invoiceSentAt).getTime());
+
+  return {
+    reportSentAt,
+    invoiceSentAt,
+    reportLabel: reportClock ? `Report sent ${reportClock}` : 'Report not sent',
+    invoiceLabel: invoiceClock ? `Invoice sent ${invoiceClock}` : 'Invoice not sent',
+    warn,
+  };
+}
+
+function reportInvoiceRank(described: ReportInvoiceDescription): number {
+  if (described.warn) return 0;
+  if (!described.reportSentAt) return 1;
+  return 2;
+}
+
+/**
+ * Completed jobs whose service date is today or earlier in Eastern time.
+ * A missing service date is not treated as today.
+ */
+export function isReportInvoiceListed(
+  job: Pick<ReportInvoiceJob, 'status' | 'preferredDate'>,
+  asOf: Date = new Date()
+): boolean {
+  if (job.status !== 'COMPLETED') return false;
+  const relation = serviceDayRelativeToEastern(job.preferredDate, asOf);
+  return relation === 'today' || relation === 'past';
+}
+
+/** Listed jobs only. Warnings first, then reports not sent, then report-before-invoice. */
+export function orderCompletedReportInvoiceJobs<T extends ReportInvoiceJob>(
+  jobs: T[],
+  asOf: Date = new Date()
+): T[] {
+  return jobs
+    .filter((job) => isReportInvoiceListed(job, asOf))
+    .map((job) => ({ job, described: describeReportInvoice(job) }))
+    .sort((a, b) => {
+      const rank = reportInvoiceRank(a.described) - reportInvoiceRank(b.described);
+      if (rank !== 0) return rank;
+      const dateA = a.job.preferredDate ?? '9999-99-99';
+      const dateB = b.job.preferredDate ?? '9999-99-99';
+      if (dateA !== dateB) return dateA < dateB ? -1 : 1;
+      if (a.job.id === b.job.id) return 0;
+      return a.job.id < b.job.id ? -1 : 1;
+    })
+    .map((entry) => entry.job);
 }

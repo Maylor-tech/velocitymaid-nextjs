@@ -33,7 +33,6 @@ export async function GET(
       select: {
         id: true,
         status: true,
-        customerName: true,
         serviceType: true,
         serviceLocation: true,
         preferredDate: true,
@@ -55,15 +54,6 @@ export async function GET(
         jobReference: true,
         Branch: {
           select: { id: true, name: true },
-        },
-        Customer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
         },
         Property: true,
         JobOffer: {
@@ -252,7 +242,6 @@ export async function GET(
       id: job.id,
       status: job.status,
       jobReference: job.jobReference,
-      customerName: job.customerName,
       serviceType: job.serviceType,
       serviceLocation: job.serviceLocation,
       preferredDate: job.preferredDate?.toISOString() ?? null,
@@ -276,7 +265,6 @@ export async function GET(
       compensationAmount: compensation?.amount ?? null,
       compensationCurrency: compensation?.currency ?? null,
       compensationBasis: compensation?.basis ?? null,
-      Customer: job.Customer,
       Branch: job.Branch,
     };
 

@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Camera, Loader2 } from 'lucide-react';
 import { CLEAN_PHOTO_CATEGORIES } from '@/lib/photos/cleanPhotoStorage';
+import {
+  FLAG_NOTE_MAX,
+  FLAG_NOTE_PLACEHOLDER,
+  photoFlagNoteError,
+} from '@/lib/flags/jobFlagRules';
 import { useJobPhotoUpload } from '@/lib/photos/useJobPhotoUpload';
 import {
   PhotoQueueGrid,
@@ -31,10 +36,12 @@ export function JobPhotoCapture({
   jobId,
   uploadedBy,
   slotMode = false,
+  onChanged,
 }: {
   jobId: string;
   uploadedBy?: string;
   slotMode?: boolean;
+  onChanged?: () => void;
 }) {
   const [category, setCategory] = useState('AFTER');
   const upload = useJobPhotoUpload(jobId, category);
@@ -42,6 +49,9 @@ export function JobPhotoCapture({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [checklist, setChecklist] = useState<ChecklistPayload | null>(null);
   const [issueNote, setIssueNote] = useState("");
+  const [flagNote, setFlagNote] = useState("");
+  const needsFlagNote =
+    category === "DAMAGE" || category === "SUPPLY" || category === "ISSUE";
 
   const loadChecklist = useCallback(async () => {
     if (!slotMode) return;
@@ -63,7 +73,15 @@ export function JobPhotoCapture({
 
   const handleUpload = async () => {
     setSubmitError(null);
-    const { hasFailures } = await upload.uploadAll(uploadedBy);
+    const noteError = photoFlagNoteError(category, flagNote);
+    if (noteError) {
+      setSubmitError(noteError);
+      return;
+    }
+    const { hasFailures } = await upload.uploadAll(
+      uploadedBy,
+      needsFlagNote ? flagNote.trim() : undefined
+    );
     if (hasFailures) {
       setSubmitError('Some photos failed. Retry, then submit again.');
     }
@@ -89,7 +107,10 @@ export function JobPhotoCapture({
             onIssueNote={setIssueNote}
             showIssueNote={checklist?.arrivalCondition === "ISSUES"}
             uploadedBy={uploadedBy}
-            onUploaded={() => void loadChecklist()}
+            onUploaded={() => {
+              void loadChecklist();
+              onChanged?.();
+            }}
           />
         </>
       )}
@@ -99,7 +120,7 @@ export function JobPhotoCapture({
             key={c}
             type="button"
             onClick={() => setCategory(c)}
-            className={`px-3 py-1 rounded-full text-sm ${
+            className={`inline-flex min-h-[44px] items-center rounded-full px-3 text-sm ${
               category === c
                 ? 'bg-vm-navy text-white'
                 : 'bg-gray-100 text-vm-text'
@@ -109,10 +130,26 @@ export function JobPhotoCapture({
           </button>
         ))}
       </div>
+      {needsFlagNote ? (
+        <div className="mb-4">
+          <label htmlFor="flag-photo-note" className="mb-1 block font-body text-sm text-vm-navy">
+            What did you notice?
+          </label>
+          <input
+            id="flag-photo-note"
+            value={flagNote}
+            maxLength={FLAG_NOTE_MAX}
+            onChange={(event) => setFlagNote(event.target.value)}
+            placeholder={FLAG_NOTE_PLACEHOLDER}
+            className="min-h-[44px] w-full rounded-[10px] border border-vm-line bg-vm-surface px-3 font-body text-sm text-vm-navy outline-none focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
+          />
+        </div>
+      ) : null}
       <input
         ref={inputRef}
         type="file"
         accept="image/*,video/mp4,video/quicktime"
+        capture="environment"
         multiple
         className="hidden"
         onChange={(e) => {
@@ -123,7 +160,7 @@ export function JobPhotoCapture({
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300"
+        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] border border-vm-line px-4 font-body text-sm font-semibold text-vm-navy"
       >
         <Camera className="h-4 w-4" />
         Add more photos
@@ -133,14 +170,16 @@ export function JobPhotoCapture({
       <PhotoQueueGrid
         items={upload.items}
         onRemove={upload.removeAt}
-        onRetry={(key) => upload.retryOne(key, uploadedBy)}
+        onRetry={(key) =>
+          upload.retryOne(key, uploadedBy, needsFlagNote ? flagNote.trim() : undefined)
+        }
       />
       {upload.readyCount > 0 && (
         <button
           type="button"
           onClick={() => void handleUpload()}
           disabled={upload.uploading}
-          className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-vm-navy text-white rounded-lg disabled:opacity-50"
+          className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white disabled:opacity-50"
         >
           {upload.uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Upload {upload.readyCount}
