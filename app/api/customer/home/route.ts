@@ -189,12 +189,13 @@ export async function GET(request: NextRequest) {
     const isCompleted = focusJob?.status === JobStatus.COMPLETED;
     const hasReport = Boolean(focusJob?.CompletionReport);
 
+    const cleanedStatuses: JobStatus[] = [
+      JobStatus.IN_PROGRESS,
+      JobStatus.ON_THE_WAY,
+      JobStatus.COMPLETED,
+    ];
     const propertyStatus = {
-      cleaned: focusJob
-        ? [JobStatus.IN_PROGRESS, JobStatus.ON_THE_WAY, JobStatus.COMPLETED].includes(
-            focusJob.status
-          )
-        : false,
+      cleaned: focusJob ? cleanedStatuses.includes(focusJob.status) : false,
       inspected: hasReport || checklistDone,
       photosUploaded: photoCount > 0,
       guestReady:
@@ -254,7 +255,7 @@ export async function GET(request: NextRequest) {
               invoiceCount: invoiceBalances._count,
             }
           : null,
-      recentReports: recentReports.map(serializeCompletionReport),
+      recentReports: recentReports.map((report) => serializeCompletionReport(report)),
       propertyStatus,
       assignedTeam,
     });

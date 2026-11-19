@@ -14,7 +14,8 @@ const NAV = [
   {
     href: '/cleaner/jobs',
     label: 'Assignments',
-    match: (p: string) => false,
+    // Shares /cleaner/jobs with My Work and Offers, so the URL never selects it.
+    match: (p: string) => p === '',
   },
   {
     href: '/cleaner/earnings',
