@@ -7,6 +7,7 @@ import { loadJobPhotoChecklist } from "@/lib/photos/jobPhotoChecklist";
 import { submitJobForQc } from "@/lib/jobs/submitJobForQc";
 import { nextReportNumber } from "@/lib/billing/numbering";
 import { sendJobReportLinkEmail } from "@/lib/email/sendJobReportLinkEmail";
+import { markOpenFlagsIncludedInReport } from "@/lib/flags/jobFlags.server";
 import type { ReportPhoto } from "@/lib/billing/serializeCompletionReport";
 
 export const runtime = "nodejs";
@@ -195,12 +196,21 @@ export async function POST(
           { status: 502 }
         );
       }
+      const flags = await markOpenFlagsIncludedInReport({
+        jobId,
+        actorId: admin.userId,
+      });
       const report = await prisma.completionReport.update({
         where: { id: review.job.CompletionReport.id },
         data: { status: "SENT", sentAt: new Date() },
         select: { status: true, publicToken: true, sentAt: true },
       });
-      return NextResponse.json({ success: true, sent: true, report });
+      return NextResponse.json({
+        success: true,
+        sent: true,
+        report,
+        flagsMarked: flags.marked,
+      });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

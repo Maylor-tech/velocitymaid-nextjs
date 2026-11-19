@@ -3,6 +3,7 @@ import { logAuditEntry } from '@/lib/audit';
 import {
   ensureArrivalFlag,
   ensurePhotoFlag,
+  flagsAwaitingReportNotice,
   markHostNotified,
   resolveFlag,
   type FlagRow,
@@ -99,6 +100,35 @@ export async function recordArrivalFlag(input: {
     if (!isForeignKeyError(error) || !input.createdById) throw error;
     return ensureArrivalFlag(writer(), { ...input, createdById: null });
   }
+}
+
+/** After the report email is sent. Earlier notices and resolved flags are left alone. */
+export async function markOpenFlagsIncludedInReport(input: {
+  jobId: string;
+  actorId: string;
+}): Promise<{ marked: number }> {
+  const rows = await prisma.jobFlag.findMany({ where: { jobId: input.jobId } });
+  const waiting = flagsAwaitingReportNotice(rows.map(toFlagRow));
+  let marked = 0;
+  for (const flag of waiting) {
+    const result = await markHostNotified(writer(), {
+      flag,
+      channel: 'IN_REPORT',
+      actorId: input.actorId,
+    });
+    if (!result.changed) continue;
+    marked += 1;
+    await logAuditEntry({
+      actorId: input.actorId,
+      actorRole: 'ADMIN',
+      action: 'JOB_FLAG_HOST_NOTIFIED',
+      entityType: 'JobFlag',
+      entityId: flag.id,
+      description: 'Host notified by IN_REPORT',
+      changes: { channel: 'IN_REPORT', jobId: input.jobId },
+    });
+  }
+  return { marked };
 }
 
 export async function notifyHostOfFlag(input: {

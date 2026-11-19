@@ -8,6 +8,7 @@ import {
   flagNote,
   arrivalNoteError,
   photoFlagNoteError,
+  flagsAwaitingReportNotice,
   markHostNotified,
   resolveFlag,
   type FlagRow,
@@ -204,5 +205,21 @@ describe('job flags', () => {
       { id: 'mid', createdAt: '2026-11-10T00:00:00.000Z', resolvedAt: null },
     ]);
     expect(ordered.map((item) => item.id)).toEqual(['newer', 'mid']);
+  });
+
+  it('marks only open flags that have not already been told', () => {
+    const open = row({ id: 'open' });
+    const told = row({
+      id: 'told',
+      hostNotifiedAt: new Date('2026-11-18T15:00:00.000Z'),
+      hostNotifiedChannel: 'EMAIL',
+    });
+    const resolved = row({
+      id: 'done',
+      resolvedAt: new Date('2026-11-18T16:00:00.000Z'),
+    });
+    expect(flagsAwaitingReportNotice([open, told, resolved]).map((flag) => flag.id)).toEqual([
+      'open',
+    ]);
   });
 });

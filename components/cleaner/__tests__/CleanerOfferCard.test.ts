@@ -25,7 +25,7 @@ describe('formatOfferLifecycleForCleaner', () => {
   it('uses the five-stage admin labels without inventing delivery', () => {
     const label = formatOfferLifecycleForCleaner({
       status: 'OFFERED',
-      expiresAt: '2026-11-19T00:00:00.000Z',
+      expiresAt: '2027-06-01T00:00:00.000Z',
       expired: false,
     });
     expect(label).toContain('Offer created');

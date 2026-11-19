@@ -4,6 +4,7 @@ import { CompensationRequiredError } from '@/lib/dispatch/compensation';
 import {
   defaultCleanerDurationMins,
   defaultCleanerOfferPay,
+  formatOfferDuration,
   resolvePayOverrideReason,
 } from '@/lib/dispatch/cleanerOfferDefaults';
 
@@ -44,5 +45,12 @@ describe('default cleaner duration', () => {
     expect(defaultCleanerDurationMins({ bedrooms: 4, largeFourBedroom: true })).toBe(420);
     expect(defaultCleanerDurationMins({ bedrooms: 4, cleanerCount: 2 })).toBe(180);
     expect(defaultCleanerDurationMins({ bedrooms: 1 })).toBeNull();
+  });
+
+  it('shows hours on the offer card', () => {
+    expect(formatOfferDuration(360)).toBe('6 hours');
+    expect(formatOfferDuration(60)).toBe('1 hour');
+    expect(formatOfferDuration(90)).toBe('1.5 hours');
+    expect(formatOfferDuration(null)).toBeNull();
   });
 });

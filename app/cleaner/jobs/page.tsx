@@ -7,6 +7,7 @@ import Link from "next/link";
 import CleanerPortalNav from "@/components/cleaner/CleanerPortalNav";
 import TrainingIncompleteBanner from "@/components/cleaner/TrainingIncompleteBanner";
 import { formatServiceDate } from "@/lib/dates/serviceDate";
+import { formatOfferDuration } from "@/lib/dispatch/cleanerOfferDefaults";
 
 interface Job {
   id: string;
@@ -448,11 +449,11 @@ export default function CleanerJobsPage() {
                             ? ` (${offer.compensation.basisLabel})`
                             : ""}
                         </p>
-                        {offer.estimatedDurationMins != null && (
+                        {formatOfferDuration(offer.estimatedDurationMins) ? (
                           <p className="text-sm text-vm-muted mt-1">
-                            Est. {offer.estimatedDurationMins} min
+                            Est. {formatOfferDuration(offer.estimatedDurationMins)}
                           </p>
-                        )}
+                        ) : null}
                       </div>
                       <span className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white sm:w-auto">
                         Review offer →

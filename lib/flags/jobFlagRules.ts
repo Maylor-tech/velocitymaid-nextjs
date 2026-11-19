@@ -193,6 +193,11 @@ export async function ensureArrivalFlag(
   }
 }
 
+/** Open flags with no earlier notice. Already told, and resolved flags, stay as they are. */
+export function flagsAwaitingReportNotice(flags: FlagRow[]): FlagRow[] {
+  return flags.filter((flag) => flag.resolvedAt == null && flag.hostNotifiedAt == null);
+}
+
 export async function markHostNotified(
   db: FlagWriter,
   input: {

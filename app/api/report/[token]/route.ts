@@ -2,34 +2,20 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { serializeCompletionReport } from '@/lib/billing/serializeCompletionReport';
+import { loadHostPhotoReport } from '@/lib/reports/loadHostPhotoReport';
+
+const ROBOTS = { 'X-Robots-Tag': 'noindex, nofollow, noarchive' };
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: { token: string } }
 ) {
-  const report = await prisma.completionReport.findUnique({
-    where: { publicToken: params.token },
-    include: {
-      Job: {
-        select: {
-          arrivalCondition: true,
-          reviewStatus: true,
-          Invoice: { select: { publicToken: true } },
-        },
-      },
-    },
-  });
+  const report = await loadHostPhotoReport(params.token);
   if (!report) {
-    return NextResponse.json({ success: false, error: 'Report not found' }, { status: 404 });
+    return NextResponse.json(
+      { success: false, error: 'Report not found' },
+      { status: 404, headers: ROBOTS }
+    );
   }
-  return NextResponse.json({
-    success: true,
-    report: serializeCompletionReport(report, {
-      arrivalCondition: report.Job.arrivalCondition,
-      reviewStatus: report.Job.reviewStatus,
-      invoicePublicToken: report.Job.Invoice?.publicToken ?? null,
-    }),
-  });
+  return NextResponse.json({ success: true, report }, { headers: ROBOTS });
 }

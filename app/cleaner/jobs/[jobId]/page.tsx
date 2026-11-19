@@ -11,6 +11,7 @@ import { JobPhotoCapture } from "@/components/cleaner/JobPhotoCapture";
 import { EscalateIssueCard } from "@/components/cleaner/EscalateIssueCard";
 import { JobPacketCard } from "@/components/cleaner/JobPacketCard";
 import { isOfferExpiredByTimestamp } from "@/lib/dispatch/offerExpiry";
+import { formatOfferDuration } from "@/lib/dispatch/cleanerOfferDefaults";
 import { finishPhotoBlockMessage } from "@/lib/photos/propertyPhotoSlots";
 import { CleanerPortalChrome } from "@/components/cleaner/CleanerPortalChrome";
 import {
@@ -496,9 +497,7 @@ export default function CleanerJobDetailPage() {
           timeWindowText={offer.preferredTime || "Window not listed"}
           areaText={area}
           durationText={
-            offer.estimatedDurationMins != null
-              ? `${offer.estimatedDurationMins} min`
-              : "Duration not listed"
+            formatOfferDuration(offer.estimatedDurationMins) ?? "Duration not listed"
           }
           jobTypeText={offer.serviceType || "Cleaning"}
           expired={offerExpired}

@@ -73,3 +73,11 @@ export function defaultCleanerDurationMins(input: {
   const count = Math.max(1, Math.floor(input.cleanerCount ?? 1));
   return Math.round((hours * 60) / count);
 }
+
+/** Offer card duration. 360 → "6 hours". 60 → "1 hour". */
+export function formatOfferDuration(mins: number | null | undefined): string | null {
+  if (mins == null || !Number.isFinite(mins) || mins <= 0) return null;
+  const hours = Math.round((mins / 60) * 10) / 10;
+  const text = Number.isInteger(hours) ? String(hours) : String(hours);
+  return `${text} ${hours === 1 ? 'hour' : 'hours'}`;
+}

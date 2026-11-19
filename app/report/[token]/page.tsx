@@ -1,58 +1,39 @@
-'use client';
+import type { Metadata } from 'next';
+import { HostPhotoReport } from '@/components/reports/HostPhotoReport';
+import { loadHostPhotoReport } from '@/lib/reports/loadHostPhotoReport';
 
-import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import type { SerializedCompletionReport } from '@/lib/billing/serializeCompletionReport';
-import { CustomerReportView } from '@/components/customer/CustomerReportView';
-import { formatServiceDate } from '@/lib/dates/serviceDate';
+export const dynamic = 'force-dynamic';
 
-function reportTitle(report: SerializedCompletionReport): string {
-  const shortDate = formatServiceDate(report.serviceDate, {
-    month: 'short',
-    day: 'numeric',
-  });
-  return `${report.propertyAddress} · ${shortDate}`;
+const NOINDEX: Metadata = {
+  title: 'Report | VelocityMaid',
+  robots: { index: false, follow: false, nocache: true },
+};
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { token: string };
+}): Promise<Metadata> {
+  const report = await loadHostPhotoReport(params.token);
+  if (!report) return NOINDEX;
+  return {
+    title: `${report.propertyName} · VelocityMaid`,
+    robots: { index: false, follow: false, nocache: true },
+  };
 }
 
-export default function PublicReportPage({ params }: { params: { token: string } }) {
-  const [report, setReport] = useState<SerializedCompletionReport | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`/api/report/${params.token}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) setReport(d.report);
-      })
-      .finally(() => setLoading(false));
-  }, [params.token]);
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-vm-canvas">
-        <Loader2 className="h-8 w-8 animate-spin text-vm-cyan" />
-      </div>
-    );
-  }
-
+export default async function PublicReportPage({
+  params,
+}: {
+  params: { token: string };
+}) {
+  const report = await loadHostPhotoReport(params.token);
   if (!report) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-vm-canvas p-6">
-        <p className="font-body text-vm-muted">Report not found.</p>
+        <p className="font-body text-sm text-vm-text">Report not found.</p>
       </div>
     );
   }
-
-  return (
-    <CustomerReportView
-      report={report}
-      title={reportTitle(report)}
-      activeNav="Reports"
-      pdfHref={
-        report.reviewStatus === 'APPROVED'
-          ? `/api/report/${params.token}/pdf`
-          : null
-      }
-    />
-  );
+  return <HostPhotoReport report={report} />;
 }

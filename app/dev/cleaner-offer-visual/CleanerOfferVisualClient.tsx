@@ -18,7 +18,7 @@ export function CleanerOfferVisualClient() {
         dateText="Wed, Nov 18, 2026"
         timeWindowText="10:00–16:00"
         areaText="Stowe"
-        durationText="150 min"
+        durationText="2.5 hours"
         jobTypeText="Vacation-rental turnover"
         processing={processing}
         declineReason={declineReason}
