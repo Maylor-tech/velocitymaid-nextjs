@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildHostPhotoReport, cleanerFirstName } from '@/lib/reports/hostPhotoReport';
+import {
+  buildHostPhotoReport,
+  cleanerFirstName,
+  paypalAmountUrl,
+  ZELLE_RECIPIENT_NAME,
+} from '@/lib/reports/hostPhotoReport';
 import {
   missingHostPaymentDetails,
   readHostPaymentConfig,
@@ -65,6 +70,7 @@ const base = {
     },
   ],
   invoice: {
+    invoiceNumber: 'STG-INV-WALK-01',
     total: 390,
     balanceDue: 390,
     publicToken: 'inv_public_token_00000001',
@@ -113,6 +119,37 @@ describe('host photo report', () => {
     expect(report.supplies).toEqual(['Paper towels']);
   });
 
+  it('merges notices whose notes match aside from case and spaces', () => {
+    const report = buildHostPhotoReport({
+      ...base,
+      flags: [
+        {
+          id: 'flag-arrival',
+          kind: 'ARRIVAL',
+          note: '  Cracked   lamp shade, living room ',
+          photoId: null,
+        },
+        {
+          id: 'flag-damage',
+          kind: 'DAMAGE',
+          note: 'cracked lamp shade, living room',
+          photoId: 'damage-photo',
+        },
+        base.flags[1]!,
+      ],
+    });
+    expect(report.notices).toEqual([
+      {
+        id: 'flag-arrival',
+        note: 'Cracked lamp shade, living room',
+        photo: {
+          url: 'https://example.test/lamp.jpg',
+          alt: 'Cracked lamp shade, living room',
+        },
+      },
+    ]);
+  });
+
   it('says nothing to report when there are no notice flags', () => {
     const report = buildHostPhotoReport({
       ...base,
@@ -138,7 +175,7 @@ describe('host photo report', () => {
         },
       ],
     });
-    expect(report.before).toEqual([{ url: 'https://example.test/before.jpg', alt: 'Before' }]);
+    expect(report.before).toEqual([{ url: 'https://example.test/before.jpg', alt: 'On arrival' }]);
     expect(
       report.rooms.every((room) =>
         room.before.every((photo) => photo.url !== 'https://example.test/before.jpg')
@@ -159,11 +196,19 @@ describe('host photo report', () => {
 
   it('shows the invoice amount and only configured payment options', () => {
     const report = buildHostPhotoReport(base);
+    expect(ZELLE_RECIPIENT_NAME).toBe('VelocityMaid LLC');
+    expect(paypalAmountUrl('https://paypal.me/velocitymaid/', 390)).toBe(
+      'https://paypal.me/velocitymaid/390.00'
+    );
+    expect(paypalAmountUrl(null, 390)).toBeNull();
     expect(report.payment).toEqual({
       amount: '$390.00',
+      invoiceNumber: 'STG-INV-WALK-01',
+      dueLabel: 'Due on receipt',
       paid: false,
       zelleHandle: 'pay@velocitymaid.test',
-      paypalUrl: 'https://paypal.me/velocitymaid',
+      zelleRecipient: 'VelocityMaid LLC',
+      paypalUrl: 'https://paypal.me/velocitymaid/390.00',
       cardToken: 'inv_public_token_00000001',
     });
     const hidden = buildHostPhotoReport({
@@ -172,7 +217,10 @@ describe('host photo report', () => {
     });
     expect(hidden.payment).toMatchObject({
       amount: '$390.00',
+      invoiceNumber: 'STG-INV-WALK-01',
+      dueLabel: 'Due on receipt',
       zelleHandle: null,
+      zelleRecipient: null,
       paypalUrl: null,
       cardToken: null,
     });

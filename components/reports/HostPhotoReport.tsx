@@ -27,6 +27,36 @@ function PhotoFrame({
   );
 }
 
+function ZellePay({ handle, recipient }: { handle: string; recipient: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(handle);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <div>
+      <p className="font-body text-base text-vm-text">Zelle is our preferred way to pay.</p>
+      <p className="mt-1 font-body text-base font-semibold text-vm-navy">{recipient}</p>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <p className="min-w-0 break-all font-body text-base text-vm-navy">{handle}</p>
+        <button
+          type="button"
+          onClick={() => void copy()}
+          className={`inline-flex min-h-11 shrink-0 items-center justify-center rounded-[10px] border border-vm-line bg-white px-4 font-body text-sm font-semibold text-vm-navy ${FOCUS}`}
+        >
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function CardPay({ invoiceToken }: { invoiceToken: string }) {
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -106,6 +136,25 @@ export function HostPhotoReport({ report }: { report: HostPhotoReport }) {
           ) : null}
         </header>
 
+        {report.before.length > 0 ? (
+          <section className="mb-6" aria-labelledby="arrival-heading">
+            <div className="rounded-[14px] border border-vm-line bg-white p-4">
+              <h2
+                id="arrival-heading"
+                className="font-heading text-lg font-bold tracking-tight text-vm-navy"
+              >
+                On arrival
+              </h2>
+              <p className="mt-1 font-body text-sm text-vm-text">How we found the property.</p>
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {report.before.map((photo) => (
+                  <PhotoFrame key={photo.url} photo={photo} onOpen={setOpen} />
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         <section className="mb-6" aria-labelledby="rooms-heading">
           <h2
             id="rooms-heading"
@@ -114,18 +163,6 @@ export function HostPhotoReport({ report }: { report: HostPhotoReport }) {
             Room by room
           </h2>
           <div className="flex flex-col gap-3">
-            {report.before.length > 0 ? (
-              <div className="rounded-[14px] border border-vm-line bg-white p-4">
-                <h3 className="font-heading text-lg font-bold tracking-tight text-vm-navy">
-                  Before
-                </h3>
-                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {report.before.map((photo) => (
-                    <PhotoFrame key={photo.url} photo={photo} onOpen={setOpen} />
-                  ))}
-                </div>
-              </div>
-            ) : null}
             {report.rooms.map((room) => (
               <div
                 key={room.key}
@@ -190,18 +227,14 @@ export function HostPhotoReport({ report }: { report: HostPhotoReport }) {
           )}
         </section>
 
-        <section className="mb-6" aria-labelledby="supplies-heading">
-          <h2
-            id="supplies-heading"
-            className="mb-3 font-heading text-xl font-bold tracking-tight text-vm-navy"
-          >
-            Supplies running low
-          </h2>
-          {report.supplies.length === 0 ? (
-            <p className="rounded-[14px] border border-vm-line bg-white p-4 font-body text-sm text-vm-text">
-              No supplies running low.
-            </p>
-          ) : (
+        {report.supplies.length > 0 ? (
+          <section className="mb-6" aria-labelledby="supplies-heading">
+            <h2
+              id="supplies-heading"
+              className="mb-3 font-heading text-xl font-bold tracking-tight text-vm-navy"
+            >
+              Supplies running low
+            </h2>
             <ul className="rounded-[14px] border border-vm-line bg-white p-4">
               {report.supplies.map((item) => (
                 <li key={item} className="font-body text-base text-vm-text">
@@ -209,8 +242,8 @@ export function HostPhotoReport({ report }: { report: HostPhotoReport }) {
                 </li>
               ))}
             </ul>
-          )}
-        </section>
+          </section>
+        ) : null}
 
         {report.payment ? (
           <section className="mb-6" aria-labelledby="payment-heading">
@@ -224,19 +257,19 @@ export function HostPhotoReport({ report }: { report: HostPhotoReport }) {
               <p className="font-heading text-[26px] font-bold tracking-tight text-vm-navy">
                 {report.payment.amount}
               </p>
+              <p className="font-body text-sm text-vm-text">{report.payment.invoiceNumber}</p>
+              {report.payment.dueLabel ? (
+                <p className="font-body text-sm text-vm-text">{report.payment.dueLabel}</p>
+              ) : null}
               {report.payment.paid ? (
                 <p className="font-body text-sm text-vm-text">Paid.</p>
               ) : (
                 <>
-                  {report.payment.zelleHandle ? (
-                    <div>
-                      <p className="font-body text-base text-vm-text">
-                        Zelle is our preferred way to pay.
-                      </p>
-                      <p className="mt-1 font-body text-base font-semibold text-vm-navy">
-                        {report.payment.zelleHandle}
-                      </p>
-                    </div>
+                  {report.payment.zelleHandle && report.payment.zelleRecipient ? (
+                    <ZellePay
+                      handle={report.payment.zelleHandle}
+                      recipient={report.payment.zelleRecipient}
+                    />
                   ) : null}
                   {report.payment.cardToken ? (
                     <CardPay invoiceToken={report.payment.cardToken} />

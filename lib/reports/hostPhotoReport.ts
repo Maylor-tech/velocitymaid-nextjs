@@ -19,10 +19,15 @@ export type HostReportNotice = {
   photo: HostReportPhoto | null;
 };
 
+export const ZELLE_RECIPIENT_NAME = 'VelocityMaid LLC';
+
 export type HostReportPayment = {
   amount: string;
+  invoiceNumber: string;
+  dueLabel: string | null;
   paid: boolean;
   zelleHandle: string | null;
+  zelleRecipient: string | null;
   paypalUrl: string | null;
   cardToken: string | null;
 };
@@ -57,6 +62,7 @@ export type HostReportFlagInput = {
 };
 
 export type HostReportInvoiceInput = {
+  invoiceNumber: string;
   total: number;
   balanceDue: number;
   publicToken: string;
@@ -89,6 +95,51 @@ function formatAmount(value: number): string {
   }).format(value);
 }
 
+/** PayPal.me amount path. Returns null when the base link is missing or not https. */
+export function paypalAmountUrl(base: string | null | undefined, amount: number): string | null {
+  const trimmed = base?.trim() ?? '';
+  if (!trimmed || !Number.isFinite(amount) || amount <= 0) return null;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== 'https:') return null;
+    const path = url.pathname.replace(/\/+$/, '');
+    url.pathname = `${path}/${amount.toFixed(2)}`;
+    url.search = '';
+    url.hash = '';
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function displayNote(note: string): string {
+  return note.trim().replace(/\s+/g, ' ');
+}
+
+/** Same job, same note ignoring case and extra spaces. Keeps the first wording and any photo. */
+export function mergeMatchingNotices(
+  notices: HostReportNotice[]
+): HostReportNotice[] {
+  const merged: HostReportNotice[] = [];
+  const indexByNote = new Map<string, number>();
+  for (const notice of notices) {
+    const note = displayNote(notice.note);
+    if (!note) continue;
+    const key = note.toLowerCase();
+    const existingIndex = indexByNote.get(key);
+    if (existingIndex == null) {
+      indexByNote.set(key, merged.length);
+      merged.push({ id: notice.id, note, photo: notice.photo });
+      continue;
+    }
+    const existing = merged[existingIndex]!;
+    if (!existing.photo && notice.photo) {
+      existing.photo = { url: notice.photo.url, alt: existing.note };
+    }
+  }
+  return merged;
+}
+
 function visiblePhotos(photos: HostReportPhotoInput[]): HostReportPhotoInput[] {
   return photos.filter((photo) => photo.customerVisible && photo.url.trim());
 }
@@ -109,7 +160,7 @@ export function buildHostPhotoReport(input: {
 
   const before = visible
     .filter((photo) => photo.category === 'BEFORE' && !photo.slotKey)
-    .map((photo) => ({ url: photo.url, alt: 'Before' }));
+    .map((photo) => ({ url: photo.url, alt: 'On arrival' }));
 
   const rooms = [...input.slots]
     .sort((a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label))
@@ -127,20 +178,19 @@ export function buildHostPhotoReport(input: {
       };
     });
 
-  const notices = input.flags
-    .filter((flag) => NOTICE_KINDS.has(flag.kind))
-    .map((flag) => {
-      const photo = flag.photoId ? byId.get(flag.photoId) : undefined;
-      const note = flag.note.trim();
-      return {
-        id: flag.id,
-        note,
-        photo: photo
-          ? { url: photo.url, alt: note || 'Noticed during the clean' }
-          : null,
-      };
-    })
-    .filter((flag) => flag.note);
+  const notices = mergeMatchingNotices(
+    input.flags
+      .filter((flag) => NOTICE_KINDS.has(flag.kind))
+      .map((flag) => {
+        const photo = flag.photoId ? byId.get(flag.photoId) : undefined;
+        const note = displayNote(flag.note);
+        return {
+          id: flag.id,
+          note,
+          photo: photo ? { url: photo.url, alt: note || 'Noticed during the clean' } : null,
+        };
+      })
+  );
 
   const supplies = input.flags
     .filter((flag) => flag.kind === 'SUPPLY')
@@ -179,9 +229,14 @@ export function buildHostPhotoReport(input: {
       payable && amountSource != null
         ? {
             amount: formatAmount(amountSource),
+            invoiceNumber: invoice!.invoiceNumber,
+            dueLabel: paid ? null : 'Due on receipt',
             paid: Boolean(paid),
             zelleHandle: paid ? null : input.paymentConfig.zelleHandle,
-            paypalUrl: paid ? null : input.paymentConfig.paypalUrl,
+            zelleRecipient: paid || !input.paymentConfig.zelleHandle ? null : ZELLE_RECIPIENT_NAME,
+            paypalUrl: paid
+              ? null
+              : paypalAmountUrl(input.paymentConfig.paypalUrl, amountSource),
             cardToken:
               paid || !input.paymentConfig.cardEnabled
                 ? null

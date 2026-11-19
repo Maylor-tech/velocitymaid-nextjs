@@ -71,6 +71,7 @@ export const loadHostPhotoReport = cache(async function loadHostPhotoReport(
           },
           Invoice: {
             select: {
+              invoiceNumber: true,
               total: true,
               balanceDue: true,
               publicToken: true,
@@ -101,6 +102,7 @@ export const loadHostPhotoReport = cache(async function loadHostPhotoReport(
     flags: job.JobFlag,
     invoice: job.Invoice
       ? {
+          invoiceNumber: job.Invoice.invoiceNumber,
           total: money(job.Invoice.total),
           balanceDue: money(job.Invoice.balanceDue),
           publicToken: job.Invoice.publicToken,
