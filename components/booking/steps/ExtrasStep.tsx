@@ -24,7 +24,7 @@ export default function ExtrasStep() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-vm-text mb-2">Additional Services</h2>
-        <p className="text-vm-muted">Select any additional services you'd like included</p>
+        <p className="text-vm-muted">Select any additional services you&apos;d like included</p>
       </div>
 
       <div className="space-y-3">

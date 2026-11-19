@@ -35,7 +35,7 @@ export default function CustomerPropertiesPage() {
           throw new Error(data.error || 'Failed to load properties');
         }
         if (!cancelled) setProperties(data.properties || []);
-      } catch (err: unknown) {
+      } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load properties');
         }

@@ -64,7 +64,7 @@ export async function GET(
       complianceStatus = 'NON_COMPLIANT';
     } else if (
       cleaner.warningCount > 0 ||
-      issues.some((i) => i.severity >= 4) ||
+      issues.some((i) => Number(i.severity) >= 4) ||
       !application?.idUploadUrl ||
       !application?.referencesUploadUrl ||
       (trainingStatus && trainingStatus.overallStatus !== 'PASSED' && trainingStatus.overallStatus !== 'ACTIVE')
@@ -97,7 +97,7 @@ export async function GET(
           trainingStatus?.overallStatus !== 'ACTIVE',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get cleaner compliance error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get cleaner compliance' },
@@ -128,7 +128,7 @@ export async function PATCH(
       );
     }
 
-    const changes: any = {};
+    const changes: Record<string, { from: LooseAny; to: LooseAny }> = {};
 
     // Update suspension status
     if (isSuspended !== undefined) {
@@ -226,7 +226,7 @@ export async function PATCH(
       success: true,
       message: 'Compliance status updated',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update cleaner compliance error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update cleaner compliance' },

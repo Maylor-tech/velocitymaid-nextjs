@@ -104,7 +104,7 @@ export async function POST(
       },
       message: `Request submitted. An administrator will review your ${actionType.toLowerCase()} request.`,
     });
-  } catch (error: any) {
+  } catch (error) {
     // If it's a NextResponse (from requireRole), re-throw it
     if (error instanceof Response) {
       throw error;

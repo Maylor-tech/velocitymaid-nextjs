@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { JobStatus } from "@prisma/client";
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
           lte: todayEnd,
         },
         status: {
-          not: 'cancelled',
+          not: 'CANCELLED',
         },
       },
     });
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
           lte: weekEnd,
         },
         status: {
-          not: 'cancelled',
+          not: 'CANCELLED',
         },
       },
     });
@@ -116,7 +117,7 @@ export async function GET(request: NextRequest) {
         branchId: branch.id,
         assignedCleanerId: null,
         status: {
-          in: ['pending', 'assigned'],
+          in: ['pending' as JobStatus, 'ASSIGNED'],
         },
       },
     });
@@ -150,7 +151,7 @@ export async function GET(request: NextRequest) {
     const completedJobsThisWeek = await prisma.job.findMany({
       where: {
         branchId: branch.id,
-        status: 'completed',
+        status: 'COMPLETED',
         preferredDate: {
           gte: weekStart,
           lte: weekEnd,
@@ -240,7 +241,7 @@ export async function GET(request: NextRequest) {
           where: {
             branchId: branch.id,
             assignedCleanerId: cleaner.id,
-            status: 'completed',
+            status: 'COMPLETED',
             completedAt: {
               gte: last60DaysStart,
             },
@@ -308,7 +309,7 @@ export async function GET(request: NextRequest) {
       jobsLast14Days,
       topCleaners,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Metrics overview error:', error);
     return NextResponse.json(

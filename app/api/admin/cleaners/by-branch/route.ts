@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
       count: cleaners.length,
       branchName: branch.name,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("[ADMIN] Fetch cleaners error:", err);
     return NextResponse.json(
       { error: err?.message || "Failed to fetch cleaners" },

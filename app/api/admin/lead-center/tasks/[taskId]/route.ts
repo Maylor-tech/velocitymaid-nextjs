@@ -29,7 +29,7 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true, task: serializeTask(task) });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update task';
     const statusCode = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status: statusCode });

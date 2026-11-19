@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
         })),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get cleaner info error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get cleaner info' },

@@ -30,7 +30,7 @@ vi.mock('../../prisma', () => ({
         driveFolderId: mockJob.driveFolderId,
         driveFolderUrl: mockJob.driveFolderUrl,
       })),
-      update: vi.fn(async ({ data }: any) => {
+      update: vi.fn(async ({ data }: LooseAny) => {
         mockJob.updates.push(data);
         mockJob.driveFolderId = data.driveFolderId;
         mockJob.driveFolderUrl = data.driveFolderUrl;
@@ -54,7 +54,7 @@ vi.mock('../client', () => ({
     return {
       files: {
         list: vi.fn(async () => ({ data: { files: driveMock.filesListResult ? [driveMock.filesListResult] : [] } })),
-        create: vi.fn(async ({ requestBody }: any) => {
+        create: vi.fn(async ({ requestBody }: LooseAny) => {
           const id = `folder-${driveMock.createdFolders.length + 1}`;
           driveMock.createdFolders.push(requestBody.name);
           return { data: { id } };

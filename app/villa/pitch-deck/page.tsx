@@ -52,7 +52,7 @@ export default function VillaPitchDeckPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-[#0A3D2F] mb-8 text-center" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
-            What's Included
+            What&apos;s Included
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#F8C548]">
@@ -98,7 +98,7 @@ export default function VillaPitchDeckPage() {
                 <strong>Open in your browser</strong> - The deck will open as an HTML document
               </li>
               <li className="text-lg">
-                <strong>Print to PDF</strong> - Press Ctrl+P (or Cmd+P on Mac) and select "Save as PDF"
+                <strong>Print to PDF</strong> - Press Ctrl+P (or Cmd+P on Mac) and select &quot;Save as PDF&quot;
               </li>
               <li className="text-lg">
                 <strong>Present or share</strong> - Use the PDF for in-person meetings, email outreach, or digital presentations
@@ -110,7 +110,7 @@ export default function VillaPitchDeckPage() {
             <div className="mt-8 p-4 bg-white rounded-lg border-2 border-[#F8C548]">
               <p className="text-sm text-vm-text">
                 <strong>Pro Tip:</strong> For best results, use landscape orientation when printing. The deck is designed 
-                for 11" x 8.5" (letter landscape) format, perfect for presentations and screen sharing.
+                for 11&quot; x 8.5&quot; (letter landscape) format, perfect for presentations and screen sharing.
               </p>
             </div>
           </div>

@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       sent,
       failed,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Lead follow-up cron failed';
     console.error('[lead-followup]', error);

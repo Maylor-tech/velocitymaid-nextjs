@@ -15,8 +15,9 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { PayoutTransferStatus, TaxProfileStatus } from "@prisma/client";
-import { selectCallScript, getVoicemailScriptForCleaner } from "@/lib/tax/callScripts";
+import { PayoutTransferStatus } from "@prisma/client";
+import { TaxProfileStatus, cleanerTaxProfile } from "@/app/api/admin/tax-profiles/delegate";
+import { selectCallScript } from "@/lib/tax/callScripts";
 
 /**
  * Get 1099 threshold for a given year
@@ -173,7 +174,7 @@ export async function GET(
       .map((cleaner) => cleaner.cleanerId);
 
     // Fetch tax profiles
-    const taxProfiles = await prisma.cleanerTaxProfile.findMany({
+    const taxProfiles = await cleanerTaxProfile().findMany({
       where: {
         cleanerId: { in: eligibleCleanerIds },
       },
@@ -273,7 +274,7 @@ export async function GET(
     const allCleaners = Array.from(cleanerTotals.values())
       .filter((cleaner) => cleaner.totalAmountCents >= thresholdCents);
 
-    const allTaxProfiles = await prisma.cleanerTaxProfile.findMany({
+    const allTaxProfiles = await cleanerTaxProfile().findMany({
       where: {
         cleanerId: { in: allCleaners.map((c) => c.cleanerId) },
       },
@@ -500,7 +501,7 @@ export async function GET(
         "Content-Disposition": `attachment; filename="call_sheet_${year}-${today.getMonth() + 1}-${today.getDate()}.html"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_1099_CALL_SHEET] Error:", error);
 
     if (error instanceof Response) {
@@ -518,5 +519,3 @@ export async function GET(
     );
   }
 }
-
-

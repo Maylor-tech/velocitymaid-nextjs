@@ -94,7 +94,7 @@ VelocityMaid Team
           });
           emailSent = true;
           console.log(`[CONTACT_REPLY] Reply sent to ${contact.email} for message ${params.id}`);
-        } catch (emailError: any) {
+        } catch (emailError) {
           console.error("[CONTACT_REPLY] Failed to send reply email:", emailError);
           // Don't fail the request if email fails - message is already saved
         }
@@ -133,7 +133,7 @@ VelocityMaid Team
       message: updatedMessage,
       reply,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_MESSAGE_REPLY] Error:", error);
 
     if (error instanceof Response) {

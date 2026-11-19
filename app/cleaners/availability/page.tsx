@@ -23,7 +23,7 @@ const DAYS_OF_WEEK = [
 ];
 
 export default function CleanerAvailabilityPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export default function CleanerAvailabilityPage() {
           blackoutDates: result.availability.blackoutDates || [],
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching availability:', err);
       setError('Failed to load availability settings');
     } finally {
@@ -161,7 +161,7 @@ export default function CleanerAvailabilityPage() {
       } else {
         setError(result.error || 'Failed to save availability');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error saving availability:', err);
       setError(err.message || 'Failed to save availability');
     } finally {
@@ -217,7 +217,7 @@ export default function CleanerAvailabilityPage() {
             <Calendar className="w-5 h-5 text-blue-600" />
             Working Days
           </h2>
-          <p className="text-sm text-vm-muted mb-4">Select the days you're available to work</p>
+          <p className="text-sm text-vm-muted mb-4">Select the days you&apos;re available to work</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
             {DAYS_OF_WEEK.map((day) => (
               <button
@@ -309,7 +309,7 @@ export default function CleanerAvailabilityPage() {
         {/* Blackout Dates */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <h2 className="text-xl font-bold text-vm-text mb-4">Blackout Dates</h2>
-          <p className="text-sm text-vm-muted mb-4">Dates when you're unavailable</p>
+          <p className="text-sm text-vm-muted mb-4">Dates when you&apos;re unavailable</p>
           <div className="space-y-4">
             <div className="flex gap-4">
               <input

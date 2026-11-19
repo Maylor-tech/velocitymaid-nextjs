@@ -1,5 +1,6 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -35,7 +36,7 @@ export async function GET(
       success: true,
       config: config || null,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get WhatsApp automation error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch automation config' },
@@ -69,6 +70,7 @@ export async function POST(
     const config = await prisma.branchAutomationConfig.upsert({
       where: { branchId: branch.id },
       create: {
+        id: randomUUID(),
         branchId: branch.id,
         bookingWebhookUrl: body.bookingWebhookUrl || null,
         reminderWebhookUrl: body.reminderWebhookUrl || null,
@@ -76,6 +78,7 @@ export async function POST(
         whatsappTemplateBooking: body.whatsappTemplateBooking || null,
         whatsappTemplateReminder: body.whatsappTemplateReminder || null,
         whatsappTemplateReview: body.whatsappTemplateReview || null,
+        updatedAt: new Date(),
       },
       update: {
         bookingWebhookUrl: body.bookingWebhookUrl !== undefined ? (body.bookingWebhookUrl || null) : undefined,
@@ -92,7 +95,7 @@ export async function POST(
       config,
       message: 'WhatsApp automation settings saved',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update WhatsApp automation error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update automation config' },

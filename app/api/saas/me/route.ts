@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     let auth;
     try {
       auth = await requireAuth(req);
-    } catch (authError: any) {
+    } catch (authError) {
       console.error(`[${requestId}] Authentication error:`, authError);
       return NextResponse.json(
         { error: 'Authentication required', requestId },
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
       } : null,
       requestId,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error(`[${requestId}] Error fetching tenant data:`, error);
     const errorMessage = process.env.NODE_ENV === 'production'
       ? 'Failed to fetch tenant data'

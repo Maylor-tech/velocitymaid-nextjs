@@ -91,7 +91,7 @@ export async function POST(
       success: true,
       progress,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Start lesson error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to start lesson' },

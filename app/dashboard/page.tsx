@@ -62,7 +62,7 @@ export default function DashboardPage() {
       } else {
         throw new Error(result.error || 'Failed to fetch dashboard data');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Dashboard fetch error:', err);
       setError(err.message || 'Failed to load dashboard data');
     } finally {
@@ -188,7 +188,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold text-vm-text mb-4">Cleaner Schedules</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {data.cleanerSchedules.map((schedule, index) => (
+              {data.cleanerSchedules.map((schedule, _index) => (
                 <CleanerScheduleCard
                   key={schedule.cleanerPhone}
                   schedule={schedule}

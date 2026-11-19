@@ -17,7 +17,7 @@ const brandColors = {
   neutral: '#F3F1EB',
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const html = generateBrandGuide();
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="velocitymaid-nj-brand-guide.html"',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate brand guide error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate brand guide' },

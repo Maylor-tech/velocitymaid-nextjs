@@ -31,7 +31,7 @@ export default function CleanerLoginPage() {
       } else {
         setError(data.error || 'Login failed');
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);

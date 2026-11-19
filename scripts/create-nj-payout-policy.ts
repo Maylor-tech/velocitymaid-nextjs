@@ -41,7 +41,7 @@ async function createNJPayoutPolicy() {
     console.log(`[CREATE_PAYOUT_POLICY] Found branch: ${branch.name} (${branch.id})`);
 
     // Step 2: Check if a policy already exists for this branch
-    const existingAssignment = await prisma.payoutPolicyAssignment.findFirst({
+    const existingAssignment = await (prisma as LooseAny).payoutPolicyAssignment.findFirst({
       where: {
         branchId: branch.id,
         effectiveTo: null, // Active assignment
@@ -64,7 +64,7 @@ async function createNJPayoutPolicy() {
     }
 
     // Step 3: Create PayoutPolicyVersion
-    const policyVersion = await prisma.payoutPolicyVersion.create({
+    const policyVersion = await (prisma as LooseAny).payoutPolicyVersion.create({
       data: {
         name: `New Jersey Payout Policy - ${new Date().toISOString().split("T")[0]}`,
         description: "Default payout policy for New Jersey branch: 55% cleaner, 45% platform",
@@ -77,7 +77,7 @@ async function createNJPayoutPolicy() {
 
     // Step 4: Create a simple rule for the policy
     // Rule structure must match PayoutRule schema from services/payout/ruleSchema.ts
-    const rule = await prisma.payoutPolicyRule.create({
+    const rule = await (prisma as LooseAny).payoutPolicyRule.create({
       data: {
         policyVersionId: policyVersion.id,
         priority: 1,
@@ -102,7 +102,7 @@ async function createNJPayoutPolicy() {
     console.log(`[CREATE_PAYOUT_POLICY] Created rule: ${rule.id}`);
 
     // Step 5: Create PayoutPolicyAssignment to link policy to branch
-    const assignment = await prisma.payoutPolicyAssignment.create({
+    const assignment = await (prisma as LooseAny).payoutPolicyAssignment.create({
       data: {
         branchId: branch.id,
         policyVersionId: policyVersion.id,
@@ -127,7 +127,7 @@ async function createNJPayoutPolicy() {
       ruleId: rule.id,
       message: `Payout policy created for ${branch.name}`,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CREATE_PAYOUT_POLICY] Error:", error);
     return {
       success: false,

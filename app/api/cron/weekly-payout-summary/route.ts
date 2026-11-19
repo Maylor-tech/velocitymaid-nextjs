@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
           failureCount: 0,
         },
       });
-    } catch (error: unknown) {
+    } catch (error) {
       const code =
         typeof error === "object" && error !== null && "code" in error
           ? String((error as { code?: unknown }).code)
@@ -186,7 +186,7 @@ export async function GET(request: NextRequest) {
         console.log(
           `[WEEKLY_PAYOUT_SUMMARY_CRON] Email sent to ${summary.cleanerEmail} (${summary.cleanerId})`
         );
-      } catch (error: unknown) {
+      } catch (error) {
         // Individual email failure doesn't stop the batch
         results.failures.push({
           cleanerId: summary.cleanerId,
@@ -227,7 +227,7 @@ export async function GET(request: NextRequest) {
       dateFrom: dateFromStr,
       dateTo: dateToStr,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[WEEKLY_PAYOUT_SUMMARY_CRON] Error:", error);
     return NextResponse.json(
       {

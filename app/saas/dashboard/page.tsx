@@ -41,7 +41,7 @@ export default function DashboardPage() {
       }
       const data = await response.json();
       setTenant(data);
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -132,7 +132,7 @@ export default function DashboardPage() {
                     Trial Period
                   </span>
                   <p className="text-sm text-vm-muted mt-2">
-                    You're on a 14-day free trial. Subscribe to continue.
+                    You&apos;re on a 14-day free trial. Subscribe to continue.
                   </p>
                 </div>
               )}

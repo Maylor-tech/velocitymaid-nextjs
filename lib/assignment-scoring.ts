@@ -9,7 +9,7 @@
  * 5. Compliance (0-10)
  */
 
-import { calculateCleanerLevel, CleanerLevelMetrics } from './cleaner-level';
+
 
 export interface AssignmentScore {
   total: number; // 0-100
@@ -59,7 +59,7 @@ export interface JobForScoring {
  */
 function calculateDistanceScore(
   cleaner: CleanerForScoring,
-  job: JobForScoring
+  _job: JobForScoring
 ): number {
   // Mock: If preferred city matches, give full points
   if (cleaner.preferredCityMatch) {

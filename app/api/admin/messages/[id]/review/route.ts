@@ -63,7 +63,7 @@ export async function POST(
       success: true,
       message: updatedMessage,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_MESSAGE_REVIEW] Error:", error);
 
     if (error instanceof Response) {

@@ -208,7 +208,7 @@ export default function CleanerApplyForm() {
         setError(data.error || "Failed to submit application");
         setShowToast(true);
       }
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit application");
       setShowToast(true);
     } finally {

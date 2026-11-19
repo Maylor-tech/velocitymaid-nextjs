@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         );
       }
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json(
         { success: false, error: 'Job not found' },
         { status: 404 }
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
       review,
       complaintId, // Include complaint ID if created
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create review error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create review' },

@@ -10,7 +10,7 @@ export default function VillaPartnershipApplySuccessPage() {
           Application Submitted Successfully!
         </h1>
         <p className="text-lg text-vm-muted mb-8">
-          Thank you for your interest in the VelocityMaid Villa Partnership Program. We've received your application and will review it carefully.
+          Thank you for your interest in the VelocityMaid Villa Partnership Program. We&apos;ve received your application and will review it carefully.
         </p>
         <p className="text-vm-text mb-8">
           Our team will contact you via WhatsApp within 24-48 hours to discuss your partnership needs and answer any questions.

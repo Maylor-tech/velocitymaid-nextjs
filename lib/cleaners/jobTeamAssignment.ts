@@ -62,6 +62,6 @@ export function validateAndBuildCleanerIds(draft: JobTeamDraft): JobTeamValidati
 
 export function buildOrderedCleanerIds(draft: JobTeamDraft): string[] {
   const result = validateAndBuildCleanerIds(draft);
-  if (!result.ok) throw new Error(result.error);
+  if (result.ok === false) throw new Error(result.error);
   return result.cleanerIds;
 }

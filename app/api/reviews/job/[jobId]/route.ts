@@ -82,7 +82,7 @@ export async function GET(
       hasReview,
       existingReview: hasReview ? existingReviews[0] : null,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Get job details error:', error);
     const message = error instanceof Error ? error.message : 'Failed to fetch job details';
     return NextResponse.json(

@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
       historyId: history.id,
       messageId,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error(`Day ${day ?? 'unknown'} nurture error:`, error);
     return NextResponse.json(
       { success: false, error: error.message || `Failed to send Day ${day ?? 'unknown'} message` },

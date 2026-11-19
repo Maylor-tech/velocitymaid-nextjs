@@ -100,7 +100,7 @@ export async function GET(
         totalPrice: job.totalPrice ? Number(job.totalPrice) : null,
       },
     });
-  } catch (err: unknown) {
+  } catch (err) {
     if (err && typeof err === "object" && "status" in err) throw err;
     const message = err instanceof Error ? err.message : "Failed to fetch job";
     return NextResponse.json(

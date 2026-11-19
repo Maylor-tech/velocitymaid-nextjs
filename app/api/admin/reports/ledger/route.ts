@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { generateCsv, formatCsvDate, formatCsvDateTime, formatCsvCurrency } from "@/lib/csv";
+import { generateCsv, formatCsvDateTime, formatCsvCurrency } from "@/lib/csv";
 import { LedgerEntryType, LedgerEntryStatus } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const dateTo = searchParams.get("dateTo");
 
     // Build where clause
-    const where: any = {};
+    const where: LooseAny = {};
     if (cleanerId) where.cleanerId = cleanerId;
     if (type && Object.values(LedgerEntryType).includes(type)) {
       where.type = type;
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[LEDGER_EXPORT] Error:", error);
     return NextResponse.json(
       {

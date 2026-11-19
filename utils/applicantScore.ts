@@ -60,7 +60,7 @@ export async function calculateApplicantFitScore(
       const branch = await prisma.branch.findUnique({
         where: { id: data.branchId },
         include: {
-          serviceAreas: {
+          BranchServiceArea: {
             select: {
               zipCode: true,
               city: true,
@@ -72,7 +72,7 @@ export async function calculateApplicantFitScore(
       if (branch) {
         // Check if residence area matches service areas
         const residenceLower = data.areaOfResidence.toLowerCase();
-        const serviceAreaMatches = branch.serviceAreas.some((area) => {
+        const serviceAreaMatches = branch.BranchServiceArea.some((area) => {
           const zipLower = area.zipCode?.toLowerCase() || '';
           const cityLower = area.city?.toLowerCase() || '';
           return (

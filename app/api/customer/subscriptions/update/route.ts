@@ -102,7 +102,7 @@ export async function PATCH(request: NextRequest) {
           }
         );
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Error updating Stripe subscription:', error);
       return NextResponse.json(
         { success: false, error: error instanceof Error ? error.message : 'Failed to update subscription in Stripe' },
@@ -142,7 +142,7 @@ export async function PATCH(request: NextRequest) {
       subscription: updated,
       message: `Subscription ${action}ed successfully`,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Update subscription error:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Failed to update subscription' },

@@ -52,7 +52,7 @@ export default function InvestorRequestsPage() {
       } else {
         throw new Error(data.error || "Failed to fetch requests");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch requests:", err);
       setError(err.message || "Failed to load requests");
     } finally {
@@ -78,7 +78,7 @@ export default function InvestorRequestsPage() {
 
       // Refresh the list
       await fetchRequests();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to approve request:", err);
       alert(err.message || "Failed to approve request. Please try again.");
     }

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getBranchBySlug, getAllBranches, getBranchLandingContent, type Branch } from '@/utils/branchData';
+import { getBranchBySlug, getBranchLandingContent } from '@/utils/branchData';
 import { Phone, MessageCircle, MapPin, CheckCircle, Star, Sparkles, ArrowRight } from 'lucide-react';
 
 interface PageProps {
@@ -122,7 +122,7 @@ export default function CityMarketingPage({ params }: PageProps) {
     notFound();
   }
 
-  const landingContent = getBranchLandingContent(branch.id);
+  const _landingContent = getBranchLandingContent(branch.id);
 
   return (
     <div className="min-h-screen bg-white">
@@ -305,7 +305,7 @@ export default function CityMarketingPage({ params }: PageProps) {
                       <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
-                  <p className="text-vm-text mb-4 italic">"{testimonial.text}"</p>
+                  <p className="text-vm-text mb-4 italic">&quot;{testimonial.text}&quot;</p>
                   <p className="font-semibold text-vm-text">{testimonial.name}</p>
                 </div>
               ))}

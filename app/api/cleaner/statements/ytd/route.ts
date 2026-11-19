@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
         })),
       })),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CLEANER_YTD_SUMMARY] Error:", error);
 
     // Handle auth errors

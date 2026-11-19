@@ -30,7 +30,7 @@ export function getStripe(): Stripe {
   }
   
   return new Stripe(secretKey, {
-    apiVersion: '2024-06-20',
+    apiVersion: '2024-06-20' as LooseAny,
   });
 }
 

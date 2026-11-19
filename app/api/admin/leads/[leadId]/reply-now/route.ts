@@ -16,9 +16,6 @@ export async function POST(
   { params }: { params: { leadId: string } }
 ) {
   try {
-    const body = await request.json();
-    const { branchId } = body;
-
     const lead = await prisma.lead.findUnique({
       where: { id: params.leadId },
     });
@@ -58,7 +55,7 @@ export async function POST(
         error: result.error || 'Failed to send WhatsApp message',
       }, { status: 500 });
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Reply now error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send follow-up' },

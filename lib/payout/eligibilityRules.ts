@@ -105,7 +105,7 @@ export function evaluatePayoutEligibility(
  * 
  * Internal helper - not exported to prevent logic leakage
  */
-function getPrimaryBlocker(
+function _getPrimaryBlocker(
   blockers: PayoutEligibilityBlocker[]
 ): PayoutEligibilityBlocker | null {
   if (blockers.length === 0) return null;

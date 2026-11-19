@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       success: true,
       leads: leads.map(serializeLead),
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to list leads';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     const refreshed = await prisma.pipelineLead.findUniqueOrThrow({ where: { id: lead.id } });
 
     return NextResponse.json({ success: true, lead: serializeLead(refreshed) });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create lead';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

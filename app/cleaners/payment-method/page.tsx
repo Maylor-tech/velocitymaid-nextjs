@@ -49,7 +49,7 @@ export default function CleanerPaymentMethodPage() {
           whatsappNumber: data.paymentMethod.whatsappNumber || '',
         });
       }
-    } catch (err: unknown) {
+    } catch (err) {
       console.error('Error fetching payment method:', err);
       setError('Unable to load payment method. Please try again.');
     } finally {
@@ -80,7 +80,7 @@ export default function CleanerPaymentMethodPage() {
       } else {
         setError(data.error || 'Failed to update payment method');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating payment method:', err);
       setError(err.message || 'Failed to update payment method');
     } finally {

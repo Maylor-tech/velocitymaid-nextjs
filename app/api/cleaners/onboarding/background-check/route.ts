@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       // In production, this would take 1-3 business days
       estimatedCompletion: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Background check error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to initiate background check' },

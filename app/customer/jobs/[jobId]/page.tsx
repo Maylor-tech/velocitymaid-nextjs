@@ -102,7 +102,7 @@ function JobDetailsContent() {
         throw new Error(data.error || 'Failed to fetch job');
       }
       return null;
-    } catch (err: unknown) {
+    } catch (err) {
       console.error('Error fetching job details:', err);
       if (!options?.silent) {
         setError(err instanceof Error ? err.message : 'Failed to load job');

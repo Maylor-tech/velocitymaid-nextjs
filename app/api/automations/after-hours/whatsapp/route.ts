@@ -15,7 +15,6 @@ import { isAfterHours, getTimeUntilMorningFormatted } from '@/lib/time/isAfterHo
 import { 
   getAfterHoursMessage, 
   determineMessageType,
-  type MessageType 
 } from '@/config/afterHoursMessages';
 
 export async function POST(request: NextRequest) {
@@ -111,7 +110,7 @@ export async function POST(request: NextRequest) {
         error: result.error || 'Failed to send WhatsApp message',
       }, { status: 500 });
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('After-hours WhatsApp error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send after-hours message' },
@@ -123,7 +122,7 @@ export async function POST(request: NextRequest) {
 /**
  * Check if after-hours (GET endpoint for testing)
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const isAfterHoursNow = isAfterHours();
   const timeUntilMorning = getTimeUntilMorningFormatted();
   

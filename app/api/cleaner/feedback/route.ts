@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     const rows = await listReleasedFeedbackForCleaner(auth.userId);
     return NextResponse.json({ success: true, items: rows });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to load feedback';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         cleanerRespondedAt: updated.cleanerRespondedAt?.toISOString() ?? null,
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to save response';
     const status =

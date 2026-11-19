@@ -28,7 +28,7 @@ interface Invoice {
 
 export default function CustomerBillingPage() {
   const router = useRouter();
-  const [customer, setCustomer] = useState<any>(null);
+  const [customer, setCustomer] = useState<LooseAny>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodSummary | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);

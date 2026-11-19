@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from "@/lib/auth/requireRole";
+
 import { prisma } from '@/lib/prisma';
 import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level';
 
@@ -32,7 +32,7 @@ export async function POST(
       orderBy: { createdAt: 'asc' },
     });
 
-    const completedJobs = allJobs.filter((j) => j.status === 'completed');
+    const completedJobs = allJobs.filter((j) => j.status === 'COMPLETED');
     const totalJobs = allJobs.length;
     const completedCount = completedJobs.length;
 
@@ -52,7 +52,7 @@ export async function POST(
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const weeklyJobs = allJobs.filter(
-      (j) => j.createdAt >= oneWeekAgo && j.status === 'completed'
+      (j) => j.createdAt >= oneWeekAgo && j.status === 'COMPLETED'
     ).length;
 
     // Productivity score: 0-100 based on weekly jobs (8+ jobs = 100, 0 jobs = 0)
@@ -100,7 +100,7 @@ export async function POST(
       level,
       calculatedAt: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Recalculate score error:', error);
     return NextResponse.json(
@@ -109,4 +109,3 @@ export async function POST(
     );
   }
 }
-

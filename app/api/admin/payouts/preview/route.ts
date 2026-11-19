@@ -1,13 +1,13 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { JobStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
 import {
   calculateJobCosts,
   type JobFinancialInput,
-  getCleanerSharePercent,
 } from '@/lib/financial/model';
 import {
   aggregateBranchFinancials,
@@ -25,7 +25,7 @@ async function getCleanerLevel(cleanerId: string): Promise<1 | 2 | 3 | 4 | null>
     const firstJob = await prisma.job.findFirst({
       where: {
         assignedCleanerId: cleanerId,
-        status: 'completed',
+        status: 'COMPLETED',
       },
       orderBy: {
         completedAt: 'asc',
@@ -53,7 +53,7 @@ async function getCleanerLevel(cleanerId: string): Promise<1 | 2 | 3 | 4 | null>
     const completedJobs = await prisma.job.count({
       where: {
         assignedCleanerId: cleanerId,
-        status: 'completed',
+        status: 'COMPLETED',
       },
     });
 
@@ -88,7 +88,7 @@ async function getCleanerLevel(cleanerId: string): Promise<1 | 2 | 3 | 4 | null>
     const levelResult = calculateCleanerLevel(metrics);
     return levelResult.level;
   } catch (error) {
-    if (error instanceof NextResponse) return error;
+    if (error instanceof NextResponse) return null;
     console.error('Error calculating cleaner level:', error);
     return null;
   }
@@ -97,7 +97,7 @@ async function getCleanerLevel(cleanerId: string): Promise<1 | 2 | 3 | 4 | null>
 /**
  * Check if job has unresolved complaint
  */
-async function hasUnresolvedComplaint(jobId: string): Promise<boolean> {
+async function hasUnresolvedComplaint(_jobId: string): Promise<boolean> {
   // TODO: Query Complaint model if it exists
   // For now, return false
   return false;
@@ -159,10 +159,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine eligible job statuses
-    const eligibleStatuses =
+    const eligibleStatuses: JobStatus[] =
       status === 'CompletedOnly'
-        ? ['completed']
-        : ['completed']; // Default to completed only for now
+        ? ['COMPLETED']
+        : ['COMPLETED']; // Default to completed only for now
 
     // Query jobs in date range
     const jobs = await prisma.job.findMany({
@@ -301,7 +301,7 @@ export async function POST(request: NextRequest) {
       },
       cleaners: cleanersResponse,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Payout preview error:', error);
     return NextResponse.json(
       {

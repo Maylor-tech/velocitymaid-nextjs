@@ -13,7 +13,7 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { createCertificate } from '@/utils/certificateGenerator';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const cleanerId = cookieStore.get('cleanerId')?.value;
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         url: `/cleaners/certificate/${certificate.certificateId}`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate certificate error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate certificate' },

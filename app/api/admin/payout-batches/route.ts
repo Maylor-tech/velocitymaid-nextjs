@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { createPayoutBatchDraft } from "@/lib/payout/batchCreationService";
 import { prisma } from "@/lib/prisma";
-import { PayoutBatchStatus } from "@prisma/client";
+import { Prisma,  PayoutBatchStatus  } from '@prisma/client';
 
 /**
  * POST /api/admin/payout-batches
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       skipped: result.skipped,
       message: `Created payout batch draft with ${result.eligibleCleaners} eligible cleaner(s), total: $${(result.totalAmountCents / 100).toFixed(2)}`,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CREATE_PAYOUT_BATCH] Error:", error);
     return NextResponse.json(
       {
@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {};
+    const where: Prisma.PayoutBatchWhereInput = {};
     if (status) {
       where.status = status;
     }
@@ -216,7 +216,7 @@ export async function GET(request: NextRequest) {
         status: status || null,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[LIST_PAYOUT_BATCHES] Error:", error);
     return NextResponse.json(
       {

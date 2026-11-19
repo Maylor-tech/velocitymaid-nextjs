@@ -18,7 +18,8 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { PayoutTransferStatus, TaxProfileStatus } from "@prisma/client";
+import { PayoutTransferStatus } from "@prisma/client";
+import { TaxProfileStatus, cleanerTaxProfile } from "@/app/api/admin/tax-profiles/delegate";
 import { maskTIN } from "@/lib/tax/tinEncryption";
 
 /**
@@ -101,7 +102,7 @@ export async function GET(
 
     // Fetch tax profiles for all cleaners
     const cleanerIds = Array.from(cleanerTotals.keys());
-    const taxProfiles = await prisma.cleanerTaxProfile.findMany({
+    const taxProfiles = await cleanerTaxProfile().findMany({
       where: {
         cleanerId: { in: cleanerIds },
       },
@@ -196,11 +197,11 @@ export async function GET(
             archivedBy: archive.archivedBy,
             readinessScore: archive.readinessScore,
             status: archive.status,
-            summary: archive.summaryJson as any,
+            summary: archive.summaryJson as Record<string, unknown>,
           }
         : null,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_CANDIDATES] Error:", error);
 

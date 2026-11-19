@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const minScore = searchParams.get('minScore');
 
-    const where: any = {};
+    const where: LooseAny = {};
 
     if (branchId) {
       where.branchId = branchId;
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     const applications = await prisma.cleanerApplication.findMany({
       where,
       include: {
-        branch: {
+        Branch: {
           select: {
             id: true,
             name: true,
@@ -69,11 +69,11 @@ export async function GET(request: NextRequest) {
         applicantFitScore: app.applicantFitScore,
         status: app.status,
         createdAt: app.createdAt,
-        branch: app.branch,
+        branch: app.Branch,
       })),
       count: applications.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get recruitment applications error:', error);
     return NextResponse.json(

@@ -290,7 +290,7 @@ function QuoteComposerInner() {
         throw new Error(data.error || "Failed to send email");
       }
       showToast("Quote email sent successfully", "success");
-    } catch (error: unknown) {
+    } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to send email";
       showToast(message, "error");

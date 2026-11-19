@@ -8,7 +8,7 @@ interface ReviewsTableProps {
   region: 'new_jersey' | 'vermont' | null;
 }
 
-export default function ReviewsTable({ reviews, region }: ReviewsTableProps) {
+export default function ReviewsTable({ reviews, _region }: ReviewsTableProps) {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

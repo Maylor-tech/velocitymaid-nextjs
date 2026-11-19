@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
       success: true,
       profitability: snapshot,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('[owner-profitability]', error);
     return NextResponse.json(

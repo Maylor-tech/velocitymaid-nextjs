@@ -61,7 +61,7 @@ export async function POST(
       drive: result.drive,
       calendar: result.calendar,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('[JOB SYNC GOOGLE]', error);
     const message =

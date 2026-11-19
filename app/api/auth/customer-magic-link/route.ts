@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
         });
 
         console.log(`[MAGIC LINK] Email sent to ${customer.email}`);
-      } catch (emailError: any) {
+      } catch (emailError) {
         console.error('[MAGIC LINK] Email send error:', emailError);
         // Don't fail the request if email fails - log it
       }
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
       // Only show link in development
       ...(process.env.NODE_ENV === 'development' && !process.env.RESEND_API_KEY && { magicLink }),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('[MAGIC LINK] Error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send magic link' },

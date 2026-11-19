@@ -19,9 +19,9 @@ import { maskAccount, maskRouting, maskHandle } from "./paymentMasking";
 export function buildPaymentMethodSnapshot(paymentMethod: {
   id: string;
   methodType: string;
-  details: any;
-}): any {
-  const snapshot: any = {
+  details: LooseAny;
+}): LooseAny {
+  const snapshot: LooseAny = {
     methodId: paymentMethod.id,
     methodType: paymentMethod.methodType,
     capturedAt: new Date().toISOString(),

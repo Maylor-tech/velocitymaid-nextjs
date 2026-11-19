@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/requireRole";
 /**
  * Reject Application API
  * POST /api/admin/recruitment/[id]/reject
@@ -24,7 +25,7 @@ export async function POST(
     const application = await prisma.cleanerApplication.findUnique({
       where: { id },
       include: {
-        branch: {
+        Branch: {
           select: {
             slug: true,
             country: true,
@@ -48,9 +49,9 @@ export async function POST(
 
     // Send WhatsApp rejection message (Jamaica only)
     const isJamaicaBranch =
-      application.branch.country === 'Jamaica' ||
-      application.branch.country === 'JM' ||
-      application.branch.slug === 'port-antonio';
+      application.Branch.country === 'Jamaica' ||
+      application.Branch.country === 'JM' ||
+      application.Branch.slug === 'port-antonio';
 
     if (isJamaicaBranch && (application.whatsappNumber || application.phone)) {
       const whatsappPhone = application.whatsappNumber || application.phone;
@@ -68,7 +69,7 @@ export async function POST(
       success: true,
       message: 'Application rejected successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Reject application error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to reject application' },

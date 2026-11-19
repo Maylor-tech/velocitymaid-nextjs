@@ -59,7 +59,7 @@ export default function CustomerLoginPage() {
       if (redirectUrl) params.set('redirect', redirectUrl);
 
       router.push(`/customer/verify?${params.toString()}`);
-    } catch (err: unknown) {
+    } catch (err) {
       console.error(err);
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
       setError(message);

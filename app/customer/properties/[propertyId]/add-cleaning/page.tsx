@@ -67,7 +67,7 @@ export default function AddCleaningPage() {
             trashInstructions: data.property.trashInstructions ?? null,
           });
         }
-      } catch (err: unknown) {
+      } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load property');
         }
@@ -113,7 +113,7 @@ export default function AddCleaningPage() {
         throw new Error(data.error || 'Failed to create cleaning');
       }
       router.push(`/customer/jobs?created=${data.job.id}`);
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create cleaning');
       setSubmitting(false);
     }

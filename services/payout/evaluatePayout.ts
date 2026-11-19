@@ -150,8 +150,9 @@ export function evaluatePayout({
         });
 
         // Update baseAmount if modified by base_percent
-        if (actionResult?.newBaseAmount !== undefined) {
-          baseAmount = actionResult.newBaseAmount;
+        const nextBase = (actionResult as ActionResult | undefined)?.newBaseAmount;
+        if (nextBase !== undefined) {
+          baseAmount = nextBase;
         }
 
         // Update min/cap if set
@@ -160,7 +161,7 @@ export function evaluatePayout({
         } else if (action.type === "cap_total") {
           capTotal = action.value;
         }
-      } catch (error: any) {
+      } catch (error) {
         console.warn(
           `[PAYOUT_EVAL] Rule ${ruleRecord.id} action ${action.type} failed:`,
           error.message

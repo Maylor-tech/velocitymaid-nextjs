@@ -19,7 +19,7 @@ export async function POST(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    const auth = await requireCustomerJobOwnership(request, params.jobId);
+    const _auth = await requireCustomerJobOwnership(request, params.jobId);
     const session = await getCustomerSession();
     if (!session) throw new Error("Session not found after auth");
 
@@ -104,7 +104,7 @@ export async function POST(
         comment: ratingRecord.comment || undefined,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Rate job error:', error);
     return NextResponse.json(
       {

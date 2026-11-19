@@ -10,7 +10,7 @@ export default function ContactInfoStep() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-vm-text mb-2">Contact Information</h2>
-        <p className="text-vm-muted">We'll use this to confirm your booking and send updates</p>
+        <p className="text-vm-muted">We&apos;ll use this to confirm your booking and send updates</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

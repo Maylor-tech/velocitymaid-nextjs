@@ -73,7 +73,7 @@ export async function GET(
 
     // Process service packages
     for (const pkg of branch.servicePackages) {
-      const packageData: any = {
+      const packageData: LooseAny = {
         code: pkg.code,
         name: pkg.name,
         basePrice: Number(pkg.basePrice),
@@ -82,7 +82,7 @@ export async function GET(
 
       // If multi-currency, extract JMD and USD prices
       if (hasMultiCurrency && pkg.pricingData) {
-        const pricingData = pkg.pricingData as any;
+        const pricingData = pkg.pricingData as LooseAny;
         if (pricingData.jmd?.base) {
           packageData.jmdPrice = pricingData.jmd.base;
         }
@@ -110,7 +110,7 @@ export async function GET(
       success: true,
       pricing,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get branch pricing error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch pricing' },

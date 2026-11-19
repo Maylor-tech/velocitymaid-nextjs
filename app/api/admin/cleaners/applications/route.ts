@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic'
 
@@ -13,9 +14,9 @@ export async function GET(request: NextRequest) {
     const branchIdParam = searchParams.get('branchId');
     const branchId = auth.branchId ?? branchIdParam;
 
-    const where: any = {};
+    const where: Prisma.CleanerApplicationWhereInput = {};
     if (status) {
-      where.status = status;
+      where.status = status as Prisma.CleanerApplicationWhereInput["status"];
     }
     if (branchId) {
       where.branchId = branchId;
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
       applications,
       newCount,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('List cleaner applications error:', error);
     return NextResponse.json(

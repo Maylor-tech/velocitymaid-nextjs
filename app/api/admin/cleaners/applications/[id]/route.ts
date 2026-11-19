@@ -41,7 +41,7 @@ export async function GET(
     }
 
     return NextResponse.json({ success: true, application });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get cleaner application error:', error);
     const message = error instanceof Error ? error.message : 'Failed to fetch application';
@@ -105,7 +105,7 @@ export async function PATCH(
     }
 
     return NextResponse.json({ success: true, application });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Update cleaner application error:', error);
     const message = error instanceof Error ? error.message : 'Failed to update application';

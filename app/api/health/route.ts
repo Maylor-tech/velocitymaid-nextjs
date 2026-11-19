@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
  * 
  * GET /api/health
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const checks: Record<string, { status: 'ok' | 'error'; message?: string }> = {};
   let overallStatus = 'ok';
 
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     } else {
       checks.env = { status: 'ok' };
     }
-  } catch (error: any) {
+  } catch (error) {
     checks.env = { status: 'error', message: error.message };
     overallStatus = 'error';
   }
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
   try {
     await prisma.$queryRaw`SELECT 1`;
     checks.database = { status: 'ok' };
-  } catch (error: any) {
+  } catch (error) {
     checks.database = { status: 'error', message: error.message };
     overallStatus = 'error';
   }
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     const stripe = getStripe();
     await stripe.customers.list({ limit: 1 });
     checks.stripe = { status: 'ok' };
-  } catch (error: any) {
+  } catch (error) {
     checks.stripe = { status: 'error', message: error.message };
     // Don't fail overall if Stripe fails (might be test mode)
   }

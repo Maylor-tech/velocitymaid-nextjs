@@ -47,7 +47,7 @@ export async function POST(
         cleanerAmount: true,
         currency: true,
         executionNote: true,
-      },
+      } as LooseAny,
     });
 
     if (!payout) {
@@ -99,7 +99,7 @@ export async function POST(
         status: "FAILED",
         executionNote: failureNote,
         updatedAt: new Date(),
-      },
+      } as LooseAny,
     });
 
     const updated = await prisma.jobPayout.findUnique({
@@ -109,7 +109,7 @@ export async function POST(
         jobId: true,
         status: true,
         executionNote: true,
-      },
+      } as LooseAny,
     });
 
     // Audit logging
@@ -136,7 +136,7 @@ export async function POST(
     notifyPayoutFailed(
       payout.cleanerId,
       payoutId,
-      payout.cleanerAmount,
+      Number(payout.cleanerAmount),
       payout.currency,
       failureNote
     ).catch((err) => {
@@ -148,7 +148,7 @@ export async function POST(
       success: true,
       payout: updated,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[FAIL_PAYOUT] Error:", error);
     return NextResponse.json(

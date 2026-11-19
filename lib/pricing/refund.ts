@@ -5,6 +5,7 @@
  * No ad-hoc refunds. Ever.
  */
 
+import { randomUUID } from "crypto";
 import { prisma } from "../prisma";
 import { getPricingSnapshot } from "./lock";
 
@@ -75,7 +76,7 @@ export async function calculateRefund(
   jobId: string,
   overrideFee: boolean = false
 ): Promise<RefundCalculation> {
-  const job = await prisma.job.findUnique({
+  const job = (await prisma.job.findUnique({
     where: { id: jobId },
     select: {
       id: true,
@@ -89,7 +90,7 @@ export async function calculateRefund(
       tax: true,
       discountAmount: true,
     },
-  });
+  } as LooseAny)) as LooseAny;
 
   if (!job) {
     throw new Error("Job not found");
@@ -100,7 +101,7 @@ export async function calculateRefund(
   }
 
   // Get base price from snapshot or current value
-  const snapshot = getPricingSnapshot(job as any);
+  const snapshot = getPricingSnapshot(job as LooseAny);
   const basePrice = snapshot?.basePrice || Number(job.basePrice || job.totalPrice || 0);
 
   // Calculate cancellation fee
@@ -145,6 +146,7 @@ export async function processRefund(
     // Log refund in audit log
     await prisma.auditLog.create({
       data: {
+        id: randomUUID(),
         entityType: "Job",
         entityId: request.jobId,
         action: "REFUND_PROCESSED",
@@ -166,7 +168,7 @@ export async function processRefund(
       success: true,
       refund,
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
       refund: {

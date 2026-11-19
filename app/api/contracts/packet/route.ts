@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { cleanerAgreementTemplate, customerTermsTemplate, villaPartnershipTemplate } from '@/app/api/contracts/templates';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Generate comprehensive HTML for multi-page PDF
     const html = generateContractPacketHTML();
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="velocitymaid-jamaica-contract-packet.html"',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate contract packet error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate contract packet' },
@@ -915,8 +915,8 @@ function generateContractPacketHTML(): string {
   `;
 }
 
-function generateContractSections(template: any): string {
-  return template.sections.map((section: any) => `
+function generateContractSections(template: LooseAny): string {
+  return template.sections.map((section: LooseAny) => `
     <div class="section">
       <h3>${section.title}</h3>
       <p>${section.content}</p>

@@ -85,7 +85,7 @@ async function manuallyCompleteJob(jobId?: string) {
         completedAt: new Date(),
         payoutStatus: "PENDING",
         ratingStatus: "PENDING",
-      },
+      } as LooseAny,
       select: {
         id: true,
         status: true,
@@ -108,7 +108,7 @@ async function manuallyCompleteJob(jobId?: string) {
       } else {
         console.log(`[MANUAL_COMPLETE] ⚠️  Payout not created: ${payoutResult.reason}`);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.log(`[MANUAL_COMPLETE] ⚠️  Could not create payout: ${error.message}`);
       console.log("   (This is okay - payout can be created later)");
     }
@@ -118,7 +118,7 @@ async function manuallyCompleteJob(jobId?: string) {
       jobId: updatedJob.id,
       message: `Job ${updatedJob.id} marked as COMPLETED`,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("[MANUAL_COMPLETE] Error:", error);
     return {
       success: false,

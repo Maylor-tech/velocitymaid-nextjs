@@ -158,7 +158,7 @@ export function StripePayoutSetup() {
 
       {status.readyForPayouts ? (
         <div className="rounded-md bg-vm-success-bg p-3 text-vm-success text-sm">
-          ✅ Your payout account is set up and verified. You're ready to receive
+          ✅ Your payout account is set up and verified. You&apos;re ready to receive
           payments!
         </div>
       ) : status.hasAccount && status.currentlyDue && status.currentlyDue.length > 0 ? (

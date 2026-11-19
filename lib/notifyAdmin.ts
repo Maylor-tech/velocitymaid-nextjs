@@ -16,7 +16,7 @@ export interface AdminNotificationData {
   customerId: string;
   customerName?: string;
   jobDate?: string;
-  [key: string]: any;
+  [key: string]: LooseAny;
 }
 
 const ADMIN_NOTIFICATION_EMAIL =

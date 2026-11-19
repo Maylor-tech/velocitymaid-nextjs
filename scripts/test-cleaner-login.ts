@@ -6,6 +6,8 @@
 const BASE = process.env.TEST_BASE_URL || 'http://localhost:3000';
 const EMAIL = process.env.TEST_CLEANER_EMAIL || 'cleaner.nj@velocitymaid.com';
 
+export {};
+
 async function main() {
   const loginRes = await fetch(`${BASE}/api/cleaners/login`, {
     method: 'POST',

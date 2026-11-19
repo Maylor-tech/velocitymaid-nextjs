@@ -30,7 +30,7 @@ export function calculateCleanerLevel(metrics: CleanerLevelMetrics): CleanerLeve
   const {
     daysSinceFirstJob,
     totalJobs,
-    completedJobs,
+    completedJobs: _completedJobs,
     averageRating,
     completionRate,
     productivityScore,

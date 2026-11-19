@@ -139,7 +139,7 @@ export async function runPayoutShadowBacktest(
         }
 
         // Fetch policy version and rules
-        const policyVersion = await prisma.payoutPolicyVersion.findUnique({
+        const policyVersion = await (prisma as LooseAny).payoutPolicyVersion.findUnique({
           where: { id: policyVersionId },
           select: {
             id: true,
@@ -153,7 +153,7 @@ export async function runPayoutShadowBacktest(
           continue;
         }
 
-        const ruleRecords = await prisma.payoutPolicyRule.findMany({
+        const ruleRecords = await (prisma as LooseAny).payoutPolicyRule.findMany({
           where: {
             policyVersionId: policyVersionId,
             isActive: true,
@@ -188,7 +188,7 @@ export async function runPayoutShadowBacktest(
           where: { id: job.assignedCleanerId },
           select: {
             id: true,
-            branchId: true,
+            primaryBranchId: true,
           },
         });
 
@@ -209,7 +209,7 @@ export async function runPayoutShadowBacktest(
           },
           payee: {
             id: payee.id,
-            branchId: payee.branchId || job.branchId,
+            branchId: payee.primaryBranchId || job.branchId,
           },
           policyVersion: {
             id: policyVersion.id,
@@ -287,7 +287,7 @@ export async function runPayoutShadowBacktest(
         const delta = v2Result.totalAmount - v1Amount;
 
         // Store shadow result (idempotent: check if exists first)
-        const existingResult = await prisma.payoutPolicyShadowResult.findFirst({
+        const existingResult = await (prisma as LooseAny).payoutPolicyShadowResult.findFirst({
           where: {
             jobId: job.id,
             policyVersionId: policyVersionId,
@@ -316,19 +316,19 @@ export async function runPayoutShadowBacktest(
 
         if (existingResult) {
           // Update existing record
-          await prisma.payoutPolicyShadowResult.update({
+          await (prisma as LooseAny).payoutPolicyShadowResult.update({
             where: { id: existingResult.id },
             data: shadowResultData,
           });
         } else {
           // Create new record
-          await prisma.payoutPolicyShadowResult.create({
+          await (prisma as LooseAny).payoutPolicyShadowResult.create({
             data: shadowResultData,
           });
         }
 
         result.stored++;
-      } catch (error: any) {
+      } catch (error) {
         result.errors++;
         const errorMsg = `Job ${job.id}: ${error.message}`;
         result.errorDetails?.push(errorMsg);
@@ -338,7 +338,7 @@ export async function runPayoutShadowBacktest(
 
     console.log(`[SHADOW_BACKTEST] Complete:`, result);
     return result;
-  } catch (error: any) {
+  } catch (error) {
     console.error("[SHADOW_BACKTEST] Fatal error:", error);
     result.errors++;
     result.errorDetails?.push(`Fatal: ${error.message}`);

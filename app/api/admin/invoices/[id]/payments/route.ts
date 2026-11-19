@@ -79,7 +79,7 @@ export async function POST(
       clamped,
       paymentAmount: creditedAmount,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to record payment';
     const status = message.includes('required') || message.includes('already paid') ? 400 : 500;

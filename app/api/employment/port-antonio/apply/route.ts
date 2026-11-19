@@ -21,8 +21,8 @@ export async function POST(request: NextRequest) {
       phone,
       address,
       availability,
-      experience,
-      whyJoin,
+      _experience,
+      _whyJoin,
       consent,
     } = body;
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Application submitted successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Employment application error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to submit application' },

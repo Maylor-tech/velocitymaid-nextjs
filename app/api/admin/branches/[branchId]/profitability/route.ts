@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBranchBySlug, getAllBranches } from '@/utils/branchData';
+import { getBranchBySlug } from '@/utils/branchData';
 
 /**
  * Branch Profitability API
@@ -31,7 +31,7 @@ export async function GET(
 
     // Calculate date range
     const endDate = end ? new Date(end) : new Date();
-    let startDate = start ? new Date(start) : new Date();
+    const startDate = start ? new Date(start) : new Date();
     
     if (!start) {
       const days = parseInt(range);
@@ -79,7 +79,7 @@ export async function GET(
       success: true,
       metrics: mockMetrics,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Branch profitability error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch profitability data' },
@@ -87,4 +87,3 @@ export async function GET(
     );
   }
 }
-

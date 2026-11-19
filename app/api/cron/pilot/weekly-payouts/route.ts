@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         : undefined,
       message: `Processed ${result.result?.createdPayouts || 0} payout(s) for ${result.period.weekLabel}`,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[WEEKLY_PAYOUTS_CRON] Unexpected error:", error);
     return NextResponse.json(
       {

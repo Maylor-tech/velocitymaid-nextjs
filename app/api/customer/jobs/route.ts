@@ -188,7 +188,7 @@ export async function GET(request: NextRequest) {
       jobs: formattedJobs,
       count: formattedJobs.length,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     // requireRole throws NextResponse (a Response). Returning it preserves 401/403.
     // `instanceof NextResponse` can fail across bundled copies of next/server;
     // `instanceof Response` is the reliable check (production logged `Response { status: 401 }` then 500).

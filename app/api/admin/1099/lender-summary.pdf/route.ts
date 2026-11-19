@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const summary = latestArchive.summaryJson as any;
+    const summary = latestArchive.summaryJson as Record<string, unknown>;
     const preparedDate = new Date().toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",
@@ -285,7 +285,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="velocitymaid-lender-compliance-summary.pdf"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_1099_LENDER_SUMMARY] Error:", error);
 
     if (error instanceof Response) {

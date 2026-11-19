@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
       message: `Sent ${sentCount} reminder messages`,
       jobsProcessed: jobs.length,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Send referral reminders error:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Failed to send reminders' },

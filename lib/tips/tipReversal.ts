@@ -35,7 +35,7 @@ async function recordWebhookEvent(input: {
       },
     });
     return 'NEW';
-  } catch (err: unknown) {
+  } catch (err) {
     const code =
       err && typeof err === 'object' && 'code' in err
         ? String((err as { code?: string }).code)

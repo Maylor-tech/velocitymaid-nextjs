@@ -20,7 +20,7 @@ export function isValidPaymentMethod(method: string): method is PaymentMethodTyp
  */
 export function validatePaymentMethodData(
   methodType: string,
-  details: any
+  details: LooseAny
 ): { valid: boolean; error?: string } {
   if (!isValidPaymentMethod(methodType)) {
     return {
@@ -96,7 +96,7 @@ export async function hasVerifiedPaymentMethod(cleanerId: string): Promise<boole
       cleanerId,
       isActive: true,
       verifiedAt: { not: null },
-    },
+    } as LooseAny,
   });
 
   return !!method;
@@ -112,9 +112,9 @@ export async function getVerifiedPaymentMethod(cleanerId: string) {
       cleanerId,
       isActive: true,
       verifiedAt: { not: null },
-    },
+    } as LooseAny,
     orderBy: {
       verifiedAt: "desc",
-    },
+    } as LooseAny,
   });
 }

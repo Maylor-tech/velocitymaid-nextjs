@@ -49,7 +49,7 @@ function SuccessContent() {
             Thank you for booking with VelocityMaid. Your payment has been processed successfully.
           </p>
           <p className="text-lg font-semibold text-vm-cyan-dark mb-6">
-            We'll contact you within 24 hours to confirm your appointment.
+            We&apos;ll contact you within 24 hours to confirm your appointment.
           </p>
           {sessionId && (
             <p className="text-sm text-vm-muted mb-8">
@@ -57,11 +57,11 @@ function SuccessContent() {
             </p>
           )}
           <div className="bg-vm-surface border border-vm-border rounded-lg p-6 mb-8 text-left">
-            <h2 className="font-semibold text-vm-text mb-3">What's Next?</h2>
+            <h2 className="font-semibold text-vm-text mb-3">What&apos;s Next?</h2>
             <ul className="space-y-2 text-vm-text">
               <li className="flex items-start">
                 <span className="text-vm-cyan-dark mr-2">✓</span>
-                <span>You'll receive a confirmation email shortly with all the details</span>
+                <span>You&apos;ll receive a confirmation email shortly with all the details</span>
               </li>
               <li className="flex items-start">
                 <span className="text-vm-cyan-dark mr-2">✓</span>
@@ -83,7 +83,7 @@ function SuccessContent() {
               Love Your Cleaning?
             </h3>
             <p className="text-vm-text mb-4 text-center">
-              After your service, we'd love to hear about your experience!
+              After your service, we&apos;d love to hear about your experience!
             </p>
             <div className="text-center">
               <Link

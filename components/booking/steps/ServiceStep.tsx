@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import {
   BOOKING_MARKETS,
-  BRANCH_SLUGS_BY_MARKET,
+
   ALL_BOOKABLE_BRANCH_SLUGS,
   branchBelongsToMarket,
   branchLocationSubtitle,

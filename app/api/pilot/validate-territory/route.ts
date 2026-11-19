@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       valid: true,
       zipCode: validation.zipCode,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[PILOT_TERRITORY] Validation error:", error);
     return NextResponse.json(
       {
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
       zipCodes,
       serviceHours,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[PILOT_TERRITORY] Get error:", error);
     return NextResponse.json(
       {

@@ -37,7 +37,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
       displayName: guestFacingDisplayName(property.guestDisplayName),
       fallbackEligible,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to load stay';
     console.error('[api/stay/:token GET]', error);

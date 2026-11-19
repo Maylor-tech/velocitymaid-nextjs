@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { Download, Instagram, Image as ImageIcon, FileText } from 'lucide-react';
+import { Instagram, Image as ImageIcon, FileText } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'VelocityMaid New Jersey - Instagram Content Pack',
@@ -66,13 +66,13 @@ export default function InstagramContentPackPage() {
               <li>Click on any graphic below to view it</li>
               <li>Open in browser (HTML format)</li>
               <li>Press Ctrl+P (or Cmd+P on Mac)</li>
-              <li>Select "Save as PDF" or use a screenshot tool</li>
+              <li>Select &quot;Save as PDF&quot; or use a screenshot tool</li>
               <li>For PNG: Use browser DevTools or a screenshot extension</li>
               <li>Download captions from the caption files</li>
             </ol>
             <div className="mt-6 p-4 bg-white rounded-lg border-2 border-[#F8C548]">
               <p className="text-sm text-vm-text">
-                <strong>Pro Tip:</strong> For best quality PNG export, use a browser extension like "Full Page Screen Capture" 
+                <strong>Pro Tip:</strong> For best quality PNG export, use a browser extension like &quot;Full Page Screen Capture&quot; 
                 or use Chrome DevTools to capture the element at exact dimensions (1080x1080 for feed, 1080x1920 for stories).
               </p>
             </div>

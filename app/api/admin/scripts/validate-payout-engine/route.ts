@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
         failed: result.results.filter((r) => !r.success).length,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[VALIDATE_PAYOUT_ENGINE_API] Error:", error);
     return NextResponse.json(
       {

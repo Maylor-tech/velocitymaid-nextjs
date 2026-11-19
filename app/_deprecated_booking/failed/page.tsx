@@ -22,9 +22,9 @@ export default function BookingFailedPage() {
           <div className="mb-6">
             <XCircle className="w-20 h-20 text-red-500 mx-auto" />
           </div>
-          <h1 className="text-4xl font-bold text-vm-text mb-4">Payment didn't go through</h1>
+          <h1 className="text-4xl font-bold text-vm-text mb-4">Payment didn&apos;t go through</h1>
           <p className="text-xl text-vm-muted mb-6">
-            We couldn't process your payment. This could be due to several reasons:
+            We couldn&apos;t process your payment. This could be due to several reasons:
           </p>
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8 text-left">
             <h2 className="font-semibold text-vm-text mb-3">Common reasons:</h2>

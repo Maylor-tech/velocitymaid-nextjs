@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       application,
       message: 'Franchise application submitted successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Franchise application error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to submit franchise application' },

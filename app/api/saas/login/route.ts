@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
         role: user.role,
       });
       console.log('[LOGIN] JWT token created successfully.');
-    } catch (tokenError: any) {
+    } catch (tokenError) {
       console.error('\n[LOGIN] FATAL ERROR: Token creation failed');
       console.error(`[${requestId}] Token creation error:`, tokenError);
       console.error(`[${requestId}] Token error details:`, {
@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
         maxAge: 60 * 60 * 24 * 7, // 7 days
       });
       console.log('[LOGIN] Cookie set successfully.');
-    } catch (cookieError: any) {
+    } catch (cookieError) {
       console.error(`[${requestId}] Cookie setting error:`, cookieError);
       return NextResponse.json(
         { success: false, error: 'Failed to set session', requestId },
@@ -194,7 +194,7 @@ export async function POST(req: NextRequest) {
       },
       requestId,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('\n[LOGIN] FATAL ERROR: Unexpected error in login');
     console.error(`[${requestId}] Login error:`, error);
     console.error(`[${requestId}] Error details:`, {

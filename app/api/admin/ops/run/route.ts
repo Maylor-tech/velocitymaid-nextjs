@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 import { runFullOpsJob } from '@/lib/workers/opsWorkers';
 import { logAuditEntry } from '@/lib/audit';
@@ -71,13 +72,16 @@ export async function POST(request: NextRequest) {
     try {
       await prisma.workerRunLog.create({
         data: {
+          id: randomUUID(),
           branchId,
           jobType: 'ops-full',
           startedAt,
           finishedAt,
           durationMs: result.durationMs,
           status: result.success ? 'SUCCESS' : 'FAILED',
-          error: result.success ? null : (result as any).error,
+          error: result.success
+            ? null
+            : ("error" in result ? String(result.error) : "Job failed"),
         },
       });
     } catch (logError) {
@@ -110,7 +114,7 @@ export async function POST(request: NextRequest) {
       cleanerLevels: result.cleanerLevels,
       integrity: result.integrity,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Worker run error:', error);
 

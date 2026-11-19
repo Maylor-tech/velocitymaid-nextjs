@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       
       await prisma.$transaction(async (tx) => {
         for (const payout of eligiblePayouts) {
-          const existingDetails = (payout.policyEvalDetails as any) || {};
+          const existingDetails = (payout.policyEvalDetails as LooseAny) || {};
 
           const updatedDetails = {
             ...existingDetails,
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
               paidAt,
               policyEvalDetails: updatedDetails,
               updatedAt: new Date(),
-            },
+            } as LooseAny,
           });
 
           settledPayoutIds.push(payout.id);
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
             },
             data: {
               payoutStatus: "PAID",
-            },
+            } as LooseAny,
           });
         }
       });
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     // Process all eligible payouts in a single transaction
     await prisma.$transaction(async (tx) => {
       for (const payout of eligiblePayouts) {
-        const existingDetails = (payout.policyEvalDetails as any) || {};
+        const existingDetails = (payout.policyEvalDetails as LooseAny) || {};
 
         // Update settlement metadata
         const updatedDetails = {
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
             paidAt,
             policyEvalDetails: updatedDetails,
             updatedAt: new Date(),
-          },
+          } as LooseAny,
         });
 
         settledPayoutIds.push(payout.id);
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
           },
           data: {
             payoutStatus: "PAID",
-          },
+          } as LooseAny,
         });
       }
     });
@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
       notifyPayoutPaid(
         payout.cleanerId,
         payout.id,
-        payout.cleanerAmount,
+        Number(payout.cleanerAmount),
         payout.currency
       ).catch((err) => {
         console.error(`[SETTLE] Failed to send notification for payout ${payout.id}:`, err);
@@ -235,7 +235,7 @@ export async function POST(request: NextRequest) {
       settledAt: paidAt.toISOString(),
       payoutIds: settledPayoutIds,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[SETTLE] Error:", error);
     return NextResponse.json(

@@ -83,7 +83,7 @@ export async function POST(
       longitude: result.longitude,
       address: result.address,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('[MAP GEOCODE]', error);
     const message =

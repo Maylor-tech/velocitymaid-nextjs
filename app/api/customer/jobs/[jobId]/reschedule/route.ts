@@ -22,7 +22,7 @@ export async function POST(
   { params }: { params: { jobId: string } }
 ) {
   try {
-    const auth = await requireCustomerJobOwnership(request, params.jobId);
+    const _auth = await requireCustomerJobOwnership(request, params.jobId);
     const session = await getCustomerSession();
     if (!session) throw new Error("Session not found after auth");
 
@@ -124,7 +124,7 @@ If you have questions, just reply here.
       success: true,
       message: 'Reschedule request submitted successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Reschedule job error:', error);
     return NextResponse.json(
       {

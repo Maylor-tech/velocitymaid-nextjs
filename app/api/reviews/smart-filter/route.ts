@@ -192,7 +192,7 @@ Thank you for giving us the opportunity to improve. 🙏`;
       { success: false, error: 'Invalid rating' },
       { status: 400 }
     );
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Smart review filter error:', error);
     const message = error instanceof Error ? error.message : 'Failed to process review';
     return NextResponse.json(

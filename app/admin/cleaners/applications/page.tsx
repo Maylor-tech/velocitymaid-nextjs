@@ -71,7 +71,7 @@ export default function CleanerApplicationsPage() {
       } else {
         throw new Error(data.error || "Failed to fetch applications");
       }
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Error fetching applications:", err);
       setError(err instanceof Error ? err.message : "Failed to load applications");
       setApplications([]);
@@ -96,7 +96,7 @@ export default function CleanerApplicationsPage() {
       if (!data.success) throw new Error(data.error || "Failed to approve");
       showToast("Application accepted — cleaner profile created");
       fetchApplications();
-    } catch (err: unknown) {
+    } catch (err) {
       showToast(err instanceof Error ? err.message : "Failed to approve", "error");
     }
   };
@@ -109,7 +109,7 @@ export default function CleanerApplicationsPage() {
       if (!data.success) throw new Error(data.error || "Failed to reject");
       showToast("Application rejected");
       fetchApplications();
-    } catch (err: unknown) {
+    } catch (err) {
       showToast(err instanceof Error ? err.message : "Failed to reject", "error");
     }
   };
@@ -125,7 +125,7 @@ export default function CleanerApplicationsPage() {
       if (!data.success) throw new Error(data.error || "Failed to update");
       showToast("Training invitation recorded");
       fetchApplications();
-    } catch (err: unknown) {
+    } catch (err) {
       showToast(err instanceof Error ? err.message : "Failed to invite", "error");
     }
   };

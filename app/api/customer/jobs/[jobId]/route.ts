@@ -188,7 +188,7 @@ export async function GET(
         completedAt: job.completedAt?.toISOString() || undefined,
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof Response) return error;
     console.error('Get job details error:', error);
     const message =

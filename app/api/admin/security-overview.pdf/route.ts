@@ -357,7 +357,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="velocitymaid-security-overview.pdf"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_SECURITY_OVERVIEW] Error:", error);
 

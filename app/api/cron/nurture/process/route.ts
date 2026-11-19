@@ -163,7 +163,7 @@ export async function GET(request: NextRequest) {
       processed: processedCount,
       sequencesChecked: sequences.length,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Process nurture messages error:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Failed to process nurture messages' },

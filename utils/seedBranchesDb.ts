@@ -619,7 +619,7 @@ export async function seedAllBranchesDb() {
       vermont: vt,
       portAntonio,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Error seeding branches:', error);
     throw error;
   }

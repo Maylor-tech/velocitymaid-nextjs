@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       success: true,
       requests,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_INVESTOR_REQUESTS] Error:", error);
 
     if (error instanceof Response) {

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       success: true,
       paymentMethod,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Update payment method error:', error);
     const message = error instanceof Error ? error.message : 'Failed to update payment method';

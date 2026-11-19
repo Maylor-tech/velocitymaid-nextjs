@@ -20,19 +20,19 @@ export async function GET(request: NextRequest) {
     const cleaners = await prisma.user.findMany({
       where: {
         role: 'CLEANER',
-        primaryBranch: {
+        Branch_User_primaryBranchIdToBranch: {
           country: 'Jamaica', // Filter for Jamaica branch only
         },
       },
       include: {
-        primaryBranch: {
+        Branch_User_primaryBranchIdToBranch: {
           select: {
             name: true,
             country: true,
           },
         },
-        trainingStatus: true,
-        lessonProgresses: {
+        TrainingStatus: true,
+        LessonProgress: {
           where: {
             status: 'COMPLETED',
           },
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     // Get total number of lessons
     const totalLessons = await prisma.trainingLesson.count({
       where: {
-        module: {
+        TrainingModule: {
           isActive: true,
         },
       },
@@ -54,12 +54,12 @@ export async function GET(request: NextRequest) {
       cleanerId: cleaner.id,
       cleanerName: cleaner.name || 'Unknown',
       cleanerEmail: cleaner.email,
-      branchName: cleaner.primaryBranch?.name || 'Unknown',
-      branchCountry: cleaner.primaryBranch?.country || 'Unknown',
-      overallStatus: cleaner.trainingStatus?.overallStatus || 'NOT_STARTED',
-      lastModuleSlug: cleaner.trainingStatus?.lastModuleSlug || null,
-      updatedAt: cleaner.trainingStatus?.updatedAt || cleaner.updatedAt,
-      completedLessons: cleaner.lessonProgresses.length,
+      branchName: cleaner.Branch_User_primaryBranchIdToBranch?.name || 'Unknown',
+      branchCountry: cleaner.Branch_User_primaryBranchIdToBranch?.country || 'Unknown',
+      overallStatus: cleaner.TrainingStatus?.overallStatus || 'NOT_STARTED',
+      lastModuleSlug: cleaner.TrainingStatus?.lastModuleSlug || null,
+      updatedAt: cleaner.TrainingStatus?.updatedAt || cleaner.updatedAt,
+      completedLessons: cleaner.LessonProgress.length,
       totalLessons,
     }));
 
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       success: true,
       cleaners: cleanersWithStatus,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get training status error:', error);
     return NextResponse.json(

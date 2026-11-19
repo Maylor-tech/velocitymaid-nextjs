@@ -39,7 +39,7 @@ export async function GET(
     const unpaidJobsCount = await prisma.job.count({
       where: {
         customerId,
-        status: 'completed',
+        status: 'COMPLETED',
         // TODO: Add payment status check when payment tracking is available
       },
     });
@@ -54,7 +54,7 @@ export async function GET(
       lastComplaintAt,
       unpaidJobsCount,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get customer risk error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get customer risk' },
@@ -84,7 +84,7 @@ export async function PATCH(
       );
     }
 
-    const changes: any = {};
+    const changes: Record<string, { from: LooseAny; to: LooseAny }> = {};
 
     // Update risk score
     if (riskScore !== undefined) {
@@ -129,7 +129,7 @@ export async function PATCH(
       success: true,
       message: 'Customer risk updated',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update customer risk error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update customer risk' },

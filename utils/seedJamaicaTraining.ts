@@ -5,6 +5,7 @@
  * This should be run after the database migration.
  */
 
+import { randomUUID } from 'crypto';
 import { prisma } from '../lib/prisma';
 import { Prisma } from '@prisma/client';
 
@@ -62,6 +63,7 @@ async function upsertLesson(
   } else {
     return await prisma.trainingLesson.create({
       data: {
+        id: randomUUID(),
         moduleId,
         order,
         title: data.title,
@@ -80,6 +82,7 @@ async function seedWelcomeModule() {
     where: { slug: 'welcome-jamaica' },
     update: {},
     create: {
+      id: randomUUID(),
       slug: 'welcome-jamaica',
       title: 'Welcome to VelocityMaid Jamaica',
       description: 'Get started with VelocityMaid and learn about our mission and how we work with you.',
@@ -231,6 +234,7 @@ async function seedProfessionalStandardsModule() {
     where: { slug: 'professional-standards' },
     update: {},
     create: {
+      id: randomUUID(),
       slug: 'professional-standards',
       title: 'Professional Standards & Culture',
       description: 'Learn about our dress code, timekeeping, and communication standards.',
@@ -407,6 +411,7 @@ async function seedCleaningSystemsModule() {
     where: { slug: 'cleaning-systems' },
     update: {},
     create: {
+      id: randomUUID(),
       slug: 'cleaning-systems',
       title: 'Cleaning Systems & Checklists',
       description: 'Learn our standard cleaning procedures for different service types.',
@@ -646,6 +651,7 @@ async function seedSafetyEcoModule() {
     where: { slug: 'safety-eco' },
     update: {},
     create: {
+      id: randomUUID(),
       slug: 'safety-eco',
       title: 'Products, Safety & Eco Practices',
       description: 'Learn about safe product use, personal protection, and eco-friendly practices.',
@@ -878,6 +884,7 @@ async function seedQualityScorecardModule() {
     where: { slug: 'quality-scorecard' },
     update: {},
     create: {
+      id: randomUUID(),
       slug: 'quality-scorecard',
       title: 'Quality Control & Scorecard',
       description: 'Understand how quality is measured and how to achieve excellence.',
@@ -1130,6 +1137,7 @@ async function seedRoutesCommunicationModule() {
     where: { slug: 'routes-communication' },
     update: {},
     create: {
+      id: randomUUID(),
       slug: 'routes-communication',
       title: 'Routes, Time & Communication',
       description: 'Learn how to manage routes, time, and handle communication effectively.',

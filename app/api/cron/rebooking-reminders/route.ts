@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
       skipped,
       unknown,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Rebooking reminder cron failed';
     console.error('[rebooking-reminders]', error);

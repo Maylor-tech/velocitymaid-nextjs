@@ -16,7 +16,7 @@ const brandColors = {
   gray: '#F1F1EB',
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const html = generateOfficeContract();
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="velocitymaid-nj-office-cleaning-contract.html"',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate office contract error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate office contract' },

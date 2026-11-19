@@ -28,7 +28,7 @@ export async function calculateCleanerShare(job: {
       if (payoutRules.baseRateType === 'PERCENTAGE') {
         const percentage = Number(payoutRules.baseRateValue) / 100;
         return Math.round(amount * percentage * 100) / 100;
-      } else if (payoutRules.baseRateType === 'FIXED') {
+      } else if ((payoutRules.baseRateType as string) === 'FIXED') {
         // Fixed rate per job (less common, but handle it)
         return Number(payoutRules.baseRateValue);
       }
@@ -52,8 +52,8 @@ export async function calculateCleanerShare(job: {
  * If no incentive/penalty models exist, returns 0 for both.
  */
 export async function applyBonusesAndPenalties(
-  cleanerId: string,
-  range: { from: Date; to: Date }
+  _cleanerId: string,
+  _range: { from: Date; to: Date }
 ): Promise<{ bonuses: number; penalties: number }> {
   try {
     // Check for incentive/bonus models
@@ -94,7 +94,7 @@ export async function getPayableJobs(
     where: {
       assignedCleanerId: cleanerId,
       branchId,
-      status: 'completed',
+      status: 'COMPLETED',
       completedAt: {
         gte: range.from,
         lte: range.to,
@@ -113,7 +113,12 @@ export async function getPayableJobs(
     },
   });
 
-  return jobs;
+  return jobs.map((job) => ({
+    id: job.id,
+    totalPrice: job.totalPrice == null ? null : Number(job.totalPrice),
+    completedAt: job.completedAt,
+    branchId: job.branchId,
+  }));
 }
 
 

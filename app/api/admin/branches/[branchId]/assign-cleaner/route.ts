@@ -104,7 +104,7 @@ export async function POST(
         branchName: branch.name,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Assign cleaner error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to assign cleaner' },
@@ -150,7 +150,7 @@ export async function DELETE(
       success: true,
       message: 'Cleaner removed from branch',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Remove cleaner error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to remove cleaner' },
@@ -182,7 +182,7 @@ export async function GET(
     }
 
     // Get all users assigned to this branch
-    const { getUserBranches, findUserById, getUsersByRole } = await import('../../../../../../utils/userData');
+    const { getUserBranches, getUsersByRole } = await import('../../../../../../utils/userData');
     const allCleaners = getUsersByRole('CLEANER');
     
     const branchCleaners = allCleaners
@@ -208,7 +208,7 @@ export async function GET(
       cleaners: branchCleaners,
       count: branchCleaners.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('List cleaners error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to list cleaners' },

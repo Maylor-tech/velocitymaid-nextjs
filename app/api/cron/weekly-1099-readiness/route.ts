@@ -344,7 +344,7 @@ export async function POST(req: NextRequest) {
           `[CRON_WEEKLY_1099_READINESS] Sent readiness report to ${admin.email}`
         );
         emailsSent++;
-      } catch (error: unknown) {
+      } catch (error) {
         console.error(
           `[CRON_WEEKLY_1099_READINESS] Failed to send email to ${admin.email}:`,
           error
@@ -367,7 +367,7 @@ export async function POST(req: NextRequest) {
       emailsFailed,
       dryRun,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[CRON_WEEKLY_1099_READINESS] Error:", error);
 
     return NextResponse.json(

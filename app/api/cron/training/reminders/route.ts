@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       remindersSent,
       errors,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Training reminders cron error:', error);
     return NextResponse.json(
       { success: false, error: (error instanceof Error ? error.message : undefined) || 'Failed to process reminders' },

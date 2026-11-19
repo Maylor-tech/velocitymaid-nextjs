@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, CheckCircle, XCircle, Send, AlertCircle, Loader2 } from "lucide-react";
+import { Bell, CheckCircle, Send, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 interface Notification {
@@ -10,14 +10,14 @@ interface Notification {
   type: string;
   title: string;
   message: string;
-  metadata: any;
+  metadata: LooseAny;
   read: boolean;
   readAt: string | null;
   createdAt: string;
 }
 
 export default function CleanerNotificationsPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export default function CleanerNotificationsPage() {
       }
 
       setNotifications(data.notifications || []);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch notifications:", err);
       setError(err.message || "Failed to load notifications");
     } finally {
@@ -70,7 +70,7 @@ export default function CleanerNotificationsPage() {
             : n
         )
       );
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to mark notification as read:", err);
       alert(err.message || "Failed to mark notification as read");
     } finally {
@@ -155,7 +155,7 @@ export default function CleanerNotificationsPage() {
             <Bell className="w-12 h-12 text-vm-muted mx-auto mb-4" />
             <p className="text-vm-muted">No notifications</p>
             <p className="text-sm text-vm-muted mt-2">
-              You'll be notified about important updates here
+              You&apos;ll be notified about important updates here
             </p>
           </div>
         ) : (

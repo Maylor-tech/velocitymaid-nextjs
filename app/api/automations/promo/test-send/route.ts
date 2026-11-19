@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Test send promo error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send test message' },

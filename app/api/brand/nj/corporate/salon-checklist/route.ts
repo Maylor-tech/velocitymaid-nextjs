@@ -14,7 +14,7 @@ const brandColors = {
   gray: '#F1F1EB',
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const html = generateSalonChecklist();
 
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="velocitymaid-nj-salon-cleaning-checklist.html"',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate salon checklist error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate salon checklist' },

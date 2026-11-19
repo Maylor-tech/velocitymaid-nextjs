@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json({ success: true, jobs: formattedJobs });
-  } catch (err: unknown) {
+  } catch (err) {
     if (err && typeof err === "object" && "status" in err) throw err;
     const message = err instanceof Error ? err.message : "Failed to fetch jobs";
     return NextResponse.json(

@@ -4,7 +4,7 @@
  * Sends WhatsApp notification to admin when a review with rating <= 3 is submitted
  */
 
-import { sendWhatsAppTemplate } from './whatsapp';
+
 import { getAdminNumber } from './whatsappRouter';
 import type { Review } from '../utils/reviewData';
 

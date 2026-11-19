@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2, ArrowLeft, Mail, Phone, MapPin, Calendar, FileText, User } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -24,7 +24,7 @@ interface CleanerApplication {
   phone: string;
   whatsappNumber: string | null;
   experienceLevel: string | null;
-  daysAvailable: any;
+  daysAvailable: string[] | Record<string, unknown> | null;
   notes: string | null;
   status: string;
   preferredName?: string | null;
@@ -48,7 +48,6 @@ interface CleanerApplication {
 }
 
 export default function CleanerApplicationDetailPage() {
-  const router = useRouter();
   const params = useParams();
   const id = params.id as string;
   
@@ -78,7 +77,7 @@ export default function CleanerApplicationDetailPage() {
       } else {
         throw new Error(data.error || 'Failed to fetch application');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching application:', err);
       setError(err.message || 'Failed to load application');
     } finally {
@@ -107,7 +106,7 @@ export default function CleanerApplicationDetailPage() {
       } else {
         throw new Error(data.error || 'Failed to approve application');
       }
-    } catch (err: any) {
+    } catch (err) {
       setToastMessage(err.message || 'Failed to approve application');
       setToastType('error');
       setShowToast(true);
@@ -138,7 +137,7 @@ export default function CleanerApplicationDetailPage() {
       } else {
         throw new Error(data.error || 'Failed to reject application');
       }
-    } catch (err: any) {
+    } catch (err) {
       setToastMessage(err.message || 'Failed to reject application');
       setToastType('error');
       setShowToast(true);
@@ -171,7 +170,7 @@ export default function CleanerApplicationDetailPage() {
       setToastType('success');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
-    } catch (err: unknown) {
+    } catch (err) {
       setToastMessage(err instanceof Error ? err.message : 'Failed to update status');
       setToastType('error');
       setShowToast(true);
@@ -194,7 +193,7 @@ export default function CleanerApplicationDetailPage() {
       setToastMessage('Notes saved');
       setToastType('success');
       setShowToast(true);
-    } catch (err: unknown) {
+    } catch (err) {
       setToastMessage(err instanceof Error ? err.message : 'Failed to save notes');
       setToastType('error');
       setShowToast(true);

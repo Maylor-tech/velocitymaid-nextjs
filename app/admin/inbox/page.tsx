@@ -11,8 +11,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
 import { Loader2, Mail, Building2, Users, Briefcase } from "lucide-react";
 
 interface ContactMessage {
@@ -85,7 +83,7 @@ export default function AdminInboxPage() {
       } else {
         throw new Error(data.error || "Failed to fetch messages");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch messages:", err);
       setError(err.message || "Failed to load messages");
     } finally {

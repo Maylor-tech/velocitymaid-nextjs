@@ -21,6 +21,27 @@ import { prisma } from "@/lib/prisma";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+interface PayoutListRow {
+  id: string;
+  jobId: string;
+  cleanerId: string;
+  branchId: string;
+  grossAmount: LooseAny;
+  cleanerAmount: LooseAny;
+  platformFee: LooseAny;
+  currency: string;
+  status: string;
+  policyVersionId: string | null;
+  policyEvalDetails: LooseAny;
+  paymentMethodSnapshot: LooseAny;
+  createdAt: Date;
+  paidAt: Date | null;
+  executedAt: Date | null;
+  executionMethod: string | null;
+  externalReferenceId: string | null;
+  executionNote: string | null;
+}
+
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
@@ -36,7 +57,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
 
     // Build where clause
-    const where: any = {};
+    const where: LooseAny = {};
     if (jobId) where.jobId = jobId;
     if (cleanerId) where.cleanerId = cleanerId;
     if (status && status !== "ALL") where.status = status;
@@ -58,7 +79,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch payouts
-    const payouts = await prisma.jobPayout.findMany({
+    const payouts = await (
+      prisma.jobPayout.findMany as unknown as (args: LooseAny) => Promise<PayoutListRow[]>
+    )({
       where,
       select: {
         id: true,
@@ -109,7 +132,7 @@ export async function GET(request: NextRequest) {
         where: { id: { in: branchIds } },
         select: { id: true, name: true },
       }),
-      prisma.payoutPolicyVersion.findMany({
+      (prisma as unknown as { payoutPolicyVersion: { findMany: (args: LooseAny) => Promise<{ id: string; name: string }[]> } }).payoutPolicyVersion.findMany({
         where: { id: { in: policyVersionIds } },
         select: { id: true, name: true },
       }),
@@ -124,8 +147,8 @@ export async function GET(request: NextRequest) {
       payouts: payouts.map((p) => {
         // Safe access to policyEvalDetails - treat as nullable
         const policy = p.policyEvalDetails ?? {};
-        const adminDecision = (policy as any)?.adminDecision ?? null;
-        const paymentSettlement = (policy as any)?.paymentSettlement ?? null;
+        const adminDecision = (policy as LooseAny)?.adminDecision ?? null;
+        const paymentSettlement = (policy as LooseAny)?.paymentSettlement ?? null;
         
         // Get paidAt from payout.paidAt or from paymentSettlement.timestamp
         const paidAtValue = p.paidAt?.toISOString() ?? (paymentSettlement?.timestamp ?? null);
@@ -173,7 +196,7 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_PAYOUTS_LIST] Error:", error);
     // Return empty list instead of throwing

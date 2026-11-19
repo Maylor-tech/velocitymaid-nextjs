@@ -50,7 +50,7 @@ export async function GET(
           lte: to,
         },
         status: {
-          notIn: ['cancelled'],
+          notIn: ['CANCELLED'],
         },
       },
       include: {
@@ -88,7 +88,7 @@ export async function GET(
       weekStart: from.toISOString(),
       weekEnd: to.toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching cleaner schedule:', error);
     return NextResponse.json(
       {

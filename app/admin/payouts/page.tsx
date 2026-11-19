@@ -7,7 +7,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import {
   Eye,
   Loader2,
@@ -17,8 +16,6 @@ import {
   RotateCcw,
   XCircle,
   Filter,
-  Calendar,
-  DollarSign,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -35,7 +32,6 @@ interface PayoutBatch {
 }
 
 export default function AdminPayoutsPage() {
-  const router = useRouter();
   const [batches, setBatches] = useState<PayoutBatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +66,7 @@ export default function AdminPayoutsPage() {
       } else {
         throw new Error(data.error || "Failed to fetch batches");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching batches:", err);
       setError(err.message || "Failed to load batches");
     } finally {
@@ -113,7 +109,7 @@ export default function AdminPayoutsPage() {
       } else {
         throw new Error(data.error || "Failed to approve batch");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error approving batch:", err);
       alert(err.message || "Failed to approve batch");
     } finally {
@@ -141,7 +137,7 @@ export default function AdminPayoutsPage() {
       } else {
         throw new Error(data.error || "Failed to process batch");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error processing batch:", err);
       alert(err.message || "Failed to process batch");
     } finally {
@@ -169,7 +165,7 @@ export default function AdminPayoutsPage() {
       } else {
         throw new Error(data.error || "Failed to retry batch");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error retrying batch:", err);
       alert(err.message || "Failed to retry batch");
     } finally {
@@ -199,7 +195,7 @@ export default function AdminPayoutsPage() {
       } else {
         throw new Error(data.error || "Failed to cancel batch");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error canceling batch:", err);
       alert(err.message || "Failed to cancel batch");
     } finally {
@@ -262,7 +258,7 @@ export default function AdminPayoutsPage() {
           `Batch created: ${data.summary?.eligibleCleaners ?? 0} cleaner(s), $${data.batch?.totalAmountDollars ?? "0.00"}`
       );
       await fetchBatches();
-    } catch (err: unknown) {
+    } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to create batch";
       setError(message);
     } finally {

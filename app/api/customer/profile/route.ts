@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
  * 
  * Get current customer profile
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const session = await getCustomerSession();
 
@@ -86,7 +86,7 @@ export async function PATCH(req: NextRequest) {
     } = body ?? {};
 
     // Basic validation — keep it simple, front-end will do more
-    const updates: Record<string, any> = {};
+    const updates: Record<string, LooseAny> = {};
 
     if (typeof firstName === 'string') updates.firstName = firstName.trim() || null;
     if (typeof lastName === 'string') updates.lastName = lastName.trim() || null;
@@ -128,9 +128,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     }
 
-    const materialUpdates: Record<string, any> = {};
+    const materialUpdates: Record<string, LooseAny> = {};
     for (const [key, value] of Object.entries(updates)) {
-      const cur = (current as Record<string, any>)[key];
+      const cur = (current as Record<string, LooseAny>)[key];
       const a = cur == null ? null : (typeof cur === 'boolean' ? cur : String(cur).trim());
       const b = value == null ? null : (typeof value === 'boolean' ? value : String(value).trim());
       if (a !== b) materialUpdates[key] = updates[key];

@@ -4,35 +4,6 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// Helper functions for date calculations
-function startOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function endOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(23, 59, 59, 999);
-  return d;
-}
-
-function startOfWeek(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day;
-  d.setDate(diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function endOfWeek(date: Date): Date {
-  const d = startOfWeek(date);
-  d.setDate(d.getDate() + 6);
-  d.setHours(23, 59, 59, 999);
-  return d;
-}
-
 function startOfMonth(date: Date): Date {
   const d = new Date(date);
   d.setDate(1);
@@ -92,9 +63,9 @@ export async function GET(
     });
 
     const totalJobs = allJobs.length;
-    const completedJobs = allJobs.filter((j) => j.status === 'completed').length;
-    const cancelledJobs = allJobs.filter((j) => j.status === 'cancelled').length;
-    const unassignedJobs = allJobs.filter((j) => !j.assignedCleanerId && j.status !== 'cancelled' && j.status !== 'completed').length;
+    const completedJobs = allJobs.filter((j) => j.status === 'COMPLETED').length;
+    const cancelledJobs = allJobs.filter((j) => j.status === 'CANCELLED').length;
+    const unassignedJobs = allJobs.filter((j) => !j.assignedCleanerId && j.status !== 'CANCELLED' && j.status !== 'COMPLETED').length;
 
     const cancellationRate = totalJobs > 0 ? (cancelledJobs / totalJobs) * 100 : 0;
 
@@ -122,7 +93,7 @@ export async function GET(
 
     // Revenue
     const completedJobsWithPrice = allJobs.filter(
-      (j) => j.status === 'completed' && j.totalPrice
+      (j) => j.status === 'COMPLETED' && j.totalPrice
     );
     let totalRevenue = 0;
     for (const job of completedJobsWithPrice) {
@@ -240,7 +211,7 @@ export async function GET(
         owed: payoutsOwedAmount,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('BRANCH_INSIGHTS_ERROR:', error);
     return NextResponse.json(
       {
@@ -251,4 +222,3 @@ export async function GET(
     );
   }
 }
-

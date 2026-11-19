@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation';
 import {
   X,
   Star,
-  Clock,
+
   TrendingUp,
   Shield,
   AlertTriangle,
   WalletCards,
   CheckCircle2,
   FileWarning,
-  User as UserIcon,
+  User as 
   Loader2,
   ExternalLink,
   Edit,
@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Cleaner, CleanerProfileDetails } from './types';
 import AvailabilityEditorModal from './AvailabilityEditorModal';
-import AddIncentiveModal from './AddIncentiveModal';
+
 import { getLevelBadgeColor } from '@/lib/cleaner-level';
 
 interface CleanerProfileDrawerProps {
@@ -100,7 +100,7 @@ export default function CleanerProfileDrawer({
     earnedAt: string | null;
     createdAt: string;
   }>>([]);
-  const [isAddIncentiveModalOpen, setIsAddIncentiveModalOpen] = useState(false);
+  const [_isAddIncentiveModalOpen, setIsAddIncentiveModalOpen] = useState(false);
   const [cleanerCompliance, setCleanerCompliance] = useState<{
     isSuspended: boolean;
     warningCount: number;
@@ -155,7 +155,7 @@ export default function CleanerProfileDrawer({
             ? {
                 averageRating: data.ratings.average ?? null,
                 totalRatings: data.ratings.count ?? 0,
-                recentRatings: (data.ratings.recent ?? []).map((r: any) => ({
+                recentRatings: (data.ratings.recent ?? []).map((r: LooseAny) => ({
                   rating: r.rating,
                   comment: r.comment ?? null,
                   customerName: r.customerName ?? null,
@@ -172,7 +172,7 @@ export default function CleanerProfileDrawer({
           payouts: data.payouts
             ? {
                 totalPaid: data.payouts.totalPaid ?? 0,
-                recentPayouts: (data.payouts.latest ?? []).map((p: any) => ({
+                recentPayouts: (data.payouts.latest ?? []).map((p: LooseAny) => ({
                   id: p.id,
                   amount: p.totalAmount ?? 0,
                   currency: p.currency ?? 'USD',
@@ -282,7 +282,7 @@ export default function CleanerProfileDrawer({
           // Compliance is optional, don't fail the whole load
           console.warn('Failed to load compliance:', complianceErr);
         }
-      } catch (err: any) {
+      } catch (err) {
         if (err.name === 'AbortError') return;
         console.error(err);
         setError(err.message || 'Failed to load cleaner profile');
@@ -350,7 +350,7 @@ export default function CleanerProfileDrawer({
       if (data.success) {
         setTrainingStatus(data.trainingStatus);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating training status:', err);
       alert('Failed to update training status. Please try again.');
     } finally {
@@ -1140,7 +1140,7 @@ export default function CleanerProfileDrawer({
                           </p>
                         )}
                         {r.comment && (
-                          <p className="mt-1 text-xs text-vm-muted">"{r.comment}"</p>
+                          <p className="mt-1 text-xs text-vm-muted">&quot;{r.comment}&quot;</p>
                         )}
                       </div>
                     ))}

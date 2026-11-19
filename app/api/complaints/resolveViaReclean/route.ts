@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/requireRole";
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -64,7 +65,7 @@ export async function PATCH(request: NextRequest) {
       success: true,
       complaint: updatedComplaint,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Resolve complaint via reclean error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to resolve complaint' },

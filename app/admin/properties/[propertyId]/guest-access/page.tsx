@@ -104,7 +104,7 @@ export default function AdminPropertyGuestAccessPage() {
           : 'Guest access rotated. Printed QR cards must be replaced.'
       );
       await load();
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : `${action} failed`);
     } finally {
       setBusy(false);

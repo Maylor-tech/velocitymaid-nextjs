@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const cleanerId = cookieStore.get('cleanerId')?.value;
@@ -257,7 +257,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="VelocityMaid-Jamaica-Cleaner-Handbook.html"',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate handbook PDF error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate handbook' },

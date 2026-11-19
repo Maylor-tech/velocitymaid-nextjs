@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       expired: result.expired,
       offerIds: result.offerIds,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('[cron/dispatch-offer-expire]', error);
     const message = error instanceof Error ? error.message : 'Failed to expire offers';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from "@/lib/auth/requireRole";
+import { Prisma } from '@prisma/client';
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 
 // PATCH /api/admin/cleaners/[cleanerId]/availability
@@ -76,19 +78,20 @@ export async function PATCH(
     const availability = await prisma.cleanerAvailability.upsert({
       where: { cleanerId },
       update: {
-        ...(workingDays && { workingDays: workingDays as any }),
-        ...(timeRanges && { timeRanges: timeRanges as any }),
+        ...(workingDays && { workingDays: workingDays as Prisma.InputJsonValue }),
+        ...(timeRanges && { timeRanges: timeRanges as Prisma.InputJsonValue }),
         ...(maxDailyJobs !== undefined && { maxDailyJobs }),
-        ...(blackoutDates !== undefined && { blackoutDates: blackoutDates as any }),
+        ...(blackoutDates !== undefined && { blackoutDates: blackoutDates as Prisma.InputJsonValue }),
         ...(isActive !== undefined && { isActive }),
         updatedAt: new Date(),
       },
       create: {
+        id: randomUUID(),
         cleanerId,
-        workingDays: (workingDays || existing?.workingDays || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) as any,
-        timeRanges: (timeRanges || existing?.timeRanges || [{ start: '09:00', end: '17:00' }]) as any,
+        workingDays: (workingDays || existing?.workingDays || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) as Prisma.InputJsonValue,
+        timeRanges: (timeRanges || existing?.timeRanges || [{ start: '09:00', end: '17:00' }]) as Prisma.InputJsonValue,
         maxDailyJobs: maxDailyJobs ?? existing?.maxDailyJobs ?? 3,
-        blackoutDates: (blackoutDates || existing?.blackoutDates || []) as any,
+        blackoutDates: (blackoutDates || existing?.blackoutDates || []) as Prisma.InputJsonValue,
         isActive: isActive ?? existing?.isActive ?? true,
         updatedAt: new Date(),
       },
@@ -104,7 +107,7 @@ export async function PATCH(
         isActive: availability.isActive,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Update availability error:', error);
     return NextResponse.json(
@@ -145,7 +148,7 @@ export async function GET(
         isActive: availability.isActive,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get availability error:', error);
     return NextResponse.json(

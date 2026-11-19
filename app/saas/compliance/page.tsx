@@ -75,7 +75,7 @@ export default function CompliancePage() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const _getStatusIcon = (status: string) => {
     switch (status) {
       case 'verified':
         return <CheckCircle className="w-5 h-5 text-vm-success" />;

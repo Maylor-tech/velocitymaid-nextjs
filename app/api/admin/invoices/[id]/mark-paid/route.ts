@@ -59,7 +59,7 @@ export async function POST(
       clamped,
       paymentAmount: creditedAmount,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to mark paid';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

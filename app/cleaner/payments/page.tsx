@@ -10,7 +10,7 @@ import { maskKeepLast } from "@/lib/mask";
 type PaymentMethod = {
   id: string;
   methodType: string;
-  details: any;
+  details: LooseAny;
   isActive: boolean;
   verifiedAt: string | null;
   verifiedBy: string | null;
@@ -130,7 +130,7 @@ export default function CleanerPaymentsPage() {
               {!method.verifiedAt && method.isActive && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                   <p className="text-sm text-yellow-800">
-                    Your payment method is pending verification. You'll be able to
+                    Your payment method is pending verification. You&apos;ll be able to
                     receive payouts once an administrator verifies your information.
                   </p>
                 </div>

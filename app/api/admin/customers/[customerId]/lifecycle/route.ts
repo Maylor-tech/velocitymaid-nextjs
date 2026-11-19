@@ -52,7 +52,7 @@ export async function POST(
     }
 
     const result = await permanentlyDeleteCustomer({ customerId, ...actor });
-    if (!result.deleted) {
+    if (result.deleted === false) {
       return NextResponse.json(
         {
           success: false,
@@ -64,7 +64,7 @@ export async function POST(
     }
 
     return NextResponse.json({ success: true, action: 'delete', deleted: true });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message =
       error instanceof Error ? error.message : 'Customer lifecycle action failed';

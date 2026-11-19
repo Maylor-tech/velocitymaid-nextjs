@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       success: true,
       paymentMethod,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get payment method error:', error);
     const message = error instanceof Error ? error.message : 'Failed to get payment method';

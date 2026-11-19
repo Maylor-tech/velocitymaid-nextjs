@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
         branch = await prisma.branch.findUnique({
           where: { id: branchId },
         });
-      } catch (dbError: unknown) {
+      } catch (dbError) {
         throw dbError;
       }
     }
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
         branch = await prisma.branch.findUnique({
           where: { slug: branchSlug },
         });
-      } catch (dbError: unknown) {
+      } catch (dbError) {
         throw dbError;
       }
     }
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
             include: { Branch: true },
           });
           branch = serviceArea?.Branch || null;
-        } catch (dbError: unknown) {
+        } catch (dbError) {
           throw dbError;
         }
       } else {
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
             orderBy: [{ priority: 'asc' }, { createdAt: 'asc' }],
           });
           branch = serviceArea?.Branch || null;
-        } catch (dbError: unknown) {
+        } catch (dbError) {
           throw dbError;
         }
       }
@@ -245,7 +245,7 @@ export async function POST(req: NextRequest) {
     if (!session.url) throw new Error('Stripe session.url missing');
 
     return NextResponse.json({ url: session.url });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Stripe checkout error:', error);
     const message = error instanceof Error ? error.message : 'Failed to create checkout session';
     return NextResponse.json({ error: message }, { status: 500 });

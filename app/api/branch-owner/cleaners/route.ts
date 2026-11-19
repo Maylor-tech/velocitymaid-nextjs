@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
       cleaners: cleanerStats,
       count: cleanerStats.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     // If it's a NextResponse (from requireRole), re-throw it
     if (error instanceof Response) {
       throw error;

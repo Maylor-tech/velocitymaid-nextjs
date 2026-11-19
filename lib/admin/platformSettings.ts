@@ -18,10 +18,10 @@ export async function saveInvoiceQuickAddItems(items: InvoiceQuickAddItem[]) {
     where: { id: 'default' },
     create: {
       id: 'default',
-      invoiceQuickAddItems: items,
+      invoiceQuickAddItems: items as LooseAny,
     },
     update: {
-      invoiceQuickAddItems: items,
+      invoiceQuickAddItems: items as LooseAny,
     },
   });
 }

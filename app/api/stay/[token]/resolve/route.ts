@@ -91,7 +91,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       propertyLabel: result.propertyLabel,
       serviceDate: result.serviceDate,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to resolve stay';
     console.error('[api/stay/:token/resolve POST]', error);

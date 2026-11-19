@@ -77,7 +77,7 @@ export async function POST(
     }
 
     return NextResponse.json({ photos: created });
-  } catch (error: unknown) {
+  } catch (error) {
     const auth = rethrowIfAuthResponse(error);
     if (auth) return auth;
     const message =

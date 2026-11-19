@@ -15,15 +15,22 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { TaxProfileStatus } from "@prisma/client";
+import { cleanerTaxProfile } from "@/app/api/admin/tax-profiles/delegate";
 
 /**
  * Generate leadership insights based on year data
  */
+type TaxYearSummaryJson = {
+  eligibleCleaners?: number;
+  verifiedW9?: number;
+  addressComplete?: number;
+  topBlockers?: Array<{ type: string; count: number }>;
+};
+
 function generateInsights(yearData: {
   finalScore: number;
   status: string;
-  summary: any;
+  summary: TaxYearSummaryJson | null;
   blockers?: Array<{ type: string; count: number }>;
 }): string[] {
   const insights: string[] = [];
@@ -101,7 +108,7 @@ export async function GET(request: NextRequest) {
 
     // Build year data array
     const years = archives.map((archive) => {
-      const summary = archive.summaryJson as any;
+      const summary = archive.summaryJson as TaxYearSummaryJson;
       const eligibleCleaners = summary?.eligibleCleaners || 0;
       const verifiedW9 = summary?.verifiedW9 || 0;
       const verifiedW9Pct =
@@ -125,7 +132,7 @@ export async function GET(request: NextRequest) {
             : 0,
         archiveDate: archive.archivedAt.toISOString().split("T")[0],
         archivedBy: archive.archivedBy,
-        blockers: blockers.map((b: any) => ({
+        blockers: blockers.map((b: { type: string; count: number }) => ({
           type: b.type,
           count: b.count,
         })),
@@ -198,7 +205,7 @@ export async function GET(request: NextRequest) {
       const yearEnd = new Date(mostRecentYear, 11, 31, 23, 59, 59, 999);
 
       // Get tax profiles for cleaners who were eligible
-      const taxProfiles = await prisma.cleanerTaxProfile.findMany({
+      const taxProfiles = await cleanerTaxProfile().findMany({
         where: {
           submittedAt: {
             gte: yearStart,
@@ -285,7 +292,7 @@ export async function GET(request: NextRequest) {
       },
       efficiency: efficiencyMetrics,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_1099_ANALYTICS] Error:", error);
 
     if (error instanceof Response) {

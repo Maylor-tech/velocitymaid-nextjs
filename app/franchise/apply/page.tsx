@@ -142,7 +142,7 @@ export default function FranchiseApplicationPage() {
       } else {
         setError(data.error || 'Failed to submit application');
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'Failed to submit application');
     } finally {
       setLoading(false);

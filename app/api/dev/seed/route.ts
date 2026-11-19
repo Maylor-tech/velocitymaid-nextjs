@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * Seeds the database with demo data for development and testing.
  * Only available in development mode.
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   // Only run in development mode
   if (process.env.NODE_ENV !== 'development' && process.env.APP_ENV !== 'development') {
     return NextResponse.json(
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       success: true,
       ...result,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Seed error:', error);
     return NextResponse.json(
       {

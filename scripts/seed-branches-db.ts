@@ -17,7 +17,7 @@ async function main() {
     console.log('   2. Select "United States" → should see New Jersey and Vermont');
     console.log('   3. Select "Jamaica" → should see Port Antonio');
     process.exit(0);
-  } catch (error: any) {
+  } catch (error) {
     console.error('\n❌ Error seeding branches:', error.message);
     if (error.stack) {
       console.error(error.stack);

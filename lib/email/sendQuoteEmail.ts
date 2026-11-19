@@ -64,7 +64,7 @@ export async function sendQuoteEmail(
     }).catch(() => {});
 
     return { sent: true, id: data?.id };
-  } catch (err: unknown) {
+  } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to send quote email";
     return { sent: false, error: message };

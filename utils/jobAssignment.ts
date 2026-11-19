@@ -63,8 +63,8 @@ export async function findBestCleanerForJob(options: AssignmentOptions): Promise
       const cleaner = await prisma.user.findUnique({
         where: { id: forceCleanerId, role: 'CLEANER' },
         include: {
-          trainingStatus: true,
-          availability: true,
+          TrainingStatus: true,
+          CleanerAvailability: true,
         },
       });
 
@@ -74,7 +74,7 @@ export async function findBestCleanerForJob(options: AssignmentOptions): Promise
 
       // Check training for Jamaica
       if (isJamaicaBranch) {
-        if (cleaner.trainingStatus?.overallStatus !== 'PASSED') {
+        if (cleaner.TrainingStatus?.overallStatus !== 'PASSED') {
           return null;
         }
       }
@@ -107,7 +107,7 @@ export async function findBestCleanerForJob(options: AssignmentOptions): Promise
           where: {
             customerId,
             assignedCleanerId: { not: null },
-            status: 'completed',
+            status: 'COMPLETED',
           },
           orderBy: {
             completedAt: 'desc',
@@ -145,8 +145,8 @@ export async function findBestCleanerForJob(options: AssignmentOptions): Promise
         primaryBranchId: branchId,
       },
       include: {
-        trainingStatus: true,
-        availability: true,
+        TrainingStatus: true,
+        CleanerAvailability: true,
       },
     });
 
@@ -154,7 +154,7 @@ export async function findBestCleanerForJob(options: AssignmentOptions): Promise
     const eligibleCleaners = cleaners.filter((cleaner) => {
       // Check training for Jamaica
       if (isJamaicaBranch) {
-        if (cleaner.trainingStatus?.overallStatus !== 'PASSED') {
+        if (cleaner.TrainingStatus?.overallStatus !== 'PASSED') {
           return false;
         }
       }
@@ -211,7 +211,7 @@ export async function findBestCleanerForJob(options: AssignmentOptions): Promise
         const weeklyJobCount = await prisma.job.count({
           where: {
             assignedCleanerId: cleaner.id,
-            status: { in: ['assigned', 'in_progress', 'completed'] },
+            status: { in: ['ASSIGNED', 'IN_PROGRESS', 'COMPLETED'] },
             assignedAt: { gte: weekStart },
           },
         });
@@ -244,7 +244,7 @@ export async function findBestCleanerForJob(options: AssignmentOptions): Promise
     });
 
     return availableCleaners[0].cleanerId;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error finding best cleaner:', error);
     return null;
   }
@@ -304,7 +304,7 @@ async function isCleanerAvailable(
           lt: new Date(jobDate.setHours(23, 59, 59, 999)),
         },
         status: {
-          notIn: ['cancelled', 'DECLINED'],
+          notIn: ['CANCELLED', 'DECLINED' as LooseAny],
         },
       },
     });
@@ -314,7 +314,7 @@ async function isCleanerAvailable(
     }
 
     return true;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error checking cleaner availability:', error);
     return false;
   }

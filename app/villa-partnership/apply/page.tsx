@@ -56,7 +56,7 @@ export default function VillaPartnershipApplyPage() {
       } else {
         setError(data.error || 'Failed to submit application');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error submitting application:', err);
       setError(err.message || 'Failed to submit application');
     } finally {

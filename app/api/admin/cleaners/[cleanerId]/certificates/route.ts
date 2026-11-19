@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
@@ -26,7 +27,7 @@ export async function GET(
     const certs = await prisma.trainingCertificate.findMany({
       where: { cleanerId },
       include: {
-        trainingStatus: true,
+        TrainingStatus: true,
       },
       orderBy: {
         issuedAt: 'desc',
@@ -34,7 +35,7 @@ export async function GET(
     });
 
     return NextResponse.json({ success: true, certificates: certs });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error loading certificates:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to load certificates' },
@@ -74,17 +75,18 @@ export async function POST(
 
     const cert = await prisma.trainingCertificate.create({
       data: {
+        id: randomUUID(),
         certificateId,
         cleanerId,
         trainingStatusId: statusId,
       },
       include: {
-        trainingStatus: true,
+        TrainingStatus: true,
       },
     });
 
     return NextResponse.json({ success: true, certificate: cert });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create certificate error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create certificate' },

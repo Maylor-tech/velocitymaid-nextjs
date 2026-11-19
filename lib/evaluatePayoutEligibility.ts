@@ -5,7 +5,7 @@
  * Returns detailed reasons if the job is not eligible.
  */
 
-import { PayoutSkipReason, SkippedJobDebug } from "./payoutDebug";
+import { PayoutSkipReason } from "./payoutDebug";
 
 export interface EligibilityEvaluationInput {
   job: {

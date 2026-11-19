@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
       messages: formattedMessages,
       requestId,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error(`[${requestId}] Error fetching messages:`, error);
     
     // If it's a NextResponse (from requireAuth), re-throw it

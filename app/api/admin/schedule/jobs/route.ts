@@ -25,13 +25,13 @@ export async function GET(request: NextRequest) {
     endDate.setHours(23, 59, 59, 999);
 
     // Build where clause
-    const where: any = {
+    const where: LooseAny = {
       preferredDate: {
         gte: startDate,
         lte: endDate,
       },
       status: {
-        notIn: ['cancelled', 'completed'],
+        notIn: ['CANCELLED', 'COMPLETED'],
       },
     };
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     const jobs = await prisma.job.findMany({
       where,
       include: {
-        branch: {
+        Branch: {
           select: {
             id: true,
             name: true,
@@ -51,25 +51,25 @@ export async function GET(request: NextRequest) {
             country: true,
           },
         },
-        assignedCleaner: {
+        User: {
           select: {
             id: true,
             name: true,
             email: true,
-            primaryBranch: {
+            Branch_User_primaryBranchIdToBranch: {
               select: {
                 name: true,
                 country: true,
               },
             },
-            trainingStatus: {
+            TrainingStatus: {
               select: {
                 overallStatus: true,
               },
             },
           },
         },
-        customer: {
+        Customer: {
           select: {
             id: true,
             firstName: true,
@@ -107,19 +107,19 @@ export async function GET(request: NextRequest) {
         primaryBranchId: { in: jamaicaBranchIds },
       },
       include: {
-        primaryBranch: {
+        Branch_User_primaryBranchIdToBranch: {
           select: {
             id: true,
             name: true,
             country: true,
           },
         },
-        trainingStatus: {
+        TrainingStatus: {
           select: {
             overallStatus: true,
           },
         },
-        availability: true,
+        CleanerAvailability: true,
       },
     });
 
@@ -132,16 +132,16 @@ export async function GET(request: NextRequest) {
         ? cleaners
             .filter((cleaner) => {
               // Check training status
-              if (cleaner.trainingStatus?.overallStatus !== 'PASSED') {
+              if (cleaner.TrainingStatus?.overallStatus !== 'PASSED') {
                 return false;
               }
 
               // Check availability
-              if (!cleaner.availability || !cleaner.availability.isActive) {
+              if (!cleaner.CleanerAvailability || !cleaner.CleanerAvailability.isActive) {
                 return false;
               }
 
-              const availability = cleaner.availability;
+              const availability = cleaner.CleanerAvailability;
               const workingDays = availability.workingDays as string[];
               const timeRanges = availability.timeRanges as Array<{ start: string; end: string }>;
               const blackoutDates = (availability.blackoutDates as string[]) || [];
@@ -186,15 +186,15 @@ export async function GET(request: NextRequest) {
               id: cleaner.id,
               name: cleaner.name || 'Unknown',
               email: cleaner.email,
-              trainingStatus: cleaner.trainingStatus?.overallStatus || 'NOT_STARTED',
-              hasAvailability: !!cleaner.availability,
+              trainingStatus: cleaner.TrainingStatus?.overallStatus || 'NOT_STARTED',
+              hasAvailability: !!cleaner.CleanerAvailability,
             }))
         : [];
 
       return {
         id: job.id,
-        customerName: job.customerName || (job.customer ? `${job.customer.firstName} ${job.customer.lastName}` : 'Unknown'),
-        customerPhone: job.customer?.phone || null,
+        customerName: job.customerName || (job.Customer ? `${job.Customer.firstName} ${job.Customer.lastName}` : 'Unknown'),
+        customerPhone: job.Customer?.phone || null,
         preferredDate: job.preferredDate,
         preferredTime: job.preferredTime,
         serviceType: job.serviceType,
@@ -202,23 +202,23 @@ export async function GET(request: NextRequest) {
         status: job.status,
         totalPrice: job.totalPrice,
         currency: job.currency,
-        assignedCleaner: job.assignedCleaner
+        assignedCleaner: job.User
           ? {
-              id: job.assignedCleaner.id,
-              name: job.assignedCleaner.name || 'Unknown',
-              trainingStatus: job.assignedCleaner.trainingStatus?.overallStatus || 'NOT_STARTED',
+              id: job.User.id,
+              name: job.User.name || 'Unknown',
+              trainingStatus: job.User.TrainingStatus?.overallStatus || 'NOT_STARTED',
             }
           : null,
         branch: {
-          id: job.branch.id,
-          name: job.branch.name,
-          slug: job.branch.slug,
-          country: job.branch.country,
+          id: job.Branch.id,
+          name: job.Branch.name,
+          slug: job.Branch.slug,
+          country: job.Branch.country,
         },
-        customer: job.customer
+        customer: job.Customer
           ? {
-              id: job.customer.id,
-              preferSameCleaner: job.customer.preferSameCleaner,
+              id: job.Customer.id,
+              preferSameCleaner: job.Customer.preferSameCleaner,
             }
           : null,
         availableCleaners: availableCleaners,
@@ -230,7 +230,7 @@ export async function GET(request: NextRequest) {
       jobs: jobsWithCleaners,
       count: jobsWithCleaners.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get schedule jobs error:', error);
     return NextResponse.json(

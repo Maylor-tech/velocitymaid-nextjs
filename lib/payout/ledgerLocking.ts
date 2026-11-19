@@ -46,7 +46,7 @@ export async function lockLedgerEntriesForTransfer(
   });
 
   // Calculate which entries to lock
-  let entriesToLock: typeof eligibleEntries = [];
+  const entriesToLock: typeof eligibleEntries = [];
   let runningTotal = 0;
 
   for (const entry of eligibleEntries) {

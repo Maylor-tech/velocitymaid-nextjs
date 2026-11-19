@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     console.log("[TEST] ====== SENDING RESPONSE ======");
     
     return NextResponse.json(responseData);
-  } catch (error: any) {
+  } catch (error) {
     console.error("[TEST] ❌ ERROR:", error);
     console.error("[TEST] Error message:", error?.message);
     console.error("[TEST] Error stack:", error?.stack);

@@ -70,7 +70,7 @@ export default function QuizForm({ quizData, lessonId, onSubmit }: QuizFormProps
       } else {
         setError(result.error || 'Failed to submit quiz');
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'An error occurred');
     } finally {
       setSubmitting(false);

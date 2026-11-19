@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const cleanerId = cookieStore.get('cleanerId')?.value;
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
       certificateId: certificate?.certificateId || null,
       trainingUrl: '/cleaners/training',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get training progress error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch training progress' },

@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { JobStatus } from "@prisma/client";
 import { prisma } from '@/lib/prisma';
 import { sendJobOffer } from '@/app/services/whatsappService';
 import { awaitJobCalendarSync } from '@/lib/google/jobGoogleSync';
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     const job = await prisma.job.findUnique({
       where: { id: jobId },
       include: {
-        branch: {
+        Branch: {
           select: {
             id: true,
             name: true,
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
             country: true,
           },
         },
-        customer: {
+        Customer: {
           select: {
             firstName: true,
             lastName: true,
@@ -65,13 +66,13 @@ export async function POST(request: NextRequest) {
     const cleaner = await prisma.user.findUnique({
       where: { id: newCleanerId, role: 'CLEANER' },
       include: {
-        primaryBranch: {
+        Branch_User_primaryBranchIdToBranch: {
           select: {
             country: true,
             slug: true,
           },
         },
-        trainingStatus: {
+        TrainingStatus: {
           select: {
             overallStatus: true,
           },
@@ -97,13 +98,13 @@ export async function POST(request: NextRequest) {
 
     // Check if Jamaica branch
     const isJamaicaBranch =
-      job.branch.country === 'Jamaica' ||
-      job.branch.country === 'JM' ||
-      job.branch.slug === 'port-antonio';
+      job.Branch.country === 'Jamaica' ||
+      job.Branch.country === 'JM' ||
+      job.Branch.slug === 'port-antonio';
 
     // For Jamaica, check training status
     if (isJamaicaBranch) {
-      if (cleaner.trainingStatus?.overallStatus !== 'PASSED') {
+      if (cleaner.TrainingStatus?.overallStatus !== 'PASSED') {
         return NextResponse.json(
           {
             success: false,
@@ -120,11 +121,11 @@ export async function POST(request: NextRequest) {
       where: { id: jobId },
       data: {
         assignedCleanerId: newCleanerId,
-        status: isJamaicaBranch && sendWhatsApp ? 'pending' : 'assigned',
+        status: isJamaicaBranch && sendWhatsApp ? ('pending' as JobStatus) : 'ASSIGNED',
         assignedAt: new Date(),
       },
       include: {
-        assignedCleaner: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest) {
         try {
           const jobInfo = {
             jobId: job.id,
-            customerName: job.customerName || (job.customer ? `${job.customer.firstName} ${job.customer.lastName}` : 'Customer'),
+            customerName: job.customerName || (job.Customer ? `${job.Customer.firstName} ${job.Customer.lastName}` : 'Customer'),
             address: job.address || 'Address TBD',
             preferredDate: job.preferredDate,
             preferredTime: job.preferredTime,
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
           };
 
           await sendJobOffer(cleanerPhone, jobInfo);
-        } catch (whatsappError: any) {
+        } catch (whatsappError) {
           console.error('Error sending WhatsApp job offer:', whatsappError);
           // Don't fail the reassignment if WhatsApp fails
         }
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
         ? 'Job reassigned. WhatsApp offer sent to cleaner.'
         : 'Job reassigned successfully.',
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Reassign job error:', error);
     return NextResponse.json(

@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       sessionId: session.id,
       tipId: tip.id,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Create tip checkout error:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Failed to create tip checkout session' },

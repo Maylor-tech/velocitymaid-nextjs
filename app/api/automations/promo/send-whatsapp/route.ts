@@ -100,7 +100,7 @@ Valid until ${new Date(promo.endDate).toLocaleDateString()}`;
       failedCount,
       totalCustomers: customers.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Send promo WhatsApp error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send promo messages' },

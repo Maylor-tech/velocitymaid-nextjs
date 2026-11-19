@@ -268,7 +268,7 @@ export async function POST(request: NextRequest) {
         log.push(`FAILED: Cleaner notification failed - ${result.error}`);
         // Don't fail the assignment if WhatsApp fails
       }
-    } catch (error: any) {
+    } catch (error) {
       log.push(`ERROR: Exception sending cleaner notification - ${error.message}`);
       // Don't fail the assignment if WhatsApp fails
     }
@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
         },
       });
       log.push('Stripe metadata updated with cleaner assignment');
-    } catch (error: any) {
+    } catch (error) {
       log.push(`WARNING: Failed to update Stripe metadata - ${error.message}`);
       // Continue even if metadata update fails
     }
@@ -316,7 +316,7 @@ export async function POST(request: NextRequest) {
       duration: `${duration}ms`,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     const duration = Date.now() - startTime;
     log.push(`ERROR: ${error.message}`);
     log.push(`Failed after ${duration}ms`);

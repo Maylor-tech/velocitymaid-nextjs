@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, mode: "FULL" });
-  } catch (err: unknown) {
+  } catch (err) {
     console.error("[HOST-INTAKE] Error:", err);
     const message =
       err instanceof Error ? err.message : "Unable to submit inquiry";

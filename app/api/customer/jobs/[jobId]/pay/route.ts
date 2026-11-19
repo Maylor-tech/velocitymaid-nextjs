@@ -155,7 +155,7 @@ export async function POST(
       },
       { status: 503 }
     );
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get payment link error:', error);
     const message =

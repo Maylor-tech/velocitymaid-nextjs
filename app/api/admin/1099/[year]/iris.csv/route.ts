@@ -16,7 +16,8 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { PayoutTransferStatus, TaxProfileStatus } from "@prisma/client";
+import { cleanerTaxProfile } from "@/app/api/admin/tax-profiles/delegate";
+import { PayoutTransferStatus } from "@prisma/client";
 import { generateCsv } from "@/lib/csv";
 import { irisMapping } from "@/lib/tax/irisMapping";
 
@@ -32,7 +33,10 @@ function get1099Threshold(year: number): number {
 /**
  * Resolve template value (simple template engine)
  */
-function resolveTemplate(template: string, data: any): string {
+function resolveTemplate(
+  template: string,
+  data: Record<string, string | number | null | undefined>
+): string {
   return template.replace(/\{\{([^}]+)\}\}/g, (match, expr) => {
     const parts = expr.trim().split("||").map((p: string) => p.trim());
     
@@ -47,7 +51,7 @@ function resolveTemplate(template: string, data: any): string {
         if (result) return result;
       } else {
         const keys = part.split(".");
-        let value = data;
+        let value: LooseAny = data;
         for (const key of keys) {
           value = value?.[key];
         }
@@ -145,7 +149,7 @@ export async function GET(
     // Fetch tax profiles (all profiles meeting threshold, not just verified)
     // Option A: No decryption, so we don't need to restrict to verified
     const cleanerIds = Array.from(cleanerTotals.keys());
-    const taxProfiles = await prisma.cleanerTaxProfile.findMany({
+    const taxProfiles = await cleanerTaxProfile().findMany({
       where: {
         cleanerId: { in: cleanerIds },
       },
@@ -225,7 +229,7 @@ export async function GET(
     });
 
     // Generate CSV
-    const csvContent = generateCsv(headers, rows);
+    const csvContent = generateCsv([...headers], rows);
 
     // Return CSV file
     return new NextResponse(csvContent, {
@@ -235,7 +239,7 @@ export async function GET(
         "Content-Disposition": `attachment; filename="1099-iris-${year}.csv"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_IRIS_EXPORT] Error:", error);
 

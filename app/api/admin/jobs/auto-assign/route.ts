@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       cleanerName: result.cleanerName,
       reason: result.reason,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Error in auto-assign endpoint:', error);
     return NextResponse.json(

@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
             success: true,
             status: "SENT",
           });
-        } catch (error: unknown) {
+        } catch (error) {
           results.push({
             payoutId,
             success: false,
@@ -352,7 +352,7 @@ export async function POST(request: NextRequest) {
           success: true,
           status: "SENT",
         });
-      } catch (error: unknown) {
+      } catch (error) {
         // Individual payout failure doesn't stop the batch
         results.push({
           payoutId,
@@ -376,7 +376,7 @@ export async function POST(request: NextRequest) {
       failed: failureCount,
       results,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[BULK_EXECUTE_PAYOUTS] Error:", error);
     return NextResponse.json(

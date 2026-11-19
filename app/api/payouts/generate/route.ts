@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       summary,
       message: 'Payout generation completed successfully',
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Generate payouts error:', error);
     const err = error as { message?: string };

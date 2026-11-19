@@ -70,7 +70,7 @@ export default function ReviewStep() {
         setError(errorMessage);
         setQuote(null);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching quote:', err);
       setError('Failed to calculate quote. Please try again.');
       setQuote(null);
@@ -176,7 +176,7 @@ export default function ReviewStep() {
 
       setSentOnce(true);
       setSendError(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Send estimate error:', err);
       setSendError(err.message || 'Failed to send estimate. Please try again.');
     } finally {
@@ -312,11 +312,11 @@ export default function ReviewStep() {
         <ul className="space-y-2 text-sm text-vm-text">
           <li className="flex items-start gap-2">
             <Check className="w-5 h-5 text-vm-success flex-shrink-0 mt-0.5" />
-            <span>You'll complete secure payment</span>
+            <span>You&apos;ll complete secure payment</span>
           </li>
           <li className="flex items-start gap-2">
             <Check className="w-5 h-5 text-vm-success flex-shrink-0 mt-0.5" />
-            <span>We'll confirm your booking</span>
+            <span>We&apos;ll confirm your booking</span>
           </li>
           <li className="flex items-start gap-2">
             <Check className="w-5 h-5 text-vm-success flex-shrink-0 mt-0.5" />
@@ -324,7 +324,7 @@ export default function ReviewStep() {
           </li>
           <li className="flex items-start gap-2">
             <Check className="w-5 h-5 text-vm-success flex-shrink-0 mt-0.5" />
-            <span>You'll receive updates by email or SMS</span>
+            <span>You&apos;ll receive updates by email or SMS</span>
           </li>
         </ul>
       </div>

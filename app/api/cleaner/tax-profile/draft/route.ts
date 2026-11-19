@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { TaxProfileStatus, TaxIdentificationType, TaxClassification } from "@prisma/client";
+import { TaxProfileStatus } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       tinType,
-      tin, // Plaintext TIN (will be encrypted on submit, not here)
+      _tin, // Plaintext TIN (will be encrypted on submit, not here)
       businessName,
       classification,
       firstName,
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
         // Never return TIN in response
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CLEANER_TAX_PROFILE_DRAFT] Error:", error);
 
     if (error instanceof Response) {

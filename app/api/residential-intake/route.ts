@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         skippedReason: confirmation.skippedReason ?? null,
       },
     });
-  } catch (err: unknown) {
+  } catch (err) {
     console.error("[RESIDENTIAL-INTAKE] Error:", err);
     const message =
       err instanceof Error ? err.message : "Unable to submit request";

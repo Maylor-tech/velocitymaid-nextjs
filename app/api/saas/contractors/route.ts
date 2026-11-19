@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
       contractors: contractorsWithStats,
       requestId,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error(`[${requestId}] Error fetching contractors:`, error);
     
     // If it's a NextResponse (from requireAuth), re-throw it

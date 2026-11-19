@@ -11,7 +11,7 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card';
+import { Card, CardContent } from 'components/ui/card';
 import { Badge } from 'components/ui/badge';
 import { Clock, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 
@@ -31,6 +31,20 @@ interface AssignmentQueueItem {
 
 export default function AssignmentQueuePage() {
   // Block in production
+  const [queue, setQueue] = useState<AssignmentQueueItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [branchId, _setBranchId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    // Get branch ID from cookie or context
+    // For now, we'll need to pass it or get it from auth
+    fetchQueue();
+    const interval = setInterval(fetchQueue, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   if (process.env.NODE_ENV === 'production') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -41,18 +55,6 @@ export default function AssignmentQueuePage() {
       </div>
     );
   }
-  const [queue, setQueue] = useState<AssignmentQueueItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [branchId, setBranchId] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Get branch ID from cookie or context
-    // For now, we'll need to pass it or get it from auth
-    fetchQueue();
-    const interval = setInterval(fetchQueue, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
 
   const fetchQueue = async () => {
     try {
@@ -70,7 +72,7 @@ export default function AssignmentQueuePage() {
       }
 
       setQueue(data.queue || []);
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || "Failed to fetch assignment queue");
     } finally {
       setLoading(false);

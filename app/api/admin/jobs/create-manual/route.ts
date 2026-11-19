@@ -224,7 +224,7 @@ export async function GET(request: NextRequest) {
         preferredDate: job.preferredDate?.toISOString() ?? null,
       })),
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : "Failed to check existing jobs";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
@@ -760,7 +760,7 @@ export async function POST(request: NextRequest) {
         warning: protectedPrice?.warning ?? null,
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : "Failed to create manual job";
     console.error("[create-manual job]", error);

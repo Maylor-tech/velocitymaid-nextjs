@@ -33,7 +33,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[MARK_NOTIFICATION_READ] Error:", error);
     return NextResponse.json(
       {

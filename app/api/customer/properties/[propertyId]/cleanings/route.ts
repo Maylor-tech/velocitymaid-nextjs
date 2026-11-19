@@ -342,7 +342,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       opsAlert,
       requestReceivedEmail,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to create cleaning';
     console.error('[customer/properties/:id/cleanings]', error);

@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/requireRole";
 /**
  * Get Single Application Details
  * GET /api/admin/recruitment/[id]
@@ -19,7 +20,7 @@ export async function GET(
     const application = await prisma.cleanerApplication.findUnique({
       where: { id },
       include: {
-        branch: {
+        Branch: {
           select: {
             id: true,
             name: true,
@@ -57,10 +58,10 @@ export async function GET(
         notes: application.notes,
         createdAt: application.createdAt,
         updatedAt: application.updatedAt,
-        branch: application.branch,
+        branch: application.Branch,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get application error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch application' },

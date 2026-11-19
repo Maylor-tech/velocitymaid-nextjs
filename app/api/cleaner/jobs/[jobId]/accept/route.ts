@@ -118,7 +118,7 @@ export async function PATCH(
       job: updatedJob,
       message: 'Job accepted. You are on the way.',
     });
-  } catch (err: unknown) {
+  } catch (err) {
     const authResp = rethrowIfAuthResponse(err);
     if (authResp) return authResp;
     console.error('[CLEANER_ACCEPT] Error:', err);

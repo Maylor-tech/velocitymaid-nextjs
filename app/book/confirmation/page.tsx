@@ -76,7 +76,7 @@ function BookingConfirmationContent() {
           console.log('[CONFIRMATION] Response ok:', response.ok);
           console.log('[CONFIRMATION] Response headers:', Object.fromEntries(response.headers.entries()));
           
-        } catch (fetchError: any) {
+        } catch (fetchError) {
           console.error('[CONFIRMATION] ❌ Fetch error:', fetchError);
           console.error('[CONFIRMATION] Fetch error name:', fetchError?.name);
           console.error('[CONFIRMATION] Fetch error message:', fetchError?.message);
@@ -124,7 +124,7 @@ function BookingConfirmationContent() {
         let responseText: string;
         try {
           responseText = await response.text();
-        } catch (textError: any) {
+        } catch (textError) {
           console.error('[CONFIRMATION] ❌ Failed to read response text:', textError);
           throw new Error('Failed to read server response. Please try again.');
         }
@@ -149,7 +149,7 @@ function BookingConfirmationContent() {
           data = JSON.parse(responseText);
           console.log('[CONFIRMATION] ✅ JSON parsed successfully');
           console.log('[CONFIRMATION] Parsed data:', JSON.stringify(data, null, 2));
-        } catch (parseError: any) {
+        } catch (parseError) {
           console.error('[CONFIRMATION] ❌ JSON PARSE ERROR');
           console.error('[CONFIRMATION] Parse error:', parseError);
           console.error('[CONFIRMATION] Parse error message:', parseError?.message);
@@ -187,7 +187,7 @@ function BookingConfirmationContent() {
         } else {
           throw new Error(data.error || 'Booking creation failed');
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error('Booking creation error:', err);
         // Clear max timeout on error
         if (maxTimeout) {

@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     // Fetch jobs from database, filtered by branch
-    const whereClause: any = {
+    const whereClause: LooseAny = {
       assignedCleanerId: authResult.cleanerId,
       branchId: { in: branchIds }, // Filter by cleaner's branches (Miami + any others)
     };
@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
       success: true,
       jobs: cleanerJobs,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get cleaner jobs error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch jobs' },
@@ -240,7 +240,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: LooseAny = {
       status: dbStatus,
       updatedAt: new Date(),
     };
@@ -358,7 +358,7 @@ export async function PATCH(request: NextRequest) {
       success: true,
       job: cleanerJob,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update job status error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update job status' },

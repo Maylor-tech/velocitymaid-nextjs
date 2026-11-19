@@ -153,7 +153,7 @@ export async function POST(
       success: true,
       message: 'Your request has been submitted and our team will review it.',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Request change error:', error);
     return NextResponse.json(
       {

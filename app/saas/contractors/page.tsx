@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Users, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
+import { Sparkles, Users, CheckCircle, XCircle, Search } from 'lucide-react';
 import Link from 'next/link';
 import { isPublicDemoMode } from '@/lib/env/publicFlags';
 

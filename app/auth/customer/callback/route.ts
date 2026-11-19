@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
       searchParams.get('redirect')
     );
     return NextResponse.redirect(new URL(redirectUrl, req.url));
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('[AUTH CALLBACK] Error:', error);
     return NextResponse.redirect(new URL('/customer/login?error=server_error', req.url));
   }

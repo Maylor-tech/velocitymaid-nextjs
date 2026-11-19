@@ -34,7 +34,7 @@ export default function LoginPage() {
 
       // Success - redirect to dashboard
       router.push('/saas/dashboard');
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
       setIsSubmitting(false);
     }
@@ -114,7 +114,7 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-6 text-sm text-vm-muted text-center">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/saas/signup" className="text-vm-cyan-dark hover:underline font-medium">
               Sign up
             </Link>

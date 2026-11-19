@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
         url: `https://velocitymaid.com/ref/${referralLink.code}`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create referral link error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create referral link' },

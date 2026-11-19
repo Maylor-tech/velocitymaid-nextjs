@@ -19,7 +19,7 @@ export async function POST(
   { params }: { params: { batchId: string } }
 ) {
   try {
-    const auth = await requireRole(request, "ADMIN");
+    await requireRole(request, "ADMIN");
 
     const { batchId } = params;
 
@@ -90,7 +90,7 @@ export async function POST(
       },
       message: "Batch approved successfully. Ready for Stripe processing.",
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[APPROVE_PAYOUT_BATCH] Error:", error);
     return NextResponse.json(
       {

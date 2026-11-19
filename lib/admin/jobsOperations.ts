@@ -23,6 +23,7 @@ export interface JobOperationsInput {
   paymentStatus: string;
   preferredDate: string | null;
   preferredTime?: string | null;
+  createdAt?: string | null;
   completedAt?: string | null;
   assignedAt?: string | null;
   onTheWayAt?: string | null;

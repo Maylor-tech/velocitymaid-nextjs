@@ -62,7 +62,7 @@ export default function LeadCommandCenterPage() {
 
       setMetrics(dash.metrics);
       setLeads(Array.isArray(leadsData.leads) ? leadsData.leads : []);
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load');
     } finally {
       setLoading(false);

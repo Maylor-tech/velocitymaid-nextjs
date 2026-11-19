@@ -66,7 +66,7 @@ export async function GET(
       documents,
       applicationId: application?.id || null,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get documents error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get documents' },
@@ -83,9 +83,6 @@ export async function PATCH(
 ) {
   try {
     const { cleanerId } = params;
-    const body = await request.json();
-    const { documentType, status } = body;
-
     // Verify cleaner exists
     const cleaner = await prisma.user.findUnique({
       where: { id: cleanerId, role: 'CLEANER' },
@@ -120,7 +117,7 @@ export async function PATCH(
       success: true,
       message: 'Document status updated',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update document status error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update document status' },

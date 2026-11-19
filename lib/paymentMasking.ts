@@ -53,12 +53,12 @@ export function maskHandle(handle?: string): string {
  * Mask payment method details for safe API response
  * Returns a sanitized version with encrypted/masked sensitive fields
  */
-export function maskPaymentDetails(details: any, methodType: string): any {
+export function maskPaymentDetails(details: LooseAny, methodType: string): LooseAny {
   if (!details || typeof details !== "object") {
     return details;
   }
 
-  const masked: any = { ...details };
+  const masked: LooseAny = { ...details };
 
   // Always safe to show
   if (details.bankName) {

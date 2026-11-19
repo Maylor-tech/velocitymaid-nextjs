@@ -80,7 +80,7 @@ export async function PATCH(request: NextRequest) {
       success: true,
       preferences,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update customer preferences error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update preferences' },

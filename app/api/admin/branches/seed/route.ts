@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Seed branches error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to seed branches' },

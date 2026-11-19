@@ -71,7 +71,7 @@ export default function BillingPage() {
       if (data.url) {
         window.location.href = data.url;
       }
-    } catch (err: any) {
+    } catch (err) {
       alert(err.message || 'Failed to start checkout');
       setProcessing(null);
     }

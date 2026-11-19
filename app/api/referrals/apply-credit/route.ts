@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         newPrice: newPrice,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Apply referral credit error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to apply referral credit' },

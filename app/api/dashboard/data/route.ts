@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       region,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Dashboard data fetch error:', error);
     return NextResponse.json(

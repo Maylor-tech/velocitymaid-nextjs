@@ -12,7 +12,11 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { TaxProfileStatus } from "@prisma/client";
+import {
+  TaxProfileStatus,
+  cleanerTaxProfile,
+  taxProfileAuditLog,
+} from "@/app/api/admin/tax-profiles/delegate";
 
 export async function POST(
   request: NextRequest,
@@ -22,7 +26,7 @@ export async function POST(
     const auth = await requireRole(request, "ADMIN");
     const { profileId } = params;
 
-    const profile = await prisma.cleanerTaxProfile.findUnique({
+    const profile = await cleanerTaxProfile().findUnique({
       where: { id: profileId },
       select: {
         id: true,
@@ -49,7 +53,7 @@ export async function POST(
     }
 
     // Update profile to VERIFIED
-    const updated = await prisma.cleanerTaxProfile.update({
+    const updated = await cleanerTaxProfile().update({
       where: { id: profileId },
       data: {
         status: TaxProfileStatus.VERIFIED,
@@ -59,7 +63,7 @@ export async function POST(
     });
 
     // Create audit log
-    await prisma.taxProfileAuditLog.create({
+    await taxProfileAuditLog().create({
       data: {
         taxProfileId: profileId,
         action: "VERIFIED",
@@ -76,7 +80,7 @@ export async function POST(
         verifiedAt: updated.verifiedAt?.toISOString(),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_TAX_PROFILE_VERIFY] Error:", error);
 
     if (error instanceof Response) {

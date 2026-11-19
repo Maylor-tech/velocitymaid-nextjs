@@ -59,8 +59,8 @@ vi.mock('@/lib/google/jobGoogleSync', () => ({
 }));
 
 vi.mock('@/lib/notifications/hostCleaningRequestNotify', () => ({
-  notifyHostCleaningRequestCreated: (...a: unknown[]) =>
-    notifyHostCleaningRequestCreated(...a),
+  notifyHostCleaningRequestCreated: (...a: LooseAny[]) =>
+    (notifyHostCleaningRequestCreated as LooseAny)(...a),
 }));
 
 import { POST as cleaningsPOST } from '@/app/api/customer/properties/[propertyId]/cleanings/route';
@@ -172,7 +172,9 @@ describe('Vermont host winter journey', () => {
         preferredTime: '10:00 AM',
       })
     );
-    const notifyArg = notifyHostCleaningRequestCreated.mock.calls[0][0];
+    const notifyArg = (notifyHostCleaningRequestCreated.mock.calls as LooseAny)[0][0] as {
+      preferredDate: Date;
+    };
     expect(notifyArg.preferredDate.toISOString()).toBe(
       '2026-08-30T00:00:00.000Z'
     );

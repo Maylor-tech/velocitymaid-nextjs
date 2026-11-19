@@ -7,7 +7,7 @@
  * ⚠️ SECURITY: Never log or expose full TIN values
  */
 
-import crypto from "crypto";
+
 import { encryptPaymentData, decryptPaymentData } from "../paymentEncryption";
 
 /**

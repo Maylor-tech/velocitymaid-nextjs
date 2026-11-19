@@ -9,6 +9,8 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { Prisma } from '@prisma/client';
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
     const transactionType = searchParams.get('transactionType');
     const limit = parseInt(searchParams.get('limit') || '100');
 
-    const where: any = {};
+    const where: Prisma.TransactionLedgerWhereInput = {};
 
     if (branchId) {
       where.branchId = branchId;
@@ -32,14 +34,14 @@ export async function GET(request: NextRequest) {
     const transactions = await prisma.transactionLedger.findMany({
       where,
       include: {
-        branch: {
+        Branch: {
           select: {
             id: true,
             name: true,
             slug: true,
           },
         },
-        cleaner: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -58,7 +60,7 @@ export async function GET(request: NextRequest) {
       transactions,
       count: transactions.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get transactions error:', error);
     return NextResponse.json(
@@ -94,6 +96,7 @@ export async function POST(request: NextRequest) {
 
     const transaction = await prisma.transactionLedger.create({
       data: {
+        id: randomUUID(),
         branchId: branchId || null,
         transactionType,
         amount: Number(amount),
@@ -103,16 +106,17 @@ export async function POST(request: NextRequest) {
         referenceType: referenceType || null,
         cleanerId: cleanerId || null,
         customerId: customerId || null,
-        metadata: metadata ? (metadata as any) : null,
+        metadata: metadata ? (metadata as Prisma.InputJsonValue) : null,
+        updatedAt: new Date(),
       },
       include: {
-        branch: {
+        Branch: {
           select: {
             id: true,
             name: true,
           },
         },
-        cleaner: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -125,7 +129,7 @@ export async function POST(request: NextRequest) {
       success: true,
       transaction,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create transaction error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create transaction' },

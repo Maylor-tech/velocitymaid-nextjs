@@ -105,7 +105,7 @@ export async function GET(
         })),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[GET_PAYOUT_BATCH] Error:", error);
     return NextResponse.json(
       {

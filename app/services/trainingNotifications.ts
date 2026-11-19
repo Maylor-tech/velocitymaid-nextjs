@@ -25,7 +25,7 @@ Complete all modules before your first job. If you have questions, reply to this
 
     const result = await sendWhatsAppMessage(cleanerPhone, message);
     return result;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error sending training welcome notification:', error);
     return {
       success: false,
@@ -54,7 +54,7 @@ Questions? Reply to this message.`;
 
     const result = await sendWhatsAppMessage(cleanerPhone, message);
     return result;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error sending training reminder:', error);
     return {
       success: false,
@@ -84,7 +84,7 @@ Continue training: ${trainingUrl}`;
 
     const result = await sendWhatsAppMessage(cleanerPhone, message);
     return result;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error sending first module completed notification:', error);
     return {
       success: false,
@@ -109,7 +109,7 @@ You'll be notified when jobs are assigned to you.`;
 
     const result = await sendWhatsAppMessage(cleanerPhone, message);
     return result;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error sending all modules completed notification:', error);
     return {
       success: false,
@@ -134,7 +134,7 @@ You'll be notified when jobs are assigned to you.`;
 
     const result = await sendWhatsAppMessage(cleanerPhone, message);
     return result;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error sending training passed notification:', error);
     return {
       success: false,

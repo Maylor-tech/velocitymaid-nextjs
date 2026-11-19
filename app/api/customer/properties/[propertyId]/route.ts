@@ -80,7 +80,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
         internalNotes: j.internalNotes,
       })),
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to load property';
     console.error('[customer/properties/:id GET]', error);
@@ -146,7 +146,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       success: true,
       property: toHostPropertyView(updated),
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to update property';
     console.error('[customer/properties/:id PATCH]', error);

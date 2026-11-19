@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   // Generate HTML for PDF (can be converted to PDF using browser print or library)
   const html = `
 <!DOCTYPE html>

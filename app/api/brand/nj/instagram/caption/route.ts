@@ -505,7 +505,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': `attachment; filename="day${day}-caption.txt"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate caption error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate caption' },

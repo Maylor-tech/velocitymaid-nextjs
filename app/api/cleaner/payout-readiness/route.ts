@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { hasVerifiedPaymentMethod } from "@/lib/paymentMethods";
+
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
         cleanerActive: cleaner?.isActive ?? false,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     // If it's a NextResponse (from requireRole), re-throw it
     if (error instanceof Response) {
       throw error;

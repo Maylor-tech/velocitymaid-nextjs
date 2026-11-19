@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       notified,
       timeoutHours,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('[cron/cleaner-response-check] Error:', error);
     const message = error instanceof Error ? error.message : 'Failed to check cleaner responses';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

@@ -98,7 +98,7 @@ export async function POST(
         assignedAt: updatedJob.assignedAt?.toISOString() ?? null,
       },
     });
-  } catch (err: unknown) {
+  } catch (err) {
     if (err && typeof err === "object" && "status" in err) throw err;
     const message = err instanceof Error ? err.message : "Failed to assign job";
     return NextResponse.json(

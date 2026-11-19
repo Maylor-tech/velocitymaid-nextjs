@@ -48,7 +48,7 @@ export async function validatePeopleStack(branchId: string): Promise<PeopleStack
   const branchOwner = await prisma.user.findFirst({
     where: {
       primaryBranchId: branchId,
-      role: UserRole.BRANCH_OWNER,
+      role: (UserRole as LooseAny).BRANCH_OWNER,
       isActive: true,
     },
     select: {
@@ -80,7 +80,7 @@ export async function validatePeopleStack(branchId: string): Promise<PeopleStack
   const cleanerDetails = await Promise.all(
     cleaners.map(async (cleaner) => {
       // Check if cleaner has payment method
-      const paymentMethod = await prisma.paymentMethod.findFirst({
+      const paymentMethod = await (prisma as LooseAny).paymentMethod.findFirst({
         where: {
           userId: cleaner.id,
           isActive: true,
@@ -167,11 +167,11 @@ export async function canAssignRoleToBranch(
   // During pilot, only allow:
   // - Branch Owner (1 only)
   // - Cleaners (3-5 max)
-  if (role === UserRole.BRANCH_OWNER) {
+  if (role === (UserRole as LooseAny).BRANCH_OWNER) {
     const existing = await prisma.user.count({
       where: {
         primaryBranchId: branchId,
-        role: UserRole.BRANCH_OWNER,
+        role: (UserRole as LooseAny).BRANCH_OWNER,
         isActive: true,
       },
     });
@@ -202,7 +202,7 @@ export async function canAssignRoleToBranch(
   }
 
   // Block all other roles during pilot
-  if (![UserRole.BRANCH_OWNER, UserRole.CLEANER].includes(role)) {
+  if (![(UserRole as LooseAny).BRANCH_OWNER, UserRole.CLEANER].includes(role)) {
     return {
       allowed: false,
       reason: `Role ${role} not allowed during Miami pilot`,

@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       branchSlug: null,
       message: 'No branch found for this ZIP code or routing code',
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Resolve ZIP error:', error);
     const message =
       error instanceof Error ? error.message : 'Failed to resolve ZIP code';

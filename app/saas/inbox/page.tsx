@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Inbox, Mail, CheckCircle, Clock, Archive } from 'lucide-react';
+import { Sparkles, Inbox, Mail, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { isPublicDemoMode } from '@/lib/env/publicFlags';
 

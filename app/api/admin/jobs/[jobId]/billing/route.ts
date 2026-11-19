@@ -26,7 +26,7 @@ export async function GET(
     await assertAdminJobRecord(auth, params.jobId);
     const status = await getJobBillingWorkflowStatus(params.jobId);
     return NextResponse.json({ success: true, workflow: status });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to load billing workflow';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
@@ -122,7 +122,7 @@ export async function POST(
       default:
         return NextResponse.json({ success: false, error: 'Unknown action' }, { status: 400 });
     }
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     if (error instanceof GoogleReviewUrlError) {
       console.error('[job billing] Google review config:', error.code, error.message);

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/admin/audit/logs
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     // Build where clause
-    const where: any = {};
+    const where: Prisma.AuditLogWhereInput = {};
 
     if (entityType) {
       where.entityType = entityType;
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
       logs: formattedLogs,
       count: formattedLogs.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get audit logs error:', error);
     return NextResponse.json(

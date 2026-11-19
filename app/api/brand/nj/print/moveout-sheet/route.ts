@@ -16,7 +16,7 @@ const brandColors = {
   gray: '#F1F1F1',
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const html = generateMoveOutSheet();
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="velocitymaid-nj-moveout-sheet.html"',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate move-out sheet error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate move-out sheet' },

@@ -54,7 +54,7 @@ export default function NewCleanerPage() {
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Failed to create cleaner");
       router.push("/admin/cleaners");
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create cleaner");
     } finally {
       setBusy(false);

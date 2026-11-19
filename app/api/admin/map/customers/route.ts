@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
       properties,
       missingLocations,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to load map data';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

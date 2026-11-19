@@ -66,7 +66,7 @@ export async function POST(
     await awaitJobGoogleSync(updated.id);
 
     return NextResponse.json({ success: true, job: updated });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('[JOB APPROVE]', error);
     const message = error instanceof Error ? error.message : 'Failed to approve booking';

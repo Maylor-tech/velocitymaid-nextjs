@@ -241,7 +241,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="VelocityMaid_Partner_Pilot_Proposal_${partnerName.replace(/[^a-zA-Z0-9]/g, "_")}.pdf"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_PARTNER_PILOT_PROPOSAL] Error:", error);
 

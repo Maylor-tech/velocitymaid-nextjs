@@ -104,7 +104,7 @@ export default function CleanerTaxFormPage() {
         setExemptFatcaCode(data.profile.exemptFatcaCode || "");
         setSignatureName(data.profile.signatureName || "");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch tax profile:", err);
       setError(err.message || "Failed to load tax profile");
     } finally {
@@ -148,7 +148,7 @@ export default function CleanerTaxFormPage() {
 
       setSuccess("Draft saved successfully");
       await fetchProfile();
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || "Failed to save draft");
     } finally {
       setSaving(false);
@@ -228,7 +228,7 @@ export default function CleanerTaxFormPage() {
       setSuccess("Tax profile submitted successfully! It will be reviewed by our team.");
       setTin(""); // Clear TIN from form after submission
       await fetchProfile();
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || "Failed to submit tax profile");
     } finally {
       setSubmitting(false);

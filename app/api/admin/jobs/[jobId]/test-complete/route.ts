@@ -99,7 +99,7 @@ export async function POST(
       job: updated,
       payout,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Test complete failed';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

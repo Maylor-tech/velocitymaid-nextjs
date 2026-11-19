@@ -33,7 +33,7 @@ export async function POST(
     }, {
       status: emailResult.sent ? 200 : emailResult.failed ? 502 : 409,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to send reminder';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

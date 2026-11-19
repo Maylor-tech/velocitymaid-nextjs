@@ -120,7 +120,7 @@ export async function POST(
     }
 
     return NextResponse.json({ success: true, url: session.url });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('[PAY BALANCE]', error);
     const message = error instanceof Error ? error.message : 'Failed to start balance payment';

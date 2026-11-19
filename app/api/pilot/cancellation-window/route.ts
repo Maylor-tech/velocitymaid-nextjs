@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       success: true,
       cancellationWindow: window,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof Response) {
       throw error;
     }

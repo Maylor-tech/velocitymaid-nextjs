@@ -143,7 +143,7 @@ export async function getAuthenticatedBranchOperator(
       success: false,
       error: "Not authenticated as branch operator",
     };
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : "Authentication failed";
     console.error("[BRANCH_OPERATOR_AUTH] Error:", error);
     return {

@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
  * Health check endpoint for booking API
  * Use this to verify the route is accessible
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   return NextResponse.json({
     status: 'ok',
     service: 'booking-api',
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString(),
       message: 'Booking API received POST request successfully'
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json({
       status: 'error',
       error: error.message,

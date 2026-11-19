@@ -3,6 +3,7 @@
  * Run with: npx tsx scripts/add-port-antonio.ts
  */
 
+import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -54,6 +55,8 @@ async function addPortAntonio() {
       // Create branch
       const newBranch = await tx.branch.create({
         data: {
+          id: randomUUID(),
+          updatedAt: new Date(),
           name: 'Port Antonio',
           slug: 'port-antonio',
           city: 'Port Antonio',
@@ -72,6 +75,8 @@ async function addPortAntonio() {
       // Create branch config
       await tx.branchConfig.create({
         data: {
+          id: randomUUID(),
+          updatedAt: new Date(),
           branchId: newBranch.id,
         },
       });
@@ -79,6 +84,8 @@ async function addPortAntonio() {
       // Create automation config
       await tx.branchAutomationConfig.create({
         data: {
+          id: randomUUID(),
+          updatedAt: new Date(),
           branchId: newBranch.id,
         },
       });
@@ -96,7 +103,7 @@ async function addPortAntonio() {
     console.log(`   Branch ID: ${branch.id}`);
     console.log(`   Slug: ${branch.slug}`);
     console.log(`   Status: ${branch.status}`);
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Error adding Port Antonio branch:', error);
     throw error;
   } finally {

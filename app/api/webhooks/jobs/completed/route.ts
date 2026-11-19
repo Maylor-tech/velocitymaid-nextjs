@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Review request triggered',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Job completion webhook error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to process job completion' },

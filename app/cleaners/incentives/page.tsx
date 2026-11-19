@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import TierBadge from '../../dashboard/incentives/components/TierBadge';
 import type { CleanerIncentive } from '@/utils/incentiveData';
-import { calculateNextTierRequirements, getTierInfo } from '@/utils/incentiveEngine';
-import type { PerformanceMetrics } from '@/utils/incentiveEngine';
+import { calculateNextTierRequirements } from '@/utils/incentiveEngine';
+
 
 export default function CleanerIncentivesPage() {
   const router = useRouter();
@@ -49,7 +49,7 @@ export default function CleanerIncentivesPage() {
         setLatestIncentive(incentives[0] || null);
         setIncentiveHistory(incentives.slice(0, 8)); // Last 8 weeks
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching incentives:', err);
       setError(err.message || 'Failed to load incentives');
     } finally {
@@ -135,7 +135,7 @@ export default function CleanerIncentivesPage() {
                 <TierBadge tier={latestIncentive.tier} size="lg" />
               </div>
               <div className="text-right">
-                <p className="text-sm text-vm-muted mb-2">This Week's Bonus</p>
+                <p className="text-sm text-vm-muted mb-2">This Week&apos;s Bonus</p>
                 <p className="text-4xl font-bold text-vm-success">
                   ${latestIncentive.bonusAmount.toFixed(2)}
                 </p>

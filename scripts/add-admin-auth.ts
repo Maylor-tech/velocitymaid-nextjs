@@ -99,7 +99,7 @@ adminRoutes.forEach((file) => {
     } else {
       console.log(`✓ Already has auth: ${file}`);
     }
-  } catch (error: any) {
+  } catch (error) {
     console.log(`❌ Error in ${file}: ${error.message}`);
   }
 });

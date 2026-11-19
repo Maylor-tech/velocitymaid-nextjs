@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:59',message:'Stripe session retrieved',data:{runId,paymentStatus:session.payment_status,hasMetadata:!!session.metadata},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'I'})}).catch(()=>{});
       // #endregion
-    } catch (stripeError: any) {
+    } catch (stripeError) {
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:62',message:'Stripe session retrieval failed',data:{runId,error:stripeError?.message,errorType:stripeError?.type},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'I'})}).catch(()=>{});
       // #endregion
@@ -101,16 +101,16 @@ export async function POST(req: NextRequest) {
     const email = metadata.email || session.customer_email || '';
     const phone = metadata.phone || '';
     const address = metadata.address || '';
-    const serviceType = metadata.serviceType || '';
-    const preferredDate = metadata.preferredDate ? new Date(metadata.preferredDate) : null;
-    const preferredTime = metadata.preferredTime || null;
-    const serviceLocation = metadata.serviceLocation || '';
+    const _serviceType = metadata.serviceType || '';
+    const _preferredDate = metadata.preferredDate ? new Date(metadata.preferredDate) : null;
+    const _preferredTime = metadata.preferredTime || null;
+    const _serviceLocation = metadata.serviceLocation || '';
     const branchId = metadata.branchId || null;
     const zipCode = metadata.zipCode || null;
-    const currency = metadata.currency || 'USD';
+    const _currency = metadata.currency || 'USD';
     const referralCode = metadata.referralCode || null;
-    const promoCode = metadata.promoCode || null;
-    const promoDiscount = metadata.referralDiscount ? parseFloat(metadata.referralDiscount) : null;
+    const _promoCode = metadata.promoCode || null;
+    const _promoDiscount = metadata.referralDiscount ? parseFloat(metadata.referralDiscount) : null;
 
     if (!branchId) {
       return NextResponse.json(
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
         ? session.customer
         : session.customer?.id || null;
 
-    const paymentIntentId =
+    const _paymentIntentId =
       typeof session.payment_intent === 'string'
         ? session.payment_intent
         : session.payment_intent?.id || null;
@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
           });
         } else {
           // Update customer info if needed
-          const updates: any = {};
+          const updates: LooseAny = {};
           if (phone && !customer.phone) {
             updates.phone = phone;
           }
@@ -196,7 +196,7 @@ export async function POST(req: NextRequest) {
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:165',message:'Customer ID set',data:{runId,customerId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'J'})}).catch(()=>{});
         // #endregion
-      } catch (customerError: any) {
+      } catch (customerError) {
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:168',message:'Customer creation/lookup error',data:{runId,error:customerError?.message,errorCode:customerError?.code},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'J'})}).catch(()=>{});
         // #endregion
@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
       try {
         const assignmentResult = await autoAssignCleaner(job.id);
         console.log('[BOOKING CREATE] Auto-assignment result:', assignmentResult);
-      } catch (assignError: any) {
+      } catch (assignError) {
         console.error('[BOOKING CREATE] Auto-assignment error (non-fatal):', assignError.message);
       }
     } else {
@@ -259,7 +259,7 @@ export async function POST(req: NextRequest) {
         ? 'Booking deposit received — pending admin review'
         : 'Booking created successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/92bbc5fe-c36d-4c77-827c-f6f5d387b5d0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking/create/route.ts:258',message:'Booking create error caught',data:{runId,errorType:error?.constructor?.name,errorMessage:error?.message,errorCode:error?.code},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'L'})}).catch(()=>{});
     // #endregion

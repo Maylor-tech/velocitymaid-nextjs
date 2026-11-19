@@ -15,7 +15,7 @@ function getStripe(): Stripe {
     throw new Error("STRIPE_SECRET_KEY is not set in environment variables");
   }
   return new Stripe(secretKey, {
-    apiVersion: "2024-06-20",
+    apiVersion: "2024-06-20" as LooseAny,
   });
 }
 
@@ -28,7 +28,7 @@ function getStripe(): Stripe {
  */
 export async function createStripeConnectAccount(
   email: string,
-  name?: string
+  _name?: string
 ): Promise<string> {
   const stripe = getStripe();
 

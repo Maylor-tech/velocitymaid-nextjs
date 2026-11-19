@@ -52,7 +52,7 @@ export async function POST(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CONTACT_INTERNAL_NOTE] Error:", error);
 
     if (error instanceof Response) {

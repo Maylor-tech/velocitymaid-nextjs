@@ -37,12 +37,12 @@ export default function SignUpSuccessPage() {
           
           {email && (
             <p className="text-sm text-vm-muted mb-8">
-              We've sent a confirmation email to <strong>{email}</strong>
+              We&apos;ve sent a confirmation email to <strong>{email}</strong>
             </p>
           )}
 
           <div className="bg-vm-surface border border-vm-border rounded-lg p-6 mb-8 text-left">
-            <h2 className="font-semibold text-vm-text mb-3">What's Next?</h2>
+            <h2 className="font-semibold text-vm-text mb-3">What&apos;s Next?</h2>
             <ul className="space-y-2 text-sm text-vm-text">
               <li className="flex items-start">
                 <span className="text-vm-cyan-dark mr-2">✓</span>

@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   try {
     expireSignedSession(response);
     return response;
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('[ADMIN LOGOUT] Error:', error);
     return NextResponse.redirect(new URL('/admin/login', req.url));
   }

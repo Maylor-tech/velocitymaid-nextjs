@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomerLayout from '../components/CustomerLayout';
-import { Calendar, Check, X, AlertCircle, CreditCard } from 'lucide-react';
+import { Calendar, AlertCircle } from 'lucide-react';
 import RegionBadge from '../components/RegionBadge';
 
 interface Subscription {

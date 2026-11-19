@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
       historyId: history.id,
       messageId,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Day 0 nurture error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send Day 0 message' },

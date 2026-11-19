@@ -19,7 +19,7 @@ export async function POST(
       include: { items: true, payments: true },
     });
     return NextResponse.json({ success: true, invoice: serializeInvoice(invoice) });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to cancel invoice';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

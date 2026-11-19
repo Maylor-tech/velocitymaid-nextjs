@@ -67,7 +67,7 @@ export default function CleanerScorecardPage() {
       } else {
         throw new Error(result.error || 'Failed to fetch scorecard data');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching scorecard:', err);
       setError(err.message || 'Failed to load scorecard');
     } finally {
@@ -117,7 +117,7 @@ export default function CleanerScorecardPage() {
   const latestIncentive = data.latestIncentive;
 
   // Calculate next tier requirements
-  const nextTierInfo = latestIncentive
+  const _nextTierInfo = latestIncentive
     ? calculateNextTierRequirements(
         {
           totalJobs: latestIncentive.totalJobs,

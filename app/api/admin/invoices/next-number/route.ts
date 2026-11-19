@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     assertOwnerAuthorization(auth);
     const invoiceNumber = await nextInvoiceNumber();
     return NextResponse.json({ success: true, invoiceNumber });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to generate number';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

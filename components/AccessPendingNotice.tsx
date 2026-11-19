@@ -18,7 +18,7 @@ export default function AccessPendingNotice() {
       </p>
 
       <p className="mt-2 text-sm text-vm-muted">
-        You'll receive a response by email shortly.
+        You&apos;ll receive a response by email shortly.
       </p>
     </div>
   );

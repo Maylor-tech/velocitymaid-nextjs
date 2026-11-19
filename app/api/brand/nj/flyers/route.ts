@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': `inline; filename="velocitymaid-nj-${type}.html"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate flyer error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate flyer' },

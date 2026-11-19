@@ -15,8 +15,8 @@ interface RequestChangeModalProps {
 
 export default function RequestChangeModal({
   jobId,
-  currentDate,
-  currentTime,
+  currentDate: _currentDate,
+  currentTime: _currentTime,
   currentAddress,
   onClose,
   onSuccess,
@@ -55,7 +55,7 @@ export default function RequestChangeModal({
 
       onSuccess();
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Request change error:', err);
       setError(err.message || 'Failed to submit change request');
     } finally {

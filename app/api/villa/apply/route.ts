@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       application,
       message: 'Application submitted successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Villa application error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to submit application' },

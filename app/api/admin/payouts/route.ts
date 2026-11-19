@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 
 // GET /api/admin/payouts
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     const dateTo = searchParams.get('dateTo');
 
     // Build where clause
-    const where: any = {};
+    const where: LooseAny = {};
 
     if (branchId) {
       where.Branch = { id: branchId };
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
               gte: payout.periodStart,
               lte: payout.periodEnd,
             },
-            status: 'completed',
+            status: 'COMPLETED',
           },
           select: {
             id: true,
@@ -120,7 +121,7 @@ export async function GET(request: NextRequest) {
       payouts: formattedPayouts,
       count: formattedPayouts.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get payouts error:', error);
     return NextResponse.json(
@@ -134,7 +135,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { cleanerId, jobs, incentives, penalties, total, currency, branchId } = body;
+    const { cleanerId, jobs, incentives: _incentives, penalties: _penalties, total, currency, branchId } = body;
 
     if (!cleanerId || !total) {
       return NextResponse.json(
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
     let periodEnd = new Date();
 
     if (jobs && jobs.length > 0) {
-      const jobDates = jobs.map((j: any) => new Date(j.completedAt || j.date)).filter(Boolean);
+      const jobDates = jobs.map((j: LooseAny) => new Date(j.completedAt || j.date)).filter(Boolean);
       if (jobDates.length > 0) {
         periodStart = new Date(Math.min(...jobDates.map((d: Date) => d.getTime())));
         periodEnd = new Date(Math.max(...jobDates.map((d: Date) => d.getTime())));
@@ -170,8 +171,10 @@ export async function POST(request: NextRequest) {
     // Create payout record
     const payout = await prisma.jamaicaPayout.create({
       data: {
+        id: randomUUID(),
         cleanerId,
-        branchId: branchId || cleaner.primaryBranchId || null,
+        branchId: (branchId || cleaner.primaryBranchId) as string,
+        updatedAt: new Date(),
         periodStart,
         periodEnd,
         totalAmount: total,
@@ -205,7 +208,7 @@ export async function POST(request: NextRequest) {
         createdAt: payout.createdAt.toISOString(),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create payout error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create payout' },

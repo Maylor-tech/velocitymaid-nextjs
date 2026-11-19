@@ -96,7 +96,7 @@ export function JobBillingWorkflowPanel({ jobId, jobCompleted, jobStatus }: JobB
         setMessage('Success');
       }
       await refresh();
-    } catch (err: unknown) {
+    } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Action failed');
     } finally {
       setBusy(null);

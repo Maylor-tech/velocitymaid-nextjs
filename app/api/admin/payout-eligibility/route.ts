@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
       },
       results,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_PAYOUT_ELIGIBILITY] Error:", error);
     return NextResponse.json(
       {

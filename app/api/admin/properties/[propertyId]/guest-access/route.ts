@@ -75,7 +75,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       feedbackAfterRevokePolicy:
         'Property revoke blocks /stay and new tip grants. Previously issued GUEST feedback public tokens may still accept submit under existing feedback rules.',
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message =
       error instanceof Error ? error.message : 'Failed to load guest access';
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       },
       { status: 400 }
     );
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message =
       error instanceof Error ? error.message : 'Failed to update guest access';

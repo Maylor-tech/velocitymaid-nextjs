@@ -158,7 +158,7 @@ Confidential — Not for redistribution.
         console.log(
           `[INVESTOR_APPROVAL] Approval email sent to ${accessRequest.email} (request ${id})`
         );
-      } catch (emailError: any) {
+      } catch (emailError) {
         console.error(
           `[INVESTOR_APPROVAL] Failed to send email to ${accessRequest.email}:`,
           emailError
@@ -172,7 +172,7 @@ Confidential — Not for redistribution.
       success: true,
       message: "Request approved and email sent",
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[INVESTOR_APPROVAL] Error:", error);
 

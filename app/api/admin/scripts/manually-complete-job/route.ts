@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[MANUAL_COMPLETE_JOB_API] Error:", error);
     return NextResponse.json(

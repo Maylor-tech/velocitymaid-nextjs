@@ -39,6 +39,16 @@ interface PerformanceData {
 
 export default function BranchOwnerPerformancePage() {
   // Block in production
+  
+  const [performance, setPerformance] = useState<PerformanceData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    fetchPerformance();
+  }, []);
+
   if (process.env.NODE_ENV === 'production') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -49,14 +59,6 @@ export default function BranchOwnerPerformancePage() {
       </div>
     );
   }
-  
-  const [performance, setPerformance] = useState<PerformanceData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchPerformance();
-  }, []);
 
   const fetchPerformance = async () => {
     try {
@@ -70,7 +72,7 @@ export default function BranchOwnerPerformancePage() {
       } else {
         throw new Error(data.error || "Failed to load performance metrics");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching performance:", err);
       setError(err.message || "Failed to load performance metrics");
     } finally {

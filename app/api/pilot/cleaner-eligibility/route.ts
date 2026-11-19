@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       success: true,
       eligibility,
     });
-  } catch (error: any) {
+  } catch (error) {
     // If it's a NextResponse (from requireRole), re-throw it
     if (error instanceof Response) {
       throw error;

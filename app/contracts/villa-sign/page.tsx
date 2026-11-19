@@ -107,7 +107,7 @@ export default function VillaSignPage() {
       } else {
         setError(data.error || 'Failed to generate contract');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error submitting contract:', err);
       setError(err.message || 'Failed to submit contract');
     } finally {

@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
       reconciled,
       errors: errors.length ? errors : undefined,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to send review requests";
     console.error("[send-review-requests]", error);

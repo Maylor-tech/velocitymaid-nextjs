@@ -42,7 +42,7 @@ export async function calculateJobQualityScore(
       },
     });
 
-    if (!job || job.status !== 'completed') {
+    if (!job || job.status !== 'COMPLETED') {
       return 0; // Can't calculate score for incomplete jobs
     }
 
@@ -93,7 +93,7 @@ export async function calculateJobQualityScore(
     }
 
     return Math.min(score, 100); // Cap at 100
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error calculating JQS:', error);
     return 0;
   }
@@ -138,7 +138,7 @@ export async function updateJobQualityScore(jobId: string): Promise<number> {
     });
 
     return score;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating JQS:', error);
     throw error;
   }
@@ -152,7 +152,7 @@ export async function getCleanerAverageJQS(cleanerId: string): Promise<number> {
     const jobs = await prisma.job.findMany({
       where: {
         assignedCleanerId: cleanerId,
-        status: 'completed',
+        status: 'COMPLETED',
         jobQualityScore: { not: null },
       },
       select: {
@@ -166,7 +166,7 @@ export async function getCleanerAverageJQS(cleanerId: string): Promise<number> {
 
     const totalScore = jobs.reduce((sum, job) => sum + (job.jobQualityScore || 0), 0);
     return Math.round(totalScore / jobs.length);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error calculating average JQS:', error);
     return 0;
   }

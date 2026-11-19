@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       failedCount,
       totalLeads: leads.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Send promo SMS error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send promo SMS' },

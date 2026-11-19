@@ -32,7 +32,7 @@ export function validateDiscount(
   // Check permission
   try {
     assertPricingPermission(role, "canApplyDiscounts");
-  } catch (error: any) {
+  } catch (error) {
     return {
       valid: false,
       error: error.message || "Permission denied: Only admins can apply discounts",

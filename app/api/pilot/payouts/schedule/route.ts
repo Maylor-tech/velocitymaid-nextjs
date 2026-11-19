@@ -17,7 +17,6 @@ import {
   getMiamiBranchId, 
   processWeeklyPayouts,
   getPayoutSummary,
-  type WeeklyPayoutPeriod 
 } from "@/lib/pilot/payoutCycle";
 
 export const dynamic = "force-dynamic";
@@ -29,12 +28,12 @@ async function requireAnyRole(
   request: NextRequest,
   roles: Array<"ADMIN" | "BRANCH_OWNER">
 ): Promise<{ userId: string; role: string; email?: string }> {
-  const errors: any[] = [];
+  const errors: LooseAny[] = [];
   
   for (const role of roles) {
     try {
       return await requireRole(request, role);
-    } catch (error: any) {
+    } catch (error) {
       errors.push(error);
       // If it's not an auth error (401/403), re-throw immediately
       if (error instanceof NextResponse) {
@@ -60,14 +59,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const bypassAuth = process.env.NODE_ENV === "development" && searchParams.get("bypassAuth") === "true";
     
-    let auth: { userId: string; role: string; email?: string };
-    
     if (bypassAuth) {
       console.warn("[M7 PAYOUT] ⚠️ AUTH BYPASSED - Development mode only");
-      auth = { userId: "dev-bypass", role: "ADMIN" };
     } else {
       // Require ADMIN or BRANCH_OWNER
-      auth = await requireAnyRole(request, ["ADMIN", "BRANCH_OWNER"]);
+      await requireAnyRole(request, ["ADMIN", "BRANCH_OWNER"]);
     }
     
     // Get Miami branch ID
@@ -94,7 +90,7 @@ export async function GET(request: NextRequest) {
       },
       summary,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[M7 PAYOUT ERROR] GET Error:", error);
     console.error("[M7 PAYOUT ERROR] Error type:", typeof error);
     console.error("[M7 PAYOUT ERROR] Error constructor:", error?.constructor?.name);
@@ -210,7 +206,7 @@ export async function POST(request: NextRequest) {
         ? `Dry run: Would create ${result.createdPayouts} payout(s) for ${result.period.weekLabel}`
         : `Created ${result.createdPayouts} payout(s) for ${result.period.weekLabel}`,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[M7 PAYOUT ERROR] POST Error:", error);
     console.error("[M7 PAYOUT ERROR] Error type:", typeof error);
     console.error("[M7 PAYOUT ERROR] Error constructor:", error?.constructor?.name);

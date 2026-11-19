@@ -17,12 +17,12 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
-    const where: any = {};
+    const where: LooseAny = {};
     if (status) {
       where.status = status;
     }
 
-    const orderBy: any = {};
+    const orderBy: LooseAny = {};
     if (sortBy === 'bedrooms') {
       orderBy.bedrooms = sortOrder;
     } else if (sortBy === 'createdAt') {
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       applications,
       count: applications.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get villa applications error:', error);
     return NextResponse.json(

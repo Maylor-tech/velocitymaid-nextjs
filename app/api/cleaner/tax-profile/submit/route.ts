@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     const encryptionKeyVer = "v1"; // Version identifier for key rotation
 
     // Get or create profile
-    const existingProfile = await prisma.cleanerTaxProfile.findUnique({
+    const _existingProfile = await prisma.cleanerTaxProfile.findUnique({
       where: { cleanerId },
     });
 
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
         submittedAt: profile.submittedAt?.toISOString(),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CLEANER_TAX_PROFILE_SUBMIT] Error:", error);
 
     if (error instanceof Response) {

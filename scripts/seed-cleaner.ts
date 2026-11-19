@@ -200,7 +200,7 @@ async function seedCleaner() {
     } else {
       console.log('\n⚠️  Warning: Cleaner may not be properly configured');
     }
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('❌ Error seeding cleaner:', error);
     process.exit(1);
   } finally {

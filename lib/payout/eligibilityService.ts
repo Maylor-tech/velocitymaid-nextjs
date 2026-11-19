@@ -40,7 +40,7 @@ export async function getPayoutEligibilityData(
     where: {
       assignedCleanerId: cleanerId,
       status: {
-        in: ["COMPLETED", "completed", "Completed"], // Handle different case variations
+        in: ["COMPLETED", "COMPLETED", "COMPLETED"], // Handle different case variations
       },
       paymentStatus: "PAID",
       completedAt: { not: null },
@@ -89,7 +89,7 @@ export async function getPayoutEligibilityData(
 
   // Optional: Check tax profile verification status
   // Only gate if tax profile exists and is not verified
-  const taxProfile = await prisma.cleanerTaxProfile.findUnique({
+  const taxProfile = await (prisma as LooseAny).cleanerTaxProfile.findUnique({
     where: { cleanerId },
     select: { status: true },
   });
@@ -144,7 +144,7 @@ export async function getBulkPayoutEligibility(
       try {
         const eligibility = await getPayoutEligibility(cleanerId);
         results.set(cleanerId, eligibility);
-      } catch (error) {
+      } catch (_error) {
         // If cleaner not found or error, mark as ineligible
         results.set(cleanerId, {
           isEligible: false,

@@ -66,12 +66,12 @@ let calendarAuth: JWT | null = null;
 
 export function getDriveClient() {
   if (!driveAuth) driveAuth = buildDriveJwt();
-  return google.drive({ version: 'v3', auth: driveAuth });
+  return google.drive({ version: 'v3', auth: driveAuth as LooseAny });
 }
 
 export function getCalendarClient() {
   if (!calendarAuth) calendarAuth = buildCalendarJwt();
-  return google.calendar({ version: 'v3', auth: calendarAuth });
+  return google.calendar({ version: 'v3', auth: calendarAuth as LooseAny });
 }
 
 /** Test-only: clears memoized clients so tests can swap mocked credentials. */

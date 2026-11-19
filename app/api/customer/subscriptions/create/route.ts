@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       url: session.url,
       sessionId: session.id,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Create subscription error:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Failed to create subscription' },

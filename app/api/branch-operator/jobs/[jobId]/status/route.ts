@@ -100,7 +100,7 @@ export async function PATCH(
         completedAt: updatedJob.completedAt?.toISOString() ?? null,
       },
     });
-  } catch (err: unknown) {
+  } catch (err) {
     if (err && typeof err === "object" && "status" in err) throw err;
     const message = err instanceof Error ? err.message : "Failed to update status";
     return NextResponse.json(

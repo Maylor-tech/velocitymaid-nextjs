@@ -7,7 +7,7 @@
 
 import { prisma } from "../prisma";
 import { sendCustomerConfirmation } from "../sendCustomerConfirmation";
-import { send24HourReminder } from "../whatsapp";
+
 
 export interface ConfirmationStatus {
   sent: boolean;
@@ -129,7 +129,7 @@ export async function sendJobConfirmation(jobId: string): Promise<ConfirmationSt
         error: result.error || "Failed to send confirmation",
       };
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error(`[PHASE_M] Error sending confirmation for job ${jobId}:`, error);
     return {
       sent: false,
@@ -201,7 +201,7 @@ export async function schedule24HourReminder(jobId: string): Promise<ReminderSta
       scheduledFor: reminderTime,
       method: "whatsapp",
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       sent: false,
       sentAt: null,
@@ -225,7 +225,7 @@ export async function getCancellationWindow(jobId: string): Promise<{
   feeAmount: number | null;
   message: string;
 }> {
-  const job = await prisma.job.findUnique({
+  const job = (await prisma.job.findUnique({
     where: { id: jobId },
     select: {
       id: true,
@@ -233,7 +233,7 @@ export async function getCancellationWindow(jobId: string): Promise<{
       totalPrice: true,
       basePrice: true,
     },
-  });
+  } as LooseAny)) as LooseAny;
 
   if (!job || !job.preferredDate) {
     return {

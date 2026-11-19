@@ -16,6 +16,11 @@ import { Button } from '@/components/ui/button';
 
 export default function TestAuthPage() {
   // Block in production
+  
+  const [userId, setUserId] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
   if (process.env.NODE_ENV === 'production') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -26,10 +31,6 @@ export default function TestAuthPage() {
       </div>
     );
   }
-  
-  const [userId, setUserId] = useState("");
-  const [status, setStatus] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   const setAuthCookie = async () => {
     if (!userId.trim()) {
@@ -59,7 +60,7 @@ export default function TestAuthPage() {
       } else {
         setStatus(`❌ Error: ${data.error}`);
       }
-    } catch (err: any) {
+    } catch (err) {
       setStatus(`❌ Error: ${err.message}`);
     } finally {
       setLoading(false);
@@ -85,7 +86,7 @@ export default function TestAuthPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-xs text-vm-muted mt-2">
-              Get this from your database: SELECT id FROM "User" WHERE role = 'BRANCH_OWNER';
+              Get this from your database: SELECT id FROM &quot;User&quot; WHERE role = &apos;BRANCH_OWNER&apos;;
             </p>
           </div>
 

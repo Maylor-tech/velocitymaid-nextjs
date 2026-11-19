@@ -44,7 +44,7 @@ interface EarningsData {
 }
 
 export default function CleanerEarningsPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const [data, setData] = useState<EarningsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +68,7 @@ export default function CleanerEarningsPage() {
           setError(result.error || 'Failed to fetch earnings data');
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching earnings:', err);
       setError(err.message || 'Failed to load earnings');
     } finally {
@@ -126,7 +126,7 @@ export default function CleanerEarningsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-vm-muted">This Week's Earnings</h3>
+              <h3 className="text-sm font-medium text-vm-muted">This Week&apos;s Earnings</h3>
               <DollarSign className="w-5 h-5 text-vm-success" />
             </div>
             <p className="text-2xl font-bold text-vm-text">
@@ -137,7 +137,7 @@ export default function CleanerEarningsPage() {
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-vm-muted">This Week's Bonuses</h3>
+              <h3 className="text-sm font-medium text-vm-muted">This Week&apos;s Bonuses</h3>
               <Award className="w-5 h-5 text-yellow-600" />
             </div>
             <p className="text-2xl font-bold text-vm-text">

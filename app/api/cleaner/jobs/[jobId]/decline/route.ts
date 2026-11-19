@@ -153,7 +153,7 @@ export async function PATCH(
         ? "Job declined. Ops can send a new offer."
         : "Job declined. It is unassigned and needs a cleaner.",
     });
-  } catch (err: unknown) {
+  } catch (err) {
     const authResp = rethrowIfAuthResponse(err);
     if (authResp) return authResp;
     console.error("[CLEANER_DECLINE] Error:", err);

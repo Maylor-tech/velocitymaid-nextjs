@@ -1,17 +1,18 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic'
 
-import { NextRequest, NextResponse } from 'next/server'
-import { requireRole } from "@/lib/auth/requireRole";
+import { NextRequest, NextResponse } from 'next/server';
+
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {  try {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
 
-    const where: any = {};
+    const where: Prisma.FranchiseApplicationWhereInput = {};
     if (status) {
-      where.status = status;
+      where.status = status as Prisma.FranchiseApplicationWhereInput["status"];
     }
 
     const applications = await prisma.franchiseApplication.findMany({
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {  try {
       success: true,
       applications,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('List franchise applications error:', error);
     return NextResponse.json(
@@ -32,4 +33,3 @@ export async function GET(request: NextRequest) {  try {
     );
   }
 }
-

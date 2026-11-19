@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
             status: "FAILED",
             executionNote: reason || null,
             updatedAt: new Date(),
-          },
+          } as LooseAny,
         });
 
         // Audit log EACH payout separately
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
         notifyPayoutFailed(
           payout.cleanerId,
           payoutId,
-          payout.cleanerAmount,
+          Number(payout.cleanerAmount),
           payout.currency,
           reason || "Payout failed"
         ).catch((err) => {
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
           success: true,
           status: "FAILED",
         });
-      } catch (error: any) {
+      } catch (error) {
         // Individual payout failure doesn't stop the batch
         results.push({
           payoutId,
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
       failed: failureCount,
       results,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[BULK_FAIL_PAYOUTS] Error:", error);
     return NextResponse.json(
       {

@@ -48,7 +48,7 @@ export async function POST(
       success: true,
       credit: result,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     if (error instanceof DepositCreditError) {
       return NextResponse.json(

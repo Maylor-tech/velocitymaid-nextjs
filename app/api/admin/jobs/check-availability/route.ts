@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       available: true,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Error checking availability:', error);
     return NextResponse.json(

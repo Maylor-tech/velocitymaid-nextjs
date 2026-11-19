@@ -24,7 +24,7 @@ export async function GET(
       );
     }
     return NextResponse.json({ success: true, ...view });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to load feedback';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
@@ -77,7 +77,7 @@ export async function POST(
       alreadySubmitted: result.alreadySubmitted,
       status: result.status,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to submit feedback';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

@@ -8,7 +8,7 @@ import { COOKIE_NAME } from '@/lib/customerSession';
  * 
  * Logout customer and clear session
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const res = NextResponse.json({
       success: true,
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     });
 
     return res;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Logout error:', error);
     return NextResponse.json(
       {

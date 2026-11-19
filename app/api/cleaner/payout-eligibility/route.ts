@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       where: {
         assignedCleanerId: authResult.cleanerId,
         status: {
-          notIn: ["COMPLETED", "completed", "Completed", "CANCELLED", "cancelled"],
+          notIn: ["COMPLETED", "COMPLETED", "COMPLETED", "CANCELLED", "CANCELLED"],
         },
       },
     });
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         minimumCompletedJobs: 3,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[PAYOUT_ELIGIBILITY] Error:", error);
     return NextResponse.json(
       {

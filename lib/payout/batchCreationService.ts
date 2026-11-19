@@ -63,7 +63,7 @@ async function getPayoutEligibilityDataTx(
     where: {
       assignedCleanerId: cleanerId,
       status: {
-        in: ["COMPLETED", "completed", "Completed"],
+        in: ["COMPLETED", "COMPLETED", "COMPLETED"],
       },
       paymentStatus: "PAID",
       completedAt: { not: null },
@@ -226,7 +226,7 @@ export async function createPayoutBatchDraft(
         });
 
         // Select entries to lock (up to eligible amount)
-        let entriesToLock: typeof eligibleEntries = [];
+        const entriesToLock: typeof eligibleEntries = [];
         let runningTotal = 0;
 
         for (const entry of eligibleEntries) {
@@ -288,7 +288,7 @@ export async function createPayoutBatchDraft(
         });
 
         totalAmountCents += eligibilityData.eligibleAmountCents;
-      } catch (error: any) {
+      } catch (error) {
         // If error during processing, skip this cleaner
         skipped.push({
           cleanerId: cleaner.id,

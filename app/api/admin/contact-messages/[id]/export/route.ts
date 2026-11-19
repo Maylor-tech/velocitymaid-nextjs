@@ -176,7 +176,7 @@ export async function GET(
         "Content-Disposition": `attachment; filename="contact-record-${message.id}.html"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CONTACT_EXPORT] Error:", error);
 
     if (error instanceof Response) {

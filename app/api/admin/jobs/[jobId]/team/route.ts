@@ -18,7 +18,7 @@ export async function GET(
     await assertAdminJobRecord(auth, params.jobId);
     const team = await loadJobTeamMembers(params.jobId);
     return NextResponse.json({ success: true, team });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to load team';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
@@ -84,7 +84,7 @@ export async function PUT(
 
     const team = await loadJobTeamMembers(params.jobId);
     return NextResponse.json({ success: true, team });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to update team';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

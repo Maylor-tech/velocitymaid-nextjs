@@ -15,7 +15,7 @@ const brandColors = {
   white: '#FFFFFF',
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const html = generatePricingCard();
 
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="velocitymaid-nj-pricing-card.html"',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate pricing card error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate pricing card' },

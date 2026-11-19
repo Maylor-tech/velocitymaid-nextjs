@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
       ...(isDev && !emailSent ? { code } : {}),
       expiresAt: expiresAt.toISOString(),
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Error in request-code:', error);
     const errorMessage =
       process.env.NODE_ENV === 'production'

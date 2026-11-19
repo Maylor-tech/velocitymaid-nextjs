@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       incentives,
       count: incentives.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('List incentives error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch incentives' },

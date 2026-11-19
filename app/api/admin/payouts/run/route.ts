@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/requireRole';
 import { JobStatus } from '@prisma/client';
@@ -83,7 +84,7 @@ async function getCleanerLevel(cleanerId: string): Promise<1 | 2 | 3 | 4 | null>
     const levelResult = calculateCleanerLevel(metrics);
     return levelResult.level;
   } catch (error) {
-    if (error instanceof NextResponse) return error;
+    if (error instanceof NextResponse) return null;
     console.error('Error calculating cleaner level:', error);
     return null;
   }
@@ -92,7 +93,7 @@ async function getCleanerLevel(cleanerId: string): Promise<1 | 2 | 3 | 4 | null>
 /**
  * Check if job has unresolved complaint
  */
-async function hasUnresolvedComplaint(jobId: string): Promise<boolean> {
+async function hasUnresolvedComplaint(_jobId: string): Promise<boolean> {
   // TODO: Query Complaint model if it exists
   return false;
 }
@@ -275,6 +276,7 @@ export async function POST(request: NextRequest) {
           // Create new payout
           const created = await prisma.cleanerPayout.create({
             data: {
+              id: randomUUID(),
               cleanerId: earnings.cleanerId,
               branchId: branch.id,
               fromDate,
@@ -286,11 +288,12 @@ export async function POST(request: NextRequest) {
               penalties: earnings.penalties,
               branchProfit: earnings.profitContribution,
               status: 'APPROVED', // Auto-approve
+              updatedAt: new Date(),
             },
           });
           createdPayouts.push(created);
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error(`Error creating payout for cleaner ${earnings.cleanerId}:`, error);
         errors.push({
           cleanerId: earnings.cleanerId,
@@ -317,7 +320,7 @@ export async function POST(request: NextRequest) {
       })),
       errors: errors.length > 0 ? errors : undefined,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Payout run error:', error);
     return NextResponse.json(
       {

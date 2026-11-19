@@ -70,7 +70,7 @@ export async function createCertificate(cleanerId: string): Promise<{
       cleanerId,
       status: 'ACTIVE',
       issuedAt: new Date(),
-    },
+    } as LooseAny,
   });
 
   return {
@@ -89,7 +89,7 @@ export async function getCertificateDetails(certificateId: string) {
     include: {
       cleaner: {
         include: {
-          primaryBranch: {
+          Branch_User_primaryBranchIdToBranch: {
             select: {
               name: true,
               country: true,
@@ -97,7 +97,7 @@ export async function getCertificateDetails(certificateId: string) {
           },
         },
       },
-      trainingStatus: true,
+      TrainingStatus: true,
     },
   });
 
@@ -107,7 +107,7 @@ export async function getCertificateDetails(certificateId: string) {
 
   // Get completed modules count
   const allLessons = await prisma.trainingLesson.findMany({
-    where: { module: { isActive: true } },
+    where: { TrainingModule: { isActive: true } },
   });
 
   const completedProgress = await prisma.lessonProgress.findMany({
@@ -120,13 +120,13 @@ export async function getCertificateDetails(certificateId: string) {
   return {
     certificateId: certificate.certificateId,
     cleanerName: certificate.cleaner.name || 'Unknown',
-    branchName: certificate.cleaner.primaryBranch?.name || 'Unknown',
-    branchCountry: certificate.cleaner.primaryBranch?.country || 'Unknown',
+    branchName: certificate.cleaner.Branch_User_primaryBranchIdToBranch?.name || 'Unknown',
+    branchCountry: certificate.cleaner.Branch_User_primaryBranchIdToBranch?.country || 'Unknown',
     issuedAt: certificate.issuedAt,
     status: certificate.status,
     modulesCompleted: completedProgress.length,
     totalModules: allLessons.length,
-    trainingStatus: certificate.trainingStatus?.overallStatus || 'UNKNOWN',
+    trainingStatus: certificate.TrainingStatus?.overallStatus || 'UNKNOWN',
   };
 }
 

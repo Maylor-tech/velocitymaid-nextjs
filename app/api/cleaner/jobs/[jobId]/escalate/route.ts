@@ -92,7 +92,7 @@ export async function POST(
       escalationId: escalation.escalationId,
       message: "Issue escalated successfully. An administrator will review it shortly.",
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof Response) {
       throw error;
     }

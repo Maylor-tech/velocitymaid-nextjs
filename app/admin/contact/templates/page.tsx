@@ -44,7 +44,7 @@ export default function ReplyTemplatesPage() {
       } else {
         throw new Error(data.error || "Failed to fetch templates");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch templates:", err);
       setError(err.message || "Failed to load templates");
     } finally {
@@ -66,7 +66,7 @@ export default function ReplyTemplatesPage() {
       }
 
       fetchTemplates();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to delete template:", err);
       alert(`Error: ${err.message}`);
     }
@@ -221,7 +221,7 @@ function TemplateForm({
       }
 
       onSave();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to save template:", err);
       alert(`Error: ${err.message}`);
     } finally {

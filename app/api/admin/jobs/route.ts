@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ jobs: formattedJobs });
-  } catch (err: unknown) {
+  } catch (err) {
     if (err instanceof NextResponse) return err;
     console.error('[ADMIN JOBS] Error:', err);
     const message = err instanceof Error ? err.message : undefined;

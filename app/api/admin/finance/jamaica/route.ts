@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         revenueByMonth,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get Jamaica revenue error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch revenue data' },

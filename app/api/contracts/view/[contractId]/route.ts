@@ -34,7 +34,7 @@ export async function GET(
 
     // Generate HTML based on contract type
     let html = '';
-    const variables: any = {
+    const variables: LooseAny = {
       name: contract.signedBy || contract.name,
       phone: contract.phone || '',
       email: contract.email || '',
@@ -54,7 +54,7 @@ export async function GET(
     if (contract.type === 'CLEANER') {
       html = generateContractHTML(cleanerAgreementTemplate, variables);
     } else if (contract.type === 'VILLA') {
-      variables.propertyName = (contract.metadata as any)?.propertyName || '';
+      variables.propertyName = (contract.metadata as LooseAny)?.propertyName || '';
       html = generateContractHTML(villaPartnershipTemplate, variables);
     } else if (contract.type === 'CUSTOMER') {
       html = generateContractHTML(customerTermsTemplate, variables);
@@ -70,7 +70,7 @@ export async function GET(
         'Content-Type': 'text/html',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('View contract error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to load contract' },
@@ -79,8 +79,8 @@ export async function GET(
   }
 }
 
-function generateContractHTML(template: any, variables: any): string {
-  const sectionsHTML = template.sections.map((section: any) => `
+function generateContractHTML(template: LooseAny, variables: LooseAny): string {
+  const sectionsHTML = template.sections.map((section: LooseAny) => `
     <div style="margin-bottom: 25px;">
       <h3 style="font-size: 18px; font-weight: bold; color: #0A3D2F; margin-bottom: 10px; font-family: 'Montserrat', Arial, sans-serif;">
         ${section.title}

@@ -108,7 +108,7 @@ export async function sendWhatsAppTemplate(
       success: true,
       messageId: data.messages?.[0]?.id,
     };
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('WhatsApp API Request Error:', error);
     return {
       success: false,

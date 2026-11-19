@@ -8,6 +8,7 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from "@/lib/auth/requireRole";
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 import { sendTrainingPassedNotification } from '@/app/services/trainingNotifications';
 
@@ -34,8 +35,10 @@ export async function POST(
         overallStatus: 'PASSED',
       },
       create: {
+        id: randomUUID(),
         cleanerId,
         overallStatus: 'PASSED',
+        updatedAt: new Date(),
       },
     });
 
@@ -43,7 +46,7 @@ export async function POST(
     const cleaner = await prisma.user.findUnique({
       where: { id: cleanerId },
       include: {
-        primaryBranch: {
+        Branch_User_primaryBranchIdToBranch: {
           select: {
             country: true,
             slug: true,
@@ -53,9 +56,9 @@ export async function POST(
     });
 
     const isJamaicaBranch =
-      cleaner?.primaryBranch?.country === 'Jamaica' ||
-      cleaner?.primaryBranch?.country === 'JM' ||
-      cleaner?.primaryBranch?.slug === 'port-antonio';
+      cleaner?.Branch_User_primaryBranchIdToBranch?.country === 'Jamaica' ||
+      cleaner?.Branch_User_primaryBranchIdToBranch?.country === 'JM' ||
+      cleaner?.Branch_User_primaryBranchIdToBranch?.slug === 'port-antonio';
 
     if (isJamaicaBranch && cleaner) {
       await prisma.user.update({
@@ -100,7 +103,7 @@ export async function POST(
       success: true,
       trainingStatus,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Override training status error:', error);
     return NextResponse.json(

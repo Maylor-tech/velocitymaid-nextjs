@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       skipped: result.skipped,
       message: `Created payout batch with ${result.eligibleCleaners} eligible cleaner(s), total: $${(result.totalAmountCents / 100).toFixed(2)}`,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[CREATE_PAYOUT_BATCH] Error:", error);
     return NextResponse.json(
@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
           .length,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[GET_PAYOUT_BATCH] Error:", error);
     return NextResponse.json(
       {

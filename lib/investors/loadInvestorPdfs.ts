@@ -86,7 +86,7 @@ export function loadInvestorPdfs(): PdfAttachment[] {
       console.log(
         `[INVESTOR_PDFS] Loaded ${file.name} (${fileSizeMB.toFixed(2)}MB)`
       );
-    } catch (error: any) {
+    } catch (error) {
       console.error(
         `[INVESTOR_PDFS] Failed to load ${file.name}:`,
         error.message

@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       success: true,
       url: session.url,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Billing portal error:', error);
     return NextResponse.json(
       {

@@ -1,6 +1,6 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from "@/lib/auth/requireRole";
+
 import { prisma } from '@/lib/prisma';
 
 export async function PATCH(
@@ -29,7 +29,7 @@ export async function PATCH(
       success: true,
       branch,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Update branch status error:', error);
     return NextResponse.json(
@@ -38,4 +38,3 @@ export async function PATCH(
     );
   }
 }
-

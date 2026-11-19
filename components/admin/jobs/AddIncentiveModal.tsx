@@ -73,7 +73,7 @@ export default function AddIncentiveModal({
       setAmount('');
       setDescription('');
       setStatus('PENDING');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error creating incentive:', err);
       setError(err.message || 'Failed to create incentive');
     } finally {

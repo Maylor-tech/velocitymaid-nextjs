@@ -24,7 +24,7 @@ export async function GET() {
         'Content-Disposition': 'inline; filename="velocitymaid-nj-corporate-pricing-sheet.html"',
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Generate pricing sheet error:', error);
     const message = error instanceof Error ? error.message : 'Failed to generate pricing sheet';
     return NextResponse.json(

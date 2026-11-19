@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
         },
         source: "stripe",
       });
-    } catch (stripeError: any) {
+    } catch (stripeError) {
       console.error("[STRIPE_STATUS_REFRESH] Error:", stripeError);
       // Return database status if Stripe refresh fails
       return NextResponse.json({
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
         warning: "Failed to refresh from Stripe, using cached status",
       });
     }
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[STRIPE_STATUS] Error:", error);
     const err = error as { message?: string; stack?: string };

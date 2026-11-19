@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     await requireRole(request, 'ADMIN');
     const report = await getIntegrationHealthReport();
     return NextResponse.json({ success: true, ...report });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to load integration health';
     const status = message.includes('Unauthorized') ? 401 : 500;

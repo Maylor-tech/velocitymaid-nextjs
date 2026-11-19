@@ -124,7 +124,7 @@ const sopSections: SOPSection[] = [
 ];
 
 export default function SOPLibraryPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [downloading, setDownloading] = useState(false);
 
@@ -155,7 +155,7 @@ export default function SOPLibraryPage() {
       } else {
         throw new Error('Failed to generate handbook');
       }
-    } catch (err: any) {
+    } catch (err) {
       alert(err.message || 'Failed to download handbook');
     } finally {
       setDownloading(false);

@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       roundingIncrement: row?.processingRoundingIncrement ?? 5,
       policyVersion: row?.processingPolicyVersion ?? DEFAULT_PROCESSING_POLICY_VERSION,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to load settings';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
@@ -120,7 +120,7 @@ export async function PATCH(request: NextRequest) {
       roundingIncrement: row.processingRoundingIncrement ?? 5,
       policyVersion: row.processingPolicyVersion ?? DEFAULT_PROCESSING_POLICY_VERSION,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to update settings';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

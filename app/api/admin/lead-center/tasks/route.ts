@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       success: true,
       tasks: tasks.map(serializeTask),
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to list tasks';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

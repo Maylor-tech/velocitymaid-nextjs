@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       upcoming: upcomingCount,
       attention: attentionCount,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     return NextResponse.json(
       { error: 'Failed to load counters' },

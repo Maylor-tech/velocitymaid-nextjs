@@ -15,7 +15,7 @@ const brandColors = {
   white: '#FFFFFF',
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const html = generateMailboxFlyer();
 
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="velocitymaid-nj-mailbox-flyer.html"',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate mailbox flyer error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate flyer' },

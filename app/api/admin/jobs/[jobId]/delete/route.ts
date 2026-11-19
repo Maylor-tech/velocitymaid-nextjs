@@ -51,7 +51,7 @@ export async function DELETE(
       );
     }
     return await setArchived(jobId, new Date());
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message =
       error instanceof Error ? error.message : "Failed to archive job";
@@ -75,7 +75,7 @@ export async function POST(
       );
     }
     return await setArchived(jobId, null);
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message =
       error instanceof Error ? error.message : "Failed to unarchive job";

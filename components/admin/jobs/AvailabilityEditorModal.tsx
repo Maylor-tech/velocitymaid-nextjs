@@ -69,7 +69,7 @@ export default function AvailabilityEditorModal({
           isActive: data.availability.isActive ?? true,
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching availability:', err);
       setError(err.message || 'Failed to load availability');
     } finally {
@@ -169,7 +169,7 @@ export default function AvailabilityEditorModal({
 
       onSave();
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error saving availability:', err);
       setError(err.message || 'Failed to save availability');
     } finally {

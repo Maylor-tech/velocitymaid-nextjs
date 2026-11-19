@@ -41,7 +41,7 @@ export async function GET(
       reason: decision.reason,
       preview: authorizedPreview,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to preview payout recalc';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

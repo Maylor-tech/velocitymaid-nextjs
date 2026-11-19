@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       failed,
       results,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Error in assign-unassigned cron:', error);
     return NextResponse.json(
       {

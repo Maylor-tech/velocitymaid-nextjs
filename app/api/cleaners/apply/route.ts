@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     return handleLegacySubmit(body);
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Cleaner application error:', error);
     const message = error instanceof Error ? error.message : 'Failed to submit application';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

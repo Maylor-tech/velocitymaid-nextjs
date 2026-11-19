@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       success: true,
       verified: !!paymentMethod,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get payment method status error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get payment method status' },

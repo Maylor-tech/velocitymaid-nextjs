@@ -11,8 +11,8 @@ import {
   type JobFinancialInput,
 } from './model';
 import {
-  aggregateBranchFinancials,
-  aggregateCleanerEarnings,
+
+
 } from './aggregation';
 import { calculateCleanerLevel, type CleanerLevelMetrics } from '../cleaner-level';
 
@@ -92,7 +92,7 @@ export async function getCleanerLevel(cleanerId: string): Promise<1 | 2 | 3 | 4 
 /**
  * Check if job has unresolved complaint
  */
-export async function hasUnresolvedComplaint(jobId: string): Promise<boolean> {
+export async function hasUnresolvedComplaint(_jobId: string): Promise<boolean> {
   // TODO: Query Complaint model if it exists
   return false;
 }

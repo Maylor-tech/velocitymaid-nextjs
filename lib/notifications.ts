@@ -20,7 +20,7 @@ export interface NotificationMetadata {
   amount?: number;
   currency?: string;
   reason?: string;
-  [key: string]: any;
+  [key: string]: LooseAny;
 }
 
 /**
@@ -34,7 +34,7 @@ export async function createNotification(
   metadata?: NotificationMetadata
 ): Promise<{ success: boolean; notificationId?: string; error?: string }> {
   try {
-    const notification = await prisma.notification.create({
+    const notification = await (prisma as LooseAny).notification.create({
       data: {
         userId,
         type,
@@ -49,7 +49,7 @@ export async function createNotification(
       success: true,
       notificationId: notification.id,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CREATE_NOTIFICATION] Error:", error);
     return {
       success: false,
@@ -136,7 +136,7 @@ export async function markNotificationRead(
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await prisma.notification.updateMany({
+    await (prisma as LooseAny).notification.updateMany({
       where: {
         id: notificationId,
         userId, // Ensure user owns the notification
@@ -148,7 +148,7 @@ export async function markNotificationRead(
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("[MARK_NOTIFICATION_READ] Error:", error);
     return {
       success: false,
@@ -163,9 +163,9 @@ export async function markNotificationRead(
 export async function getUnreadNotifications(
   userId: string,
   limit: number = 50
-): Promise<any[]> {
+): Promise<LooseAny[]> {
   try {
-    const notifications = await prisma.notification.findMany({
+    const notifications = await (prisma as LooseAny).notification.findMany({
       where: {
         userId,
         read: false,
@@ -177,7 +177,7 @@ export async function getUnreadNotifications(
     });
 
     return notifications;
-  } catch (error: any) {
+  } catch (error) {
     console.error("[GET_UNREAD_NOTIFICATIONS] Error:", error);
     return [];
   }

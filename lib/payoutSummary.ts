@@ -93,7 +93,7 @@ export async function buildWeeklyPayoutSummary({
     },
   });
 
-  const cleanerMap = new Map(cleaners.map((c) => [c.id, c]));
+  const _cleanerMap = new Map(cleaners.map((c) => [c.id, c]));
 
   // Group payouts by cleaner and compute totals
   const summaries: CleanerPayoutSummary[] = [];
@@ -116,25 +116,26 @@ export async function buildWeeklyPayoutSummary({
 
     const payoutRows: PayoutSummaryRow[] = cleanerPayouts.map((p) => {
       // Extract payment method type from snapshot (masked)
-      const snapshot = p.paymentMethodSnapshot as any;
+      const snapshot = p.paymentMethodSnapshot as LooseAny;
       const paymentMethodType = snapshot?.methodType || null;
 
       // Update totals
+      const amount = Number(p.cleanerAmount);
       if (p.status === "PAID") {
-        totals.paid += p.cleanerAmount;
+        totals.paid += amount;
       } else if (p.status === "SENT") {
-        totals.sent += p.cleanerAmount;
+        totals.sent += amount;
       } else if (p.status === "APPROVED" || p.status === "READY" || p.status === "PENDING") {
-        totals.approved += p.cleanerAmount;
+        totals.approved += amount;
       } else if (p.status === "FAILED") {
-        totals.failed += p.cleanerAmount;
+        totals.failed += amount;
       }
 
       return {
         payoutId: p.id,
         jobId: p.jobId,
         status: p.status,
-        amount: p.cleanerAmount,
+        amount,
         currency: p.currency,
         createdAt: p.createdAt.toISOString(),
         executedAt: p.executedAt?.toISOString() || null,

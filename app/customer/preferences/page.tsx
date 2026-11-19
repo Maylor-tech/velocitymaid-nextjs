@@ -8,7 +8,7 @@ import type { CustomerPreferences } from '@/utils/customerData';
 
 export default function CustomerPreferencesPage() {
   const router = useRouter();
-  const [preferences, setPreferences] = useState<CustomerPreferences | null>(null);
+  const [_preferences, setPreferences] = useState<CustomerPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export default function CustomerPreferencesPage() {
           setAllowEmail(prefs.allowEmail);
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching preferences:', err);
       setError(err.message || 'Failed to load preferences');
     } finally {
@@ -91,7 +91,7 @@ export default function CustomerPreferencesPage() {
       } else {
         throw new Error(data.error || 'Failed to update preferences');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating preferences:', err);
       setError(err.message || 'Failed to update preferences');
     } finally {

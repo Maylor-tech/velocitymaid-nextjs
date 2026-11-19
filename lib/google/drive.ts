@@ -52,7 +52,8 @@ async function findFolderByName(
     supportsAllDrives: true,
     fields: 'files(id, name)',
   });
-  return res.data.files?.[0]?.id ?? null;
+  const listed = res.data as { files?: Array<{ id?: string | null }> };
+  return listed.files?.[0]?.id ?? null;
 }
 
 async function createFolder(

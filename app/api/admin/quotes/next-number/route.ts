@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       success: true,
       quoteNumber,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[admin/quotes/next-number]", error);
     const message =
       error instanceof Error ? error.message : "Failed to generate quote number";

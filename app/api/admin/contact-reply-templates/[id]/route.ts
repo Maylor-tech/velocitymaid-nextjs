@@ -37,7 +37,7 @@ export async function PUT(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_TEMPLATE_UPDATE] Error:", error);
 
     if (error instanceof Response) {
@@ -73,7 +73,7 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_TEMPLATE_DELETE] Error:", error);
 
     if (error instanceof Response) {

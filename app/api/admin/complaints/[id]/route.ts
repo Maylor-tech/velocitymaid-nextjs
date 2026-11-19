@@ -2,17 +2,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
 
 // GET /api/admin/complaints/[id]
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET() {
   try {
-    const { id } = params;
-
     // TODO: Replace with actual Complaint model query when schema is updated
     // const complaint = await prisma.complaint.findUnique({
     //   where: { id },
@@ -35,7 +29,7 @@ export async function GET(
       success: false,
       error: 'Complaint model not yet implemented in Prisma schema',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get complaint error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get complaint' },
@@ -94,7 +88,7 @@ export async function PATCH(
       success: true,
       message: 'Complaint updated',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update complaint error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update complaint' },
@@ -109,19 +103,19 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
-
+    const complaintId = params.id;
+    console.info("Delete complaint request", request.method, complaintId);
     // TODO: Replace with actual Complaint model soft delete when schema is updated
     // await prisma.complaint.update({
-    //   where: { id },
+    //   where: { id: complaintId },
     //   data: { status: 'DELETED', updatedAt: new Date() },
     // });
 
     return NextResponse.json({
       success: true,
-      message: 'Complaint deleted',
+      message: `Complaint ${complaintId} deleted`,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Delete complaint error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to delete complaint' },

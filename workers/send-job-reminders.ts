@@ -149,7 +149,7 @@ export async function sendJobReminder(job: ReminderJob): Promise<{
         error: result.error,
       };
     }
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
       error: error.message || "Failed to send reminder",

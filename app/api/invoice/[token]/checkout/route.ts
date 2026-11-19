@@ -32,7 +32,7 @@ export async function POST(
       reused: result.reused,
       invoice: result.invoice,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create checkout';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

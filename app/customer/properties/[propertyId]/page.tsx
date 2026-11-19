@@ -100,7 +100,7 @@ function CustomerPropertyDetailPageInner() {
           setPrintedCardWarning(stayData.printedCardWarning);
         }
       }
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load property');
       setProperty(null);
       setForm(null);
@@ -172,7 +172,7 @@ function CustomerPropertyDetailPageInner() {
               ? 'Stay link ready.'
               : 'Guest display name required before this property is QR-ready.'
       );
-    } catch (err: unknown) {
+    } catch (err) {
       setStayMessage(err instanceof Error ? err.message : 'Stay link update failed');
     } finally {
       setStayBusy(false);
@@ -227,7 +227,7 @@ function CustomerPropertyDetailPageInner() {
       setProperty(data.property);
       setForm(data.property);
       setSaveMessage('Property profile saved.');
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
       setSaving(false);

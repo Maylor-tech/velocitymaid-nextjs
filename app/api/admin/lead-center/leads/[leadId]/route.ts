@@ -39,7 +39,7 @@ export async function GET(
         completedAt: t.completedAt?.toISOString() ?? null,
       })),
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to load lead';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });
@@ -120,7 +120,7 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true, lead: serializeLead(refreshed) });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update lead';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });
@@ -137,7 +137,7 @@ export async function DELETE(
     await prisma.pipelineLead.delete({ where: { id: params.leadId } });
 
     return NextResponse.json({ success: true });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete lead';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

@@ -116,7 +116,7 @@ export async function GET() {
       bookingCta,
       support,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch customer';
     console.error('Get customer error:', error);
     return NextResponse.json({ success: false, error: message }, { status: 500 });

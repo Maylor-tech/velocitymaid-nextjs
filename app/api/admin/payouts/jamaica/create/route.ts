@@ -42,7 +42,10 @@ export async function POST(request: NextRequest) {
 
     // Send WhatsApp notification (non-blocking)
     try {
-      const cleaner = payout.cleaner;
+      const cleaner = (payout as { cleaner?: { name?: string | null } }).cleaner;
+      if (!cleaner) {
+        throw new Error("Cleaner missing on payout");
+      }
       const paymentMethod = await import('@/app/services/payouts/jamaicaPayoutService').then(
         (m) => m.getCleanerPaymentMethod(cleanerId)
       );
@@ -71,7 +74,7 @@ export async function POST(request: NextRequest) {
       success: true,
       payout,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create payout error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create payout' },

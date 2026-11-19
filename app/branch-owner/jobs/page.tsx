@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, User, AlertCircle, CheckCircle2, XCircle, DollarSign, Lock } from "lucide-react";
+import { Calendar, MapPin, User, AlertCircle, DollarSign, Lock } from "lucide-react";
 import Link from "next/link";
 
 interface Job {
@@ -47,16 +47,6 @@ interface Cleaner {
 
 export default function BranchOwnerJobsPage() {
   // Block in production
-  if (process.env.NODE_ENV === 'production') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-vm-text mb-2">404</h1>
-          <p className="text-vm-muted">Page not found</p>
-        </div>
-      </div>
-    );
-  }
   
   const [jobs, setJobs] = useState<Job[]>([]);
   const [cleaners, setCleaners] = useState<Cleaner[]>([]);
@@ -73,9 +63,21 @@ export default function BranchOwnerJobsPage() {
   const [actionNotes, setActionNotes] = useState("");
 
   useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
     fetchJobs();
     fetchCleaners();
   }, [statusFilter, filter]);
+
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-vm-text mb-2">404</h1>
+          <p className="text-vm-muted">Page not found</p>
+        </div>
+      </div>
+    );
+  }
 
   const fetchJobs = async () => {
     try {
@@ -93,7 +95,7 @@ export default function BranchOwnerJobsPage() {
       } else {
         throw new Error(data.error || "Failed to load jobs");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching jobs:", err);
       setError(err.message || "Failed to load jobs");
     } finally {
@@ -164,7 +166,7 @@ export default function BranchOwnerJobsPage() {
       } else {
         throw new Error(data.error || "Failed to perform action");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error performing action:", err);
       alert(err.message || "Failed to perform action");
     } finally {

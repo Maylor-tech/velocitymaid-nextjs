@@ -9,7 +9,7 @@
  * Escape a CSV field value
  * Handles quotes, commas, and newlines
  */
-export function escapeCsvField(value: any): string {
+export function escapeCsvField(value: LooseAny): string {
   if (value === null || value === undefined) {
     return "";
   }
@@ -27,7 +27,7 @@ export function escapeCsvField(value: any): string {
 /**
  * Generate CSV row from array of values
  */
-export function csvRow(values: any[]): string {
+export function csvRow(values: LooseAny[]): string {
   return values.map(escapeCsvField).join(",");
 }
 
@@ -44,7 +44,7 @@ export function csvHeader(headers: string[]): string {
  * @param rows - Array of arrays representing data rows
  * @returns CSV string with BOM for Excel UTF-8 compatibility
  */
-export function generateCsv(headers: string[], rows: any[][]): string {
+export function generateCsv(headers: string[], rows: LooseAny[][]): string {
   const bom = "\uFEFF"; // UTF-8 BOM for Excel compatibility
   const headerRow = csvHeader(headers);
   const dataRows = rows.map((row) => csvRow(row));

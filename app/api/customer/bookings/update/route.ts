@@ -115,7 +115,7 @@ export async function PATCH(request: NextRequest) {
         addOns: addOns || booking.addOns,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update customer booking error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update booking' },

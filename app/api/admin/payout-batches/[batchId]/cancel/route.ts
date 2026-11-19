@@ -118,7 +118,7 @@ export async function POST(
         unlockedLedgerEntries: result.unlockedLedgerEntries,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CANCEL_PAYOUT_BATCH] Error:", error);
 
     // Handle specific error cases

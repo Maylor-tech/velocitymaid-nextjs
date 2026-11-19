@@ -55,31 +55,34 @@ function ZellePay({
   handle,
   phone,
   recipient,
+  invoiceNumber,
 }: {
   handle: string | null;
   phone: string | null;
   recipient: string;
+  invoiceNumber: string;
 }) {
   return (
     <div>
       <p className="font-body text-base text-vm-text">Zelle is our preferred way to pay.</p>
-      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-2 font-body text-base text-vm-text">
-        <span>Send to</span>
-        {handle ? (
-          <>
-            <span className="font-semibold text-vm-navy">{handle}</span>
-            <CopyValue value={handle} label={`Copy ${handle}`} />
-          </>
-        ) : null}
-        {handle && phone ? <span>or</span> : null}
-        {phone ? (
-          <>
-            <span className="font-semibold text-vm-navy">{phone}</span>
-            <CopyValue value={phone} label={`Copy ${phone}`} />
-          </>
-        ) : null}
-        <span>({recipient})</span>
-      </div>
+      {handle ? (
+        <div className="mt-2 flex flex-nowrap items-center justify-between gap-3">
+          <p className="min-w-0 break-all font-body text-base font-semibold text-vm-navy">{handle}</p>
+          <CopyValue value={handle} label={`Copy ${handle}`} />
+        </div>
+      ) : null}
+      {phone ? (
+        <div className="mt-2 flex flex-nowrap items-center justify-between gap-3">
+          <p className="min-w-0 font-body text-base font-semibold text-vm-navy">{phone}</p>
+          <CopyValue value={phone} label={`Copy ${phone}`} />
+        </div>
+      ) : null}
+      <p className="mt-2 font-body text-base text-vm-text">({recipient})</p>
+      {invoiceNumber ? (
+        <p className="mt-2 font-body text-base text-vm-text">
+          Please put {invoiceNumber} in the Zelle memo.
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -298,6 +301,7 @@ export function HostPhotoReport({ report }: { report: HostPhotoReport }) {
                       handle={report.payment.zelleHandle}
                       phone={report.payment.zellePhone}
                       recipient={report.payment.zelleRecipient}
+                      invoiceNumber={report.payment.invoiceNumber}
                     />
                   ) : null}
                   {report.payment.cardToken ? (

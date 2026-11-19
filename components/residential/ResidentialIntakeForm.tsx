@@ -125,7 +125,7 @@ export function ResidentialIntakeForm() {
         throw new Error(data.error || "Unable to submit request");
       }
       setDone(true);
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to submit request");
     } finally {
       setSubmitting(false);

@@ -101,7 +101,7 @@ filesToFix.forEach((file) => {
     } else {
       console.log(`✓ No issues: ${file}`);
     }
-  } catch (error: any) {
+  } catch (error) {
     console.log(`❌ Error in ${file}: ${error.message}`);
   }
 });

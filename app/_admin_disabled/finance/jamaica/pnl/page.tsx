@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingDown, TrendingUp, Plus, Edit } from 'lucide-react';
+import { TrendingDown, TrendingUp, Plus } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyConverter';
 
 interface PnLData {
@@ -55,7 +55,7 @@ export default function JamaicaPnLPage() {
       } else {
         setError(result.error || 'Failed to fetch P&L data');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching P&L:', err);
       setError(err.message || 'Failed to load P&L data');
     } finally {
@@ -83,7 +83,7 @@ export default function JamaicaPnLPage() {
       } else {
         alert(result.error || 'Failed to add expense');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error adding expense:', err);
       alert(err.message || 'Failed to add expense');
     }

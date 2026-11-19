@@ -83,7 +83,7 @@ export async function GET(
           lte: dayEnd,
         },
         status: {
-          notIn: ['cancelled'],
+          notIn: ['CANCELLED'],
         },
       },
     });
@@ -97,7 +97,7 @@ export async function GET(
           lte: weekEnd,
         },
         status: {
-          notIn: ['cancelled'],
+          notIn: ['CANCELLED'],
         },
       },
     });
@@ -108,7 +108,7 @@ export async function GET(
         branchId,
         assignedCleanerId: null,
         status: {
-          notIn: ['cancelled', 'completed'],
+          notIn: ['CANCELLED', 'COMPLETED'],
         },
         preferredDate: {
           gte: new Date(),
@@ -140,7 +140,7 @@ export async function GET(
           lte: weekEnd,
         },
         status: {
-          notIn: ['cancelled'],
+          notIn: ['CANCELLED'],
         },
       },
       select: {
@@ -179,7 +179,7 @@ export async function GET(
         revenueWeek: Math.round(revenueWeek * 100) / 100,
       },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('BRANCH_METRICS_ERROR:', err);
     return NextResponse.json(
       {

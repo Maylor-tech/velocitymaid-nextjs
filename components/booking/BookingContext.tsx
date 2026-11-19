@@ -355,7 +355,7 @@ export function BookingProvider({ children, initialBranchSlug }: BookingProvider
 
       // Redirect to Stripe checkout
       window.location.href = url;
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'Failed to submit booking. Please try again.');
       setLoading(false);
     }

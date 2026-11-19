@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       success: true,
       templates,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_REPLY_TEMPLATES] Error:", error);
 
     if (error instanceof Response) {
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, template });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_TEMPLATE_CREATE] Error:", error);
 
     if (error instanceof Response) {

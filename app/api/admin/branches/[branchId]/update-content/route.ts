@@ -2,7 +2,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from "@/lib/auth/requireRole";
+
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -37,6 +38,7 @@ export async function PATCH(
     const landingContent = await prisma.branchLandingContent.upsert({
       where: { branchId: branch.id },
       create: {
+        id: randomUUID(),
         branchId: branch.id,
         headline: body.headline || null,
         subheadline: body.subheadline || null,
@@ -46,6 +48,7 @@ export async function PATCH(
         localCtaLabel: body.localCtaLabel || null,
         testimonials: body.testimonials ? JSON.parse(JSON.stringify(body.testimonials)) : null,
         faqEntries: body.faqEntries ? JSON.parse(JSON.stringify(body.faqEntries)) : null,
+        updatedAt: new Date(),
       },
       update: {
         ...(body.headline !== undefined && { headline: body.headline }),
@@ -63,7 +66,7 @@ export async function PATCH(
       success: true,
       landingContent,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Update landing content error:', error);
     return NextResponse.json(
@@ -72,4 +75,3 @@ export async function PATCH(
     );
   }
 }
-

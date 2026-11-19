@@ -63,7 +63,7 @@ async function checkStripeKeys(): Promise<boolean> {
       detail: 'Test mode API key valid',
     });
     return true;
-  } catch (e: unknown) {
+  } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     log({
       name: 'Stripe API reachable',

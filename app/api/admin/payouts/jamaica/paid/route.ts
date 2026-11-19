@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Send WhatsApp notification (non-blocking)
     try {
-      const cleaner = payout.cleaner;
+      const _cleaner = (payout as { cleaner?: { name?: string | null } }).cleaner;
       const paymentMethod = await getCleanerPaymentMethod(payout.cleanerId);
 
       const whatsappNumber = paymentMethod?.whatsappNumber || null;
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       success: true,
       payout,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Mark payout paid error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to mark payout as paid' },

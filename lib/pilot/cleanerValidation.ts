@@ -6,7 +6,7 @@
  */
 
 import { prisma } from "../prisma";
-import { hasVerifiedPaymentMethod } from "../paymentMethods";
+
 
 export interface CleanerAssignmentEligibility {
   eligible: boolean;
@@ -91,14 +91,15 @@ export async function checkCleanerAssignmentEligibility(
     orderBy: { createdAt: "desc" },
   });
 
+  const method = paymentMethod as LooseAny;
   const paymentMethodStatus = {
     exists: !!paymentMethod,
-    verified: !!(paymentMethod?.isActive && paymentMethod?.verifiedAt),
+    verified: !!(method?.isActive && method?.verifiedAt),
     status: !paymentMethod
       ? ("none" as const)
-      : !paymentMethod.isActive && paymentMethod.verificationNote
+      : !method.isActive && method.verificationNote
       ? ("rejected" as const)
-      : paymentMethod.isActive && !paymentMethod.verifiedAt
+      : method.isActive && !method.verifiedAt
       ? ("pending" as const)
       : ("verified" as const),
   };

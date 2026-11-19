@@ -71,7 +71,7 @@ export default function BranchProfitabilityPage() {
       } else {
         throw new Error(result.error || 'Failed to fetch data');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching profitability data:', err);
       setError(err.message || 'Failed to load profitability data');
     } finally {

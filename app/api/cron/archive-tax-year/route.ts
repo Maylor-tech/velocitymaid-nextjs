@@ -313,7 +313,7 @@ export async function POST(req: NextRequest) {
       status: readiness.status,
       summary: readiness.summary,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[CRON_ARCHIVE_TAX_YEAR] Error:", error);
 
     return NextResponse.json(

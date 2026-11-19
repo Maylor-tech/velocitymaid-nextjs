@@ -77,7 +77,7 @@ export async function GET(
         status,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get lesson error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch lesson' },

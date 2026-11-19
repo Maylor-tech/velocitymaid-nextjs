@@ -75,13 +75,13 @@ export async function POST(
 
     const previousStatus = payout.status;
     const paidAt = new Date();
-    const existingDetails = (payout.policyEvalDetails as any) || {};
+    const existingDetails = (payout.policyEvalDetails as Record<string, unknown> | null) || {};
 
     // Update settlement metadata if needed
     const updatedDetails = {
       ...existingDetails,
       paymentSettlement: {
-        ...existingDetails.paymentSettlement,
+        ...(existingDetails.paymentSettlement as Record<string, unknown>),
         confirmedAt: paidAt.toISOString(),
         adminId: auth.userId,
         demoMode: DEMO_MODE, // Mark as demo
@@ -100,7 +100,7 @@ export async function POST(
             paidAt,
             policyEvalDetails: updatedDetails,
             updatedAt: new Date(),
-          },
+          } as LooseAny,
         });
 
         await ensureJobPayoutLedgerEntry(tx, {
@@ -150,7 +150,7 @@ export async function POST(
           paidAt,
           policyEvalDetails: updatedDetails,
           updatedAt: new Date(),
-        },
+        } as LooseAny,
       });
 
       await ensureJobPayoutLedgerEntry(tx, {
@@ -202,7 +202,7 @@ export async function POST(
     notifyPayoutPaid(
       payout.cleanerId,
       payoutId,
-      payout.cleanerAmount,
+      Number(payout.cleanerAmount),
       payout.currency
     ).catch((err) => {
       console.error("[CONFIRM_PAID] Failed to send notification:", err);
@@ -213,7 +213,7 @@ export async function POST(
       success: true,
       payout: updated,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[CONFIRM_PAID] Error:", error);
     return NextResponse.json(

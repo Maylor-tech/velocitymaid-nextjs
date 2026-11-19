@@ -46,7 +46,7 @@ export default function ContactForm() {
 
       setSubmitted(true);
       window.dispatchEvent(new CustomEvent("contactFormSubmitted"));
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to submit contact form:", err);
       setError(err instanceof Error ? err.message : "Failed to submit message. Please try again.");
     } finally {

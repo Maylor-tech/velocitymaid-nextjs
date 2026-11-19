@@ -22,7 +22,7 @@ import HomeDetailsStep from '../../components/booking/steps/HomeDetailsStep';
 import DateTimeStep from '../../components/booking/steps/DateTimeStep';
 import ExtrasStep from '../../components/booking/steps/ExtrasStep';
 import ContactInfoStep from '../../components/booking/steps/ContactInfoStep';
-import ReviewStep from '../../components/booking/steps/ReviewStep';
+
 import ConfirmationStep from '../../components/booking/steps/ConfirmationStep';
 import { Loader2 } from 'lucide-react';
 

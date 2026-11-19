@@ -14,7 +14,7 @@ const NAV = [
   {
     href: '/cleaner/jobs',
     label: 'Assignments',
-    match: (p: string) => false,
+    match: (_p: string) => false,
   },
   {
     href: '/cleaner/earnings',

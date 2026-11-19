@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': `inline; filename="velocitymaid-nj-${type}-${format}.html"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate social template error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate template' },

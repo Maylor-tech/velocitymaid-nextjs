@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       success: true,
       id: result.id,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[admin/quotes/send]", error);
     const message =
       error instanceof Error ? error.message : "Failed to send quote email";

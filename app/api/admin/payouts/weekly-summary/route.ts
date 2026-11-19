@@ -22,7 +22,7 @@ function parseDateParam(value: string | null): Date | null {
 
 export async function GET(request: NextRequest) {
   try {
-    const auth = await requireRole(request, "ADMIN");
+    const _auth = await requireRole(request, "ADMIN");
 
     const url = new URL(request.url);
     const dateFrom = parseDateParam(url.searchParams.get("dateFrom"));
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
         totalAmount: Number(totals._sum.cleanerAmount ?? 0),
         status: statusMap,
       });
-    } catch (dbError: any) {
+    } catch (dbError) {
       console.error("[WEEKLY_SUMMARY] Database error:", dbError);
       // Return empty results instead of failing
       return NextResponse.json({
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
         status: {},
       });
     }
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[WEEKLY_SUMMARY] Error:", error);
     console.error("[WEEKLY_SUMMARY] Error stack:", error.stack);

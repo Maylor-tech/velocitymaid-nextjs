@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       summary,
       message: 'Weekly incentive report completed successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Run incentive report error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to run incentive report' },

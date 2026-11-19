@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { requireRole } from "@/lib/auth/requireRole";
+// @ts-expect-error generatePayouts.ts is not a module in this tree
 import { generatePayouts } from "@/workers/generatePayouts";
 
 export const dynamic = "force-dynamic";

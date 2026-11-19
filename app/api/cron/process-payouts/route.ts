@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
             `[CRON_PROCESS_PAYOUTS] Batch ${batch.id}: Processed ${result.processed}, Succeeded ${result.succeeded}, Failed ${result.failed}, Complete: ${result.isComplete}`
           );
         }
-      } catch (err: unknown) {
+      } catch (err) {
         const errorMessage = (err instanceof Error ? err.message : undefined) || "Unknown error";
         results.push({
           batchId: batch.id,
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
       results,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[CRON_PROCESS_PAYOUTS] Fatal error:", error);
     return NextResponse.json(
       {

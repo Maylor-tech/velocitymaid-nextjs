@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       filter,
       customers: withPortal,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to list customers';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

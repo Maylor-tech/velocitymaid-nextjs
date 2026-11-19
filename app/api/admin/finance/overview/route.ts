@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from '@/lib/prisma';
-import { calculateRevenueTrendSlope } from '@/lib/finance/healthScore';
 import {
   calculateFinancialBreakdownsForJobs,
   calculateFinancialHealthScore,
@@ -123,7 +122,7 @@ export async function GET(request: NextRequest) {
     const cancelledJobs = await prisma.job.count({
       where: {
         branchId: branch.id,
-        status: 'cancelled',
+        status: 'CANCELLED',
         createdAt: {
           gte: dateRange.from,
           lte: dateRange.to,
@@ -165,7 +164,7 @@ export async function GET(request: NextRequest) {
     const jobsForDates = await prisma.job.findMany({
       where: {
         branchId: branch.id,
-        status: 'completed',
+        status: 'COMPLETED',
         completedAt: {
           gte: dateRange.from,
           lte: dateRange.to,
@@ -207,14 +206,11 @@ export async function GET(request: NextRequest) {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    // Calculate revenue trend slope
-    const revenueTrendSlope = calculateRevenueTrendSlope(revenueByDay);
-
     // By service type - get jobs with service types
     const jobsWithServiceType = await prisma.job.findMany({
       where: {
         branchId: branch.id,
-        status: 'completed',
+        status: 'COMPLETED',
         completedAt: {
           gte: dateRange.from,
           lte: dateRange.to,
@@ -305,7 +301,7 @@ export async function GET(request: NextRequest) {
       branchesSummary,
       health,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Finance overview error:', error);
     return NextResponse.json(

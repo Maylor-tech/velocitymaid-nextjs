@@ -132,13 +132,13 @@ export async function GET(request: NextRequest) {
               console.error(`Failed to send WhatsApp for cleaner ${cleaner.id}:`, whatsappError);
               // Don't fail the payout creation if WhatsApp fails
             }
-          } catch (payoutError: unknown) {
+          } catch (payoutError) {
             console.error(`Failed to create payout for cleaner ${cleaner.id}:`, payoutError);
             results.payoutsFailed++;
             results.errors.push(`Cleaner ${cleaner.id}: ${(payoutError instanceof Error ? payoutError.message : undefined)}`);
           }
         }
-      } catch (branchError: unknown) {
+      } catch (branchError) {
         console.error(`Error processing branch ${branch.id}:`, branchError);
         results.errors.push(`Branch ${branch.id}: ${(branchError instanceof Error ? branchError.message : undefined)}`);
       }
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
       periodEnd: periodEnd.toISOString(),
       ...results,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Cron job error:', error);
     return NextResponse.json(
       { success: false, error: (error instanceof Error ? error.message : undefined) || 'Failed to run cron job' },

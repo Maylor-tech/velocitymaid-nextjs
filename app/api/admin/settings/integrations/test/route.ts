@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, ...result });
     }
     return NextResponse.json({ success: false, error: 'provider must be "drive" or "calendar"' }, { status: 400 });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Connection test failed';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

@@ -58,6 +58,7 @@ export interface BookingDraft {
   home: BookingHomeDetails;
   schedule: BookingSchedule;
   extras: BookingExtras;
+  recurringFrequency?: string | null;
 }
 
 export type BookingStep = 0 | 1 | 2 | 3 | 4 | 5;

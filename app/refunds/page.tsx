@@ -184,7 +184,7 @@ export default function RefundPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-vm-text mb-4">Policy Updates</h2>
             <p className="text-vm-text leading-relaxed">
-              We reserve the right to update this Refund Policy at any time. Changes will be posted on this page with an updated "Last updated" date. Your continued use of our services after changes are posted constitutes acceptance of the updated policy.
+              We reserve the right to update this Refund Policy at any time. Changes will be posted on this page with an updated &quot;Last updated&quot; date. Your continued use of our services after changes are posted constitutes acceptance of the updated policy.
             </p>
           </section>
         </div>

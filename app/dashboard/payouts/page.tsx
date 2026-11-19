@@ -68,7 +68,7 @@ export default function PayoutsDashboardPage() {
       } else {
         throw new Error(data.error || 'Failed to fetch payouts');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching payouts:', err);
       setError(err.message || 'Failed to load payouts');
     } finally {
@@ -105,7 +105,7 @@ export default function PayoutsDashboardPage() {
       } else {
         throw new Error(data.error || 'Failed to update payout');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating payout:', err);
       alert(err.message || 'Failed to update payout');
       throw err;

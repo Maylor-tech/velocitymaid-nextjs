@@ -309,7 +309,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="velocitymaid-compliance-process.pdf"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_COMPLIANCE_PROCESS] Error:", error);
 

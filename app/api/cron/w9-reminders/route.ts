@@ -298,7 +298,7 @@ export async function POST(req: NextRequest) {
           `[CRON_W9_REMINDERS] Sent reminder #${reminderNumber} to ${cleaner.cleanerEmail} (cleaner ${profile.cleanerId})`
         );
         remindersSent++;
-      } catch (error: unknown) {
+      } catch (error) {
         console.error(
           `[CRON_W9_REMINDERS] Failed to send reminder to ${cleaner.cleanerEmail}:`,
           error
@@ -319,7 +319,7 @@ export async function POST(req: NextRequest) {
       remindersFailed,
       dryRun,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[CRON_W9_REMINDERS] Error:", error);
 
     return NextResponse.json(

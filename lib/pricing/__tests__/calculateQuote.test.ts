@@ -17,7 +17,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
 const { mockBranches, mockPackages } = vi.hoisted(() => {
-  const mockBranches: Record<string, any> = {
+  const mockBranches: Record<string, LooseAny> = {
     'new-jersey': {
       id: 'branch-nj',
       slug: 'new-jersey',
@@ -59,10 +59,10 @@ const { mockBranches, mockPackages } = vi.hoisted(() => {
 vi.mock('../../prisma', () => ({
   prisma: {
     branch: {
-      findUnique: vi.fn(async ({ where }: any) => mockBranches[where.slug] ?? null),
+      findUnique: vi.fn(async ({ where }: LooseAny) => mockBranches[where.slug] ?? null),
     },
     branchServicePackage: {
-      findFirst: vi.fn(async ({ where }: any) => {
+      findFirst: vi.fn(async ({ where }: LooseAny) => {
         const codes: string[] = where.code.in;
         return (
           mockPackages.find(

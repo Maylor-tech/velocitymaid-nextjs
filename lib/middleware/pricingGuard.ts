@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole, AuthContext } from "../auth/requireRole";
-import { assertPricingPermission } from "../permissions/pricing";
+import { assertPricingPermission, type PricingPermissions } from "../permissions/pricing";
 import { prisma } from "../prisma";
 import { assertPriceUnlocked } from "../pricing/lock";
 import { UserRole } from "@prisma/client";
@@ -21,10 +21,13 @@ export async function requirePricingPermission(
   permission: 'view' | 'edit' | 'discount' | 'viewHistory' | 'overrideLock'
 ): Promise<AuthContext> {
   // Get authenticated user
-  const auth = await requireRole(request, ["ADMIN", "MANAGER", "BRANCH_OWNER", "SUPPORT"]);
+  const auth = await requireRole(
+    request,
+    ["ADMIN", "MANAGER", "BRANCH_OWNER", "SUPPORT"] as LooseAny
+  );
   
   // Map permission string to permission key
-  const permissionMap: Record<string, keyof typeof import("@/lib/permissions/pricing").PRICING_PERMISSIONS.ADMIN> = {
+  const permissionMap: Record<string, keyof PricingPermissions> = {
     view: "canViewPrices",
     edit: "canEditPrices",
     discount: "canApplyDiscounts",
@@ -42,8 +45,8 @@ export async function requirePricingPermission(
 
   // Check permission
   try {
-    assertPricingPermission(auth.role as UserRole, permissionKey as any);
-  } catch (error: any) {
+    assertPricingPermission(auth.role as UserRole, permissionKey as LooseAny);
+  } catch (_error) {
     // Log unauthorized attempt
     console.warn(`[PRICING_GUARD] Unauthorized attempt: ${auth.role} tried to ${permission}`);
     
@@ -72,7 +75,7 @@ export async function requirePriceUnlocked(
       id: true,
       priceLockedAt: true,
       status: true,
-    },
+    } as LooseAny,
   });
 
   if (!job) {
@@ -83,12 +86,12 @@ export async function requirePriceUnlocked(
   }
 
   try {
-    assertPriceUnlocked(job as any);
-  } catch (error: any) {
+    assertPriceUnlocked(job as LooseAny);
+  } catch (error) {
     throw NextResponse.json(
       { 
         success: false, 
-        error: error.message || "Job pricing is locked and cannot be modified" 
+        error: error instanceof Error ? error.message : "Job pricing is locked and cannot be modified" 
       },
       { status: 403 }
     );

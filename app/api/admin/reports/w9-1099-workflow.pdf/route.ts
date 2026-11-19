@@ -261,7 +261,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="w9_1099_workflow.pdf"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_W9_1099_WORKFLOW] Error:", error);
 
     if (error instanceof Response) {

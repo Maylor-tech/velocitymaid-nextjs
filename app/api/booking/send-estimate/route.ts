@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
 
-  } catch (err: any) {
+  } catch (err) {
 
     console.error("[ESTIMATE] ERROR:", err);
     console.error("[ESTIMATE] Error stack:", err?.stack);

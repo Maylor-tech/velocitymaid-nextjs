@@ -230,7 +230,7 @@ export async function sendPayoutConfirmationEmail(
     );
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error(
       `[PAYOUT_CONFIRMATION_EMAIL] Failed to send email for transfer ${transfer.id}:`,
       error

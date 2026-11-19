@@ -251,7 +251,7 @@ export async function POST(
       success: true,
       payout: updated ? { ...updated, executionNote } : updated,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[EXECUTE_PAYOUT] Error:", error);
     return NextResponse.json(

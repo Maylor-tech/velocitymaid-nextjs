@@ -42,7 +42,7 @@ export async function GET(
         secondaryText: SERVICE_INVOICE_ZELLE_SECONDARY,
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to load invoice';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

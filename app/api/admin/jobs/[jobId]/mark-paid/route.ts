@@ -159,7 +159,7 @@ export async function POST(
       },
       payout: payoutResult,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message =
       error instanceof Error ? error.message : "Failed to record payment";

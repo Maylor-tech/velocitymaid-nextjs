@@ -55,7 +55,7 @@ export default function CustomerVerifyPage() {
       }
 
       router.push(redirectUrl);
-    } catch (err: unknown) {
+    } catch (err) {
       console.error(err);
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
       setError(message);

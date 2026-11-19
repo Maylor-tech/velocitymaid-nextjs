@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       message: 'ID uploaded successfully',
       fileInfo,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Upload ID error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to upload ID' },

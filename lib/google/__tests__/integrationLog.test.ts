@@ -7,14 +7,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const { logCalls, notificationCalls } = vi.hoisted(() => ({
-  logCalls: [] as any[],
-  notificationCalls: [] as any[],
+  logCalls: [] as LooseAny[],
+  notificationCalls: [] as LooseAny[],
 }));
 
 vi.mock('../../prisma', () => ({
   prisma: {
     integrationEventLog: {
-      create: vi.fn(async ({ data }: any) => {
+      create: vi.fn(async ({ data }: LooseAny) => {
         logCalls.push(data);
         return data;
       }),
@@ -23,7 +23,7 @@ vi.mock('../../prisma', () => ({
 }));
 
 vi.mock('@/lib/notifications/adminNotificationCenter', () => ({
-  createAdminNotification: vi.fn(async (input: any) => {
+  createAdminNotification: vi.fn(async (input: LooseAny) => {
     notificationCalls.push(input);
   }),
   adminNotificationHelpers: {

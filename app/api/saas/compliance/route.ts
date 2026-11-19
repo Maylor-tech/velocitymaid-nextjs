@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
       items,
       requestId,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error(`[${requestId}] Error fetching compliance data:`, error);
     
     // If it's a NextResponse (from requireAuth), re-throw it

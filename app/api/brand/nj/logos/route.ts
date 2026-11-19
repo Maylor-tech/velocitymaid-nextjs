@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': `inline; filename="velocitymaid-nj-${type}.svg"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate logo error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate logo' },

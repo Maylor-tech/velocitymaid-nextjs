@@ -146,7 +146,7 @@ export async function POST(
       success: true,
       payout: updated,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[APPROVE_PAYOUT] Error:", error);
     return NextResponse.json(

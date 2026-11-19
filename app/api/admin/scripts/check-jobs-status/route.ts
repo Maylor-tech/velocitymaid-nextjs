@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       success: true,
       ...result,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CHECK_JOBS_STATUS_API] Error:", error);
     return NextResponse.json(
       {

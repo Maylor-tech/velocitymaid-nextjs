@@ -12,7 +12,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, ArrowLeft, Mail, Send, CheckCircle2, Archive, Eye, MessageSquare } from "lucide-react";
+import { Loader2, ArrowLeft, Send, CheckCircle2, Archive, Eye, MessageSquare } from "lucide-react";
 
 interface ContactReply {
   id: string;
@@ -74,7 +74,7 @@ export default function AdminInboxDetailPage() {
       } else {
         throw new Error(data.error || "Failed to fetch message");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch message:", err);
       setError(err.message || "Failed to load message");
     } finally {
@@ -105,7 +105,7 @@ export default function AdminInboxDetailPage() {
       
       // Trigger dashboard refresh
       window.dispatchEvent(new CustomEvent("messageStatusUpdated"));
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to mark as read:", err);
       alert(`Error: ${err.message}`);
     } finally {
@@ -144,7 +144,7 @@ export default function AdminInboxDetailPage() {
       
       // Trigger dashboard refresh
       window.dispatchEvent(new CustomEvent("messageStatusUpdated"));
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to send reply:", err);
       alert(`Error: ${err.message}`);
     } finally {
@@ -176,7 +176,7 @@ export default function AdminInboxDetailPage() {
       setTimeout(() => {
         router.push("/admin/inbox");
       }, 1000);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to archive:", err);
       alert(`Error: ${err.message}`);
     } finally {

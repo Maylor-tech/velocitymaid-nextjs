@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       success: true,
       profile: redacted,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CLEANER_TAX_PROFILE_GET] Error:", error);
 
     if (error instanceof Response) {

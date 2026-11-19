@@ -80,7 +80,7 @@ export async function getBranchCostConfig(branchId: string): Promise<BranchCostC
     }
 
     // Check BranchPayoutRules for any cost-related settings
-    const payoutRules = await prisma.branchPayoutRules.findUnique({
+    const _payoutRules = await prisma.branchPayoutRules.findUnique({
       where: { branchId },
     });
 

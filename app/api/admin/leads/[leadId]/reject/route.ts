@@ -35,7 +35,7 @@ export async function POST(
       success: true,
       message: 'Lead rejected',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Reject lead error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to reject lead' },

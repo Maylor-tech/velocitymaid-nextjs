@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   if (process.env.APP_ENV !== "development") {
     return NextResponse.json(
       { success: false, error: "Not allowed in production" },
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, jobsUpdated });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Sync failed" },
       { status: 500 }

@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
@@ -34,7 +35,7 @@ export async function PATCH(
     }
 
     // Update message status with appropriate timestamps
-    const updateData: any = { status };
+    const updateData: Prisma.ContactMessageUpdateInput = { status };
     
     if (status === "REVIEWED") {
       updateData.reviewedAt = new Date();
@@ -50,7 +51,7 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_CONTACT_STATUS] Error:", error);
 
     if (error instanceof Response) {

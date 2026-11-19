@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         cancelledAt: new Date().toISOString(),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Cancel customer booking error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to cancel booking' },

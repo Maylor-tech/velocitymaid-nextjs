@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, notifications, unreadCount });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to load notifications';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });
@@ -64,7 +64,7 @@ export async function PATCH(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, notification });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update notification';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

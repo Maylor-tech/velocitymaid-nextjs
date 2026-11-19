@@ -46,7 +46,7 @@ export async function GET(
       success: true,
       message,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_CONTACT_MESSAGE_DETAIL] Error:", error);
 
     if (error instanceof Response) {

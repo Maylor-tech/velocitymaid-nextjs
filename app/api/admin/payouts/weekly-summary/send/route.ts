@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
         console.log(
           `[WEEKLY_PAYOUT_SUMMARY] Email sent to ${summary.cleanerEmail} (${summary.cleanerId})`
         );
-      } catch (error: any) {
+      } catch (error) {
         // Individual email failure doesn't stop the batch
         results.failures.push({
           cleanerId: summary.cleanerId,
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
       totalCleaners: summaryResult.totalCleaners,
       totalPayouts: summaryResult.totalPayouts,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[WEEKLY_PAYOUT_SUMMARY] Error:", error);
     return NextResponse.json(
       {

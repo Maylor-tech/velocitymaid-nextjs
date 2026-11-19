@@ -490,7 +490,7 @@ export async function GET(request: NextRequest) {
         exceptions: exceptionsCount,
       },
     });
-  } catch (err: unknown) {
+  } catch (err) {
     const authResponse = rethrowIfAuthResponse(err);
     if (authResponse) return authResponse;
     const code = err && typeof err === 'object' && 'code' in err

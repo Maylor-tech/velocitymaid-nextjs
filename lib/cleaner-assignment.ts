@@ -5,7 +5,7 @@ import { sendCleanerAssignment } from './sendCleanerAssignment';
 import { awaitJobCalendarSync } from './google/jobGoogleSync';
 import { notifyCleanerOfAssignmentByEmail } from './notifications/cleanerAssignmentEmail';
 import { getCleanerAverageJQS } from '../utils/jobQualityScore';
-import { isCleanerTrainingEligible } from '../utils/trainingEligibility';
+
 import { resolveCityFromZip } from '../utils/cityRouting';
 import { APPROVED_CLEANER_APPLICATION_STATUSES } from './cleaners/applicationStatus';
 import { isDispatchOffersEnabledForBranch } from './dispatch/featureFlags';
@@ -38,7 +38,7 @@ async function isCleanerAvailableForJob(
   cleanerId: string,
   preferredDate: Date,
   preferredTime: string | null,
-  branchId: string
+  _branchId: string
 ): Promise<boolean> {
   try {
     const availability = await prisma.cleanerAvailability.findUnique({
@@ -162,7 +162,7 @@ async function isCleanerAvailableForJob(
     }
 
     return true;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error checking cleaner availability:', error);
     return false;
   }
@@ -275,8 +275,8 @@ async function selectBestCleanerForJob(job: {
       const cleaner = await prisma.user.findUnique({
         where: { email: cleanerApp.email },
         include: {
-          trainingStatus: true,
-          availability: true,
+          TrainingStatus: true,
+          CleanerAvailability: true,
         },
       });
 
@@ -286,7 +286,7 @@ async function selectBestCleanerForJob(job: {
 
       // Check training for Jamaica
       if (isJamaicaBranch) {
-        if (cleaner.trainingStatus?.overallStatus !== 'PASSED') {
+        if (cleaner.TrainingStatus?.overallStatus !== 'PASSED') {
           continue;
         }
       }
@@ -304,13 +304,13 @@ async function selectBestCleanerForJob(job: {
         id: cleaner.id,
         name: cleaner.name || cleanerApp.name || 'Cleaner',
         email: cleaner.email,
-        trainingStatus: cleaner.trainingStatus,
-        availability: cleaner.availability ? {
-          workingDays: cleaner.availability.workingDays as string[],
-          timeRanges: cleaner.availability.timeRanges as Array<{ start: string; end: string }>,
-          maxDailyJobs: cleaner.availability.maxDailyJobs,
-          blackoutDates: (cleaner.availability.blackoutDates as string[]) || [],
-          isActive: cleaner.availability.isActive,
+        trainingStatus: cleaner.TrainingStatus,
+        availability: cleaner.CleanerAvailability ? {
+          workingDays: cleaner.CleanerAvailability.workingDays as string[],
+          timeRanges: cleaner.CleanerAvailability.timeRanges as Array<{ start: string; end: string }>,
+          maxDailyJobs: cleaner.CleanerAvailability.maxDailyJobs,
+          blackoutDates: (cleaner.CleanerAvailability.blackoutDates as string[]) || [],
+          isActive: cleaner.CleanerAvailability.isActive,
         } : null,
         preferredCities: cleaner.preferredCities,
       });
@@ -412,7 +412,7 @@ async function selectBestCleanerForJob(job: {
       cleanerId: availableCleaners[0].cleanerId,
       cleanerName: availableCleaners[0].cleanerName,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in selectBestCleanerForJob:', error);
     return null;
   }
@@ -433,7 +433,7 @@ async function selectBestCleanerForJob(job: {
 export async function findBestCleaner(
   params: FindBestCleanerParams
 ): Promise<{ cleanerId: string; cleanerName: string } | null> {
-  const { branchId, scheduledDate, scheduledTime } = params;
+  const { branchId, scheduledDate, scheduledTime: _scheduledTime } = params;
 
   try {
     // Get all approved cleaners for this branch
@@ -558,13 +558,13 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
     const job = await prisma.job.findUnique({
       where: { id: jobId },
       include: {
-        branch: {
+        Branch: {
           select: {
             id: true,
             slug: true,
           },
         },
-        customer: {
+        Customer: {
           select: {
             id: true,
             preferSameCleaner: true,
@@ -593,7 +593,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
             details: { error: 'job_not_found' },
           },
         });
-      } catch (e) {
+      } catch (_e) {
         // Ignore logging errors
       }
       
@@ -634,7 +634,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
               summary: `Assignment attempt for blocked customer on job ${jobId}`,
               details: `Auto-assignment prevented for blocked customer`,
               status: 'OPEN',
-            },
+            } as LooseAny,
           });
         } catch (e) {
           console.error('Failed to create compliance issue:', e);
@@ -652,7 +652,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
               details: { customerBlocked: true },
             },
           });
-        } catch (e) {
+        } catch (_e) {
           // Ignore logging errors
         }
 
@@ -678,7 +678,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
       console.log('[ASSIGNMENT_FAILURE]', JSON.stringify({
         jobId,
         branchId: job.branchId,
-        branchSlug: job.branch?.slug,
+        branchSlug: job.Branch?.slug,
         reason: 'no_scheduled_date',
         timestamp: new Date().toISOString(),
       }));
@@ -690,7 +690,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
 
     // Extract city from address for logging
     let jobCity: string | null = null;
-    if (job.address && job.branch?.slug === 'new-jersey') {
+    if (job.address && job.Branch?.slug === 'new-jersey') {
       const zipMatch = job.address.match(/\b\d{5}\b/);
       if (zipMatch) {
         jobCity = resolveCityFromZip(zipMatch[0]);
@@ -698,7 +698,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
     }
 
     // Use unified cleaner selection logic
-    if (!job.branch) {
+    if (!job.Branch) {
       console.log('[ASSIGNMENT_FAILURE]', JSON.stringify({
         jobId,
         branchId: job.branchId,
@@ -719,8 +719,8 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
       preferredTime: job.preferredTime,
       address: job.address,
       Branch: {
-        id: job.branch.id,
-        slug: job.branch.slug,
+        id: job.Branch.id,
+        slug: job.Branch.slug,
       },
     });
 
@@ -729,7 +729,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
       console.log('[ASSIGNMENT_FAILURE]', JSON.stringify({
         jobId,
         branchId: job.branchId,
-        branchSlug: job.branch?.slug,
+        branchSlug: job.Branch?.slug,
         preferredDate: job.preferredDate.toISOString(),
         preferredTime: job.preferredTime,
         city: jobCity,
@@ -752,7 +752,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
             },
           },
         });
-      } catch (logError: any) {
+      } catch (logError) {
         console.error('Error logging assignment:', logError);
       }
       
@@ -763,11 +763,11 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
     }
 
     // Update job with cleaner assignment
-    const updatedJob = await prisma.job.update({
+    const _updatedJob = await prisma.job.update({
       where: { id: jobId },
       data: {
         assignedCleanerId: bestCleaner.cleanerId,
-        status: 'assigned',
+        status: 'ASSIGNED',
         assignedAt: new Date(),
       },
     });
@@ -846,7 +846,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
           },
         },
       });
-    } catch (logError: any) {
+    } catch (logError) {
       // Don't fail assignment if logging fails
       console.error('Error logging assignment:', logError);
     }
@@ -857,7 +857,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
       cleanerId: bestCleaner.cleanerId,
       cleanerName: bestCleaner.cleanerName,
       branchId: job.branchId,
-      branchSlug: job.branch?.slug,
+      branchSlug: job.Branch?.slug,
       preferredDate: job.preferredDate.toISOString(),
       timestamp: new Date().toISOString(),
     }));
@@ -867,7 +867,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AssignmentResult
       cleanerId: bestCleaner.cleanerId,
       cleanerName: bestCleaner.cleanerName,
     };
-  } catch (error: any) {
+  } catch (error) {
     // Structured logging for assignment error
     console.log('[ASSIGNMENT_ERROR]', JSON.stringify({
       jobId,

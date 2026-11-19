@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/requireRole";
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Branch profitability fetch error:', error);
     return NextResponse.json(
       {

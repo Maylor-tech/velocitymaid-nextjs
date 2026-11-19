@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'SMS review request queued',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Send review request SMS error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send SMS review request' },

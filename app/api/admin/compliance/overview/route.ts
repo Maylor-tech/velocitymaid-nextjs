@@ -21,11 +21,9 @@ export async function GET(request: NextRequest) {
     const toDate = dateTo ? new Date(dateTo) : now;
 
     // Build where clauses
-    const branchWhere = branchId ? { id: branchId } : {};
     const cleanerWhere = branchId ? { primaryBranchId: branchId } : {};
     const customerWhere = branchId ? { branchId } : {};
     const issueWhere = branchId ? { branchId } : {};
-    const complaintWhere = branchId ? { Job: { branchId } } : {};
 
     // Get branch info
     const branch = branchId
@@ -90,7 +88,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const highSeverityIssues = await prisma.complianceIssue.count({
+    const countComplianceIssues = prisma.complianceIssue.count as (
+      args: LooseAny
+    ) => Promise<number>;
+    const highSeverityIssues = await countComplianceIssues({
       where: {
         ...issueWhere,
         cleanerId: { not: null },
@@ -253,7 +254,7 @@ export async function GET(request: NextRequest) {
             warningCount: true,
           },
         },
-        trainingStatus: {
+        TrainingStatus: {
           select: {
             id: true,
             overallStatus: true,
@@ -327,7 +328,7 @@ export async function GET(request: NextRequest) {
           : null,
       })),
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('COMPLIANCE_OVERVIEW_ERROR:', error);
     return NextResponse.json(

@@ -177,7 +177,7 @@ export async function runWeeklyIncentiveReport(): Promise<WeeklyIncentiveSummary
         },
         success: true,
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error(`Error processing incentive for cleaner ${cleaner.id}:`, error);
       results.push({
         cleanerId: cleaner.id,

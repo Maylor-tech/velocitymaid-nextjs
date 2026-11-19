@@ -107,7 +107,7 @@ Thanks! 🙏`;
         error: result.error || 'Failed to send WhatsApp message',
       }, { status: 500 });
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Send review request WhatsApp error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send review request' },

@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       url: contractUrl,
       html, // For immediate display
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate cleaner contract error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate contract' },
@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateContractHTML(template: any, variables: any): string {
-  const sectionsHTML = template.sections.map((section: any) => `
+function generateContractHTML(template: LooseAny, variables: LooseAny): string {
+  const sectionsHTML = template.sections.map((section: LooseAny) => `
     <div style="margin-bottom: 25px;">
       <h3 style="font-size: 18px; font-weight: bold; color: #0A3D2F; margin-bottom: 10px; font-family: 'Montserrat', Arial, sans-serif;">
         ${section.title}

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
-import { Download, Image, FileText, Palette, Type, Camera } from 'lucide-react';
-import Link from 'next/link';
+import { Download, Image, FileText, Palette } from 'lucide-react';
+
 
 export const metadata: Metadata = {
   title: 'VelocityMaid New Jersey - Brand Kit',

@@ -4,6 +4,7 @@
  * Usage: npx tsx scripts/create-miami-branch.ts
  */
 
+import { randomUUID } from "crypto";
 import { prisma } from "../lib/prisma";
 
 const MIAMI_ZIP_CODES = [
@@ -31,6 +32,8 @@ async function createMiamiBranch() {
     // Create Miami branch
     const branch = await prisma.branch.create({
       data: {
+        id: randomUUID(),
+        updatedAt: new Date(),
         name: "Miami",
         slug: "miami",
         country: "US",
@@ -51,6 +54,8 @@ async function createMiamiBranch() {
     // Create branch config
     await prisma.branchConfig.create({
       data: {
+        id: randomUUID(),
+        updatedAt: new Date(),
         branchId: branch.id,
         maxDailyJobs: 20,
       },
@@ -60,6 +65,8 @@ async function createMiamiBranch() {
 
     // Create service areas for ZIP codes
     const zipCodeData = MIAMI_ZIP_CODES.map((zip) => ({
+      id: randomUUID(),
+      updatedAt: new Date(),
       branchId: branch.id,
       zipCode: zip,
       priority: 1,
@@ -80,7 +87,7 @@ async function createMiamiBranch() {
     console.log(`  Body: { "dryRun": true }`);
 
     return branch.id;
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Error creating Miami branch:", error.message);
     throw error;
   } finally {

@@ -200,7 +200,7 @@ export async function GET(request: NextRequest) {
         })),
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('[CLEANER_EARNINGS] Error:', error);
     const message =

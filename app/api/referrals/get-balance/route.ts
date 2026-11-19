@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
         createdAt: c.createdAt,
       })),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get referral balance error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get referral balance' },

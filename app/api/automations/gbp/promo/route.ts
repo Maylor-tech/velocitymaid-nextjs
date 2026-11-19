@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       message: 'Promo post queued for Google Business Profile',
       postContent,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('GBP promo post error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create GBP post' },

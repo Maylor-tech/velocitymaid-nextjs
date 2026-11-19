@@ -50,7 +50,7 @@ export default function PayBalanceSection({
       }
 
       throw new Error('Secure checkout could not be opened. Please try again.');
-    } catch (err: unknown) {
+    } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Something went wrong. Please try again.';
       setError(message);

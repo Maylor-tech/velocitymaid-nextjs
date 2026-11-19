@@ -30,7 +30,7 @@ export async function verifyJobCompletion(jobId: string): Promise<JobCompletionC
   const issues: string[] = [];
   const warnings: string[] = [];
 
-  const job = await prisma.job.findUnique({
+  const job = (await prisma.job.findUnique({
     where: { id: jobId },
     select: {
       id: true,
@@ -45,7 +45,7 @@ export async function verifyJobCompletion(jobId: string): Promise<JobCompletionC
       preferredDate: true,
       preferredTime: true,
     },
-  });
+  } as LooseAny)) as LooseAny;
 
   if (!job) {
     return {
@@ -92,12 +92,12 @@ export async function verifyJobCompletion(jobId: string): Promise<JobCompletionC
   } else {
     // Verify snapshot structure
     try {
-      const snapshot = job.pricingSnapshot as any;
+      const snapshot = job.pricingSnapshot as LooseAny;
       if (!snapshot.basePrice && !snapshot.totalPrice) {
         snapshotIntact = false;
         warnings.push("Pricing snapshot missing price data");
       }
-    } catch (error) {
+    } catch (_error) {
       snapshotIntact = false;
       warnings.push("Pricing snapshot invalid format");
     }
@@ -196,7 +196,7 @@ export async function escalateJobIssue(
       success: true,
       escalationId,
     };
-  } catch (error: unknown) {
+  } catch (error) {
     console.error(`[PHASE_M] Error creating escalation:`, error);
     return {
       success: false,

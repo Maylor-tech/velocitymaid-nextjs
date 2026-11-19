@@ -101,7 +101,7 @@ export async function GET() {
       recentInvoices,
       stripeCustomerId,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Billing summary error:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Failed to fetch billing summary' },

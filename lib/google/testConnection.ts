@@ -48,7 +48,7 @@ export async function testDriveConnection(): Promise<ConnectionTestResult> {
 
     return {
       ok: true,
-      message: `Connected — root folder "${res.data.name}" is reachable in Shared Drive.`,
+      message: `Connected — root folder "${(res.data as { name?: string | null }).name}" is reachable in Shared Drive.`,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown Google Drive error';

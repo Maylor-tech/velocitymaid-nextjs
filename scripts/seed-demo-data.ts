@@ -4,6 +4,7 @@
  * Seeds the database with realistic demo data for development and testing
  */
 
+import { randomUUID } from 'crypto';
 import { prisma } from '../lib/prisma';
 import {
   randomDateWithin,
@@ -131,6 +132,7 @@ export async function seedDemoData() {
     // Random training certificate for seeders
     await prisma.trainingCertificate.create({
       data: {
+        id: `cert_seed_${cleaner.id}`,
         certificateId: `CERT-SEED-${i}`,
         cleanerId: cleaner.id,
         trainingStatusId: ts.id,
@@ -143,8 +145,8 @@ export async function seedDemoData() {
       data: {
         id: `avail_${cleaner.id}`,
         cleanerId: cleaner.id,
-        workingDays: availability.workingDays as any,
-        timeRanges: availability.timeRanges as any,
+        workingDays: availability.workingDays as LooseAny,
+        timeRanges: availability.timeRanges as LooseAny,
         maxDailyJobs: availability.maxDailyJobs,
         isActive: !isSuspended,
         updatedAt: new Date(),
@@ -166,14 +168,14 @@ export async function seedDemoData() {
   // Step 5: Seed Jobs (10)
   console.log('📋 Creating jobs...');
   const jobs = [];
-  const jobStatusValues = ['pending', 'assigned', 'in_progress', 'completed', 'cancelled'];
+  const jobStatusValues = ['RECEIVED', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const;
 
   for (let i = 0; i < 10; i++) {
     const customer = pick(customers);
     const status = pick(jobStatusValues);
-    const assignedCleaner = status !== 'pending' && status !== 'cancelled' ? pick(cleaners) : null;
+    const assignedCleaner = status !== 'RECEIVED' && status !== 'CANCELLED' ? pick(cleaners) : null;
     const preferredDate = randomDateWithin(60);
-    const isCompleted = status === 'completed';
+    const isCompleted = status === 'COMPLETED';
     const completedAt = isCompleted ? new Date(preferredDate.getTime() + 2 * 60 * 60 * 1000) : null;
 
     const job = await prisma.job.create({
@@ -202,7 +204,7 @@ export async function seedDemoData() {
 
   // Step 6: Seed Ratings (4) - only for completed jobs
   console.log('⭐ Creating ratings...');
-  const completedJobs = jobs.filter((j) => j.status === 'completed');
+  const completedJobs = jobs.filter((j) => j.status === 'COMPLETED');
   const jobsToRate = completedJobs.slice(0, 4);
 
   for (const job of jobsToRate) {
@@ -251,7 +253,7 @@ export async function seedDemoData() {
         status: 'OPEN',
         summary: 'Multiple warnings issued - review required',
         details: 'Cleaner has received multiple warnings for attendance issues.',
-      },
+      } as LooseAny,
     });
   }
 
@@ -267,7 +269,7 @@ export async function seedDemoData() {
         status: 'OPEN',
         summary: 'Cleaner suspended due to policy violation',
         details: 'Cleaner has been suspended pending investigation.',
-      },
+      } as LooseAny,
     });
   }
 
@@ -287,6 +289,7 @@ export async function seedDemoData() {
   for (const cleaner of cleaners.slice(0, 3)) {
     await prisma.auditLog.create({
       data: {
+        id: randomUUID(),
         actorId: null,
         actorRole: 'ADMIN',
         action: 'CREATED_CLEANER',
@@ -306,7 +309,8 @@ export async function seedDemoData() {
     if (trainingStatus) {
       await prisma.auditLog.create({
         data: {
-          actorId: null,
+          id: randomUUID(),
+        actorId: null,
           actorRole: 'ADMIN',
           action: 'UPDATED_TRAINING_STATUS',
           entityType: 'Cleaner',
@@ -323,6 +327,7 @@ export async function seedDemoData() {
   for (const job of assignedJobs.slice(0, 3)) {
     await prisma.auditLog.create({
       data: {
+        id: randomUUID(),
         actorId: null,
         actorRole: 'ADMIN',
         action: 'ASSIGNED_JOB',
@@ -335,17 +340,18 @@ export async function seedDemoData() {
   }
 
   // Log job completions
-  const completedJobsForAudit = jobs.filter((j) => j.status === 'completed');
+  const completedJobsForAudit = jobs.filter((j) => j.status === 'COMPLETED');
   for (const job of completedJobsForAudit.slice(0, 2)) {
     await prisma.auditLog.create({
       data: {
+        id: randomUUID(),
         actorId: null,
         actorRole: 'SYSTEM',
         action: 'COMPLETED_JOB',
         entityType: 'Job',
         entityId: job.id,
         description: `Job marked as completed`,
-        changes: { status: 'completed', completedAt: job.completedAt?.toISOString() },
+        changes: { status: 'COMPLETED', completedAt: job.completedAt?.toISOString() },
       },
     });
   }
@@ -354,6 +360,7 @@ export async function seedDemoData() {
   if (suspendedCleaner) {
     await prisma.auditLog.create({
       data: {
+        id: randomUUID(),
         actorId: null,
         actorRole: 'ADMIN',
         action: 'SUSPENDED_CLEANER',
@@ -370,12 +377,13 @@ export async function seedDemoData() {
   for (const issue of issues) {
     await prisma.auditLog.create({
       data: {
+        id: randomUUID(),
         actorId: null,
         actorRole: 'ADMIN',
         action: 'CREATED_COMPLIANCE_ISSUE',
         entityType: 'ComplianceIssue',
         entityId: issue.id,
-        description: `Compliance issue created: ${issue.summary}`,
+        description: `Compliance issue created: ${(issue as LooseAny).summary}`,
         changes: { type: issue.type, severity: issue.severity },
       },
     });

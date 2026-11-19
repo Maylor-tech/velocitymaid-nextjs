@@ -264,14 +264,14 @@ export async function POST(
               });
 
               if (application?.phone) {
-                const module = await prisma.trainingModule.findUnique({
+                const trainingModule = await prisma.trainingModule.findUnique({
                   where: { id: lesson.moduleId },
                 });
-                if (module) {
+                if (trainingModule) {
                   await sendFirstModuleCompletedNotification(
                     cleanerId,
                     application.phone,
-                    module.title
+                    trainingModule.title
                   );
                 }
               }
@@ -295,7 +295,7 @@ export async function POST(
         ? 'Congratulations! You passed the quiz.'
         : `You scored ${score}%. You need ${passingScore}% to pass. Please review the lesson and try again.`,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Submit quiz error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to submit quiz' },

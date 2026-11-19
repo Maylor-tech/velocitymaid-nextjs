@@ -89,7 +89,7 @@ export function PayoutStatusCard() {
 
       {data.eligible && (
         <div className="rounded-md bg-vm-success-bg p-3 text-vm-success text-sm">
-          You're eligible for payout. Payments are processed automatically
+          You&apos;re eligible for payout. Payments are processed automatically
           according to the platform schedule.
         </div>
       )}

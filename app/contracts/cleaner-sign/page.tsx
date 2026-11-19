@@ -9,7 +9,7 @@ export default function CleanerSignPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [contractUrl, setContractUrl] = useState<string | null>(null);
+  const [_contractUrl, setContractUrl] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -22,7 +22,7 @@ export default function CleanerSignPage() {
   const [signature, setSignature] = useState<string | null>(null);
   const signatureRef = useRef<HTMLCanvasElement>(null);
 
-  const handleSignatureDraw = () => {
+  const _handleSignatureDraw = () => {
     if (signatureRef.current) {
       const canvas = signatureRef.current;
       const ctx = canvas.getContext('2d');
@@ -126,7 +126,7 @@ export default function CleanerSignPage() {
       } else {
         setError(data.error || 'Failed to generate contract');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error submitting contract:', err);
       setError(err.message || 'Failed to submit contract');
     } finally {

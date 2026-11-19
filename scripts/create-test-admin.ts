@@ -37,7 +37,7 @@ async function createTestAdmin() {
     console.log(`   Email: ${admin.email}`);
     console.log(`   Name: ${admin.name}`);
     return admin;
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Error creating admin:", error);
     throw error;
   }

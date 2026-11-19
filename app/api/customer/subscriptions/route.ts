@@ -70,7 +70,7 @@ export async function GET() {
           : subscription.nextBillingDate,
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Get subscriptions error:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Failed to fetch subscriptions' },

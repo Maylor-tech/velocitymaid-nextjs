@@ -87,7 +87,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Build update object - only include fields that were provided
-    const updates: Record<string, any> = {};
+    const updates: Record<string, LooseAny> = {};
 
     if (firstName !== undefined) {
       updates.firstName = firstName.trim() || null;
@@ -130,9 +130,9 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const materialUpdates: Record<string, any> = {};
+    const materialUpdates: Record<string, LooseAny> = {};
     for (const [key, value] of Object.entries(updates)) {
-      const current = (customer as Record<string, any>)[key];
+      const current = (customer as Record<string, LooseAny>)[key];
       const cur = current == null ? null : String(current).trim();
       const next = value == null ? null : String(value).trim();
       if (cur !== next) materialUpdates[key] = updates[key];
@@ -173,7 +173,7 @@ export async function PATCH(req: NextRequest) {
       success: true,
       customer: updated,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating customer profile:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to update profile' },

@@ -204,7 +204,7 @@ export async function GET(request: NextRequest) {
       },
       unassignedJobs,
     });
-  } catch (err: unknown) {
+  } catch (err) {
     if (err instanceof NextResponse) return err;
     console.error('OPERATIONS_DASHBOARD_ERROR:', err);
     const message = err instanceof Error ? err.message : 'Failed to load operations data';

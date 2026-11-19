@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     // Always return 200 to acknowledge receipt
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error('WhatsApp webhook error:', error);
     // Still return 200 to prevent Meta from retrying
     return NextResponse.json({ success: false, error: error.message }, { status: 200 });
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 /**
  * Handle individual inbound message
  */
-async function handleInboundMessage(message: any) {
+async function handleInboundMessage(message: LooseAny) {
   try {
     const from = message.from; // User's phone number
     const text = message.text?.body || '';
@@ -122,7 +122,7 @@ async function handleInboundMessage(message: any) {
 
     // Default: send general help
     await replyWithGeneralHelp(from);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error handling inbound message:', error);
     // Don't throw - we don't want to break the webhook
   }
@@ -356,7 +356,7 @@ async function handleJobReply(cleanerPhone: string, reply: 'YES' | 'NO', origina
       // TODO: Notify admin that job was declined
       console.log(`Job ${job.id} declined by cleaner ${cleaner.id}`);
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error handling job reply:', error);
     // Don't throw - we don't want to break the webhook
   }

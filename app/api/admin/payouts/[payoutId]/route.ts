@@ -66,12 +66,12 @@ export async function GET(
         status: payout.status,
         rulesVersion: payout.rulesVersion,
         createdAt: payout.createdAt.toISOString(),
-        updatedAt: payout.updatedAt.toISOString(),
+        updatedAt: (payout as unknown as { updatedAt: Date }).updatedAt.toISOString(),
         paidAt: payout.paidAt?.toISOString() || null,
         Job: payout.Job,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching payout:", error);
     return NextResponse.json(
       {

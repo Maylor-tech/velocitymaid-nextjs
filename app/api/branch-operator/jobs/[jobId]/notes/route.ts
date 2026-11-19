@@ -64,7 +64,7 @@ export async function POST(
         createdAt: log.createdAt.toISOString(),
       },
     });
-  } catch (err: unknown) {
+  } catch (err) {
     if (err && typeof err === "object" && "status" in err) throw err;
     const message = err instanceof Error ? err.message : "Failed to add note";
     return NextResponse.json(

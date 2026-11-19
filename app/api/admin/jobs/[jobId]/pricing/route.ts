@@ -157,7 +157,7 @@ export async function PATCH(
         : null,
       message: 'Pricing updated successfully',
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     if (error instanceof Response) {
       throw error;
@@ -205,7 +205,7 @@ export async function GET(
       pricing: jobToAdminPricingView(job),
       discountReasonCodes: DISCOUNT_REASON_CODES,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     if (error instanceof Response) {
       throw error;

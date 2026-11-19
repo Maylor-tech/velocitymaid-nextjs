@@ -17,7 +17,7 @@ import { getCleanerAverageJQS } from '@/utils/jobQualityScore';
  * 
  * Returns: { success: true, stats: CleanerStats, jobsByDay: [], recentJobs: [] }
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Get cleaner ID from cookie
     const cookieStore = await cookies();
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
       complaints: complaints.slice(0, 5), // Last 5 complaints
       latestIncentive, // Current tier and bonus
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get scorecard error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch scorecard data' },

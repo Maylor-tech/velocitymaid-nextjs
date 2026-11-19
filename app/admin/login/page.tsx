@@ -44,7 +44,7 @@ export default function AdminLoginPage() {
       }
 
       router.push('/admin/jobs');
-    } catch (err: unknown) {
+    } catch (err) {
       console.error('Admin login issue:', err);
       setError(null);
     } finally {

@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/requireRole";
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -96,7 +97,7 @@ export async function PATCH(request: NextRequest) {
       success: true,
       payout: updatedPayout,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update payout error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update payout' },

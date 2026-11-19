@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 import { getJamaicaRevenue } from '@/utils/jamaicaFinanceQueries';
 import { convertUSDToJMD } from '@/utils/currencyConverter';
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     // Get cleaner payouts
     const payouts = await prisma.jamaicaPayout.findMany({
       where: {
-        branch: {
+        Branch: {
           slug: 'port-antonio',
         },
         periodStart: { gte: startDate },
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
     // For now, estimate from payouts or use transaction ledger
     const bonuses = await prisma.transactionLedger.findMany({
       where: {
-        branch: {
+        Branch: {
           slug: 'port-antonio',
         },
         transactionType: 'BONUS_ISSUED',
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
     // Get operational expenses (from transaction ledger)
     const expenses = await prisma.transactionLedger.findMany({
       where: {
-        branch: {
+        Branch: {
           slug: 'port-antonio',
         },
         transactionType: { in: ['SUPPLIES', 'OPERATIONAL_EXPENSE'] },
@@ -114,10 +115,10 @@ export async function GET(request: NextRequest) {
     const cleanerCount = await prisma.user.count({
       where: {
         role: 'CLEANER',
-        primaryBranch: {
+        Branch_User_primaryBranchIdToBranch: {
           slug: 'port-antonio',
         },
-        trainingStatus: {
+        TrainingStatus: {
           overallStatus: 'PASSED',
         },
       },
@@ -152,7 +153,7 @@ export async function GET(request: NextRequest) {
         })),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get P&L error:', error);
     return NextResponse.json(
@@ -190,11 +191,13 @@ export async function POST(request: NextRequest) {
     // Create transaction ledger entry
     const transaction = await prisma.transactionLedger.create({
       data: {
+        id: randomUUID(),
         branchId: branch.id,
         transactionType,
         amount: Number(amount),
         currency: currency || 'JMD',
         description,
+        updatedAt: new Date(),
       },
     });
 
@@ -202,7 +205,7 @@ export async function POST(request: NextRequest) {
       success: true,
       transaction,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create expense error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create expense' },

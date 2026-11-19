@@ -110,7 +110,7 @@ export async function GET(
         "Content-Disposition": `inline; filename="payout-statement-${transferId}.html"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CLEANER_STATEMENT_PDF] Error:", error);
 
     // Handle auth errors
@@ -133,7 +133,7 @@ export async function GET(
 /**
  * Generate HTML for payout statement PDF
  */
-function generateStatementHTML(transfer: any): string {
+function generateStatementHTML(transfer: LooseAny): string {
   const amount = (transfer.amountCents / 100).toFixed(2);
   const periodStart = transfer.batch.periodStart.toLocaleDateString("en-US", {
     year: "numeric",
@@ -153,7 +153,7 @@ function generateStatementHTML(transfer: any): string {
 
   // Calculate totals from ledger entries
   const totalFromLedger = transfer.ledgerEntries.reduce(
-    (sum: number, entry: any) => sum + entry.amountCents,
+    (sum: number, entry: LooseAny) => sum + entry.amountCents,
     0
   );
 
@@ -379,7 +379,7 @@ function generateStatementHTML(transfer: any): string {
           </tr>
         </thead>
         <tbody>
-          ${transfer.ledgerEntries.map((entry: any) => {
+          ${transfer.ledgerEntries.map((entry: LooseAny) => {
             const entryDate = entry.createdAt.toLocaleDateString("en-US", {
               year: "numeric",
               month: "short",

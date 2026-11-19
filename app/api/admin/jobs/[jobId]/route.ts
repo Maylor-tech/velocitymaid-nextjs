@@ -332,7 +332,7 @@ export async function GET(
       success: true,
       job: formattedJob,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Error fetching job details:', error);
     return NextResponse.json(
@@ -723,7 +723,7 @@ export async function PATCH(
       },
       payout,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     if (isDispatchError(error)) {
       return NextResponse.json(

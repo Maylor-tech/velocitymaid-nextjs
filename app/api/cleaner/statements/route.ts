@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const dateTo = searchParams.get("dateTo");
 
     // Build where clause (scoped to this cleaner)
-    const where: any = {
+    const where: LooseAny = {
       cleanerId, // CRITICAL: Only this cleaner's transfers
     };
 
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CLEANER_STATEMENTS_CSV] Error:", error);
     
     // Handle auth errors

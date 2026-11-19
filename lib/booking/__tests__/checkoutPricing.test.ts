@@ -89,7 +89,7 @@ describe('checkoutPricing verification', () => {
       totalPrice: 999,
     });
     expect(rejected.ok).toBe(false);
-    if (!rejected.ok) {
+    if (rejected.ok === false) {
       expect(rejected.error).toMatch(/does not match server pricing/i);
     }
   });

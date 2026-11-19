@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('[TEST] Error sending cleaner assignment:', error);
     return NextResponse.json(
       {
@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
       error: result.error,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         success: false,

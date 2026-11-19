@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const cancelledJobs = await prisma.job.count({
       where: {
         branchId,
-        status: "cancelled",
+        status: "CANCELLED",
         createdAt: {
           gte: monthAgo,
         },
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
       where: {
         branchId,
         status: {
-          in: ["assigned", "confirmed"],
+          in: ["ASSIGNED", "CONFIRMED"],
         },
         assignedAt: {
           not: null,
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
     const recentCompletedJobs = await prisma.job.findMany({
       where: {
         branchId,
-        status: "completed",
+        status: "COMPLETED",
         assignedAt: {
           not: null,
         },
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
       where: {
         branchId,
         status: {
-          in: ["pending", "assigned"],
+          in: ["pending", "ASSIGNED"],
         },
         preferredDate: {
           lte: now,
@@ -203,7 +203,7 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof Response) {
       throw error;
     }

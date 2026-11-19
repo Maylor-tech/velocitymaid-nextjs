@@ -54,7 +54,7 @@ export async function GET(
       success: true,
       logs: formattedLogs,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Error fetching assignment logs:', error);
     return NextResponse.json(

@@ -48,6 +48,7 @@ interface Job {
   appliedReferralCode: string | null;
   createdAt: string;
   assignedAt: string | null;
+  onTheWayAt: string | null;
   completedAt: string | null;
 }
 
@@ -61,7 +62,7 @@ export default function JobDetailDrawer({
   const [loading, setLoading] = useState(false);
   const [autoAssigning, setAutoAssigning] = useState(false);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
-  const [assignmentLogs, setAssignmentLogs] = useState<any[]>([]);
+  const [assignmentLogs, setAssignmentLogs] = useState<LooseAny[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [cleanerProfileId, setCleanerProfileId] = useState<string | null>(null);
 
@@ -136,7 +137,7 @@ export default function JobDetailDrawer({
       } else {
         alert(data.error || data.reason || 'Failed to assign job');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error auto-assigning:', err);
       alert(err.message || 'Failed to assign job');
     } finally {
@@ -380,7 +381,7 @@ export default function JobDetailDrawer({
                   { label: 'Assigned', at: job.assignedAt },
                   { label: 'On the way', at: job.onTheWayAt },
                   { label: 'Completed', at: job.completedAt },
-                ].map((step, index) => (
+                ].map((step, _index) => (
                   <li key={step.label} className="ml-4 relative">
                     <div
                       className={`absolute w-3 h-3 rounded-full -left-[17px] top-0.5 ${
@@ -416,24 +417,29 @@ export default function JobDetailDrawer({
       {/* Manual Assignment Modal */}
       {job && (
         <AssignCleanerModal
-          open={assignModalOpen}
+          isOpen={assignModalOpen}
           onClose={() => setAssignModalOpen(false)}
           job={{
             id: job.id,
+            customerName:
+              [job.Customer?.firstName, job.Customer?.lastName].filter(Boolean).join(' ') ||
+              'Customer',
+            address: job.address ?? '',
+            date: job.preferredDate ?? '',
+            status: job.status,
             branchId: job.branchId,
             preferredDate: job.preferredDate,
             preferredTime: job.preferredTime,
-            address: job.address,
           }}
-          onAssigned={() => {
+          onSelectCleaner={() => {
             loadJob();
             if (onJobUpdated) {
               onJobUpdated();
             }
           }}
-          onViewCleanerProfile={(cleanerId) => {
+          onOpenProfile={(cleaner) => {
             setAssignModalOpen(false);
-            setCleanerProfileId(cleanerId);
+            setCleanerProfileId(cleaner.id);
           }}
         />
       )}

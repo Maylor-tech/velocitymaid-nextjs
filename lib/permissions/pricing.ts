@@ -17,7 +17,7 @@ export interface PricingPermissions {
   canOverridePriceLock: boolean; // With void + rebook only
 }
 
-export const PRICING_PERMISSIONS: Record<UserRole, PricingPermissions> = {
+export const PRICING_PERMISSIONS: Record<string, PricingPermissions> = {
   ADMIN: {
     canViewPrices: true,
     canEditPrices: true,

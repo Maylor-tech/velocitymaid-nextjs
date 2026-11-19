@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from "@/lib/auth/requireRole";
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -57,9 +58,11 @@ export async function POST(
             },
           },
           create: {
+            id: randomUUID(),
             branchId: branch.id,
             zipCode: normalizedZip,
             priority: 1,
+            updatedAt: new Date(),
           },
           update: {
             // Update existing if needed
@@ -67,7 +70,7 @@ export async function POST(
           },
         });
         addedCodes.push(normalizedZip);
-      } catch (err: any) {
+      } catch (err) {
         // Skip duplicates or other errors
         skippedCodes.push(normalizedZip);
         console.warn(`Skipped ${normalizedZip}:`, err.message);
@@ -80,7 +83,7 @@ export async function POST(
       skippedCodes,
       message: `Added ${addedCodes.length} service area(s). ${skippedCodes.length > 0 ? `${skippedCodes.length} skipped (may already exist).` : ''}`,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Add service areas error:', error);
     return NextResponse.json(

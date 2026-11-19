@@ -93,7 +93,7 @@ export default function CleanerEarningsPage() {
       } else {
         throw new Error(result.error || 'Failed to load earnings');
       }
-    } catch (err: unknown) {
+    } catch (err) {
       console.error('Error fetching earnings:', err);
       setError(err instanceof Error ? err.message : 'Failed to load earnings');
     } finally {

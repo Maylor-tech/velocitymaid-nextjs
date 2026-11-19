@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       branchName: branchName ?? undefined,
       isBranchScoped: !!auth.branchId,
     });
-  } catch (err: any) {
+  } catch (err) {
     return NextResponse.json(
       { success: false, error: err?.message ?? 'Unauthorized' },
       { status: 401 }

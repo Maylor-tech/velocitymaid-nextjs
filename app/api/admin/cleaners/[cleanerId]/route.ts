@@ -102,7 +102,7 @@ export async function GET(
           lte: weekEnd,
         },
         status: {
-          notIn: ['cancelled'],
+          notIn: ['CANCELLED'],
         },
       },
     });
@@ -119,7 +119,7 @@ export async function GET(
           lte: monthEnd,
         },
         status: {
-          notIn: ['cancelled'],
+          notIn: ['CANCELLED'],
         },
       },
     });
@@ -129,7 +129,7 @@ export async function GET(
       where: {
         assignedCleanerId: cleanerId,
         status: {
-          notIn: ['cancelled'],
+          notIn: ['CANCELLED'],
         },
       },
     });
@@ -137,7 +137,7 @@ export async function GET(
     const completedCount = await prisma.job.count({
       where: {
         assignedCleanerId: cleanerId,
-        status: 'completed',
+        status: 'COMPLETED',
       },
     });
 
@@ -283,7 +283,7 @@ export async function GET(
           gte: new Date(),
         },
         status: {
-          notIn: ['cancelled', 'completed'],
+          notIn: ['CANCELLED', 'COMPLETED'],
         },
       },
       take: 10,
@@ -311,7 +311,7 @@ export async function GET(
     const recentJobs = await prisma.job.findMany({
       where: {
         assignedCleanerId: cleanerId,
-        status: 'completed',
+        status: 'COMPLETED',
       },
       take: 10,
       orderBy: { completedAt: 'desc' },
@@ -453,7 +453,7 @@ export async function GET(
         return calculateCleanerLevel(metrics);
       })(),
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('CLEANER_PROFILE_ERROR:', err);
     return NextResponse.json(
       {

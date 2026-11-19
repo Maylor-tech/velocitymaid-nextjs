@@ -18,12 +18,6 @@ const nextConfig = {
     domains: ['images.unsplash.com'],
     unoptimized: false,
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },

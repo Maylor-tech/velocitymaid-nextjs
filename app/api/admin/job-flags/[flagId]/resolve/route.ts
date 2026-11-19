@@ -32,7 +32,7 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Flag not found' }, { status: 404 });
     }
     return NextResponse.json({ success: true, changed: result.changed });
-  } catch (error: unknown) {
+  } catch (error) {
     const authResponse = rethrowIfAuthResponse(error);
     if (authResponse) return authResponse;
     const message = error instanceof Error ? error.message : 'Could not resolve flag';

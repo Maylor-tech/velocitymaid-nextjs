@@ -269,7 +269,7 @@ export async function GET(
         'Content-Disposition': `inline; filename="certificate-${certificateId}.html"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate PDF error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate PDF' },

@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    let { name, email, organization, interest } = body;
+    const { name, email, organization, interest } = body;
 
     // Normalize email (lowercase, trim) to prevent duplicates
     email = email?.toLowerCase().trim();
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("[INVESTOR_ACCESS_REQUEST] Investor access request error:", error);
 
     return NextResponse.json(

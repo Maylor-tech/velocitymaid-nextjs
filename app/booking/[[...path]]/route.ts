@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path?: string[] } }
+  { params: _params }: { params: { path?: string[] } }
 ) {
   const { searchParams } = new URL(request.url);
   

@@ -20,12 +20,12 @@ export async function POST(request: NextRequest) {
       email,
       phone,
       dateOfBirth,
-      ssn,
+      _ssn,
       bankName,
       accountHolderName,
       accountNumber,
       routingNumber,
-      accountType,
+      _accountType,
     } = body;
 
     // Validate required fields
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Onboarding completed successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Complete onboarding error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to complete onboarding' },

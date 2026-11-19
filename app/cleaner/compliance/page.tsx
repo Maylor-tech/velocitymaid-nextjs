@@ -59,7 +59,7 @@ interface ComplianceChecklistData {
 }
 
 export default function CleanerCompliancePage() {
-  const router = useRouter();
+  const _router = useRouter();
   const [data, setData] = useState<ComplianceChecklistData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export default function CleanerCompliancePage() {
       }
 
       setData(responseData);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch compliance checklist:", err);
       setError(err.message || "Failed to load compliance checklist");
     } finally {

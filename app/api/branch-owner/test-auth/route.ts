@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         branchId,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[BRANCH_OWNER_TEST_AUTH] Error:", error);
     return NextResponse.json(
       {

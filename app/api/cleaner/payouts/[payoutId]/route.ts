@@ -82,7 +82,7 @@ export async function GET(
         Branch: branch,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CLEANER_PAYOUT_RECEIPT] Error:", error);
     return NextResponse.json(
       {

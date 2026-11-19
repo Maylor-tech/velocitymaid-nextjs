@@ -14,7 +14,7 @@ import { prisma } from '@/lib/prisma';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customerId, messageType, jobId } = body;
+    const { customerId, messageType, jobId: _jobId } = body;
 
     if (!customerId) {
       return NextResponse.json(
@@ -102,7 +102,7 @@ Share with friends and earn rewards!`;
         url: referralUrl,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Send referral WhatsApp error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send WhatsApp message' },

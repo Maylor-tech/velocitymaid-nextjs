@@ -138,7 +138,7 @@ async function checkJobsStatus() {
       completedWithoutCleaner,
       jobsWithoutCleaner: completedJobs.filter((j) => !j.assignedCleanerId),
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error:", error);
     return { error: error.message };
   } finally {

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { calculateCleanerLevel } from "@/lib/cleaner-level";
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   if (process.env.APP_ENV !== "development") {
     return NextResponse.json(
       { success: false, error: "Not allowed in production" },
@@ -28,11 +28,11 @@ export async function POST(request: NextRequest) {
     let updated = 0;
 
     for (const cleaner of cleaners) {
-      const level = calculateCleanerLevel({
+      const _level = calculateCleanerLevel({
         warningCount: cleaner.warningCount,
         isSuspended: cleaner.isSuspended,
         // Additional metrics can be added as needed
-      } as any);
+      } as LooseAny);
 
       // No dedicated level field in schema; just bump updatedAt to reflect recalculation
       await prisma.user.update({
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, updated });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Recalculation failed" },
       { status: 500 }

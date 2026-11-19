@@ -297,7 +297,7 @@ export async function autoAssignCleaner(jobId: string): Promise<AutoAssignResult
       cleanerId: selectedCleaner.id,
       cleanerName: selectedCleaner.name || undefined,
     };
-  } catch (err: unknown) {
+  } catch (err) {
     console.error("[AUTO_ASSIGN] Error:", err);
     return {
       success: false,

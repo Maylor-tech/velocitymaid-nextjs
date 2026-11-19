@@ -19,6 +19,15 @@ interface DashboardMetrics {
 
 export default function BranchOwnerDashboardPage() {
   // Block in production
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    fetchDashboard();
+  }, []);
+
   if (process.env.NODE_ENV === 'production') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -29,13 +38,6 @@ export default function BranchOwnerDashboardPage() {
       </div>
     );
   }
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
 
   const fetchDashboard = async () => {
     try {
@@ -64,7 +66,7 @@ export default function BranchOwnerDashboardPage() {
       } else {
         throw new Error(data.error || "Failed to load dashboard");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching dashboard:", err);
       setError(err.message || "Failed to load dashboard");
     } finally {

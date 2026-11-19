@@ -261,7 +261,7 @@ export default function AdminJobDetailPage() {
       } else {
         throw new Error(data.error || 'Failed to fetch job');
       }
-    } catch (err: unknown) {
+    } catch (err) {
       console.error('Error fetching job:', err);
       setError(err instanceof Error ? err.message : 'Failed to load job');
     } finally {
@@ -347,7 +347,7 @@ export default function AdminJobDetailPage() {
       } else {
         throw new Error(data.error || 'Review action failed');
       }
-    } catch (err: unknown) {
+    } catch (err) {
       const message = err instanceof Error ? err.message : 'Review action failed';
       setToastMessage(message);
       setToastType('error');
@@ -378,7 +378,7 @@ export default function AdminJobDetailPage() {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 5000);
       fetchJob();
-    } catch (err: unknown) {
+    } catch (err) {
       const message = err instanceof Error ? err.message : 'Test complete failed';
       setToastMessage(message);
       setToastType('error');
@@ -422,7 +422,7 @@ export default function AdminJobDetailPage() {
       setPayoutReference('');
       fetchJob();
       fetchAuditLogs();
-    } catch (err: unknown) {
+    } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to mark payout as paid';
       setToastMessage(message);
       setToastType('error');
@@ -477,7 +477,7 @@ export default function AdminJobDetailPage() {
       setMarkPaidReference('');
       fetchJob();
       fetchAuditLogs();
-    } catch (err: unknown) {
+    } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to record payment';
       setToastMessage(message);
       setToastType('error');
@@ -513,7 +513,7 @@ export default function AdminJobDetailPage() {
       setToastType('success');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 5000);
-    } catch (err: unknown) {
+    } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to send invite';
       setToastMessage(message);
       setToastType('error');
@@ -552,7 +552,7 @@ export default function AdminJobDetailPage() {
       setEditOpen(false);
       await fetchJob();
       await fetchAuditLogs();
-    } catch (err: unknown) {
+    } catch (err) {
       setToastMessage(err instanceof Error ? err.message : 'Save failed');
       setToastType('error');
       setShowToast(true);
@@ -624,7 +624,7 @@ export default function AdminJobDetailPage() {
           throw new Error(data.error || 'Failed to assign cleaner');
         }
       }
-    } catch (err: unknown) {
+    } catch (err) {
       setToastMessage(err instanceof Error ? err.message : 'Failed to assign cleaner');
       setToastType('error');
       setShowToast(true);
@@ -667,7 +667,7 @@ export default function AdminJobDetailPage() {
       setShowToast(true);
       await fetchJob();
       await fetchAuditLogs();
-    } catch (err: unknown) {
+    } catch (err) {
       setToastMessage(err instanceof Error ? err.message : 'Google sync failed');
       setToastType('error');
       setShowToast(true);

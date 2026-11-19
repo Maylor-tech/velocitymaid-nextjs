@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ASSIGN_CLEANER_API] Error:", error);
     return NextResponse.json(

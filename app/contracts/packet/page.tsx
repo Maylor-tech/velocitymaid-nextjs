@@ -23,7 +23,7 @@ export default function ContractPacketPage() {
 
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <h2 className="text-2xl font-bold text-[#0A3D2F] mb-4" style={{ fontFamily: 'Montserrat, Poppins, sans-serif' }}>
-            What's Included
+            What&apos;s Included
           </h2>
           <ul className="space-y-3 text-vm-text">
             <li className="flex items-start gap-3">
@@ -78,7 +78,7 @@ export default function ContractPacketPage() {
             Professional & Comprehensive
           </h2>
           <p className="text-lg mb-6">
-            This packet contains everything you need to understand VelocityMaid Jamaica's services, standards, 
+            This packet contains everything you need to understand VelocityMaid Jamaica&apos;s services, standards, 
             and legal agreements. All documents are professionally formatted and ready for printing or digital use.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -114,8 +114,8 @@ export default function ContractPacketPage() {
           </ol>
           <div className="mt-6 p-4 bg-[#F3F1EB] rounded-lg">
             <p className="text-sm text-vm-text">
-              <strong>Note:</strong> The downloaded file is an HTML document that can be printed to PDF using your browser's 
-              print function (Ctrl+P or Cmd+P). For best results, select "Save as PDF" as the destination.
+              <strong>Note:</strong> The downloaded file is an HTML document that can be printed to PDF using your browser&apos;s 
+              print function (Ctrl+P or Cmd+P). For best results, select &quot;Save as PDF&quot; as the destination.
             </p>
           </div>
         </div>

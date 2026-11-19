@@ -10,7 +10,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, TrendingUp, TrendingDown, Target, Calendar, Users, CheckCircle, AlertCircle, XCircle, FileText, Download } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, CheckCircle, AlertCircle, XCircle, FileText, Download, type LucideIcon } from "lucide-react";
 
 interface YearData {
   year: number;
@@ -47,7 +47,7 @@ const BLOCKER_LABELS: Record<string, string> = {
   NO_STATEMENTS: "No Statements",
 };
 
-const STATUS_COLORS: Record<string, { bg: string; text: string; icon: any }> = {
+const STATUS_COLORS: Record<string, { bg: string; text: string; icon: LucideIcon }> = {
   READY: {
     bg: "bg-vm-success-bg",
     text: "text-vm-success",
@@ -87,7 +87,7 @@ export default function AnalyticsPage() {
       }
 
       setData(result);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch analytics:", err);
       setError(err.message || "Failed to load analytics");
     } finally {
@@ -363,11 +363,9 @@ export default function AnalyticsPage() {
             Readiness Score Trend
           </h2>
           <div className="relative h-64 flex items-end">
-            {sortedYears.map((year, idx) => {
+            {sortedYears.map((year) => {
               const height = (year.finalScore / maxScore) * 100;
               const statusConfig = STATUS_COLORS[year.status] || STATUS_COLORS.NOT_READY;
-              const isLast = idx === sortedYears.length - 1;
-              const isFirst = idx === 0;
 
               return (
                 <div

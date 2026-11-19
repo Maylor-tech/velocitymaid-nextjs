@@ -103,12 +103,12 @@ export async function POST(request: NextRequest) {
           }
 
           const paidAt = new Date();
-          const existingDetails = (payout.policyEvalDetails as any) || {};
+          const existingDetails = (payout.policyEvalDetails as Record<string, unknown> | null) || {};
 
           const updatedDetails = {
             ...existingDetails,
             paymentSettlement: {
-              ...existingDetails.paymentSettlement,
+              ...(existingDetails.paymentSettlement as Record<string, unknown>),
               confirmedAt: paidAt.toISOString(),
               adminId: auth.userId,
               demoMode: true,
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
                 paidAt,
                 policyEvalDetails: updatedDetails,
                 updatedAt: new Date(),
-              },
+              } as LooseAny,
             });
 
             await ensureJobPayoutLedgerEntry(tx, {
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
             success: true,
             status: "PAID",
           });
-        } catch (error: any) {
+        } catch (error) {
           results.push({
             payoutId,
             success: false,
@@ -228,13 +228,13 @@ export async function POST(request: NextRequest) {
 
         const previousStatus = payout.status;
         const paidAt = new Date();
-        const existingDetails = (payout.policyEvalDetails as any) || {};
+        const existingDetails = (payout.policyEvalDetails as Record<string, unknown> | null) || {};
 
         // Update settlement metadata if needed
         const updatedDetails = {
           ...existingDetails,
           paymentSettlement: {
-            ...existingDetails.paymentSettlement,
+            ...(existingDetails.paymentSettlement as Record<string, unknown>),
             confirmedAt: paidAt.toISOString(),
             adminId: auth.userId,
           },
@@ -250,7 +250,7 @@ export async function POST(request: NextRequest) {
               paidAt,
               policyEvalDetails: updatedDetails,
               updatedAt: new Date(),
-            },
+            } as LooseAny,
           });
 
           await ensureJobPayoutLedgerEntry(tx, {
@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
         notifyPayoutPaid(
           payout.cleanerId,
           payoutId,
-          payout.cleanerAmount,
+          Number(payout.cleanerAmount),
           payout.currency
         ).catch((err) => {
           console.error(`[BULK_CONFIRM_PAID] Failed to send notification for payout ${payoutId}:`, err);
@@ -303,7 +303,7 @@ export async function POST(request: NextRequest) {
           success: true,
           status: "PAID",
         });
-      } catch (error: any) {
+      } catch (error) {
         // Individual payout failure doesn't stop the batch
         results.push({
           payoutId,
@@ -327,7 +327,7 @@ export async function POST(request: NextRequest) {
       failed: failureCount,
       results,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[BULK_CONFIRM_PAID] Error:", error);
     return NextResponse.json(

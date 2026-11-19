@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="review-qr-nj.png"',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate review QR code error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate QR code' },

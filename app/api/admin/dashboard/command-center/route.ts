@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const auth = await requireRole(request, 'ADMIN');
     const data = await getOpsCommandCenter(auth.branchId ?? null);
     return NextResponse.json({ success: true, data });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('[command-center]', error);
     const message =

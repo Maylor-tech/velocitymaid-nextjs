@@ -27,7 +27,8 @@ export interface PricingSnapshot {
  * Check if job pricing is locked
  */
 export function isPriceLocked(job: Job): boolean {
-  return !!job.priceLockedAt;
+  const priced = job as LooseAny;
+  return !!priced.priceLockedAt;
 }
 
 /**
@@ -55,7 +56,7 @@ export async function lockJobPricing(
     where: { id: jobId },
     data: {
       priceLockedAt: new Date(),
-      pricingSnapshot: snapshot as any, // Prisma Json type
+      pricingSnapshot: snapshot as LooseAny, // Prisma Json type
       pricingReferenceId: snapshot.pricingReferenceId,
       basePrice: snapshot.basePrice,
       modifiers: snapshot.modifiers,
@@ -64,7 +65,7 @@ export async function lockJobPricing(
       discountAmount: snapshot.discountAmount,
       discountReason: snapshot.discountReason,
       discountApprovedBy: adminId,
-    },
+    } as LooseAny,
   });
 }
 
@@ -75,17 +76,18 @@ export function createPricingSnapshot(
   job: Job,
   adminId: string
 ): PricingSnapshot {
+  const priced = job as LooseAny;
   return {
-    basePrice: Number(job.basePrice || 0),
-    modifiers: Number(job.modifiers || 0),
-    fees: Number(job.fees || 0),
-    tax: Number(job.tax || 0),
-    discountAmount: job.discountAmount ? Number(job.discountAmount) : null,
-    discountReason: job.discountReason || null,
-    totalPrice: Number(job.totalPrice || 0),
-    currency: job.currency || "USD",
-    serviceType: job.serviceType || null,
-    pricingReferenceId: job.pricingReferenceId || null,
+    basePrice: Number(priced.basePrice || 0),
+    modifiers: Number(priced.modifiers || 0),
+    fees: Number(priced.fees || 0),
+    tax: Number(priced.tax || 0),
+    discountAmount: priced.discountAmount ? Number(priced.discountAmount) : null,
+    discountReason: priced.discountReason || null,
+    totalPrice: Number(priced.totalPrice || 0),
+    currency: priced.currency || "USD",
+    serviceType: priced.serviceType || null,
+    pricingReferenceId: priced.pricingReferenceId || null,
     lockedAt: new Date().toISOString(),
     lockedBy: adminId,
   };
@@ -95,29 +97,30 @@ export function createPricingSnapshot(
  * Get pricing snapshot from job
  */
 export function getPricingSnapshot(job: Job): PricingSnapshot | null {
-  if (!job.priceLockedAt || !job.pricingSnapshot) {
+  const priced = job as LooseAny;
+  if (!priced.priceLockedAt || !priced.pricingSnapshot) {
     return null;
   }
 
   // If snapshot exists in JSON, use it
-  if (typeof job.pricingSnapshot === 'object') {
-    return job.pricingSnapshot as PricingSnapshot;
+  if (typeof priced.pricingSnapshot === "object") {
+    return priced.pricingSnapshot as PricingSnapshot;
   }
 
   // Otherwise reconstruct from fields
   return {
-    basePrice: Number(job.basePrice || 0),
-    modifiers: Number(job.modifiers || 0),
-    fees: Number(job.fees || 0),
-    tax: Number(job.tax || 0),
-    discountAmount: job.discountAmount ? Number(job.discountAmount) : null,
-    discountReason: job.discountReason || null,
-    totalPrice: Number(job.totalPrice || 0),
-    currency: job.currency || "USD",
-    serviceType: job.serviceType || null,
-    pricingReferenceId: job.pricingReferenceId || null,
-    lockedAt: job.priceLockedAt.toISOString(),
-    lockedBy: job.discountApprovedBy || "system",
+    basePrice: Number(priced.basePrice || 0),
+    modifiers: Number(priced.modifiers || 0),
+    fees: Number(priced.fees || 0),
+    tax: Number(priced.tax || 0),
+    discountAmount: priced.discountAmount ? Number(priced.discountAmount) : null,
+    discountReason: priced.discountReason || null,
+    totalPrice: Number(priced.totalPrice || 0),
+    currency: priced.currency || "USD",
+    serviceType: priced.serviceType || null,
+    pricingReferenceId: priced.pricingReferenceId || null,
+    lockedAt: priced.priceLockedAt.toISOString(),
+    lockedBy: priced.discountApprovedBy || "system",
   };
 }
 

@@ -17,7 +17,6 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import {
   generateBrandedCoverPage,
-  getCoverPageStyles,
   type CoverPageMeta,
 } from "@/lib/reports/coverPage";
 
@@ -145,9 +144,9 @@ export async function GET(request: NextRequest) {
 
     // Build year data
     const years = archives.map((archive) => {
-      const summary = archive.summaryJson as any;
-      const eligibleCleaners = summary?.eligibleCleaners || 0;
-      const verifiedW9 = summary?.verifiedW9 || 0;
+      const summary = archive.summaryJson as Record<string, unknown>;
+      const eligibleCleaners = typeof summary?.eligibleCleaners === "number" ? summary.eligibleCleaners : 0;
+      const verifiedW9 = typeof summary?.verifiedW9 === "number" ? summary.verifiedW9 : 0;
       const verifiedW9Pct =
         eligibleCleaners > 0
           ? Math.round((verifiedW9 / eligibleCleaners) * 100)
@@ -483,7 +482,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="velocitymaid-investor-compliance-summary.html"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_INVESTOR_SUMMARY] Error:", error);
 
@@ -502,4 +501,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

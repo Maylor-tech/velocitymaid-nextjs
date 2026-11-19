@@ -152,7 +152,7 @@ export async function runWeeklyPayouts(): Promise<WeeklyPayoutSummary> {
           success: true,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(`Error processing payout for cleaner ${cleaner.id}:`, error);
       results.push({
         cleanerId: cleaner.id,

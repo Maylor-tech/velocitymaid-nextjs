@@ -155,7 +155,7 @@ export async function getAuthenticatedBranchOwner(
       success: false,
       error: "Not authenticated as branch owner",
     };
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[BRANCH_OWNER_AUTH] Error:", error);
     return {
       success: false,

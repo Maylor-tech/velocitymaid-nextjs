@@ -109,7 +109,7 @@ export async function POST(
       message: `Invite sent to ${customer.email}`,
       invitedAt: invitedAt.toISOString(),
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message =
       error instanceof Error ? error.message : "Failed to send invite";

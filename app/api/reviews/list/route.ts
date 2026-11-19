@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       stats,
       count: reviews.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('List reviews error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch reviews' },

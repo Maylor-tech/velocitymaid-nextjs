@@ -150,7 +150,7 @@ Reply to this message if you have questions! 🙏`;
         error: result.error || 'Failed to send WhatsApp message',
       }, { status: 500 });
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('WhatsApp lead auto-response error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send auto-response' },

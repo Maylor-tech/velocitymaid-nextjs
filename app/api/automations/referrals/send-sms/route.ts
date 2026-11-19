@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         url: bookingUrl,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Send referral SMS error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to send SMS message' },

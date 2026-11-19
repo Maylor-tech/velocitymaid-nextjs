@@ -38,7 +38,7 @@ export function TodaySchedule({
     {
       key: 'cleaner',
       header: 'Cleaner',
-      render: (v, row) =>
+      render: (v, _row) =>
         v ? (
           <span>{String(v)}</span>
         ) : (

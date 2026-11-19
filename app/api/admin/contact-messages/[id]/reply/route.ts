@@ -97,7 +97,7 @@ VelocityMaid Team
           console.log(
             `[CONTACT_REPLY] Reply sent to ${contact.email} for message ${params.id}`
           );
-        } catch (emailError: any) {
+        } catch (emailError) {
           console.error("[CONTACT_REPLY] Failed to send reply email:", emailError);
           // Don't fail - reply is already saved
         }
@@ -115,8 +115,8 @@ VelocityMaid Team
       });
     }
 
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
+    return NextResponse.json({ success: true, replyId: reply.id });
+  } catch (error) {
     console.error("[CONTACT_REPLY] Error:", error);
 
     if (error instanceof Response) {

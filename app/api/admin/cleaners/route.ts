@@ -9,12 +9,12 @@ export const dynamic = 'force-dynamic';
  * If jobId is provided, checks availability against that specific job
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from "@/lib/auth/requireRole";
 import { JobStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getCleanerAverageJQS } from '@/utils/jobQualityScore';
-import { computeAssignmentScore, CleanerForScoring } from '@/lib/assignment-scoring';
+import { computeAssignmentScore } from '@/lib/assignment-scoring';
 import { calculateCleanerLevel, CleanerLevelMetrics } from '@/lib/cleaner-level';
 import { ACTIVE_JOB_STATUS_EXCLUDE } from '@/lib/jobStatus';
 import { APPROVED_CLEANER_APPLICATION_STATUSES } from '@/lib/cleaners/applicationStatus';
@@ -79,10 +79,12 @@ export async function GET(request: NextRequest) {
       ? await prisma.job.findUnique({
           where: { id: jobId },
           select: {
+            id: true,
             branchId: true,
             preferredDate: true,
             preferredTime: true,
             serviceLocation: true,
+            address: true,
             jobQualityScore: true,
           },
         })
@@ -520,7 +522,7 @@ export async function GET(request: NextRequest) {
       cleaners,
       count: cleaners.length,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('CLEANER_LIST_ERROR:', err);
     return NextResponse.json(
       {

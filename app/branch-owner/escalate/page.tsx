@@ -11,16 +11,6 @@ import { useRouter } from "next/navigation";
 
 export default function BranchOwnerEscalatePage() {
   // Block in production
-  if (process.env.NODE_ENV === 'production') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-vm-text mb-2">404</h1>
-          <p className="text-vm-muted">Page not found</p>
-        </div>
-      </div>
-    );
-  }
   
   const router = useRouter();
   const [issueType, setIssueType] = useState<string>("");
@@ -31,6 +21,17 @@ export default function BranchOwnerEscalatePage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-vm-text mb-2">404</h1>
+          <p className="text-vm-muted">Page not found</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +63,7 @@ export default function BranchOwnerEscalatePage() {
       } else {
         throw new Error(data.error || "Failed to escalate issue");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error escalating issue:", err);
       setError(err.message || "Failed to escalate issue");
     } finally {
@@ -265,7 +266,7 @@ export default function BranchOwnerEscalatePage() {
                   About Escalations
                 </p>
                 <p className="text-xs text-blue-700 mt-1">
-                  Escalated issues are reviewed by administrators. You'll be notified once the issue is resolved.
+                  Escalated issues are reviewed by administrators. You&apos;ll be notified once the issue is resolved.
                   Use this for issues that require admin-level decisions or overrides.
                 </p>
               </div>

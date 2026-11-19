@@ -95,7 +95,7 @@ export async function sendWhatsAppMessage(
       success: false,
       error: 'No message ID returned from WhatsApp API',
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('WhatsApp send error:', error.response?.data || error.message);
     const errorData = error.response?.data as WhatsAppErrorResponse;
     return {
@@ -156,7 +156,7 @@ export async function sendJobOffer(
     preferredDate: Date | null;
     preferredTime: string | null;
     serviceType: string | null;
-    totalPrice: any;
+    totalPrice: LooseAny;
     currency: string | null;
   }
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
@@ -189,7 +189,7 @@ export async function sendJobOffer(
       `Job ID: ${jobInfo.jobId}`;
 
     return sendWhatsAppMessage(to, message);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Send job offer error:', error);
     return {
       success: false,

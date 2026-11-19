@@ -36,7 +36,7 @@ export async function PATCH(
             email: true,
           },
         },
-        trainingStatus: {
+        TrainingStatus: {
           select: {
             id: true,
             overallStatus: true,
@@ -83,7 +83,7 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true, certificate: updated });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating training certificate:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update certificate status' },

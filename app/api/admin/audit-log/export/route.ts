@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
+import { taxProfileAuditLog } from "@/app/api/admin/tax-profiles/delegate";
 import { escapeCsvField, csvRow, csvHeader, generateCsv, formatCsvDateTime } from "@/lib/csv";
 
 export async function GET(request: NextRequest) {
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
     const actionType = url.searchParams.get("actionType");
 
     // Build where clause
-    const where: any = {};
+    const where: { createdAt?: { gte?: Date; lte?: Date }; action?: string } = {};
 
     if (startDate) {
       where.createdAt = { ...where.createdAt, gte: new Date(startDate) };
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch audit logs
-    const auditLogs = await prisma.taxProfileAuditLog.findMany({
+    const auditLogs = await taxProfileAuditLog().findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: 10000, // Limit to prevent memory issues
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
       ])
     );
 
-    const csv = generateCsv(headers, rows);
+    const csv = "\uFEFF" + [headers, ...rows].join("\n");
 
     // Return CSV
     const filename = `audit-log-export-${new Date().toISOString().split("T")[0]}.csv`;
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_AUDIT_LOG_EXPORT] Error:", error);
 
     if (error instanceof Response) {

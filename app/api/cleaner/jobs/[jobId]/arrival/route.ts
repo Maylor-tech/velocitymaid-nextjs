@@ -65,7 +65,7 @@ export async function PATCH(
     }
 
     return NextResponse.json({ success: true, job: updated });
-  } catch (err: unknown) {
+  } catch (err) {
     const authResp = rethrowIfAuthResponse(err);
     if (authResp) return authResp;
     const message = err instanceof Error ? err.message : "Failed to save arrival";

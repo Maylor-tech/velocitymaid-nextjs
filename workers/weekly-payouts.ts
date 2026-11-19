@@ -83,7 +83,7 @@ export async function runWeeklyPayouts(
       result,
       dryRun: options?.dryRun || false,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("[WEEKLY_PAYOUTS] Error:", error);
     return {
       success: false,

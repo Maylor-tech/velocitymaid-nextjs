@@ -16,7 +16,7 @@ export default function PaymentMethodForm({
   initialMethodType = "BANK",
 }: PaymentMethodFormProps) {
   const [methodType, setMethodType] = useState(initialMethodType);
-  const [details, setDetails] = useState<any>({});
+  const [details, setDetails] = useState<LooseAny>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,7 +85,7 @@ export default function PaymentMethodForm({
       }
 
       onSuccess();
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || "Failed to save payment method");
     } finally {
       setLoading(false);
@@ -265,7 +265,7 @@ export default function PaymentMethodForm({
       {methodType === "CASH" && (
         <div className="bg-muted border rounded-lg p-4">
           <p className="text-sm text-muted-foreground">
-            Cash payments don't require additional details. You'll receive cash
+            Cash payments don&apos;t require additional details. You&apos;ll receive cash
             payouts directly.
           </p>
         </div>

@@ -43,7 +43,7 @@ export default function AddPaymentMethodModal({
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
           <p className="text-sm text-blue-800">
             <strong>Note:</strong> Your payment method will be saved and marked
-            as pending verification. You'll receive payouts once verified by an
+            as pending verification. You&apos;ll receive payouts once verified by an
             administrator.
           </p>
         </div>

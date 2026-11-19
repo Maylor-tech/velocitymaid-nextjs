@@ -49,7 +49,7 @@ export default function CustomerProfilePage() {
       } else {
         throw new Error(data.error || 'Failed to fetch profile');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching profile:', err);
       setError(err.message || 'Failed to load profile');
     } finally {
@@ -133,7 +133,7 @@ export default function CustomerProfilePage() {
       
       // Hide success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating profile:', err);
       setError(err.message || 'Failed to update profile');
     } finally {

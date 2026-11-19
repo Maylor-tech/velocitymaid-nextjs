@@ -87,7 +87,7 @@ export async function PATCH(
       job: updatedJob,
       message: 'Job started. Service is in progress.',
     });
-  } catch (err: unknown) {
+  } catch (err) {
     const authResp = rethrowIfAuthResponse(err);
     if (authResp) return authResp;
     console.error('[CLEANER_START] Error:', err);

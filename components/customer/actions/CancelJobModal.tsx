@@ -40,7 +40,7 @@ export default function CancelJobModal({
 
       onSuccess();
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Cancel job error:', err);
       setError(err.message || 'Failed to cancel job');
       setLoading(false);

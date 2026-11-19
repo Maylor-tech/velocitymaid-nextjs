@@ -112,7 +112,7 @@ Please review and take action.`;
  * Send email alert for complaint
  * TODO: Implement email sending (SendGrid, Resend, etc.)
  */
-async function sendComplaintEmailAlert(complaint: Complaint): Promise<void> {
+async function _sendComplaintEmailAlert(_complaint: Complaint): Promise<void> {
   // TODO: Implement email sending
   // Example using SendGrid or Resend:
   /*

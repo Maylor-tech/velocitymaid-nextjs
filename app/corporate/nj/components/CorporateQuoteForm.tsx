@@ -55,7 +55,7 @@ export default function CorporateQuoteForm() {
           Thank You!
         </h3>
         <p className="text-lg mb-4">
-          We've received your quote request. Our team will contact you within 24 hours.
+          We&apos;ve received your quote request. Our team will contact you within 24 hours.
         </p>
         <p className="text-sm">
           In the meantime, feel free to download our corporate service documents above.

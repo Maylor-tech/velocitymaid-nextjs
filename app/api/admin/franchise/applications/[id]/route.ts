@@ -1,5 +1,7 @@
+import { requireRole } from "@/lib/auth/requireRole";
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export async function PATCH(
@@ -19,7 +21,7 @@ export async function PATCH(
       );
     }
 
-    const updateData: any = {};
+    const updateData: Prisma.FranchiseApplicationUpdateInput = {};
     if (status) {
       updateData.status = status;
     }
@@ -36,7 +38,7 @@ export async function PATCH(
       success: true,
       application,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update franchise application error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update application' },

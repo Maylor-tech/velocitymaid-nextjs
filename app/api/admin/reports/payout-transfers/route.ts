@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const dateTo = searchParams.get("dateTo");
 
     // Build where clause
-    const where: any = {};
+    const where: LooseAny = {};
     if (batchId) where.batchId = batchId;
     if (cleanerId) where.cleanerId = cleanerId;
     if (status && Object.values(PayoutTransferStatus).includes(status)) {
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[PAYOUT_TRANSFERS_EXPORT] Error:", error);
     return NextResponse.json(
       {

@@ -64,7 +64,7 @@ export default function SignUpPage() {
 
       // Success - redirect to dashboard (session cookie is set by API)
       router.push('/saas/dashboard');
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
       setIsSubmitting(false);
     }

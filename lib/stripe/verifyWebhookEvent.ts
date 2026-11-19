@@ -65,7 +65,7 @@ export function verifyStripeWebhookEvent(input: {
   try {
     const event = input.constructEvent(input.body, input.signature, secret);
     return { ok: true, event, mode: 'verified' };
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Invalid webhook signature';
     return { ok: false, status: 401, error: message };

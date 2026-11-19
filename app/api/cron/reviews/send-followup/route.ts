@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       message: `Sent ${sentCount} follow-up review requests`,
       jobsProcessed: jobs.length,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Send follow-up review requests error:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Failed to send follow-up requests' },

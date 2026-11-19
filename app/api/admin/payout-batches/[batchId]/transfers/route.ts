@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { PayoutTransferStatus } from "@prisma/client";
+import { Prisma, PayoutTransferStatus } from "@prisma/client";
 
 export async function GET(
   request: NextRequest,
@@ -77,7 +77,7 @@ export async function GET(
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {
+    const where: Prisma.PayoutTransferWhereInput = {
       batchId,
     };
     if (status) {
@@ -158,7 +158,7 @@ export async function GET(
         status: status || null,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[LIST_BATCH_TRANSFERS] Error:", error);
     return NextResponse.json(
       {

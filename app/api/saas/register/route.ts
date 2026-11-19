@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
       } else {
         console.log('[REGISTER] No existing user found. Proceeding with registration.');
       }
-    } catch (dbError: any) {
+    } catch (dbError) {
       console.error(`[${requestId}] Database error checking existing user:`, dbError);
       return NextResponse.json(
         { error: 'Database error. Please try again.', requestId },
@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
     try {
       hashedPassword = await hashPassword(password);
       console.log('[REGISTER] Password hashed successfully.');
-    } catch (hashError: any) {
+    } catch (hashError) {
       console.error(`[${requestId}] Password hashing error:`, hashError);
       return NextResponse.json(
         { error: 'Failed to process password', requestId },
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
         },
       });
       console.log(`[REGISTER] Tenant created: ${tenant.id} (${tenant.name})`);
-    } catch (tenantError: any) {
+    } catch (tenantError) {
       console.error(`[${requestId}] Tenant creation error:`, tenantError);
       console.error(`[${requestId}] Tenant error details:`, {
         code: tenantError.code,
@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
         });
         stripeCustomerId = stripeCustomer.id;
         console.log(`[REGISTER] Stripe customer created: ${stripeCustomer.id}`);
-      } catch (stripeError: any) {
+      } catch (stripeError) {
         console.warn(`[${requestId}] Stripe customer creation failed (continuing without Stripe):`, stripeError.message);
         // Continue registration without Stripe - can be set up later
         // This allows registration to work even if Stripe is not configured
@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
         },
       });
       console.log(`[${requestId}] Subscription record created: ${subscription.id}`);
-    } catch (subError: any) {
+    } catch (subError) {
       console.error(`[${requestId}] Subscription creation error:`, subError);
       // Clean up tenant if subscription creation fails
       await prisma.tenant.delete({ where: { id: tenant.id } }).catch(() => {});
@@ -265,7 +265,7 @@ export async function POST(req: NextRequest) {
         hasPassword: !!user.password,
       });
       console.log('[REGISTER] Database transaction successful. Tenant and user created.');
-    } catch (userError: any) {
+    } catch (userError) {
       console.error('\n[REGISTER] FATAL ERROR: User creation failed');
       console.error(`[${requestId}] User creation error:`, userError);
       console.error(`[${requestId}] Error details:`, {
@@ -303,7 +303,7 @@ export async function POST(req: NextRequest) {
         tenantId: user.tenantId!,
         role: user.role,
       });
-    } catch (tokenError: any) {
+    } catch (tokenError) {
       console.error(`[${requestId}] Token creation error:`, tokenError);
       console.error(`[${requestId}] Token error details:`, {
         message: tokenError.message,
@@ -324,7 +324,7 @@ export async function POST(req: NextRequest) {
           path: '/',
           maxAge: 60 * 60 * 24 * 7, // 7 days
         });
-      } catch (cookieError: any) {
+      } catch (cookieError) {
         console.error(`[${requestId}] Cookie setting error:`, cookieError);
         // Don't fail registration if cookie fails, but log it
       }
@@ -352,7 +352,7 @@ export async function POST(req: NextRequest) {
       },
       requestId,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('\n[REGISTER] FATAL ERROR: Unexpected error in registration');
     console.error(`[${requestId}] Unexpected registration error:`, error);
     console.error(`[${requestId}] Error details:`, {

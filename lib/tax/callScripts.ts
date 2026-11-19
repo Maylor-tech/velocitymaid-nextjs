@@ -6,7 +6,11 @@
  * No sensitive data in scripts
  */
 
-import { TaxProfileStatus } from "@prisma/client";
+const TaxProfileStatus = {
+  DRAFT: "DRAFT",
+  SUBMITTED: "SUBMITTED",
+  REJECTED: "REJECTED",
+} as const;
 
 export type CallScriptType =
   | "W9_NOT_STARTED"
@@ -167,11 +171,11 @@ Thank you.`,
 export function selectCallScript(data: {
   cleanerName: string | null;
   adminName: string;
-  w9Status: TaxProfileStatus | null;
+  w9Status: string | null;
   addressComplete: boolean;
   issues: string[];
 }): CallScript {
-  const { cleanerName, adminName, w9Status, addressComplete, issues } = data;
+  const { cleanerName, adminName, w9Status, addressComplete, issues: _issues } = data;
 
   // Determine primary issue
   const hasW9NotStarted = !w9Status || w9Status === TaxProfileStatus.DRAFT;

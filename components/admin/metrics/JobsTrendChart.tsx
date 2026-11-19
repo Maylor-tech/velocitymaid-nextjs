@@ -20,7 +20,7 @@ export default function JobsTrendChart({ data }: JobsTrendChartProps) {
   };
 
   const barWidth = 100 / data.length;
-  const padding = 2;
+  const _padding = 2;
 
   return (
     <div className="space-y-4">

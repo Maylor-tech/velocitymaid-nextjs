@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from 'react';
-import { Calendar, Clock, Home, Sparkles, ArrowRight, Loader2, MapPin } from 'lucide-react';
+import { Calendar, Home, Sparkles, ArrowRight, Loader2, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { sendGAEvent } from '@next/third-parties/google';
@@ -177,8 +177,8 @@ function BookingPageContent() {
       const data = await response.json();
       if (data.success && data.branch?.serviceAreas) {
         const areas = data.branch.serviceAreas
-          .filter((area: any) => area.zipCode.startsWith('PA-'))
-          .map((area: any) => ({
+          .filter((area: { zipCode: string }) => area.zipCode.startsWith('PA-'))
+          .map((area: { zipCode: string; city?: string | null }) => ({
             code: area.zipCode,
             name: area.city || area.zipCode.replace('PA-', ''),
           }));
@@ -366,7 +366,7 @@ function BookingPageContent() {
 
 
   // Individual field validation functions
-  const validateField = (field: keyof FormData, value: any): string => {
+  const validateField = (field: keyof FormData, value: string): string => {
     switch (field) {
       case 'firstName':
         if (!value.trim()) return 'First name is required';
@@ -419,7 +419,7 @@ function BookingPageContent() {
   };
 
   // Clear error when user starts typing
-  const handleFieldChange = (field: keyof FormData, value: any) => {
+  const handleFieldChange = (field: keyof FormData, value: string) => {
     setFormData({ ...formData, [field]: value });
     // Clear error if field was previously touched and is now valid
     if (touched[field]) {

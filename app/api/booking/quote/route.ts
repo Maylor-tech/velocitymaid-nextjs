@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       success: true,
       quote,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in /api/booking/quote:', error);
     return NextResponse.json(
       { success: false, errors: [{ field: 'global', message: 'Failed to calculate quote' }] },

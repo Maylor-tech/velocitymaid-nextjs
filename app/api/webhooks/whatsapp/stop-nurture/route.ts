@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       message: 'Nurture sequence stopped',
       customerId: customer.id,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Stop nurture sequence error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to stop nurture sequence' },

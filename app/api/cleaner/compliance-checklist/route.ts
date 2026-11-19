@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
         });
         hasStatements = hasStatementsCount > 0;
       }
-    } catch (dbError: any) {
+    } catch (dbError) {
       console.warn("[COMPLIANCE_CHECKLIST] DB unavailable, using fallback:", dbError?.message);
       // Fallback: allow page to render for authenticated cleaner
       // even if DB is temporarily unavailable
@@ -337,7 +337,7 @@ export async function GET(request: NextRequest) {
       readinessScore: Math.round(readinessScore * 100) / 100, // Round to 2 decimal places
       fallback: !cleaner || cleaner.stripeAccountId === null, // Indicate if using fallback data
     } as ComplianceChecklistResponse);
-  } catch (error: any) {
+  } catch (error) {
     console.error("[COMPLIANCE_CHECKLIST] Error:", error);
 
     if (error instanceof Response) {

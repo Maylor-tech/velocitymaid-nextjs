@@ -71,7 +71,7 @@ export async function POST(
         assignedCleanerId: result.job.assignedCleanerId,
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (isDispatchError(error)) {
       return NextResponse.json(
         { success: false, error: error.message, code: error.code },

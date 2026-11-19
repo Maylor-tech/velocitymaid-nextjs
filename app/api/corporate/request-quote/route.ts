@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
         ...quoteRequest,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Corporate quote request error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to submit quote request' },

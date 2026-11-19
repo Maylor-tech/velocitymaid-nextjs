@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       sent,
       failed,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to send feedback reminders';
     console.error('[send-feedback-reminders]', message);

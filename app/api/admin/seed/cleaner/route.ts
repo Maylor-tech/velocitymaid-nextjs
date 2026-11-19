@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
         userBranchLinks: verified?.UserBranch.length || 0,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error seeding cleaner:", error);
     return NextResponse.json(
       {

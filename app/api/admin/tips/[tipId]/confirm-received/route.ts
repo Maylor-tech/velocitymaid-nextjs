@@ -118,7 +118,7 @@ export async function POST(
     }
 
     return NextResponse.json({ success: true, ...result });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message =
       error instanceof Error ? error.message : 'Failed to confirm tip';

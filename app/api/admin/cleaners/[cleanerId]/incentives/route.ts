@@ -59,7 +59,7 @@ export async function GET(
       totalEarned: 0,
       totalPending: 0,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get incentives error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get incentives' },
@@ -143,7 +143,7 @@ export async function POST(
       success: true,
       incentive,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create incentive error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create incentive' },
@@ -190,9 +190,9 @@ export async function PATCH(
     // Placeholder response
     return NextResponse.json({
       success: true,
-      message: 'Incentive status updated',
+      message: `Incentive ${incentiveId} updated for cleaner ${cleanerId}`,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update incentive error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update incentive' },

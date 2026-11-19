@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       bookings,
       count: bookings.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('List customer bookings error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch bookings' },

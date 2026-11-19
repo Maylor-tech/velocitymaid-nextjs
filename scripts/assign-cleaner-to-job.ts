@@ -8,6 +8,7 @@
  *   POST /api/admin/scripts/assign-cleaner
  */
 
+import { randomUUID } from "crypto";
 import { prisma } from "../lib/prisma";
 import { JobStatus } from "@prisma/client";
 
@@ -59,6 +60,8 @@ async function assignCleanerToJob() {
           // Create user from approved application
           user = await prisma.user.create({
             data: {
+              id: randomUUID(),
+              updatedAt: new Date(),
               email: cleanerApp.email,
               name: cleanerApp.name,
               role: "CLEANER",
@@ -124,7 +127,7 @@ async function assignCleanerToJob() {
       cleanerId: cleanerId,
       message: `Cleaner ${cleanerId} assigned to job ${updatedJob.id}`,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ASSIGN_CLEANER] Error:", error);
     return {
       success: false,

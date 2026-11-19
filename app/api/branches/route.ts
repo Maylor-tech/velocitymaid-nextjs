@@ -12,7 +12,7 @@ import { prisma } from '@/lib/prisma';
  * Returns active branches for Phase 0 use (booking, cleaner application)
  * This is a Phase 0 route - no admin authentication required
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const branches = await prisma.branch.findMany({
       where: {
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       branches,
       count: branches.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('BRANCH_FETCH_ERROR:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch branches' },

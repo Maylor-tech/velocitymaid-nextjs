@@ -19,7 +19,7 @@ export async function getActivePolicyVersionIdForBranch(
 ): Promise<string | null> {
   try {
     // Find active assignment for this branch
-    const assignment = await prisma.payoutPolicyAssignment.findFirst({
+    const assignment = await (prisma as LooseAny).payoutPolicyAssignment.findFirst({
       where: {
         branchId: branchId,
         effectiveFrom: {
@@ -53,7 +53,7 @@ export async function getActivePolicyVersionIdForBranch(
     }
 
     return assignment.policyVersionId;
-  } catch (error: any) {
+  } catch (error) {
     console.error(
       `[POLICY_SELECTION] Error finding policy for branch ${branchId}:`,
       error

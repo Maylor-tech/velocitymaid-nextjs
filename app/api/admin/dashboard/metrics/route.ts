@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       success: true,
       metrics,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_DASHBOARD_METRICS] Error:", error);
 
     if (error instanceof Response) {

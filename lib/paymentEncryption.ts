@@ -50,7 +50,7 @@ export function encryptPaymentData(text: string): string {
     
     // Return format: iv.hex.tag.hex.encrypted.hex
     return `${iv.toString("hex")}.${tag.toString("hex")}.${encrypted.toString("hex")}`;
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ENCRYPT_PAYMENT_DATA] Error:", error);
     throw new Error("Failed to encrypt payment data");
   }
@@ -83,7 +83,7 @@ export function decryptPaymentData(payload: string): string {
     decipher.setAuthTag(tag);
     
     return decipher.update(encrypted, undefined, "utf8") + decipher.final("utf8");
-  } catch (error: any) {
+  } catch (error) {
     console.error("[DECRYPT_PAYMENT_DATA] Error:", error);
     throw new Error("Failed to decrypt payment data");
   }

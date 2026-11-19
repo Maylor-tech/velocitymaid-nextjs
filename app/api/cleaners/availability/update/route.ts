@@ -88,18 +88,18 @@ export async function POST(request: NextRequest) {
     const availability = await prisma.cleanerAvailability.upsert({
       where: { cleanerId },
       update: {
-        workingDays: workingDays as any,
-        timeRanges: timeRanges as any,
+        workingDays: workingDays as LooseAny,
+        timeRanges: timeRanges as LooseAny,
         maxDailyJobs,
-        blackoutDates: blackoutDates as any,
+        blackoutDates: blackoutDates as LooseAny,
         isActive: true,
       },
       create: {
         cleanerId,
-        workingDays: workingDays as any,
-        timeRanges: timeRanges as any,
+        workingDays: workingDays as LooseAny,
+        timeRanges: timeRanges as LooseAny,
         maxDailyJobs,
-        blackoutDates: blackoutDates as any,
+        blackoutDates: blackoutDates as LooseAny,
         isActive: true,
       },
     });
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
         blackoutDates: availability.blackoutDates as string[] || [],
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update availability error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update availability' },

@@ -82,7 +82,7 @@ export function PhotoSlotList({
       });
       delete attempts.current[key];
       onUploaded();
-    } catch (err: unknown) {
+    } catch (err) {
       const message = err instanceof Error ? err.message : "Upload failed. Tap Retry.";
       setError(message);
       setFailed({ key, file, category, slotKey, caption });

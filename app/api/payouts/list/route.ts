@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/requireRole";
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
       payouts,
       count: payouts.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('List payouts error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch payouts' },

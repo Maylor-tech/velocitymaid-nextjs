@@ -85,7 +85,7 @@ export async function getAuthenticatedCleaner(
       success: false,
       error: "Not authenticated as cleaner",
     };
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[CLEANER_AUTH] Error:", error);
     return {
       success: false,

@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       success: true,
       payouts,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('List payouts error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to list payouts' },

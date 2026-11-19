@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
         scheduledDays: schedule.map(s => s.day),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Schedule nurture sequence error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to schedule nurture sequence' },

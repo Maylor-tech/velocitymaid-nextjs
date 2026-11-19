@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       totalFailed,
       promosProcessed: promos.length,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Monthly promo scheduler error:', error);
     return NextResponse.json(
       { success: false, error: (error instanceof Error ? error.message : undefined) || 'Failed to process monthly promos' },

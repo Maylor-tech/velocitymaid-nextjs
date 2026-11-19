@@ -24,7 +24,9 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { PayoutTransferStatus, TaxProfileStatus } from "@prisma/client";
+import { PayoutTransferStatus } from "@prisma/client";
+import { TaxProfileStatus, cleanerTaxProfile } from "@/app/api/admin/tax-profiles/delegate";
+import { selectCallScript, getVoicemailScriptForCleaner } from "@/lib/tax/callScripts";
 
 /**
  * Get 1099 threshold for a given year
@@ -225,7 +227,7 @@ export async function GET(
     }
 
     // Fetch tax profiles for eligible cleaners
-    const taxProfiles = await prisma.cleanerTaxProfile.findMany({
+    const taxProfiles = await cleanerTaxProfile().findMany({
       where: {
         cleanerId: { in: eligibleCleanerIds },
       },
@@ -351,7 +353,7 @@ export async function GET(
       daysRemaining,
       cleaners: topCleaners,
     } as CallListResponse);
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_CALL_LIST] Error:", error);
 

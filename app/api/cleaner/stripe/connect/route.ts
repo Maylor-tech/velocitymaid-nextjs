@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       url: onboardingUrl,
       accountId,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[STRIPE_CONNECT] Error:", error);
     const err = error as { message?: string; stack?: string };

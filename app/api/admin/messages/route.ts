@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 /**
  * Admin Messages API
  * 
@@ -25,9 +26,9 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get("role");
 
     // Build where clause
-    const where: any = {};
+    const where: Prisma.ContactMessageWhereInput = {};
     if (status && ["NEW", "REVIEWED", "REPLIED", "ARCHIVED"].includes(status)) {
-      where.status = status;
+      where.status = status as Prisma.ContactMessageWhereInput["status"];
     }
     if (role) {
       where.role = role;
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
       success: true,
       messages,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_MESSAGES] Error:", error);
 
     if (error instanceof Response) {

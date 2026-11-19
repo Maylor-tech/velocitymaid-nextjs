@@ -48,11 +48,11 @@ export function getCleanerMessage(key: keyof typeof CLEANER_MESSAGES): string {
  */
 export function getCustomerMessage(
   key: keyof typeof CUSTOMER_MESSAGES,
-  ...args: any[]
+  ...args: LooseAny[]
 ): string {
   const message = CUSTOMER_MESSAGES[key];
   if (typeof message === 'function') {
-    return message(...args);
+    return (message as (...messageArgs: LooseAny[]) => string)(...args);
   }
   return message;
 }

@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
         name: authResult.branchOwner?.primaryBranchId ? undefined : "Your Branch", // Don't expose branch name if not needed
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     // If it's a NextResponse (from requireRole), re-throw it
     if (error instanceof Response) {
       throw error;

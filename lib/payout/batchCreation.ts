@@ -70,7 +70,7 @@ export async function createPayoutBatch(
         isEligible: eligibility.isEligible,
         eligibleAmountCents: eligibility.eligibleAmountCents,
       });
-    } catch (error: any) {
+    } catch (error) {
       eligibilityResults.set(cleaner.id, {
         isEligible: false,
         eligibleAmountCents: 0,
@@ -140,7 +140,7 @@ export async function createPayoutBatch(
         orderBy: { createdAt: "asc" },
       });
 
-      let entriesToLock: typeof eligibleEntries = [];
+      const entriesToLock: typeof eligibleEntries = [];
       let runningTotal = 0;
 
       for (const entry of eligibleEntries) {

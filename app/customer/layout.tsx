@@ -6,7 +6,7 @@ import { verifyCustomerSessionToken, COOKIE_NAME } from '../../lib/customerSessi
 import { prisma } from '../../lib/prisma';
 import {
   isCustomerPortalEmailBlocked,
-  customerPortalBlockedMessage,
+
 } from '@/lib/customer/portalAccess';
 
 /**
@@ -44,7 +44,7 @@ export default async function CustomerPortalLayout({
     customer = await prisma.customer.findUnique({
       where: { id: session.customerId },
     });
-  } catch (error: any) {
+  } catch (error) {
     // Handle database connection errors
     console.error('Database error in customer layout:', error);
     

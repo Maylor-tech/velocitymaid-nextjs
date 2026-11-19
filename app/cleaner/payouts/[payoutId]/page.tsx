@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, CheckCircle, XCircle, Send, AlertCircle, Download } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 interface PayoutReceipt {
@@ -15,7 +15,7 @@ interface PayoutReceipt {
   platformFee: number;
   currency: string;
   status: string;
-  paymentMethodSnapshot: any;
+  paymentMethodSnapshot: LooseAny;
   createdAt: string;
   paidAt: string | null;
   executedAt: string | null;
@@ -36,7 +36,7 @@ interface PayoutReceipt {
 
 export default function CleanerPayoutReceiptPage() {
   const params = useParams();
-  const router = useRouter();
+  const _router = useRouter();
   const payoutId = params.payoutId as string;
 
   const [payout, setPayout] = useState<PayoutReceipt | null>(null);
@@ -61,7 +61,7 @@ export default function CleanerPayoutReceiptPage() {
       }
 
       setPayout(data.payout);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch payout:", err);
       setError(err.message || "Failed to load payout receipt");
     } finally {
@@ -99,7 +99,7 @@ export default function CleanerPayoutReceiptPage() {
     return colors[status] || "bg-gray-100 text-vm-text";
   };
 
-  const renderPaymentMethod = (snapshot: any) => {
+  const renderPaymentMethod = (snapshot: LooseAny) => {
     if (!snapshot) return <span className="text-vm-muted">—</span>;
 
     if (snapshot.methodType === "BANK") {

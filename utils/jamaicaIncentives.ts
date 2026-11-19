@@ -62,7 +62,7 @@ export async function calculateAttendanceBonus(
   const jobs = await prisma.job.findMany({
     where: {
       assignedCleanerId: cleanerId,
-      status: 'completed',
+      status: 'COMPLETED',
       completedAt: {
         gte: periodStart,
         lte: periodEnd,

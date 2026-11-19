@@ -20,6 +20,8 @@ for (const key of [
 process.env.DATABASE_URL = localUrl;
 process.env.DIRECT_URL = localUrl;
 
+export {};
+
 async function main() {
   const { prisma } = await import('../lib/prisma');
   const { recordInvoicePayment } = await import('../lib/invoices/invoiceService');

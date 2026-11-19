@@ -65,7 +65,7 @@ export function JobPhotoReview({ jobId }: { jobId: string }) {
       if (body.action === "override-finish") setMessage(data.message || "Submitted for QC.");
       if (body.action === "retake") setMessage("Retake requested. The slot is open again.");
       await load();
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed");
     } finally {
       setBusy(false);

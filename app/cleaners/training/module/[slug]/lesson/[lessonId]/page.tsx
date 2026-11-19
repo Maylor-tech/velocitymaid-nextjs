@@ -71,7 +71,7 @@ export default function LessonPage() {
           setError(result.error || 'Failed to load lesson');
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
@@ -89,7 +89,7 @@ export default function LessonPage() {
   const renderMarkdown = (content: string) => {
     return content
       .split('\n')
-      .map((line, index) => {
+      .map((line, _index) => {
         if (line.startsWith('# ')) {
           return `<h1 class="text-3xl font-bold text-vm-text mb-4 mt-6 first:mt-0">${line.substring(2)}</h1>`;
         }

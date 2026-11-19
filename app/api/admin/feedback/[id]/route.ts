@@ -115,7 +115,7 @@ export async function GET(
         dispositionOptions: DISPOSITION_CATEGORIES,
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to load feedback';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
@@ -207,7 +207,7 @@ export async function PATCH(
           : 500;
       return NextResponse.json({ success: false, error: message }, { status });
     }
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to update feedback';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

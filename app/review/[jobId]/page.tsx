@@ -55,7 +55,7 @@ export default function ReviewPage() {
       } else {
         setError(data.error || 'Failed to load job details');
       }
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load job details');
     } finally {
       setLoading(false);
@@ -97,7 +97,7 @@ export default function ReviewPage() {
       } else {
         setError(data.error || 'Failed to submit review');
       }
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit review');
     } finally {
       setSubmitting(false);

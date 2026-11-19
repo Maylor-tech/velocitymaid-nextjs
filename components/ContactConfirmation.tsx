@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ContactForm from "./ContactForm";
+
 
 export default function ContactConfirmation() {
   const [submitted, setSubmitted] = useState(false);
@@ -36,7 +36,7 @@ export default function ContactConfirmation() {
       </p>
 
       <p className="mt-2 text-sm text-vm-muted">
-        You'll hear back shortly if there's a fit.
+        You&apos;ll hear back shortly if there&apos;s a fit.
       </p>
     </div>
   );

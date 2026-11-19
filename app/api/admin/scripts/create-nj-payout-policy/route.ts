@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CREATE_PAYOUT_POLICY_API] Error:", error);
     return NextResponse.json(
       {

@@ -378,7 +378,7 @@ export async function POST(request: NextRequest) {
         reasoning: scoringResult.reasoning,
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Create lead error:', error);
     const message =
       error instanceof Error ? error.message : 'Failed to create lead';

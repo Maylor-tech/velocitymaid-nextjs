@@ -3,8 +3,9 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
-import { rethrowIfAuthResponse } from '@/lib/api/routeAuth';
+
 import { getCertificationSummary } from '@/lib/cleaners/trainingProgress';
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 import { logAuditEntry } from '@/lib/audit';
 
@@ -53,6 +54,7 @@ export async function PATCH(
         updatedAt: new Date(),
       },
       create: {
+        id: randomUUID(),
         cleanerId,
         overallStatus,
         updatedAt: new Date(),
@@ -85,7 +87,7 @@ export async function PATCH(
         updatedAt: trainingStatus.updatedAt,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Update training status error:', error);
     return NextResponse.json(
@@ -137,7 +139,7 @@ export async function GET(
         })),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get training status error:', error);
     return NextResponse.json(
@@ -146,4 +148,3 @@ export async function GET(
     );
   }
 }
-

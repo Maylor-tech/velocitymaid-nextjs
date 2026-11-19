@@ -36,7 +36,7 @@ export function ArrivalCheck({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not save arrival");
       onSaved();
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save arrival");
     } finally {
       setSaving(null);

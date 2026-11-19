@@ -637,7 +637,7 @@ export async function GET(request: NextRequest) {
         hasMore: safePage < totalPages,
       },
     });
-  } catch (err: unknown) {
+  } catch (err) {
     const authResponse = rethrowIfAuthResponse(err);
     if (authResponse) return authResponse;
     console.error('Admin monthly jobs API error:', err);

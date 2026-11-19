@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': `inline; filename="velocitymaid-nj-leave-behind-${side}.html"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate leave-behind error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate leave-behind card' },

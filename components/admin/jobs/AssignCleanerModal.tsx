@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { X, Search, User, Star, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Search, User, Star, CheckCircle, AlertCircle } from 'lucide-react';
 import { Cleaner, Job } from './types';
 
 interface AssignCleanerModalProps {
@@ -49,7 +49,7 @@ export default function AssignCleanerModal({
 
         // Phase 4 Part B: Sort by V3 assignment score if available, otherwise use matchScore
         list = list
-          .map((c: any) => ({
+          .map((c: LooseAny) => ({
             ...c,
             matchScore: c.matchScore ?? c.match_score ?? null,
           }))
@@ -71,7 +71,7 @@ export default function AssignCleanerModal({
         }
 
         setCleaners(list);
-      } catch (err: any) {
+      } catch (err) {
         if (err.name === 'AbortError') return;
         console.error(err);
         setError(err.message || 'Failed to load cleaners');

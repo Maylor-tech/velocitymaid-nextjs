@@ -67,7 +67,7 @@ export default function TestimonialsSection({ testimonials = defaultTestimonials
 
               {/* Testimonial Text */}
               <p className="text-vm-text mb-6 leading-relaxed">
-                "{testimonial.text}"
+                &quot;{testimonial.text}&quot;
               </p>
 
               {/* Customer Info */}

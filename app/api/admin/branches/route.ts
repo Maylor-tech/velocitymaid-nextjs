@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
       branches,
       count: branches.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('BRANCH_FETCH_ERROR:', error);
     return NextResponse.json(
@@ -116,7 +117,6 @@ export async function POST(request: NextRequest) {
       templateBranchId,
       status,
       generateLandingPage,
-      enableBookings,
     } = body;
 
     // Validate required fields
@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
       // Create branch
       const newBranch = await tx.branch.create({
         data: {
+          id: randomUUID(),
           name,
           slug,
           country,
@@ -155,22 +156,26 @@ export async function POST(request: NextRequest) {
           managerId: managerId || null,
           pricingModelId: pricingModelId || null,
           status: status || 'COMING_SOON',
+          updatedAt: new Date(),
         },
       });
 
       // Create branch config
       await tx.branchConfig.create({
         data: {
+          id: randomUUID(),
           branchId: newBranch.id,
           bookingEmail: bookingEmail || null,
           supportEmail: supportEmail || null,
           maxDailyJobs: maxDailyJobs || null,
+          updatedAt: new Date(),
         },
       });
 
       // Create automation config
       await tx.branchAutomationConfig.create({
         data: {
+          id: randomUUID(),
           branchId: newBranch.id,
           bookingWebhookUrl: bookingWebhookUrl || null,
           reminderWebhookUrl: reminderWebhookUrl || null,
@@ -178,6 +183,7 @@ export async function POST(request: NextRequest) {
           whatsappTemplateBooking: whatsappTemplateBooking || null,
           whatsappTemplateReminder: whatsappTemplateReminder || null,
           whatsappTemplateReview: whatsappTemplateReview || null,
+          updatedAt: new Date(),
         },
       });
 
@@ -187,9 +193,11 @@ export async function POST(request: NextRequest) {
           .map((zip: string) => zip.trim())
           .filter((zip: string) => zip.length > 0)
           .map((zip: string) => ({
+            id: randomUUID(),
             branchId: newBranch.id,
             zipCode: zip,
             priority: 1,
+            updatedAt: new Date(),
           }));
 
         if (zipCodeData.length > 0) {
@@ -202,31 +210,28 @@ export async function POST(request: NextRequest) {
 
       // Clone default packages if requested
       if (cloneDefaultPackages) {
-        let sourcePackages: any[] = [];
-        
-        if (templateBranchId) {
-          // Clone from template branch
-          sourcePackages = await tx.branchServicePackage.findMany({
-            where: { branchId: templateBranchId },
-          });
-        } else {
-          // Use default packages
-          sourcePackages = [
+        const defaultPackages = [
             { code: 'STANDARD_CLEAN', name: 'Standard Clean', defaultDurationHours: 2, basePrice: 80, description: null },
             { code: 'DEEP_CLEAN', name: 'Deep Clean', defaultDurationHours: 4, basePrice: 150, description: null },
             { code: 'MOVE_IN_OUT', name: 'Move In/Out Clean', defaultDurationHours: 6, basePrice: 250, description: null },
           ];
-        }
+        const sourcePackages = templateBranchId
+          ? await tx.branchServicePackage.findMany({
+              where: { branchId: templateBranchId },
+            })
+          : defaultPackages;
 
         await tx.branchServicePackage.createMany({
           data: sourcePackages.map((pkg) => ({
+            id: randomUUID(),
             branchId: newBranch.id,
             code: pkg.code,
             name: pkg.name,
             description: pkg.description || null,
             defaultDurationHours: pkg.defaultDurationHours,
-            basePrice: pkg.basePrice,
+            basePrice: Number(pkg.basePrice),
             isActive: true,
+            updatedAt: new Date(),
           })),
         });
       }
@@ -235,11 +240,13 @@ export async function POST(request: NextRequest) {
       if (generateLandingPage) {
         await tx.branchLandingContent.create({
           data: {
+            id: randomUUID(),
             branchId: newBranch.id,
             headline: `Professional Cleaning Services in ${city}, ${state}`,
             subheadline: `Experience the VelocityMaid difference in ${city}. Trusted, reliable, and thorough cleaning services.`,
             seoTitle: `Professional Cleaning Services in ${city}, ${state} | VelocityMaid`,
             seoDescription: `Book professional cleaning services in ${city}, ${state}. Fast, reliable, and affordable. Get your free quote today!`,
+            updatedAt: new Date(),
           },
         });
       }
@@ -262,6 +269,7 @@ export async function POST(request: NextRequest) {
           },
         },
         create: {
+          id: randomUUID(),
           userId: managerId,
           branchId: branch.id,
         },
@@ -274,7 +282,7 @@ export async function POST(request: NextRequest) {
       branch,
       message: 'Branch created successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create branch error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create branch' },

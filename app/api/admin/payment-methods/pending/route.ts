@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ success: true, pending: maskedPending });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : "Failed";
     return NextResponse.json(

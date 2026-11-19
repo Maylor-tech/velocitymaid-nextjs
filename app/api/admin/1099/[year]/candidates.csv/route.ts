@@ -13,8 +13,9 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { PayoutTransferStatus, TaxProfileStatus } from "@prisma/client";
-import { generateCsv, formatCsvDate, formatCsvCurrency } from "@/lib/csv";
+import { PayoutTransferStatus } from "@prisma/client";
+import { TaxProfileStatus, cleanerTaxProfile } from "@/app/api/admin/tax-profiles/delegate";
+import { generateCsv, formatCsvCurrency } from "@/lib/csv";
 import { maskTIN } from "@/lib/tax/tinEncryption";
 
 /**
@@ -97,7 +98,7 @@ export async function GET(
 
     // Fetch tax profiles
     const cleanerIds = Array.from(cleanerTotals.keys());
-    const taxProfiles = await prisma.cleanerTaxProfile.findMany({
+    const taxProfiles = await cleanerTaxProfile().findMany({
       where: {
         cleanerId: { in: cleanerIds },
       },
@@ -207,7 +208,7 @@ export async function GET(
         "Content-Disposition": `attachment; filename="1099-candidates-${year}.csv"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_CSV_EXPORT] Error:", error);
 
@@ -226,4 +227,3 @@ export async function GET(
     );
   }
 }
-

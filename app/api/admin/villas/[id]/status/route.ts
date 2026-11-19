@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/requireRole";
 /**
  * Update Villa Application Status
  * POST /api/admin/villas/[id]/status
@@ -62,7 +63,7 @@ export async function POST(
       success: true,
       application: updated,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update villa application status error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update status' },

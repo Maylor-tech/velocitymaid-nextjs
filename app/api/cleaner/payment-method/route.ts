@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       success: true,
       method: null,
     });
-  } catch (error: any) {
+  } catch (error) {
     // If it's a NextResponse (from requireRole), re-throw it
     if (error instanceof Response) {
       throw error;
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Encrypt sensitive payment data before saving
-      const encryptedDetails: any = { ...details };
+      const encryptedDetails: LooseAny = { ...details };
       
       if (methodType === "BANK") {
         // Encrypt account and routing numbers
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "Payment method updated successfully",
     });
-  } catch (error: any) {
+  } catch (error) {
     // If it's a NextResponse (from requireRole), re-throw it
     if (error instanceof Response) {
       throw error;

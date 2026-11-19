@@ -128,7 +128,7 @@ export async function refundDepositForRejectedJob(
       refundId: refund.id,
       amount: (refund.amount ?? 0) / 100,
     };
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Stripe refund failed';
     console.error('[DEPOSIT REFUND]', jobId, message);
     return { status: 'failed', error: message };

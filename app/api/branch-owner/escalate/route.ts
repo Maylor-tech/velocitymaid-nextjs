@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       },
       message: "Issue escalated successfully. An administrator will review it shortly.",
     });
-  } catch (error: any) {
+  } catch (error) {
     // If it's a NextResponse (from requireRole), re-throw it
     if (error instanceof Response) {
       throw error;

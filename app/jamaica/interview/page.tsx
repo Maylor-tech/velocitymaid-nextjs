@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 declare global {
   interface Window {
-    Calendly: any;
+    Calendly: LooseAny;
   }
 }
 
@@ -80,8 +80,8 @@ export default function InterviewPage() {
             <li>• Interview will be conducted via video call (Zoom/Google Meet)</li>
             <li>• Please have your ID and any relevant documents ready</li>
             <li>• The interview typically takes 15-20 minutes</li>
-            <li>• We'll discuss your experience, availability, and answer any questions</li>
-            <li>• After the interview, we'll review and get back to you within 2-3 business days</li>
+            <li>• We&apos;ll discuss your experience, availability, and answer any questions</li>
+            <li>• After the interview, we&apos;ll review and get back to you within 2-3 business days</li>
           </ul>
         </div>
       </div>

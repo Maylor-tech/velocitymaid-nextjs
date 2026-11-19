@@ -44,7 +44,7 @@ export default function CertificatePage() {
           setError(result.error || 'Failed to load certificate');
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
@@ -68,7 +68,7 @@ export default function CertificatePage() {
       } else {
         throw new Error('Failed to generate PDF');
       }
-    } catch (err: any) {
+    } catch (err) {
       alert(err.message || 'Failed to download certificate');
     } finally {
       setDownloading(false);

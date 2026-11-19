@@ -109,7 +109,7 @@ export async function POST(
       refund,
       warning: refundWarning,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     if (isDispatchError(error)) {
       return NextResponse.json(

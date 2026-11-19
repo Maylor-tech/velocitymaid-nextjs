@@ -71,7 +71,7 @@ export async function GET(
         verificationUrl,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get certificate error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch certificate' },

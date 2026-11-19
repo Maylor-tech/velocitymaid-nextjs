@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/requireRole";
 /**
  * Reset Training API
  * POST /api/admin/training/[cleanerId]/reset
@@ -36,7 +37,7 @@ export async function POST(
       success: true,
       message: 'Training progress reset successfully',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Reset training error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to reset training' },

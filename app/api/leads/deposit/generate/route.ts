@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       depositAmount,
       message: 'Deposit URL generated',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate deposit URL error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate deposit URL' },

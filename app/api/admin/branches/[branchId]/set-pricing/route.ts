@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from "@/lib/auth/requireRole";
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -57,6 +58,7 @@ export async function POST(
             },
           },
           create: {
+            id: randomUUID(),
             branchId: branch.id,
             code: pkg.code,
             name: pkg.name,
@@ -75,6 +77,7 @@ export async function POST(
               quoteRequiredForLargeVillas: pricing.quoteRequiredForLargeVillas,
             },
             isActive: true,
+            updatedAt: new Date(),
           },
           update: {
             name: pkg.name,
@@ -95,7 +98,7 @@ export async function POST(
           },
         });
         updatedPackages.push(pkg.code);
-      } catch (err: any) {
+      } catch (err) {
         console.error(`Error updating package ${pkg.code}:`, err);
       }
     }
@@ -105,7 +108,7 @@ export async function POST(
       updatedPackages,
       message: `Updated ${updatedPackages.length} service packages with multi-currency pricing`,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Set pricing error:', error);
     return NextResponse.json(

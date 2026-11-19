@@ -26,7 +26,7 @@ export async function POST(
     });
 
     return NextResponse.json({ success: true, updated });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : "Failed";
     return NextResponse.json(

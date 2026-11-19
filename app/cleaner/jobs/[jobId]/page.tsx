@@ -165,7 +165,7 @@ export default function CleanerJobDetailPage() {
             : "ASSIGNED"
       );
       setOffer(data.offer ?? null);
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to fetch job:", err);
       setError(err instanceof Error ? err.message : "Failed to load job");
     } finally {
@@ -188,7 +188,7 @@ export default function CleanerJobDetailPage() {
       }
       await fetchJob();
       setFeedback(data.message || "Offer accepted. This job is now assigned to you.");
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to accept offer");
     } finally {
       setProcessing(false);
@@ -212,7 +212,7 @@ export default function CleanerJobDetailPage() {
       }
       setFeedback("Offer declined. Ops can send another offer if needed.");
       setTimeout(() => router.push("/cleaner/jobs"), 1600);
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to decline offer");
     } finally {
       setProcessing(false);
@@ -235,7 +235,7 @@ export default function CleanerJobDetailPage() {
 
       await fetchJob();
       setFeedback("You're on the way.");
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to accept job:", err);
       alert(err instanceof Error ? err.message : "Failed to accept job");
     } finally {
@@ -259,7 +259,7 @@ export default function CleanerJobDetailPage() {
 
       await fetchJob();
       setFeedback("Job started. Service is in progress.");
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to start job:", err);
       alert(err instanceof Error ? err.message : "Failed to start job");
     } finally {
@@ -316,7 +316,7 @@ export default function CleanerJobDetailPage() {
         data.message ||
           "Submitted for QC. Admin still reviews completion before invoicing."
       );
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to complete job:", err);
       alert(err instanceof Error ? err.message : "Failed to complete job");
     } finally {
@@ -347,7 +347,7 @@ export default function CleanerJobDetailPage() {
 
       router.push("/cleaner/jobs");
       alert("Job declined. Ops can offer it to another cleaner.");
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to decline job:", err);
       alert(err instanceof Error ? err.message : "Failed to decline job");
     } finally {

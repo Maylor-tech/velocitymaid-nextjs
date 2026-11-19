@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
 
     // Send WhatsApp notification (non-blocking)
     try {
-      const cleaner = payout.cleaner;
       const paymentMethod = await getCleanerPaymentMethod(payout.cleanerId);
 
       const whatsappNumber = paymentMethod?.whatsappNumber || null;
@@ -49,7 +48,7 @@ export async function POST(request: NextRequest) {
       success: true,
       payout,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Approve payout error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to approve payout' },

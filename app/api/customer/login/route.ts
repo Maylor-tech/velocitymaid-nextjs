@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       if (bookings.length > 0) {
         // Create customer from booking data
         const firstBooking = bookings[0];
-        const nameParts = firstBooking.customerName.split(' ');
+        const _nameParts = firstBooking.customerName.split(' ');
         
         customer = await findOrCreateCustomerFromEmail(normalizedEmail);
         
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         phone: customer.phone,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Customer login error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to login' },

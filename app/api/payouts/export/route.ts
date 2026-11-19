@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/requireRole";
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': `attachment; filename="payouts-${periodStart || 'all'}-${periodEnd || 'all'}.csv"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Export payouts error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to export payouts' },

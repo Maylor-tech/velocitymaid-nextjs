@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       complaintId: complaint.id,
       complaint,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create complaint error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create complaint' },

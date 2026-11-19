@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
         status: referralEvent.status,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Process referral error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to process referral' },

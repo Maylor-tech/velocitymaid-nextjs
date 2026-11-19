@@ -124,9 +124,9 @@ export async function GET(request: NextRequest) {
 
     // Build year data
     const years = archives.map((archive) => {
-      const summary = archive.summaryJson as any;
-      const eligibleCleaners = summary?.eligibleCleaners || 0;
-      const verifiedW9 = summary?.verifiedW9 || 0;
+      const summary = archive.summaryJson as Record<string, unknown>;
+      const eligibleCleaners = typeof summary?.eligibleCleaners === "number" ? summary.eligibleCleaners : 0;
+      const verifiedW9 = typeof summary?.verifiedW9 === "number" ? summary.verifiedW9 : 0;
       const verifiedW9Pct =
         eligibleCleaners > 0
           ? Math.round((verifiedW9 / eligibleCleaners) * 100)
@@ -141,11 +141,11 @@ export async function GET(request: NextRequest) {
         addressCompletePct:
           eligibleCleaners > 0
             ? Math.round(
-                ((summary?.addressComplete || 0) / eligibleCleaners) * 100
+                (((typeof summary?.addressComplete === "number" ? summary.addressComplete : 0) / eligibleCleaners) * 100)
               )
             : 0,
         archiveDate: archive.archivedAt.toISOString().split("T")[0],
-        blockers: (summary?.topBlockers || []).map((b: any) => ({
+        blockers: ((summary?.topBlockers as Array<{ type: string; count: number }> | undefined) || []).map((b) => ({
           type: b.type,
           count: b.count,
         })),
@@ -532,7 +532,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="velocitymaid-tax-compliance-summary-${yearRange}.html"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_1099_BOARD_SUMMARY] Error:", error);
 

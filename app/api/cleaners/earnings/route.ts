@@ -14,7 +14,7 @@ import { prisma } from '@/lib/prisma';
 import { calculateCleanerEarnings } from '@/app/services/payouts/jamaicaPayoutService';
 import { calculateTotalJamaicaBonuses } from '@/utils/jamaicaIncentives';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const cleanerId = cookieStore.get('cleanerId')?.value;
@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get cleaner earnings error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch earnings' },

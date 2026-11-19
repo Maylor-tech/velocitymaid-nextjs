@@ -95,7 +95,7 @@ async function validatePayoutEngine() {
       return { success: false, results };
     }
 
-    const policyVersion = await prisma.payoutPolicyVersion.findUnique({
+    const policyVersion = await (prisma as LooseAny).payoutPolicyVersion.findUnique({
       where: { id: policyVersionId },
       select: {
         id: true,
@@ -191,7 +191,7 @@ async function validatePayoutEngine() {
 
     // Step 5: Verify shadow result
     console.log("\nStep 5: Verifying shadow result...");
-    const shadowResultRecord = await prisma.payoutPolicyShadowResult.findFirst({
+    const shadowResultRecord = await (prisma as LooseAny).payoutPolicyShadowResult.findFirst({
       where: {
         jobId: completedJob.id,
         policyVersionId: policyVersionId,
@@ -273,7 +273,7 @@ async function validatePayoutEngine() {
     console.log("╚════════════════════════════════════════════════════════╝\n");
 
     return { success: true, results };
-  } catch (error: any) {
+  } catch (error) {
     console.error("\n❌ Validation error:", error);
     results.push({
       step: "Validation Error",

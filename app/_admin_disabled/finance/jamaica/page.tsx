@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Users, Calendar, BarChart3 } from 'lucide-react';
+import { DollarSign, TrendingUp, Calendar } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyConverter';
 
 interface RevenueData {
@@ -63,7 +63,7 @@ export default function JamaicaRevenueDashboard() {
       } else {
         setError(result.error || 'Failed to fetch revenue data');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching revenue:', err);
       setError(err.message || 'Failed to load revenue data');
     } finally {

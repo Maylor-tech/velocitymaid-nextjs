@@ -4,7 +4,7 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, CheckCircle2, XCircle, AlertCircle, User, Mail, MapPin } from "lucide-react";
@@ -32,6 +32,17 @@ interface Cleaner {
 
 export default function BranchOwnerCleanersPage() {
   // Block in production
+  
+  const [cleaners, setCleaners] = useState<Cleaner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    fetchCleaners();
+  }, []);
+
   if (process.env.NODE_ENV === 'production') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -42,15 +53,6 @@ export default function BranchOwnerCleanersPage() {
       </div>
     );
   }
-  
-  const [cleaners, setCleaners] = useState<Cleaner[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchCleaners();
-  }, []);
 
   const fetchCleaners = async () => {
     try {
@@ -64,7 +66,7 @@ export default function BranchOwnerCleanersPage() {
       } else {
         throw new Error(data.error || "Failed to load cleaners");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching cleaners:", err);
       setError(err.message || "Failed to load cleaners");
     } finally {
@@ -103,7 +105,7 @@ export default function BranchOwnerCleanersPage() {
       } else {
         throw new Error(data.error || "Failed to submit request");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error requesting action:", err);
       alert(err.message || "Failed to submit request");
     } finally {

@@ -34,7 +34,7 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
     }
     return NextResponse.json({ success: true, invoice: serializeInvoice(invoice) });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     return NextResponse.json({ success: false, error: 'Failed to fetch invoice' }, { status: 500 });
   }
@@ -167,7 +167,7 @@ export async function PATCH(
     await refreshInvoiceStatus(params.id);
     const refreshed = await loadInvoice(params.id);
     return NextResponse.json({ success: true, invoice: serializeInvoice(refreshed!) });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     return NextResponse.json({ success: false, error: 'Failed to update invoice' }, { status: 500 });
   }

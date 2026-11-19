@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/requireRole";
 /**
  * Get Cleaner Training Detail API
  * GET /api/admin/training/[cleanerId]
@@ -21,18 +22,18 @@ export async function GET(
     const cleaner = await prisma.user.findUnique({
       where: { id: cleanerId, role: 'CLEANER' },
       include: {
-        primaryBranch: {
+        Branch_User_primaryBranchIdToBranch: {
           select: {
             name: true,
             country: true,
           },
         },
-        trainingStatus: true,
-        lessonProgresses: {
+        TrainingStatus: true,
+        LessonProgress: {
           include: {
-            lesson: {
+            TrainingLesson: {
               include: {
-                module: {
+                TrainingModule: {
                   select: {
                     title: true,
                     slug: true,
@@ -54,9 +55,9 @@ export async function GET(
 
     // Get all lessons
     const allLessons = await prisma.trainingLesson.findMany({
-      where: { module: { isActive: true } },
+      where: { TrainingModule: { isActive: true } },
       include: {
-        module: {
+        TrainingModule: {
           select: {
             title: true,
             slug: true,
@@ -64,26 +65,26 @@ export async function GET(
         },
       },
       orderBy: [
-        { module: { order: 'asc' } },
+        { TrainingModule: { order: 'asc' } },
         { order: 'asc' },
       ],
     });
 
     // Map lessons with progress
     const lessonsWithProgress = allLessons.map((lesson) => {
-      const progress = cleaner.lessonProgresses.find((p) => p.lessonId === lesson.id);
+      const progress = cleaner.LessonProgress.find((p) => p.lessonId === lesson.id);
       return {
         id: lesson.id,
         title: lesson.title,
         order: lesson.order,
         status: (progress?.status || 'NOT_STARTED') as 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED',
         score: progress?.score || null,
-        moduleTitle: lesson.module.title,
-        moduleSlug: lesson.module.slug,
+        moduleTitle: lesson.TrainingModule.title,
+        moduleSlug: lesson.TrainingModule.slug,
       };
     });
 
-    const completedLessons = cleaner.lessonProgresses.filter((p) => p.status === 'COMPLETED').length;
+    const completedLessons = cleaner.LessonProgress.filter((p) => p.status === 'COMPLETED').length;
     const totalLessons = allLessons.length;
 
     return NextResponse.json({
@@ -92,14 +93,14 @@ export async function GET(
         cleanerId: cleaner.id,
         cleanerName: cleaner.name || 'Unknown',
         cleanerEmail: cleaner.email,
-        branchName: cleaner.primaryBranch?.name || 'Unknown',
-        overallStatus: cleaner.trainingStatus?.overallStatus || 'NOT_STARTED',
+        branchName: cleaner.Branch_User_primaryBranchIdToBranch?.name || 'Unknown',
+        overallStatus: cleaner.TrainingStatus?.overallStatus || 'NOT_STARTED',
         completedLessons,
         totalLessons,
         lessons: lessonsWithProgress,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get training detail error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch training details' },

@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 
     await setCleanerSessionCookie(cleanerId);
     return NextResponse.json({ ok: true });
-  } catch (err: unknown) {
+  } catch (err) {
     console.error('[CLEANER_LOGIN] Error:', err);
     const message =
       err instanceof Error && err.message.includes('connect')
@@ -114,7 +114,7 @@ export async function DELETE() {
     const cookieStore = await cookies();
     cookieStore.delete('cleanerId');
     return NextResponse.json({ success: true, message: 'Logged out' });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Logout failed';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

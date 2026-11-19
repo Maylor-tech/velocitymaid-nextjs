@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
       jobs: eligibleJobs,
       count: eligibleJobs.length,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof Response) return error;
     console.error('Get eligible jobs error:', error);
     return NextResponse.json(

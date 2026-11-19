@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         name: admin.name,
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[CREATE_ADMIN] Error:", error);
     return NextResponse.json(
       {

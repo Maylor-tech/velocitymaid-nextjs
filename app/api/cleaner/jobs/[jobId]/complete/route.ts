@@ -107,7 +107,7 @@ export async function PATCH(
       message:
         'Submitted for QC. Admin reviews photos and checklist before invoicing or notifying the customer.',
     });
-  } catch (err: unknown) {
+  } catch (err) {
     const authResp = rethrowIfAuthResponse(err);
     if (authResp) return authResp;
     console.error('[CLEANER_COMPLETE] Error:', err);

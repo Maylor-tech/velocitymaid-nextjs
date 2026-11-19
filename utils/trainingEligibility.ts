@@ -19,14 +19,14 @@ export async function isCleanerTrainingEligible(cleanerId: string): Promise<{
     const cleaner = await prisma.user.findUnique({
       where: { id: cleanerId },
       include: {
-        primaryBranch: {
+        Branch_User_primaryBranchIdToBranch: {
           select: {
             id: true,
             country: true,
             slug: true,
           },
         },
-        trainingStatus: true,
+        TrainingStatus: true,
       },
     });
 
@@ -39,9 +39,9 @@ export async function isCleanerTrainingEligible(cleanerId: string): Promise<{
 
     // Check if cleaner is in Jamaica branch
     const isJamaicaBranch =
-      cleaner.primaryBranch?.country === 'Jamaica' ||
-      cleaner.primaryBranch?.country === 'JM' ||
-      cleaner.primaryBranch?.slug === 'port-antonio';
+      cleaner.Branch_User_primaryBranchIdToBranch?.country === 'Jamaica' ||
+      cleaner.Branch_User_primaryBranchIdToBranch?.country === 'JM' ||
+      cleaner.Branch_User_primaryBranchIdToBranch?.slug === 'port-antonio';
 
     // If not Jamaica branch, training is not required
     if (!isJamaicaBranch) {
@@ -52,7 +52,7 @@ export async function isCleanerTrainingEligible(cleanerId: string): Promise<{
     }
 
     // For Jamaica branch, check training status
-    const trainingStatus = cleaner.trainingStatus;
+    const trainingStatus = cleaner.TrainingStatus;
 
     if (!trainingStatus) {
       return {
@@ -74,7 +74,7 @@ export async function isCleanerTrainingEligible(cleanerId: string): Promise<{
       eligible: true,
       trainingStatus: 'PASSED',
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error checking training eligibility:', error);
     // Fail open for U.S. branches, fail closed for Jamaica
     return {
@@ -136,7 +136,7 @@ export async function isCleanerEligibleForPayout(cleanerId: string, branchId: st
     return {
       eligible: true,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error checking payout eligibility:', error);
     return {
       eligible: false,

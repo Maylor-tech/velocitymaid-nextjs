@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, FileText, CreditCard, Shield, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
-import CleanerHeader from '../components/CleanerHeader';
+import { Upload, FileText, Shield, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+
 
 interface OnboardingStep {
   id: string;
@@ -116,7 +116,7 @@ export default function CleanerOnboardingPage() {
       } else {
         setError(data.error || 'Failed to upload ID');
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'Failed to upload ID');
     } finally {
       setLoading(false);
@@ -154,7 +154,7 @@ export default function CleanerOnboardingPage() {
       } else {
         setError(data.error || 'Background check failed');
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'Background check failed');
     } finally {
       setLoading(false);
@@ -181,7 +181,7 @@ export default function CleanerOnboardingPage() {
       } else {
         setError(data.error || 'Failed to complete onboarding');
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'Failed to complete onboarding');
     } finally {
       setLoading(false);
@@ -289,10 +289,10 @@ export default function CleanerOnboardingPage() {
               </label>
               <select
                 value={formData.idType}
-                onChange={(e) => setFormData({ ...formData, idType: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, idType: e.target.value as LooseAny })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
               >
-                <option value="drivers_license">Driver's License</option>
+                <option value="drivers_license">Driver&apos;s License</option>
                 <option value="state_id">State ID</option>
                 <option value="passport">Passport</option>
               </select>
@@ -483,7 +483,7 @@ export default function CleanerOnboardingPage() {
                 </label>
                 <select
                   value={formData.accountType}
-                  onChange={(e) => setFormData({ ...formData, accountType: e.target.value as any })}
+                  onChange={(e) => setFormData({ ...formData, accountType: e.target.value as LooseAny })}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-vm-cyan focus:border-transparent outline-none"
                 >

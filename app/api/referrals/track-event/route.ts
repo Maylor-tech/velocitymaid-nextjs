@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         status: referralEvent.status,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Track referral event error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to track referral event' },

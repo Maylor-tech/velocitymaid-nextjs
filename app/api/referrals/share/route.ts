@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
         url: shareUrl,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Share referral link error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to get share link' },

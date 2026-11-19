@@ -98,7 +98,7 @@ export default function AdminPayoutBatchDetailPage() {
       } else {
         throw new Error(data.error || "Failed to fetch batch details");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching batch details:", err);
       setError(err.message || "Failed to load batch details");
     } finally {
@@ -123,7 +123,7 @@ export default function AdminPayoutBatchDetailPage() {
       } else {
         throw new Error(data.error || "Failed to fetch transfers");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching transfers:", err);
     }
   };
@@ -167,7 +167,7 @@ export default function AdminPayoutBatchDetailPage() {
       } else {
         throw new Error(data.error || "Failed to approve batch");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error approving batch:", err);
       alert(err.message || "Failed to approve batch");
     } finally {
@@ -196,7 +196,7 @@ export default function AdminPayoutBatchDetailPage() {
       } else {
         throw new Error(data.error || "Failed to process batch");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error processing batch:", err);
       alert(err.message || "Failed to process batch");
     } finally {
@@ -225,7 +225,7 @@ export default function AdminPayoutBatchDetailPage() {
       } else {
         throw new Error(data.error || "Failed to retry batch");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error retrying batch:", err);
       alert(err.message || "Failed to retry batch");
     } finally {
@@ -255,7 +255,7 @@ export default function AdminPayoutBatchDetailPage() {
       } else {
         throw new Error(data.error || "Failed to cancel batch");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error canceling batch:", err);
       alert(err.message || "Failed to cancel batch");
     } finally {

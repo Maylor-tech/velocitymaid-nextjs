@@ -258,7 +258,7 @@ export async function GET(request: NextRequest) {
       propertyStatus,
       assignedTeam,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to load home';
     console.error('[customer home]', message);

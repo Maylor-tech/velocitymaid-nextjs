@@ -44,6 +44,8 @@ export interface Job {
   status: string;
   assignedCleanerId?: string | null;
   branchId?: string; // For API calls
+  preferredDate?: string | null;
+  preferredTime?: string | null;
 }
 
 export interface CleanerProfileDetails {

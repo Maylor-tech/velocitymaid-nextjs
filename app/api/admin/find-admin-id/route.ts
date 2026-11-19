@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
           ? `Found ${admins.length} active admin user(s)`
           : "No active admin users found. Run scripts/setup-admin.ts locally.",
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[FIND_ADMIN_ID] Error:", error);
     return NextResponse.json(
       {

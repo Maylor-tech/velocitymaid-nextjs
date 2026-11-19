@@ -70,7 +70,7 @@ export async function GET(
       report: review.job.CompletionReport,
       invoicePublicToken: review.job.Invoice?.publicToken ?? null,
     });
-  } catch (err: unknown) {
+  } catch (err) {
     const auth = rethrowIfAuthResponse(err);
     if (auth) return auth;
     const message = err instanceof Error ? err.message : "Failed to load photo review";
@@ -214,7 +214,7 @@ export async function POST(
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
-  } catch (err: unknown) {
+  } catch (err) {
     const auth = rethrowIfAuthResponse(err);
     if (auth) return auth;
     const message = err instanceof Error ? err.message : "Photo review failed";

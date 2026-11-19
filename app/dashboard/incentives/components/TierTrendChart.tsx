@@ -1,7 +1,7 @@
 'use client';
 
 import { getTierIndex } from '@/utils/incentiveEngine';
-import type { IncentiveTier } from '@/utils/incentiveData';
+
 import type { CleanerIncentive } from '@/utils/incentiveData';
 
 interface TierTrendChartProps {

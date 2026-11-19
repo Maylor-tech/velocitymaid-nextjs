@@ -12,7 +12,7 @@ import { getComplaintByReviewId } from '@/utils/complaintData';
 // Note: Review and complaint checking will be done via API in production
 
 export default function BookingHistoryPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const [bookings, setBookings] = useState<CustomerBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export default function BookingHistoryPage() {
       } else {
         throw new Error(data.error || 'Failed to fetch bookings');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching booking history:', err);
       setError(err.message || 'Failed to load history');
     } finally {
@@ -43,7 +43,7 @@ export default function BookingHistoryPage() {
   };
 
   // TODO: Check reviews via API
-  const hasReview = (bookingId: string) => {
+  const _hasReview = (_bookingId: string) => {
     // This will be checked via API call in production
     return false;
   };
@@ -54,7 +54,7 @@ export default function BookingHistoryPage() {
     return reviews.length > 0 ? reviews[0] : null;
   };
 
-  const hasComplaint = (bookingId: string) => {
+  const _hasComplaint = (_bookingId: string) => {
     // TODO: Check complaint via API
     return false;
   };
@@ -119,7 +119,7 @@ export default function BookingHistoryPage() {
                             {renderStars(review.rating)}
                           </div>
                           {review.comment && (
-                            <p className="text-sm text-vm-text italic">"{review.comment}"</p>
+                            <p className="text-sm text-vm-text italic">&quot;{review.comment}&quot;</p>
                           )}
                         </div>
                         <Link
@@ -153,7 +153,7 @@ export default function BookingHistoryPage() {
                             </span>
                           ) : (
                             <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
-                              We're reviewing your feedback
+                              We&apos;re reviewing your feedback
                             </span>
                           )}
                         </div>

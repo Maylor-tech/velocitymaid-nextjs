@@ -50,7 +50,7 @@ export default function ComplaintsDashboardPage() {
       } else {
         throw new Error(data.error || 'Failed to fetch complaints');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching complaints:', err);
       setError(err.message || 'Failed to load complaints');
     } finally {
@@ -87,7 +87,7 @@ export default function ComplaintsDashboardPage() {
       } else {
         throw new Error(data.error || 'Failed to update complaint');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating complaint:', err);
       alert(err.message || 'Failed to update complaint');
       throw err;

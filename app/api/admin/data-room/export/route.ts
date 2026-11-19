@@ -19,7 +19,8 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { createWriteStream, mkdirSync, rmSync, writeFileSync, readFileSync } from "fs";
+import { taxProfileAuditLog } from "@/app/api/admin/tax-profiles/delegate";
+import { mkdirSync, rmSync, writeFileSync, readFileSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import archiver from "archiver";
@@ -31,7 +32,7 @@ import {
 /**
  * Generate PDF content (HTML) for a document
  */
-async function generatePDFContent(type: string): Promise<string> {
+function generatePDFContent(type: string): string {
   const preparedDate = new Date().toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
@@ -195,7 +196,7 @@ async function generateTaxYearArchiveJSON(): Promise<string> {
  * Generate sample audit log JSON
  */
 async function generateAuditLogJSON(): Promise<string> {
-  const logs = await prisma.taxProfileAuditLog.findMany({
+  const logs = await taxProfileAuditLog().findMany({
     orderBy: { createdAt: "desc" },
     take: 50,
     select: {
@@ -280,7 +281,7 @@ export async function GET(request: NextRequest) {
           archiveJSON
         );
       }
-    } catch (error) {
+    } catch {
       // If no archives exist, skip
     }
 
@@ -311,7 +312,7 @@ export async function GET(request: NextRequest) {
           JSON.stringify(analyticsData, null, 2)
         );
       }
-    } catch (error) {
+    } catch {
       // Skip if analytics unavailable
     }
 
@@ -324,7 +325,7 @@ export async function GET(request: NextRequest) {
           auditLogJSON
         );
       }
-    } catch (error) {
+    } catch {
       // Skip if no audit logs
     }
 
@@ -346,7 +347,7 @@ export async function GET(request: NextRequest) {
           JSON.stringify(archives, null, 2)
         );
       }
-    } catch (error) {
+    } catch {
       // Skip if no archives
     }
 
@@ -456,7 +457,7 @@ Any change to file contents will invalidate the signature and checksums.
 
       // Add manifest files to file list (they'll be included in ZIP automatically)
       // Note: Manifest files are written to base directory, so they're included when we archive the directory
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof NextResponse) return error;
       console.warn(
         "[DATA_ROOM_EXPORT] Manifest creation failed (continuing without signature):",
@@ -507,7 +508,7 @@ Any change to file contents will invalidate the signature and checksums.
       archive.directory(base, "Compliance_Data_Room");
       archive.finalize();
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_DATA_ROOM_EXPORT] Error:", error);
 
     if (error instanceof Response) {
@@ -525,4 +526,3 @@ Any change to file contents will invalidate the signature and checksums.
     );
   }
 }
-

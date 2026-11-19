@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, customer });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Lookup failed';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

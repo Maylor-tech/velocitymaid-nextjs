@@ -31,7 +31,7 @@ function getStripe(): Stripe {
     throw new Error("STRIPE_SECRET_KEY is not set in environment variables");
   }
   return new Stripe(secretKey, {
-    apiVersion: "2024-06-20",
+    apiVersion: "2024-06-20" as LooseAny,
   });
 }
 
@@ -315,7 +315,7 @@ export async function processApprovedPayoutBatch(
         });
 
         succeeded++;
-      } catch (stripeError: any) {
+      } catch (stripeError) {
         // Step 8: Mark FAILED with failureReason on error
         const errorMessage =
           stripeError.message || "Stripe transfer failed";
@@ -338,7 +338,7 @@ export async function processApprovedPayoutBatch(
 
         failed++;
       }
-    } catch (error: any) {
+    } catch (error) {
       // Handle any other errors
       const errorMessage = error.message || "Unknown error processing transfer";
 

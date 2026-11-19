@@ -52,7 +52,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
         ...STAY_QR_CACHE_HEADERS,
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     if (error instanceof StayQrError) {
       const status =

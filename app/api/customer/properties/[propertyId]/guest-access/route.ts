@@ -64,7 +64,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
       feedbackAfterRevokePolicy:
         'Property revoke blocks /stay and new tip grants. Previously issued GUEST feedback public tokens may still accept submit under existing feedback rules.',
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to load guest access';
     console.error('[customer/properties/:id/guest-access GET]', error);
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       qrReady: ensured.qrReady,
       printedCardWarning: PRINTED_CARD_WARNING,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to update guest access';
     const status =

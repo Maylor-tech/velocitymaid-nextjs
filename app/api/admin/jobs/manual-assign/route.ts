@@ -275,7 +275,7 @@ export async function POST(request: NextRequest) {
       },
       message: 'Cleaner assigned successfully',
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Error manually assigning cleaner:', error);
     return NextResponse.json(

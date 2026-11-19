@@ -114,7 +114,7 @@ export async function POST(
       }),
       message: `Retried ${retriedResults.length} failed transfer(s). ${retriedResults.filter((r) => r.status === "succeeded").length} succeeded, ${retriedResults.filter((r) => r.status === "failed").length} failed.`,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[RETRY_PAYOUT_BATCH] Error:", error);
     return NextResponse.json(
       {

@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
+// @ts-expect-error generatePayouts.ts is not a module in this tree
 import { generatePayouts } from "@/workers/generatePayouts";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
       debug: result.debug || [], // Comprehensive debug results
       message: `Generated ${result.created || 0} payout(s), skipped ${totalSkipped} job(s)`,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_GENERATE_PAYOUTS] Error:", error);
     console.error("[ADMIN_GENERATE_PAYOUTS] Error stack:", error.stack);

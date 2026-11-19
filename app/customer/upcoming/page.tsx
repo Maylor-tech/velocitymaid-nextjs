@@ -31,7 +31,7 @@ export default function UpcomingBookingsPage() {
       } else {
         throw new Error(data.error || 'Failed to fetch bookings');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching upcoming bookings:', err);
       setError(err.message || 'Failed to load bookings');
     } finally {

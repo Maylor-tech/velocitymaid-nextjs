@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         email: email || null,
         metadata: {
-          ...((existingContract.metadata as any) || {}),
+          ...((existingContract.metadata as LooseAny) || {}),
           signature,
         },
       },
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       success: true,
       contract,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Sign contract error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to sign contract' },

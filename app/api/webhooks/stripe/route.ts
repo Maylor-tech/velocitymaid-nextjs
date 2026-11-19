@@ -257,7 +257,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         },
       });
       console.log(`Confirmation sent successfully for session ${session.id}`);
-    } catch (error: unknown) {
+    } catch (error) {
       console.error(`Error updating Stripe metadata for session ${session.id}:`, (error instanceof Error ? error.message : String(error)));
       // Don't fail the webhook if metadata update fails
     }
@@ -321,7 +321,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           }
 
           customerId = customer.id;
-        } catch (customerError: unknown) {
+        } catch (customerError) {
           console.error(
             `Error creating/finding customer for session ${session.id} (non-fatal):`,
             customerError instanceof Error ? customerError.message : String(customerError)
@@ -347,7 +347,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         try {
           const assignmentResult = await autoAssignCleaner(job.id);
           console.log('Auto-assignment result:', assignmentResult);
-        } catch (assignError: unknown) {
+        } catch (assignError) {
           const msg =
             assignError instanceof Error
               ? assignError.message
@@ -356,7 +356,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         }
       }
     }
-  } catch (jobError: unknown) {
+  } catch (jobError) {
     console.error(
       `Error creating/finding job for session ${session.id} (non-fatal):`,
       jobError instanceof Error ? jobError.message : String(jobError)
@@ -414,7 +414,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     } else {
       console.warn('WhatsApp credentials not configured - skipping admin notification');
     }
-  } catch (error: unknown) {
+  } catch (error) {
     // Log error but don't block the webhook
     console.error(`Error in admin notification process for session ${session.id}:`, (error instanceof Error ? error.message : String(error)));
   }
@@ -433,7 +433,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       customerPhone: metadata.phone || null,
     });
     if (sent) console.log(`Invoice receipt sent for session ${session.id}`);
-  } catch (err: unknown) {
+  } catch (err) {
     console.error(
       `Error sending invoice receipt for session ${session.id}:`,
       err instanceof Error ? err.message : String(err)
@@ -495,7 +495,7 @@ async function handleAccountUpdated(account: Stripe.Account) {
       cleanerId: cleaner.id,
       status,
     };
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('[ACCOUNT_UPDATED] Error:', error);
     return {
       success: false,
@@ -594,7 +594,7 @@ export async function POST(request: NextRequest) {
 
             log.push(`SUCCESS: Subscription updated for tenant ${tenantId}`);
           }
-        } catch (error: unknown) {
+        } catch (error) {
           log.push(`ERROR: Failed to update subscription: ${(error instanceof Error ? error.message : String(error))}`);
           console.error('Subscription update error:', error);
         }
@@ -690,7 +690,7 @@ export async function POST(request: NextRequest) {
           });
 
           log.push(`SUCCESS: Subscription updated for ${subscription.id}`);
-        } catch (error: unknown) {
+        } catch (error) {
           log.push(`ERROR: Failed to update subscription: ${(error instanceof Error ? error.message : String(error))}`);
           console.error('Subscription update error:', error);
         }
@@ -718,7 +718,7 @@ export async function POST(request: NextRequest) {
           customerPhone,
         });
         if (sent) log.push('SUCCESS: Invoice receipt WhatsApp sent');
-      } catch (receiptErr: unknown) {
+      } catch (receiptErr) {
         log.push(
           `Invoice receipt skip/error: ${
             receiptErr instanceof Error ? receiptErr.message : String(receiptErr)
@@ -778,7 +778,7 @@ export async function POST(request: NextRequest) {
         });
         if (sent) log.push('SUCCESS: Refund confirmation WhatsApp sent');
         else log.push('SKIP: Refund notice not sent (no phone or already sent)');
-      } catch (refundErr: unknown) {
+      } catch (refundErr) {
         log.push(
           `Refund confirmation error: ${
             refundErr instanceof Error ? refundErr.message : String(refundErr)
@@ -838,7 +838,7 @@ export async function POST(request: NextRequest) {
           if (sent) log.push('SUCCESS: Refund confirmation WhatsApp sent');
           else log.push('SKIP: Refund notice not sent (no phone or already sent)');
         }
-      } catch (refundErr: unknown) {
+      } catch (refundErr) {
         log.push(
           `Refund confirmation error: ${
             refundErr instanceof Error ? refundErr.message : String(refundErr)
@@ -892,7 +892,7 @@ export async function POST(request: NextRequest) {
       log,
     });
 
-  } catch (error: unknown) {
+  } catch (error) {
     const duration = Date.now() - startTime;
     log.push(`ERROR: ${(error instanceof Error ? error.message : String(error))}`);
     log.push(`Failed after ${duration}ms`);

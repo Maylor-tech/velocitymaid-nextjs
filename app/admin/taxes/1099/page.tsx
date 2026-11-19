@@ -21,7 +21,6 @@ import {
   DollarSign,
   Users,
   Target,
-  TrendingUp,
 } from "lucide-react";
 
 interface Candidate {
@@ -59,8 +58,8 @@ export default function Admin1099Page() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [threshold, setThreshold] = useState<number>(600);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [verifiedFilter, setVerifiedFilter] = useState<string>("all");
+  const [statusFilter] = useState<string>("all");
+  const [verifiedFilter] = useState<string>("all");
   const [readinessData, setReadinessData] = useState<{
     overallScore: number;
     eligibleCleanersCount: number;
@@ -82,54 +81,16 @@ export default function Admin1099Page() {
     archivedBy: string | null;
     readinessScore: number;
     status: string;
-    summary: any;
+    summary: Record<string, unknown> | null;
   } | null>(null);
   const [readinessLoading, setReadinessLoading] = useState(false);
   const [blockerFilter, setBlockerFilter] = useState<string | null>(null);
-  const [callList, setCallList] = useState<Array<{
-    cleanerId: string;
-    cleanerName: string | null;
-    cleanerEmail: string;
-    cleanerPhone: string | null;
-    priorityScore: number;
-    issues: string[];
-    w9Status: string | null;
-    addressComplete: boolean;
-    lastReminderSentAt: string | null;
-    reminderCount: number;
-    callScript: {
-      type: string;
-      title: string;
-      script: string;
-      followUps?: string[];
-    };
-    voicemailScript: {
-      type: string;
-      title: string;
-      script: string;
-    };
-  }>>([]);
-  const [callListLoading, setCallListLoading] = useState(false);
-  const [selectedScript, setSelectedScript] = useState<{
-    cleanerName: string | null;
-    callScript: {
-      type: string;
-      title: string;
-      script: string;
-      followUps?: string[];
-    };
-    voicemailScript: {
-      type: string;
-      title: string;
-      script: string;
-    };
-  } | null>(null);
-  const [contactedCleaners, setContactedCleaners] = useState<Set<string>>(new Set());
+  // Visibility gate only. Nothing in this page fills the list (fetchCallList was never defined).
+  const [callList] = useState<unknown[]>([]);
 
   useEffect(() => {
     fetchCandidates();
     fetchReadiness();
-    fetchCallList();
   }, [year, statusFilter, verifiedFilter]);
 
   const fetchCandidates = async () => {
@@ -183,9 +144,9 @@ export default function Admin1099Page() {
 
       setCandidates(filteredCandidates);
       setSummary(data.summary || null);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch 1099 candidates:", err);
-      setError(err.message || "Failed to load 1099 candidates");
+      setError(err instanceof Error ? err.message : "Failed to load 1099 candidates");
       setCandidates([]);
       setSummary(null);
     } finally {
@@ -208,7 +169,7 @@ export default function Admin1099Page() {
         eligibleCleanersCount: data.eligibleCleanersCount,
         blockers: data.blockers || [],
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch readiness:", err);
       // Don't show error for readiness, just log it
     } finally {
@@ -515,7 +476,7 @@ export default function Admin1099Page() {
               <div className="flex items-center gap-3 mb-4">
                 <AlertCircle className="w-6 h-6 text-red-600" />
                 <h2 className="text-lg font-semibold text-red-900">
-                  Today's Focus
+                  Today&apos;s Focus
                 </h2>
               </div>
               <p className="text-sm text-red-800 mb-4">

@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    let { role, name, email, organization, message } = body;
+    const { role, name, email, organization, message } = body;
 
     // Normalize email (lowercase, trim) to prevent duplicates
     email = email?.toLowerCase().trim();
@@ -104,7 +104,7 @@ ${message || "—"}
           console.log(
             `[CONTACT] Email notification sent to ${to} for ${role} contact from ${email}`
           );
-        } catch (emailError: any) {
+        } catch (emailError) {
           console.error("[CONTACT] Failed to send email notification:", emailError);
           // Don't fail the request if email fails - message is already saved
         }
@@ -129,7 +129,7 @@ ${message || "—"}
         console.log(
           `[CONTACT] Auto-reply sent to ${email} for ${role} contact`
         );
-      } catch (autoReplyError: any) {
+      } catch (autoReplyError) {
         console.error("[CONTACT] Failed to send auto-reply:", autoReplyError);
         // Don't fail the request if auto-reply fails - message is already saved
       }
@@ -140,7 +140,7 @@ ${message || "—"}
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err) {
     console.error("[CONTACT] Contact API error:", err);
     console.error("[CONTACT] Error details:", {
       message: err.message,

@@ -32,7 +32,7 @@ export default function IncentivesDashboardPage() {
       } else {
         throw new Error(data.error || 'Failed to fetch incentives');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching incentives:', err);
       setError(err.message || 'Failed to load incentives');
     } finally {

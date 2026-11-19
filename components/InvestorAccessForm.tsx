@@ -48,7 +48,7 @@ export default function InvestorAccessForm({ onSubmitted }: InvestorAccessFormPr
 
       // Success - call callback to show pending notice
       onSubmitted?.();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to submit request:", err);
       setError(err.message || "Failed to submit request. Please try again.");
     } finally {

@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
  * 
  * POST /api/saas/logout
  */
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   try {
     const cookieStore = await cookies();
     // Delete both old and new cookie names for compatibility
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     cookieStore.delete('saas_token');
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error('[SAAS LOGOUT] Error:', error);
     return NextResponse.json(
       { success: false, error: 'Logout failed' },

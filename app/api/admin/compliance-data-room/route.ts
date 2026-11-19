@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       ],
       note: "Download each document individually, or use a browser extension to batch download all links.",
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_COMPLIANCE_DATA_ROOM] Error:", error);
 
     if (error instanceof Response) {

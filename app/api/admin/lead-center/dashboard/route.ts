@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const metrics = await computeDashboardMetrics(prisma);
 
     return NextResponse.json({ success: true, metrics });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to load dashboard';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

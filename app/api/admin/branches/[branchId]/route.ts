@@ -2,7 +2,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from "@/lib/auth/requireRole";
+
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 
 export async function GET(
@@ -16,27 +17,27 @@ export async function GET(
     const branch = await prisma.branch.findUnique({
       where: { slug },
       include: {
-        manager: {
+        User_Branch_managerIdToUser: {
           select: { id: true, name: true, email: true },
         },
-        pricingModel: {
+        PricingModel: {
           select: { id: true, name: true },
         },
-        serviceAreas: {
+        BranchServiceArea: {
           orderBy: { zipCode: 'asc' },
         },
-        servicePackages: {
+        BranchServicePackage: {
           where: { isActive: true },
           orderBy: { name: 'asc' },
         },
-        config: true,
-        automationConfig: true,
-        landingContent: true,
+        BranchConfig: true,
+        BranchAutomationConfig: true,
+        BranchLandingContent: true,
         _count: {
           select: {
-            jobs: true,
-            userBranches: true,
-            customers: true,
+            Job: true,
+            UserBranch: true,
+            Customer: true,
           },
         },
       },
@@ -53,7 +54,7 @@ export async function GET(
       success: true,
       branch,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get branch error:', error);
     return NextResponse.json(
@@ -108,10 +109,12 @@ export async function PATCH(
         await tx.branchConfig.upsert({
           where: { branchId: updatedBranch.id },
           create: {
+            id: randomUUID(),
             branchId: updatedBranch.id,
             bookingEmail: bookingEmail || null,
             supportEmail: supportEmail || null,
             maxDailyJobs: maxDailyJobs ? parseInt(maxDailyJobs) : null,
+            updatedAt: new Date(),
           },
           update: {
             ...(bookingEmail !== undefined && { bookingEmail: bookingEmail || null }),
@@ -133,9 +136,11 @@ export async function PATCH(
           .map((zip: string) => zip.trim())
           .filter((zip: string) => zip.length > 0)
           .map((zip: string) => ({
+            id: randomUUID(),
             branchId: updatedBranch.id,
             zipCode: zip,
             priority: 1,
+            updatedAt: new Date(),
           }));
 
         if (zipCodeData.length > 0) {
@@ -151,11 +156,13 @@ export async function PATCH(
         await tx.branchLandingContent.upsert({
           where: { branchId: updatedBranch.id },
           create: {
+            id: randomUUID(),
             branchId: updatedBranch.id,
             headline: headline || null,
             subheadline: subheadline || null,
             seoTitle: seoTitle || null,
             seoDescription: seoDescription || null,
+            updatedAt: new Date(),
           },
           update: {
             ...(headline !== undefined && { headline: headline || null }),
@@ -173,7 +180,7 @@ export async function PATCH(
       success: true,
       branch,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Update branch error:', error);
     return NextResponse.json(
@@ -182,4 +189,3 @@ export async function PATCH(
     );
   }
 }
-

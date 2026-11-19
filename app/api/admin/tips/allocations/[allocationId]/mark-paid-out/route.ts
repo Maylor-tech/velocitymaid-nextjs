@@ -79,7 +79,7 @@ export async function POST(
       ...result,
       note: 'Settlement recorded only — API did not transfer funds.',
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message =
       error instanceof Error

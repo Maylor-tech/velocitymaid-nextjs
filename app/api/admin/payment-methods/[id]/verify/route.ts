@@ -81,7 +81,7 @@ export async function POST(
         ? "Payment method approved successfully" 
         : "Payment method rejected",
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[ADMIN_PAYMENT_METHODS_VERIFY] Error:", error);
     const message = error instanceof Error ? error.message : "Failed to verify payment method";

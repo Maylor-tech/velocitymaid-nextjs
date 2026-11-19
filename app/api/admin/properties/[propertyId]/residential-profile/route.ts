@@ -36,7 +36,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ success: false, error: "Property not found" }, { status: 404 });
     }
     return NextResponse.json({ success: true, property });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load profile";
     const status = message.includes("Unauthorized") ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });
@@ -97,7 +97,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     });
 
     return NextResponse.json({ success: true, profile });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to save profile";
     const status = message.includes("Unauthorized") ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

@@ -7,12 +7,10 @@
 
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from "crypto";
 import { prisma } from '@/lib/prisma';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { branchId: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
@@ -74,12 +72,14 @@ export async function POST(
           startDate: new Date(startDate),
           endDate: new Date(endDate),
           active: active ?? true,
+          updatedAt: new Date(),
         },
       });
     } else {
       // Create new promo
       promo = await prisma.promo.create({
         data: {
+          id: randomUUID(),
           branchId,
           month,
           year,
@@ -90,6 +90,7 @@ export async function POST(
           startDate: new Date(startDate),
           endDate: new Date(endDate),
           active: active ?? true,
+          updatedAt: new Date(),
         },
       });
     }
@@ -98,7 +99,7 @@ export async function POST(
       success: true,
       promo,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Save promo error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to save promo' },
@@ -134,7 +135,7 @@ export async function GET(
       success: true,
       promos,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get promos error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch promos' },

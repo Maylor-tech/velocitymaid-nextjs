@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const branch = searchParams.get('branch');
 
-    const where: any = {};
+    const where: Prisma.ContractWhereInput = {};
 
     if (type) {
       where.type = type;
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
       contracts,
       count: contracts.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get contracts error:', error);
     return NextResponse.json(

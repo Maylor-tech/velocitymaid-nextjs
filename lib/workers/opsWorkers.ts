@@ -4,6 +4,7 @@
  * Background workers for recalculating metrics, cleaner levels, and data integrity checks
  */
 
+import { randomUUID } from 'crypto';
 import { prisma } from '../prisma';
 import { calculateCleanerLevel, CleanerLevelMetrics } from '../cleaner-level';
 import {
@@ -61,7 +62,7 @@ export async function recalculateBranchMetrics(branchId: string) {
         lte: todayEnd,
       },
       status: {
-        not: 'cancelled',
+        not: 'CANCELLED',
       },
     },
   });
@@ -75,7 +76,7 @@ export async function recalculateBranchMetrics(branchId: string) {
         lte: weekEnd,
       },
       status: {
-        not: 'cancelled',
+        not: 'CANCELLED',
       },
     },
   });
@@ -86,7 +87,7 @@ export async function recalculateBranchMetrics(branchId: string) {
       branchId,
       assignedCleanerId: null,
       status: {
-        in: ['pending', 'assigned'],
+        in: ['RECEIVED', 'ASSIGNED'],
       },
     },
   });
@@ -95,7 +96,7 @@ export async function recalculateBranchMetrics(branchId: string) {
   const completedJobsThisWeek = await prisma.job.findMany({
     where: {
       branchId,
-      status: 'completed',
+      status: 'COMPLETED',
       preferredDate: {
         gte: weekStart,
         lte: weekEnd,
@@ -120,6 +121,8 @@ export async function recalculateBranchMetrics(branchId: string) {
       unassignedJobs,
     },
     create: {
+      id: randomUUID(),
+      updatedAt: new Date(),
       branchId,
       jobsToday,
       jobsThisWeek,
@@ -173,7 +176,7 @@ export async function recalculateCleanerLevels(branchId: string) {
         : 0;
 
       const totalJobs = allJobs.length;
-      const completedJobs = allJobs.filter((j) => j.status === 'completed');
+      const completedJobs = allJobs.filter((j) => j.status === 'COMPLETED');
       const completedCount = completedJobs.length;
       const completionRate = totalJobs > 0 ? (completedCount / totalJobs) * 100 : 0;
 
@@ -189,7 +192,7 @@ export async function recalculateCleanerLevels(branchId: string) {
       // Calculate weekly jobs for productivity
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
       const weeklyJobs = allJobs.filter(
-        (j) => j.createdAt >= weekAgo && j.status === 'completed'
+        (j) => j.createdAt >= weekAgo && j.status === 'COMPLETED'
       ).length;
       const productivityScore = Math.min(100, (weeklyJobs / 8) * 100);
 
@@ -219,7 +222,7 @@ export async function recalculateCleanerLevels(branchId: string) {
         level: level.level,
         label: level.label,
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error(`Error calculating level for cleaner ${cleaner.id}:`, err);
       results.push({
         cleanerId: cleaner.id,
@@ -324,7 +327,7 @@ export async function recalculateFinancialMetrics(branchId: string) {
       totalCleanerEarnings: branchTotals.totalCleanerEarnings,
       totalCosts: branchTotals.totalStripeFees + branchTotals.totalSuppliesCost + branchTotals.totalTravelCost + branchTotals.totalOverheadCost,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error recalculating financial metrics:', error);
     return {
       totalGrossRevenue: 0,
@@ -375,6 +378,7 @@ export async function runFullOpsJob(branchId: string) {
       if (!hasCert) {
         await prisma.trainingCertificate.create({
           data: {
+            id: randomUUID(),
             certificateId: `CERT-${Date.now()}-${status.cleanerId.slice(0, 8)}`,
             cleanerId: status.cleanerId,
             trainingStatusId: status.id,
@@ -396,7 +400,7 @@ export async function runFullOpsJob(branchId: string) {
       integrity,
       durationMs,
     };
-  } catch (error: any) {
+  } catch (error) {
     const durationMs = Date.now() - startTime;
     throw {
       success: false,

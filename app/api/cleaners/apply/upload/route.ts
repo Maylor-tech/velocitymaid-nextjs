@@ -17,7 +17,7 @@ export const runtime = 'nodejs'; // Required for file system operations (if usin
 
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   // Return error - file uploads not supported on Vercel serverless
   return NextResponse.json(
     { 
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       success: false,
       error: 'File uploads not yet implemented with cloud storage',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('File upload error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to upload file' },

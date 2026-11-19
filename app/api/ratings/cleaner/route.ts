@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       success: true,
       rating: ratingRecord,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating/updating cleaner rating:', error);
     return NextResponse.json(
       {

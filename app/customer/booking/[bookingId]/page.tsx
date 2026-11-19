@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { Calendar, Clock, MapPin, DollarSign, User, MessageSquare, Star, X } from 'lucide-react';
 import type { CustomerBooking } from '@/utils/customerBookings';
 import { getReviewsByJobId, type Review } from '@/utils/reviewData';
-import { getComplaintByReviewId } from '@/utils/complaintData';
+
 // Note: Review checking will be done via API in production
 
 export default function BookingDetailsPage() {
@@ -57,7 +57,7 @@ export default function BookingDetailsPage() {
       } else {
         throw new Error(data.error || 'Failed to fetch booking');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching booking details:', err);
       setError(err.message || 'Failed to load booking');
     } finally {
@@ -259,7 +259,7 @@ export default function BookingDetailsPage() {
                 <p className="text-sm text-vm-muted mb-1">Total Price</p>
                 <p className="font-medium text-vm-text">
                   {/* Check if booking has currency field (Jamaica bookings) */}
-                  {(booking as any).currency === 'JMD' 
+                  {(booking as LooseAny).currency === 'JMD' 
                     ? `JMD $${booking.totalPrice.toLocaleString()}`
                     : `$${booking.totalPrice.toFixed(2)}`
                   }
@@ -319,7 +319,7 @@ export default function BookingDetailsPage() {
                   <span className="text-vm-muted">({review.rating}/5)</span>
                 </div>
                 {review.comment && (
-                  <p className="text-vm-text italic mb-2">"{review.comment}"</p>
+                  <p className="text-vm-text italic mb-2">&quot;{review.comment}&quot;</p>
                 )}
                 <Link
                   href={`/review/${booking.id}`}

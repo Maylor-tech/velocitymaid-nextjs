@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       },
       message: 'Cleaner assignment updated successfully',
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Error changing cleaner assignment:', error);
     return NextResponse.json(

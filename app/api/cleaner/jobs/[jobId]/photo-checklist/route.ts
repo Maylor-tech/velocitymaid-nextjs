@@ -18,7 +18,7 @@ export async function GET(
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
     return NextResponse.json({ success: true, checklist });
-  } catch (err: unknown) {
+  } catch (err) {
     const authResp = rethrowIfAuthResponse(err);
     if (authResp) return authResp;
     const message = err instanceof Error ? err.message : "Failed to load photo checklist";

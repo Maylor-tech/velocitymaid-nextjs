@@ -102,7 +102,7 @@ function ReplyBox({
       setText("");
       setTemplates([]); // Clear templates on close
       onReplySent();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to send reply:", err);
       setError(err.message || "Failed to send reply");
     } finally {
@@ -212,7 +212,7 @@ export default function AdminContactPage() {
       } else {
         throw new Error(data.error || "Failed to fetch messages");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch messages:", err);
       setError(err.message || "Failed to load messages");
     } finally {
@@ -235,7 +235,7 @@ export default function AdminContactPage() {
 
       // Refresh messages to show updated status
       fetchMessages();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to update status:", err);
       alert(`Error: ${err.message}`);
     }

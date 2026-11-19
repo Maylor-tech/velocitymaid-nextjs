@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const referralUrl = `https://velocitymaid.com/ref/${code}`;
+    const _referralUrl = `https://velocitymaid.com/ref/${code}`;
     const bookingUrl = `https://velocitymaid.com/booking?branch=new-jersey&ref=${code}`;
 
     // Generate QR code
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate QR code error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate QR code' },

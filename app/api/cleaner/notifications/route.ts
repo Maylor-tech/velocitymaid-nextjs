@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       success: true,
       notifications,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[CLEANER_NOTIFICATIONS] Error:", error);
     return NextResponse.json(
       {

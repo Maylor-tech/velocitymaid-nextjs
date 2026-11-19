@@ -79,7 +79,7 @@ describe('jobTeamAssignment helpers', () => {
       assistantCleanerIds: [CARYLL],
     });
     expect(result.ok).toBe(false);
-    if (!result.ok) {
+    if (result.ok === false) {
       expect(result.error).toMatch(/primary cleaner is required/i);
     }
   });

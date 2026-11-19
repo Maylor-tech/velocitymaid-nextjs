@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
         endDate: promo.endDate,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Validate promo error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to validate promo' },

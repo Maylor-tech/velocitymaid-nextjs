@@ -24,7 +24,7 @@ export interface PricingAnomaly {
   message: string;
   jobId?: string;
   branchId?: string;
-  details: Record<string, any>;
+  details: Record<string, LooseAny>;
 }
 
 /**
@@ -62,7 +62,7 @@ export async function getPriceChangeEvents(
   });
 
   return logs.map((log) => {
-    const changes = log.changes as any;
+    const changes = log.changes as LooseAny;
     const previousPrice = Number(changes.previousPrice || 0);
     const newPrice = Number(changes.newPrice || 0);
     const changeAmount = newPrice - previousPrice;

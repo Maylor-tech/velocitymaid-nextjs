@@ -26,7 +26,7 @@ export async function GET() {
         'Content-Disposition': 'inline; filename="velocitymaid-nj-corporate-services-overview.html"',
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Generate services overview error:', error);
     const message = error instanceof Error ? error.message : 'Failed to generate services overview';
     return NextResponse.json(

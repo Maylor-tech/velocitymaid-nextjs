@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/requireRole";
 /**
  * Get Single Villa Application
  * GET /api/admin/villas/[id]
@@ -31,7 +32,7 @@ export async function GET(
       success: true,
       application,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get villa application error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch application' },

@@ -62,7 +62,7 @@ export async function POST(
       success: true,
       message: updatedMessage,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_MESSAGE_ARCHIVE] Error:", error);
 
     if (error instanceof Response) {

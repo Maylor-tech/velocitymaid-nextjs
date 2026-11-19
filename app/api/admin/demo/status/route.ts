@@ -5,12 +5,12 @@
  * Used by client-side code to determine if demo mode is enabled.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { isDemoModeServer } from "@/lib/demoMode";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   return NextResponse.json({
     demoMode: isDemoModeServer(),
   });

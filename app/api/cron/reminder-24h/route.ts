@@ -286,7 +286,7 @@ export async function GET(request: NextRequest) {
         if (!isTest) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
-      } catch (error: unknown) {
+      } catch (error) {
         log.push(`ERROR: Exception sending reminder to ${booking.customerName} - ${(error instanceof Error ? error.message : undefined)}`);
         failureCount++;
         results.push({
@@ -310,7 +310,7 @@ export async function GET(request: NextRequest) {
       log,
       duration: `${duration}ms`,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const duration = Date.now() - startTime;
     log.push(`ERROR: ${(error instanceof Error ? error.message : undefined)}`);
     log.push(`[${new Date().toISOString()}] Cron job failed after ${duration}ms`);

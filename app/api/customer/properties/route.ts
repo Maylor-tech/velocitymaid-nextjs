@@ -28,7 +28,7 @@ export async function GET() {
       success: true,
       properties: properties.map(toHostPropertyView),
     });
-  } catch (error: unknown) {
+  } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to load properties';
     console.error('[customer/properties]', error);

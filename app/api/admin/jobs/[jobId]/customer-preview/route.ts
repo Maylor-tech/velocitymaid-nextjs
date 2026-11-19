@@ -94,7 +94,7 @@ export async function GET(
         customerPortalUrl: job.customerId ? `/customer/jobs/${job.id}` : null,
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to load preview';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

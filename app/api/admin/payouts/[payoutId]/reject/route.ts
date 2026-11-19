@@ -55,7 +55,7 @@ export async function POST(
     }
 
     const previousStatus = payout.status;
-    const existingDetails = (payout.policyEvalDetails as any) || {};
+    const existingDetails = (payout.policyEvalDetails as Record<string, unknown> | null) || {};
     const updatedDetails = {
       ...existingDetails,
       adminDecision: {
@@ -102,7 +102,7 @@ export async function POST(
       success: true,
       payout: updated,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error("[REJECT_PAYOUT] Error:", error);
     return NextResponse.json(

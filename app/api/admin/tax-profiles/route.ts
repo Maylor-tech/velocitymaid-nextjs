@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
-import { TaxProfileStatus } from "@prisma/client";
+import { TaxProfileStatus, cleanerTaxProfile } from "@/app/api/admin/tax-profiles/delegate";
 import { maskTIN } from "@/lib/tax/tinEncryption";
 
 export async function GET(request: NextRequest) {
@@ -31,14 +31,14 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {};
+    const where: LooseAny = {};
     if (status && Object.values(TaxProfileStatus).includes(status)) {
       where.status = status;
     }
 
     // Fetch profiles with cleaner info
     const [profiles, total] = await Promise.all([
-      prisma.cleanerTaxProfile.findMany({
+      cleanerTaxProfile().findMany({
         where,
         skip,
         take: limit,
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
           },
         },
       }),
-      prisma.cleanerTaxProfile.count({ where }),
+      cleanerTaxProfile().count({ where }),
     ]);
 
     // Redact sensitive data - never expose full TIN
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[ADMIN_TAX_PROFILES_LIST] Error:", error);
 
     if (error instanceof Response) {

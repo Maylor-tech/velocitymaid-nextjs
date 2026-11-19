@@ -37,13 +37,13 @@ export async function GET(request: NextRequest) {
       where: {
         role: 'CLEANER',
         primaryBranchId: branch.id,
-        trainingStatus: {
+        TrainingStatus: {
           overallStatus: 'PASSED',
         },
       },
       include: {
-        trainingStatus: true,
-        availability: true,
+        TrainingStatus: true,
+        CleanerAvailability: true,
       },
     });
 
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
             expectedPayout: pastEarnings.totalEarnings + pastBonuses.total,
             jobCount: pastEarnings.jobCount,
           });
-        } catch (error: any) {
+        } catch {
           // If no past data, use 0
           forecasts.push({
             cleanerId: cleaner.id,
@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get payout forecast error:', error);
     return NextResponse.json(

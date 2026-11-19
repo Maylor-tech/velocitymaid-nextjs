@@ -22,7 +22,7 @@ async function migrateLegacyUsers() {
     const usersWithoutTenant = await prisma.user.findMany({
       where: {
         tenantId: null,
-      },
+      } as LooseAny,
       select: {
         id: true,
         email: true,
@@ -38,7 +38,7 @@ async function migrateLegacyUsers() {
     }
 
     // Find or create a default tenant
-    let defaultTenant = await prisma.tenant.findFirst({
+    let defaultTenant = await (prisma as LooseAny).tenant.findFirst({
       where: {
         name: 'Legacy Users',
       },
@@ -46,7 +46,7 @@ async function migrateLegacyUsers() {
 
     if (!defaultTenant) {
       console.log('Creating default tenant for legacy users...');
-      defaultTenant = await prisma.tenant.create({
+      defaultTenant = await (prisma as LooseAny).tenant.create({
         data: {
           name: 'Legacy Users',
         },
@@ -61,10 +61,10 @@ async function migrateLegacyUsers() {
     const updateResult = await prisma.user.updateMany({
       where: {
         tenantId: null,
-      },
+      } as LooseAny,
       data: {
         tenantId: defaultTenant.id,
-      },
+      } as LooseAny,
     });
 
     console.log(`✅ Successfully migrated ${updateResult.count} users to tenant ${defaultTenant.id}`);
@@ -73,7 +73,7 @@ async function migrateLegacyUsers() {
       console.log(`  - ${user.email} (${user.name || 'No name'})`);
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Migration failed:', error);
     throw error;
   } finally {

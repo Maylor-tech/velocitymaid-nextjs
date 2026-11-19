@@ -160,7 +160,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ success: false, error: "Property not found" }, { status: 404 });
     }
     return NextResponse.json({ success: true, property });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : "Failed to load the service agreement";
     const status = message.includes("Unauthorized") ? 401 : 500;
@@ -356,7 +356,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       rateAuditId,
       preferenceAuditId,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     if (error instanceof ServicePackageValidationError) {
       const status = error.code === "AGREEMENT_STALE" ? 409 : 400;

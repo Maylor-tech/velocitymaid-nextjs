@@ -112,7 +112,7 @@ export async function POST(
       userId,
       message: 'Application accepted and cleaner profile created',
     });
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Approve cleaner application error:', error);
     const message = error instanceof Error ? error.message : 'Failed to approve application';

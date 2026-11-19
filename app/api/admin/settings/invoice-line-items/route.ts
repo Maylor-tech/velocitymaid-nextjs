@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     await requireRole(request, 'ADMIN');
     const items = await getInvoiceQuickAddItems();
     return NextResponse.json({ success: true, items });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to load settings';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });
@@ -27,7 +27,7 @@ export async function PATCH(request: NextRequest) {
     const items = parseInvoiceQuickAddItems(body.items);
     await saveInvoiceQuickAddItems(items);
     return NextResponse.json({ success: true, items });
-  } catch (error: unknown) {
+  } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to save settings';
     const status = message.includes('Unauthorized') ? 401 : 500;
     return NextResponse.json({ success: false, error: message }, { status });

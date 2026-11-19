@@ -23,16 +23,16 @@ import { decryptPaymentData } from "./paymentEncryption";
  */
 export function getDecryptedPaymentDetails(paymentMethod: {
   methodType: string;
-  details: any;
-}): any {
-  const decrypted: any = { ...paymentMethod.details };
+  details: LooseAny;
+}): LooseAny {
+  const decrypted: LooseAny = { ...paymentMethod.details };
 
   if (paymentMethod.methodType === "BANK") {
     // Decrypt account and routing numbers for bank transfer
     if (paymentMethod.details.accountNumber) {
       try {
         decrypted.accountNumber = decryptPaymentData(paymentMethod.details.accountNumber);
-      } catch (error) {
+      } catch (_error) {
         console.error("[GET_DECRYPTED_PAYMENT_DETAILS] Failed to decrypt account number");
         throw new Error("Failed to decrypt payment method account number");
       }
@@ -40,7 +40,7 @@ export function getDecryptedPaymentDetails(paymentMethod: {
     if (paymentMethod.details.routingNumber) {
       try {
         decrypted.routingNumber = decryptPaymentData(paymentMethod.details.routingNumber);
-      } catch (error) {
+      } catch (_error) {
         console.error("[GET_DECRYPTED_PAYMENT_DETAILS] Failed to decrypt routing number");
         throw new Error("Failed to decrypt payment method routing number");
       }
@@ -50,7 +50,7 @@ export function getDecryptedPaymentDetails(paymentMethod: {
     if (paymentMethod.details.handle) {
       try {
         decrypted.handle = decryptPaymentData(paymentMethod.details.handle);
-      } catch (error) {
+      } catch (_error) {
         console.error("[GET_DECRYPTED_PAYMENT_DETAILS] Failed to decrypt handle");
         throw new Error("Failed to decrypt payment method handle");
       }
@@ -58,7 +58,7 @@ export function getDecryptedPaymentDetails(paymentMethod: {
     if (paymentMethod.details.email) {
       try {
         decrypted.email = decryptPaymentData(paymentMethod.details.email);
-      } catch (error) {
+      } catch (_error) {
         // Email might not be encrypted if it was added before encryption
         decrypted.email = paymentMethod.details.email;
       }
@@ -66,7 +66,7 @@ export function getDecryptedPaymentDetails(paymentMethod: {
     if (paymentMethod.details.phone) {
       try {
         decrypted.phone = decryptPaymentData(paymentMethod.details.phone);
-      } catch (error) {
+      } catch (_error) {
         // Phone might not be encrypted if it was added before encryption
         decrypted.phone = paymentMethod.details.phone;
       }

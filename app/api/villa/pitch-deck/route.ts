@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Generate comprehensive HTML for multi-page PDF pitch deck
     const html = generatePitchDeckHTML();
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': 'inline; filename="velocitymaid-jamaica-villa-pitch-deck.html"',
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate pitch deck error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate pitch deck' },

@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     let auth;
     try {
       auth = await requireAuth(req);
-    } catch (authError: any) {
+    } catch (authError) {
       console.error(`[${requestId}] Authentication error:`, authError);
       return NextResponse.json(
         { error: 'Authentication required', requestId },
@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
       url: session.url,
       requestId,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error(`[${requestId}] Error creating checkout session:`, error);
     
     // Don't expose internal error details in production

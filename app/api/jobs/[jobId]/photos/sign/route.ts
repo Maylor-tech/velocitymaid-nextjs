@@ -40,7 +40,7 @@ export async function POST(
     });
 
     return NextResponse.json(signed);
-  } catch (error: unknown) {
+  } catch (error) {
     const auth = rethrowIfAuthResponse(error);
     if (auth) return auth;
     const message = error instanceof Error ? error.message : "Failed to sign upload";

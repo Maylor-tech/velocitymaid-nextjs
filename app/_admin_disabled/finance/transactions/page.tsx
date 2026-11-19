@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { DollarSign, Filter, Plus } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyConverter';
 
 interface Transaction {
@@ -27,7 +27,6 @@ interface Transaction {
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState({
     branchId: '',
     transactionType: '',
@@ -50,11 +49,10 @@ export default function TransactionsPage() {
       if (result.success) {
         setTransactions(result.transactions || []);
       } else {
-        setError(result.error || 'Failed to fetch transactions');
+        console.error('Failed to fetch transactions:', result.error || 'Unknown error');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching transactions:', err);
-      setError(err.message || 'Failed to load transactions');
     } finally {
       setLoading(false);
     }

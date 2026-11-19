@@ -62,7 +62,7 @@ export default function ModulePage() {
           setError(result.error || 'Failed to load module');
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
@@ -143,7 +143,7 @@ export default function ModulePage() {
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-vm-success" />
               <p className="text-vm-success font-medium">
-                Congratulations! You've completed all lessons in this module.
+                Congratulations! You&apos;ve completed all lessons in this module.
               </p>
             </div>
           </div>

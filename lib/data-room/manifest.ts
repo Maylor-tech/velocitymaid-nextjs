@@ -70,7 +70,7 @@ export function signManifest(manifestJson: string): string {
     );
 
     return signature.toString("base64");
-  } catch (error: any) {
+  } catch (error) {
     throw new Error(`Failed to sign manifest: ${error.message}`);
   }
 }
@@ -140,7 +140,7 @@ export function getPublicKey(): string | null {
       type: "spki",
       format: "pem",
     }) as string;
-  } catch (error) {
+  } catch (_error) {
     // If derivation fails, return null (optional feature)
     return null;
   }
@@ -185,7 +185,7 @@ export function createManifest(
   let signature: string;
   try {
     signature = signManifest(manifestJson);
-  } catch (error: any) {
+  } catch (error) {
     // If signing fails, create unsigned manifest (still useful for checksums)
     console.warn(
       "[DATA_ROOM_MANIFEST] Signing failed, creating unsigned manifest:",

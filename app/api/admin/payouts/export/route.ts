@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 /**
  * GET /api/admin/payouts/export
  * 
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
     const branchId = searchParams.get("branchId");
 
     // Build where clause (reuse list logic)
-    const where: any = {};
+    const where: Prisma.JobPayoutWhereInput = {};
     if (status) where.status = status;
     if (cleanerId) where.cleanerId = cleanerId;
     if (branchId) where.branchId = branchId;
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
         executionMethod: true,
         externalReferenceId: true,
         executionNote: true,
-      },
+      } as LooseAny,
       orderBy: {
         createdAt: "desc",
       },
@@ -128,7 +129,7 @@ export async function GET(request: NextRequest) {
     const rows = payouts.map((p) => {
       const cleaner = cleanerMap.get(p.cleanerId);
       const branch = branchMap.get(p.branchId);
-      const snapshot = p.paymentMethodSnapshot as any;
+      const snapshot = p.paymentMethodSnapshot as Record<string, unknown> | null;
 
       // Format payment method details (masked only)
       let paymentMethodDetails = "";
@@ -176,7 +177,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="payouts-export-${new Date().toISOString().split("T")[0]}.csv"`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[PAYOUTS_EXPORT] Error:", error);
     return NextResponse.json(
       {

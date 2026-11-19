@@ -63,7 +63,7 @@ export async function POST(
         ? "Batch processing complete. All transfers processed."
         : `Processed ${result.processed} transfer(s). ${result.succeeded} succeeded, ${result.failed} failed, ${result.skipped} skipped. Run again to process remaining transfers.`,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[PROCESS_PAYOUT_BATCH] Error:", error);
     return NextResponse.json(
       {

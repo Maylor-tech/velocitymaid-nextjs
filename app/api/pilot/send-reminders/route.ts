@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       ...result,
       message: `Processed ${result.processed} jobs: ${result.sent} sent, ${result.failed} failed`,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof Response) {
       throw error;
     }
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       ...result,
       message: `Processed ${result.processed} jobs: ${result.sent} sent, ${result.failed} failed`,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof Response) {
       throw error;
     }

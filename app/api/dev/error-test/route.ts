@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   if (process.env.APP_ENV !== "development") {
     return NextResponse.json(
       { success: false, error: "Not allowed in production" },
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
   try {
     throw new Error("Simulated developer error — test successful.");
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Simulated error" },
       { status: 500 }

@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
       { success: false, error: "customerId or jobId query param required" },
       { status: 400 }
     );
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[admin/quotes/prefill]", error);
     const message =
       error instanceof Error ? error.message : "Failed to load prefill data";

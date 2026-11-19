@@ -3,17 +3,11 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from "@/lib/auth/requireRole";
-import { prisma } from '@/lib/prisma';
 
 // GET /api/admin/complaints
 export async function GET(request: NextRequest) {
   try {
     await requireRole(request, "ADMIN");
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const branchId = searchParams.get('branchId');
-    const severity = searchParams.get('severity');
-
     // TODO: Replace with actual Complaint model queries when schema is updated
     // For now, return placeholder structure
     // const where: any = {};
@@ -30,14 +24,14 @@ export async function GET(request: NextRequest) {
     //   orderBy: { createdAt: 'desc' },
     // });
 
-    const complaints: any[] = [];
+    const complaints: unknown[] = [];
 
     return NextResponse.json({
       success: true,
       complaints,
       count: complaints.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Get complaints error:', error);
     return NextResponse.json(
@@ -100,7 +94,7 @@ export async function POST(request: NextRequest) {
       success: true,
       complaint,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create complaint error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create complaint' },
