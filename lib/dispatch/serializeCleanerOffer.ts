@@ -9,6 +9,11 @@ import {
   type CleanerOfferLocationView,
 } from './cleanerViews';
 import { effectiveOfferStatus } from './offerExpiry';
+import {
+  cleanerPayLabel,
+  compensationMethodLabel,
+  type CompensationMethod,
+} from '@/lib/cleanerComp/pay';
 
 export type CleanerOfferJson = {
   offerId: string;
@@ -28,6 +33,13 @@ export type CleanerOfferJson = {
   operationalNotes: string | null;
   expiresAt: string;
   offeredAt: string;
+  /** Method and rate only. Never the customer price. */
+  payTerms: {
+    method: CompensationMethod;
+    label: string;
+    methodLabel: string;
+    assisted: boolean;
+  } | null;
 };
 
 export type CleanerOfferSource = {
@@ -41,6 +53,11 @@ export type CleanerOfferSource = {
   operationalNotes: string | null;
   expiresAt: Date;
   offeredAt: Date;
+  CompensationAgreement?: {
+    method: CompensationMethod;
+    rate: unknown;
+    assisted: boolean;
+  } | null;
   Job: {
     jobReference: string | null;
     serviceType: string | null;
@@ -63,6 +80,15 @@ export function serializeCleanerOffer(row: CleanerOfferSource): CleanerOfferJson
     currency: row.compensationCurrency,
     basis: row.compensationBasis,
   });
+  const agreement = row.CompensationAgreement;
+  const payTerms = agreement
+    ? {
+        method: agreement.method,
+        label: cleanerPayLabel(agreement.method, Number(agreement.rate)),
+        methodLabel: compensationMethodLabel(agreement.method),
+        assisted: agreement.assisted,
+      }
+    : null;
 
   const payload: CleanerOfferJson = {
     offerId: row.id,
@@ -89,6 +115,7 @@ export function serializeCleanerOffer(row: CleanerOfferSource): CleanerOfferJson
     operationalNotes: row.operationalNotes,
     expiresAt: row.expiresAt.toISOString(),
     offeredAt: row.offeredAt.toISOString(),
+    payTerms,
   };
 
   assertNoCustomerFinancials(payload, 'cleaner offer');

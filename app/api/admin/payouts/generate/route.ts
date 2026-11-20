@@ -49,17 +49,19 @@ export async function POST(request: NextRequest) {
       errorDetails: result.errorDetails || [],
       skippedJobs: result.skippedJobs || [],
       debug: result.debug || [], // Comprehensive debug results
-      message: `Generated ${result.created || 0} payout(s), skipped ${totalSkipped} job(s)`,
+      review: result.review || [],
+      message: `Review list only. ${result.created || 0} obligation(s) recorded. No transfer was sent.`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof NextResponse) return error;
+    const message = error instanceof Error ? error.message : "Failed to generate payouts";
+    const stack = error instanceof Error ? error.stack : undefined;
     console.error("[ADMIN_GENERATE_PAYOUTS] Error:", error);
-    console.error("[ADMIN_GENERATE_PAYOUTS] Error stack:", error.stack);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to generate payouts",
-        details: process.env.NODE_ENV === "development" ? error.stack : undefined,
+        error: message,
+        details: process.env.NODE_ENV === "development" ? stack : undefined,
       },
       { status: 500 }
     );

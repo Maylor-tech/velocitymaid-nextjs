@@ -62,7 +62,8 @@ const finance: AdminNavItem = {
     p.startsWith('/admin/taxes') ||
     p.startsWith('/admin/invoices') ||
     p.startsWith('/admin/profitability') ||
-    p.startsWith('/admin/tips'),
+    p.startsWith('/admin/tips') ||
+    p.startsWith('/admin/cleaner-pay'),
 };
 const communications: AdminNavItem = {
   href: '/admin/notifications',

@@ -644,6 +644,10 @@ model Job {
   Property                 Property?                  @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   JobPayout                JobPayout?
   JobOffer                 JobOffer[]
+  CompensationAgreement    CompensationAgreement[]
+  ManualPaymentAllocation  ManualPaymentAllocation[] @relation("AllocationJob")
+  AdvanceAppliedAllocations ManualPaymentAllocation[] @relation("AdvanceAppliedJob")
+  CleanerPayable           CleanerPayable[]
   Tip                      Tip[]
   GuestTipAuthorization    GuestTipAuthorization[]
   RebookingReminderDelivery RebookingReminderDelivery?
@@ -728,10 +732,153 @@ model JobOffer {
   Cleaner                User            @relation("JobOfferCleaner", fields: [cleanerId], references: [id])
   CreatedByAdmin         User?           @relation("JobOfferCreatedBy", fields: [createdByAdminId], references: [id])
   CancelledByAdmin       User?           @relation("JobOfferCancelledBy", fields: [cancelledByAdminId], references: [id])
+  CompensationAgreement  CompensationAgreement?
 
   @@index([jobId, status])
   @@index([cleanerId, status])
   @@index([expiresAt])
+}
+
+/// Per-cleaner terms entered on the admin screen. No cleaner has a code default.
+model CleanerCompTerms {
+  id             String             @id @default(cuid())
+  cleanerId      String
+  soloMethod     CompensationMethod
+  soloRate       Decimal            @db.Decimal(10, 2)
+  assistedMethod CompensationMethod
+  assistedRate   Decimal            @db.Decimal(10, 2)
+  /// Optional. Null means a 4+ bedroom solo clean uses the standard solo terms.
+  homeSizeMinBedrooms Int?
+  homeSizeSoloMethod  CompensationMethod?
+  homeSizeSoloRate    Decimal?           @db.Decimal(10, 2)
+  /// The row in effect on the service date is the latest effectiveFrom on or before that date.
+  effectiveFrom  DateTime           @db.Date
+  note           String?
+  setBy          String?
+  setAt          DateTime           @default(now())
+  Cleaner        User               @relation(fields: [cleanerId], references: [id], onDelete: Restrict)
+
+  @@unique([cleanerId, effectiveFrom])
+  @@index([cleanerId])
+  @@map("cleaner_comp_terms")
+}
+
+/// One agreement per job and cleaner. The offer is optional when the cleaner was assigned directly.
+model CompensationAgreement {
+  id                String             @id @default(cuid())
+  jobOfferId        String?            @unique
+  jobId             String
+  cleanerId         String
+  method            CompensationMethod
+  rate              Decimal            @db.Decimal(10, 2)
+  eligibleBase      Decimal?           @db.Decimal(10, 2)
+  /// When true, eligibleBase was typed for this job and replaces the job price.
+  manualEligibleBase Boolean           @default(false)
+  payBasis          PayBasis           @default(TERMS)
+  includedAddOns    String[]           @default([])
+  assisted          Boolean            @default(false)
+  setBy             String?
+  setAt             DateTime           @default(now())
+  note              String?
+  frozenAt          DateTime?
+  verifiedHours     Decimal?           @db.Decimal(8, 2)
+  hoursVerifiedBy   String?
+  hoursVerifiedAt   DateTime?
+  JobOffer          JobOffer?          @relation(fields: [jobOfferId], references: [id], onDelete: Restrict)
+  Job               Job                @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  Cleaner           User               @relation("CompensationAgreementCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
+
+  @@unique([jobId, cleanerId])
+  @@index([cleanerId])
+  @@map("compensation_agreements")
+}
+
+model ManualPayment {
+  id            String                    @id @default(cuid())
+  cleanerId     String
+  /// Stable import key. One key is one payment, even when several rows allocate it.
+  paymentKey    String?                   @unique
+  paidOn        DateTime                  @db.Date
+  amount        Decimal                   @db.Decimal(10, 2)
+  method        ManualPaymentMethod
+  paidFromKind  PaidFromKind              @default(UNKNOWN)
+  paidFromLabel String?
+  memo          String?
+  recordedBy    String?
+  recordedAt    DateTime                  @default(now())
+  Cleaner       User                      @relation("ManualPaymentCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
+  allocations   ManualPaymentAllocation[]
+  Reimbursement ReimbursementOwed?
+
+  @@index([cleanerId, paidOn])
+  @@map("manual_payments")
+}
+
+model ManualPaymentAllocation {
+  id              String         @id @default(cuid())
+  manualPaymentId String
+  jobId           String?
+  allocationType  AllocationType @default(JOB)
+  amount          Decimal        @db.Decimal(10, 2)
+  memo            String?
+  /// Original reference. MATCH: rows stay unmatched until an admin links a job.
+  jobReference    String?
+  payBasisNote    String?
+  /// Set when an advance is applied to a later job.
+  appliedJobId    String?
+  ManualPayment   ManualPayment  @relation(fields: [manualPaymentId], references: [id], onDelete: Cascade)
+  Job             Job?           @relation("AllocationJob", fields: [jobId], references: [id], onDelete: Restrict)
+  AppliedJob      Job?           @relation("AdvanceAppliedJob", fields: [appliedJobId], references: [id], onDelete: Restrict)
+
+  @@index([jobId])
+  @@index([appliedJobId])
+  @@index([manualPaymentId])
+  @@map("manual_payment_allocations")
+}
+
+/// Money a person fronted. Not cleaner pay, and one row per payment.
+model ReimbursementOwed {
+  id              String               @id @default(cuid())
+  manualPaymentId String               @unique
+  personName      String
+  amount          Decimal              @db.Decimal(10, 2)
+  status          ReimbursementStatus  @default(OWED)
+  repaidOn        DateTime?            @db.Date
+  repaidMethod    ManualPaymentMethod?
+  repaidMemo      String?
+  repaidBy        String?
+  createdAt       DateTime             @default(now())
+  ManualPayment   ManualPayment        @relation(fields: [manualPaymentId], references: [id], onDelete: Cascade)
+
+  @@map("reimbursements_owed")
+}
+
+/// 1099 notice threshold for the cleaner pay view. Default $2,000.
+model CleanerPaySettings {
+  id            String   @id @default("default")
+  threshold1099 Decimal  @default(2000) @db.Decimal(10, 2)
+  updatedAt     DateTime @updatedAt
+
+  @@map("cleaner_pay_settings")
+}
+
+/// One review obligation per completed job and cleaner. Not a transfer.
+model CleanerPayable {
+  id          String               @id @default(cuid())
+  jobId       String
+  cleanerId   String
+  expected    Decimal              @db.Decimal(10, 2)
+  paid        Decimal              @db.Decimal(10, 2)
+  balance     Decimal              @db.Decimal(10, 2)
+  status      CleanerPayableStatus
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  Job         Job                  @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  Cleaner     User                 @relation("CleanerPayableCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
+
+  @@unique([jobId, cleanerId])
+  @@index([cleanerId, status])
+  @@map("cleaner_payables")
 }
 
 model CleanerProfile {
@@ -761,8 +908,12 @@ model CleanerProfile {
   inactiveDate        DateTime?
   /// UNRESOLVED | EMPLOYEE | INDEPENDENT_CONTRACTOR — never inferred automatically.
   classificationStatus String  @default("UNRESOLVED")
-  /// ZELLE | CHECK | ACH_PROVIDER | STRIPE_CONNECT | OTHER | null — preference enum only, no credentials.
+  /// Preference only. No account numbers.
   paymentPreference   String?
+  /// Tax paperwork for solo percentage offers. Existing cleaners default to W-9 missing.
+  taxPaperworkType    TaxPaperworkType   @default(W9)
+  taxPaperworkStatus  TaxPaperworkStatus @default(MISSING)
+  taxPaperworkOn      DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1343,6 +1494,10 @@ model User {
   JobOfferAsCleaner                   JobOffer[]             @relation("JobOfferCleaner")
   JobOfferCreated                     JobOffer[]             @relation("JobOfferCreatedBy")
   JobOfferCancelled                   JobOffer[]             @relation("JobOfferCancelledBy")
+  CleanerCompTerms                    CleanerCompTerms[]
+  CompensationAgreements              CompensationAgreement[] @relation("CompensationAgreementCleaner")
+  ManualPayments                      ManualPayment[]        @relation("ManualPaymentCleaner")
+  CleanerPayables                     CleanerPayable[]       @relation("CleanerPayableCleaner")
   JobsApproved                        Job[]                  @relation("JobApprovedBy")
   JobChecklistItemCompleted           JobChecklistItem[]     @relation("JobChecklistItem_completedBy")
   LessonProgress                      LessonProgress[]
@@ -1938,6 +2093,60 @@ enum CompensationBasis {
   FLAT
   HOURLY
   OTHER
+}
+
+enum CompensationMethod {
+  PERCENTAGE
+  HOURLY
+  FLAT
+}
+
+enum PayBasis {
+  TERMS
+  HISTORICAL_AS_PAID
+}
+
+enum AllocationType {
+  JOB
+  ADVANCE
+  OTHER
+}
+
+enum PaidFromKind {
+  BUSINESS_ACCOUNT
+  PERSONAL_FUNDS
+  UNKNOWN
+}
+
+enum ReimbursementStatus {
+  OWED
+  REPAID
+}
+
+enum TaxPaperworkType {
+  W9
+  W4_I9
+  NONE
+}
+
+enum TaxPaperworkStatus {
+  ON_FILE
+  MISSING
+}
+
+enum ManualPaymentMethod {
+  ZELLE
+  CASH
+  CHECK
+  OTHER
+}
+
+enum CleanerPayableStatus {
+  NEEDS_HOURS
+  NEEDS_RECONCILIATION
+  PAID_MANUALLY
+  OWED
+  OVERPAID
 }
 
 enum CleanPhotoCategory {

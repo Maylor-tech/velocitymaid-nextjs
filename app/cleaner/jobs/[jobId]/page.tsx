@@ -60,6 +60,12 @@ interface Job {
     basis: string;
     basisLabel: string;
   } | null;
+  payTerms?: {
+    method: string;
+    label: string;
+    methodLabel: string;
+    assisted: boolean;
+  } | null;
   estimatedDurationMins?: number | null;
   currency: string | null;
   assignedAt: string | null;
@@ -95,6 +101,10 @@ interface OfferPayload {
   estimatedDurationMins?: number | null;
   expiresAt: string;
   operationalNotes: string | null;
+  payTerms?: {
+    label: string;
+    methodLabel: string;
+  } | null;
 }
 
 function authMessage(status: number, error?: string): string {
@@ -455,10 +465,12 @@ export default function CleanerJobDetailPage() {
             <p><span className="text-vm-muted">Area:</span> {offer.location.areaLabel || "See cleaner portal"}</p>
             <p>
               <span className="text-vm-muted">Your accepted pay (historical):</span>{" "}
-              {formatPrice(
-                offer.compensation?.amount ?? offer.compensationAmount,
-                offer.compensation?.currency || offer.compensationCurrency
-              )}
+              {offer.payTerms
+                ? `${offer.payTerms.label} · ${offer.payTerms.methodLabel}`
+                : formatPrice(
+                    offer.compensation?.amount ?? offer.compensationAmount,
+                    offer.compensation?.currency || offer.compensationCurrency
+                  )}
             </p>
           </div>
         </div>
@@ -491,8 +503,8 @@ export default function CleanerJobDetailPage() {
             offerExpired,
             new Date(nowMs)
           )}
-          compensationDisplay={formatPrice(amount, currency)}
-          compensationBasisLabel={basisLabel}
+          compensationDisplay={offer.payTerms?.label ?? formatPrice(amount, currency)}
+          compensationBasisLabel={offer.payTerms?.methodLabel ?? basisLabel}
           dateText={offer.serviceDate}
           timeWindowText={offer.preferredTime || "Window not listed"}
           areaText={area}
@@ -685,11 +697,13 @@ export default function CleanerJobDetailPage() {
               <div>
                 <p className="font-medium">Your pay</p>
                 <p className="text-vm-muted">
-                  {formatPrice(
-                    job.compensation?.amount ?? job.compensationAmount ?? null,
-                    job.compensation?.currency || job.compensationCurrency || job.currency
-                  )}
-                  {job.compensation?.basisLabel
+                  {job.payTerms
+                    ? `${job.payTerms.label} · ${job.payTerms.methodLabel}`
+                    : formatPrice(
+                        job.compensation?.amount ?? job.compensationAmount ?? null,
+                        job.compensation?.currency || job.compensationCurrency || job.currency
+                      )}
+                  {!job.payTerms && job.compensation?.basisLabel
                     ? ` (${job.compensation.basisLabel})`
                     : ""}
                 </p>
