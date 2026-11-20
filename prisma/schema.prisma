@@ -645,7 +645,8 @@ model Job {
   JobPayout                JobPayout?
   JobOffer                 JobOffer[]
   CompensationAgreement    CompensationAgreement[]
-  ManualPaymentAllocation  ManualPaymentAllocation[]
+  ManualPaymentAllocation  ManualPaymentAllocation[] @relation("AllocationJob")
+  AdvanceAppliedAllocations ManualPaymentAllocation[] @relation("AdvanceAppliedJob")
   CleanerPayable           CleanerPayable[]
   Tip                      Tip[]
   GuestTipAuthorization    GuestTipAuthorization[]
@@ -755,7 +756,7 @@ model CleanerCompTerms {
   note           String?
   setBy          String?
   setAt          DateTime           @default(now())
-  Cleaner        User               @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  Cleaner        User               @relation(fields: [cleanerId], references: [id], onDelete: Restrict)
 
   @@unique([cleanerId, effectiveFrom])
   @@index([cleanerId])
@@ -826,21 +827,28 @@ model ManualPaymentAllocation {
   /// Set when an advance is applied to a later job.
   appliedJobId    String?
   ManualPayment   ManualPayment  @relation(fields: [manualPaymentId], references: [id], onDelete: Cascade)
-  Job             Job?           @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  Job             Job?           @relation("AllocationJob", fields: [jobId], references: [id], onDelete: Restrict)
+  AppliedJob      Job?           @relation("AdvanceAppliedJob", fields: [appliedJobId], references: [id], onDelete: Restrict)
 
   @@index([jobId])
+  @@index([appliedJobId])
   @@index([manualPaymentId])
   @@map("manual_payment_allocations")
 }
 
 /// Money a person fronted. Not cleaner pay, and one row per payment.
 model ReimbursementOwed {
-  id              String        @id @default(cuid())
-  manualPaymentId String        @unique
+  id              String               @id @default(cuid())
+  manualPaymentId String               @unique
   personName      String
-  amount          Decimal       @db.Decimal(10, 2)
-  createdAt       DateTime      @default(now())
-  ManualPayment   ManualPayment @relation(fields: [manualPaymentId], references: [id], onDelete: Cascade)
+  amount          Decimal              @db.Decimal(10, 2)
+  status          ReimbursementStatus  @default(OWED)
+  repaidOn        DateTime?            @db.Date
+  repaidMethod    ManualPaymentMethod?
+  repaidMemo      String?
+  repaidBy        String?
+  createdAt       DateTime             @default(now())
+  ManualPayment   ManualPayment        @relation(fields: [manualPaymentId], references: [id], onDelete: Cascade)
 
   @@map("reimbursements_owed")
 }
@@ -900,10 +908,12 @@ model CleanerProfile {
   inactiveDate        DateTime?
   /// UNRESOLVED | EMPLOYEE | INDEPENDENT_CONTRACTOR — never inferred automatically.
   classificationStatus String  @default("UNRESOLVED")
-  /// ZELLE | CHECK | ACH_PROVIDER | STRIPE_CONNECT | OTHER | null — preference enum only, no credentials.
+  /// Preference only. No account numbers.
   paymentPreference   String?
-  w9Status            W9Status  @default(MISSING)
-  w9StatusOn          DateTime?
+  /// Tax paperwork for solo percentage offers. Existing cleaners default to W-9 missing.
+  taxPaperworkType    TaxPaperworkType   @default(W9)
+  taxPaperworkStatus  TaxPaperworkStatus @default(MISSING)
+  taxPaperworkOn      DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2108,7 +2118,18 @@ enum PaidFromKind {
   UNKNOWN
 }
 
-enum W9Status {
+enum ReimbursementStatus {
+  OWED
+  REPAID
+}
+
+enum TaxPaperworkType {
+  W9
+  W4_I9
+  NONE
+}
+
+enum TaxPaperworkStatus {
   ON_FILE
   MISSING
 }

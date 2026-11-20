@@ -165,7 +165,7 @@ describe('cleaner compensation review', () => {
         assistedRate: 30,
         homeSizeException: null,
       },
-      w9Status: 'ON_FILE',
+      paperwork: { type: 'W9', status: 'ON_FILE' },
       eligibleBase: 390,
       bedrooms: 4,
     });
@@ -189,7 +189,7 @@ describe('cleaner compensation review', () => {
       resolveAssignmentAgreement({
         choice: 'solo',
         storedTerms: terms,
-        w9Status: 'ON_FILE',
+        paperwork: { type: 'W9', status: 'ON_FILE' },
         eligibleBase: 455,
         bedrooms: 4,
       })
@@ -198,7 +198,7 @@ describe('cleaner compensation review', () => {
       resolveAssignmentAgreement({
         choice: 'solo',
         storedTerms: terms,
-        w9Status: 'ON_FILE',
+        paperwork: { type: 'W9', status: 'ON_FILE' },
         eligibleBase: 325,
         bedrooms: 3,
       })
@@ -207,7 +207,7 @@ describe('cleaner compensation review', () => {
       resolveAssignmentAgreement({
         choice: 'assisted',
         storedTerms: terms,
-        w9Status: 'MISSING',
+        paperwork: { type: 'W9', status: 'MISSING' },
         eligibleBase: 455,
         bedrooms: 5,
       })
@@ -216,7 +216,7 @@ describe('cleaner compensation review', () => {
       resolveAssignmentAgreement({
         choice: 'solo',
         storedTerms: terms,
-        w9Status: 'MISSING',
+        paperwork: { type: 'W9', status: 'MISSING' },
         eligibleBase: 455,
         bedrooms: 4,
       }).method

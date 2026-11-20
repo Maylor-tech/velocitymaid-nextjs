@@ -52,7 +52,7 @@ export default function CleanerPayVisualPage() {
       cleanerName="Dory (Dori)"
       lines={lines}
       termsLabel="Terms from Oct 9, 2026: solo 65% · assisted $30 per hour. No home-size exception. No add-on pay rule."
-      w9Label="W-9 missing. Solo percentage offers stay blocked. Assisted hourly is allowed."
+      w9Label="Tax paperwork is missing. Solo percentage offers stay blocked. Assisted hourly is allowed."
       exceptionForm={<HomeSizeExceptionForm sample exception={null} />}
       ytd={{ total: '$360.00', threshold: '$2,000.00', warnAt: '$1,600.00', warning: false }}
       advances={[

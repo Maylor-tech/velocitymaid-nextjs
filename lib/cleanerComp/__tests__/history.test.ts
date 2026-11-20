@@ -103,7 +103,7 @@ describe('confirmed cleaner payment history', () => {
     expect(second.skippedKeys).toEqual(['DORI-2026-08-17', 'DORI-2026-08-31', 'AURORA-2026-10-27']);
   });
 
-  it('blocks a solo percentage offer when the W-9 is missing and still allows assisted hourly', () => {
+  it('blocks a solo percentage offer when tax paperwork is missing and still allows assisted hourly', () => {
     const terms = {
       soloMethod: 'PERCENTAGE' as const,
       soloRate: 65,
@@ -115,14 +115,14 @@ describe('confirmed cleaner payment history', () => {
       resolveAssignmentAgreement({
         choice: 'solo',
         storedTerms: terms,
-        w9Status: 'MISSING',
+        paperwork: { type: 'W9', status: 'MISSING' },
         eligibleBase: 390,
       })
-    ).toThrow(/W-9/);
+    ).toThrow(/tax paperwork/);
     const assisted = resolveAssignmentAgreement({
       choice: 'assisted',
       storedTerms: terms,
-      w9Status: 'MISSING',
+      paperwork: { type: 'W9', status: 'MISSING' },
       eligibleBase: 390,
     });
     expect(assisted).toMatchObject({ method: 'HOURLY', rate: 30, assisted: true });
@@ -132,7 +132,7 @@ describe('confirmed cleaner payment history', () => {
     const agreed = resolveAssignmentAgreement({
       choice: 'custom',
       storedTerms: null,
-      w9Status: 'ON_FILE',
+      paperwork: { type: 'W9', status: 'ON_FILE' },
       custom: { method: 'PERCENTAGE', rate: 65 },
       eligibleBase: 390,
       manualBase: 200,

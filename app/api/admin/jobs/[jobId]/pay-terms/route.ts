@@ -7,6 +7,7 @@ import {
   appliedSoloTerms,
   cleanerPayLabel,
   cleanerTermsFromRow,
+  paperworkFromProfile,
   resolveAssignmentAgreement,
   termsInEffect,
   type OfferChoice,
@@ -54,7 +55,7 @@ export async function GET(
       }),
       prisma.cleanerProfile.findUnique({
         where: { userId: job.assignedCleanerId },
-        select: { w9Status: true },
+        select: { taxPaperworkType: true, taxPaperworkStatus: true, taxPaperworkOn: true },
       }),
       prisma.compensationAgreement.findUnique({
         where: { jobId_cleanerId: { jobId: job.id, cleanerId: job.assignedCleanerId } },
@@ -69,7 +70,7 @@ export async function GET(
       cleanerName: job.User?.name || 'Cleaner',
       serviceDate: day,
       bedrooms: job.Property?.bedrooms ?? null,
-      w9Status: profile?.w9Status ?? 'MISSING',
+      paperwork: paperworkFromProfile(profile),
       terms: terms
         ? {
             soloMethod: solo?.method ?? terms.soloMethod,
@@ -145,7 +146,7 @@ export async function POST(
       prisma.cleanerCompTerms.findMany({ where: { cleanerId: job.assignedCleanerId } }),
       prisma.cleanerProfile.findUnique({
         where: { userId: job.assignedCleanerId },
-        select: { w9Status: true },
+        select: { taxPaperworkType: true, taxPaperworkStatus: true, taxPaperworkOn: true },
       }),
     ]);
     const day = serviceDay(job);
@@ -155,7 +156,7 @@ export async function POST(
       draft = resolveAssignmentAgreement({
         choice,
         storedTerms,
-        w9Status: profile?.w9Status ?? 'MISSING',
+        paperwork: paperworkFromProfile(profile),
         bedrooms: job.Property?.bedrooms ?? null,
         eligibleBase: agreedCleaningPrice({
           agreedOperationalPrice: job.agreedOperationalPrice,

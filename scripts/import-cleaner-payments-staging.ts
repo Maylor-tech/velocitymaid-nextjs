@@ -86,11 +86,11 @@ async function main() {
       }));
     cleaners.push({ id: user.id, name: user.name || person.name, email: user.email });
     const profile = await prisma.cleanerProfile.findUnique({ where: { userId: user.id } });
-    if (!profile || profile.w9StatusOn == null) {
+    if (!profile || profile.taxPaperworkOn == null) {
       await prisma.cleanerProfile.upsert({
         where: { userId: user.id },
-        update: { w9Status: 'MISSING', w9StatusOn: null },
-        create: { userId: user.id, w9Status: 'MISSING' },
+        update: { taxPaperworkType: 'W9', taxPaperworkStatus: 'MISSING', taxPaperworkOn: null },
+        create: { userId: user.id, taxPaperworkType: 'W9', taxPaperworkStatus: 'MISSING' },
       });
     }
     const termsRule = HISTORY_TERMS.find((rule) => rule.match.test(person.name) || rule.match.test(user.name || ''));

@@ -30,7 +30,7 @@ describe('pay record guards', () => {
     const agreed = resolveAssignmentAgreement({
       choice: 'assisted',
       storedTerms: terms,
-      w9Status: 'MISSING',
+      paperwork: { type: 'W9', status: 'MISSING' },
       eligibleBase: null,
     });
     expect(agreed).toMatchObject({ method: 'HOURLY', rate: 30, assisted: true });

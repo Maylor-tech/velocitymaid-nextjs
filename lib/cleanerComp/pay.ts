@@ -21,8 +21,82 @@ export type AllocationType = (typeof ALLOCATION_TYPES)[number];
 export const PAID_FROM_KINDS = ['BUSINESS_ACCOUNT', 'PERSONAL_FUNDS', 'UNKNOWN'] as const;
 export type PaidFromKind = (typeof PAID_FROM_KINDS)[number];
 
-export const W9_STATUSES = ['ON_FILE', 'MISSING'] as const;
-export type W9Status = (typeof W9_STATUSES)[number];
+export const TAX_PAPERWORK_TYPES = ['W9', 'W4_I9', 'NONE'] as const;
+export type TaxPaperworkType = (typeof TAX_PAPERWORK_TYPES)[number];
+
+export const TAX_PAPERWORK_STATUSES = ['ON_FILE', 'MISSING'] as const;
+export type TaxPaperworkStatus = (typeof TAX_PAPERWORK_STATUSES)[number];
+
+export type TaxPaperwork = {
+  type: TaxPaperworkType;
+  status: TaxPaperworkStatus;
+  on?: string | null;
+};
+
+/** Solo percentage needs W-9 or W-4/I-9 on file. NONE does not qualify. */
+export function soloPercentageAllowed(paperwork?: TaxPaperwork | null): boolean {
+  if (!paperwork || paperwork.status !== 'ON_FILE') return false;
+  return paperwork.type === 'W9' || paperwork.type === 'W4_I9';
+}
+
+export function paperworkFromProfile(profile: {
+  taxPaperworkType?: string | null;
+  taxPaperworkStatus?: string | null;
+  taxPaperworkOn?: Date | string | null;
+} | null | undefined): TaxPaperwork {
+  const type = TAX_PAPERWORK_TYPES.includes(profile?.taxPaperworkType as TaxPaperworkType)
+    ? (profile?.taxPaperworkType as TaxPaperworkType)
+    : 'W9';
+  const status = profile?.taxPaperworkStatus === 'ON_FILE' ? 'ON_FILE' : 'MISSING';
+  const on = profile?.taxPaperworkOn instanceof Date
+    ? profile.taxPaperworkOn.toISOString().slice(0, 10)
+    : profile?.taxPaperworkOn?.slice(0, 10) ?? null;
+  return { type, status, on };
+}
+
+export function taxPaperworkLabel(paperwork?: TaxPaperwork | null): string {
+  if (!soloPercentageAllowed(paperwork)) {
+    return 'Tax paperwork is missing. Solo percentage offers stay blocked. Assisted hourly is allowed.';
+  }
+  const type = paperwork?.type === 'W4_I9' ? 'W-4 and I-9' : 'W-9';
+  const on = paperwork?.on ? ` · ${paperwork.on}` : '';
+  return `${type} on file${on}.`;
+}
+
+export const REIMBURSEMENT_STATUSES = ['OWED', 'REPAID'] as const;
+export type ReimbursementStatus = (typeof REIMBURSEMENT_STATUSES)[number];
+
+export type ReimbursementRecord = {
+  status: ReimbursementStatus;
+  repaidOn: string | null;
+  repaidMethod: ManualPaymentMethod | null;
+  repaidMemo: string | null;
+  repaidBy: string | null;
+};
+
+export function openReimbursement(): ReimbursementRecord {
+  return { status: 'OWED', repaidOn: null, repaidMethod: null, repaidMemo: null, repaidBy: null };
+}
+
+export function markReimbursementRepaid(
+  row: ReimbursementRecord,
+  input: { repaidOn: string; repaidMethod: ManualPaymentMethod; repaidMemo?: string | null; repaidBy: string }
+): ReimbursementRecord {
+  if (row.status === 'REPAID') throw new Error('This reimbursement is already repaid.');
+  const repaidOn = input.repaidOn.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(repaidOn)) throw new Error('Mark repaid needs a date.');
+  if (!MANUAL_PAYMENT_METHODS.includes(input.repaidMethod)) {
+    throw new Error('Mark repaid needs a method.');
+  }
+  if (!input.repaidBy.trim()) throw new Error('Mark repaid needs the person who recorded it.');
+  return {
+    status: 'REPAID',
+    repaidOn,
+    repaidMethod: input.repaidMethod,
+    repaidMemo: input.repaidMemo?.trim() || null,
+    repaidBy: input.repaidBy,
+  };
+}
 
 export const PAY_BASIS = ['TERMS', 'HISTORICAL_AS_PAID'] as const;
 export type PayBasis = (typeof PAY_BASIS)[number];
@@ -582,7 +656,7 @@ export type OfferChoice = 'solo' | 'assisted' | 'custom';
 
 export function offerChoicesForCleaner(
   terms: CleanerTerms | null,
-  w9Status?: W9Status | null,
+  paperwork?: TaxPaperwork | null,
   bedrooms?: number | null
 ): { id: 'solo' | 'assisted'; label: string; method: CompensationMethod; rate: number; assisted: boolean }[] {
   if (!terms) return [];
@@ -603,7 +677,7 @@ export function offerChoicesForCleaner(
       assisted: true,
     },
   ];
-  if (w9Status !== 'MISSING') return choices;
+  if (soloPercentageAllowed(paperwork)) return choices;
   return choices.filter((choice) => !(choice.id === 'solo' && choice.method === 'PERCENTAGE'));
 }
 
@@ -611,7 +685,7 @@ export function resolveAssignmentAgreement(input: {
   cleanerName?: string | null;
   choice: OfferChoice;
   storedTerms: CleanerTerms | null;
-  w9Status?: W9Status | null;
+  paperwork?: TaxPaperwork | null;
   custom?: {
     method: CompensationMethod;
     rate: number;
@@ -637,11 +711,11 @@ export function resolveAssignmentAgreement(input: {
 } {
   const soloForHome =
     input.choice === 'solo' ? appliedSoloTerms(input.storedTerms, input.bedrooms) : null;
-  if (input.w9Status === 'MISSING' && soloForHome?.method === 'PERCENTAGE') {
-    throw new Error('Solo percentage offers need a W-9 on file. Assisted hourly is still allowed.');
+  if (soloForHome?.method === 'PERCENTAGE' && !soloPercentageAllowed(input.paperwork)) {
+    throw new Error('Solo percentage offers need tax paperwork on file. Assisted hourly is still allowed.');
   }
 
-  const choices = offerChoicesForCleaner(input.storedTerms, input.w9Status, input.bedrooms);
+  const choices = offerChoicesForCleaner(input.storedTerms, input.paperwork, input.bedrooms);
   let method: CompensationMethod;
   let rate: number;
   let assisted = false;
@@ -665,8 +739,8 @@ export function resolveAssignmentAgreement(input: {
     assisted = choice.assisted;
   }
 
-  if (method === 'PERCENTAGE' && input.w9Status === 'MISSING') {
-    throw new Error('Solo percentage offers need a W-9 on file. Assisted hourly is still allowed.');
+  if (method === 'PERCENTAGE' && !soloPercentageAllowed(input.paperwork)) {
+    throw new Error('Solo percentage offers need tax paperwork on file. Assisted hourly is still allowed.');
   }
 
   const manualEligibleBase = input.manualBase != null && Number.isFinite(input.manualBase);

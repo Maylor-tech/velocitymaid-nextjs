@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
+import { paperworkFromProfile } from '@/lib/cleanerComp/pay';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,6 +30,9 @@ export async function GET(request: NextRequest) {
             memberStatus: true,
             certificationLabel: true,
             isInternalTeam: true,
+            taxPaperworkType: true,
+            taxPaperworkStatus: true,
+            taxPaperworkOn: true,
           },
         },
         Branch_User_primaryBranchIdToBranch: {
@@ -52,6 +56,7 @@ export async function GET(request: NextRequest) {
         certificationLabel: c.CleanerProfile?.certificationLabel ?? 'PENDING',
         isInternalTeam: c.CleanerProfile?.isInternalTeam ?? false,
         branchName: c.Branch_User_primaryBranchIdToBranch?.name ?? null,
+        paperwork: paperworkFromProfile(c.CleanerProfile),
       })),
     });
   } catch (error: unknown) {

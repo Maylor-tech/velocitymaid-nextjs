@@ -7,7 +7,9 @@ CREATE TYPE "CleanerPayableStatus" AS ENUM ('NEEDS_HOURS', 'NEEDS_RECONCILIATION
 CREATE TYPE "PayBasis" AS ENUM ('TERMS', 'HISTORICAL_AS_PAID');
 CREATE TYPE "AllocationType" AS ENUM ('JOB', 'ADVANCE', 'OTHER');
 CREATE TYPE "PaidFromKind" AS ENUM ('BUSINESS_ACCOUNT', 'PERSONAL_FUNDS', 'UNKNOWN');
-CREATE TYPE "W9Status" AS ENUM ('ON_FILE', 'MISSING');
+CREATE TYPE "ReimbursementStatus" AS ENUM ('OWED', 'REPAID');
+CREATE TYPE "TaxPaperworkType" AS ENUM ('W9', 'W4_I9', 'NONE');
+CREATE TYPE "TaxPaperworkStatus" AS ENUM ('ON_FILE', 'MISSING');
 
 CREATE TABLE "cleaner_comp_terms" (
     "id" TEXT NOT NULL,
@@ -122,9 +124,18 @@ CREATE TABLE "reimbursements_owed" (
     "manualPaymentId" TEXT NOT NULL,
     "personName" TEXT NOT NULL,
     "amount" DECIMAL(10,2) NOT NULL,
+    "status" "ReimbursementStatus" NOT NULL DEFAULT 'OWED',
+    "repaidOn" DATE,
+    "repaidMethod" "ManualPaymentMethod",
+    "repaidMemo" TEXT,
+    "repaidBy" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "reimbursements_owed_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "reimbursements_owed_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "reimbursements_owed_repaid_complete" CHECK (
+        ("status" = 'OWED' AND "repaidOn" IS NULL)
+        OR ("status" = 'REPAID' AND "repaidOn" IS NOT NULL)
+    )
 );
 
 CREATE UNIQUE INDEX "reimbursements_owed_manualPaymentId_key" ON "reimbursements_owed"("manualPaymentId");
@@ -154,10 +165,11 @@ CREATE TABLE "cleaner_payables" (
 CREATE UNIQUE INDEX "cleaner_payables_jobId_cleanerId_key" ON "cleaner_payables"("jobId", "cleanerId");
 CREATE INDEX "cleaner_payables_cleanerId_status_idx" ON "cleaner_payables"("cleanerId", "status");
 
-ALTER TABLE "CleanerProfile" ADD COLUMN "w9Status" "W9Status" NOT NULL DEFAULT 'MISSING';
-ALTER TABLE "CleanerProfile" ADD COLUMN "w9StatusOn" TIMESTAMP(3);
+ALTER TABLE "CleanerProfile" ADD COLUMN "taxPaperworkType" "TaxPaperworkType" NOT NULL DEFAULT 'W9';
+ALTER TABLE "CleanerProfile" ADD COLUMN "taxPaperworkStatus" "TaxPaperworkStatus" NOT NULL DEFAULT 'MISSING';
+ALTER TABLE "CleanerProfile" ADD COLUMN "taxPaperworkOn" TIMESTAMP(3);
 
-ALTER TABLE "cleaner_comp_terms" ADD CONSTRAINT "cleaner_comp_terms_cleanerId_fkey" FOREIGN KEY ("cleanerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "cleaner_comp_terms" ADD CONSTRAINT "cleaner_comp_terms_cleanerId_fkey" FOREIGN KEY ("cleanerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE "compensation_agreements" ADD CONSTRAINT "compensation_agreements_jobOfferId_fkey" FOREIGN KEY ("jobOfferId") REFERENCES "JobOffer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "compensation_agreements" ADD CONSTRAINT "compensation_agreements_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -167,6 +179,7 @@ ALTER TABLE "manual_payments" ADD CONSTRAINT "manual_payments_cleanerId_fkey" FO
 
 ALTER TABLE "manual_payment_allocations" ADD CONSTRAINT "manual_payment_allocations_manualPaymentId_fkey" FOREIGN KEY ("manualPaymentId") REFERENCES "manual_payments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "manual_payment_allocations" ADD CONSTRAINT "manual_payment_allocations_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "manual_payment_allocations" ADD CONSTRAINT "manual_payment_allocations_appliedJobId_fkey" FOREIGN KEY ("appliedJobId") REFERENCES "Job"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE "reimbursements_owed" ADD CONSTRAINT "reimbursements_owed_manualPaymentId_fkey" FOREIGN KEY ("manualPaymentId") REFERENCES "manual_payments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 

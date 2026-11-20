@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { soloPercentageAllowed, type TaxPaperwork } from '@/lib/cleanerComp/pay';
 
 type PayTermsPayload = {
   success: boolean;
@@ -8,7 +9,7 @@ type PayTermsPayload = {
   assigned?: boolean;
   cleanerName?: string;
   serviceDate?: string;
-  w9Status?: 'ON_FILE' | 'MISSING';
+  paperwork?: TaxPaperwork;
   terms?: {
     soloRate: number;
     soloMethod?: 'PERCENTAGE' | 'HOURLY' | 'FLAT';
@@ -61,7 +62,8 @@ export function JobPayTerms({ jobId, assigned }: { jobId: string; assigned: bool
 
   if (!assigned) return null;
 
-  const soloBlocked = data?.w9Status === 'MISSING' && (data.terms?.soloMethod ?? 'PERCENTAGE') === 'PERCENTAGE';
+  const soloBlocked =
+    !soloPercentageAllowed(data?.paperwork) && (data?.terms?.soloMethod ?? 'PERCENTAGE') === 'PERCENTAGE';
 
   return (
     <section className="rounded-[14px] border border-vm-line bg-white p-4">
@@ -109,7 +111,7 @@ export function JobPayTerms({ jobId, assigned }: { jobId: string; assigned: bool
       )}
       {soloBlocked && !data?.agreement ? (
         <p className="mt-2 font-body text-sm text-vm-text">
-          W-9 is missing. Solo percentage stays blocked. Assisted hourly is allowed.
+          Tax paperwork is missing. Solo percentage stays blocked. Assisted hourly is allowed.
         </p>
       ) : null}
       {error ? <p className="mt-2 font-body text-sm text-vm-danger">{error}</p> : null}

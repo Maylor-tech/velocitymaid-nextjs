@@ -7,11 +7,12 @@ import {
   COMPENSATION_METHODS,
   homeSizeColumns,
   homeSizeExceptionLabel,
+  paperworkFromProfile,
   parseHomeSizeException,
+  TAX_PAPERWORK_TYPES,
   termsInEffect,
-  W9_STATUSES,
   type CompensationMethod,
-  type W9Status,
+  type TaxPaperworkType,
 } from '@/lib/cleanerComp/pay';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
       prisma.cleanerCompTerms.findMany({ where: { cleanerId }, orderBy: { effectiveFrom: 'asc' } }),
       prisma.cleanerProfile.findUnique({
         where: { userId: cleanerId },
-        select: { w9Status: true, w9StatusOn: true },
+        select: { taxPaperworkType: true, taxPaperworkStatus: true, taxPaperworkOn: true },
       }),
       jobId
         ? prisma.job.findUnique({
@@ -65,8 +66,7 @@ export async function GET(request: NextRequest) {
               : null,
           }
         : null,
-      w9Status: profile?.w9Status ?? 'MISSING',
-      w9StatusOn: profile?.w9StatusOn?.toISOString().slice(0, 10) ?? null,
+      paperwork: paperworkFromProfile(profile),
     });
   } catch (error) {
     const auth = rethrowIfAuthResponse(error);
@@ -162,24 +162,30 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    let w9Status: W9Status | null = null;
-    if (body.w9Status != null) {
-      if (!W9_STATUSES.includes(body.w9Status)) {
-        return NextResponse.json({ success: false, error: 'W-9 status is on file or missing.' }, { status: 400 });
+    const paperwork = paperworkFromProfile(null);
+    if (body.paperwork != null) {
+      const type = body.paperwork.type as TaxPaperworkType;
+      const on = new Date(`${String(body.paperwork.on || '')}T00:00:00.000Z`);
+      if (!TAX_PAPERWORK_TYPES.includes(type) || type === 'NONE' || Number.isNaN(on.getTime())) {
+        return NextResponse.json(
+          { success: false, error: 'Tax paperwork needs a W-9 or W-4 and I-9, and a date.' },
+          { status: 400 }
+        );
       }
-      w9Status = body.w9Status;
-      const w9StatusOn = body.w9StatusOn ? new Date(String(body.w9StatusOn)) : new Date();
       await prisma.cleanerProfile.upsert({
         where: { userId: cleanerId },
-        update: { w9Status, w9StatusOn: Number.isNaN(w9StatusOn.getTime()) ? new Date() : w9StatusOn },
-        create: { userId: cleanerId, w9Status, w9StatusOn: Number.isNaN(w9StatusOn.getTime()) ? new Date() : w9StatusOn },
+        update: { taxPaperworkType: type, taxPaperworkStatus: 'ON_FILE', taxPaperworkOn: on },
+        create: { userId: cleanerId, taxPaperworkType: type, taxPaperworkStatus: 'ON_FILE', taxPaperworkOn: on },
       });
+      paperwork.type = type;
+      paperwork.status = 'ON_FILE';
+      paperwork.on = on.toISOString().slice(0, 10);
     }
 
     return NextResponse.json({
       success: true,
       effectiveFrom: terms.effectiveFrom.toISOString().slice(0, 10),
-      w9Status,
+      paperwork,
     });
   } catch (error) {
     const auth = rethrowIfAuthResponse(error);

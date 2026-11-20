@@ -34,6 +34,7 @@ import {
 import {
   agreedCleaningPrice,
   cleanerTermsFromRow,
+  paperworkFromProfile,
   resolveAssignmentAgreement,
   termsInEffect,
   type CleanerTerms,
@@ -207,7 +208,7 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
       select: {
         name: true,
         CleanerCompTerms: true,
-        CleanerProfile: { select: { w9Status: true } },
+        CleanerProfile: { select: { taxPaperworkType: true, taxPaperworkStatus: true, taxPaperworkOn: true } },
       },
     });
     const serviceDay = (previewJob.completedAt ?? previewJob.preferredDate)?.toISOString().slice(0, 10) ?? '';
@@ -230,7 +231,7 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
               includedAddOns: input.agreement.includedAddOns,
             }
           : undefined,
-        w9Status: cleaner?.CleanerProfile?.w9Status ?? 'MISSING',
+        paperwork: paperworkFromProfile(cleaner?.CleanerProfile),
         bedrooms: previewJob.Property?.bedrooms ?? null,
         eligibleBase: agreedCleaningPrice({
           agreedOperationalPrice: previewJob.agreedOperationalPrice,

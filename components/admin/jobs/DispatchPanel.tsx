@@ -14,9 +14,10 @@ import {
 } from '@/lib/dispatch/releaseReasons';
 import {
   offerChoicesForCleaner,
+  soloPercentageAllowed,
   type CleanerTerms,
   type CompensationMethod,
-  type W9Status,
+  type TaxPaperwork,
 } from '@/lib/cleanerComp/pay';
 
 type OfferRow = {
@@ -148,7 +149,7 @@ export function DispatchPanel({
   const [manualBase, setManualBase] = useState('');
   const [storedTerms, setStoredTerms] = useState<CleanerTerms | null>(null);
   const [bedrooms, setBedrooms] = useState<number | null>(null);
-  const [w9Status, setW9Status] = useState<W9Status | null>(null);
+  const [paperwork, setPaperwork] = useState<TaxPaperwork | null>(null);
   const [durationMins, setDurationMins] = useState('');
   const [ttlMinutes, setTtlMinutes] = useState('');
   const [urgency, setUrgency] = useState<'STANDARD' | 'SAME_DAY' | 'URGENT'>('STANDARD');
@@ -189,7 +190,7 @@ export function DispatchPanel({
     if (!selectedCleanerId) {
       setStoredTerms(null);
       setBedrooms(null);
-      setW9Status(null);
+      setPaperwork(null);
       return;
     }
     let cancelled = false;
@@ -197,17 +198,17 @@ export function DispatchPanel({
       `/api/admin/cleaner-pay/terms?cleanerId=${encodeURIComponent(selectedCleanerId)}&jobId=${encodeURIComponent(jobId)}`
     )
       .then((res) => res.json())
-      .then((json: { success?: boolean; terms?: CleanerTerms | null; w9Status?: W9Status; bedrooms?: number | null }) => {
+      .then((json: { success?: boolean; terms?: CleanerTerms | null; paperwork?: TaxPaperwork; bedrooms?: number | null }) => {
         if (cancelled || !json.success) return;
         setStoredTerms(json.terms ?? null);
         setBedrooms(json.bedrooms ?? null);
-        setW9Status(json.w9Status ?? 'MISSING');
+        setPaperwork(json.paperwork ?? { type: 'W9', status: 'MISSING' });
       })
       .catch(() => {
         if (!cancelled) {
           setStoredTerms(null);
           setBedrooms(null);
-          setW9Status(null);
+          setPaperwork(null);
         }
       });
     return () => {
@@ -238,7 +239,7 @@ export function DispatchPanel({
       setError('Select a cleaner');
       return;
     }
-    const choices = offerChoicesForCleaner(storedTerms, w9Status, bedrooms);
+    const choices = offerChoicesForCleaner(storedTerms, paperwork, bedrooms);
     const choice = choices.some((row) => row.id === payChoice)
       ? payChoice
       : choices.length === 0
@@ -248,8 +249,8 @@ export function DispatchPanel({
       setError('Enter this cleaner’s rate. No default is assumed.');
       return;
     }
-    if ((choice === 'solo' || (choice === 'custom' && customMethod === 'PERCENTAGE')) && w9Status === 'MISSING') {
-      setError('Solo percentage offers need a W-9 on file. Assisted hourly is still allowed.');
+    if ((choice === 'solo' || (choice === 'custom' && customMethod === 'PERCENTAGE')) && !soloPercentageAllowed(paperwork)) {
+      setError('Solo percentage offers need tax paperwork on file. Assisted hourly is still allowed.');
       return;
     }
     setSending(true);
@@ -435,9 +436,9 @@ export function DispatchPanel({
             </div>
             <div>
               <p className="block text-sm font-medium text-vm-text mb-1">Cleaner compensation</p>
-              {offerChoicesForCleaner(storedTerms, w9Status, bedrooms).length > 0 ? (
+              {offerChoicesForCleaner(storedTerms, paperwork, bedrooms).length > 0 ? (
                 <div className="flex flex-col gap-2">
-                  {offerChoicesForCleaner(storedTerms, w9Status, bedrooms).map((choice) => (
+                  {offerChoicesForCleaner(storedTerms, paperwork, bedrooms).map((choice) => (
                     <button
                       key={choice.id}
                       type="button"
@@ -503,9 +504,9 @@ export function DispatchPanel({
                 {' '}
                 No add-on pay rule is set. Add-on amounts stay out of the percentage base unless this agreement marks them included.
               </p>
-              {w9Status === 'MISSING' ? (
+              {!soloPercentageAllowed(paperwork) ? (
                 <p className="mt-1 font-body text-sm text-vm-muted">
-                  W-9 is missing. Solo percentage offers stay blocked. Assisted hourly is allowed.
+                  Tax paperwork is missing. Solo percentage offers stay blocked. Assisted hourly is allowed.
                 </p>
               ) : null}
               <label className="mt-3 block font-body text-sm font-medium text-vm-text" htmlFor="manual-base">

@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { cleanerPayCsv } from '@/lib/cleanerComp/pay';
 
 export type CleanerPayLine = {
@@ -32,9 +32,12 @@ export type CleanerPayAdvance = {
 };
 
 export type CleanerPayReimbursement = {
+  id?: string;
   person: string;
   amount: string;
   detail: string;
+  status?: 'OWED' | 'REPAID';
+  repaidOn?: string | null;
 };
 
 export type CleanerPayUnmatched = {
@@ -87,9 +90,34 @@ export function CleanerPayScreen({
   exceptionForm = null,
   sample = false,
 }: CleanerPayScreenProps) {
+  const [repayId, setRepayId] = useState<string | null>(null);
+  const [repayOn, setRepayOn] = useState('');
+  const [repayMethod, setRepayMethod] = useState('ZELLE');
+  const [repayMemo, setRepayMemo] = useState('');
+  const [repayError, setRepayError] = useState<string | null>(null);
+  const [repaySaving, setRepaySaving] = useState(false);
   const expected = lines.reduce((sum, line) => sum + money(line.expected), 0);
   const paid = lines.reduce((sum, line) => sum + money(line.paid), 0);
   const balance = lines.reduce((sum, line) => sum + money(line.balance), 0);
+
+  const markRepaid = async (id: string) => {
+    setRepaySaving(true);
+    setRepayError(null);
+    try {
+      const res = await fetch('/api/admin/cleaner-pay/reimbursements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, repaidOn: repayOn, repaidMethod: repayMethod, repaidMemo: repayMemo }),
+      });
+      const json = (await res.json()) as { success?: boolean; error?: string };
+      if (!res.ok || !json.success) throw new Error(json.error || 'Could not mark this reimbursement repaid');
+      window.location.reload();
+    } catch (err) {
+      setRepayError(err instanceof Error ? err.message : 'Could not mark this reimbursement repaid');
+    } finally {
+      setRepaySaving(false);
+    }
+  };
 
   const download = () => {
     const csv = cleanerPayCsv(lines);
@@ -250,11 +278,79 @@ export function CleanerPayScreen({
         ) : (
           <ul className="flex flex-col">
             {reimbursements.map((row) => (
-              <li key={`${row.person}-${row.amount}-${row.detail}`} className="border-b border-vm-line px-4 py-3 last:border-b-0">
+              <li key={row.id || `${row.person}-${row.amount}-${row.detail}`} className="border-b border-vm-line px-4 py-3 last:border-b-0">
                 <p className="font-body text-sm font-semibold text-vm-navy">
-                  Reimbursement owed to {row.person} · {row.amount}
+                  {row.status === 'REPAID' ? 'Reimbursement repaid to' : 'Reimbursement owed to'} {row.person} · {row.amount}
                 </p>
-                <p className="font-body text-sm text-vm-muted">{row.detail}</p>
+                <p className="font-body text-sm text-vm-muted">
+                  {row.detail}
+                  {row.status === 'REPAID' && row.repaidOn ? ` · repaid ${row.repaidOn}` : ''}
+                </p>
+                {!sample && row.id && row.status !== 'REPAID' ? (
+                  repayId === row.id ? (
+                    <form
+                      className="mt-3 grid max-w-sm gap-2"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void markRepaid(row.id as string);
+                      }}
+                    >
+                      <label className="font-body text-sm text-vm-text" htmlFor={`repaid-on-${row.id}`}>
+                        Repaid on
+                        <input
+                          id={`repaid-on-${row.id}`}
+                          type="date"
+                          required
+                          value={repayOn}
+                          onChange={(event) => setRepayOn(event.target.value)}
+                          className="mt-1 block min-h-11 w-full rounded-[10px] border border-vm-border px-3 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
+                        />
+                      </label>
+                      <label className="font-body text-sm text-vm-text" htmlFor={`repaid-method-${row.id}`}>
+                        Method
+                        <select
+                          id={`repaid-method-${row.id}`}
+                          value={repayMethod}
+                          onChange={(event) => setRepayMethod(event.target.value)}
+                          className="mt-1 block min-h-11 w-full rounded-[10px] border border-vm-border bg-white px-3 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
+                        >
+                          <option value="ZELLE">Zelle</option>
+                          <option value="CHECK">Check</option>
+                          <option value="CASH">Cash</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                      </label>
+                      <label className="font-body text-sm text-vm-text" htmlFor={`repaid-memo-${row.id}`}>
+                        Memo
+                        <input
+                          id={`repaid-memo-${row.id}`}
+                          value={repayMemo}
+                          onChange={(event) => setRepayMemo(event.target.value)}
+                          className="mt-1 block min-h-11 w-full rounded-[10px] border border-vm-border px-3 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
+                        />
+                      </label>
+                      {repayError ? <p className="font-body text-sm text-vm-text">{repayError}</p> : null}
+                      <button
+                        type="submit"
+                        disabled={repaySaving}
+                        className="inline-flex min-h-11 items-center justify-center rounded-[10px] bg-vm-navy px-4 font-body text-sm font-semibold text-white focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan disabled:opacity-60"
+                      >
+                        {repaySaving ? 'Saving…' : 'Mark repaid'}
+                      </button>
+                    </form>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRepayId(row.id as string);
+                        setRepayError(null);
+                      }}
+                      className="mt-2 inline-flex min-h-11 items-center rounded-[10px] border border-vm-border px-4 font-body text-sm font-semibold text-vm-text focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
+                    >
+                      Mark repaid
+                    </button>
+                  )
+                ) : null}
               </li>
             ))}
           </ul>

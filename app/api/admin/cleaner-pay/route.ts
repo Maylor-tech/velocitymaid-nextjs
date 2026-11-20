@@ -9,6 +9,7 @@ import {
   compensationMethodLabel,
   DEFAULT_1099_THRESHOLD,
   homeSizeExceptionLabel,
+  paperworkFromProfile,
   reviewPayables,
   termsBoundary,
   termsInEffect,
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
         unmatched: [],
         ytd: null,
         terms: null,
-        w9Status: null,
+        paperwork: null,
       });
     }
 
@@ -130,7 +131,10 @@ export async function GET(request: NextRequest) {
         where: { cleanerId: cleaner.id },
         orderBy: { effectiveFrom: 'asc' },
       }),
-      prisma.cleanerProfile.findUnique({ where: { userId: cleaner.id }, select: { w9Status: true, w9StatusOn: true } }),
+      prisma.cleanerProfile.findUnique({
+        where: { userId: cleaner.id },
+        select: { taxPaperworkType: true, taxPaperworkStatus: true, taxPaperworkOn: true },
+      }),
       prisma.cleanerPaySettings.findUnique({ where: { id: 'default' } }),
       prisma.reimbursementOwed.findMany({
         include: { ManualPayment: { select: { paidOn: true, memo: true } } },
@@ -240,8 +244,7 @@ export async function GET(request: NextRequest) {
               : null,
           }
         : null,
-      w9Status: profile?.w9Status ?? 'MISSING',
-      w9StatusOn: profile?.w9StatusOn?.toISOString().slice(0, 10) ?? null,
+      paperwork: paperworkFromProfile(profile),
       ytd: {
         total: formatMoney(notice.ytd),
         threshold: formatMoney(notice.threshold),
@@ -250,9 +253,12 @@ export async function GET(request: NextRequest) {
       },
       advances,
       reimbursements: reimbursements.map((row) => ({
+        id: row.id,
         person: row.personName,
         amount: formatMoney(money(row.amount)),
         detail: `${formatDay(day(row.ManualPayment.paidOn))} · ${row.ManualPayment.memo || 'Personal funds'}`,
+        status: row.status,
+        repaidOn: row.repaidOn ? formatDay(day(row.repaidOn)) : null,
       })),
       unmatched: unmatched.map((row) => ({
         cleaner: row.ManualPayment.Cleaner.name || 'Cleaner',

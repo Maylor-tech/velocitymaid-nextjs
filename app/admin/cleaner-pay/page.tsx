@@ -14,6 +14,7 @@ import {
   HomeSizeExceptionForm,
   type HomeSizeExceptionValue,
 } from '@/components/admin/cleanerPay/HomeSizeExceptionForm';
+import { taxPaperworkLabel } from '@/lib/cleanerComp/pay';
 
 type TermsPayload = {
   soloRate?: number;
@@ -65,13 +66,7 @@ export default function CleanerPayPage() {
             }`
           : undefined
       );
-      setW9Label(
-        json.w9Status === 'ON_FILE'
-          ? `W-9 on file${json.w9StatusOn ? ` · ${json.w9StatusOn}` : ''}.`
-          : json.w9Status === 'MISSING'
-            ? 'W-9 missing. Solo percentage offers stay blocked. Assisted hourly is allowed.'
-            : undefined
-      );
+      setW9Label(json.paperwork ? taxPaperworkLabel(json.paperwork) : undefined);
     })();
     return () => {
       cancelled = true;
