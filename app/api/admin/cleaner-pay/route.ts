@@ -5,9 +5,13 @@ import { prisma } from '@/lib/prisma';
 import {
   agreedCleaningPrice,
   cleanerPayLabel,
+  cleanerTermsFromRow,
   compensationMethodLabel,
   DEFAULT_1099_THRESHOLD,
+  homeSizeExceptionLabel,
   reviewPayables,
+  termsBoundary,
+  termsInEffect,
   thresholdNotice,
   yearToDateTotal,
   type JobPayInput,
@@ -122,7 +126,10 @@ export async function GET(request: NextRequest) {
     }));
 
     const [terms, profile, settings, reimbursements, unmatched] = await Promise.all([
-      prisma.cleanerCompTerms.findUnique({ where: { cleanerId: cleaner.id } }),
+      prisma.cleanerCompTerms.findMany({
+        where: { cleanerId: cleaner.id },
+        orderBy: { effectiveFrom: 'asc' },
+      }),
       prisma.cleanerProfile.findUnique({ where: { userId: cleaner.id }, select: { w9Status: true, w9StatusOn: true } }),
       prisma.cleanerPaySettings.findUnique({ where: { id: 'default' } }),
       prisma.reimbursementOwed.findMany({
@@ -148,7 +155,10 @@ export async function GET(request: NextRequest) {
         includedAddOns: agreement.includedAddOns,
       }),
       tip: 0,
-      termsEffectiveFrom: terms?.effectiveFrom.toISOString().slice(0, 10) ?? null,
+      termsEffectiveFrom: termsBoundary(
+        terms.map((row) => ({ effectiveFrom: row.effectiveFrom.toISOString().slice(0, 10) })),
+        day(agreement.Job.completedAt ?? agreement.Job.preferredDate)
+      ),
       agreement: {
         method: agreement.method,
         rate: money(agreement.rate) ?? 0,
@@ -193,6 +203,8 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    const today = new Date().toISOString().slice(0, 10);
+    const currentTerms = termsInEffect(terms.map((row) => cleanerTermsFromRow(row)), today);
     const year = new Date().getUTCFullYear();
     const ytd = yearToDateTotal(paymentInputs, cleaner.id, year);
     const notice = thresholdNotice(ytd, settings ? Number(settings.threshold1099) : DEFAULT_1099_THRESHOLD);
@@ -211,13 +223,21 @@ export async function GET(request: NextRequest) {
       success: true,
       cleanerId: cleaner.id,
       cleanerName: cleaner.name || 'Cleaner',
-      terms: terms
+      terms: currentTerms
         ? {
-            soloMethod: terms.soloMethod,
-            soloRate: Number(terms.soloRate),
-            assistedMethod: terms.assistedMethod,
-            assistedRate: Number(terms.assistedRate),
-            effectiveFrom: terms.effectiveFrom.toISOString().slice(0, 10),
+            soloMethod: currentTerms.soloMethod,
+            soloRate: currentTerms.soloRate,
+            assistedMethod: currentTerms.assistedMethod,
+            assistedRate: currentTerms.assistedRate,
+            effectiveFrom: currentTerms.effectiveFrom,
+            homeSizeException: currentTerms.homeSizeException
+              ? {
+                  minBedrooms: currentTerms.homeSizeException.minBedrooms,
+                  method: currentTerms.homeSizeException.method,
+                  rate: currentTerms.homeSizeException.rate,
+                  label: homeSizeExceptionLabel(currentTerms.homeSizeException),
+                }
+              : null,
           }
         : null,
       w9Status: profile?.w9Status ?? 'MISSING',

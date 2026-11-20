@@ -86,13 +86,22 @@ async function main() {
       }));
     cleaners.push({ id: user.id, name: user.name || person.name, email: user.email });
     const profile = await prisma.cleanerProfile.findUnique({ where: { userId: user.id } });
-    if (!profile) {
-      await prisma.cleanerProfile.create({ data: { userId: user.id, w9Status: 'MISSING' } });
+    if (!profile || profile.w9StatusOn == null) {
+      await prisma.cleanerProfile.upsert({
+        where: { userId: user.id },
+        update: { w9Status: 'MISSING', w9StatusOn: null },
+        create: { userId: user.id, w9Status: 'MISSING' },
+      });
     }
     const termsRule = HISTORY_TERMS.find((rule) => rule.match.test(person.name) || rule.match.test(user.name || ''));
     if (termsRule) {
       effectiveFrom[user.id] = termsRule.effectiveFrom;
-      const terms = await prisma.cleanerCompTerms.findUnique({ where: { cleanerId: user.id } });
+      const terms = await prisma.cleanerCompTerms.findFirst({
+        where: {
+          cleanerId: user.id,
+          effectiveFrom: new Date(`${termsRule.effectiveFrom}T00:00:00.000Z`),
+        },
+      });
       if (!terms) {
         await prisma.cleanerCompTerms.create({
           data: {
@@ -204,8 +213,10 @@ async function main() {
     if (agreement) continue;
     const offerId = `offer-history-${job.jobId}`;
     const hourly = job.agreement.method === 'HOURLY';
-    await prisma.jobOffer.create({
-      data: {
+    await prisma.jobOffer.upsert({
+      where: { id: offerId },
+      update: {},
+      create: {
         id: offerId,
         jobId: job.jobId,
         cleanerId: job.cleanerId,
@@ -213,7 +224,7 @@ async function main() {
         offeredAt: new Date(`${job.serviceDate}T12:00:00.000Z`),
         expiresAt: new Date(`${job.serviceDate}T18:00:00.000Z`),
         respondedAt: new Date(`${job.serviceDate}T12:00:00.000Z`),
-        compensationAmount: hourly ? job.agreement.rate : job.agreement.rate,
+        compensationAmount: job.agreement.rate,
         compensationCurrency: 'USD',
         compensationBasis: hourly ? CompensationBasis.HOURLY : CompensationBasis.OTHER,
         operationalNotes: 'History import. No offer email was sent.',

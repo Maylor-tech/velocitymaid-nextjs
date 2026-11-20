@@ -23,6 +23,7 @@ import {
 } from '@/lib/billing/commercialAmount';
 import { isTerminalStatus } from '@/lib/jobStatus';
 import { DispatchPanel } from '@/components/admin/jobs/DispatchPanel';
+import { JobPayTerms } from '@/components/admin/jobs/JobPayTerms';
 import type { DispatchUiState } from '@/lib/dispatch/dispatchState';
 
 interface Job {
@@ -1600,6 +1601,9 @@ export default function AdminJobDetailPage() {
                 <p className="text-sm text-vm-muted">{job.assignedCleaner.email}</p>
               </div>
             )}
+            <div className="md:col-span-2">
+              <JobPayTerms jobId={jobId} assigned={Boolean(job.assignedCleanerId)} />
+            </div>
             {job.internalNotes && (
               <div className="md:col-span-2">
                 <p className="text-sm text-vm-muted">Service notes</p>

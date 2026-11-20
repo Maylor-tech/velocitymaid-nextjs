@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import {
   ALLOCATION_TYPES,
   assertAllocationMemo,
+  assertAllocationsWithinPayment,
   MANUAL_PAYMENT_METHODS,
   PAID_FROM_KINDS,
   type AllocationType,
@@ -71,8 +72,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'A job allocation needs a job.' }, { status: 400 });
     }
     const allocated = parsed.reduce((sum, row) => sum + row.amount, 0);
-    if (Math.round(allocated * 100) > Math.round(amount * 100)) {
-      return NextResponse.json({ success: false, error: 'Allocations cannot exceed the payment.' }, { status: 400 });
+    try {
+      assertAllocationsWithinPayment(amount, allocated);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Allocations cannot exceed the payment.';
+      return NextResponse.json({ success: false, error: message }, { status: 400 });
     }
 
     const payment = await prisma.$transaction(async (tx) => {

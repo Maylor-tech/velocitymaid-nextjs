@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { cleanerPayCsv } from '@/lib/cleanerComp/pay';
 
 export type CleanerPayLine = {
@@ -60,6 +61,7 @@ type CleanerPayScreenProps = {
   ytd?: CleanerPayYtd | null;
   termsLabel?: string;
   w9Label?: string;
+  exceptionForm?: ReactNode;
   sample?: boolean;
 };
 
@@ -82,6 +84,7 @@ export function CleanerPayScreen({
   ytd = null,
   termsLabel,
   w9Label,
+  exceptionForm = null,
   sample = false,
 }: CleanerPayScreenProps) {
   const expected = lines.reduce((sum, line) => sum + money(line.expected), 0);
@@ -134,6 +137,8 @@ export function CleanerPayScreen({
           {w9Label ? <span className="block">{w9Label}</span> : null}
         </p>
       ) : null}
+
+      {exceptionForm}
 
       {ytd ? (
         <div className="rounded-[14px] border border-vm-line bg-white p-4">

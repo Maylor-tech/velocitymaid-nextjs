@@ -33,7 +33,9 @@ import {
 } from '@/lib/dispatch/cleanerOfferDefaults';
 import {
   agreedCleaningPrice,
+  cleanerTermsFromRow,
   resolveAssignmentAgreement,
+  termsInEffect,
   type CleanerTerms,
   type CompensationMethod,
   type OfferChoice,
@@ -69,6 +71,7 @@ const OFFER_JOB_SELECT = {
   internalNotes: true,
   dispatchUrgency: true,
   preferredDate: true,
+  completedAt: true,
   preferredTime: true,
   Customer: { select: { billingPolicy: true } },
   Branch: { select: { id: true, slug: true, country: true } },
@@ -207,15 +210,11 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
         CleanerProfile: { select: { w9Status: true } },
       },
     });
-    const storedTerms: CleanerTerms | null = cleaner?.CleanerCompTerms
-      ? {
-          soloMethod: cleaner.CleanerCompTerms.soloMethod,
-          soloRate: Number(cleaner.CleanerCompTerms.soloRate),
-          assistedMethod: cleaner.CleanerCompTerms.assistedMethod,
-          assistedRate: Number(cleaner.CleanerCompTerms.assistedRate),
-          effectiveFrom: cleaner.CleanerCompTerms.effectiveFrom.toISOString().slice(0, 10),
-        }
-      : null;
+    const serviceDay = (previewJob.completedAt ?? previewJob.preferredDate)?.toISOString().slice(0, 10) ?? '';
+    const storedTerms: CleanerTerms | null = termsInEffect(
+      (cleaner?.CleanerCompTerms ?? []).map((row) => cleanerTermsFromRow(row)),
+      serviceDay
+    );
     const manualBase =
       input.agreement.manualBase == null ? null : Number(input.agreement.manualBase);
     try {
@@ -232,6 +231,7 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
             }
           : undefined,
         w9Status: cleaner?.CleanerProfile?.w9Status ?? 'MISSING',
+        bedrooms: previewJob.Property?.bedrooms ?? null,
         eligibleBase: agreedCleaningPrice({
           agreedOperationalPrice: previewJob.agreedOperationalPrice,
           agreedCustomerPrice: previewJob.agreedCustomerPrice,

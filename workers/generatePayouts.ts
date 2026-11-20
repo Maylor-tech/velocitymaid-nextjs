@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma';
 import {
   agreedCleaningPrice,
   reviewPayables,
+  termsBoundary,
   type JobPayInput,
   type ManualPaymentInput,
   type Obligation,
@@ -121,9 +122,12 @@ export async function generatePayouts(
         where: { cleanerId: { in: cleanerIds } },
       })
     : [];
-  const effectiveFrom = new Map(
-    terms.map((row) => [row.cleanerId, row.effectiveFrom.toISOString().slice(0, 10)])
-  );
+  const termsByCleaner = new Map<string, { effectiveFrom: string }[]>();
+  for (const row of terms) {
+    const list = termsByCleaner.get(row.cleanerId) ?? [];
+    list.push({ effectiveFrom: row.effectiveFrom.toISOString().slice(0, 10) });
+    termsByCleaner.set(row.cleanerId, list);
+  }
 
   const paymentInputs: ManualPaymentInput[] = payments.map((payment) => ({
     id: payment.id,
@@ -189,7 +193,10 @@ export async function generatePayouts(
         includedAddOns: agreement.includedAddOns,
       }),
       tip: 0,
-      termsEffectiveFrom: effectiveFrom.get(job.assignedCleanerId) ?? null,
+      termsEffectiveFrom: termsBoundary(
+        termsByCleaner.get(job.assignedCleanerId) ?? [],
+        serviceDate(job.completedAt ?? job.preferredDate)
+      ),
       agreement: {
         method: agreement.method,
         rate: money(agreement.rate) ?? 0,

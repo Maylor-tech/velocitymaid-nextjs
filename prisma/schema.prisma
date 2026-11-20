@@ -741,25 +741,31 @@ model JobOffer {
 /// Per-cleaner terms entered on the admin screen. No cleaner has a code default.
 model CleanerCompTerms {
   id             String             @id @default(cuid())
-  cleanerId      String             @unique
+  cleanerId      String
   soloMethod     CompensationMethod
   soloRate       Decimal            @db.Decimal(10, 2)
   assistedMethod CompensationMethod
   assistedRate   Decimal            @db.Decimal(10, 2)
-  /// Jobs before this date are historical as paid, unless that job has its own hourly basis.
+  /// Optional. Null means a 4+ bedroom solo clean uses the standard solo terms.
+  homeSizeMinBedrooms Int?
+  homeSizeSoloMethod  CompensationMethod?
+  homeSizeSoloRate    Decimal?           @db.Decimal(10, 2)
+  /// The row in effect on the service date is the latest effectiveFrom on or before that date.
   effectiveFrom  DateTime           @db.Date
   note           String?
   setBy          String?
   setAt          DateTime           @default(now())
   Cleaner        User               @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
 
+  @@unique([cleanerId, effectiveFrom])
+  @@index([cleanerId])
   @@map("cleaner_comp_terms")
 }
 
-/// Frozen assignment terms. One row per offer. Rate edits stop once the job is complete.
+/// One agreement per job and cleaner. The offer is optional when the cleaner was assigned directly.
 model CompensationAgreement {
   id                String             @id @default(cuid())
-  jobOfferId        String             @unique
+  jobOfferId        String?            @unique
   jobId             String
   cleanerId         String
   method            CompensationMethod
@@ -777,11 +783,11 @@ model CompensationAgreement {
   verifiedHours     Decimal?           @db.Decimal(8, 2)
   hoursVerifiedBy   String?
   hoursVerifiedAt   DateTime?
-  JobOffer          JobOffer           @relation(fields: [jobOfferId], references: [id], onDelete: Cascade)
-  Job               Job                @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  JobOffer          JobOffer?          @relation(fields: [jobOfferId], references: [id], onDelete: Restrict)
+  Job               Job                @relation(fields: [jobId], references: [id], onDelete: Restrict)
   Cleaner           User               @relation("CompensationAgreementCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
 
-  @@index([jobId, cleanerId])
+  @@unique([jobId, cleanerId])
   @@index([cleanerId])
   @@map("compensation_agreements")
 }
@@ -859,7 +865,7 @@ model CleanerPayable {
   status      CleanerPayableStatus
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
-  Job         Job                  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Job         Job                  @relation(fields: [jobId], references: [id], onDelete: Restrict)
   Cleaner     User                 @relation("CleanerPayableCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
 
   @@unique([jobId, cleanerId])
@@ -1478,7 +1484,7 @@ model User {
   JobOfferAsCleaner                   JobOffer[]             @relation("JobOfferCleaner")
   JobOfferCreated                     JobOffer[]             @relation("JobOfferCreatedBy")
   JobOfferCancelled                   JobOffer[]             @relation("JobOfferCancelledBy")
-  CleanerCompTerms                    CleanerCompTerms?
+  CleanerCompTerms                    CleanerCompTerms[]
   CompensationAgreements              CompensationAgreement[] @relation("CompensationAgreementCleaner")
   ManualPayments                      ManualPayment[]        @relation("ManualPaymentCleaner")
   CleanerPayables                     CleanerPayable[]       @relation("CleanerPayableCleaner")

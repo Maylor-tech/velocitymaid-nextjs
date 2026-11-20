@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   confirmVerifiedHours,
+  eligibleCleaningAmount,
   expectedPay,
+  parseHomeSizeException,
+  resolveAssignmentAgreement,
   reviewPayables,
   withRateChange,
   type AgreementSnapshot,
@@ -148,6 +151,94 @@ describe('cleaner compensation review', () => {
     });
     expect(result.rows[0]?.status).toBe('NEEDS_RECONCILIATION');
     expect(result.obligations).toHaveLength(0);
+  });
+
+  it('keeps a 4 bedroom solo clean on standard terms when no exception is set', () => {
+    expect(parseHomeSizeException(null)).toBeNull();
+    expect(parseHomeSizeException({ minBedrooms: '', method: '', rate: '' })).toBeNull();
+    const agreed = resolveAssignmentAgreement({
+      choice: 'solo',
+      storedTerms: {
+        soloMethod: 'PERCENTAGE',
+        soloRate: 65,
+        assistedMethod: 'HOURLY',
+        assistedRate: 30,
+        homeSizeException: null,
+      },
+      w9Status: 'ON_FILE',
+      eligibleBase: 390,
+      bedrooms: 4,
+    });
+    expect(agreed).toMatchObject({
+      method: 'PERCENTAGE',
+      rate: 65,
+      compensationAmount: 253.5,
+      includedAddOns: [],
+    });
+  });
+
+  it('uses a saved 4+ bedroom flat amount and leaves smaller homes on standard solo terms', () => {
+    const terms = {
+      soloMethod: 'PERCENTAGE' as const,
+      soloRate: 65,
+      assistedMethod: 'HOURLY' as const,
+      assistedRate: 30,
+      homeSizeException: { minBedrooms: 4, method: 'FLAT' as const, rate: 180 },
+    };
+    expect(
+      resolveAssignmentAgreement({
+        choice: 'solo',
+        storedTerms: terms,
+        w9Status: 'ON_FILE',
+        eligibleBase: 455,
+        bedrooms: 4,
+      })
+    ).toMatchObject({ method: 'FLAT', rate: 180, compensationAmount: 180, includedAddOns: [] });
+    expect(
+      resolveAssignmentAgreement({
+        choice: 'solo',
+        storedTerms: terms,
+        w9Status: 'ON_FILE',
+        eligibleBase: 325,
+        bedrooms: 3,
+      })
+    ).toMatchObject({ method: 'PERCENTAGE', rate: 65, compensationAmount: 211.25 });
+    expect(
+      resolveAssignmentAgreement({
+        choice: 'assisted',
+        storedTerms: terms,
+        w9Status: 'MISSING',
+        eligibleBase: 455,
+        bedrooms: 5,
+      })
+    ).toMatchObject({ method: 'HOURLY', rate: 30, assisted: true });
+    expect(
+      resolveAssignmentAgreement({
+        choice: 'solo',
+        storedTerms: terms,
+        w9Status: 'MISSING',
+        eligibleBase: 455,
+        bedrooms: 4,
+      }).method
+    ).toBe('FLAT');
+  });
+
+  it('excludes an add-on from the percentage base unless the agreement includes it', () => {
+    const excluded = job({
+      agreedCleaningPrice: 430,
+      otherAddOns: [{ key: 'laundry', amount: 40 }],
+      agreement: agreement({ eligibleBase: null, includedAddOns: [] }),
+    });
+    expect(eligibleCleaningAmount(excluded)).toBe(390);
+    expect(expectedPay(excluded)).toBe(253.5);
+
+    const included = job({
+      agreedCleaningPrice: 430,
+      otherAddOns: [{ key: 'laundry', amount: 40 }],
+      agreement: agreement({ eligibleBase: null, includedAddOns: ['laundry'] }),
+    });
+    expect(eligibleCleaningAmount(included)).toBe(430);
+    expect(expectedPay(included)).toBe(279.5);
   });
 
   it('records verified hours once', () => {

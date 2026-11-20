@@ -10,11 +10,16 @@ import {
   type CleanerPayUnmatched,
   type CleanerPayYtd,
 } from '@/components/admin/cleanerPay/CleanerPayScreen';
+import {
+  HomeSizeExceptionForm,
+  type HomeSizeExceptionValue,
+} from '@/components/admin/cleanerPay/HomeSizeExceptionForm';
 
 type TermsPayload = {
   soloRate?: number;
   assistedRate?: number;
   effectiveFrom?: string;
+  homeSizeException?: HomeSizeExceptionValue | null;
 } | null;
 
 export default function CleanerPayPage() {
@@ -25,6 +30,8 @@ export default function CleanerPayPage() {
   const [unmatched, setUnmatched] = useState<CleanerPayUnmatched[]>([]);
   const [ytd, setYtd] = useState<CleanerPayYtd | null>(null);
   const [termsLabel, setTermsLabel] = useState<string | undefined>(undefined);
+  const [exception, setException] = useState<HomeSizeExceptionValue | null>(null);
+  const [cleanerId, setCleanerId] = useState<string | undefined>(undefined);
   const [w9Label, setW9Label] = useState<string | undefined>(undefined);
   const [cleanerName, setCleanerName] = useState('Cleaner pay');
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +47,7 @@ export default function CleanerPayPage() {
         return;
       }
       setCleanerName(json.cleanerName || 'Cleaner pay');
+      setCleanerId(json.cleanerId || undefined);
       setLines(json.lines || []);
       setPayments(json.payments || []);
       setAdvances(json.advances || []);
@@ -47,9 +55,14 @@ export default function CleanerPayPage() {
       setUnmatched(json.unmatched || []);
       setYtd(json.ytd || null);
       const terms = json.terms as TermsPayload;
+      setException(terms?.homeSizeException ?? null);
       setTermsLabel(
         terms
-          ? `Terms from ${terms.effectiveFrom}: solo ${terms.soloRate}% · assisted $${terms.assistedRate} per hour.`
+          ? `Terms from ${terms.effectiveFrom}: solo ${terms.soloRate}% · assisted $${terms.assistedRate} per hour. ${
+              terms.homeSizeException
+                ? terms.homeSizeException.label
+                : 'No home-size exception. No add-on pay rule.'
+            }`
           : undefined
       );
       setW9Label(
@@ -80,6 +93,14 @@ export default function CleanerPayPage() {
       ytd={ytd}
       termsLabel={termsLabel}
       w9Label={w9Label}
+      exceptionForm={
+        <HomeSizeExceptionForm
+          key={exception?.label ?? 'none'}
+          cleanerId={cleanerId}
+          exception={exception}
+          onSaved={() => window.location.reload()}
+        />
+      }
     />
   );
 }

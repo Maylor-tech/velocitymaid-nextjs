@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/requireRole";
 import { assertAdminJobRecord } from "@/lib/auth/adminJobAccess";
+import { jobDeleteBlockReason } from "@/lib/cleanerComp/pay";
 
 async function setArchived(jobId: string, archivedAt: Date | null) {
   const job = await prisma.job.findUnique({
@@ -26,6 +27,18 @@ async function setArchived(jobId: string, archivedAt: Date | null) {
       { success: false, error: "Job not found" },
       { status: 404 }
     );
+  }
+
+  if (archivedAt) {
+    const [agreements, payables, allocations] = await Promise.all([
+      prisma.compensationAgreement.count({ where: { jobId } }),
+      prisma.cleanerPayable.count({ where: { jobId } }),
+      prisma.manualPaymentAllocation.count({ where: { jobId } }),
+    ]);
+    const blocked = jobDeleteBlockReason({ agreements, payables, allocations });
+    if (blocked) {
+      return NextResponse.json({ success: false, error: blocked }, { status: 409 });
+    }
   }
 
   await prisma.job.update({

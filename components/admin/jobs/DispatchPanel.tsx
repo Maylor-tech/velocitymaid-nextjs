@@ -147,6 +147,7 @@ export function DispatchPanel({
   const [payReason, setPayReason] = useState('');
   const [manualBase, setManualBase] = useState('');
   const [storedTerms, setStoredTerms] = useState<CleanerTerms | null>(null);
+  const [bedrooms, setBedrooms] = useState<number | null>(null);
   const [w9Status, setW9Status] = useState<W9Status | null>(null);
   const [durationMins, setDurationMins] = useState('');
   const [ttlMinutes, setTtlMinutes] = useState('');
@@ -187,27 +188,32 @@ export function DispatchPanel({
   useEffect(() => {
     if (!selectedCleanerId) {
       setStoredTerms(null);
+      setBedrooms(null);
       setW9Status(null);
       return;
     }
     let cancelled = false;
-    void fetch(`/api/admin/cleaner-pay/terms?cleanerId=${encodeURIComponent(selectedCleanerId)}`)
+    void fetch(
+      `/api/admin/cleaner-pay/terms?cleanerId=${encodeURIComponent(selectedCleanerId)}&jobId=${encodeURIComponent(jobId)}`
+    )
       .then((res) => res.json())
-      .then((json: { success?: boolean; terms?: CleanerTerms | null; w9Status?: W9Status }) => {
+      .then((json: { success?: boolean; terms?: CleanerTerms | null; w9Status?: W9Status; bedrooms?: number | null }) => {
         if (cancelled || !json.success) return;
         setStoredTerms(json.terms ?? null);
+        setBedrooms(json.bedrooms ?? null);
         setW9Status(json.w9Status ?? 'MISSING');
       })
       .catch(() => {
         if (!cancelled) {
           setStoredTerms(null);
+          setBedrooms(null);
           setW9Status(null);
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [selectedCleanerId]);
+  }, [selectedCleanerId, jobId]);
 
   if (!enabled) return null;
 
@@ -232,7 +238,7 @@ export function DispatchPanel({
       setError('Select a cleaner');
       return;
     }
-    const choices = offerChoicesForCleaner(storedTerms, w9Status);
+    const choices = offerChoicesForCleaner(storedTerms, w9Status, bedrooms);
     const choice = choices.some((row) => row.id === payChoice)
       ? payChoice
       : choices.length === 0
@@ -429,9 +435,9 @@ export function DispatchPanel({
             </div>
             <div>
               <p className="block text-sm font-medium text-vm-text mb-1">Cleaner compensation</p>
-              {offerChoicesForCleaner(storedTerms, w9Status).length > 0 ? (
+              {offerChoicesForCleaner(storedTerms, w9Status, bedrooms).length > 0 ? (
                 <div className="flex flex-col gap-2">
-                  {offerChoicesForCleaner(storedTerms, w9Status).map((choice) => (
+                  {offerChoicesForCleaner(storedTerms, w9Status, bedrooms).map((choice) => (
                     <button
                       key={choice.id}
                       type="button"
@@ -489,12 +495,19 @@ export function DispatchPanel({
                 </div>
               )}
               <p className="mt-2 font-body text-sm text-vm-muted">
-                {w9Status === 'MISSING'
-                  ? 'W-9 is missing. Solo percentage offers stay blocked. Assisted hourly is allowed.'
+                {storedTerms?.homeSizeException
+                  ? `${storedTerms.homeSizeException.minBedrooms}+ bedroom solo uses the saved exception. Smaller homes stay on the standard solo terms.`
                   : storedTerms
-                    ? `Terms from ${storedTerms.effectiveFrom || 'the date on file'}. The cleaner sees the method and rate only.`
+                    ? 'No home-size exception is set. A 4+ bedroom solo clean stays on the standard solo terms.'
                     : 'Set terms for this cleaner before sending an offer. No default is assumed.'}
+                {' '}
+                No add-on pay rule is set. Add-on amounts stay out of the percentage base unless this agreement marks them included.
               </p>
+              {w9Status === 'MISSING' ? (
+                <p className="mt-1 font-body text-sm text-vm-muted">
+                  W-9 is missing. Solo percentage offers stay blocked. Assisted hourly is allowed.
+                </p>
+              ) : null}
               <label className="mt-3 block font-body text-sm font-medium text-vm-text" htmlFor="manual-base">
                 Percentage base
               </label>

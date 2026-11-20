@@ -139,6 +139,8 @@ export function toMoney(raw: unknown): number | null {
 
 /**
  * Agreed cleaning price, minus add-ons the assignment did not mark included.
+ * Terms do not carry an add-on pay rule. An add-on stays out of this base
+ * unless this agreement lists it in includedAddOns.
  * A frozen snapshot wins, so a later price edit cannot rewrite a finished job.
  * Tips are not a parameter of this amount.
  */
@@ -402,27 +404,195 @@ export function compensationMethodLabel(method: CompensationMethod): string {
   return 'Flat';
 }
 
+/** Optional solo override for a home at or above a bedroom count. Absent means no exception. */
+export type HomeSizeException = {
+  minBedrooms: number;
+  method: CompensationMethod;
+  rate: number;
+};
+
 export type CleanerTerms = {
   soloMethod: CompensationMethod;
   soloRate: number;
   assistedMethod: CompensationMethod;
   assistedRate: number;
   effectiveFrom?: string | null;
+  /** Null or omitted: every home size uses the standard solo terms. */
+  homeSizeException?: HomeSizeException | null;
 };
+
+export function homeSizeExceptionLabel(exception: HomeSizeException): string {
+  return `${exception.minBedrooms}+ bedroom solo = ${cleanerPayLabel(exception.method, exception.rate)}`;
+}
+
+/**
+ * Solo terms for this home. A 4+ bedroom clean stays on the standard solo terms
+ * until an exception is stored. Assisted work never uses the exception.
+ */
+export function appliedSoloTerms(
+  terms: CleanerTerms | null,
+  bedrooms?: number | null
+): { method: CompensationMethod; rate: number; exception: boolean } | null {
+  if (!terms) return null;
+  const exception = terms.homeSizeException ?? null;
+  if (
+    exception &&
+    bedrooms != null &&
+    Number.isFinite(bedrooms) &&
+    bedrooms >= exception.minBedrooms
+  ) {
+    return { method: exception.method, rate: exception.rate, exception: true };
+  }
+  return { method: terms.soloMethod, rate: terms.soloRate, exception: false };
+}
+
+/** Blank input clears the exception. A partial row is rejected. */
+export function parseHomeSizeException(raw: unknown): HomeSizeException | null {
+  if (raw == null || raw === '') return null;
+  if (typeof raw !== 'object') {
+    throw new Error('Home-size exception needs a bedroom minimum, a method, and an amount.');
+  }
+  const body = raw as { minBedrooms?: unknown; method?: unknown; rate?: unknown };
+  const minBlank = body.minBedrooms == null || body.minBedrooms === '';
+  const methodBlank = body.method == null || body.method === '';
+  const rateBlank = body.rate == null || body.rate === '';
+  if (minBlank && methodBlank && rateBlank) return null;
+  if (minBlank || methodBlank || rateBlank) {
+    throw new Error('Home-size exception needs a bedroom minimum, a method, and an amount.');
+  }
+  const minBedrooms = Number(body.minBedrooms);
+  const rate = Number(body.rate);
+  if (!Number.isInteger(minBedrooms) || minBedrooms < 1) {
+    throw new Error('Home-size exception needs a whole number of bedrooms, such as 4.');
+  }
+  if (!COMPENSATION_METHODS.includes(body.method as CompensationMethod)) {
+    throw new Error('Home-size exception method is percentage, hourly, or flat.');
+  }
+  if (!Number.isFinite(rate) || rate <= 0) {
+    throw new Error('Home-size exception needs an amount greater than zero.');
+  }
+  return {
+    minBedrooms,
+    method: body.method as CompensationMethod,
+    rate: round2(rate),
+  };
+}
+
+export function homeSizeColumns(exception: HomeSizeException | null): {
+  homeSizeMinBedrooms: number | null;
+  homeSizeSoloMethod: CompensationMethod | null;
+  homeSizeSoloRate: number | null;
+} {
+  if (!exception) {
+    return { homeSizeMinBedrooms: null, homeSizeSoloMethod: null, homeSizeSoloRate: null };
+  }
+  return {
+    homeSizeMinBedrooms: exception.minBedrooms,
+    homeSizeSoloMethod: exception.method,
+    homeSizeSoloRate: exception.rate,
+  };
+}
+
+export function cleanerTermsFromRow(row: {
+  soloMethod: CompensationMethod;
+  soloRate: unknown;
+  assistedMethod: CompensationMethod;
+  assistedRate: unknown;
+  effectiveFrom?: Date | string | null;
+  homeSizeMinBedrooms?: number | null;
+  homeSizeSoloMethod?: CompensationMethod | null;
+  homeSizeSoloRate?: unknown;
+}): CleanerTerms {
+  const min = row.homeSizeMinBedrooms ?? null;
+  const method = row.homeSizeSoloMethod ?? null;
+  const rate = toMoney(row.homeSizeSoloRate);
+  const effective = row.effectiveFrom instanceof Date
+    ? row.effectiveFrom.toISOString().slice(0, 10)
+    : row.effectiveFrom ?? null;
+  return {
+    soloMethod: row.soloMethod,
+    soloRate: toMoney(row.soloRate) ?? 0,
+    assistedMethod: row.assistedMethod,
+    assistedRate: toMoney(row.assistedRate) ?? 0,
+    effectiveFrom: effective,
+    homeSizeException:
+      min != null && method && rate != null ? { minBedrooms: min, method, rate } : null,
+  };
+}
+
+function dayKey(value: string | null | undefined): string {
+  return (value ?? '').slice(0, 10);
+}
+
+/** Latest terms whose effectiveFrom is on or before the service date. */
+export function termsInEffect<T extends { effectiveFrom?: string | null }>(
+  rows: T[],
+  serviceDate: string
+): T | null {
+  const day = dayKey(serviceDate);
+  const eligible = rows
+    .filter((row) => {
+      const from = dayKey(row.effectiveFrom);
+      return from !== '' && from <= day;
+    })
+    .sort((a, b) => dayKey(b.effectiveFrom).localeCompare(dayKey(a.effectiveFrom)));
+  return eligible[0] ?? null;
+}
+
+/**
+ * Date used to decide historical pay. A service date with terms in effect uses that row.
+ * A service date before every row uses the earliest future date, so later terms do not apply.
+ */
+export function termsBoundary<T extends { effectiveFrom?: string | null }>(
+  rows: T[],
+  serviceDate: string
+): string | null {
+  const current = termsInEffect(rows, serviceDate);
+  if (current?.effectiveFrom) return dayKey(current.effectiveFrom);
+  const day = dayKey(serviceDate);
+  const upcoming = rows
+    .map((row) => dayKey(row.effectiveFrom))
+    .filter((from) => from !== '' && from > day)
+    .sort();
+  return upcoming[0] ?? null;
+}
+
+export function assertAllocationsWithinPayment(amount: number, allocated: number): void {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error('Payment amount must be greater than zero.');
+  }
+  if (!Number.isFinite(allocated) || allocated < 0) {
+    throw new Error('Allocation amounts must be greater than zero.');
+  }
+  if (Math.round(allocated * 100) > Math.round(amount * 100)) {
+    throw new Error('Allocations cannot exceed the payment.');
+  }
+}
+
+export function jobDeleteBlockReason(counts: {
+  agreements: number;
+  payables: number;
+  allocations: number;
+}): string | null {
+  if (counts.agreements + counts.payables + counts.allocations <= 0) return null;
+  return 'This job has cleaner pay records, so it cannot be deleted.';
+}
 
 export type OfferChoice = 'solo' | 'assisted' | 'custom';
 
 export function offerChoicesForCleaner(
   terms: CleanerTerms | null,
-  w9Status?: W9Status | null
+  w9Status?: W9Status | null,
+  bedrooms?: number | null
 ): { id: 'solo' | 'assisted'; label: string; method: CompensationMethod; rate: number; assisted: boolean }[] {
   if (!terms) return [];
+  const solo = appliedSoloTerms(terms, bedrooms);
   const choices: { id: 'solo' | 'assisted'; label: string; method: CompensationMethod; rate: number; assisted: boolean }[] = [
     {
       id: 'solo',
-      label: `Solo (${cleanerPayLabel(terms.soloMethod, terms.soloRate)})`,
-      method: terms.soloMethod,
-      rate: terms.soloRate,
+      label: `Solo (${cleanerPayLabel(solo?.method ?? terms.soloMethod, solo?.rate ?? terms.soloRate)})`,
+      method: solo?.method ?? terms.soloMethod,
+      rate: solo?.rate ?? terms.soloRate,
       assisted: false,
     },
     {
@@ -451,6 +621,8 @@ export function resolveAssignmentAgreement(input: {
   eligibleBase: number | null;
   /** Typed percentage base for this job, such as a weekly office share. */
   manualBase?: number | null;
+  /** Used only to apply a stored home-size exception. Unknown size stays on standard solo terms. */
+  bedrooms?: number | null;
   note?: string | null;
 }): {
   method: CompensationMethod;
@@ -463,15 +635,13 @@ export function resolveAssignmentAgreement(input: {
   compensationBasis: 'FLAT' | 'HOURLY' | 'OTHER';
   note: string | null;
 } {
-  if (
-    input.w9Status === 'MISSING' &&
-    input.choice === 'solo' &&
-    input.storedTerms?.soloMethod === 'PERCENTAGE'
-  ) {
+  const soloForHome =
+    input.choice === 'solo' ? appliedSoloTerms(input.storedTerms, input.bedrooms) : null;
+  if (input.w9Status === 'MISSING' && soloForHome?.method === 'PERCENTAGE') {
     throw new Error('Solo percentage offers need a W-9 on file. Assisted hourly is still allowed.');
   }
 
-  const choices = offerChoicesForCleaner(input.storedTerms, input.w9Status);
+  const choices = offerChoicesForCleaner(input.storedTerms, input.w9Status, input.bedrooms);
   let method: CompensationMethod;
   let rate: number;
   let assisted = false;
@@ -490,8 +660,8 @@ export function resolveAssignmentAgreement(input: {
     if (!choice) {
       throw new Error('Set terms for this cleaner before sending an offer. No default is assumed.');
     }
-    method = choice.method;
-    rate = choice.rate;
+    method = soloForHome?.method ?? choice.method;
+    rate = soloForHome?.rate ?? choice.rate;
     assisted = choice.assisted;
   }
 

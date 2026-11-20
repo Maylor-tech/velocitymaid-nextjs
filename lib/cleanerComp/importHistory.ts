@@ -1,6 +1,7 @@
 import { round2 } from '@/lib/payoutRules';
 import {
   assertAllocationMemo,
+  assertAllocationsWithinPayment,
   reimbursementLines,
   type AllocationType,
   type JobPayInput,
@@ -361,6 +362,10 @@ export function planCleanerPaymentImport(input: {
       };
     });
 
+    assertAllocationsWithinPayment(
+      amount,
+      round2(allocations.reduce((sum, row) => sum + row.amount, 0))
+    );
     payments.push({
       id: `import-${paymentKey}`,
       paymentKey,
