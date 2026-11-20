@@ -22,7 +22,6 @@ import {
   validateCleanerApply,
 } from "@/lib/cleaners/validateCleanerApply";
 import { parseApplyMarket } from "@/lib/cleaners/applyMarket";
-import { PAYOUT_RULES } from "@/lib/payoutRules";
 import {
   NJ_WORK_WITH_US_PATH,
   VERMONT_WORK_WITH_US_PATH,
@@ -242,10 +241,7 @@ export default function CleanerApplyForm() {
                 How this work is paid
               </p>
               <p className="mt-1 font-body text-sm leading-relaxed text-vm-muted">
-                Independent contractor (1099). You earn{" "}
-                {Math.round(PAYOUT_RULES.cleanerPct * 100)}% of the job total.
-                Payout is queued after the job is marked complete, on a weekly
-                cycle. You handle taxes; we collect a W-9 once.
+                Pay and employment terms are confirmed at your interview, in writing, before your first job.
               </p>
               <Link
                 href={

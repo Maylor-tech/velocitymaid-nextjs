@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2, ArrowLeft, Mail, Phone, MapPin, Calendar, FileText, User } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -12,6 +12,12 @@ import {
   CleanerApplyView,
   parseCleanerApplyData,
 } from '@/components/admin/cleaners/CleanerApplyView';
+import {
+  HIRING_STATUS_LABELS,
+  HIRING_STATUSES,
+  parseVermontWorkApplication,
+  WORK_AREA_LABELS,
+} from '@/lib/marketing/vermontWorkWithUs';
 import {
   CLEANER_APPLICATION_STATUS_LABELS,
   isOpenCleanerApplication,
@@ -24,7 +30,7 @@ interface CleanerApplication {
   phone: string;
   whatsappNumber: string | null;
   experienceLevel: string | null;
-  daysAvailable: any;
+  daysAvailable: unknown;
   notes: string | null;
   status: string;
   preferredName?: string | null;
@@ -48,7 +54,6 @@ interface CleanerApplication {
 }
 
 export default function CleanerApplicationDetailPage() {
-  const router = useRouter();
   const params = useParams();
   const id = params.id as string;
   
@@ -78,9 +83,9 @@ export default function CleanerApplicationDetailPage() {
       } else {
         throw new Error(data.error || 'Failed to fetch application');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching application:', err);
-      setError(err.message || 'Failed to load application');
+      setError(err instanceof Error ? err.message : 'Failed to load application');
     } finally {
       setLoading(false);
     }
@@ -107,8 +112,8 @@ export default function CleanerApplicationDetailPage() {
       } else {
         throw new Error(data.error || 'Failed to approve application');
       }
-    } catch (err: any) {
-      setToastMessage(err.message || 'Failed to approve application');
+    } catch (err: unknown) {
+      setToastMessage(err instanceof Error ? err.message : 'Failed to approve application');
       setToastType('error');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -138,8 +143,8 @@ export default function CleanerApplicationDetailPage() {
       } else {
         throw new Error(data.error || 'Failed to reject application');
       }
-    } catch (err: any) {
-      setToastMessage(err.message || 'Failed to reject application');
+    } catch (err: unknown) {
+      setToastMessage(err instanceof Error ? err.message : 'Failed to reject application');
       setToastType('error');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -155,6 +160,30 @@ export default function CleanerApplicationDetailPage() {
   useEffect(() => {
     if (application?.notes) setAdminNotes(application.notes);
   }, [application?.notes]);
+
+  const handleHiringStatus = async (hiringStatus: string) => {
+    try {
+      setStatusUpdating(true);
+      const response = await fetch(`/api/admin/cleaners/applications/${id}/hiring-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hiringStatus }),
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Could not update the status');
+      await fetchApplication();
+      setToastMessage('Status saved');
+      setToastType('success');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (err: unknown) {
+      setToastMessage(err instanceof Error ? err.message : 'Could not update the status');
+      setToastType('error');
+      setShowToast(true);
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
 
   const handleStatusChange = async (newStatus: string) => {
     try {
@@ -287,6 +316,25 @@ export default function CleanerApplicationDetailPage() {
               <p className="text-vm-muted">Application Details</p>
             </div>
             <div className="flex flex-col items-end gap-2">
+              {parseVermontWorkApplication(application.applicationData) ? (
+                <label className="font-body text-sm text-vm-text" htmlFor="hiring-status">
+                  Status
+                  <select
+                    id="hiring-status"
+                    value={parseVermontWorkApplication(application.applicationData)?.hiringStatus}
+                    disabled={statusUpdating}
+                    onChange={(e) => void handleHiringStatus(e.target.value)}
+                    className="mt-1 block min-h-11 rounded-[10px] border border-vm-border bg-white px-3 font-body text-sm text-vm-text focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
+                  >
+                    {HIRING_STATUSES.map((status) => (
+                      <option key={status} value={status}>
+                        {HIRING_STATUS_LABELS[status]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <>
               <span className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(application.status)}`}>
                 {CLEANER_APPLICATION_STATUS_LABELS[application.status] || application.status}
               </span>
@@ -300,12 +348,14 @@ export default function CleanerApplicationDetailPage() {
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
+                </>
+              )}
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        {isOpenCleanerApplication(application.status) && (
+        {isOpenCleanerApplication(application.status) && !parseVermontWorkApplication(application.applicationData) && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex flex-wrap gap-3">
             <button
               type="button"
@@ -456,6 +506,32 @@ export default function CleanerApplicationDetailPage() {
               )}
             </div>
           </div>
+
+          {parseVermontWorkApplication(application.applicationData) && (
+            <div className="mb-6 rounded-[14px] border border-vm-border bg-white p-6">
+              <h2 className="font-heading text-xl font-bold text-vm-navy">Vermont application</h2>
+              <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <dt className="font-body text-sm text-vm-muted">Town and area</dt>
+                  <dd className="font-body text-sm text-vm-text">
+                    {parseVermontWorkApplication(application.applicationData)?.town} · {WORK_AREA_LABELS[parseVermontWorkApplication(application.applicationData)!.area]}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-body text-sm text-vm-muted">Own transport</dt>
+                  <dd className="font-body text-sm text-vm-text">
+                    {parseVermontWorkApplication(application.applicationData)?.ownTransport === 'yes' ? 'Yes' : 'No'}
+                  </dd>
+                </div>
+              </dl>
+              <h3 className="mt-4 font-heading text-base font-bold text-vm-navy">
+                Tell us about a time you had to communicate a problem to a client.
+              </h3>
+              <p className="mt-2 whitespace-pre-wrap font-body text-sm leading-relaxed text-vm-text">
+                {parseVermontWorkApplication(application.applicationData)?.problemStory}
+              </p>
+            </div>
+          )}
 
           {parseTalentApplicationData(application.applicationData) && (
             <TalentApplicationView data={parseTalentApplicationData(application.applicationData)!} />

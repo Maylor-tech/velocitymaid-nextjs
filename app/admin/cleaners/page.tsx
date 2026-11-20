@@ -116,9 +116,9 @@ export default function AdminCleanersPage() {
           <KpiCard label="Active team" value={members.filter((m) => m.memberStatus === "ACTIVE").length} icon={<Users className="h-5 w-5" />} />
           <Link href="/admin/cleaners/applications" className="block">
             <KpiCard
-              label="Cleaner applications"
+              label="Applicants"
               value={newApplications > 0 ? `${newApplications} New` : "0 New"}
-              subtitle="Review talent portal submissions"
+              subtitle="Vermont work-with-us and earlier applications"
               icon={<ClipboardList className="h-5 w-5" />}
             />
           </Link>
@@ -127,7 +127,7 @@ export default function AdminCleanersPage() {
 
         <div className="mb-4 flex gap-3">
           <Link href="/admin/cleaners/applications" className="rounded-lg border border-vm-cyan bg-vm-cyan-tint px-4 py-2 font-body text-sm font-semibold text-vm-navy">
-            View applications
+            View applicants
           </Link>
         </div>
 

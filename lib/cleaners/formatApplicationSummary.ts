@@ -1,5 +1,6 @@
 import type { TalentApplicationPayload } from '@/lib/cleaners/talentApplicationTypes';
 import { parseTalentApplicationData } from '@/components/admin/cleaners/TalentApplicationView';
+import { parseVermontWorkApplication, WORK_AREA_LABELS } from '@/lib/marketing/vermontWorkWithUs';
 
 export interface ApplicationListRow {
   id: string;
@@ -32,6 +33,8 @@ export function safeBranchLocation(app: ApplicationListRow): string {
 }
 
 export function formatAvailabilitySummary(app: ApplicationListRow): string {
+  const work = parseVermontWorkApplication(app.applicationData);
+  if (work) return work.daysAvailable.join(', ') || '—';
   const talent = parseTalentApplicationData(app.applicationData) as TalentApplicationPayload | null;
   if (talent?.availability) {
     const days = talent.availability.daysAvailable?.join(', ') || '—';
@@ -47,6 +50,11 @@ export function formatAvailabilitySummary(app: ApplicationListRow): string {
 }
 
 export function formatExperienceSummary(app: ApplicationListRow): string {
+  const work = parseVermontWorkApplication(app.applicationData);
+  if (work) {
+    const rental = work.shortTermRentalExperience === 'yes' ? 'short-term rental experience' : 'no short-term rental experience';
+    return `${work.yearsExperience} · ${rental}`;
+  }
   const talent = parseTalentApplicationData(app.applicationData) as TalentApplicationPayload | null;
   if (talent?.experience) {
     return `${talent.experience.yearsExperience} · ${talent.experience.experienceTypes?.slice(0, 2).join(', ') || 'General'}`;
@@ -55,6 +63,8 @@ export function formatExperienceSummary(app: ApplicationListRow): string {
 }
 
 export function formatTransportSummary(app: ApplicationListRow): string {
+  const work = parseVermontWorkApplication(app.applicationData);
+  if (work) return work.ownTransport === 'yes' ? 'Yes' : 'No';
   const talent = parseTalentApplicationData(app.applicationData) as TalentApplicationPayload | null;
   if (talent?.eligibility) {
     return talent.eligibility.reliableTransportation
@@ -65,6 +75,8 @@ export function formatTransportSummary(app: ApplicationListRow): string {
 }
 
 export function formatServiceArea(app: ApplicationListRow): string {
+  const work = parseVermontWorkApplication(app.applicationData);
+  if (work) return `${work.town} · ${WORK_AREA_LABELS[work.area]}`;
   const talent = parseTalentApplicationData(app.applicationData) as TalentApplicationPayload | null;
   if (talent?.serviceAreas?.areas?.length) {
     return talent.serviceAreas.areas.join(', ');
