@@ -4,7 +4,6 @@ import { Car, Clock, DollarSign, MapPin, ShieldCheck } from "lucide-react";
 import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import { pageSocialMetadata } from "@/lib/seo/socialImages";
-import { PAYOUT_RULES } from "@/lib/payoutRules";
 import { NJ_SERVICE_CITIES } from "@/lib/markets/newJersey";
 import {
   CLEANER_APPLY_NJ_PATH,
@@ -27,8 +26,6 @@ export const metadata: Metadata = {
   }),
 };
 
-const pct = Math.round(PAYOUT_RULES.cleanerPct * 100);
-
 export default function NewJerseyWorkWithUsPage() {
   return (
     <div className="min-h-screen bg-white">
@@ -43,7 +40,7 @@ export default function NewJerseyWorkWithUsPage() {
               Work with VelocityMaid in New Jersey
             </h1>
             <p className="mx-auto mt-4 max-w-2xl font-body text-sm leading-relaxed text-white/70 sm:text-base">
-              Recurring homes and deep cleans. You earn {pct}% of the job total.
+              Recurring homes and deep cleans. You see the payout before you accept.
               Weekly payout after the job is marked complete. Pay and employment
               terms are confirmed at your interview, in writing, before your first job.
             </p>
@@ -69,8 +66,8 @@ export default function NewJerseyWorkWithUsPage() {
             {[
               {
                 icon: DollarSign,
-                title: `${pct}% of the quoted job`,
-                text: "New Jersey jobs are quoted per home. You see the payout before you accept. Tips are extra. Pay and employment terms are confirmed at your interview, in writing, before your first job.",
+                title: "You see the payout before you accept",
+                text: "New Jersey jobs are quoted per home. Tips are extra. Pay and employment terms are confirmed at your interview, in writing, before your first job.",
               },
               {
                 icon: Clock,

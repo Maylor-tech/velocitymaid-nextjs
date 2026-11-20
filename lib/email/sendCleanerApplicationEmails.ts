@@ -28,7 +28,10 @@ export async function sendCleanerApplicationConfirmationEmail(params: {
      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${NAVY};">Hi ${name},</p>
      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${NAVY};">
        Your application has been received. Our team reviews every candidate carefully.
-       If selected, the next step will be the <strong>VelocityMaid Certification Program</strong>.
+       If selected, the next step is a short interview, then a paid first job together.
+     </p>
+     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${NAVY};">
+       Pay and employment terms are confirmed at your interview, in writing, before your first job.
      </p>
      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${NAVY};">
        Once your application is reviewed and approved, you will receive the full
@@ -41,7 +44,8 @@ export async function sendCleanerApplicationConfirmationEmail(params: {
   const text = `Hi ${params.applicantName.trim() || 'there'},
 
 Your application has been received. Our team reviews every candidate carefully.
-If selected, the next step will be the VelocityMaid Certification Program.
+If selected, the next step is a short interview, then a paid first job together.
+Pay and employment terms are confirmed at your interview, in writing, before your first job.
 
 Once your application is reviewed and approved, you will receive the full VelocityMaid Cleaner Handbook — everything you need to know about working with us, how jobs work, and how you get paid.
 
