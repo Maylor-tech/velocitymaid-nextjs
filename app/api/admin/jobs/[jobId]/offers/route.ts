@@ -240,6 +240,19 @@ export async function POST(
     }
 
     const body = await request.json();
+    const agreement =
+      body.agreement && typeof body.agreement === 'object'
+        ? {
+            choice: body.agreement.choice as 'solo' | 'assisted' | 'custom',
+            method: body.agreement.method,
+            rate: body.agreement.rate != null ? Number(body.agreement.rate) : undefined,
+            assisted: body.agreement.assisted === true,
+            includedAddOns: Array.isArray(body.agreement.includedAddOns)
+              ? body.agreement.includedAddOns.map(String)
+              : undefined,
+            note: typeof body.agreement.note === 'string' ? body.agreement.note : null,
+          }
+        : null;
     const offer = await createJobOffer({
       jobId,
       cleanerId: String(body.cleanerId || ''),
@@ -256,6 +269,7 @@ export async function POST(
       ttlMinutes: body.ttlMinutes != null ? Number(body.ttlMinutes) : null,
       channel: body.channel === 'PORTAL' ? 'PORTAL' : 'EMAIL',
       createdByAdminId: admin.userId,
+      agreement,
     });
 
     return NextResponse.json({

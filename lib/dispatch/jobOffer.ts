@@ -31,6 +31,13 @@ import {
   isLargeFourBedroom,
   resolvePayOverrideReason,
 } from '@/lib/dispatch/cleanerOfferDefaults';
+import {
+  agreedCleaningPrice,
+  resolveAssignmentAgreement,
+  type CleanerTerms,
+  type CompensationMethod,
+  type OfferChoice,
+} from '@/lib/cleanerComp/pay';
 import { DispatchError } from '@/lib/dispatch/errors';
 import { resolveOfferExpiration, type DispatchUrgencyValue } from '@/lib/dispatch/offerTtl';
 import { notifyCleanerOfOffer } from '@/lib/dispatch/notifyOffer';
@@ -55,6 +62,8 @@ const OFFER_JOB_SELECT = {
   quotedTotal: true,
   totalPrice: true,
   agreedCustomerPrice: true,
+  agreedOperationalPrice: true,
+  processingAllowanceEstimated: true,
   serviceType: true,
   estimatedDurationMins: true,
   internalNotes: true,
@@ -78,6 +87,14 @@ export type CreateOfferInput = {
   ttlMinutes?: number | null;
   channel?: 'EMAIL' | 'PORTAL';
   createdByAdminId?: string | null;
+  agreement?: {
+    choice: OfferChoice;
+    method?: CompensationMethod;
+    rate?: number;
+    assisted?: boolean;
+    includedAddOns?: string[];
+    note?: string | null;
+  } | null;
 };
 
 function uniqueViolation(err: unknown): boolean {
@@ -174,14 +191,68 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
   }
   let compensationAmount: number;
   let compensationBasis: ReturnType<typeof parseCompensationBasis>;
-  try {
-    compensationAmount = parseApprovedCompensation(input.compensationAmount);
-    compensationBasis = parseCompensationBasis(input.compensationBasis);
-  } catch (err) {
-    if (err instanceof CompensationRequiredError) {
-      throw new DispatchError(err.message, err.code, 400);
+  let agreementDraft: ReturnType<typeof resolveAssignmentAgreement> | null = null;
+  if (input.agreement) {
+    const previewJob = await prisma.job.findUnique({
+      where: { id: input.jobId },
+      select: OFFER_JOB_SELECT,
+    });
+    if (!previewJob) throw new DispatchError('Job not found', 'JOB_NOT_FOUND', 404);
+    const cleaner = await prisma.user.findUnique({
+      where: { id: input.cleanerId },
+      select: {
+        name: true,
+        CleanerCompTerms: true,
+      },
+    });
+    const storedTerms: CleanerTerms | null = cleaner?.CleanerCompTerms
+      ? {
+          soloMethod: cleaner.CleanerCompTerms.soloMethod,
+          soloRate: Number(cleaner.CleanerCompTerms.soloRate),
+          assistedMethod: cleaner.CleanerCompTerms.assistedMethod,
+          assistedRate: Number(cleaner.CleanerCompTerms.assistedRate),
+        }
+      : null;
+    try {
+      agreementDraft = resolveAssignmentAgreement({
+        cleanerName: cleaner?.name ?? null,
+        choice: input.agreement.choice,
+        storedTerms,
+        custom: input.agreement.method
+          ? {
+              method: input.agreement.method,
+              rate: Number(input.agreement.rate),
+              assisted: input.agreement.assisted,
+              includedAddOns: input.agreement.includedAddOns,
+            }
+          : undefined,
+        eligibleBase: agreedCleaningPrice({
+          agreedOperationalPrice: previewJob.agreedOperationalPrice,
+          agreedCustomerPrice: previewJob.agreedCustomerPrice,
+          processingAllowance: previewJob.processingAllowanceEstimated,
+          includedAddOns: input.agreement.includedAddOns,
+        }),
+        note: input.agreement.note,
+      });
+    } catch (err) {
+      throw new DispatchError(
+        err instanceof Error ? err.message : 'Compensation terms are required',
+        'COMPENSATION_REQUIRED',
+        400
+      );
     }
-    throw err;
+    compensationAmount = agreementDraft.compensationAmount;
+    compensationBasis = agreementDraft.compensationBasis;
+  } else {
+    try {
+      compensationAmount = parseApprovedCompensation(input.compensationAmount);
+      compensationBasis = parseCompensationBasis(input.compensationBasis);
+    } catch (err) {
+      if (err instanceof CompensationRequiredError) {
+        throw new DispatchError(err.message, err.code, 400);
+      }
+      throw err;
+    }
   }
 
   const job = await prisma.job.findUnique({
@@ -240,17 +311,21 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
     totalPrice: job.totalPrice,
   });
   let compensationOverrideReason: string | null;
-  try {
-    compensationOverrideReason = resolvePayOverrideReason({
-      amount: compensationAmount,
-      defaultPay,
-      reason: input.compensationOverrideReason,
-    });
-  } catch (err) {
-    if (err instanceof CompensationRequiredError) {
-      throw new DispatchError(err.message, err.code, 400);
+  if (agreementDraft) {
+    compensationOverrideReason = null;
+  } else {
+    try {
+      compensationOverrideReason = resolvePayOverrideReason({
+        amount: compensationAmount,
+        defaultPay,
+        reason: input.compensationOverrideReason,
+      });
+    } catch (err) {
+      if (err instanceof CompensationRequiredError) {
+        throw new DispatchError(err.message, err.code, 400);
+      }
+      throw err;
     }
-    throw err;
   }
 
   const cleanerCount = job._count?.JobTeamMember ?? 1;
@@ -324,24 +399,43 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
       : null;
 
   let offer: JobOffer;
+  const offerData = {
+    jobId: job.id,
+    cleanerId: cleaner.id,
+    status: JobOfferStatus.OFFERED,
+    offeredAt,
+    expiresAt,
+    compensationAmount,
+    compensationCurrency: 'USD',
+    compensationBasis,
+    compensationOverrideReason,
+    estimatedDurationMins,
+    operationalNotes: input.operationalNotes ?? job.internalNotes ?? null,
+    channel: input.channel ?? 'EMAIL',
+    createdByAdminId: adminId,
+  };
+  const draft = agreementDraft;
   try {
-    offer = await prisma.jobOffer.create({
-      data: {
-        jobId: job.id,
-        cleanerId: cleaner.id,
-        status: JobOfferStatus.OFFERED,
-        offeredAt,
-        expiresAt,
-        compensationAmount,
-        compensationCurrency: 'USD',
-        compensationBasis,
-        compensationOverrideReason,
-        estimatedDurationMins,
-        operationalNotes: input.operationalNotes ?? job.internalNotes ?? null,
-        channel: input.channel ?? 'EMAIL',
-        createdByAdminId: adminId,
-      },
-    });
+    offer = draft
+      ? await prisma.$transaction(async (tx) => {
+          const created = await tx.jobOffer.create({ data: offerData });
+          await tx.compensationAgreement.create({
+            data: {
+              jobOfferId: created.id,
+              jobId: job.id,
+              cleanerId: cleaner.id,
+              method: draft.method,
+              rate: draft.rate,
+              eligibleBase: draft.eligibleBase,
+              includedAddOns: draft.includedAddOns,
+              assisted: draft.assisted,
+              setBy: adminId,
+              note: draft.note,
+            },
+          });
+          return created;
+        })
+      : await prisma.jobOffer.create({ data: offerData });
   } catch (err) {
     if (uniqueViolation(err)) {
       throw new DispatchError(

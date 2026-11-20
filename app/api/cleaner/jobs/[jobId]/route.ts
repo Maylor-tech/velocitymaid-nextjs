@@ -16,6 +16,7 @@ import { toCleanerOfferLocationView } from "@/lib/dispatch/cleanerViews";
 import { serializeCleanerOffer } from "@/lib/dispatch/serializeCleanerOffer";
 import { toCleanerCompensationView } from "@/lib/dispatch/compensation";
 import { assertNoCustomerFinancials } from "@/lib/dispatch/cleanerFinancialGuard";
+import { cleanerPayLabel, compensationMethodLabel } from "@/lib/cleanerComp/pay";
 import { isEffectivelyOpen } from "@/lib/dispatch/offerExpiry";
 
 export const runtime = "nodejs";
@@ -69,6 +70,11 @@ export async function GET(
           },
           orderBy: { offeredAt: "desc" },
           take: 1,
+          include: {
+            CompensationAgreement: {
+              select: { method: true, rate: true, assisted: true },
+            },
+          },
         },
       },
     });
@@ -262,6 +268,17 @@ export async function GET(
       propertyId: job.propertyId,
       property: job.Property ? toCleanerPropertyView(job.Property) : null,
       compensation,
+      payTerms: offerRow?.CompensationAgreement
+        ? {
+            method: offerRow.CompensationAgreement.method,
+            label: cleanerPayLabel(
+              offerRow.CompensationAgreement.method,
+              Number(offerRow.CompensationAgreement.rate)
+            ),
+            methodLabel: compensationMethodLabel(offerRow.CompensationAgreement.method),
+            assisted: offerRow.CompensationAgreement.assisted,
+          }
+        : null,
       compensationAmount: compensation?.amount ?? null,
       compensationCurrency: compensation?.currency ?? null,
       compensationBasis: compensation?.basis ?? null,

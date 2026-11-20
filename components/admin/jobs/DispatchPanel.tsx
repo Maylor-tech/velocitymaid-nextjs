@@ -12,6 +12,11 @@ import {
   RELEASE_REASON_LABELS,
   type ReleaseReasonCode,
 } from '@/lib/dispatch/releaseReasons';
+import {
+  isDorothyCleaner,
+  offerChoicesForCleaner,
+  type CompensationMethod,
+} from '@/lib/cleanerComp/pay';
 
 type OfferRow = {
   id: string;
@@ -134,10 +139,12 @@ export function DispatchPanel({
   const [releaseReason, setReleaseReason] = useState<ReleaseReasonCode>('CLEANER_UNAVAILABLE');
   const [releaseNotes, setReleaseNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [compensation, setCompensation] = useState('');
+  const [payChoice, setPayChoice] = useState<'solo' | 'assisted' | 'custom'>('custom');
+  const [customMethod, setCustomMethod] = useState<CompensationMethod>('PERCENTAGE');
+  const [customRate, setCustomRate] = useState('');
+  const [customAssisted, setCustomAssisted] = useState(false);
   const [payReason, setPayReason] = useState('');
   const [durationMins, setDurationMins] = useState('');
-  const [compensationBasis, setCompensationBasis] = useState<'FLAT' | 'HOURLY' | 'OTHER'>('FLAT');
   const [ttlMinutes, setTtlMinutes] = useState('');
   const [urgency, setUrgency] = useState<'STANDARD' | 'SAME_DAY' | 'URGENT'>('STANDARD');
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -156,11 +163,6 @@ export function DispatchPanel({
       }
       setData(json);
       setUrgency(json.dispatchUrgency);
-      setCompensation((current) =>
-        current || json.compensationPreview == null
-          ? current
-          : String(json.compensationPreview)
-      );
       setDurationMins((current) =>
         current || json.durationPreviewMins == null
           ? current
@@ -201,16 +203,11 @@ export function DispatchPanel({
       setError('Select a cleaner');
       return;
     }
-    if (!compensation.trim()) {
-      setError('Enter the approved cleaner compensation before sending.');
-      return;
-    }
-    const preview = data?.compensationPreview;
-    const amount = Number(compensation);
-    const matchesDefault =
-      preview != null && Math.round(amount * 100) === Math.round(preview * 100);
-    if (!matchesDefault && !payReason.trim()) {
-      setError('Add a short reason when cleaner pay is not the 65% default.');
+    const selectedName = cleaners.find((cleaner) => cleaner.id === selectedCleanerId)?.name;
+    const choices = offerChoicesForCleaner(selectedName, null);
+    const choice = choices.length === 0 ? 'custom' : payChoice === 'custom' ? 'solo' : payChoice;
+    if (choice === 'custom' && (!customRate.trim() || Number(customRate) <= 0)) {
+      setError('Enter this cleaner’s rate. No default is assumed.');
       return;
     }
     setSending(true);
@@ -221,8 +218,17 @@ export function DispatchPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cleanerId: selectedCleanerId,
-          compensationAmount: Number(compensation),
-          compensationBasis,
+          compensationAmount: choice === 'custom' ? Number(customRate) : undefined,
+          agreement:
+            choice === 'custom'
+              ? {
+                  choice,
+                  method: customMethod,
+                  rate: Number(customRate),
+                  assisted: customAssisted,
+                  note: payReason.trim() || null,
+                }
+              : { choice, note: payReason.trim() || null },
           compensationOverrideReason: payReason.trim() || undefined,
           estimatedDurationMins: durationMins.trim() ? Number(durationMins) : undefined,
           ttlMinutes: ttlMinutes ? Number(ttlMinutes) : undefined,
@@ -385,37 +391,86 @@ export function DispatchPanel({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-vm-text mb-1">
-                Cleaner compensation (required)
-              </label>
-              <input
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={compensation}
-                onChange={(e) => setCompensation(e.target.value)}
-                placeholder={
-                  data?.compensationPreview != null
-                    ? `Preview ${formatMoney(data.compensationPreview)}`
-                    : 'Enter approved cleaner pay'
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              />
-              <p className="mt-1 font-body text-sm text-vm-muted">
-                Default is 65% of the agreed customer price, rounded to the cent.
-                {data?.compensationPreview != null
-                  ? ` Suggested pay: ${formatMoney(data.compensationPreview)}.`
-                  : ' No agreed price on this job — enter the amount and a reason.'}
+              <p className="block text-sm font-medium text-vm-text mb-1">Cleaner compensation</p>
+              {offerChoicesForCleaner(
+                cleaners.find((cleaner) => cleaner.id === selectedCleanerId)?.name,
+                null
+              ).length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  {offerChoicesForCleaner(
+                    cleaners.find((cleaner) => cleaner.id === selectedCleanerId)?.name,
+                    null
+                  ).map((choice) => (
+                    <button
+                      key={choice.id}
+                      type="button"
+                      aria-pressed={(payChoice === 'custom' ? 'solo' : payChoice) === choice.id}
+                      onClick={() => setPayChoice(choice.id)}
+                      className={`min-h-11 rounded-[10px] border px-3 text-left font-body text-sm font-semibold ${
+                        payChoice === choice.id
+                          ? 'border-vm-navy bg-vm-navy text-white'
+                          : 'border-gray-300 bg-white text-vm-navy'
+                      }`}
+                    >
+                      {choice.label}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <p className="font-body text-sm text-vm-muted">
+                    No default for this cleaner. Set the method and rate for this assignment.
+                  </p>
+                  <label className="font-body text-sm font-medium text-vm-text" htmlFor="custom-method">
+                    Method
+                  </label>
+                  <select
+                    id="custom-method"
+                    value={customMethod}
+                    onChange={(e) => setCustomMethod(e.target.value as CompensationMethod)}
+                    className="min-h-11 w-full rounded-[10px] border border-gray-300 px-3 font-body text-sm"
+                  >
+                    <option value="PERCENTAGE">Percentage</option>
+                    <option value="HOURLY">Hourly</option>
+                    <option value="FLAT">Flat</option>
+                  </select>
+                  <label className="font-body text-sm font-medium text-vm-text" htmlFor="custom-rate">
+                    Rate
+                  </label>
+                  <input
+                    id="custom-rate"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={customRate}
+                    onChange={(e) => setCustomRate(e.target.value)}
+                    placeholder={customMethod === 'PERCENTAGE' ? 'Percent' : 'Dollars'}
+                    className="min-h-11 w-full rounded-[10px] border border-gray-300 px-3 font-body text-sm"
+                  />
+                  <label className="inline-flex min-h-11 items-center gap-2 font-body text-sm text-vm-text">
+                    <input
+                      type="checkbox"
+                      checked={customAssisted}
+                      onChange={(e) => setCustomAssisted(e.target.checked)}
+                    />
+                    Assisted — owner works alongside
+                  </label>
+                </div>
+              )}
+              <p className="mt-2 font-body text-sm text-vm-muted">
+                {isDorothyCleaner(cleaners.find((cleaner) => cleaner.id === selectedCleanerId)?.name)
+                  ? 'Solo is 65% of the eligible cleaning amount. Assisted is $30 per verified hour.'
+                  : 'The cleaner sees the method and rate only.'}
               </p>
               <label className="mt-3 block font-body text-sm font-medium text-vm-text" htmlFor="pay-override-reason">
-                Override reason
+                Note
               </label>
               <input
                 id="pay-override-reason"
                 type="text"
                 value={payReason}
                 onChange={(e) => setPayReason(e.target.value)}
-                placeholder="Required only when pay is not the 65% default"
+                placeholder="Optional"
                 className="mt-1 min-h-11 w-full rounded-[10px] border border-gray-300 px-3 font-body text-sm"
               />
             </div>
@@ -441,22 +496,6 @@ export function DispatchPanel({
                 Default from bedrooms: 2 bed 3h, 3 bed 5h, 4 bed 6h, large 4 bed 7h.
                 Split across the crew when more than one cleaner is assigned. Change it here to override.
               </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-vm-text mb-1">
-                Payment basis
-              </label>
-              <select
-                value={compensationBasis}
-                onChange={(e) =>
-                  setCompensationBasis(e.target.value as 'FLAT' | 'HOURLY' | 'OTHER')
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              >
-                <option value="FLAT">Flat rate</option>
-                <option value="HOURLY">Hourly</option>
-                <option value="OTHER">Other</option>
-              </select>
             </div>
           </div>
 

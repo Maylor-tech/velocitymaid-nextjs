@@ -644,6 +644,9 @@ model Job {
   Property                 Property?                  @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   JobPayout                JobPayout?
   JobOffer                 JobOffer[]
+  CompensationAgreement    CompensationAgreement[]
+  ManualPaymentAllocation  ManualPaymentAllocation[]
+  CleanerPayable           CleanerPayable[]
   Tip                      Tip[]
   GuestTipAuthorization    GuestTipAuthorization[]
   RebookingReminderDelivery RebookingReminderDelivery?
@@ -728,10 +731,102 @@ model JobOffer {
   Cleaner                User            @relation("JobOfferCleaner", fields: [cleanerId], references: [id])
   CreatedByAdmin         User?           @relation("JobOfferCreatedBy", fields: [createdByAdminId], references: [id])
   CancelledByAdmin       User?           @relation("JobOfferCancelledBy", fields: [cancelledByAdminId], references: [id])
+  CompensationAgreement  CompensationAgreement?
 
   @@index([jobId, status])
   @@index([cleanerId, status])
   @@index([expiresAt])
+}
+
+/// Per-cleaner terms. Dorothy is not stored here; her solo and assisted rates are fixed in code.
+model CleanerCompTerms {
+  id             String             @id @default(cuid())
+  cleanerId      String             @unique
+  soloMethod     CompensationMethod
+  soloRate       Decimal            @db.Decimal(10, 2)
+  assistedMethod CompensationMethod
+  assistedRate   Decimal            @db.Decimal(10, 2)
+  note           String?
+  setBy          String?
+  setAt          DateTime           @default(now())
+  Cleaner        User               @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  @@map("cleaner_comp_terms")
+}
+
+/// Frozen assignment terms. One row per offer. Rate edits stop once the job is complete.
+model CompensationAgreement {
+  id                String             @id @default(cuid())
+  jobOfferId        String             @unique
+  jobId             String
+  cleanerId         String
+  method            CompensationMethod
+  rate              Decimal            @db.Decimal(10, 2)
+  eligibleBase      Decimal?           @db.Decimal(10, 2)
+  includedAddOns    String[]           @default([])
+  assisted          Boolean            @default(false)
+  setBy             String?
+  setAt             DateTime           @default(now())
+  note              String?
+  frozenAt          DateTime?
+  verifiedHours     Decimal?           @db.Decimal(8, 2)
+  hoursVerifiedBy   String?
+  hoursVerifiedAt   DateTime?
+  JobOffer          JobOffer           @relation(fields: [jobOfferId], references: [id], onDelete: Cascade)
+  Job               Job                @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Cleaner           User               @relation("CompensationAgreementCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
+
+  @@index([jobId, cleanerId])
+  @@index([cleanerId])
+  @@map("compensation_agreements")
+}
+
+model ManualPayment {
+  id           String                    @id @default(cuid())
+  cleanerId    String
+  paidOn       DateTime                  @db.Date
+  amount       Decimal                   @db.Decimal(10, 2)
+  method       ManualPaymentMethod
+  memo         String?
+  recordedBy   String?
+  recordedAt   DateTime                  @default(now())
+  Cleaner      User                      @relation("ManualPaymentCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
+  allocations  ManualPaymentAllocation[]
+
+  @@index([cleanerId, paidOn])
+  @@map("manual_payments")
+}
+
+model ManualPaymentAllocation {
+  id              String        @id @default(cuid())
+  manualPaymentId String
+  jobId           String
+  amount          Decimal       @db.Decimal(10, 2)
+  ManualPayment   ManualPayment @relation(fields: [manualPaymentId], references: [id], onDelete: Cascade)
+  Job             Job           @relation(fields: [jobId], references: [id], onDelete: Restrict)
+
+  @@index([jobId])
+  @@index([manualPaymentId])
+  @@map("manual_payment_allocations")
+}
+
+/// One review obligation per completed job and cleaner. Not a transfer.
+model CleanerPayable {
+  id          String               @id @default(cuid())
+  jobId       String
+  cleanerId   String
+  expected    Decimal              @db.Decimal(10, 2)
+  paid        Decimal              @db.Decimal(10, 2)
+  balance     Decimal              @db.Decimal(10, 2)
+  status      CleanerPayableStatus
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  Job         Job                  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Cleaner     User                 @relation("CleanerPayableCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
+
+  @@unique([jobId, cleanerId])
+  @@index([cleanerId, status])
+  @@map("cleaner_payables")
 }
 
 model CleanerProfile {
@@ -1343,6 +1438,10 @@ model User {
   JobOfferAsCleaner                   JobOffer[]             @relation("JobOfferCleaner")
   JobOfferCreated                     JobOffer[]             @relation("JobOfferCreatedBy")
   JobOfferCancelled                   JobOffer[]             @relation("JobOfferCancelledBy")
+  CleanerCompTerms                    CleanerCompTerms?
+  CompensationAgreements              CompensationAgreement[] @relation("CompensationAgreementCleaner")
+  ManualPayments                      ManualPayment[]        @relation("ManualPaymentCleaner")
+  CleanerPayables                     CleanerPayable[]       @relation("CleanerPayableCleaner")
   JobsApproved                        Job[]                  @relation("JobApprovedBy")
   JobChecklistItemCompleted           JobChecklistItem[]     @relation("JobChecklistItem_completedBy")
   LessonProgress                      LessonProgress[]
@@ -1938,6 +2037,27 @@ enum CompensationBasis {
   FLAT
   HOURLY
   OTHER
+}
+
+enum CompensationMethod {
+  PERCENTAGE
+  HOURLY
+  FLAT
+}
+
+enum ManualPaymentMethod {
+  ZELLE
+  CASH
+  CHECK
+  OTHER
+}
+
+enum CleanerPayableStatus {
+  NEEDS_HOURS
+  NEEDS_RECONCILIATION
+  PAID_MANUALLY
+  OWED
+  OVERPAID
 }
 
 enum CleanPhotoCategory {
