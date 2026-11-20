@@ -20,14 +20,13 @@ export default function CleanerApplySuccess() {
             Thank you for applying to VelocityMaid
           </h1>
           <p className="mx-auto mt-4 max-w-md font-body text-base leading-relaxed text-vm-muted">
-            Your application has been received. If selected, the next step will be the{' '}
-            <strong className="text-vm-navy">VelocityMaid Certification Program</strong>.
+            Your application has been received. If selected, the next step is a short interview, then a paid first job together.
           </p>
           <div className="mt-8 rounded-xl border border-vm-border bg-vm-surface p-5 text-left">
             <h2 className="font-heading text-sm font-semibold text-vm-navy">What happens next</h2>
             <ul className="mt-2 space-y-1.5 font-body text-sm text-vm-muted">
               <li>• Our talent team reviews every application within 2–3 business days</li>
-              <li>• Strong candidates are invited to certification training</li>
+              <li>• If we move ahead, we email you to set that interview</li>
               <li>• You&apos;ll receive email updates at the address you provided</li>
             </ul>
           </div>

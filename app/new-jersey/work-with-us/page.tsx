@@ -14,7 +14,7 @@ import {
 
 const title = "Work with us in New Jersey | VelocityMaid";
 const description =
-  "Independent cleaning work in Bloomfield, Montclair, Newark, and nearby towns. See how pay works, then apply.";
+  "Cleaning work in Bloomfield, Montclair, Newark, and nearby towns. See how pay works, then apply.";
 
 export const metadata: Metadata = {
   title,
@@ -43,9 +43,9 @@ export default function NewJerseyWorkWithUsPage() {
               Work with VelocityMaid in New Jersey
             </h1>
             <p className="mx-auto mt-4 max-w-2xl font-body text-sm leading-relaxed text-white/70 sm:text-base">
-              Independent contractor work for recurring homes and deep cleans.
-              {` You earn ${pct}% of the job total.`} Weekly payout after the job
-              is marked complete.
+              Recurring homes and deep cleans. You earn {pct}% of the job total.
+              Weekly payout after the job is marked complete. Pay and employment
+              terms are confirmed at your interview, in writing, before your first job.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
@@ -70,7 +70,7 @@ export default function NewJerseyWorkWithUsPage() {
               {
                 icon: DollarSign,
                 title: `${pct}% of the quoted job`,
-                text: "New Jersey jobs are quoted per home. You see the payout before you accept. Tips are extra. 1099 — W-9 once.",
+                text: "New Jersey jobs are quoted per home. You see the payout before you accept. Tips are extra. Pay and employment terms are confirmed at your interview, in writing, before your first job.",
               },
               {
                 icon: Clock,
