@@ -94,6 +94,7 @@ export type CreateOfferInput = {
     assisted?: boolean;
     includedAddOns?: string[];
     note?: string | null;
+    manualBase?: number | null;
   } | null;
 };
 
@@ -203,6 +204,7 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
       select: {
         name: true,
         CleanerCompTerms: true,
+        CleanerProfile: { select: { w9Status: true } },
       },
     });
     const storedTerms: CleanerTerms | null = cleaner?.CleanerCompTerms
@@ -211,8 +213,11 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
           soloRate: Number(cleaner.CleanerCompTerms.soloRate),
           assistedMethod: cleaner.CleanerCompTerms.assistedMethod,
           assistedRate: Number(cleaner.CleanerCompTerms.assistedRate),
+          effectiveFrom: cleaner.CleanerCompTerms.effectiveFrom.toISOString().slice(0, 10),
         }
       : null;
+    const manualBase =
+      input.agreement.manualBase == null ? null : Number(input.agreement.manualBase);
     try {
       agreementDraft = resolveAssignmentAgreement({
         cleanerName: cleaner?.name ?? null,
@@ -226,12 +231,14 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
               includedAddOns: input.agreement.includedAddOns,
             }
           : undefined,
+        w9Status: cleaner?.CleanerProfile?.w9Status ?? 'MISSING',
         eligibleBase: agreedCleaningPrice({
           agreedOperationalPrice: previewJob.agreedOperationalPrice,
           agreedCustomerPrice: previewJob.agreedCustomerPrice,
           processingAllowance: previewJob.processingAllowanceEstimated,
           includedAddOns: input.agreement.includedAddOns,
         }),
+        manualBase: manualBase != null && Number.isFinite(manualBase) ? manualBase : null,
         note: input.agreement.note,
       });
     } catch (err) {
@@ -427,6 +434,7 @@ export async function createJobOffer(input: CreateOfferInput): Promise<JobOffer>
               method: draft.method,
               rate: draft.rate,
               eligibleBase: draft.eligibleBase,
+              manualEligibleBase: draft.manualEligibleBase,
               includedAddOns: draft.includedAddOns,
               assisted: draft.assisted,
               setBy: adminId,

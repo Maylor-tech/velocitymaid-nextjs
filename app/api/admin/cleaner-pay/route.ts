@@ -6,7 +6,10 @@ import {
   agreedCleaningPrice,
   cleanerPayLabel,
   compensationMethodLabel,
+  DEFAULT_1099_THRESHOLD,
   reviewPayables,
+  thresholdNotice,
+  yearToDateTotal,
   type JobPayInput,
   type ManualPaymentInput,
 } from '@/lib/cleanerComp/pay';
@@ -55,7 +58,7 @@ export async function GET(request: NextRequest) {
     const cleanerId = request.nextUrl.searchParams.get('cleanerId');
     const cleaners = await prisma.user.findMany({
       where: {
-        CompensationAgreements: { some: {} },
+        OR: [{ CompensationAgreements: { some: {} } }, { ManualPayments: { some: {} } }],
         ...(cleanerId ? { id: cleanerId } : {}),
       },
       select: { id: true, name: true },
@@ -69,6 +72,12 @@ export async function GET(request: NextRequest) {
         cleanerName: 'No agreements yet',
         lines: [],
         payments: [],
+        advances: [],
+        reimbursements: [],
+        unmatched: [],
+        ytd: null,
+        terms: null,
+        w9Status: null,
       });
     }
 
@@ -104,8 +113,28 @@ export async function GET(request: NextRequest) {
       allocations: payment.allocations.map((allocation) => ({
         jobId: allocation.jobId,
         amount: money(allocation.amount) ?? 0,
+        type: allocation.allocationType,
+        memo: allocation.memo,
+        appliedJobId: allocation.appliedJobId,
       })),
+      paidFromKind: payment.paidFromKind,
+      paidFromLabel: payment.paidFromLabel,
     }));
+
+    const [terms, profile, settings, reimbursements, unmatched] = await Promise.all([
+      prisma.cleanerCompTerms.findUnique({ where: { cleanerId: cleaner.id } }),
+      prisma.cleanerProfile.findUnique({ where: { userId: cleaner.id }, select: { w9Status: true, w9StatusOn: true } }),
+      prisma.cleanerPaySettings.findUnique({ where: { id: 'default' } }),
+      prisma.reimbursementOwed.findMany({
+        include: { ManualPayment: { select: { paidOn: true, memo: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.manualPaymentAllocation.findMany({
+        where: { jobId: null, jobReference: { startsWith: 'MATCH:' } },
+        include: { ManualPayment: { select: { cleanerId: true, paidOn: true, Cleaner: { select: { name: true } } } } },
+        orderBy: { ManualPayment: { paidOn: 'desc' } },
+      }),
+    ]);
 
     const jobs: JobPayInput[] = agreements.map((agreement) => ({
       jobId: agreement.jobId,
@@ -119,10 +148,13 @@ export async function GET(request: NextRequest) {
         includedAddOns: agreement.includedAddOns,
       }),
       tip: 0,
+      termsEffectiveFrom: terms?.effectiveFrom.toISOString().slice(0, 10) ?? null,
       agreement: {
         method: agreement.method,
         rate: money(agreement.rate) ?? 0,
         eligibleBase: money(agreement.eligibleBase),
+        manualEligibleBase: agreement.manualEligibleBase,
+        payBasis: agreement.payBasis,
         includedAddOns: agreement.includedAddOns,
         assisted: agreement.assisted,
         verifiedHours: money(agreement.verifiedHours),
@@ -141,7 +173,12 @@ export async function GET(request: NextRequest) {
         cleaner: cleaner.name || 'Cleaner',
         job: agreement?.Job.jobReference || row.jobId,
         date: formatDay(serviceDate),
-        method: agreement ? compensationMethodLabel(agreement.method) : row.method,
+        method:
+          row.payBasis === 'HISTORICAL_AS_PAID'
+            ? 'Historical as paid'
+            : agreement
+              ? compensationMethodLabel(agreement.method)
+              : row.method,
         rate: agreement ? cleanerPayLabel(agreement.method, Number(agreement.rate)) : String(row.rate),
         hours:
           row.verifiedHours == null
@@ -156,9 +193,53 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    const year = new Date().getUTCFullYear();
+    const ytd = yearToDateTotal(paymentInputs, cleaner.id, year);
+    const notice = thresholdNotice(ytd, settings ? Number(settings.threshold1099) : DEFAULT_1099_THRESHOLD);
+    const advances = payments.flatMap((payment) =>
+      payment.allocations
+        .filter((allocation) => allocation.allocationType === 'ADVANCE')
+        .map((allocation) => ({
+          date: formatDay(day(payment.paidOn)),
+          amount: formatMoney(money(allocation.amount)),
+          memo: allocation.memo || '—',
+          applied: allocation.appliedJobId ? 'Applied to a later job' : 'Not applied to a job',
+        }))
+    );
+
     return NextResponse.json({
       success: true,
+      cleanerId: cleaner.id,
       cleanerName: cleaner.name || 'Cleaner',
+      terms: terms
+        ? {
+            soloMethod: terms.soloMethod,
+            soloRate: Number(terms.soloRate),
+            assistedMethod: terms.assistedMethod,
+            assistedRate: Number(terms.assistedRate),
+            effectiveFrom: terms.effectiveFrom.toISOString().slice(0, 10),
+          }
+        : null,
+      w9Status: profile?.w9Status ?? 'MISSING',
+      w9StatusOn: profile?.w9StatusOn?.toISOString().slice(0, 10) ?? null,
+      ytd: {
+        total: formatMoney(notice.ytd),
+        threshold: formatMoney(notice.threshold),
+        warnAt: formatMoney(notice.warnAt),
+        warning: notice.warning,
+      },
+      advances,
+      reimbursements: reimbursements.map((row) => ({
+        person: row.personName,
+        amount: formatMoney(money(row.amount)),
+        detail: `${formatDay(day(row.ManualPayment.paidOn))} · ${row.ManualPayment.memo || 'Personal funds'}`,
+      })),
+      unmatched: unmatched.map((row) => ({
+        cleaner: row.ManualPayment.Cleaner.name || 'Cleaner',
+        amount: formatMoney(money(row.amount)),
+        reference: row.jobReference || 'Unmatched',
+        basis: row.payBasisNote || '—',
+      })),
       lines,
       payments: payments.map((payment) => ({
         date: formatDay(day(payment.paidOn)),

@@ -13,9 +13,10 @@ import {
   type ReleaseReasonCode,
 } from '@/lib/dispatch/releaseReasons';
 import {
-  isDorothyCleaner,
   offerChoicesForCleaner,
+  type CleanerTerms,
   type CompensationMethod,
+  type W9Status,
 } from '@/lib/cleanerComp/pay';
 
 type OfferRow = {
@@ -144,6 +145,9 @@ export function DispatchPanel({
   const [customRate, setCustomRate] = useState('');
   const [customAssisted, setCustomAssisted] = useState(false);
   const [payReason, setPayReason] = useState('');
+  const [manualBase, setManualBase] = useState('');
+  const [storedTerms, setStoredTerms] = useState<CleanerTerms | null>(null);
+  const [w9Status, setW9Status] = useState<W9Status | null>(null);
   const [durationMins, setDurationMins] = useState('');
   const [ttlMinutes, setTtlMinutes] = useState('');
   const [urgency, setUrgency] = useState<'STANDARD' | 'SAME_DAY' | 'URGENT'>('STANDARD');
@@ -180,6 +184,31 @@ export function DispatchPanel({
     if (enabled) void load();
   }, [enabled, load]);
 
+  useEffect(() => {
+    if (!selectedCleanerId) {
+      setStoredTerms(null);
+      setW9Status(null);
+      return;
+    }
+    let cancelled = false;
+    void fetch(`/api/admin/cleaner-pay/terms?cleanerId=${encodeURIComponent(selectedCleanerId)}`)
+      .then((res) => res.json())
+      .then((json: { success?: boolean; terms?: CleanerTerms | null; w9Status?: W9Status }) => {
+        if (cancelled || !json.success) return;
+        setStoredTerms(json.terms ?? null);
+        setW9Status(json.w9Status ?? 'MISSING');
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setStoredTerms(null);
+          setW9Status(null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCleanerId]);
+
   if (!enabled) return null;
 
   const clock = new Date(nowMs);
@@ -203,11 +232,18 @@ export function DispatchPanel({
       setError('Select a cleaner');
       return;
     }
-    const selectedName = cleaners.find((cleaner) => cleaner.id === selectedCleanerId)?.name;
-    const choices = offerChoicesForCleaner(selectedName, null);
-    const choice = choices.length === 0 ? 'custom' : payChoice === 'custom' ? 'solo' : payChoice;
+    const choices = offerChoicesForCleaner(storedTerms, w9Status);
+    const choice = choices.some((row) => row.id === payChoice)
+      ? payChoice
+      : choices.length === 0
+        ? 'custom'
+        : choices[0].id;
     if (choice === 'custom' && (!customRate.trim() || Number(customRate) <= 0)) {
       setError('Enter this cleaner’s rate. No default is assumed.');
+      return;
+    }
+    if ((choice === 'solo' || (choice === 'custom' && customMethod === 'PERCENTAGE')) && w9Status === 'MISSING') {
+      setError('Solo percentage offers need a W-9 on file. Assisted hourly is still allowed.');
       return;
     }
     setSending(true);
@@ -227,8 +263,9 @@ export function DispatchPanel({
                   rate: Number(customRate),
                   assisted: customAssisted,
                   note: payReason.trim() || null,
+                  manualBase: manualBase.trim() ? Number(manualBase) : null,
                 }
-              : { choice, note: payReason.trim() || null },
+              : { choice, note: payReason.trim() || null, manualBase: manualBase.trim() ? Number(manualBase) : null },
           compensationOverrideReason: payReason.trim() || undefined,
           estimatedDurationMins: durationMins.trim() ? Number(durationMins) : undefined,
           ttlMinutes: ttlMinutes ? Number(ttlMinutes) : undefined,
@@ -392,15 +429,9 @@ export function DispatchPanel({
             </div>
             <div>
               <p className="block text-sm font-medium text-vm-text mb-1">Cleaner compensation</p>
-              {offerChoicesForCleaner(
-                cleaners.find((cleaner) => cleaner.id === selectedCleanerId)?.name,
-                null
-              ).length > 0 ? (
+              {offerChoicesForCleaner(storedTerms, w9Status).length > 0 ? (
                 <div className="flex flex-col gap-2">
-                  {offerChoicesForCleaner(
-                    cleaners.find((cleaner) => cleaner.id === selectedCleanerId)?.name,
-                    null
-                  ).map((choice) => (
+                  {offerChoicesForCleaner(storedTerms, w9Status).map((choice) => (
                     <button
                       key={choice.id}
                       type="button"
@@ -458,10 +489,23 @@ export function DispatchPanel({
                 </div>
               )}
               <p className="mt-2 font-body text-sm text-vm-muted">
-                {isDorothyCleaner(cleaners.find((cleaner) => cleaner.id === selectedCleanerId)?.name)
-                  ? 'Solo is 65% of the eligible cleaning amount. Assisted is $30 per verified hour.'
-                  : 'The cleaner sees the method and rate only.'}
+                {w9Status === 'MISSING'
+                  ? 'W-9 is missing. Solo percentage offers stay blocked. Assisted hourly is allowed.'
+                  : storedTerms
+                    ? `Terms from ${storedTerms.effectiveFrom || 'the date on file'}. The cleaner sees the method and rate only.`
+                    : 'Set terms for this cleaner before sending an offer. No default is assumed.'}
               </p>
+              <label className="mt-3 block font-body text-sm font-medium text-vm-text" htmlFor="manual-base">
+                Percentage base
+              </label>
+              <input
+                id="manual-base"
+                inputMode="decimal"
+                value={manualBase}
+                onChange={(e) => setManualBase(e.target.value)}
+                placeholder="Job price, or a typed share"
+                className="mt-1 min-h-11 w-full rounded-[10px] border border-gray-300 px-3 font-body text-sm"
+              />
               <label className="mt-3 block font-body text-sm font-medium text-vm-text" htmlFor="pay-override-reason">
                 Note
               </label>

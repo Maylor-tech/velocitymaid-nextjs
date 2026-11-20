@@ -15,14 +15,29 @@ export type PayableStatus = (typeof PAYABLE_STATUSES)[number];
 export const MANUAL_PAYMENT_METHODS = ['ZELLE', 'CASH', 'CHECK', 'OTHER'] as const;
 export type ManualPaymentMethod = (typeof MANUAL_PAYMENT_METHODS)[number];
 
-export const DOROTHY_SOLO_RATE = 65;
-export const DOROTHY_ASSISTED_RATE = 30;
+export const ALLOCATION_TYPES = ['JOB', 'ADVANCE', 'OTHER'] as const;
+export type AllocationType = (typeof ALLOCATION_TYPES)[number];
+
+export const PAID_FROM_KINDS = ['BUSINESS_ACCOUNT', 'PERSONAL_FUNDS', 'UNKNOWN'] as const;
+export type PaidFromKind = (typeof PAID_FROM_KINDS)[number];
+
+export const W9_STATUSES = ['ON_FILE', 'MISSING'] as const;
+export type W9Status = (typeof W9_STATUSES)[number];
+
+export const PAY_BASIS = ['TERMS', 'HISTORICAL_AS_PAID'] as const;
+export type PayBasis = (typeof PAY_BASIS)[number];
+
+/** Warning starts at 80% of this amount. Admins can store a different threshold. */
+export const DEFAULT_1099_THRESHOLD = 2000;
 
 export type AgreementSnapshot = {
   method: CompensationMethod;
   /** 65 means 65 percent. 30 means $30 per verified hour, or a flat dollar amount. */
   rate: number;
   eligibleBase: number | null;
+  /** Typed for this job. Replaces the job’s cleaning price. */
+  manualEligibleBase?: boolean;
+  payBasis?: PayBasis;
   includedAddOns: string[];
   assisted: boolean;
   verifiedHours: number | null;
@@ -45,7 +60,17 @@ export type JobPayInput = {
   otherAddOns?: AddOnAmount[];
   /** Never part of expected pay. Kept so callers can prove it was ignored. */
   tip?: number;
+  /** When the service date is before this day, pay is historical as paid unless the job has verified hourly terms. */
+  termsEffectiveFrom?: string | null;
   agreement: AgreementSnapshot;
+};
+
+export type AllocationInput = {
+  jobId?: string | null;
+  amount: number;
+  type?: AllocationType;
+  memo?: string | null;
+  appliedJobId?: string | null;
 };
 
 export type ManualPaymentInput = {
@@ -53,7 +78,9 @@ export type ManualPaymentInput = {
   cleanerId: string;
   date: string;
   amount: number;
-  allocations: { jobId: string; amount: number }[];
+  paidFromKind?: PaidFromKind;
+  paidFromLabel?: string | null;
+  allocations: AllocationInput[];
 };
 
 export type Obligation = {
@@ -75,11 +102,22 @@ export type ReviewRow = {
   method: CompensationMethod;
   rate: number;
   verifiedHours: number | null;
+  payBasis: PayBasis;
   persisted: boolean;
 };
 
-export function isDorothyCleaner(name: string | null | undefined): boolean {
-  return (name ?? '').trim().toLowerCase().includes('dorothy');
+export function assertAllocationMemo(type: AllocationType, memo: string | null | undefined): void {
+  if (type !== 'JOB' && !(memo ?? '').trim()) {
+    throw new Error('A memo is required for an advance or other allocation.');
+  }
+}
+
+export function applyAdvance<T extends AllocationInput>(allocation: T, jobId: string): T {
+  if ((allocation.type ?? 'JOB') !== 'ADVANCE') {
+    throw new Error('Only an advance can be applied to a later job.');
+  }
+  if (!jobId) throw new Error('Choose the job this advance applies to.');
+  return { ...allocation, appliedJobId: jobId };
 }
 
 export function suggestedHours(
@@ -106,6 +144,9 @@ export function toMoney(raw: unknown): number | null {
  */
 export function eligibleCleaningAmount(input: JobPayInput): number | null {
   const agreement = input.agreement;
+  if (agreement.manualEligibleBase && agreement.eligibleBase != null) {
+    return round2(agreement.eligibleBase);
+  }
   if (agreement.frozenAt && agreement.eligibleBase != null) {
     return round2(agreement.eligibleBase);
   }
@@ -162,15 +203,35 @@ export function confirmVerifiedHours(
   };
 }
 
+function allocationType(allocation: AllocationInput): AllocationType {
+  return allocation.type ?? 'JOB';
+}
+
 function allocatedToJob(payments: ManualPaymentInput[], jobId: string, cleanerId: string): number {
   let total = 0;
   for (const payment of payments) {
     if (payment.cleanerId !== cleanerId) continue;
     for (const allocation of payment.allocations) {
-      if (allocation.jobId === jobId) total += allocation.amount;
+      const type = allocationType(allocation);
+      if (type === 'JOB' && allocation.jobId === jobId) total += allocation.amount;
+      if (type === 'ADVANCE' && allocation.appliedJobId === jobId) total += allocation.amount;
     }
   }
   return round2(total);
+}
+
+function dayOnly(value: string | null | undefined): string {
+  return (value ?? '').slice(0, 10);
+}
+
+/** Jobs before terms are paid as allocated. A verified hourly basis on that job still uses hours × rate. */
+export function isHistoricalAsPaid(job: JobPayInput): boolean {
+  if (job.agreement.payBasis === 'HISTORICAL_AS_PAID') return true;
+  const effective = dayOnly(job.termsEffectiveFrom);
+  if (!effective || dayOnly(job.serviceDate) >= effective) return false;
+  if (job.agreement.method === 'HOURLY' && job.agreement.verifiedHours != null) return false;
+  if (job.agreement.method === 'FLAT') return false;
+  return true;
 }
 
 function hasUnallocatedPaymentOnDate(
@@ -209,12 +270,40 @@ export function reviewPayables(input: {
         method: job.agreement.method,
         rate: job.agreement.rate,
         verifiedHours: job.agreement.verifiedHours,
+        payBasis: job.agreement.payBasis === 'HISTORICAL_AS_PAID' ? 'HISTORICAL_AS_PAID' : 'TERMS',
         persisted: true,
       });
       continue;
     }
 
     const paid = allocatedToJob(input.payments, job.jobId, job.cleanerId);
+    if (isHistoricalAsPaid(job)) {
+      const obligation: Obligation = {
+        jobId: job.jobId,
+        cleanerId: job.cleanerId,
+        expected: paid,
+        paid,
+        balance: 0,
+        status: 'PAID_MANUALLY',
+      };
+      obligations.push(obligation);
+      created += 1;
+      rows.push({
+        jobId: job.jobId,
+        cleanerId: job.cleanerId,
+        status: 'PAID_MANUALLY',
+        expected: paid,
+        paid,
+        balance: 0,
+        method: job.agreement.method,
+        rate: job.agreement.rate,
+        verifiedHours: job.agreement.verifiedHours,
+        payBasis: 'HISTORICAL_AS_PAID',
+        persisted: true,
+      });
+      continue;
+    }
+
     const hourlyUnverified =
       job.agreement.method === 'HOURLY' && job.agreement.verifiedHours == null;
     if (hourlyUnverified) {
@@ -228,6 +317,7 @@ export function reviewPayables(input: {
         method: job.agreement.method,
         rate: job.agreement.rate,
         verifiedHours: null,
+        payBasis: 'TERMS',
         persisted: false,
       });
       continue;
@@ -244,6 +334,7 @@ export function reviewPayables(input: {
         method: job.agreement.method,
         rate: job.agreement.rate,
         verifiedHours: job.agreement.verifiedHours,
+        payBasis: 'TERMS',
         persisted: false,
       });
       continue;
@@ -261,6 +352,7 @@ export function reviewPayables(input: {
         method: job.agreement.method,
         rate: job.agreement.rate,
         verifiedHours: job.agreement.verifiedHours,
+        payBasis: 'TERMS',
         persisted: false,
       });
       continue;
@@ -289,6 +381,7 @@ export function reviewPayables(input: {
       method: job.agreement.method,
       rate: job.agreement.rate,
       verifiedHours: job.agreement.verifiedHours,
+      payBasis: 'TERMS',
       persisted: true,
     });
   }
@@ -314,34 +407,17 @@ export type CleanerTerms = {
   soloRate: number;
   assistedMethod: CompensationMethod;
   assistedRate: number;
+  effectiveFrom?: string | null;
 };
 
 export type OfferChoice = 'solo' | 'assisted' | 'custom';
 
 export function offerChoicesForCleaner(
-  cleanerName: string | null | undefined,
-  terms: CleanerTerms | null
+  terms: CleanerTerms | null,
+  w9Status?: W9Status | null
 ): { id: 'solo' | 'assisted'; label: string; method: CompensationMethod; rate: number; assisted: boolean }[] {
-  if (isDorothyCleaner(cleanerName)) {
-    return [
-      {
-        id: 'solo',
-        label: 'Solo (65%)',
-        method: 'PERCENTAGE',
-        rate: DOROTHY_SOLO_RATE,
-        assisted: false,
-      },
-      {
-        id: 'assisted',
-        label: 'Assisted ($30/hr)',
-        method: 'HOURLY',
-        rate: DOROTHY_ASSISTED_RATE,
-        assisted: true,
-      },
-    ];
-  }
   if (!terms) return [];
-  return [
+  const choices: { id: 'solo' | 'assisted'; label: string; method: CompensationMethod; rate: number; assisted: boolean }[] = [
     {
       id: 'solo',
       label: `Solo (${cleanerPayLabel(terms.soloMethod, terms.soloRate)})`,
@@ -357,12 +433,15 @@ export function offerChoicesForCleaner(
       assisted: true,
     },
   ];
+  if (w9Status !== 'MISSING') return choices;
+  return choices.filter((choice) => !(choice.id === 'solo' && choice.method === 'PERCENTAGE'));
 }
 
 export function resolveAssignmentAgreement(input: {
-  cleanerName: string | null;
+  cleanerName?: string | null;
   choice: OfferChoice;
   storedTerms: CleanerTerms | null;
+  w9Status?: W9Status | null;
   custom?: {
     method: CompensationMethod;
     rate: number;
@@ -370,6 +449,8 @@ export function resolveAssignmentAgreement(input: {
     includedAddOns?: string[];
   };
   eligibleBase: number | null;
+  /** Typed percentage base for this job, such as a weekly office share. */
+  manualBase?: number | null;
   note?: string | null;
 }): {
   method: CompensationMethod;
@@ -377,20 +458,26 @@ export function resolveAssignmentAgreement(input: {
   assisted: boolean;
   includedAddOns: string[];
   eligibleBase: number | null;
+  manualEligibleBase: boolean;
   compensationAmount: number;
   compensationBasis: 'FLAT' | 'HOURLY' | 'OTHER';
   note: string | null;
 } {
-  const choices = offerChoicesForCleaner(input.cleanerName, input.storedTerms);
+  if (
+    input.w9Status === 'MISSING' &&
+    input.choice === 'solo' &&
+    input.storedTerms?.soloMethod === 'PERCENTAGE'
+  ) {
+    throw new Error('Solo percentage offers need a W-9 on file. Assisted hourly is still allowed.');
+  }
+
+  const choices = offerChoicesForCleaner(input.storedTerms, input.w9Status);
   let method: CompensationMethod;
   let rate: number;
   let assisted = false;
   let includedAddOns: string[] = [];
 
   if (input.choice === 'custom') {
-    if (isDorothyCleaner(input.cleanerName)) {
-      throw new Error('Dorothy uses Solo (65%) or Assisted ($30/hr).');
-    }
     if (!input.custom || !Number.isFinite(input.custom.rate) || input.custom.rate <= 0) {
       throw new Error('Set terms for this cleaner before sending an offer. No default is assumed.');
     }
@@ -408,14 +495,18 @@ export function resolveAssignmentAgreement(input: {
     assisted = choice.assisted;
   }
 
-  if (method === 'PERCENTAGE' && input.eligibleBase == null) {
+  if (method === 'PERCENTAGE' && input.w9Status === 'MISSING') {
+    throw new Error('Solo percentage offers need a W-9 on file. Assisted hourly is still allowed.');
+  }
+
+  const manualEligibleBase = input.manualBase != null && Number.isFinite(input.manualBase);
+  const base = manualEligibleBase ? round2(input.manualBase as number) : input.eligibleBase;
+  if (method === 'PERCENTAGE' && base == null) {
     throw new Error('This job has no agreed cleaning price to apply the percentage to.');
   }
 
   const compensationAmount =
-    method === 'PERCENTAGE'
-      ? round2((input.eligibleBase ?? 0) * (rate / 100))
-      : round2(rate);
+    method === 'PERCENTAGE' ? round2((base ?? 0) * (rate / 100)) : round2(rate);
   const compensationBasis = method === 'HOURLY' ? 'HOURLY' : method === 'FLAT' ? 'FLAT' : 'OTHER';
 
   return {
@@ -423,7 +514,8 @@ export function resolveAssignmentAgreement(input: {
     rate: round2(rate),
     assisted,
     includedAddOns,
-    eligibleBase: input.eligibleBase,
+    eligibleBase: base,
+    manualEligibleBase,
     compensationAmount,
     compensationBasis,
     note: input.note?.trim() || null,
@@ -444,6 +536,52 @@ export function agreedCleaningPrice(input: {
   const allowance = toMoney(input.processingAllowance) ?? 0;
   if (!included.has('processingAllowance')) return round2(Math.max(0, customer - allowance));
   return customer;
+}
+
+export function yearToDateTotal(
+  payments: ManualPaymentInput[],
+  cleanerId: string,
+  year: number
+): number {
+  let total = 0;
+  const prefix = `${year}-`;
+  for (const payment of payments) {
+    if (payment.cleanerId !== cleanerId || !payment.date.startsWith(prefix)) continue;
+    for (const allocation of payment.allocations) {
+      const type = allocation.type ?? 'JOB';
+      if (type === 'JOB' || type === 'ADVANCE') total += allocation.amount;
+    }
+  }
+  return round2(total);
+}
+
+export function thresholdNotice(ytd: number, threshold = DEFAULT_1099_THRESHOLD) {
+  const warnAt = round2(threshold * 0.8);
+  return {
+    ytd: round2(ytd),
+    threshold: round2(threshold),
+    warnAt,
+    warning: round2(ytd) >= warnAt,
+  };
+}
+
+export function reimbursementLines(payments: ManualPaymentInput[]): {
+  paymentId: string;
+  person: string;
+  amount: number;
+}[] {
+  const lines: { paymentId: string; person: string; amount: number }[] = [];
+  const seen = new Set<string>();
+  for (const payment of payments) {
+    if (payment.paidFromKind !== 'PERSONAL_FUNDS' || seen.has(payment.id)) continue;
+    seen.add(payment.id);
+    lines.push({
+      paymentId: payment.id,
+      person: (payment.paidFromLabel ?? '').trim() || 'Unknown',
+      amount: round2(payment.amount),
+    });
+  }
+  return lines;
 }
 
 function csvCell(value: string | number | null): string {

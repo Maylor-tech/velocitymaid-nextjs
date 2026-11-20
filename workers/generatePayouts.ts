@@ -116,6 +116,14 @@ export async function generatePayouts(
         where: { cleanerId: { in: cleanerIds } },
       })
     : [];
+  const terms = cleanerIds.length
+    ? await prisma.cleanerCompTerms.findMany({
+        where: { cleanerId: { in: cleanerIds } },
+      })
+    : [];
+  const effectiveFrom = new Map(
+    terms.map((row) => [row.cleanerId, row.effectiveFrom.toISOString().slice(0, 10)])
+  );
 
   const paymentInputs: ManualPaymentInput[] = payments.map((payment) => ({
     id: payment.id,
@@ -125,6 +133,9 @@ export async function generatePayouts(
     allocations: payment.allocations.map((allocation) => ({
       jobId: allocation.jobId,
       amount: money(allocation.amount) ?? 0,
+      type: allocation.allocationType,
+      memo: allocation.memo,
+      appliedJobId: allocation.appliedJobId,
     })),
   }));
   const existingObligations: Obligation[] = existing.flatMap((row) => {
@@ -178,10 +189,13 @@ export async function generatePayouts(
         includedAddOns: agreement.includedAddOns,
       }),
       tip: 0,
+      termsEffectiveFrom: effectiveFrom.get(job.assignedCleanerId) ?? null,
       agreement: {
         method: agreement.method,
         rate: money(agreement.rate) ?? 0,
         eligibleBase: money(agreement.eligibleBase),
+        manualEligibleBase: agreement.manualEligibleBase,
+        payBasis: agreement.payBasis,
         includedAddOns: agreement.includedAddOns,
         assisted: agreement.assisted,
         verifiedHours: money(agreement.verifiedHours),

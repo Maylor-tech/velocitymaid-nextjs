@@ -251,6 +251,10 @@ export async function POST(
               ? body.agreement.includedAddOns.map(String)
               : undefined,
             note: typeof body.agreement.note === 'string' ? body.agreement.note : null,
+            manualBase:
+              body.agreement.manualBase == null || body.agreement.manualBase === ''
+                ? null
+                : Number(body.agreement.manualBase),
           }
         : null;
     const offer = await createJobOffer({

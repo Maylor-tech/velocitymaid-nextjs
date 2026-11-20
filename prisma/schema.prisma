@@ -738,7 +738,7 @@ model JobOffer {
   @@index([expiresAt])
 }
 
-/// Per-cleaner terms. Dorothy is not stored here; her solo and assisted rates are fixed in code.
+/// Per-cleaner terms entered on the admin screen. No cleaner has a code default.
 model CleanerCompTerms {
   id             String             @id @default(cuid())
   cleanerId      String             @unique
@@ -746,6 +746,8 @@ model CleanerCompTerms {
   soloRate       Decimal            @db.Decimal(10, 2)
   assistedMethod CompensationMethod
   assistedRate   Decimal            @db.Decimal(10, 2)
+  /// Jobs before this date are historical as paid, unless that job has its own hourly basis.
+  effectiveFrom  DateTime           @db.Date
   note           String?
   setBy          String?
   setAt          DateTime           @default(now())
@@ -763,6 +765,9 @@ model CompensationAgreement {
   method            CompensationMethod
   rate              Decimal            @db.Decimal(10, 2)
   eligibleBase      Decimal?           @db.Decimal(10, 2)
+  /// When true, eligibleBase was typed for this job and replaces the job price.
+  manualEligibleBase Boolean           @default(false)
+  payBasis          PayBasis           @default(TERMS)
   includedAddOns    String[]           @default([])
   assisted          Boolean            @default(false)
   setBy             String?
@@ -782,32 +787,65 @@ model CompensationAgreement {
 }
 
 model ManualPayment {
-  id           String                    @id @default(cuid())
-  cleanerId    String
-  paidOn       DateTime                  @db.Date
-  amount       Decimal                   @db.Decimal(10, 2)
-  method       ManualPaymentMethod
-  memo         String?
-  recordedBy   String?
-  recordedAt   DateTime                  @default(now())
-  Cleaner      User                      @relation("ManualPaymentCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
-  allocations  ManualPaymentAllocation[]
+  id            String                    @id @default(cuid())
+  cleanerId     String
+  /// Stable import key. One key is one payment, even when several rows allocate it.
+  paymentKey    String?                   @unique
+  paidOn        DateTime                  @db.Date
+  amount        Decimal                   @db.Decimal(10, 2)
+  method        ManualPaymentMethod
+  paidFromKind  PaidFromKind              @default(UNKNOWN)
+  paidFromLabel String?
+  memo          String?
+  recordedBy    String?
+  recordedAt    DateTime                  @default(now())
+  Cleaner       User                      @relation("ManualPaymentCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
+  allocations   ManualPaymentAllocation[]
+  Reimbursement ReimbursementOwed?
 
   @@index([cleanerId, paidOn])
   @@map("manual_payments")
 }
 
 model ManualPaymentAllocation {
-  id              String        @id @default(cuid())
+  id              String         @id @default(cuid())
   manualPaymentId String
-  jobId           String
-  amount          Decimal       @db.Decimal(10, 2)
-  ManualPayment   ManualPayment @relation(fields: [manualPaymentId], references: [id], onDelete: Cascade)
-  Job             Job           @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  jobId           String?
+  allocationType  AllocationType @default(JOB)
+  amount          Decimal        @db.Decimal(10, 2)
+  memo            String?
+  /// Original reference. MATCH: rows stay unmatched until an admin links a job.
+  jobReference    String?
+  payBasisNote    String?
+  /// Set when an advance is applied to a later job.
+  appliedJobId    String?
+  ManualPayment   ManualPayment  @relation(fields: [manualPaymentId], references: [id], onDelete: Cascade)
+  Job             Job?           @relation(fields: [jobId], references: [id], onDelete: Restrict)
 
   @@index([jobId])
   @@index([manualPaymentId])
   @@map("manual_payment_allocations")
+}
+
+/// Money a person fronted. Not cleaner pay, and one row per payment.
+model ReimbursementOwed {
+  id              String        @id @default(cuid())
+  manualPaymentId String        @unique
+  personName      String
+  amount          Decimal       @db.Decimal(10, 2)
+  createdAt       DateTime      @default(now())
+  ManualPayment   ManualPayment @relation(fields: [manualPaymentId], references: [id], onDelete: Cascade)
+
+  @@map("reimbursements_owed")
+}
+
+/// 1099 notice threshold for the cleaner pay view. Default $2,000.
+model CleanerPaySettings {
+  id            String   @id @default("default")
+  threshold1099 Decimal  @default(2000) @db.Decimal(10, 2)
+  updatedAt     DateTime @updatedAt
+
+  @@map("cleaner_pay_settings")
 }
 
 /// One review obligation per completed job and cleaner. Not a transfer.
@@ -858,6 +896,8 @@ model CleanerProfile {
   classificationStatus String  @default("UNRESOLVED")
   /// ZELLE | CHECK | ACH_PROVIDER | STRIPE_CONNECT | OTHER | null — preference enum only, no credentials.
   paymentPreference   String?
+  w9Status            W9Status  @default(MISSING)
+  w9StatusOn          DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2043,6 +2083,28 @@ enum CompensationMethod {
   PERCENTAGE
   HOURLY
   FLAT
+}
+
+enum PayBasis {
+  TERMS
+  HISTORICAL_AS_PAID
+}
+
+enum AllocationType {
+  JOB
+  ADVANCE
+  OTHER
+}
+
+enum PaidFromKind {
+  BUSINESS_ACCOUNT
+  PERSONAL_FUNDS
+  UNKNOWN
+}
+
+enum W9Status {
+  ON_FILE
+  MISSING
 }
 
 enum ManualPaymentMethod {

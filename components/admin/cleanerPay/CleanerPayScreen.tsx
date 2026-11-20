@@ -23,10 +23,43 @@ export type CleanerPayEntry = {
   allocated: string;
 };
 
+export type CleanerPayAdvance = {
+  date: string;
+  amount: string;
+  memo: string;
+  applied: string;
+};
+
+export type CleanerPayReimbursement = {
+  person: string;
+  amount: string;
+  detail: string;
+};
+
+export type CleanerPayUnmatched = {
+  cleaner: string;
+  amount: string;
+  reference: string;
+  basis: string;
+};
+
+export type CleanerPayYtd = {
+  total: string;
+  threshold: string;
+  warnAt: string;
+  warning: boolean;
+};
+
 type CleanerPayScreenProps = {
   cleanerName: string;
   lines: CleanerPayLine[];
   payments: CleanerPayEntry[];
+  advances?: CleanerPayAdvance[];
+  reimbursements?: CleanerPayReimbursement[];
+  unmatched?: CleanerPayUnmatched[];
+  ytd?: CleanerPayYtd | null;
+  termsLabel?: string;
+  w9Label?: string;
   sample?: boolean;
 };
 
@@ -43,6 +76,12 @@ export function CleanerPayScreen({
   cleanerName,
   lines,
   payments,
+  advances = [],
+  reimbursements = [],
+  unmatched = [],
+  ytd = null,
+  termsLabel,
+  w9Label,
   sample = false,
 }: CleanerPayScreenProps) {
   const expected = lines.reduce((sum, line) => sum + money(line.expected), 0);
@@ -87,6 +126,25 @@ export function CleanerPayScreen({
         <p className="rounded-[14px] border border-vm-line bg-white px-4 py-3 font-body text-sm text-vm-text">
           Sample figures for review. Nothing on this page is saved.
         </p>
+      ) : null}
+
+      {termsLabel || w9Label ? (
+        <p className="font-body text-sm text-vm-text">
+          {termsLabel ? <span className="block">{termsLabel}</span> : null}
+          {w9Label ? <span className="block">{w9Label}</span> : null}
+        </p>
+      ) : null}
+
+      {ytd ? (
+        <div className="rounded-[14px] border border-vm-line bg-white p-4">
+          <p className="font-body text-sm text-vm-muted">Year to date</p>
+          <p className="font-heading text-2xl font-bold text-vm-navy">{ytd.total}</p>
+          <p className="mt-1 font-body text-sm text-vm-text">
+            {ytd.warning
+              ? `Year to date has reached ${ytd.warnAt}, 80% of the ${ytd.threshold} 1099 threshold.`
+              : `1099 notice starts at ${ytd.warnAt}, 80% of ${ytd.threshold}.`}
+          </p>
+        </div>
       ) : null}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -157,6 +215,66 @@ export function CleanerPayScreen({
             </li>
           ))}
         </ul>
+      </section>
+
+      {advances.length > 0 ? (
+        <section className="rounded-[14px] border border-vm-line bg-white">
+          <h2 className="border-b border-vm-line px-4 py-3 font-heading text-lg font-bold text-vm-navy">
+            Advances
+          </h2>
+          <ul className="flex flex-col">
+            {advances.map((advance) => (
+              <li key={`${advance.date}-${advance.amount}`} className="border-b border-vm-line px-4 py-3 last:border-b-0">
+                <p className="font-body text-sm font-semibold text-vm-navy">
+                  {advance.date} · {advance.amount}
+                </p>
+                <p className="font-body text-sm text-vm-text">{advance.memo}</p>
+                <p className="font-body text-sm text-vm-muted">{advance.applied}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="rounded-[14px] border border-vm-line bg-white">
+        <h2 className="border-b border-vm-line px-4 py-3 font-heading text-lg font-bold text-vm-navy">
+          Reimbursements owed
+        </h2>
+        {reimbursements.length === 0 ? (
+          <p className="px-4 py-3 font-body text-sm text-vm-muted">No personal-funds reimbursements.</p>
+        ) : (
+          <ul className="flex flex-col">
+            {reimbursements.map((row) => (
+              <li key={`${row.person}-${row.amount}-${row.detail}`} className="border-b border-vm-line px-4 py-3 last:border-b-0">
+                <p className="font-body text-sm font-semibold text-vm-navy">
+                  Reimbursement owed to {row.person} · {row.amount}
+                </p>
+                <p className="font-body text-sm text-vm-muted">{row.detail}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="rounded-[14px] border border-vm-line bg-white">
+        <h2 className="border-b border-vm-line px-4 py-3 font-heading text-lg font-bold text-vm-navy">
+          Unmatched
+        </h2>
+        {unmatched.length === 0 ? (
+          <p className="px-4 py-3 font-body text-sm text-vm-muted">No payments waiting for a job.</p>
+        ) : (
+          <ul className="flex flex-col">
+            {unmatched.map((row) => (
+              <li key={row.reference} className="border-b border-vm-line px-4 py-3 last:border-b-0">
+                <p className="font-body text-sm font-semibold text-vm-navy">
+                  {row.cleaner} · {row.amount}
+                </p>
+                <p className="font-body text-sm text-vm-text">{row.reference}</p>
+                <p className="font-body text-sm text-vm-muted">{row.basis} · Waiting for an admin to link the job.</p>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="rounded-[14px] border border-vm-line bg-white">

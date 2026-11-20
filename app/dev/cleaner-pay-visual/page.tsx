@@ -3,73 +3,95 @@ import { notFound } from 'next/navigation';
 
 const lines = [
   {
-    cleaner: 'Dorothy Staging',
-    job: 'VM-STAGING-COMP-SOLO',
-    date: 'Nov 18, 2026',
-    method: 'Percentage',
-    rate: '65%',
+    cleaner: 'Dory (Dori)',
+    job: 'VM-2026-0015',
+    date: 'Aug 17, 2026',
+    method: 'Historical as paid',
+    rate: '—',
     hours: '—',
-    expected: '$253.50',
-    paid: '$0.00',
-    balance: '$253.50',
-    status: 'Owed',
+    expected: '$100.00',
+    paid: '$100.00',
+    balance: '$0.00',
+    status: 'Paid manually',
   },
   {
-    cleaner: 'Dorothy Staging',
-    job: 'VM-STAGING-COMP-ASSIST',
-    date: 'Nov 18, 2026',
-    method: 'Hourly',
-    rate: '$30 per hour',
-    hours: '4.5',
-    expected: '$135.00',
-    paid: '$0.00',
-    balance: '$135.00',
-    status: 'Owed',
-  },
-  {
-    cleaner: 'Dorothy Staging',
-    job: 'VM-STAGING-COMP-HOURS',
-    date: 'Nov 19, 2026',
-    method: 'Hourly',
-    rate: '$30 per hour',
-    hours: 'Not verified',
-    expected: '—',
-    paid: '—',
-    balance: '—',
-    status: 'Needs hours',
-  },
-  {
-    cleaner: 'Dorothy Staging',
-    job: 'VM-STAGING-COMP-PAID',
-    date: 'Nov 17, 2026',
-    method: 'Percentage',
-    rate: '65%',
+    cleaner: 'Dory (Dori)',
+    job: 'VM-2026-0031',
+    date: 'Aug 31, 2026',
+    method: 'Historical as paid',
+    rate: '—',
     hours: '—',
-    expected: '$253.50',
-    paid: '$253.50',
+    expected: '$170.00',
+    paid: '$170.00',
+    balance: '$0.00',
+    status: 'Paid manually',
+  },
+  {
+    cleaner: 'Dory (Dori)',
+    job: 'VM-2026-0033',
+    date: 'Aug 30, 2026',
+    method: 'Historical as paid',
+    rate: '—',
+    hours: '—',
+    expected: '$57.41',
+    paid: '$57.41',
     balance: '$0.00',
     status: 'Paid manually',
   },
 ];
 
 export default function CleanerPayVisualPage() {
-  if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production') notFound();
+  if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production') {
+    notFound();
+  }
+
   return (
-    <main className="min-h-screen bg-vm-canvas">
-      <CleanerPayScreen
-        cleanerName="Dorothy Staging"
-        sample
-        lines={lines}
-        payments={[
-          {
-            date: 'Nov 17, 2026',
-            amount: '$253.50',
-            method: 'Zelle',
-            memo: 'Staging test — disregard',
-            allocated: 'Allocated to VM-STAGING-COMP-PAID',
-          },
-        ]}
-      />
-    </main>
+    <CleanerPayScreen
+      sample
+      cleanerName="Dory (Dori)"
+      lines={lines}
+      termsLabel="Terms from Oct 9, 2026: solo 65% · assisted $30 per hour. Stored on the cleaner, not in code."
+      w9Label="W-9 missing. Solo percentage offers stay blocked. Assisted hourly is allowed."
+      ytd={{ total: '$360.00', threshold: '$2,000.00', warnAt: '$1,600.00', warning: false }}
+      advances={[
+        {
+          date: 'Aug 31, 2026',
+          amount: '$32.59',
+          memo: 'TDS reset / advance',
+          applied: 'Not applied to a job',
+        },
+      ]}
+      reimbursements={[
+        {
+          person: 'Caryll',
+          amount: '$100.00',
+          detail: 'Aug 17, 2026 · Personal funds · listed once',
+        },
+      ]}
+      unmatched={[
+        {
+          cleaner: 'Aurora Burroughs',
+          amount: '$90.00',
+          reference: 'MATCH:354 Grout Road 2026-10-27',
+          basis: 'Hourly 3h × $30',
+        },
+      ]}
+      payments={[
+        {
+          date: 'Aug 17, 2026',
+          amount: '$100.00',
+          method: 'Zelle',
+          memo: 'Personal funds · Caryll',
+          allocated: 'Allocated to VM-2026-0015',
+        },
+        {
+          date: 'Aug 31, 2026',
+          amount: '$260.00',
+          method: 'Zelle',
+          memo: 'Business account · VelocityMaid Chase',
+          allocated: 'Allocated $170.00 + $57.41 + $32.59 advance',
+        },
+      ]}
+    />
   );
 }
