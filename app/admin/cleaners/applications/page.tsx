@@ -12,6 +12,11 @@ import {
   UserPlus,
 } from "lucide-react";
 import {
+  HIRING_STATUS_LABELS,
+  HIRING_STATUSES,
+  parseVermontWorkApplication,
+} from "@/lib/marketing/vermontWorkWithUs";
+import {
   CLEANER_APPLICATION_STATUS_LABELS,
   isOpenCleanerApplication,
 } from "@/lib/cleaners/applicationStatus";
@@ -58,8 +63,9 @@ export default function CleanerApplicationsPage() {
     try {
       setLoading(true);
       setError(null);
+      const hiringFilter = (HIRING_STATUSES as readonly string[]).includes(statusFilter);
       const params = new URLSearchParams();
-      if (statusFilter !== "all") params.append("status", statusFilter);
+      if (statusFilter !== "all" && !hiringFilter) params.append("status", statusFilter);
       if (branchFilter !== "all") params.append("branchId", branchFilter);
 
       const response = await fetch(`/api/admin/cleaners/applications?${params.toString()}`);
@@ -87,6 +93,22 @@ export default function CleanerApplicationsPage() {
   useEffect(() => {
     fetchApplications();
   }, [fetchApplications]);
+
+  const saveHiringStatus = async (id: string, hiringStatus: string) => {
+    try {
+      const response = await fetch(`/api/admin/cleaners/applications/${id}/hiring-status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hiringStatus }),
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || "Could not update the status");
+      showToast("Status saved");
+      fetchApplications();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Could not update the status", "error");
+    }
+  };
 
   const handleApprove = async (id: string) => {
     if (!confirm("Accept and convert this applicant into a cleaner profile?")) return;
@@ -164,9 +186,9 @@ export default function CleanerApplicationsPage() {
 
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="font-heading text-2xl font-bold text-vm-navy">Cleaner Applications</h1>
+            <h1 className="font-heading text-2xl font-bold text-vm-navy">Applicants</h1>
             <p className="mt-1 font-body text-sm text-vm-muted">
-              Review talent portal submissions and move candidates through certification.
+              Vermont work-with-us applications, plus earlier talent portal submissions.
             </p>
             {newCount > 0 && (
               <p className="mt-2 inline-flex rounded-full bg-vm-warning-bg px-3 py-1 font-body text-xs font-semibold text-vm-warning">
@@ -202,6 +224,11 @@ export default function CleanerApplicationsPage() {
             >
               <option value="all">All</option>
               <option value="NEW">New</option>
+              <option value="CONTACTED">Contacted</option>
+              <option value="INTERVIEW">Interview</option>
+              <option value="TRIAL">Trial</option>
+              <option value="HIRED">Hired</option>
+              <option value="NOT_A_FIT">Not a fit</option>
               <option value="REVIEWING">Reviewing</option>
               <option value="TRAINING_INVITED">Training invited</option>
               <option value="ACCEPTED">Accepted</option>
@@ -235,14 +262,24 @@ export default function CleanerApplicationsPage() {
           </div>
         ) : applications.length === 0 ? (
           <div className="rounded-xl border border-vm-border bg-vm-white py-16 text-center">
-            <p className="font-heading text-lg text-vm-navy">No cleaner applications yet.</p>
+            <p className="font-heading text-lg text-vm-navy">No applicants yet.</p>
             <p className="mt-2 font-body text-sm text-vm-muted">
-              When candidates apply at /cleaners/apply, they will appear here for review.
+              Applications from the Vermont work-with-us page appear here.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {applications.map((app) => (
+            {applications
+              .filter((app) => {
+                if (!(HIRING_STATUSES as readonly string[]).includes(statusFilter)) return true;
+                return parseVermontWorkApplication(app.applicationData)?.hiringStatus === statusFilter;
+              })
+              .map((app) => {
+              const work = parseVermontWorkApplication(app.applicationData);
+              const statusLabel = work
+                ? HIRING_STATUS_LABELS[work.hiringStatus]
+                : CLEANER_APPLICATION_STATUS_LABELS[app.status] || app.status;
+              return (
               <div
                 key={app.id}
                 className="rounded-xl border border-vm-border bg-vm-white p-5 shadow-sm"
@@ -253,8 +290,8 @@ export default function CleanerApplicationsPage() {
                     <p className="font-body text-sm text-vm-muted">{app.email}</p>
                     <p className="font-body text-sm text-vm-muted">{app.phone || "—"}</p>
                   </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(app.status)}`}>
-                    {CLEANER_APPLICATION_STATUS_LABELS[app.status] || app.status}
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(work?.hiringStatus || app.status)}`}>
+                    {statusLabel}
                   </span>
                 </div>
 
@@ -270,13 +307,30 @@ export default function CleanerApplicationsPage() {
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
+                  {work ? (
+                    <label className="font-body text-sm text-vm-text" htmlFor={`hiring-${app.id}`}>
+                      Status
+                      <select
+                        id={`hiring-${app.id}`}
+                        value={work.hiringStatus}
+                        onChange={(event) => void saveHiringStatus(app.id, event.target.value)}
+                        className="mt-1 block min-h-11 rounded-[10px] border border-vm-border bg-white px-3 font-body text-sm text-vm-text focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-vm-cyan"
+                      >
+                        {HIRING_STATUSES.map((status) => (
+                          <option key={status} value={status}>
+                            {HIRING_STATUS_LABELS[status]}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
                   <Link
                     href={`/admin/cleaners/applications/${app.id}`}
                     className="inline-flex items-center gap-1 rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy hover:bg-vm-surface"
                   >
                     <Eye className="h-4 w-4" /> View full application
                   </Link>
-                  {isOpenCleanerApplication(app.status) && (
+                  {isOpenCleanerApplication(app.status) && !work && (
                     <>
                       <button
                         type="button"
@@ -303,7 +357,8 @@ export default function CleanerApplicationsPage() {
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
