@@ -32,7 +32,14 @@ interface ReviewState {
   invoicePublicToken: string | null;
 }
 
-export function JobPhotoReview({ jobId }: { jobId: string }) {
+export function JobPhotoReview({
+  jobId,
+  refreshKey = 0,
+}: {
+  jobId: string;
+  /** Bump to reload after photos are added elsewhere on the page. */
+  refreshKey?: number;
+}) {
   const [review, setReview] = useState<ReviewState | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +53,7 @@ export function JobPhotoReview({ jobId }: { jobId: string }) {
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, refreshKey]);
 
   const act = async (body: Record<string, string>) => {
     setBusy(true);

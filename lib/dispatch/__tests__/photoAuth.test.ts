@@ -43,6 +43,42 @@ describe('photo upload auth', () => {
     expect(findUnique).not.toHaveBeenCalled();
   });
 
+  it('allows a branch-scoped admin on a job in their branch', async () => {
+    requireRole.mockResolvedValueOnce({
+      userId: 'admin-2',
+      role: 'ADMIN',
+      isBranchScoped: true,
+      branchIds: ['vt'],
+    });
+    findUnique.mockResolvedValue({ id: 'job-1', branchId: 'vt' });
+    const req = new NextRequest('http://localhost/api/jobs/job-1/photos/sign', {
+      method: 'POST',
+    });
+    const actor = await requirePhotoUploadAccess(req, 'job-1');
+    expect(actor).toEqual({ role: 'ADMIN', userId: 'admin-2' });
+  });
+
+  it('forbids a branch-scoped admin on another branch job, without trying cleaner auth', async () => {
+    requireRole.mockResolvedValueOnce({
+      userId: 'admin-2',
+      role: 'ADMIN',
+      isBranchScoped: true,
+      branchIds: ['vt'],
+    });
+    findUnique.mockResolvedValue({ id: 'job-1', branchId: 'nj' });
+    const req = new NextRequest('http://localhost/api/jobs/job-1/photos/sign', {
+      method: 'POST',
+    });
+    try {
+      await requirePhotoUploadAccess(req, 'job-1');
+      expect.fail('expected forbidden');
+    } catch (err) {
+      expect(err).toBeInstanceOf(NextResponse);
+      expect((err as NextResponse).status).toBe(403);
+    }
+    expect(requireRole).toHaveBeenCalledTimes(1);
+  });
+
   it('allows an assigned cleaner', async () => {
     requireRole
       .mockRejectedValueOnce(NextResponse.json({ error: 'no admin' }, { status: 401 }))
