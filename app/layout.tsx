@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Script from "next/script";
+import GaInternalTrafficGuard from "../components/analytics/GaInternalTrafficGuard";
+import { INTERNAL_PATH_PATTERN } from "@/lib/analytics/internalPaths";
 import WhatsAppButton from "../components/WhatsAppButton";
 import { DemoModeBanner } from "../components/DemoModeBanner";
 import { BUSINESS_ADDRESS } from "@/lib/company/businessAddress";
@@ -323,12 +325,14 @@ export default function RootLayout({
             />
             <Script id="ga4-init" strategy="afterInteractive">
               {`
+                window['ga-disable-${gaId}'] = new RegExp(${JSON.stringify(INTERNAL_PATH_PATTERN)}).test(window.location.pathname);
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
                 gtag('config', '${gaId}');
               `}
             </Script>
+            <GaInternalTrafficGuard gaId={gaId} />
           </>
         )}
       </body>
