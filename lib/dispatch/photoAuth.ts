@@ -15,11 +15,33 @@ export async function requirePhotoUploadAccess(
   request: NextRequest,
   jobId: string
 ): Promise<PhotoActor> {
+  let admin: Awaited<ReturnType<typeof requireRole>> | null = null;
   try {
-    const admin = await requireRole(request, 'ADMIN');
-    return { role: 'ADMIN', userId: admin.userId };
+    admin = await requireRole(request, 'ADMIN');
   } catch {
     // fall through to cleaner
+  }
+
+  if (admin) {
+    // A branch-scoped admin (for example a branch manager) may only add
+    // photos to jobs in their own branch. The owner account is unscoped.
+    if (admin.isBranchScoped) {
+      const scopedJob = await prisma.job.findUnique({
+        where: { id: jobId },
+        select: { id: true, branchId: true },
+      });
+      if (!scopedJob) {
+        throw NextResponse.json({ error: 'Job not found' }, { status: 404 });
+      }
+      const allowed = admin.branchIds ?? (admin.branchId ? [admin.branchId] : []);
+      if (!allowed.includes(scopedJob.branchId)) {
+        throw NextResponse.json(
+          { error: 'Forbidden: this job belongs to another branch' },
+          { status: 403 }
+        );
+      }
+    }
+    return { role: 'ADMIN', userId: admin.userId };
   }
 
   const cleaner = await requireRole(request, 'CLEANER');

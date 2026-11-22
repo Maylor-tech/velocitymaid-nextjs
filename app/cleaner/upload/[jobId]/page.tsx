@@ -4,8 +4,10 @@ import { prisma } from "@/lib/prisma";
 import CleanerUploadClient from "./CleanerUploadClient";
 
 /**
- * Public, no-login photo upload page for cleaners.
- * The unguessable job ID in the URL is the access key.
+ * Photo upload page for the cleaner assigned to this job.
+ * Middleware requires the cleaner login cookie, and the upload API only
+ * accepts the assigned cleaner or an admin. Office staff use
+ * /admin/jobs/[jobId] or /admin/jobs/[jobId]/complete instead.
  */
 export default async function CleanerUploadPage({
   params,

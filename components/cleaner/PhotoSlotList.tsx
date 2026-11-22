@@ -28,6 +28,7 @@ export function PhotoSlotList({
   showIssueNote,
   uploadedBy,
   onUploaded,
+  allowLibrary = false,
 }: {
   jobId: string;
   slots: SlotRow[];
@@ -36,7 +37,10 @@ export function PhotoSlotList({
   showIssueNote: boolean;
   uploadedBy?: string;
   onUploaded: () => void;
+  /** Office use: let the picker choose saved photos instead of forcing the camera. */
+  allowLibrary?: boolean;
 }) {
+  const captureMode = allowLibrary ? undefined : "environment";
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
   const beforeRef = useRef<HTMLInputElement | null>(null);
   const attempts = useRef<Record<string, string>>({});
@@ -114,7 +118,7 @@ export function PhotoSlotList({
             ref={beforeRef}
             type="file"
             accept="image/*"
-            capture="environment"
+            capture={captureMode}
             className="hidden"
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -148,7 +152,7 @@ export function PhotoSlotList({
               }}
               type="file"
               accept="image/*"
-              capture="environment"
+              capture={captureMode}
               className="hidden"
               onChange={(event) => {
                 const file = event.target.files?.[0];

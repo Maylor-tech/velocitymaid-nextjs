@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, DollarSign, CheckCircle, XCircle, AlertCircle, Cloc
 import Link from 'next/link';
 import { JobChecklistSection } from '@/components/brand/JobChecklistSection';
 import { JobPhotoReview } from '@/components/admin/jobs/JobPhotoReview';
+import { AdminJobPhotoUpload } from '@/components/admin/jobs/AdminJobPhotoUpload';
 import { JobBillingWorkflowPanel } from '@/components/admin/jobs/JobBillingWorkflowPanel';
 import { JobDetailHero } from '@/components/admin/jobs/JobDetailHero';
 import { CustomerPortalPreview } from '@/components/admin/jobs/CustomerPortalPreview';
@@ -140,6 +141,7 @@ export default function AdminJobDetailPage() {
   const { isBranchScoped } = useAdminShell();
   
   const [job, setJob] = useState<Job | null>(null);
+  const [photoRefreshKey, setPhotoRefreshKey] = useState(0);
   const [cleaners, setCleaners] = useState<Cleaner[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1890,7 +1892,14 @@ export default function AdminJobDetailPage() {
         </div>
 
         <div className="mt-6">
-          <JobPhotoReview jobId={jobId} />
+          <AdminJobPhotoUpload
+            jobId={jobId}
+            onUploaded={() => setPhotoRefreshKey((k) => k + 1)}
+          />
+        </div>
+
+        <div className="mt-6">
+          <JobPhotoReview jobId={jobId} refreshKey={photoRefreshKey} />
         </div>
 
         <div className="mt-6">

@@ -64,13 +64,13 @@ export default function MarkCleanCompletePage() {
   const handleCopyUploadLink = async () => {
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
-    const url = `${origin}/cleaner/upload/${jobId}`;
+    const url = `${origin}/admin/jobs/${jobId}/complete`;
     try {
       await navigator.clipboard.writeText(url);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2500);
     } catch {
-      window.prompt("Copy this upload link:", url);
+      window.prompt("Copy this report link:", url);
     }
   };
 
@@ -350,14 +350,15 @@ export default function MarkCleanCompletePage() {
               ) : (
                 <>
                   <Link2 className="h-3.5 w-3.5" />
-                  Copy Caryll&apos;s upload link
+                  Copy link to this report
                 </>
               )}
             </button>
           </div>
           <p className="-mt-2 mb-4 font-body text-xs text-vm-muted">
-            Text this link to the cleaner — they can upload photos from their
-            phone with no login.
+            Anyone signed in to the admin dashboard (for example Caryll) can
+            open this link on a phone and add photos. Cleaners add photos from
+            their own job screen in the cleaner app.
           </p>
 
           <div
