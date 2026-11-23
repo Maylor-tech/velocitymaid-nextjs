@@ -39,7 +39,8 @@ const customers: AdminNavItem = {
   href: '/admin/customers',
   label: 'Customers & Properties',
   icon: UserCircle,
-  match: (p) => p.startsWith('/admin/customers'),
+  match: (p) =>
+    p.startsWith('/admin/customers') || p.startsWith('/admin/calendar-sync'),
 };
 const cleaners: AdminNavItem = {
   href: '/admin/cleaners',

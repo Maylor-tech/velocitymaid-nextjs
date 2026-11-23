@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { formatServiceDate } from '@/lib/dates/serviceDate';
 import { parseHostCleaningNotes } from '@/lib/properties/propertyService';
+import CalendarSyncCard from '@/components/customer/CalendarSyncCard';
 
 interface HostProperty {
   id: string;
@@ -106,6 +107,17 @@ function CustomerPropertyDetailPageInner() {
       setForm(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  /** Refresh only the upcoming cleans list (after a calendar sync). */
+  const refreshUpcoming = async () => {
+    try {
+      const res = await fetch(`/api/customer/properties/${propertyId}`);
+      const data = await res.json();
+      if (res.ok && data.success) setUpcomingJobs(data.upcomingJobs || []);
+    } catch {
+      /* list refresh is best-effort */
     }
   };
 
@@ -665,6 +677,8 @@ function CustomerPropertyDetailPageInner() {
           </button>
         </div>
       </section>
+
+      <CalendarSyncCard propertyId={propertyId} onSynced={() => void refreshUpcoming()} />
 
       <section className="rounded-xl border border-vm-navy/10 bg-vm-white p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
