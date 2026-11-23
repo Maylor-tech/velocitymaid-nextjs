@@ -84,6 +84,12 @@ export default function AdminCustomersPage() {
           Portal usage — see who has logged in and who may need a nudge. Archive hides clutter
           without deleting history.
         </p>
+        <Link
+          href="/admin/calendar-sync"
+          className="mt-2 inline-block font-body text-sm font-semibold text-vm-cyan-dark"
+        >
+          Booking calendar sync (Airbnb / VRBO) →
+        </Link>
 
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative max-w-md flex-1">

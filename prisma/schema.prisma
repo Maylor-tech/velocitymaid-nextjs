@@ -369,6 +369,7 @@ model Property {
   PhotoSlots             PropertyPhotoSlot[]
   ServicePackages        PropertyServicePackage[]
   PaymentPreference      PropertyPaymentPreference?
+  CalendarFeeds          PropertyCalendarFeed[]
 
   @@index([customerId])
   @@index([customerId, address])
@@ -637,6 +638,7 @@ model Job {
   Receipts                 Receipt[]
   IntegrationEventLog      IntegrationEventLog[]
   AdminNotification        AdminNotification[]
+  CalendarFeedEvents       CalendarFeedEvent[]
   User                     User?                      @relation(fields: [assignedCleanerId], references: [id])
   ApprovedBy               User?                      @relation("JobApprovedBy", fields: [approvedById], references: [id])
   Branch                   Branch                     @relation(fields: [branchId], references: [id])
@@ -2758,4 +2760,50 @@ model GuestTipAuthorization {
   @@index([propertyId])
   @@index([expiresAt])
   @@map("guest_tip_authorizations")
+}
+
+/// A host's booking-calendar export link (Airbnb / VRBO / other iCal).
+/// The URL is a private capability: never return it whole to the browser.
+model PropertyCalendarFeed {
+  id            String              @id @default(cuid())
+  propertyId    String
+  /// AIRBNB | VRBO | BOOKING | OTHER
+  source        String
+  url           String
+  label         String?
+  active        Boolean             @default(true)
+  lastSyncedAt  DateTime?
+  /// OK | ERROR
+  lastStatus    String?
+  lastError     String?
+  createdBy     String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  Property      Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  Events        CalendarFeedEvent[]
+
+  @@unique([propertyId, url])
+  @@index([active])
+  @@map("property_calendar_feeds")
+}
+
+/// One reservation seen in a feed. Checkout (endDate) drives the turnover Job.
+model CalendarFeedEvent {
+  id          String               @id @default(cuid())
+  feedId      String
+  uid         String
+  startDate   DateTime             @db.Date
+  endDate     DateTime             @db.Date
+  /// ACTIVE | CANCELLED
+  status      String               @default("ACTIVE")
+  jobId       String?
+  firstSeenAt DateTime             @default(now())
+  lastSeenAt  DateTime             @default(now())
+  cancelledAt DateTime?
+  Feed        PropertyCalendarFeed @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  Job         Job?                 @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@unique([feedId, uid])
+  @@index([jobId])
+  @@map("calendar_feed_events")
 }

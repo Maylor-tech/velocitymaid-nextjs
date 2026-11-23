@@ -23,7 +23,10 @@ export type AdminNotificationType =
   | 'FAILED_CALENDAR_SYNC'
   | 'JOB_ISSUE_REPORTED'
   | 'JOB_COMPLETED'
-  | 'INVOICE_STRIPE_OVERPAYMENT';
+  | 'INVOICE_STRIPE_OVERPAYMENT'
+  | 'CALENDAR_SYNC_TURNOVER'
+  | 'CALENDAR_SYNC_CHANGE'
+  | 'CALENDAR_SYNC_ERROR';
 
 export type AdminNotificationSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
 
