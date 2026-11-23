@@ -11,6 +11,7 @@ import {
 } from "@/lib/marketing/publicCtas";
 import { AfterTheClean } from "@/components/marketing/AfterTheClean";
 import { HomeWatchLinkCard } from "@/components/marketing/HomeWatchLinkCard";
+import { HostChecklistCard } from "@/components/marketing/HostChecklistCard";
 import { ArrowRight, MapPin, Snowflake } from "lucide-react";
 import {
   VERMONT_OPERATIONS_SUPPORT_LINE1,
@@ -162,6 +163,8 @@ export default function VermontOverviewPage() {
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 space-y-16">
+        <HostChecklistCard />
+
         <section className="rounded-xl border border-vm-border bg-vm-surface/50 p-6 sm:p-8">
           <h2 className="font-heading font-bold text-vm-navy text-xl mb-2">
             Not sure which area fits?
