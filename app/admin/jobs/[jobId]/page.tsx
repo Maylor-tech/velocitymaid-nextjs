@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { VoidCompletionPanel } from '@/components/admin/jobs/VoidCompletionPanel';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, DollarSign, CheckCircle, XCircle, AlertCircle, Clock, FileText } from 'lucide-react';
 import Link from 'next/link';
@@ -1008,6 +1009,9 @@ export default function AdminJobDetailPage() {
 
         {!isBranchScoped && (
         <>
+        {job.status === 'COMPLETED' && (
+          <VoidCompletionPanel jobId={jobId} onDone={() => fetchJob()} />
+        )}
         <div className="mb-6">
           <JobBillingWorkflowPanel
             jobId={jobId}

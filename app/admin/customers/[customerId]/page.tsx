@@ -8,6 +8,7 @@ import type { TravelZone } from '@prisma/client';
 import { TRAVEL_ZONE_OPTIONS } from '@/lib/vermont/travelZone';
 import { PortalInviteButton } from '@/components/admin/PortalInviteButton';
 import { CustomerActionsMenu } from '@/components/admin/CustomerActionsMenu';
+import { CustomerOverviewPanel } from '@/components/admin/customers/CustomerOverviewPanel';
 
 const inputClass =
   'w-full rounded-lg border border-vm-border px-3 py-2 font-body text-sm text-vm-navy focus:border-vm-cyan focus:outline-none focus:ring-1 focus:ring-vm-cyan';
@@ -156,7 +157,7 @@ export default function AdminCustomerProfilePage() {
 
   return (
     <div className="min-h-screen bg-vm-surface p-6">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-5xl">
         <Link
           href="/admin/customers"
           className="mb-4 inline-flex items-center gap-1 font-body text-sm text-vm-cyan-dark hover:underline"
@@ -167,11 +168,31 @@ export default function AdminCustomerProfilePage() {
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="font-heading text-2xl font-bold text-vm-navy">Property Profile</h1>
+            <h1 className="font-heading text-2xl font-bold text-vm-navy">{displayName}</h1>
             <p className="mt-1 font-body text-sm text-vm-muted">
-              {displayName} · {customer.email}
+              {customer.email}
+              {customer.phone ? ` · ${customer.phone}` : ''}
+              {customer.Branch ? ` · ${customer.Branch.name}` : ''}
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
+              {customer.portal && (
+                <span
+                  className={`rounded-full px-2 py-0.5 font-body text-[11px] font-semibold ${
+                    customer.portal.inviteAccepted
+                      ? 'bg-vm-success-bg text-vm-success'
+                      : customer.portal.portalInviteSent
+                        ? 'bg-vm-warning-bg text-vm-warning'
+                        : 'bg-vm-surface text-vm-muted'
+                  }`}
+                >
+                  Portal:{' '}
+                  {customer.portal.inviteAccepted
+                    ? `active${customer.portal.lastPortalLoginAt ? `, last login ${new Date(customer.portal.lastPortalLoginAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}`
+                    : customer.portal.portalInviteSent
+                      ? 'invited, not logged in yet'
+                      : 'no invite sent'}
+                </span>
+              )}
               {customer.recordKind === 'SYSTEM' && (
                 <span className="rounded-full bg-vm-surface px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-vm-muted">
                   System account
@@ -206,7 +227,15 @@ export default function AdminCustomerProfilePage() {
           />
         </div>
 
-        <div className="mt-6 space-y-6 rounded-xl border border-vm-border bg-vm-white p-6">
+        <div className="mt-6">
+          <CustomerOverviewPanel customerId={customer.id} />
+        </div>
+
+        <h2 className="mt-10 font-heading text-lg font-bold text-vm-navy">Settings</h2>
+        <p className="font-body text-sm text-vm-muted">
+          Portal access, travel zone, billing policy and residential scope.
+        </p>
+        <div className="mt-3 max-w-3xl space-y-6 rounded-xl border border-vm-border bg-vm-white p-6">
           {customer.portal && (
             <div className="rounded-lg bg-vm-surface/80 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
