@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth/requireRole';
 import { prisma } from '@/lib/prisma';
-import { getCustomerPortalStats } from '@/lib/admin/customerPortalStats';
+import { getCustomerSummaries } from '@/lib/admin/customerOverview';
 import {
   customerListWhere,
   type CustomerListFilter,
@@ -36,20 +36,27 @@ export async function GET(request: NextRequest) {
         archivedAt: true,
         archivedBy: true,
         recordKind: true,
-        _count: { select: { Job: true, Invoice: true } },
+        _count: { select: { Job: true, Invoice: true, Property: true } },
       },
       orderBy: { updatedAt: 'desc' },
       take,
     });
 
-    const withPortal = await Promise.all(
-      customers.map(async (c) => ({
+    // One batch of grouped queries for the whole page (not one query per customer).
+    const summaries = await getCustomerSummaries(customers);
+    const withPortal = customers.map((c) => {
+      const s = summaries.get(c.id)!;
+      return {
         ...c,
         jobCount: c._count.Job,
         invoiceCount: c._count.Invoice,
-        portal: await getCustomerPortalStats(c.id),
-      }))
-    );
+        propertyCount: c._count.Property,
+        portal: s.portal,
+        nextCleanDate: s.nextCleanDate,
+        lastCleanDate: s.lastCleanDate,
+        unpaidTotal: s.unpaidTotal,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -57,8 +64,10 @@ export async function GET(request: NextRequest) {
       customers: withPortal,
     });
   } catch (error: unknown) {
+    if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Failed to list customers';
     const status = message.includes('Unauthorized') ? 401 : 500;
+    if (status === 500) console.error('[admin/customers GET]', error);
     return NextResponse.json({ success: false, error: message }, { status });
   }
 }
