@@ -48,6 +48,7 @@ export async function getCustomerSummaries(
   const out = new Map<string, CustomerSummary>();
   if (ids.length === 0) return out;
   const today = startOfTodayUtc(now);
+  const tomorrow = new Date(today.getTime() + 86400000);
 
   const [logins, next, last, unpaid] = await Promise.all([
     prisma.customerLoginToken.groupBy({
@@ -63,7 +64,7 @@ export async function getCustomerSummaries(
     }),
     prisma.job.groupBy({
       by: ['customerId'],
-      where: { customerId: { in: ids }, status: 'COMPLETED' },
+      where: { customerId: { in: ids }, status: 'COMPLETED', preferredDate: { lt: tomorrow } },
       _max: { preferredDate: true },
     }),
     prisma.invoice.groupBy({
@@ -170,6 +171,10 @@ export function jobFlags(j: {
 }): string[] {
   const flags: string[] = [];
   if (CANCELLED_JOB_STATUSES.includes(j.status)) return flags;
+  if (j.status === 'COMPLETED' && j.date && j.date > j.todayIso) {
+    flags.push('Marked completed, but the date is still ahead');
+    return flags;
+  }
   if (j.price == null || j.price === 0) flags.push('No price set');
   const open = OPEN_JOB_STATUSES.includes(j.status);
   if (open && !j.hasCleaner) flags.push('Needs a cleaner');
@@ -256,7 +261,9 @@ export async function getCustomerOverview(customerId: string, now = new Date()):
   const split = splitJobs(rows, now);
 
   const yearStartIso = yearStart.toISOString();
-  const completedThisYear = split.past.filter((j) => j.status === 'COMPLETED' && (j.date ?? '') >= yearStartIso);
+  const completedThisYear = split.past.filter(
+    (j) => j.status === 'COMPLETED' && (j.date ?? '') >= yearStartIso && (j.date ?? '') <= todayIso
+  );
   const billedThisYear = invoices
     .filter((i) => i.status !== 'CANCELLED' && i.status !== 'DRAFT' && (i.jobDate ? i.jobDate >= yearStart : true))
     .reduce((s, i) => s + Number(i.total), 0);

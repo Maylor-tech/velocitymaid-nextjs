@@ -50,6 +50,11 @@ describe('jobFlags', () => {
       jobFlags({ status: 'RECEIVED', date: '2026-11-08T00:00:00.000Z', price: null, hasCleaner: false, todayIso })
     ).toEqual(['No price set', 'Needs a cleaner', 'Date has passed']);
   });
+  it('flags a job marked completed with a date still ahead', () => {
+    expect(
+      jobFlags({ status: 'COMPLETED', date: '2027-02-19T00:00:00.000Z', price: null, hasCleaner: true, todayIso })
+    ).toEqual(['Marked completed, but the date is still ahead']);
+  });
   it('does not flag cancelled jobs or completed jobs without a cleaner', () => {
     expect(jobFlags({ status: 'CANCELLED', date: null, price: null, hasCleaner: false, todayIso })).toEqual([]);
     expect(jobFlags({ status: 'COMPLETED', date: todayIso, price: 265, hasCleaner: false, todayIso })).toEqual([]);
