@@ -135,9 +135,23 @@ export async function GET(
         ? customerInvoicePayPath(invoice.publicToken)
         : null;
 
+    const latestChange = await prisma.customerJobChangeRequest.findFirst({
+      where: { jobId: job.id },
+      orderBy: { requestedAt: 'desc' },
+      select: { status: true, requestedAt: true, payload: true },
+    });
+    const decision = (latestChange?.payload as { decision?: { note?: string | null } } | null)?.decision;
+
     return NextResponse.json({
       success: true,
       job: {
+        changeRequest: latestChange
+          ? {
+              status: latestChange.status,
+              requestedAt: latestChange.requestedAt.toISOString(),
+              note: decision?.note ?? null,
+            }
+          : null,
         id: job.id,
         date: job.preferredDate?.toISOString() || null,
         startTime: job.preferredTime || null,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
+import { ChangeRequestsBanner } from '@/components/admin/jobs/ChangeRequestsBanner';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -340,6 +341,8 @@ function AdminJobsPageContent() {
             )}
           </div>
         </div>
+
+        <ChangeRequestsBanner />
 
         {/* Period navigation */}
         <div className="mb-3 flex flex-col gap-2 rounded-xl border border-vm-border bg-vm-white p-3">

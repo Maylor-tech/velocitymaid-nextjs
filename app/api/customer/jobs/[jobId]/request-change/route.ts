@@ -72,22 +72,29 @@ export async function POST(
       );
     }
 
-    // Check if job is already cancelled or completed
-    if (job.status === 'completed' || job.status === 'cancelled' || job.status === 'CANCELLED_BY_CUSTOMER') {
+    // Any upcoming clean that is not finished or cancelled can get a change request,
+    // including host requests still at RECEIVED (most host-portal and calendar-sync cleans).
+    const allowedStatuses = ['RECEIVED', 'CONFIRMED', 'ASSIGNED'];
+    if (!allowedStatuses.includes(job.status)) {
       return NextResponse.json(
-        { success: false, error: 'Cannot change a completed or cancelled job' },
+        {
+          success: false,
+          error:
+            job.status === 'COMPLETED' || job.status === 'CANCELLED' || job.status === 'CANCELLED_EMERGENCY'
+              ? 'This clean is already completed or cancelled.'
+              : 'Your cleaner is already on the way. Please call us at (802) 733-5348.',
+        },
         { status: 400 }
       );
     }
 
-    // Only allow change requests once the booking is a firm, upcoming commitment.
-    // Excludes RECEIVED (not yet admin-reviewed/approved — could still be rejected)
-    // and IN_PROGRESS (cleaner is actively on site; COMPLETED/CANCELLED are blocked above).
-    const allowedStatuses = ['CONFIRMED', 'ASSIGNED', 'ON_THE_WAY'];
-    if (!allowedStatuses.includes(job.status)) {
+    const pending = await prisma.customerJobChangeRequest.count({
+      where: { jobId: params.jobId, status: 'PENDING' },
+    });
+    if (pending > 0) {
       return NextResponse.json(
-        { success: false, error: 'Job must be scheduled to request changes' },
-        { status: 400 }
+        { success: false, error: 'You already have a change request waiting for this clean. We will reply soon.' },
+        { status: 409 }
       );
     }
 
@@ -105,7 +112,7 @@ export async function POST(
 
     if (hoursUntilJob <= 4) {
       return NextResponse.json(
-        { success: false, error: 'Change window closed. Changes must be requested at least 4 hours before your appointment.' },
+        { success: false, error: 'This clean is less than 4 hours away. Please call us at (802) 733-5348.' },
         { status: 400 }
       );
     }
@@ -113,6 +120,12 @@ export async function POST(
     // Parse request body
     const body = await request.json();
     const { newDate, newStartTime, newDuration, newAddress, notes } = body ?? {};
+    if (!newDate && !newStartTime && !newDuration && !newAddress && !(typeof notes === 'string' && notes.trim())) {
+      return NextResponse.json(
+        { success: false, error: 'Tell us what to change: a new date, a time, or a note.' },
+        { status: 400 }
+      );
+    }
 
     // Build payload
     const payload = {
@@ -153,12 +166,12 @@ export async function POST(
       success: true,
       message: 'Your request has been submitted and our team will review it.',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Request change error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to submit change request',
+        error: error instanceof Error ? error.message : 'Failed to submit change request',
       },
       { status: 500 }
     );
