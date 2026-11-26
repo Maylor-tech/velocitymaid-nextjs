@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { IcsEvent } from '../ics';
-import { planSync, type KnownEvent } from '../plan';
+import { findNearMatchJob, planSync, type KnownEvent } from '../plan';
 
 const ev = (uid: string, start: string, end: string, summary = 'Reserved'): IcsEvent => ({
   uid,
@@ -79,5 +79,18 @@ describe('planSync', () => {
     const plan = planSync([], [known('a', '2026-12-05', '2026-12-08')], TODAY);
     expect(plan.suspiciousEmpty).toBe(false);
     expect(plan.removed.map((k) => k.uid)).toEqual(['a']);
+  });
+});
+
+describe('findNearMatchJob', () => {
+  const jobs = [{ id: 'dec30', day: '2026-12-30' }];
+  it('links a stay reported as ending one day after an existing clean', () => {
+    expect(findNearMatchJob('2026-12-31', jobs, new Set(['2026-12-31']))?.id).toBe('dec30');
+  });
+  it('does not link when another stay in the feed ends on that clean day', () => {
+    expect(findNearMatchJob('2026-12-31', jobs, new Set(['2026-12-30', '2026-12-31']))).toBeNull();
+  });
+  it('does not link two days apart', () => {
+    expect(findNearMatchJob('2027-01-01', jobs, new Set())).toBeNull();
   });
 });

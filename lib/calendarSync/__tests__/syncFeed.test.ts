@@ -47,6 +47,14 @@ vi.mock('@/lib/prisma', () => ({
           (j) => j.propertyId === where.propertyId && sameDay(j.preferredDate, where.preferredDate) && where.status.in.includes(j.status)
         ) ?? null,
       findUnique: async ({ where }: Row) => db.jobs.find((j) => j.id === where.id) ?? null,
+      findMany: async ({ where }: Row) =>
+        db.jobs.filter(
+          (j) =>
+            j.propertyId === where.propertyId &&
+            where.status.in.includes(j.status) &&
+            j.preferredDate >= where.preferredDate.gte &&
+            j.preferredDate <= where.preferredDate.lte
+        ),
       create: async ({ data }: Row) => {
         const row = { ...data, propertyId: data.Property.connect.id };
         db.jobs.push(row);
@@ -150,6 +158,28 @@ describe('syncCalendarFeed', () => {
     expect(r).toMatchObject({ created: 0, linked: 1 });
     expect(db.jobs).toHaveLength(1);
     expect(db.events[0].jobId).toBe('manual');
+  });
+
+  it('links a stay one day off an existing clean and warns, instead of adding a second clean', async () => {
+    db.jobs.push({ id: 'dec30', propertyId: 'prop1', preferredDate: new Date('2026-12-30T00:00:00Z'), status: 'RECEIVED' });
+    const r = await syncCalendarFeed('feed1', {
+      now: NOW,
+      fetchImpl: fetchReturning(ics([['s1', '2026-12-26', '2026-12-31'], ['s2', '2026-12-31', '2027-01-03']])),
+    });
+    expect(r).toMatchObject({ created: 1, linked: 1 });
+    expect(db.events.find((e) => e.uid === 's1').jobId).toBe('dec30');
+    expect(db.jobs.map((j) => j.preferredDate.toISOString().slice(0, 10)).sort()).toEqual(['2026-12-30', '2027-01-03']);
+    expect(notifications.some((n) => n.type === 'CALENDAR_SYNC_CHANGE' && n.severity === 'WARNING')).toBe(true);
+  });
+
+  it('still creates a separate clean when another stay explains the nearby clean', async () => {
+    db.jobs.push({ id: 'dec30', propertyId: 'prop1', preferredDate: new Date('2026-12-30T00:00:00Z'), status: 'RECEIVED' });
+    const r = await syncCalendarFeed('feed1', {
+      now: NOW,
+      fetchImpl: fetchReturning(ics([['a', '2026-12-27', '2026-12-30'], ['b', '2026-12-30', '2026-12-31']])),
+    });
+    expect(r).toMatchObject({ created: 1, linked: 1 });
+    expect(db.jobs).toHaveLength(2);
   });
 
   it('moves an unconfirmed request, but only alerts on a confirmed one', async () => {

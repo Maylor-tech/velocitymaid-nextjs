@@ -104,3 +104,24 @@ export function planSync(
   }
   return plan;
 }
+
+/**
+ * A stay whose checkout is one day off an existing open clean usually means the
+ * platform reports the dates slightly differently (e.g. a blocked gap night), not
+ * a second stay. Link to that clean instead of creating a duplicate, unless the
+ * feed itself has another stay ending on the clean's day (then it is a real,
+ * separate turnover).
+ */
+export function findNearMatchJob(
+  stayEnd: string,
+  candidates: Array<{ id: string; day: string }>,
+  feedCheckoutDays: Set<string>
+): { id: string; day: string } | null {
+  const near = [addDays(stayEnd, -1), addDays(stayEnd, 1)];
+  for (const day of near) {
+    if (feedCheckoutDays.has(day)) continue;
+    const hit = candidates.find((c) => c.day === day);
+    if (hit) return hit;
+  }
+  return null;
+}

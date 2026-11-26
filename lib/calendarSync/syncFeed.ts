@@ -14,9 +14,9 @@ import {
   createAdminNotification,
 } from '@/lib/notifications/adminNotificationCenter';
 import { parseServiceDateInput } from '@/lib/dates/serviceDate';
-import { parseIcs } from './ics';
+import { isReservation, parseIcs } from './ics';
 import { isAllowedFeedHost, SOURCE_LABELS, type CalendarSource } from './feedUrl';
-import { planSync, type KnownEvent, type PlannedStay } from './plan';
+import { addDays, findNearMatchJob, planSync, type KnownEvent, type PlannedStay } from './plan';
 
 export const CALENDAR_TURNOVER_SERVICE = 'Vacation Rental Turnover';
 const MAX_FEED_BYTES = 2_000_000;
@@ -192,7 +192,9 @@ export async function syncCalendarFeed(
     status: e.status === 'CANCELLED' ? 'CANCELLED' : 'ACTIVE',
     jobId: e.jobId,
   }));
-  const plan = planSync(parseIcs(text), known, todayInVermont(now));
+  const feedEvents = parseIcs(text);
+  const plan = planSync(feedEvents, known, todayInVermont(now));
+  const feedCheckoutDays = new Set(feedEvents.filter(isReservation).map((e) => e.end));
   result.suspiciousEmpty = plan.suspiciousEmpty;
 
   const billingPolicy = resolveBillingPolicy({
@@ -213,6 +215,39 @@ export async function syncCalendarFeed(
       select: { id: true },
     });
     if (existing) return { jobId: existing.id, created: false };
+
+    // One day off an open clean, with no other stay explaining that clean: same stay,
+    // reported differently by the platform. Link it and ask ops to check the date.
+    const nearby = await prisma.job.findMany({
+      where: {
+        propertyId: property.id,
+        status: { in: [...OPEN_JOB_STATUSES] },
+        preferredDate: {
+          gte: parseServiceDateInput(addDays(stay.end, -1))!,
+          lte: parseServiceDateInput(addDays(stay.end, 1))!,
+        },
+      },
+      select: { id: true, jobReference: true, preferredDate: true },
+    });
+    const near = findNearMatchJob(
+      stay.end,
+      nearby
+        .filter((j) => j.preferredDate)
+        .map((j) => ({ id: j.id, day: j.preferredDate!.toISOString().slice(0, 10) })),
+      feedCheckoutDays
+    );
+    if (near) {
+      const ref = nearby.find((j) => j.id === near.id)?.jobReference ?? '';
+      await createAdminNotification({
+        type: 'CALENDAR_SYNC_CHANGE',
+        severity: 'WARNING',
+        message: `${sourceLabel} shows checkout ${prettyDay(stay.end)} for ${property.name}, but the clean ${ref} is on ${prettyDay(near.day)}. Linked them instead of adding a second clean. Check the date with the host.`.trim(),
+        jobId: near.id,
+        actionUrl: adminNotificationHelpers.adminJobLink(near.id),
+        idempotent: true,
+      });
+      return { jobId: near.id, created: false };
+    }
 
     const job = await prisma.job.create({
       data: {
