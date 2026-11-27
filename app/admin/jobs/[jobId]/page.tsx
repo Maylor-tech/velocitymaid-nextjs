@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { ChangeRequestsList } from '@/components/admin/jobs/ChangeRequestsList';
+import { MergeDuplicatePanel } from '@/components/admin/jobs/MergeDuplicatePanel';
 import { VoidCompletionPanel } from '@/components/admin/jobs/VoidCompletionPanel';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, DollarSign, CheckCircle, XCircle, AlertCircle, Clock, FileText } from 'lucide-react';
@@ -885,6 +887,14 @@ export default function AdminJobDetailPage() {
           }}
           isBranchScoped={isBranchScoped}
         />
+
+        <ChangeRequestsList jobId={jobId} compact onDecided={() => fetchJob()} />
+
+        {['RECEIVED', 'CONFIRMED', 'ASSIGNED'].includes(job.status) && (
+          <div className="mt-4">
+            <MergeDuplicatePanel jobId={jobId} onDone={() => fetchJob()} />
+          </div>
+        )}
 
         {loopProgress && (
           <div

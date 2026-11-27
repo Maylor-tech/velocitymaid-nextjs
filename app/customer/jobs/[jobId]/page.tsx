@@ -26,6 +26,7 @@ import { formatServiceDate } from '@/lib/dates/serviceDate';
 import { tipUrlForJob } from '@/lib/tips/tipLinks';
 
 interface JobDetails {
+  changeRequest?: { status: string; requestedAt: string; note: string | null } | null;
   id: string;
   date: string | null;
   startTime: string | null;
@@ -390,6 +391,24 @@ function JobDetailsContent() {
 
       <div className="bg-vm-white rounded-xl shadow-sm border border-vm-navy/10 p-6">
         <h2 className="text-lg font-heading font-semibold text-vm-navy mb-4">Actions</h2>
+        {job.changeRequest && (
+          <p
+            className={`mb-4 rounded-lg px-4 py-3 font-body text-sm ${
+              job.changeRequest.status === 'PENDING'
+                ? 'bg-vm-warning-bg text-vm-warning'
+                : job.changeRequest.status === 'APPROVED'
+                  ? 'bg-vm-success-bg text-vm-success'
+                  : 'bg-vm-surface text-vm-muted'
+            }`}
+          >
+            {job.changeRequest.status === 'PENDING'
+              ? `Change requested on ${new Date(job.changeRequest.requestedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}. We'll confirm it soon.`
+              : job.changeRequest.status === 'APPROVED'
+                ? 'Your change was approved. The details above are up to date.'
+                : 'Your last change request could not be made. Call us at (802) 733-5348 and we will sort it out.'}
+            {job.changeRequest.note ? ` Note from VelocityMaid: ${job.changeRequest.note}` : ''}
+          </p>
+        )}
         <ActionButtons
           status={job.status}
           jobDate={job.date || job.scheduledDate || undefined}
